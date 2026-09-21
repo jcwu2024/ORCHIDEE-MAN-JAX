@@ -57,10 +57,17 @@ def run(args):
 
     started = time.perf_counter()
     protocol = json.loads(args.protocol.read_text(encoding="utf-8"))
+    from scripts.hpc.shared_admission_recovery import load_resume_report, restore_gradient
+
+    resume_path = getattr(args, "resume_report", None)
+    prior = load_resume_report(resume_path, args.output, protocol) if resume_path else None
     report = dict(status="running", protocol=protocol, completed_updates=0,
                   scientific_acceptance=False, checkpoint_inherited=False,
                   source_git_head=subprocess.check_output(
                       ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip())
+    if prior is not None:
+        report.update(admission_resumed=True, resumed_report=str(resume_path),
+                      resumed_gradient_source_git_head=prior["source_git_head"])
 
     def emit(stage, **values):
         report.update(stage=stage, elapsed_seconds=time.perf_counter() - started, **values)
@@ -75,7 +82,10 @@ def run(args):
         emit("load_metadata_and_train_rows")
         manifest = json.loads(args.prepared_manifest.read_text(encoding="utf-8"))
         ids = select_artifact_ids(manifest["entries"], protocol["calibration"]["artifact_count"])
-        runtime, parent, template, artifacts, metadata = load_shared_runtime(args, ids)
+        if prior is not None and tuple(prior["calibration"]["artifact_ids"]) != ids:
+            raise ValueError("recovery calibration/sample selection differs from source")
+        runtime, parent, template, artifacts, metadata = load_shared_runtime(
+            args, ids if prior is None else ids[:2])
         jax = runtime["jax"]
         import jax.numpy as jnp
 
@@ -94,14 +104,18 @@ def run(args):
 
         emit("calibrate_train_scales", data=metadata)
         # Calibration is CPU work even when the model test runs on a GPU.
-        with jax.default_device(jax.devices("cpu")[0]):
-            scales, calibration = prepare_shared_trajectory_scales(
-                runtime, artifacts,
-                flux_floors={key: protocol["calibration"]["flux_floor_gC_m2_day"] for key in FLUX_KEYS},
-                stock_change_floors={key: protocol["calibration"]["stock_change_floor_gC_m2_day"]
-                                    for key in STOCK_KEYS})
-        scale_mapping = {"flux_scales": scales.flux_scales,
-                         "stock_change_scales": scales.stock_change_scales}
+        if prior is None:
+            with jax.default_device(jax.devices("cpu")[0]):
+                scales, calibration = prepare_shared_trajectory_scales(
+                    runtime, artifacts,
+                    flux_floors={key: protocol["calibration"]["flux_floor_gC_m2_day"] for key in FLUX_KEYS},
+                    stock_change_floors={key: protocol["calibration"]["stock_change_floor_gC_m2_day"]
+                                        for key in STOCK_KEYS})
+            scale_mapping = {"flux_scales": scales.flux_scales,
+                             "stock_change_scales": scales.stock_change_scales}
+        else:
+            calibration, scale_mapping = prior["calibration"], prior["scales"]
+            report["calibration_reused"] = True
         emit("calibration_completed", calibration=calibration, scales=scale_mapping)
         head = build_shared_process_head(parent, template, config=shared_config(protocol["architecture"]))
         state_scales = derive_target_oriented_scales(
@@ -114,6 +128,8 @@ def run(args):
                    for artifact in artifacts[:2]]
         report["admission_rows"] = [next(row for row in metadata["calibration_daily_rows"]
                                          if row["artifact_id"] == identifier) for identifier in ids[:2]]
+        if prior is not None and report["admission_rows"] != prior["admission_rows"]:
+            raise ValueError("recovered gradient admission rows differ")
         def initializer():
             return head.initialize(runtime["probe_assembled"], seed=protocol["seed"])
         emit("parameter_shapes")
@@ -135,14 +151,22 @@ def run(args):
             eligible_by_field={key: len(value) for key, value in coordinate_plan.items()},
         )
         if args.shape_only:
+            if prior is not None:
+                restore_gradient(jax, prior, shapes)
+                emit("completed", status="passed", classification="saved_gradient_recovery_structure_only")
+                return report
             for sample in samples:
                 jax.eval_shape(objective, shapes, sample)
             jax.eval_shape(jax.value_and_grad(objective, has_aux=True), shapes, samples[0])
             emit("completed", status="passed", classification="canonical_one_day_forward_gradient_shapes_only")
             return report
 
-        emit("initialize_fresh_parameters")
-        parameters = jax.jit(initializer)()
+        if prior is None:
+            emit("initialize_fresh_parameters")
+            parameters = jax.jit(initializer)()
+        else:
+            emit("restore_completed_initial_gradient")
+            parameters, gradient, value = restore_gradient(jax, prior, shapes)
         jax.block_until_ready(parameters)
         from scripts.hpc.shared_state_anchor_diagnostics import (
             state_coordinate_owners,
@@ -152,33 +176,47 @@ def run(args):
         forward = jax.jit(make_shared_daily_objective(
             runtime, head, template, state_scales, scale_mapping,
             include_state_diagnostics=True))
-        owners = state_coordinate_owners(head.contract)
 
         def forward_report(values):
             return [(loss, {key: value for key, value in auxiliary.items()
                             if key != "state_diagnostics"}) for loss, auxiliary in values]
 
-        emit("initial_canonical_forward")
-        initial = [forward(parameters, sample) for sample in samples]
-        jax.block_until_ready(initial)
-        attribution = [summarize_state_anchor(auxiliary["state_diagnostics"], state_scales, owners)
-                       for _loss, auxiliary in initial]
-        for detail, (_loss, auxiliary) in zip(attribution, initial, strict=True):
-            detail["matches_state_anchor"] = bool(np.isclose(
-                detail["total"], float(auxiliary["state_change_anchor"]), rtol=1e-10, atol=1e-10))
+        if prior is None:
+            owners = state_coordinate_owners(head.contract)
+            emit("initial_canonical_forward")
+            initial = [forward(parameters, sample) for sample in samples]
+            jax.block_until_ready(initial)
+            attribution = [summarize_state_anchor(auxiliary["state_diagnostics"], state_scales, owners)
+                           for _loss, auxiliary in initial]
+            for detail, (_loss, auxiliary) in zip(attribution, initial, strict=True):
+                detail["matches_state_anchor"] = bool(np.isclose(
+                    detail["total"], float(auxiliary["state_change_anchor"]), rtol=1e-10, atol=1e-10))
+        else:
+            initial, attribution = prior["initial"], prior["state_anchor_attribution"]
+            report["initial_forward_reused"] = True
         emit("initial_forward_completed", initial=forward_report(initial),
              state_anchor_attribution=attribution,
-             forward_device_memory=runtime["devices"][0].memory_stats())
+             forward_device_memory=(prior["forward_device_memory"] if prior
+                                    else runtime["devices"][0].memory_stats()))
         if not all(np.isfinite(float(value)) and hard_ok(aux) for value, aux in initial):
             return reject("initial_forward_physical")
-        emit("compile_complete_parameter_gradient")
         gradient_function = jax.jit(jax.value_and_grad(objective, has_aux=True))
-        compiled = gradient_function.lower(parameters, samples[0]).compile()
-        sizes = memory_sizes(compiled)
-        emit("gradient_compiled", compiled_gradient_memory=sizes)
+        compiled = None
+        if prior is None:
+            emit("compile_complete_parameter_gradient")
+            compiled = gradient_function.lower(parameters, samples[0]).compile()
+            sizes = memory_sizes(compiled)
+            emit("gradient_compiled", compiled_gradient_memory=sizes)
+        else:
+            sizes = prior["compiled_gradient_memory"]
+            emit("saved_gradient_reused", source_compiled_gradient_memory=sizes,
+                 gradient_artifact=prior["gradient_artifact"])
         if sizes["estimated_live_bytes"] > protocol["admission"]["gradient_memory_limit_gib"] * 2**30:
             return reject("compiled_gradient_memory")
-        (value, auxiliary), gradient = compiled(parameters, samples[0])
+        if prior is None:
+            (value, auxiliary), gradient = compiled(parameters, samples[0])
+        else:
+            auxiliary = initial[0][1]
         jax.block_until_ready(gradient)
         numeric = _tree_numeric_report(jax, gradient)
         groups = {key: _tree_numeric_report(jax, tree) for key, tree in gradient.items()}
@@ -187,9 +225,10 @@ def run(args):
             return reject("full_parameter_gradient")
         if not all(group["all_finite"] and group["l2_norm"] > 0 for group in groups.values()):
             return reject("shared_and_tokenizer_gradient_participation")
-        saved = args.output.with_suffix(".gradient.pkl")
-        persist_tree(saved, jax, dict(parameters=parameters, gradient=gradient, value=value,
-                                      protocol=protocol, source_git_head=report["source_git_head"]))
+        saved = Path(prior["gradient_artifact"]) if prior else args.output.with_suffix(".gradient.pkl")
+        if prior is None:
+            persist_tree(saved, jax, dict(parameters=parameters, gradient=gradient, value=value,
+                                          protocol=protocol, source_git_head=report["source_git_head"]))
         emit("gradient_preserved", gradient_artifact=str(saved))
         direction = jax.tree_util.tree_map(lambda g: (g / numeric["l2_norm"]).astype(g.dtype), gradient)
         tangent = jax.jit(lambda p, d, sample: jax.jvp(
@@ -205,18 +244,32 @@ def run(args):
              direction="normalized_full_parameter_gradient", passed=direction_ok))
         if not direction_ok:
             return reject("jvp_reverse_agreement")
-        del direction, tangent, gradient
+        del direction, tangent
         optimizer = initialize_target_oriented_adamw(parameters)
         update = make_update(protocol)
         updates = []
         for iteration in range(protocol["admission"]["updates"]):
             sample = samples[iteration % len(samples)]
             tick = time.perf_counter()
-            (before, aux), gradients = compiled(parameters, sample)
+            if iteration == 0:
+                before, aux, gradients = value, auxiliary, gradient
+            else:
+                if compiled is None:
+                    emit("load_cached_update_gradient")
+                    compile_tick = time.perf_counter()
+                    compiled = gradient_function.lower(parameters, samples[0]).compile()
+                    sizes = memory_sizes(compiled)
+                    emit("update_gradient_ready", gradient_compile_or_cache_seconds=time.perf_counter()-compile_tick,
+                         compiled_gradient_memory=sizes)
+                    if sizes["estimated_live_bytes"] > protocol["admission"]["gradient_memory_limit_gib"] * 2**30:
+                        return reject("compiled_update_gradient_memory")
+                (before, aux), gradients = compiled(parameters, sample)
             if not hard_ok(aux):
                 return reject("update_input_physical")
             parameters, optimizer, norm, clip = update(parameters, gradients, optimizer)
             jax.block_until_ready(parameters)
+            if iteration == 0:
+                del gradient
             after, aux_after = forward(parameters, sample)
             jax.block_until_ready(after)
             row = dict(update=iteration + 1, loss_before=before, loss_after=after,
@@ -225,6 +278,9 @@ def run(args):
                        process_day=aux_after["process_day"], flux=aux_after["flux"], stock=aux_after["stock"])
             updates.append(row)
             emit("optimizer_update_completed", completed_updates=iteration + 1, updates=updates)
+            persist_tree(args.output.with_suffix(".checkpoint.pkl"), jax,
+                         dict(parameters=parameters, optimizer=optimizer, completed_updates=iteration + 1,
+                              protocol=protocol, scales=scale_mapping))
             if not np.isfinite(float(after)) or not np.isfinite(float(norm)) or not hard_ok(aux_after):
                 return reject("updated_forward_physical")
         checkpoint = args.output.with_suffix(".checkpoint.pkl")
@@ -258,6 +314,8 @@ def parser():
     result.add_argument("--protocol", type=Path,
                         default=ROOT / "manifests/coarse_graining/shared_transformer_admission_v1.json")
     result.add_argument("--shape-only", action="store_true")
+    result.add_argument("--resume-report", type=Path,
+                        help="reuse a completed initial gradient and its unchanged calibration")
     return result
 
 
