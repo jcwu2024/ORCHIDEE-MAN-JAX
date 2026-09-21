@@ -1,5 +1,10 @@
 # Shared daily/T7/T30 preparation while daily AD runs
 
+Completion update2026-09-22: CPU wrapper45145 COMPLETED0 in785.68s; all
+four window shape checks and first-artifact T7/T30 gradient traces pass.
+Daily100848 also passes. The RUNNING snapshot at the end is historical.
+See `shared_v3_admission_results_20260922.md` for evidence and next action.
+
 Scope: implement the already agreed shared trajectory objective and prepare
 its CPU actual-data interface. This does not alter architecture/output
 coordinates or the running immutable158192f daily admission (wrapper100848).

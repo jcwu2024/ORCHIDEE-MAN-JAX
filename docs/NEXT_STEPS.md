@@ -1,12 +1,26 @@
 # Current Roadmap
 
-Last updated: 2026-09-21.
+Last updated: 2026-09-22.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-21)
+## Current execution gate (2026-09-22)
+
+Shared-v3 daily admission100848 COMPLETED0 at158192f in3857.82s: full75.58M
+gradient finite, JVP/reverse relative difference2.3409e-7, both AdamW updates
+and hard/checkpoint checks pass; measured peak7.522GiB (pool25.391GiB).
+Both daily losses and carbon groups improve, but state-change anchors rise;
+this is technical/two-sample learning evidence, not long-term acceptance.
+Recurrent CPU preparation45145 COMPLETED0 at605c941 in785.68s: four T7/T30
+forward-shape and first-artifact gradient-shape checks pass.
+Next finish the bounded joint GPU admission runner under
+`shared_recurrent_admission_v1.json`, then free-node actual T7/T30 physical,
+native AD/memory and two joint updates. No new task is launched. Reuse these
+completed checks; do not rerun100848 or45145. Read
+`research/daily_coarse_graining/shared_v3_admission_results_20260922.md`.
+Earlier RUNNING snapshots below are historical and superseded by this result.
 
 The remaining-output source/statistics audit is complete: all eight persistent
 OK_LEAK fast endpoints equal the final state in512 existing TRAIN rows, with

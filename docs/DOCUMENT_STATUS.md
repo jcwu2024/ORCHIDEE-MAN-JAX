@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-21.
+Last updated: 2026-09-22.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -20,8 +20,9 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_recurrent_preparation_20260921.md` | T7/T30 interface and CPU preparation in progress while daily AD runs | Exact joint weights, recurrent state, common initial masks; no extra GPU work or numerical AD acceptance |
-| `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md` | v3 forward COMPLETED0, hard gates pass; full AD/two updates running | Initial losses0.457/0.479, corrected state anchors, unchanged carbon science; no learning acceptance |
+| `research/daily_coarse_graining/shared_v3_admission_results_20260922.md` | Daily100848 and CPU45145 COMPLETED0; next joint GPU admission runner | Numerical daily AD/two updates,7.522GiB peak, two-sample loss tradeoff, passed recurrent CPU shapes |
+| `research/daily_coarse_graining/shared_recurrent_preparation_20260921.md` | T7/T30 interface implemented; CPU preparation passed, see September22 results | Exact joint weights, recurrent state, common initial masks; numerical recurrent AD still pending |
+| `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md` | v3 forward COMPLETED0; later daily AD/two updates also passed, see September22 results | Initial losses0.457/0.479, corrected state anchors, unchanged carbon science at initialization |
 | `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md` | Shared-v3 isolated coordinate/source correction, local/free admission in progress | Eight recurrent readouts, full-TRAIN delta scales, bare cimean=annualCa; unchanged loss/backbone |
 | `research/daily_coarse_graining/shared_remaining_state_source_audit_20260921.md` | Source plus512-row fast-endpoint/final-state identity PASS | All eight OK_LEAK state owners and limits of reusing existing delta statistics |
 | `research/daily_coarse_graining/shared_cimean_source_audit_20260921.md` | Source audit complete | Bare-soil Ca identity, current annual input and cross-year delta semantics |

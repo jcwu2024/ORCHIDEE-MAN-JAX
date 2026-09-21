@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-21.
+Last updated: 2026-09-22.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,18 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+2026-09-22 collection: both free tasks COMPLETED0. Daily100848 at158192f
+passes complete75,578,497-parameter gradients, JVP/reverse (relative2.3409e-7),
+two full-network updates and hard/checkpoint gates in3857.82s. Peak allocator
+7.522GiB vs25.391GiB pool. Daily total loss decreases20.53%/16.12% on the two
+TRAIN samples; carbon flux/stock losses improve while state anchors rise.
+This is technical/local learning evidence, not scientific model acceptance.
+CPU45145 at605c941 passes four actual-data recurrent forward-shape and
+first-artifact T7/T30 gradient-shape checks in785.68s. Next finish and run
+bounded free-GPU joint admission; no new job submitted, no paid work.
+See `research/daily_coarse_graining/shared_v3_admission_results_20260922.md`.
+RUNNING descriptions below are retained historical snapshots.
 
 Shared-v3 output corrections are implemented for local/free admission:
 eight persistent OK_LEAK readouts now have a decoder-local daily-residual
