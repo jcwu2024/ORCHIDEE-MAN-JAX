@@ -267,6 +267,16 @@ def test_daily_objective_uses_three_groups_and_merges_science_hard_counts(monkey
     )
     loss, diagnostics = objective(jnp.asarray(0.0), sample)
 
+    reporting = make_shared_daily_objective(
+        {"loss_scales": {}}, head, object(), scales, science_scales,
+        include_state_diagnostics=True,
+    )
+    reported_loss, reported_auxiliary = reporting(jnp.asarray(0.0), sample)
+    np.testing.assert_array_equal(reported_loss, loss)
+    assert "state_diagnostics" not in diagnostics
+    assert reported_auxiliary["state_diagnostics"]["predicted"] is predicted_state
+    assert reported_auxiliary["state_diagnostics"]["expected"] is expected_state
+
     np.testing.assert_allclose(loss, 6.0)
     np.testing.assert_array_equal(captured["predicted"]["gpp_defined"], gpp_target.defined[None, ...])
     np.testing.assert_allclose(captured["predicted"]["fraction"], [[0.2, 0.8]])

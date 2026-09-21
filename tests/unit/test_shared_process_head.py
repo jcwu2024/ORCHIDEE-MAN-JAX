@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -132,6 +133,8 @@ def test_canonical_shared_head_forward_covers_full_learned_schema_without_legacy
 
     context = head.assemble_context(parameters, setup["assembled"])
     outputs = head.learned_outputs(parameters, context, setup["assembled"])
+    reference_head = replace(head, shared_config=replace(config, decoder_execution="original"))
+    reference_outputs = reference_head.learned_outputs(parameters, context, setup["assembled"])
     fields = head.learned_schema.fields
     assert len(fields) == len(outputs) == 161
     assert sum(int(np.prod(field.shape)) for field in fields) == 39_006
@@ -140,3 +143,5 @@ def test_canonical_shared_head_forward_covers_full_learned_schema_without_legacy
         value = np.asarray(outputs[field.name])
         assert value.shape == field.shape
         assert np.all(np.isfinite(value)), field.name
+        np.testing.assert_allclose(value, reference_outputs[field.name], rtol=2e-5, atol=2e-6,
+                                   err_msg=field.name)

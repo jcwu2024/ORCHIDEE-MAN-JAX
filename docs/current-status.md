@@ -45,6 +45,13 @@ shared-projection reuse and native rematerialization preserve all valid output
 capacity; no optimized runtime or reduced-memory claim yet. See
 `research/daily_coarse_graining/shared_decoder_execution_plan_20260921.md`.
 
+Execution follow-up: static gather/scatter and shared K/V reuse are now
+implemented, preserving the parameter tree and full output shapes. Bounded
+original/gather-only/combined comparisons precede actual-runtime admission.
+No decoder rematerialization is enabled; use it only if steps1+2 fail measured
+daily and T7/T30 memory requirements. Added host-only state-loss attribution
+does not modify the loss. Optimized GPU memory and learning remain unmeasured.
+
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint
 replay pass; no scientific acceptance. Gradient norms2499/5352 with strong

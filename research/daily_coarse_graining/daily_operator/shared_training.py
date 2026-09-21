@@ -125,7 +125,8 @@ def compose_shared_groups(process_day, daily_flux, daily_stock, recurrent_flux=(
     return (process_day + flux + stock) / 3.0
 
 
-def make_shared_daily_objective(runtime, head, template, state_scales, science_scales):
+def make_shared_daily_objective(runtime, head, template, state_scales, science_scales, *,
+                                include_state_diagnostics=False):
     """Full canonical one-day loss; scale inputs must be frozen TRAIN statistics.
 
 `state_scales.state` must use daily state-change scales, not standing stocks.
@@ -234,7 +235,7 @@ The process scalar uses existing source-owned typed labels and their weights.
             "carbon_negative": jnp.sum(result.next_state_defined.carbon & (result.next_state.carbon < -2e-12)),
             **_science_hard_failures(terms.hard_counts),
         }
-        return loss, {
+        auxiliary = {
             "process_day": process_day,
             "process_labels": process_label,
             "state_change_anchor": state.total,
@@ -244,5 +245,15 @@ The process scalar uses existing source-owned typed labels and their weights.
             "hard": hard,
             "declared_mask_change": declared_mask_change,
         }
+        # Forward-only reporting uses these leaves; the training/AD objective
+        # keeps its existing outputs and scalar unchanged.
+        if include_state_diagnostics:
+            auxiliary["state_diagnostics"] = {
+                "predicted": result.next_state,
+                "expected": sample.expected_next_state,
+                "predicted_defined": result.next_state_defined,
+                "expected_defined": sample.expected_next_state_defined,
+            }
+        return loss, auxiliary
 
     return objective

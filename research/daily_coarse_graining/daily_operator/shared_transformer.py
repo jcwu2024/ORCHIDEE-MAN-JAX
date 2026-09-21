@@ -48,6 +48,7 @@ class SharedTransformerConfig:
     readout_width: int = 256
     output_chunk_size: int = 64
     normalization_epsilon: float = 1.0e-6
+    decoder_execution: str = "gather_reuse"
 
     # The audited canonical tokenizer remains narrower than the new backbone.
     input_width: int = 384
@@ -80,6 +81,10 @@ class SharedTransformerConfig:
             raise ValueError("readout width and output chunk size must be positive")
         if not 0.0 < self.normalization_epsilon < 1.0:
             raise ValueError("normalization epsilon must lie in (0, 1)")
+        if self.decoder_execution not in {"original", "gather_only", "gather_reuse"}:
+            raise ValueError(
+                "decoder execution must be original, gather_only, or gather_reuse"
+            )
 
 
 class SharedTransformerContext(NamedTuple):
@@ -321,6 +326,197 @@ def _run_blocks(
     return query
 
 
+class _DecoderBlockProjection(NamedTuple):
+    family_key: Any
+    family_value: Any
+    process_key: Any
+    process_value: Any
+    carbon_key: Any | None
+    carbon_value: Any | None
+
+
+def _project_key_value(parameters: Mapping[str, Any], tokens: Any) -> tuple[Any, Any]:
+    return _linear(parameters["key"], tokens), _linear(parameters["value"], tokens)
+
+
+def _decoder_projection_cache(
+    parameters: Mapping[str, Any],
+    context: SharedTransformerContext,
+    family_tokens: Any,
+    *,
+    carbon_tokens: Any | None,
+) -> tuple[tuple[_DecoderBlockProjection, ...], ...]:
+    """Project banks shared by coordinate queries once per expert and block."""
+
+    blocks = parameters["shared_transformer"]["coordinate_blocks"]
+    carbon_by_block = []
+    for block in blocks:
+        if carbon_tokens is None:
+            carbon_by_block.append((None, None))
+        else:
+            carbon_by_block.append(
+                _project_key_value(block["attention"], carbon_tokens)
+            )
+
+    result = []
+    for expert_index in range(int(context.process_tokens.shape[0])):
+        expert = []
+        for block_index, block in enumerate(blocks):
+            family_key, family_value = _project_key_value(
+                block["attention"], family_tokens[expert_index]
+            )
+            process_key, process_value = _project_key_value(
+                block["attention"], context.process_tokens[expert_index][None, :]
+            )
+            carbon_key, carbon_value = carbon_by_block[block_index]
+            expert.append(
+                _DecoderBlockProjection(
+                    family_key=family_key,
+                    family_value=family_value,
+                    process_key=process_key,
+                    process_value=process_value,
+                    carbon_key=carbon_key,
+                    carbon_value=carbon_value,
+                )
+            )
+        result.append(tuple(expert))
+    return tuple(result)
+
+
+def _attention_from_projected_segments(
+    parameters: Mapping[str, Any],
+    query: Any,
+    dynamic_tokens: Any,
+    *,
+    family_key: Any,
+    family_value: Any,
+    family_mask: Any,
+    dynamic_mask: Any,
+    process_key: Any,
+    process_value: Any,
+    process_mask: Any,
+    carbon_key: Any | None,
+    carbon_value: Any | None,
+    carbon_mask: Any | None,
+    heads: int,
+    normalization_epsilon: float,
+) -> Any:
+    """Attend to shared and query-local banks with one normalization."""
+
+    projected_query = _linear(parameters["query"], query)
+    dynamic_key, dynamic_value = _project_key_value(parameters, dynamic_tokens)
+    width = int(projected_query.shape[-1])
+    head_width = width // int(heads)
+
+    def per_head(value: Any) -> Any:
+        shaped = value.reshape(value.shape[:-1] + (heads, head_width))
+        return shaped.swapaxes(-3, -2)
+
+    head_query = per_head(projected_query)
+    head_dynamic_key = per_head(dynamic_key)
+    head_dynamic_value = per_head(dynamic_value)
+    head_family_key = per_head(family_key)
+    head_family_value = per_head(family_value)
+    head_process_key = per_head(process_key)
+    head_process_value = per_head(process_value)
+    head_query = _stable_head_l2_normalize(head_query, normalization_epsilon)
+    head_dynamic_key = _stable_head_l2_normalize(head_dynamic_key, normalization_epsilon)
+    head_family_key = _stable_head_l2_normalize(head_family_key, normalization_epsilon)
+    head_process_key = _stable_head_l2_normalize(head_process_key, normalization_epsilon)
+
+    temperature = jnp.sqrt(jnp.asarray(head_width, dtype=jnp.float32))
+
+    def scores(key: Any, *, shared: bool) -> Any:
+        equation = "...hqd,hkd->...hqk" if shared else "...hqd,...hkd->...hqk"
+        return jnp.clip(jnp.einsum(equation, head_query, key), -1.0, 1.0) * temperature
+
+    logits = [
+        scores(head_family_key, shared=True),
+        scores(head_dynamic_key, shared=False),
+        scores(head_process_key, shared=True),
+    ]
+    masks = [family_mask, dynamic_mask, process_mask]
+    head_carbon_value = None
+    if carbon_key is not None and carbon_mask is not None:
+        head_carbon_key = per_head(carbon_key)
+        head_carbon_value = per_head(carbon_value)
+        head_carbon_key = _stable_head_l2_normalize(head_carbon_key, normalization_epsilon)
+        logits.append(scores(head_carbon_key, shared=True))
+        masks.append(carbon_mask)
+
+    combined_logits = jnp.concatenate(tuple(logits), axis=-1)
+    combined_mask = jnp.concatenate(tuple(masks), axis=-1)
+    head_mask = jnp.expand_dims(combined_mask, axis=-3)
+    row_valid = jnp.expand_dims(jnp.any(combined_mask, axis=-1, keepdims=True), axis=-3)
+    combined_logits = jnp.where(head_mask, combined_logits, -jnp.inf)
+    weights = jax.nn.softmax(jnp.where(row_valid, combined_logits, 0.0), axis=-1)
+    weights = jnp.where(head_mask, weights, 0.0)
+
+    offsets = np.cumsum(
+        (0, family_key.shape[-2], dynamic_key.shape[-2], process_key.shape[-2])
+    )
+    result = jnp.einsum(
+        "...hqk,hkd->...hqd", weights[..., offsets[0] : offsets[1]], head_family_value
+    )
+    result += jnp.einsum(
+        "...hqk,...hkd->...hqd",
+        weights[..., offsets[1] : offsets[2]],
+        head_dynamic_value,
+    )
+    result += jnp.einsum(
+        "...hqk,hkd->...hqd", weights[..., offsets[2] : offsets[3]], head_process_value
+    )
+    if head_carbon_value is not None:
+        result += jnp.einsum(
+            "...hqk,hkd->...hqd", weights[..., offsets[3] :], head_carbon_value
+        )
+    result = result.swapaxes(-3, -2).reshape(result.shape[:-3] + (result.shape[-2], width))
+    return _linear(parameters["output"], result)
+
+
+def _run_coordinate_blocks_reusing_projections(
+    query: Any,
+    dynamic_tokens: Any,
+    *,
+    dynamic_mask: Any,
+    family_mask: Any,
+    process_mask: Any,
+    carbon_mask: Any | None,
+    blocks: Any,
+    projections: tuple[_DecoderBlockProjection, ...],
+    config: SharedTransformerConfig,
+) -> Any:
+    for block, projected in zip(blocks, projections, strict=True):
+        message = _attention_from_projected_segments(
+            block["attention"],
+            query,
+            dynamic_tokens,
+            family_key=projected.family_key,
+            family_value=projected.family_value,
+            family_mask=family_mask,
+            dynamic_mask=dynamic_mask,
+            process_key=projected.process_key,
+            process_value=projected.process_value,
+            process_mask=process_mask,
+            carbon_key=projected.carbon_key,
+            carbon_value=projected.carbon_value,
+            carbon_mask=carbon_mask,
+            heads=config.attention_heads,
+            normalization_epsilon=config.normalization_epsilon,
+        )
+        query = _layer_norm(
+            query + message,
+            block["attention_norm_scale"],
+            block["attention_norm_bias"],
+        )
+        query = _layer_norm(
+            query + _ffn(block["ffn"], query),
+            block["ffn_norm_scale"],
+            block["ffn_norm_bias"],
+        )
+    return query
+
+
 def assemble_shared_transformer_context(
     parameters: Mapping[str, Any],
     inputs: AssembledDailyOperatorInput,
@@ -419,6 +615,39 @@ def _field_active_and_pft_owner(
     return coordinates, active, pft_owner
 
 
+def _static_field_coordinate_indices(
+    field: Any,
+    ownership: Any,
+    layout: StrongBaselineLayout,
+) -> np.ndarray:
+    """Return only coordinates allowed by the declared static PFT layout."""
+
+    coordinates = np.asarray(field_coordinates(field.shape), dtype=np.int32)
+    eligible = np.ones((coordinates.shape[0],), dtype=np.bool_)
+    for axis_index, axis_name in enumerate(ownership.axes):
+        if axis_name == "pft" and field.full_pft_axis:
+            eligible &= np.isin(
+                coordinates[:, axis_index],
+                np.asarray(layout.active_pft_indices, dtype=np.int32),
+            )
+    return np.flatnonzero(eligible).astype(np.int32, copy=False)
+
+
+def shared_transformer_static_coordinate_indices(
+    *,
+    schema: NeuralOutputSchema,
+    layout: StrongBaselineLayout,
+) -> Mapping[str, np.ndarray]:
+    """Return the layout-only decoder coordinates retained for every field."""
+
+    if tuple(field.name for field in schema.fields) != tuple(field.name for field in layout.ledger):
+        raise ValueError("shared Transformer schema and layout drift")
+    return {
+        field.name: _static_field_coordinate_indices(field, ownership, layout)
+        for field, ownership in zip(schema.fields, layout.ledger, strict=True)
+    }
+
+
 def shared_transformer_output_masks(
     context: SharedTransformerContext,
     inputs: AssembledDailyOperatorInput,
@@ -473,9 +702,15 @@ def _field_coordinate_inputs(
     field_index: int,
     layout: StrongBaselineLayout,
     input_normalization: NeuralInputNormalization,
+    coordinate_indices: np.ndarray | None = None,
 ) -> tuple[Any, Any, Any, Any, Any, Any, Any]:
     shared = parameters["shared_transformer"]
     coordinates, active, pft_owner = _field_active_and_pft_owner(context, field, ownership, layout)
+    if coordinate_indices is not None:
+        selected = jnp.asarray(coordinate_indices, dtype=jnp.int32)
+        coordinates = coordinates[selected]
+        active = active[selected]
+        pft_owner = pft_owner[selected]
     expert_index = int(layout.field_expert_index[field_index])
     features = jnp.broadcast_to(
         context.process_tokens[expert_index]
@@ -511,6 +746,8 @@ def _field_coordinate_inputs(
             axis_tokens.append(token)
             axis_masks.append(active & dynamic_mask)
     local_indices = np.asarray(layout.local_state_indices[field_index], dtype=np.int32).reshape(-1)
+    if coordinate_indices is not None and local_indices.size:
+        local_indices = local_indices[coordinate_indices]
     if local_indices.size:
         local, local_defined = _normalized_local_state(inputs, input_normalization, local_indices)
     else:
@@ -641,7 +878,15 @@ def _decode_field(
     carbon_tokens: Any | None,
     carbon_defined: Any | None,
     carbon_state_layout: Any | None,
+    projection_cache: tuple[_DecoderBlockProjection, ...] | None,
 ) -> tuple[Any, Any]:
+    gather = config.decoder_execution != "original"
+    coordinate_indices = (
+        _static_field_coordinate_indices(field, ownership, layout) if gather else None
+    )
+    _full_coordinates, full_active, _full_owner = _field_active_and_pft_owner(
+        context, field, ownership, layout
+    )
     (
         features,
         active,
@@ -659,9 +904,15 @@ def _decode_field(
         field_index=field_index,
         layout=layout,
         input_normalization=input_normalization,
+        coordinate_indices=coordinate_indices,
     )
     expert_index = int(layout.field_expert_index[field_index])
     size = int(features.shape[0])
+    if size == 0:
+        return (
+            jnp.zeros(field.shape, dtype=jnp.float32),
+            full_active.reshape(field.shape),
+        )
     chunk = min(int(config.output_chunk_size), size)
     padded_size = ((size + chunk - 1) // chunk) * chunk
     pad = padded_size - size
@@ -688,48 +939,79 @@ def _decode_field(
     def decode_chunk(values: tuple[Any, ...]) -> Any:
         chunk_features, chunk_active, chunk_owner, chunk_axis, chunk_axis_mask, chunk_local, chunk_local_mask = values
         count = chunk_features.shape[0]
-        families = jnp.broadcast_to(
-            family_tokens[expert_index][None, :, :],
-            (count, family_tokens.shape[1], config.width),
-        )
         family_valid = chunk_active[:, None] & family_mask[expert_index][None, :]
-        process = jnp.broadcast_to(context.process_tokens[expert_index], (count, 1, config.width))
-        bank = jnp.concatenate((families, chunk_axis, chunk_local[:, None, :], process), axis=1)
-        mask = jnp.concatenate(
-            (
-                family_valid,
-                chunk_axis_mask & chunk_active[:, None],
-                chunk_local_mask[:, None],
-                chunk_active[:, None],
-            ),
-            axis=1,
-        )
+        raw_mask = None
         if field.name == GPP_FIELD and carbon_tokens is not None:
-            raw_carbon = jnp.broadcast_to(
-                carbon_tokens[None, :, :],
-                (count, carbon_tokens.shape[0], config.width),
-            )
             carbon_owner = jnp.asarray(carbon_state_layout.pft_owner_index, dtype=jnp.int32)
             raw_mask = carbon_defined[None, :] & (
                 (carbon_owner[None, :] == -1) | (carbon_owner[None, :] == chunk_owner[:, None])
             )
             raw_mask &= chunk_active[:, None]
-            bank = jnp.concatenate((bank, raw_carbon), axis=1)
-            mask = jnp.concatenate((mask, raw_mask), axis=1)
-        encoded = _run_blocks(
-            chunk_features[:, None, :],
-            bank,
-            mask[:, None, :],
-            shared["coordinate_blocks"],
-            config,
-        )[:, 0, :]
+        if projection_cache is None:
+            families = jnp.broadcast_to(
+                family_tokens[expert_index][None, :, :],
+                (count, family_tokens.shape[1], config.width),
+            )
+            process = jnp.broadcast_to(
+                context.process_tokens[expert_index], (count, 1, config.width)
+            )
+            bank = jnp.concatenate(
+                (families, chunk_axis, chunk_local[:, None, :], process), axis=1
+            )
+            mask = jnp.concatenate(
+                (
+                    family_valid,
+                    chunk_axis_mask & chunk_active[:, None],
+                    chunk_local_mask[:, None],
+                    chunk_active[:, None],
+                ),
+                axis=1,
+            )
+            if raw_mask is not None:
+                raw_carbon = jnp.broadcast_to(
+                    carbon_tokens[None, :, :],
+                    (count, carbon_tokens.shape[0], config.width),
+                )
+                bank = jnp.concatenate((bank, raw_carbon), axis=1)
+                mask = jnp.concatenate((mask, raw_mask), axis=1)
+            encoded = _run_blocks(
+                chunk_features[:, None, :],
+                bank,
+                mask[:, None, :],
+                shared["coordinate_blocks"],
+                config,
+            )[:, 0, :]
+        else:
+            dynamic = jnp.concatenate((chunk_axis, chunk_local[:, None, :]), axis=1)
+            dynamic_valid = jnp.concatenate(
+                (
+                    chunk_axis_mask & chunk_active[:, None],
+                    chunk_local_mask[:, None],
+                ),
+                axis=1,
+            )
+            encoded = _run_coordinate_blocks_reusing_projections(
+                chunk_features[:, None, :],
+                dynamic,
+                dynamic_mask=dynamic_valid[:, None, :],
+                family_mask=family_valid[:, None, :],
+                process_mask=chunk_active[:, None, None],
+                carbon_mask=(
+                    raw_mask[:, None, :]
+                    if raw_mask is not None
+                    else None
+                ),
+                blocks=shared["coordinate_blocks"],
+                projections=projection_cache,
+                config=config,
+            )[:, 0, :]
         raw = _linear(
             shared["readout_second"],
             jax.nn.gelu(_linear(shared["readout_first"], encoded)),
         )[:, 0]
         return jnp.where(chunk_active, raw, 0.0)
 
-    raw = jax.lax.map(
+    decoded = jax.lax.map(
         decode_chunk,
         (
             feature_chunks,
@@ -741,7 +1023,12 @@ def _decode_field(
             local_mask_chunks,
         ),
     ).reshape(-1)[:size]
-    return raw.reshape(field.shape), active.reshape(field.shape)
+    if coordinate_indices is None:
+        raw = decoded
+    else:
+        raw = jnp.zeros((int(np.prod(field.shape, dtype=np.int64)),), dtype=decoded.dtype)
+        raw = raw.at[jnp.asarray(coordinate_indices, dtype=jnp.int32)].set(decoded)
+    return raw.reshape(field.shape), full_active.reshape(field.shape)
 
 
 def shared_transformer_raw_outputs(
@@ -769,6 +1056,14 @@ def shared_transformer_raw_outputs(
             input_normalization,
             carbon_state_layout,
         )
+    projection_cache = None
+    if config.decoder_execution == "gather_reuse":
+        projection_cache = _decoder_projection_cache(
+            parameters,
+            context,
+            family_tokens,
+            carbon_tokens=raw_carbon,
+        )
     outputs = {}
     masks = {}
     for field_index, (field, ownership) in enumerate(zip(schema.fields, layout.ledger, strict=True)):
@@ -787,6 +1082,11 @@ def shared_transformer_raw_outputs(
             carbon_tokens=raw_carbon,
             carbon_defined=carbon_defined,
             carbon_state_layout=carbon_state_layout,
+            projection_cache=(
+                None
+                if projection_cache is None
+                else projection_cache[int(layout.field_expert_index[field_index])]
+            ),
         )
         outputs[field.name] = raw
         masks[field.name] = active
@@ -801,4 +1101,5 @@ __all__ = [
     "shared_transformer_output_masks",
     "shared_transformer_parameter_count",
     "shared_transformer_raw_outputs",
+    "shared_transformer_static_coordinate_indices",
 ]

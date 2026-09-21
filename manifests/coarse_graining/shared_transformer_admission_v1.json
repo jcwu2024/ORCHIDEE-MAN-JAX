@@ -10,6 +10,8 @@
     "backbone_blocks": 8,
     "decoder_blocks": 2,
     "query_chunk_size": 64,
+    "decoder_execution": "gather_reuse",
+    "decoder_rematerialization": false,
     "attention": "fp32_unit_L2_qk_logits_cosine_times_sqrt_head_width",
     "outgoing_center": "existing_v6_TRAIN_mean_in_logit_space",
     "outgoing_center_floor": 1e-8,

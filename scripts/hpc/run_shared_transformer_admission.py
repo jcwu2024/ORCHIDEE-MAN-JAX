@@ -20,6 +20,7 @@ def shared_config(specification):
         ffn_width=specification["ffn_width"], backbone_blocks=specification["backbone_blocks"],
         coordinate_blocks=specification["decoder_blocks"],
         output_chunk_size=specification["query_chunk_size"],
+        decoder_execution=specification.get("decoder_execution", "gather_reuse"),
     )
 
 
@@ -82,6 +83,9 @@ def run(args):
         from research.daily_coarse_graining.daily_operator.shared_process_head import build_shared_process_head
         from research.daily_coarse_graining.daily_operator.shared_training import make_shared_daily_objective
         from research.daily_coarse_graining.daily_operator.shared_trajectory_loss import FLUX_KEYS, STOCK_KEYS
+        from research.daily_coarse_graining.daily_operator.shared_transformer import (
+            shared_transformer_static_coordinate_indices,
+        )
         from research.daily_coarse_graining.daily_operator.target_oriented_training import (
             derive_target_oriented_scales,
             initialize_target_oriented_adamw,
@@ -121,6 +125,15 @@ def run(args):
         report.update(parameter_count=sum(counts.values()), trainable_parameter_count=sum(counts.values()),
                       parameter_groups=counts, learned_fields=len(head.learned_schema.fields),
                       learned_scalars=sum(int(np.prod(field.shape)) for field in head.learned_schema.fields))
+        coordinate_plan = shared_transformer_static_coordinate_indices(
+            schema=head.learned_schema, layout=head.layout)
+        report["decoder_execution"] = dict(
+            mode=head.shared_config.decoder_execution,
+            rematerialization=False,
+            active_pft_indices=list(head.layout.active_pft_indices),
+            eligible_coordinates=sum(len(value) for value in coordinate_plan.values()),
+            eligible_by_field={key: len(value) for key, value in coordinate_plan.items()},
+        )
         if args.shape_only:
             for sample in samples:
                 jax.eval_shape(objective, shapes, sample)
@@ -131,11 +144,31 @@ def run(args):
         emit("initialize_fresh_parameters")
         parameters = jax.jit(initializer)()
         jax.block_until_ready(parameters)
-        forward = jax.jit(objective)
+        from scripts.hpc.shared_state_anchor_diagnostics import (
+            state_coordinate_owners,
+            summarize_state_anchor,
+        )
+
+        forward = jax.jit(make_shared_daily_objective(
+            runtime, head, template, state_scales, scale_mapping,
+            include_state_diagnostics=True))
+        owners = state_coordinate_owners(head.contract)
+
+        def forward_report(values):
+            return [(loss, {key: value for key, value in auxiliary.items()
+                            if key != "state_diagnostics"}) for loss, auxiliary in values]
+
         emit("initial_canonical_forward")
         initial = [forward(parameters, sample) for sample in samples]
         jax.block_until_ready(initial)
-        emit("initial_forward_completed", initial=initial)
+        attribution = [summarize_state_anchor(auxiliary["state_diagnostics"], state_scales, owners)
+                       for _loss, auxiliary in initial]
+        for detail, (_loss, auxiliary) in zip(attribution, initial, strict=True):
+            detail["matches_state_anchor"] = bool(np.isclose(
+                detail["total"], float(auxiliary["state_change_anchor"]), rtol=1e-10, atol=1e-10))
+        emit("initial_forward_completed", initial=forward_report(initial),
+             state_anchor_attribution=attribution,
+             forward_device_memory=runtime["devices"][0].memory_stats())
         if not all(np.isfinite(float(value)) and hard_ok(aux) for value, aux in initial):
             return reject("initial_forward_physical")
         emit("compile_complete_parameter_gradient")
@@ -207,7 +240,8 @@ def run(args):
         if not optimizer_equal or not all(np.isfinite(float(value)) and hard_ok(aux) for value, aux in replay):
             return reject("final_cross_sample_physical")
         emit("completed", status="passed", classification="one_day_two_update_technical_admission_only",
-             checkpoint=str(checkpoint), checkpoint_optimizer_roundtrip_equal=optimizer_equal, final=replay,
+             checkpoint=str(checkpoint), checkpoint_optimizer_roundtrip_equal=optimizer_equal,
+             final=forward_report(replay),
              device_memory=runtime["devices"][0].memory_stats(),
              next_gate="changed_joint_T7_T30_loss_native_AD_admission_then_bounded_learning")
         return report

@@ -20,6 +20,10 @@ historical/current-method assets; the fresh-litter paid proposal stays on hold.
 The first full-gradient compilation exceeded GPU memory; execution-only
 optimization is planned in `research/daily_coarse_graining/shared_decoder_execution_plan_20260921.md`.
 Historical auxiliary categories do not authorize output-capacity reductions.
+The decoder now exposes original/gather-only/gather-reuse execution for bounded
+parity checks, with no parameter-tree change or decoder rematerialization.
+`scripts/hpc/shared_state_anchor_diagnostics.py` attributes forward-only state
+loss reports without changing the shared objective or its AD outputs.
 
 `scripts/hpc/run_mixed_learning.py` remains the fresh daily/T7/T30 training
 entry. The fresh-litter manifest declares the optional fourth daily coefficient

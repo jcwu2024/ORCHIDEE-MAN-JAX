@@ -38,6 +38,14 @@ count finds8550 potentially active coordinates out of39006 under the current
 declared PFT layout; other coordinates are already structurally masked, not
 judged scientifically unimportant. Actual memory savings remain unmeasured.
 
+Execution steps1+2 are implemented as `gather_reuse`, with `original` and
+`gather_only` retained for bounded equivalence checks. No checkpoint/recompute
+has been added: the user wants it only if measured daily plus T7/T30 memory
+requires it. Finish local output/gradient comparisons and run free-node
+optimized admission; retain the24GiB gradient limit. Forward-only diagnostic
+reporting now attributes the unchanged state anchor to fields/scales. Do not
+silently alter its weights or claim the scaling cause before those results.
+
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid
 within their original scope. Do not interpret the discussion as authorization

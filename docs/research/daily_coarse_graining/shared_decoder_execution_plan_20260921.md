@@ -3,6 +3,10 @@
 2026-09-21. Planning/source audit after the4eeb168 admission memory rejection.
 No replacement architecture or new training is claimed in this document.
 
+User follow-up: implement and measure steps1+2 first. Do not add step3 if
+the real daily plus T7/T30 training fits with sufficient margin. Architectural
+capacity and potentially active outputs remain unchanged.
+
 The user correctly challenged interpreting `auxiliary_supervision` as evidence
 of low long-term importance. That registry is a declared category, not a
 measured sensitivity ranking or proof that a smaller neural decoder suffices.
@@ -143,3 +147,45 @@ If these execution changes cannot fit or have unacceptable runtime, review a
 new architecture explicitly. A lower-capacity auxiliary route, latent bottleneck,
 or output removal changes the hypothesis and requires scientific validation;
 none is automatically authorized by the historical category label.
+
+## Implemented execution and local evidence
+
+`shared_transformer.py` now has three execution policies: `original` for
+bounded reference checks, `gather_only`, and default `gather_reuse`. These
+are execution settings, not new parameter trees. Shared K/V projections remain
+inside the differentiable invocation; the decoder combines all score segments
+before a single softmax and contracts shared value banks without tiling them
+over queries. There is no decoder rematerialization in this implementation.
+
+The admission runner reports the deployed eligible count and retains its24GiB
+gradient-memory gate. Forward-only state diagnostics attribute the existing
+state anchor to groups, canonical fields and largest coordinates; they do not
+change the scalar or add another training objective. The bias decomposition
+retains cross-field terms, so a field's signed bias contribution may be negative.
+Local evidence:
+
+- The canonical static plan retains8550/39006 coordinates across161 fields.
+- Original/gather-only/gather-reuse comparisons pass on a bounded four-field,
+  two-decoder-block model: GPP, maintenance, snow and a full-PFT thermal field
+  with nontrivial local-state indices. Checks include padded chunks, runtime
+  all-PFT masking, permutation and raw-carbon routing.
+- Separate four-field Jacobians agree for neural parameters and continuous
+  inputs; physical-parameter inputs retain zero neural-decoder sensitivity
+  (explicit physical factors remain outside the raw decoder). The final
+  four-objective Jacobian check passed in137.75seconds. Forward tolerances are
+  rtol2e-5/atol2e-6, gradient rtol5e-4/atol2e-5, reflecting FP32 reordered
+  reductions; they were not loosened after a failure.
+- All161 physical output arrays agree with original execution in the canonical
+  small-width head fixture. Four physical-head tests passed in178.72seconds.
+- Trajectory/runtime tests (15) and state-diagnostic/shared-training tests (7)
+  pass. The canonical diagnostic owner map covers all seven state groups; the
+  host decomposition reproduces masked MSE plus squared mean bias, including
+  opposite-sign cross-field terms. Reporting does not change the scalar loss.
+- Ruff and whitespace checks pass. Sol/high implemented the execution module
+  and bounded derivative tests; the lead reviewed/integrated and checked the
+  physical-head and diagnostic paths. Graph transport remains unavailable.
+
+The full original production gradient still has no numerical reference: its
+previous compilation was rejected for memory. Local bounded equivalence does
+not certify full production gradients or scientific learning. Optimized actual
+memory/speed and numerical admission are pending the free-node run.
