@@ -15,6 +15,14 @@ carbon/biomass objectives from the agreed design:
 The active gate is local/free-node implementation admission: canonical forward,
 loss/native AD, physical state checks and two full-network optimizer updates.
 This is not authorization for paid training or scientific acceptance.
+Implementation and local/runtime evidence:
+`research/daily_coarse_graining/shared_transformer_implementation_20260921.md`.
+The full shared tree has75,578,497 parameters. Free test02 actual-data
+calibration/forward-gradient tracing PASSED in416.48seconds. Free gln01 GPU0
+admission is running at4eeb168, wrapperPID107435/Python108244,60minute model-test
+bound. Its actual GPU-environment runtime check passed in76.10seconds.
+Collect its report before any next graph: full gradient, JVP/reverse agreement,
+two updates, physical counters and checkpoint readback. No science pass yet.
 
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid

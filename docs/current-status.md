@@ -24,6 +24,15 @@ are being integrated and checked locally/free-node. This is not a scientific
 result or paid-training authorization. The old1000-update/24.80yuan proposal
 is on hold. Existing evidence below is retained.
 
+Implemented shared tree:75,578,497 fresh trainable parameters,161 learned
+fields/39,006 coordinates; local network, physical-head, loss and legacy
+compatibility tests pass. Immutable4eeb168 actual-data CPU admission PASSED
+on free test02 in416.48seconds. Calibration512 rows/256 point-years, no nonzero
+RH coverage. Free gln01 GPU0 actual gradient/two-update admission is RUNNING,
+wrapper107435/Python108244,60minute model-test bound. The separate actual GPU
+runtime check passed in76.10seconds; real-model numerical admission is pending.
+See `research/daily_coarse_graining/shared_transformer_implementation_20260921.md`.
+
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint
 replay pass; no scientific acceptance. Gradient norms2499/5352 with strong
