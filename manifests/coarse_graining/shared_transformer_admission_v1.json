@@ -40,7 +40,7 @@
   },
   "admission": {
     "updates": 2,
-    "direction_seed": 20260922,
+    "direction": "normalized_full_parameter_gradient",
     "direction_rtol": 0.01,
     "direction_atol": 1e-6,
     "gradient_memory_limit_gib": 24,
