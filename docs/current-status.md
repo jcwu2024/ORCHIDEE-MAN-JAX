@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Shared joint numerical admission is now running on free gln01 GPU1,
+wrapper7359, immutablec2498e4, checkout`shared-joint-c2498e4-full`,240min main
+ceiling plus separate5min runtime check.38 unique local tests and deployed
+report/config prerequisite validation pass; actual shell CPU/GPU argument
+expansions pass. Report prefix`shared-joint-c2498e4-gpu`. It starts fresh and
+tests daily/T7/T30 gradients and two joint updates; no paid/scientific claim.
+See `research/daily_coarse_graining/shared_joint_gpu_admission_20260922.md`.
+
 2026-09-22 collection: both free tasks COMPLETED0. Daily100848 at158192f
 passes complete75,578,497-parameter gradients, JVP/reverse (relative2.3409e-7),
 two full-network updates and hard/checkpoint gates in3857.82s. Peak allocator
@@ -20,8 +28,8 @@ two full-network updates and hard/checkpoint gates in3857.82s. Peak allocator
 TRAIN samples; carbon flux/stock losses improve while state anchors rise.
 This is technical/local learning evidence, not scientific model acceptance.
 CPU45145 at605c941 passes four actual-data recurrent forward-shape and
-first-artifact T7/T30 gradient-shape checks in785.68s. Next finish and run
-bounded free-GPU joint admission; no new job submitted, no paid work.
+first-artifact T7/T30 gradient-shape checks in785.68s. The bounded free-GPU
+joint admission is now7359 above; no paid work.
 See `research/daily_coarse_graining/shared_v3_admission_results_20260922.md`.
 RUNNING descriptions below are retained historical snapshots.
 

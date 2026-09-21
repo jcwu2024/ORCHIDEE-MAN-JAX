@@ -1,6 +1,6 @@
 # Shared daily/T7/T30 numerical admission
 
-Status: implemented and locally checked; free execution authorized by the user's
+Status: free GPU admission RUNNING as wrapper7359; authorized by the user's
 2026-09-22 continuation. No paid task or scientific acceptance.
 
 Daily-v3 numerical admission100848 and recurrent CPU preparation45145 both
@@ -78,4 +78,26 @@ daily/trajectory14 tests also pass (38 unique tests total). Ruff, CLI help
 and shell syntax pass. A Sol/high worker implemented the runner and focused
 tests; parent reviewed the integration and owns launch/acceptance. Forward and
 reverse executables remain cached across updates; no per-component cache purge.
-Actual deployment prerequisite check and full-model GPU results remain pending.
+Actual deployment prerequisite validation passed on free test02 in0.1s,
+as did CPU/GPU target-shell argument expansion. The full-model GPU result
+remains pending.
+
+## Launch
+
+Code c2498e4, independent checkout`runtime/checkouts/shared-joint-c2498e4-full`.
+Wrapper7359 on free gln01 GPU1; rechecked idle immediately before launch.
+Command: `MODE=gpu GPU_DEVICE=1 RUN_TIMEOUT=240m` with this checkout's
+`scripts/hpc/run_shared_recurrent_admission.sh` and output below.
+Report/log prefix`runtime/outputs/diagnostics/shared-joint-c2498e4-gpu`.
+Prerequisite evidence:`outputs/shared-joint-c2498e4-prerequisites.json`.
+No paid job was submitted. The separate deployed GPU runtime check passed
+in36.10s. At wrapper elapsed1m06s, the main runner had passed prerequisites
+and was loading existing TRAIN artifacts. Full-model numerical results are
+still pending.
+
+Deployment note: cloning another shared checkout hit the old server Git's
+alternate-object-store nesting limit before any computation. A9.44MB full
+single-branch bundle and independent clone resolved it. The incomplete
+`shared-joint-c2498e4` directory is not active; no existing checkout/data was
+removed. Avoid further chains of shared clones; use the independent checkout
+or a complete bundle as the source for later immutable checkouts.
