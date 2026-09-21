@@ -13,12 +13,16 @@ OK_LEAK fast endpoints equal the final state in512 existing TRAIN rows, with
 zero difference. Shared-v3 implements decoder-local day-start plus full-TRAIN
 delta coordinates for those eight fields, and source-owned bare cimean=legal
 current annualCa. Canonical targets/losses and75,578,497 parameters are unchanged.
-Local integration/free-node admission is in progress; no v3 GPU result yet.
+At158192f, local20 shared/residual/recovery tests and4 Ca tests pass. Free
+test02 shape admission wrapper32673 COMPLETED0 in371.73s. Free gln01 GPU1
+forward wrapper46671 is RUNNING with30min main-test bound; prefix
+`runtime/outputs/diagnostics/shared-persistent-158192f-forward`. No v3 GPU
+result yet. Read its report/log before another launch; do not repeat CPU work.
 Follow `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md`:
 actual-data CPU shape -> matched two-row free GPU forward -> native AD/two
 updates -> jointT7/T30. No paid launch and no learned-science acceptance.
 
-Latest completion: both free GPU tasks exited0; no current task or paid launch.
+Prior-v2 completion: both original/thermal free GPU tasks exited0.
 Original-transform recovery8004a11 completed2079.96s, both full-network updates,
 directional AD PASS1.511e-7 relative, checkpoint roundtrip/physical checks pass,
 measured allocator peak7.52GiB. Corrected thermal6467453 forward completed603.23s,
@@ -26,10 +30,10 @@ zero updates, all hard counters zero. Same deep-coordinate errors87.36/80.29K
 are now bounded by0.000339/0.000168K; row819 shallow soil still has3.24K error.
 Carbon flux/stock losses are exactly unchanged: this is initialization repair,
 not trained carbon accuracy. Remaining state anchor4054/2603 is99.98% dominated
-by four fuel pools,dead_leaves,cimean. Next make one bounded source/statistics
-check of their output coordinates and daily-change supervision before selecting
-the effective-model AD/two-update compilation; do not downweight them or switch
-backbones. Then joint T7/T30 and a bounded learning contract. Detailed evidence:
+by four fuel pools,dead_leaves,cimean. Their bounded source/statistics audit
+is now complete and its v3 correction is under admission as stated above.
+Do not downweight them or switch backbones. Then joint T7/T30 and a bounded
+learning contract. Detailed prior-v2 evidence:
 `research/daily_coarse_graining/shared_thermal_forward_results_20260921.md`.
 The chronology below retains earlier facts; RUNNING snapshots are superseded.
 

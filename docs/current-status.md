@@ -21,15 +21,21 @@ Bare cimean uses legal current annualCa, including year transitions, rather
 than a vegetation-pooled neural residual. Loss/target contracts, architecture
 and capacity are unchanged; fresh inference/AD gates remain before training.
 See `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md`.
+At158192f, local20 integration/residual/recovery tests and4 Ca boundary tests
+pass; actual-data free test02 shape admission completed371.73s, exit0,
+75,578,497 parameters/161fields/39,006coordinates. Free gln01 GPU1 forward
+wrapper46671 is running under30min main-test bound, with a separate5min
+runtime check; report prefix `shared-persistent-158192f-forward`. No v3
+numerical AD/optimizer/scientific acceptance yet. No paid job submitted.
 
-Latest result: freeGPU recovery8004a11 and centered-thermal forward6467453 both
-COMPLETED0, no active task. Recovery2080s: both updates, directional AD,
+Prior-v2 result: freeGPU recovery8004a11 and centered-thermal forward6467453 both
+COMPLETED0. Recovery2080s: both updates, directional AD,
 hard counters and checkpoint roundtrip/replay pass; allocator peak7.52GiB.
 Centered forward603s: physical counters pass, total losses676.14/434.23,
 thermal group0.318/0.0703; carbon groups exactly unchanged. Initial deep80-87K
 errors removed, shallow error3.24K remains. State anchor4054/2603 is99.98%
-dominated by four fuel pools/dead_leaves/cimean; next bounded source/statistics
-audit before effective-model AD/two updates, then jointT7/T30. No learned-model
+dominated by four fuel pools/dead_leaves/cimean; their now-completed audit
+supports the v3 gate above, then effective-model AD/two updates and jointT7/T30. No learned-model
 or revised numerical-gradient acceptance. See
 `research/daily_coarse_graining/shared_thermal_forward_results_20260921.md`.
 Earlier RUNNING snapshots below are superseded by this result.

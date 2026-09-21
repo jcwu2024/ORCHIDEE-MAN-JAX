@@ -44,3 +44,13 @@ All eight actual owner slices have8,591,565 observed TRAIN values per
 coordinate, matching compact PFT order(0,13), with finite means/variances.
 No full-TRAIN zero-count columns occur in these eight owner slices. Existing
 bounded identity report: `outputs/shared-endpoint-sample-audit-20260921.json`.
+
+Deployed immutable158192f to `runtime/checkouts/shared-persistent-158192f`.
+Actual test02 shape admission wrapper32673 completed0 in371.73s, with full
+forward/gradient shapes and unchanged75,578,497 parameters/161fields/39,006
+coordinates. Report `outputs/shared-persistent-158192f-cpu.json`.
+GPU1 was idle immediately before launch. Free gln01 forward wrapper46671 is
+running with30min main-test bound (plus separate5min runtime check), prefix
+`runtime/outputs/diagnostics/shared-persistent-158192f-forward`. Target-shell
+CPU/GPU dry-runs passed before execution. Inspect completed report first;
+v3 native numerical AD/two updates still follow a valid paired forward.
