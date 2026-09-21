@@ -189,3 +189,22 @@ The full original production gradient still has no numerical reference: its
 previous compilation was rejected for memory. Local bounded equivalence does
 not certify full production gradients or scientific learning. Optimized actual
 memory/speed and numerical admission are pending the free-node run.
+
+## Deployed admission
+
+Immutable code094dfd2 is deployed at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-decoder-094dfd2`.
+CPU/GPU target-shell dry runs and shell syntax passed. Free test02 shape
+admission COMPLETED0 in417.41seconds, confirming75,578,497 trainable parameters,
+161 fields/39006 outputs,8550 static eligible coordinates, active PFT0/13 and
+rematerialization false. This is shape evidence, not a numerical gradient.
+The final dedicated local suite passed3 tests in158.45seconds.
+
+Free gln01 GPU0 wrapper10651/Python11462 is RUNNING with60min main-test ceiling.
+The synthetic GPU environment check PASSED70.95s (JAX0.4.38).
+Logs and JSON use the prefix
+`runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`. Existing24GiB
+compiled-gradient admission limit is unchanged. Do not duplicate the run.
+Full numerical gradients, two updates, actual memory/time and subsequent
+T7/T30 admission remain pending. Local CPU report:
+`outputs/shared-decoder-094dfd2-cpu.json`.

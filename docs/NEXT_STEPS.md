@@ -46,6 +46,15 @@ optimized admission; retain the24GiB gradient limit. Forward-only diagnostic
 reporting now attributes the unchanged state anchor to fields/scales. Do not
 silently alter its weights or claim the scaling cause before those results.
 
+At immutable094dfd2, local equivalence passes and free test02 forward/gradient
+shape admission PASSED in417.41seconds; actual layout confirms8550/39006
+coordinates,75,578,497 trainable parameters, no decoder rematerialization.
+Free gln01 GPU0 admission is RUNNING (wrapper10651/Python11462,60min main-test
+bound). Synthetic GPU runtime check PASSED70.95s. Report/log prefix:
+`runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`.
+Collect its memory, native AD, update and state-field attribution results;
+do not start a duplicate or a paid task. Joint T7/T30 remains the next gate.
+
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid
 within their original scope. Do not interpret the discussion as authorization

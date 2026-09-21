@@ -51,6 +51,14 @@ original/gather-only/combined comparisons precede actual-runtime admission.
 No decoder rematerialization is enabled; use it only if steps1+2 fail measured
 daily and T7/T30 memory requirements. Added host-only state-loss attribution
 does not modify the loss. Optimized GPU memory and learning remain unmeasured.
+At094dfd2, bounded four-field/two-block output and Jacobian comparisons pass
+(3 tests,158.45s), and canonical161-field physical outputs match original
+execution at small width. Free test02 actual-data forward/gradient shape
+admission PASSED417.41s; deployed plan confirms8550 eligible coordinates,
+unchanged75,578,497 parameters. Free gln01 GPU0 wrapper10651/Python11462 is
+RUNNING with60min main-test ceiling; synthetic GPU environment check passed
+in70.95s. Prefix: `runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`.
+No paid submission.
 
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint
