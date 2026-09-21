@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-21.
+Last updated: 2026-09-22.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -21,6 +21,12 @@ public checkpointed rollout to shared science terms with exact joint weights.
 `scripts/hpc/prepare_shared_recurrent_admission.py/.sh` reuses accepted TRAIN
 calibration and checks actual-data forward/gradient shapes on free CPU only;
 it does not run numerical full-model AD or claim GPU/scientific acceptance.
+`scripts/hpc/run_shared_recurrent_admission.py/.sh` owns the subsequent bounded
+numerical daily/T7/T30 admission: fresh initialization, preserved component
+gradients, native directional checks and two full-network joint updates.
+Its CPU mode validates the existing reports/configuration only; the GPU mode
+is free-node-only. It is not a production training or independent science
+evaluation runner. See `shared_joint_gpu_admission_20260922.md` in research docs.
 `run_shared_transformer_admission.py` and its shell launcher own bounded CPU
 shape/scales and free GPU forward/gradient/two-update admission. The admission
 manifest is not a production-training contract. Existing runners below remain
