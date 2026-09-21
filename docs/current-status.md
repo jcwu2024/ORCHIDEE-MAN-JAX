@@ -24,8 +24,13 @@ See `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md`.
 At158192f, local20 integration/residual/recovery tests and4 Ca boundary tests
 pass; actual-data free test02 shape admission completed371.73s, exit0,
 75,578,497 parameters/161fields/39,006coordinates. Free gln01 GPU1 forward
-wrapper46671 is running under30min main-test bound, with a separate5min
-runtime check; report prefix `shared-persistent-158192f-forward`. No v3
+wrapper46671 completed0 in673.68s: all hard counters zero, losses0.45660/0.47949
+and state anchors0.43510/0.21969 after matched coordinate corrections. Carbon
+science terms are exactly unchanged; untrained NPP/respiration errors remain.
+See `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md`.
+Free GPU1 wrapper100848 is running native AD/JVP/two-update admission,
+120min main-test bound plus separate5min runtime check, report prefix
+`shared-persistent-158192f-admission`. No v3
 numerical AD/optimizer/scientific acceptance yet. No paid job submitted.
 
 Prior-v2 result: freeGPU recovery8004a11 and centered-thermal forward6467453 both

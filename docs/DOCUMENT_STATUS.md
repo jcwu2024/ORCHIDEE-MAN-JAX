@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md` | v3 forward COMPLETED0, hard gates pass; full AD/two updates running | Initial losses0.457/0.479, corrected state anchors, unchanged carbon science; no learning acceptance |
 | `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md` | Shared-v3 isolated coordinate/source correction, local/free admission in progress | Eight recurrent readouts, full-TRAIN delta scales, bare cimean=annualCa; unchanged loss/backbone |
 | `research/daily_coarse_graining/shared_remaining_state_source_audit_20260921.md` | Source plus512-row fast-endpoint/final-state identity PASS | All eight OK_LEAK state owners and limits of reusing existing delta statistics |
 | `research/daily_coarse_graining/shared_cimean_source_audit_20260921.md` | Source audit complete | Bare-soil Ca identity, current annual input and cross-year delta semantics |

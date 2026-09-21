@@ -15,9 +15,15 @@ delta coordinates for those eight fields, and source-owned bare cimean=legal
 current annualCa. Canonical targets/losses and75,578,497 parameters are unchanged.
 At158192f, local20 shared/residual/recovery tests and4 Ca tests pass. Free
 test02 shape admission wrapper32673 COMPLETED0 in371.73s. Free gln01 GPU1
-forward wrapper46671 is RUNNING with30min main-test bound; prefix
-`runtime/outputs/diagnostics/shared-persistent-158192f-forward`. No v3 GPU
-result yet. Read its report/log before another launch; do not repeat CPU work.
+forward wrapper46671 COMPLETED0 in673.68s: all hard counters zero; matched
+losses676.14/434.23->0.45660/0.47949, state anchor4054.50/2602.69->0.43510/0.21969.
+Carbon science is exactly unchanged; this repairs initialization, not learning.
+Free GPU1 full native AD/JVP/two-update wrapper100848 is RUNNING from158192f
+under120min main-test bound, prefix
+`runtime/outputs/diagnostics/shared-persistent-158192f-admission`.
+Read its report/log before another launch; do not repeat completed CPU/forward
+checks or start another output audit solely because untrained errors remain.
+Evidence: `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md`.
 Follow `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md`:
 actual-data CPU shape -> matched two-row free GPU forward -> native AD/two
 updates -> jointT7/T30. No paid launch and no learned-science acceptance.
