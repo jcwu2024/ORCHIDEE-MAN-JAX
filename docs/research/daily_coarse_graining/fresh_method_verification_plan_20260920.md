@@ -1,6 +1,10 @@
 # From exploratory continuation to a reproducible training method
 
 Status: preparation draft, not a submitted job or frozen final method.
+The executable first candidate is now specified in
+`fresh_litter_joint_protocol_20260921.md`; use that document for exact
+coefficients, resource segmentation and admission. The open questions below
+record this draft's preparation history, not authority to launch more arms.
 Prepared while array15290789 runs. No running checkout, sampling or objective
 is changed by this document, and no additional paid work is authorized here.
 

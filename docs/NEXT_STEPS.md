@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-21)
 
+Fresh-method preparation now has one executable candidate:
+`research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.
+Keep Attention, fresh seed20260911/fresh AdamW/all109,464,375 parameters;
+apply all daily/T7/T30 objectives including litter from update1. Explicit
+fourth daily coefficient prevents ambiguous loss reporting. The declared
+method remains5415updates; a proposed1000-update resource segment preserves
+the same method and optimizer. Free two-update actual-runtime integration
+and broader evaluation preparation precede any new paid submission.
+The5h/2V100/8CPU proposal costs at most24.80yuan and is NOT yet approved.
+Do not resume the completed inherited four-arm chain by default.
+
 Array15290789_0..3 COMPLETED0:0, all500 new updates and100/250/500
 assessments/checkpoints. Each~2h10m, estimated24.07yuan total. No active task
 or new paid submission. All technical/physical monitoring passes, scientific

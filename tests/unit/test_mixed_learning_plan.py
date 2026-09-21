@@ -2,6 +2,7 @@ import gzip
 import json
 from copy import deepcopy
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -27,6 +28,18 @@ IDENTITY = {
     'schedule_sha256':'schedule',
     'training_contract_sha256':'contract',
 }
+
+
+def test_fresh_litter_recipe_uses_complete_prepared_pool_contract():
+    path = Path(__file__).resolve().parents[2] / 'manifests/coarse_graining/mixed_learning_fresh_litter_v1.json'
+    configuration = json.loads(path.read_text())
+    assert _validate_configuration(configuration) == EXPECTED_EPOCH_UPDATES
+    # Preserve the final padded batch; this method is not the 200-update prefix.
+    assert configuration['sampling'] == EXPECTED_SAMPLING
+    changed = deepcopy(configuration)
+    changed['updates'] = 1000
+    with pytest.raises(ValueError, match='exactly 5415'):
+        _validate_configuration(changed)
 
 
 def _window(prefix,artifact_id,length,start=0):

@@ -1,9 +1,17 @@
 # Code Map
 
-Last updated: 2026-09-20.
+Last updated: 2026-09-21.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
+
+`scripts/hpc/run_mixed_learning.py` remains the fresh daily/T7/T30 training
+entry. The fresh-litter manifest declares the optional fourth daily coefficient
+and all-parameter initialization; the runner records separate litter physical
+diagnostics. `--run-until-update` is a resumable resource boundary, not a new
+method or checkpoint-selection rule. `run_mixed_learning_fresh_litter.sh`
+reuses the prepared data and dual-device engine; its job script is a pending
+paid proposal. Historical exploratory runners do not initialize this method.
 
 `scripts/hpc/litter_parallel_protocol.py` declares the four-arm source100
 experiment, effective optimizer metadata and checkpoint provenance.

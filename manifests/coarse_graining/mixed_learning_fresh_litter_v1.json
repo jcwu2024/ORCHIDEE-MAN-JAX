@@ -1,0 +1,24 @@
+{
+  "schema_version": "mixed_learning_fresh_litter_v1",
+  "model_protocol": "mixed_learning_fresh_litter_model_v1.json",
+  "initialization_seed": 20260911,
+  "updates": 5415,
+  "sampling": {"seed": 20260912, "batch_size": 64, "microbatch_size": 8, "max_artifacts_per_batch": 5, "batch_packing": "fixed_replay_pad"},
+  "recurrent_seed": 20260914,
+  "outer_weights": {"daily": 1.0, "T7": 0.5, "T30": 0.5},
+  "recurrent_weights": {
+    "daily_flux": {"gpp": 0.125, "npp": 0.125, "autotrophic_respiration": 0.125, "heterotrophic_respiration": 0.125},
+    "cumulative_flux": {"gpp": 0.125, "npp": 0.125, "autotrophic_respiration": 0.125, "heterotrophic_respiration": 0.125},
+    "stock_endpoint": {"aboveground_biomass_carbon": 0.025, "belowground_biomass_carbon": 0.025, "canopy_interception_organic_carbon": 0.05},
+    "stock_trajectory": {"aboveground_biomass_carbon": 0.025, "belowground_biomass_carbon": 0.025, "canopy_interception_organic_carbon": 0.05}
+  },
+  "milestones": [0, 100, 250, 500, 1000, 2500, 4000, 5415],
+  "rolling_recovery_interval": 50,
+  "fixed_training_panel": "first_daily_batch_and_first_T7_T30_pair",
+  "development_panel": "unchanged_8_T7_and_8_T30",
+  "compiled_memory_limit_gib": 24,
+  "initialization": "fresh_model_seed_and_fresh_AdamW; no_exploratory_weights",
+  "stop_rule": "one_prepared_pool_pass; resource_segments_preserve_method_and_optimizer; stop_on_technical_or_physical_failure; no_accuracy_early_stop",
+  "checkpoint_selection": "report_all_eight_milestones; update5415_is_final; segment1000_is_intermediate",
+  "claim": "fresh_method_development; not_full_Teacher_epoch_or_final_scientific_acceptance"
+}

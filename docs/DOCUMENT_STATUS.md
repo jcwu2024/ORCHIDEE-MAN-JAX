@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md` | Executable fresh recipe; free integration pending, no paid submission | From-init litter supervision, whole-network joint training, resumable1000-update resource proposal |
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |

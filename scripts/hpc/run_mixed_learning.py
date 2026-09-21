@@ -10,6 +10,7 @@ import json
 import os
 import subprocess
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
@@ -18,20 +19,123 @@ from scripts.hpc import probe_feedback_loss_calibration as calibration
 from scripts.hpc import probe_feedback_loss_updates as admission
 from scripts.hpc import run_fresh_start_one_day as prototype
 
+FRESH_LITTER_SCHEMA = 'mixed_learning_fresh_litter_v1'
+FRESH_LITTER_WEIGHT = 5.221716892123007e-5
+FRESH_LITTER_PROTOCOL = {
+    'weight': FRESH_LITTER_WEIGHT,
+    'penalty': 'pseudo_huber',
+    'scale_source_pft_index': 13,
+    'minimum_scale_gC_m2_day': .01,
+}
+
 
 def validate_configuration(config, model):
-    epoch = config.get('schema_version') == 'mixed_learning_epoch_v1'
-    if (config.get('schema_version') not in ('mixed_learning_v1', 'mixed_learning_epoch_v1')
-            or config.get('updates') != (5415 if epoch else 200)
-            or config.get('milestones') != ([0,200,1000,2500,4000,5415] if epoch else [0,50,100,200])
+    schema = config.get('schema_version')
+    epoch = schema == 'mixed_learning_epoch_v1'
+    fresh_litter = schema == FRESH_LITTER_SCHEMA
+    full_pool = epoch or fresh_litter
+    expected_milestones = ([0,100,250,500,1000,2500,4000,5415] if fresh_litter
+                           else [0,200,1000,2500,4000,5415] if epoch
+                           else [0,50,100,200])
+    initialization_seed = config.get('initialization_seed', 20260911)
+    litter_protocol = model.get('litter_carbon_stock_change')
+    if (schema not in ('mixed_learning_v1', 'mixed_learning_epoch_v1', FRESH_LITTER_SCHEMA)
+            or config.get('updates') != (5415 if full_pool else 200)
+            or config.get('milestones') != expected_milestones
             or config.get('outer_weights') != {'daily': 1., 'T7': .5, 'T30': .5}
             or config.get('sampling') != dict(seed=20260912, batch_size=64,
                 microbatch_size=8, max_artifacts_per_batch=5, batch_packing='fixed_replay_pad')
-            or model.get('seed') != 20260911
+            or initialization_seed not in ((20260911, 20260921) if fresh_litter else (20260911,))
+            or model.get('seed') != initialization_seed
+            or (fresh_litter and 'initialization_seed' not in config)
+            or (not fresh_litter and 'initialization_seed' in config)
+            or (litter_protocol != FRESH_LITTER_PROTOCOL if fresh_litter
+                else litter_protocol is not None)
             or model.get('parameter_count') != 109464375
             or model.get('trainable_scope') != 'all_neural_parameters'
-            or model['optimizer']['schedule'] != ('constant_one_pool_pass' if epoch else 'constant_200_updates')):
+            or model['optimizer']['schedule'] != ('constant_one_pool_pass' if full_pool
+                                                  else 'constant_200_updates')):
         raise ValueError('mixed learning differs from declared fresh learning protocol')
+
+
+def daily_loss_composition(model):
+    """Return the dynamic coefficient vector and its stable report labels."""
+    names = ['base', 'canopy_stock_change', 'litterpart_feedback']
+    weights = [1., model['canopy_carbon_stock_change']['weight'],
+               model['loss']['litterpart_feedback_mse']]
+    litter = model.get('litter_carbon_stock_change')
+    if litter is not None and float(litter['weight']) > 0.:
+        names.append('litter_stock_change')
+        weights.append(float(litter['weight']))
+    return dict(component_names=names, weights=weights,
+                optional_litter_stock_change=len(weights) == 4)
+
+
+def optional_litter_daily_diagnostics(auxiliary):
+    """Summarize the optional physical stock-change term without large arrays."""
+    litter = auxiliary.get('litter_stock_change')
+    if litter is None:
+        return None
+    owners = litter.get('per_owner')
+    if not isinstance(owners, Mapping) or set(owners) != {'aboveground', 'belowground'}:
+        raise ValueError('litter stock-change owner registry drift')
+
+    def constant(value, name):
+        array = np.asarray(value)
+        if array.size < 1 or not np.all(array == array.reshape(-1)[0]):
+            raise ValueError(f'litter stock-change field {name!r} is not constant')
+        scalar = array.reshape(-1)[0]
+        return int(scalar) if np.issubdtype(array.dtype, np.integer) else float(scalar)
+
+    result = dict(
+        unit='gC_m-2_day-1',
+        weight=constant(litter['weight'], 'weight'),
+        scale_source_pft_index=constant(
+            litter['scale_source_pft_index'], 'scale_source_pft_index'),
+        minimum_scale_gC_m2_day=constant(
+            litter['minimum_scale_gC_m2_day'], 'minimum_scale_gC_m2_day'),
+        mean_unweighted_loss=float(np.mean(np.asarray(
+            litter['unweighted_loss'], dtype=np.float64))),
+        mean_weighted_loss=float(np.mean(np.asarray(litter['total'], dtype=np.float64))),
+        hard_invalid_count=int(np.sum(np.asarray(litter['hard_invalid_count']))),
+        hard_empty_count=int(np.sum(np.asarray(litter['hard_empty_count']))),
+        per_owner={},
+    )
+    for name in ('aboveground', 'belowground'):
+        owner = owners[name]
+        valid = np.asarray(owner['valid'], dtype=np.bool_)
+        residual = np.asarray(owner['physical_residual'], dtype=np.float64)
+        selected = residual[np.broadcast_to(valid, residual.shape) & np.isfinite(residual)]
+        result['per_owner'][name] = dict(
+            mean_loss=float(np.mean(np.asarray(owner['loss'], dtype=np.float64))),
+            valid_count=int(np.sum(np.asarray(owner['valid_count']))),
+            expected_count=int(np.sum(np.asarray(owner['expected_count']))),
+            invalid_prediction_count=int(np.sum(np.asarray(
+                owner['invalid_prediction_count']))),
+            invalid_target_count=int(np.sum(np.asarray(owner['invalid_target_count']))),
+            physical_residual_rmse=(float(np.sqrt(np.mean(selected * selected)))
+                                    if selected.size else None),
+        )
+    return result
+
+
+def validate_run_until(args, training_total, *, profiling, completed_updates=None):
+    """Validate a resource segment without making it part of method identity."""
+    endpoint = getattr(args, 'run_until_update', None)
+    if endpoint is None:
+        return
+    if profiling:
+        raise ValueError('run-until-update is for training, not fixed-checkpoint profiling')
+    if args.integration_updates is not None or args.stop_after_update is not None:
+        raise ValueError('run-until-update is separate from integration-only limits')
+    if not 0 < endpoint <= training_total:
+        raise ValueError('run-until-update must be within the declared training budget')
+    if completed_updates is not None and endpoint <= completed_updates:
+        raise ValueError('run-until-update must advance beyond the restored checkpoint')
+
+
+def requires_execution_policy(config):
+    return config.get('schema_version') in ('mixed_learning_epoch_v1', FRESH_LITTER_SCHEMA)
 
 
 def checkpoint_path(output, index=None):
@@ -337,7 +441,7 @@ def run(args):
     precision_components = (() if precision_stage is None
                             else precision_stage_components(precision_stage))
     precision_candidate = getattr(args, 'attention_score_dtype', 'legacy') == 'fp32'
-    if config['schema_version'] == 'mixed_learning_epoch_v1' and execution_policy is None:
+    if requires_execution_policy(config) and execution_policy is None:
         raise ValueError('one-pool-pass training requires the admitted execution policy')
     if precision_candidate and precision_stage is None and execution_policy is None:
         raise ValueError('FP32 Attention requires precision staging or a declared execution policy')
@@ -358,11 +462,12 @@ def run(args):
             raise ValueError('stop-after-update is only for bounded integration recovery')
         if not 0 < args.stop_after_update < limit:
             raise ValueError('stop-after-update must be within and before the integration budget')
-    execution_limit = args.stop_after_update or limit
+    validate_run_until(args, training_total, profiling=profiling)
+    execution_limit = args.stop_after_update or args.run_until_update or limit
     scope = ('performance_profile_not_training' if profiling else
              'integration_only' if args.integration_updates else
              'declared_learning_schedule' if learning_schedule is not None else
-             'one_pool_pass_learning' if config['schema_version'] == 'mixed_learning_epoch_v1'
+             'one_pool_pass_learning' if requires_execution_policy(config)
              else 'bounded_200_update_learning')
     started = time.perf_counter()
     current_head = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
@@ -410,6 +515,10 @@ def run(args):
             resume_data_consumption = previous.get('data_consumption')
         report = previous
         report['prior_elapsed_seconds'] = report.get('prior_elapsed_seconds',0.)+report.get('elapsed_seconds',0.)
+    if args.run_until_update is None:
+        report.pop('resource_segment_endpoint', None)
+    else:
+        report['resource_segment_endpoint'] = args.run_until_update
 
     batches = None
     reporter = MixedLearningReporter(
@@ -492,8 +601,8 @@ def run(args):
         base = calibration._base_weights(graph)
         daily_backward = calibration._make_evaluator(jax,jnp,objective,base)
         daily_forward = jax.jit(calibration._make_batch_objective(jax,jnp,objective,base))
-        coefficients = jnp.asarray((1., model['canopy_carbon_stock_change']['weight'],
-                                    model['loss']['litterpart_feedback_mse']),dtype=jnp.float64)
+        composition = daily_loss_composition(model)
+        coefficients = jnp.asarray(composition['weights'], dtype=jnp.float64)
         recurrent_loss, loss_spec = bind_recurrent_science_loss(runtime,head,config['recurrent_weights'])
         component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),recurrent_loss)
         backward = jax.jit(jax.value_and_grad(component.checkpointed_loss,argnums=0))
@@ -508,7 +617,8 @@ def run(args):
             jnp.all(jnp.isfinite(v)) for v in jax.tree_util.tree_leaves(tree)])))
         norm_fn = jax.jit(lambda tree: jnp.sqrt(sum(jnp.sum(jnp.square(v.astype(jnp.float64)))
                                                   for v in jax.tree_util.tree_leaves(tree))))
-        report.update(recurrent_scales=loss_spec, device=str(runtime['devices'][0]),
+        report.update(recurrent_scales=loss_spec, daily_loss_composition=composition,
+            device=str(runtime['devices'][0]),
             parameter_count=model['parameter_count'], memory_fraction=os.environ.get('XLA_PYTHON_CLIENT_MEM_FRACTION'))
 
         def sample(rows):
@@ -591,6 +701,8 @@ def run(args):
             del saved
         else:
             optimizer = primary_helper(initialize_target_oriented_adamw, parameters)
+        validate_run_until(args, training_total, profiling=profiling,
+                           completed_updates=report['completed_updates'])
         if args.dual_device_training:
             with (jax.default_device(primary_device),
                   device_helper_cache(primary_device)):
@@ -653,8 +765,18 @@ def run(args):
                 aux_rows.append(aux)
             aux = admission._concatenate_auxiliary(jax,aux_rows)
             hard = calibration._hard_summary(aux['hard'],batch_size=len(rows))
+            litter_diagnostics = optional_litter_daily_diagnostics(aux)
+            if litter_diagnostics is not None and (
+                    hard['totals'].get('litter_change_invalid')
+                    != litter_diagnostics['hard_invalid_count']
+                    or hard['totals'].get('litter_change_empty')
+                    != litter_diagnostics['hard_empty_count']):
+                raise ValueError('litter stock-change auxiliary and hard counts differ')
+            diagnostics = calibration._diagnostics(jax,aux,batch_size=len(rows))
+            if litter_diagnostics is not None:
+                diagnostics['litter_stock_change'] = litter_diagnostics
             result = dict(mean_loss=float(np.mean(losses)),count=len(rows),hard=hard,
-                diagnostics=calibration._diagnostics(jax,aux,batch_size=len(rows)),
+                diagnostics=diagnostics,
                 mean_terms=np.mean(np.asarray(aux['terms']),axis=0).tolist())
             if not np.all(np.isfinite(losses)) or not hard['all_zero']:
                 report['failed_daily_panel'] = result
@@ -1334,7 +1456,7 @@ def run(args):
                 monitor_milestone(index+1)
             elif (index+1)%config['rolling_recovery_interval']==0 or index+1==execution_limit:
                 save()
-            if args.integration_updates and index+1==execution_limit:
+            if (args.integration_updates or args.run_until_update is not None) and index+1==execution_limit:
                 monitor_milestone(index+1)
         if dual_trainer is not None:
             dual_trainer.close()
@@ -1383,6 +1505,8 @@ def parser():
     result.add_argument('--integration-updates',type=int,choices=(1,2,3))
     result.add_argument('--stop-after-update',type=int,
                         help='integration-only recoverable early stop; not part of method identity')
+    result.add_argument('--run-until-update',type=int,
+                        help='resource segment endpoint; resumable and excluded from method identity')
     result.add_argument('--resume',type=Path)
     result.add_argument('--report-interval',type=int,default=25,
                         help='full report every N updates plus all checkpoints/monitors; '

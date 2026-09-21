@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+2026-09-21 fresh-method implementation: one Attention/direct-joint recipe
+is declared in `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.
+All parameters and AdamW initialize afresh, with optional litter supervision
+active from update1. The shared batch composer already retained this term;
+the main runner now makes its fourth coefficient and physical diagnostics
+explicit. A resumable resource limit does not alter the5415-update method.
+Free actual-model integration and broader evaluation are pending; no new
+scientific pass or paid submission is claimed.
+
 Array15290789_0..3 COMPLETED0:0: A2:10:23,B/C2:10:43,D2:11:27. All500
 new updates, three milestones/checkpoints, technical/physical passes, no
 science guard stop, scientific acceptance false. Total tariff estimate24.07

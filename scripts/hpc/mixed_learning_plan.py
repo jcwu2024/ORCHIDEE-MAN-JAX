@@ -57,6 +57,7 @@ def _validate_configuration(configuration):
     expected_updates = {
         'mixed_learning_v1':EXPECTED_UPDATES,
         'mixed_learning_epoch_v1':EXPECTED_EPOCH_UPDATES,
+        'mixed_learning_fresh_litter_v1':EXPECTED_EPOCH_UPDATES,
     }.get(schema_version)
     if expected_updates is None:
         raise ValueError('mixed-learning protocol schema drift')
@@ -169,7 +170,8 @@ def _epoch_daily_coverage(batches, sampler, *, batch_size):
 def load_plan(args, configuration):
     """Load, validate and bind a complete bounded metadata-only plan."""
     updates = _validate_configuration(configuration)
-    epoch_protocol = configuration['schema_version'] == 'mixed_learning_epoch_v1'
+    epoch_protocol = configuration['schema_version'] in (
+        'mixed_learning_epoch_v1', 'mixed_learning_fresh_litter_v1')
     report_path = Path(args.catalogue_report).resolve()
     schedule_path = Path(args.recurrent_schedule).resolve()
     selection_path = Path(args.selection).resolve()
