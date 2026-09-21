@@ -8,6 +8,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-21)
 
+Latest completion: both free GPU tasks exited0; no current task or paid launch.
+Original-transform recovery8004a11 completed2079.96s, both full-network updates,
+directional AD PASS1.511e-7 relative, checkpoint roundtrip/physical checks pass,
+measured allocator peak7.52GiB. Corrected thermal6467453 forward completed603.23s,
+zero updates, all hard counters zero. Same deep-coordinate errors87.36/80.29K
+are now bounded by0.000339/0.000168K; row819 shallow soil still has3.24K error.
+Carbon flux/stock losses are exactly unchanged: this is initialization repair,
+not trained carbon accuracy. Remaining state anchor4054/2603 is99.98% dominated
+by four fuel pools,dead_leaves,cimean. Next make one bounded source/statistics
+check of their output coordinates and daily-change supervision before selecting
+the effective-model AD/two-update compilation; do not downweight them or switch
+backbones. Then joint T7/T30 and a bounded learning contract. Detailed evidence:
+`research/daily_coarse_graining/shared_thermal_forward_results_20260921.md`.
+The chronology below retains earlier facts; RUNNING snapshots are superseded.
+
 The user has approved implementation of the consolidated shared Transformer.
 Implement explicit process readouts, source ownership and long-term
 carbon/biomass objectives from the agreed design:
@@ -59,11 +74,11 @@ Synthetic GPU runtime check PASSED70.95s. Report/log prefix:
 Resumption at8004a11 reuses the saved gradient, parameters, calibration and
 initial forwards. Local recovery tests pass (3 tests,8.31s); free test02
 saved-gradient structure check PASSED in215.51s. Free gln01 GPU0 recovery
-wrapper25784 is RUNNING with a90min main-test bound, only JVP/reverse and two
+wrapper25784 COMPLETED0 under its90min main-test bound, JVP/reverse and two
 optimizer updates; prefix `runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`.
 Python26637 reached directional PASS at1325.46s, relative difference1.511e-7;
-update1 completed at1763.7s and update2/checkpoint completion is still pending.
-Do not relaunch or mutate its immutable checkout. Concurrently audit dominant
+both updates and checkpoint checks completed at2079.96s.
+Do not relaunch its completed admission. The earlier audit addressed dominant
 thermal output/scaling: ptn+tdeep account for98.95% of the
 state anchor, with deep-soil errors80-87K amplified by~0.000119K change scales.
 Do not hide this with a weight reduction. No paid task is submitted.
@@ -74,7 +89,7 @@ TRAIN means/scales, producing order-one normalized tendencies and80-87K errors.
 All64 eligible ptn coordinates have observed finite/interior means and valid
 scales; all384 unit-scale fallbacks are inactive PFT coordinates. Implement
 the shared-only TRAIN-centered bounded transform under v2, preserving v1 for
-the running recovery. Plan and matched-forward gates:
+the original recovery. Plan and matched-forward gates:
 `research/daily_coarse_graining/shared_thermal_output_plan_20260921.md`.
 Keep loss weights and duplicate state terms unchanged in this isolated test.
 Local tests -> free CPU shape -> free GPU two-row forward -> revised AD/two
@@ -83,10 +98,11 @@ At6467453, local shared-head/recovery9 tests pass177.24s; additional recovery
 forward-only/v1-policy4 tests pass3.37s. Target-shell CPU/GPU dry runs pass.
 Free test02 shape admission wrapper18250 COMPLETED0 in352.60s, prefix
 `runtime/outputs/diagnostics/shared-thermal-6467453-cpu`. Free gln01 GPU1 v2
-forward-only wrapper30682 is RUNNING with30min bound, prefix
+forward-only wrapper30682 COMPLETED0 in603.23s within30min bound, prefix
 `runtime/outputs/diagnostics/shared-thermal-6467453-forward`. It uses the same
 fresh seed/two TRAIN rows, no optimizer updates; compare temperature errors and
-all loss/physical groups before revised AD admission. Do not relaunch it.
+all loss/physical groups before revised AD admission. Its paired results are
+in the latest completion above; do not relaunch it.
 Source/statistics evidence:
 `research/daily_coarse_graining/shared_thermal_output_audit_20260921.md`.
 

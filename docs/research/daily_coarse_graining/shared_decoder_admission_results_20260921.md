@@ -1,5 +1,11 @@
 # Shared decoder execution: memory passes, admission incomplete
 
+Update: the original094dfd2 attempt below timed out; its saved-gradient
+recovery8004a11 subsequently COMPLETED0 in2079.96s, both updates and restored
+checkpoint physical checks pass, measured allocator peak7.52GiB. Full result:
+`shared_thermal_forward_results_20260921.md`. Historical launch snapshots below
+do not indicate an active process.
+
 Code094dfd2, free gln01 GPU0. Wrapper10651/Python11462 have exited.
 The shell log ends with `run_exit_status=124`: the60min main-test limit
 interrupted directional-JVP compilation after a full reverse gradient had

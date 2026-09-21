@@ -13,6 +13,18 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest result: freeGPU recovery8004a11 and centered-thermal forward6467453 both
+COMPLETED0, no active task. Recovery2080s: both updates, directional AD,
+hard counters and checkpoint roundtrip/replay pass; allocator peak7.52GiB.
+Centered forward603s: physical counters pass, total losses676.14/434.23,
+thermal group0.318/0.0703; carbon groups exactly unchanged. Initial deep80-87K
+errors removed, shallow error3.24K remains. State anchor4054/2603 is99.98%
+dominated by four fuel pools/dead_leaves/cimean; next bounded source/statistics
+audit before effective-model AD/two updates, then jointT7/T30. No learned-model
+or revised numerical-gradient acceptance. See
+`research/daily_coarse_graining/shared_thermal_forward_results_20260921.md`.
+Earlier RUNNING snapshots below are superseded by this result.
+
 2026-09-21 user-approved architecture implementation supersedes the pending fresh-litter
 submission. The user requests a simple, coherent architecture and a training
 method judged by long-term biomass/productivity/respiration, with discussion

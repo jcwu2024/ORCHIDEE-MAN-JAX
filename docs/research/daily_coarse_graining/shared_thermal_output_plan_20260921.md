@@ -1,7 +1,8 @@
 # Shared thermal output scaling: bounded correction
 
-Status: TRAIN audit supports the correction; implementation and local tests
-pass. Actual forward/gradient/update admission remains pending.
+Status: TRAIN audit, local tests and actual GPU forward pass. Revised numerical
+gradient/update admission remains pending. Completion and remaining issues:
+`shared_thermal_forward_results_20260921.md`.
 This is not a new backbone or paid training plan.
 
 ## Mechanism and scope
@@ -88,4 +89,5 @@ forward/gradient shape admission COMPLETED0 in352.60s, no change in parameter
 count. Free gln01 GPU1 forward-only wrapper30682 is running with30min main-test
 limit, prefix `runtime/outputs/diagnostics/shared-thermal-6467453-forward`.
 The same fresh seed and two TRAIN rows are used; zero updates are requested.
-Actual forward outcome remains pending.
+Actual forward COMPLETED0 in603.23s; the completion report above supersedes
+this launch snapshot.
