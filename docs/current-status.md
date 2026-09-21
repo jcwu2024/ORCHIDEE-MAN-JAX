@@ -33,6 +33,16 @@ Free GPU1 wrapper100848 is running native AD/JVP/two-update admission,
 `shared-persistent-158192f-admission`. No v3
 numerical AD/optimizer/scientific acceptance yet. No paid job submitted.
 
+Parallel preparation at605c941 implements shared daily/T7/T30 loss composition
+and canonical recurrent bindings without changing the running daily checkout.
+26 local tests and Ruff pass. Free test02 wrapper45145 is running the actual
+TRAIN CPU shape/gradient-graph preparation with a20min ceiling, report prefix
+`shared-recurrent-605c941-cpu`. At3m50s parameter shapes were complete; window
+checks were pending. No numerical recurrent gradient or learning claim follows
+from these CPU checks. Finish the GPU admission runner after daily admission
+and this preparation pass; do not duplicate100848 or launch paid work.
+See `research/daily_coarse_graining/shared_recurrent_preparation_20260921.md`.
+
 Prior-v2 result: freeGPU recovery8004a11 and centered-thermal forward6467453 both
 COMPLETED0. Recovery2080s: both updates, directional AD,
 hard counters and checkpoint roundtrip/replay pass; allocator peak7.52GiB.

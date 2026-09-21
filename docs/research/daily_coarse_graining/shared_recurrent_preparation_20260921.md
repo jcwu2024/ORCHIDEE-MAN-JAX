@@ -54,3 +54,13 @@ Ruff passed. This includes native checkpoint/plain AD on a small synthetic
 recurrence and exact joint value/gradient composition. These are not numerical
 full75.58M model gradient results. Seven-stock nonnegativity uses the physical
 trajectory masks, separately from the common-initial supervision masks.
+
+Execution snapshot: immutable605c941 deployed to
+`runtime/checkouts/shared-recurrent-605c941`; actual target-shell dry-run passed.
+Free test02 wrapper45145 runs with20min timeout, report/log prefix
+`runtime/outputs/diagnostics/shared-recurrent-605c941-cpu`.
+At3m50s elapsed it had loaded the existing TRAIN artifacts and constructed
+parameter shapes (157.9s); daily and window graph checks were still pending.
+This is a RUNNING snapshot, not a passed result. The GPU admission runner is
+not yet complete. Concurrent daily wrapper100848 was still running at43m52s,
+in full-gradient compilation, with no numerical AD/update outcome yet.
