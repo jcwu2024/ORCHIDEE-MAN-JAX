@@ -11,11 +11,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 Daily-only free cache diagnostic108553 COMPLETED0 in462.275s: bootstrap224.85s,
 lowering233.17s; same daily key as the earlier free benchmark,34.5MB cache
 entry exists/readable, no backend compile or executable load attempted.
-User approved the1GPU/8CPU/64GiB/45min/2.07yuan comparison on an idle node.
-Paid15329407 RUNNING onibc13b03n03 from21:31:01, hard end22:16:01; initial
-node load0.16, GPU empty. Report/log prefix
-`runtime/outputs/diagnostics/shared-compile-15329407`. Collect actual cache
-loading/compilation counters and timing before another full benchmark.
+Paid15329407 COMPLETED0:0 in8m57s, estimated0.41yuan: the same daily cache
+loaded successfully onibc13b03n03, cache hits1/backend compiles0. Bootstrap
+214.24s, lowering220.39s, cache/load/finalization70.67s. This proves usable
+cross-node daily caching, not a causal attribution of earlier slowdowns to
+contention, nor microbatch/dual speedup. Both diagnostics have finished.
+Next prepare a staged/resumable benchmark that preserves reference components,
+records actual cache reuse and measures micro2 first under a separate bound.
+Reuse this completed evidence; no further standalone daily cache probe by default.
+Do not submit the original all-in-one benchmarks unchanged. New microbatch
+compilation still needs its own budget. No new job is submitted in this collection.
 Read `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md`.
 
 Both execution probes have now exited124 during reference work: free38944
@@ -27,7 +32,7 @@ are superseded. See `research/daily_coarse_graining/shared_execution_timeout_res
 Next diagnose compilation/cache reuse before another full benchmark; do not
 resubmit either unchanged. Original100-update learning/science evidence is
 unchanged. Runtime archival is paused. No GPU job remains from these two old runs;
-the approved daily-only diagnostic above is the sole new paid job.
+the approved daily-only diagnostic above has also completed.
 
 Runtime housekeeping is complete:55 inactive working trees archived; total
 runtime entries351386 ->216367. Both active GPU sources and all Git dependency

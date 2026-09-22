@@ -15,9 +15,12 @@ describe an earlier gate without being rewritten.
 
 Free daily cache diagnostic108553 COMPLETED0 in462.275s: found the exact prior
 free benchmark daily key and readable34.5MB cache; no backend compile attempted.
-Lowering alone233.17s. Approved idle-node daily-only paid comparison15329407
-RUNNING onibc13b03n03 from21:31:01 to at most22:16:01,1GPU/8CPU/45min,
-2.07yuan ceiling. Initial load0.16 and allocated GPU empty. Read
+Lowering alone233.17s. Paid15329407 COMPLETED0:0 in8m57s onibc13b03n03,
+estimated0.41yuan. It loaded that same daily cache with0 backend compiles:
+bootstrap214.24s, lowering220.39s, cache/load/finalization70.67s. Cross-node
+daily caching is usable; earlier contention causality and candidate performance
+are not established. Next prepare staged/resumable micro2 execution measurement;
+both diagnostics have finished and no further job is launched. Read
 `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md`.
 
 Execution probes38944 and15328832 have ended with launcher timeout124; paid
