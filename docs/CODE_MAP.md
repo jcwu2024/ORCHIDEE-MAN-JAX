@@ -5,7 +5,9 @@ Last updated: 2026-09-22.
 `probe_shared_execution.py` now supports persistent reference/micro2/micro4
 stages. `run_shared_staged_execution.sh` prepares on free CPU, loads cached
 reference gradients on free GPU, or measures one approved paid candidate.
-`job_shared_staged_execution.sh` declares the pending1GPU/8CPU/2h micro2 request.
+`job_shared_staged_execution.sh` requires STAGE=micro2 or micro4 and declares
+one1GPU/8CPU/2h job. Two independent submissions will measure them in parallel,
+sharing the completed read-only reference and writing distinct candidate files.
 Partial reference files survive interruption. Both scalar and candidate warm
 timings execute the full joint update; saved gradients are not timing shortcuts.
 

@@ -20,7 +20,10 @@ reference RUNNING, wrapper6597,22:16:54CST September22,40min limit, immutable
 `runtime/outputs/diagnostics/shared-staged-08e7f48-free`.
 Persistent components and complete proposal go to
 `runtime/outputs/diagnostics/shared-staged-source100-v1`.
-New micro2 paid allocation remains unapproved/unsubmitted, maximum5.52yuan.
+User clarified micro2 and micro4 should run concurrently on separate GPUs,
+preferably separate idle nodes. Each uses the completed shared reference and
+retimes scalar32 locally. Two proposed jobs remain unapproved/unsubmitted,
+each1GPU/8CPU/64GiB/2h and5.52yuan, combined11.04yuan maximum.
 No measured microbatch speedup yet; no architecture/loss change. The following
 preparation-only snapshots are historical; see the staged execution plan.
 

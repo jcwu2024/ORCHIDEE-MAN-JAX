@@ -16,9 +16,13 @@ RUNNING, wrapper6597, started22:16:54CST September22,40min cap. Report/log:
 Collect the saved daily/T7/T30 components and full reference from
 `runtime/outputs/diagnostics/shared-staged-source100-v1`; preserve partial
 results if interrupted. Reuse cached graphs; a cache miss is reported without
-starting a cold reference compile. Then request the prepared micro2 allocation:
-1V100/8CPU/64GiB/2h,5.52yuan maximum, explicit idle node. No new paid job is
-approved/submitted. micro4 follows measured micro2 evidence, not automatically.
+starting a cold reference compile. User clarified that micro2 and micro4 should
+run in parallel on separate GPUs, preferably two idle nodes to avoid host CPU
+contention. Each job reads the completed shared reference and writes only its
+own candidate state/report, retiming scalar32 in its own allocation. Prepare
+two independent1V100/8CPU/64GiB/2h jobs,5.52yuan each,11.04yuan total maximum.
+No new paid job is approved/submitted. Each candidate compilation has its own
+2h cap; preserve completed results if time expires.
 Read`research/daily_coarse_graining/shared_staged_execution_plan_20260922.md`.
 The earlier next-action snapshots below are superseded by this live stage.
 

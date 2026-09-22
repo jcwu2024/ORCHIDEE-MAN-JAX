@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=shared-micro2
+#SBATCH --job-name=shared-micro
 #SBATCH --partition=gnall
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -14,6 +14,8 @@
 set -euo pipefail
 # Select an idle node with sbatch --nodelist after approval and occupancy check.
 export CODE_ROOT=${CODE_ROOT:?set approved immutable checkout}
-export MODE=gpu STAGE=micro2 RUN_TIMEOUT=110m
+export MODE=gpu RUN_TIMEOUT=110m
+export STAGE=${STAGE:?set micro2 or micro4 for this independent job}
+case "$STAGE" in micro2|micro4) ;; *) exit 2 ;; esac
 export OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-staged-${SLURM_JOB_ID}.json
 exec bash "$CODE_ROOT/scripts/hpc/run_shared_staged_execution.sh" "$@"

@@ -1,4 +1,17 @@
-# Resumable shared scalar32 versus micro2 execution measurement
+# Resumable shared scalar32 versus micro2/micro4 execution measurement
+
+User clarification2026-09-22: run micro2 and micro4 in parallel on separate
+GPUs, preferably separate idle nodes to reduce host CPU contention. This
+supersedes the original decision gate between2 and4 below. Submit two separate
+jobs with STAGE=micro2 and STAGE=micro4. Each requests1V100/8CPU/64GiB/2h,
+5.52yuan maximum; combined worst-case11.04yuan. Both read the completed
+reference; each writes a distinct micro2.pkl/micro4.pkl and job-specific log
+and report. Both retime scalar32 in their own allocation for a fair comparison.
+No shared reference writer remains when the parallel jobs launch. The active
+free reference checkout08e7f48 remains unchanged. Paid submission is pending
+the completed reference and resource approval. Completion within each2h cap
+is not guaranteed. No numerical graph change is introduced by this launcher
+selection. The original single-candidate budget below is historical.
 
 The user requested prompt continuation after15329407 demonstrated a usable
 cross-node daily cache hit. Retain the scientific contract in
@@ -72,6 +85,8 @@ percentage is not the Python child's utilization. Confirm completion from the
 JSON status and log`run_exit_status`, not process absence alone.
 
 After reference completion, the prepared paid command is
-`CODE_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-v1 /rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n03 scripts/hpc/job_shared_staged_execution.sh`
-from that checkout, subject to user approval and a fresh idle-node check.
+`STAGE=micro2 CODE_ROOT=<new immutable checkout> /rmprog/slurm/v22.05.7/bin/sbatch --nodelist=<idle node A> scripts/hpc/job_shared_staged_execution.sh`
+and the same command with STAGE=micro4 and idle node B, from the new deployed
+checkout after reference completion, subject to resource approval and fresh
+occupancy checks. Do not mutate the running08e7f48 checkout.
 No new paid allocation is approved or submitted. No micro2 speedup is claimed.
