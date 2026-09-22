@@ -8,6 +8,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+User approved immediate paid parallel submission. Jobs15329444(micro2,
+ibc13b03n03) and15329445(micro4,ibc13b03n04) are SUBMITTED/HELD pending the
+free reference6597, each1V100/8CPU/64GiB/2h, combined11.04yuan maximum.
+Both selected nodes were IDLE,CPUAlloc0/112,CPULoad0.01. Immutable source
+6302071:`runtime/checkouts/shared-staged-parallel-v1`. Free test02 helper36324
+automatically releases both upon reference JSON status completed; otherwise
+it leaves them held after error/cache-miss or45min. No paid allocation is used
+while held. Helper log:`runtime/outputs/diagnostics/shared-parallel-release-15329444-15329445.log`.
+Collect each`runtime/outputs/diagnostics/shared-staged-<jobid>.json/.log`.
+Do not resubmit or request approval again for these two authorized jobs.
+The unsubmitted/unapproved wording below is superseded by this launch record.
+
 Staged benchmark08e7f48 is deployed in`runtime/checkouts/shared-staged-v1`.
 Local/deployed25 focused tests pass; actual CPU preparation passes41.5s;
 CPU/free/paid shell argument expansions pass. Free gln01 GPU1 reference is

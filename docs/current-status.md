@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Paid parallel jobs15329444(micro2,ibc13b03n03) and15329445(micro4,
+ibc13b03n04) submitted with user approval22:25:27/28CST September22.
+Each1V100/8CPU/64GiB/2h, combined11.04yuan maximum; immutable6302071 at
+`runtime/checkouts/shared-staged-parallel-v1`. Both are held pending the free
+reference6597 and consume no allocation yet. Free test02 helper36324 releases
+both automatically on completed reference; failures leave them held. Selected
+nodes were IDLE withCPULoad0.01. The earlier pending-approval text is superseded.
+
 Staged benchmark08e7f48: local/deployed25 tests pass; source100 CPU preparation
 passes41.5s; actual free/paid argument expansion passes. Free gln01 GPU1
 reference RUNNING, wrapper6597,22:16:54CST September22,40min limit, immutable

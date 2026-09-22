@@ -1,5 +1,24 @@
 # Resumable shared scalar32 versus micro2/micro4 execution measurement
 
+## Authorized parallel submission
+
+User approved immediate paid submission. On2026-09-22 22:25:27/28CST submitted
+15329444 micro2 toibc13b03n03 and15329445 micro4 toibc13b03n04, both with
+`--hold` pending free reference6597. Each1V100/8CPU/64GiB/2h, combined maximum
+11.04yuan. Both nodes wereIDLE,CPUAlloc0/112,CPULoad0.01. Source6302071 at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-parallel-v1`.
+Actual deployed micro4 shell expansion and earlier micro2 expansion pass.
+Scheduler records confirm nodes, resources, time limit and workdir.
+
+Free test02 helper36324 executes`release_shared_benchmarks.sh` and polls the
+atomic reference JSON every20s, releasing both jobs throughcln01 only after
+status completed. It leaves them held on reference failure or after45min.
+The login-node SSH hop was checked. Held jobs use no paid GPU allocation.
+Helper log:`runtime/outputs/diagnostics/shared-parallel-release-15329444-15329445.log`.
+Paid report/log prefix:`runtime/outputs/diagnostics/shared-staged-<jobid>`.
+No further approval is required to release these authorized jobs. Earlier
+unsubmitted/unapproved wording below records the preparation phase.
+
 User clarification2026-09-22: run micro2 and micro4 in parallel on separate
 GPUs, preferably separate idle nodes to reduce host CPU contention. This
 supersedes the original decision gate between2 and4 below. Submit two separate
