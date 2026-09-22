@@ -8,6 +8,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Daily-only cache diagnostic is implemented and RUNNING as free GPU1 wrapper
+108553 (15min ceiling), report/log prefix
+`runtime/outputs/diagnostics/shared-compile-key-free-20260922`.
+It records real JAX cache keys and stops before full-gradient backend compilation.
+Local6 tests, actual JAX0.4.38 CPU self-tests and target-shell expansion pass.
+Prepared idle-node paid fallback is1GPU/8CPU/64GiB/45min,2.07yuan ceiling,
+not yet submitted. Read `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md`.
+
+Both execution probes have now exited124 during reference work: free38944
+compiled daily/T7/T30 in175.03min and entered reference measurement just before
+the180min limit; paid15328832 FAILED124:0 after02:51:39, still compiling GPU0
+T30. Neither reached candidate parity/timing or retained a training update.
+No OOM/numerical exception is logged. The earlier RUNNING snapshots below
+are superseded. See `research/daily_coarse_graining/shared_execution_timeout_results_20260922.md`.
+Next diagnose compilation/cache reuse before another full benchmark; do not
+resubmit either unchanged. Original100-update learning/science evidence is
+unchanged. Runtime archival is paused. No GPU job remains from these two runs.
+
 Runtime housekeeping is complete:55 inactive working trees archived; total
 runtime entries351386 ->216367. Both active GPU sources and all Git dependency
 stores remain in place. Before using an old marked checkout, restore it as

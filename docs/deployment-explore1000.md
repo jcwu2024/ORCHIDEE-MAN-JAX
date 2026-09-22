@@ -30,6 +30,18 @@ the same process and allocation, and record the node, allocated CPUs, thread
 environment, JAX version, command, and workload. A test-node wall time is only
 diagnostic because other users can preempt effective CPU time.
 
+User preference2026-09-22: before compilation/performance probes on paid GPUs,
+inspect `sinfo` and `scontrol show node` for occupancy and CPU load. Prefer an
+idle node and select it explicitly with `--nodelist` when available within the
+approved allocation. A free GPU on a CPU-busy node is not equivalent to an idle
+node for XLA compilation. At job start record the actual CPU allocation and
+affinity, host load and visible GPU processes alongside compiler/cache timings.
+Selection of an idle node does not prevent Slurm placing later jobs there;
+whole-node exclusivity is a separate resource/cost choice, not the default.
+Keep existing paid approval rules and do not infer historical contention from
+current load alone. If no node is idle, report that fact when preparing the
+bounded request rather than calling a partially free node idle.
+
 The first Teacher capture benchmark is defined by
 `scripts/hpc/slurm_teacher_cpu_benchmark.sh`: one `cnall` task, 8 allocated
 CPUs, a one-hour limit, one cold capture, and three in-process hot repeats over

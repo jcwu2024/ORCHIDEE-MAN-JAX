@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Execution probes38944 and15328832 have ended with launcher timeout124; paid
+Slurm elapsed02:51:39, estimated charge14.19yuan. Free scalar-reference
+compilation alone took175.03min versus19.51min in the previous learning run;
+per-graph compiled memory sizes match. No microbatch/dual speedup or real-model
+candidate parity was measured. No OOM/numerical exception appears in the logs.
+The RUNNING snapshots below are historical. Diagnose compilation/cache reuse
+before repeating; no new paid submission. Evidence and exact limits:
+`research/daily_coarse_graining/shared_execution_timeout_results_20260922.md`.
+
 User now prioritizes execution optimization before expanding shared learning.
 The32 sequential daily gradients cost14.91s, T7/T30 together13.66s. Implement
 matched micro2/4 vs scalar32 full-gradient/update/timing benchmark at source100;

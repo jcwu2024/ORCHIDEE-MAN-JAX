@@ -20,9 +20,11 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md` | Free key-only wrapper108553 RUNNING; paid daily-only comparison prepared, not submitted | Distinguish lowering, cache lookup, cold compile and host contention |
 | `runtime-archival-20260922.md` |55 inactive code working trees archived and verified; runtime216367 entries | Restore historical source paths; protect Git dependencies and active runs; manage file quota |
-| `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md` | Approved and RUNNING15328832 at8cce49e;2GPU/8CPU/3h, max14.88yuan | Same-method gradients/two changing-data updates, full timing, memory and cost |
-| `research/daily_coarse_graining/shared_execution_plan_20260922.md` | Micro2/4 benchmark RUNNING38944 at0507e1b; local/deployed tiny tests pass | Same checkpoint/data/gradient/update comparison, memory/speed; dual preparation concurrent |
+| `research/daily_coarse_graining/shared_execution_timeout_results_20260922.md` | Both probes exited124 during reference work; no candidate performance result | Compilation-time regression, preserved partial evidence and next diagnosis |
+| `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md` |15328832 timed out before dual comparison; result supersedes RUNNING snapshot | Same-method gradients/two changing-data updates, full timing, memory and cost |
+| `research/daily_coarse_graining/shared_execution_plan_20260922.md` |38944 timed out before micro2/4; result supersedes RUNNING snapshot | Same checkpoint/data/gradient/update comparison, memory/speed |
 | `research/daily_coarse_graining/shared_learning_results_20260922.md` |87042 COMPLETED100 updates,97.07min; learning visible, scientific accuracy still insufficient | Fixed physical improvements, biomass-change scale, canopy/litter regressions, runtime and next coverage extension |
 | `research/daily_coarse_graining/shared_learning_runtime_fix_20260922.md` |83621 API error at0 updates; fixed4408daf, deployed tiny monitor tests pass, recovery87042 RUNNING | Same fresh initialization, unchanged method; collect learning panels |
 | `research/daily_coarse_graining/shared_learning_protocol_20260922.md` | Fresh100-update free pilot protocol;83621 failed at0, same-method recovery87042 RUNNING |32 daily rows, oneT7/oneT30, fixed fit and48 held-out development windows, milestones0/20/100 |
