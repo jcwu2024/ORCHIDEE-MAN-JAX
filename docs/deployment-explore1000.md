@@ -50,6 +50,14 @@ accepted as representative.
 
 ## Checkout Transfer
 
+Completed experimental working trees may be archived to control filesystem
+entry count. Consult `runtime-archival-20260922.md` and its explicit manifest
+before reusing a historical checkout path. An `ARCHIVED_WORKING_FILES.md`
+marker means restore that tree from the named archive first. Keep shared Git
+object stores and active task paths intact; do not equate an old checkout date
+with permission to delete dependencies. Reuse existing immutable checkouts
+when their code is unchanged instead of creating another full working tree.
+
 GitHub access from the cluster is unreliable. Transfer a Git bundle from the
 workstation instead of using third-party mirrors.
 
