@@ -99,7 +99,8 @@ def test_cache_only_hit_is_distinguished_and_restores_hooks():
 
 @pytest.mark.parametrize(
     ("stage", "expected"),
-    (("reference", ()), ("micro2", (2,)), ("micro4", (4,)), ("all", (2, 4))),
+    (("reference", ()), ("micro2", (2,)), ("micro4", (4,)),
+     ("micro8", (8,)), ("micro16", (16,)), ("all", (2, 4))),
 )
 def test_selected_size_dispatch(stage, expected):
     assert probe.selected_microbatch_sizes(stage, {"microbatch_sizes": [2, 4]}) == expected

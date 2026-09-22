@@ -12,7 +12,7 @@ if [[ ${1:-} == --dry-run ]]; then DRY_RUN=1; shift; fi
 case "$CODE_ROOT" in "$ROOT"/runtime/checkouts/*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT"/runtime/outputs/*.json) ;; *) exit 2 ;; esac
 case "$STATE_DIR" in "$ROOT"/runtime/outputs/diagnostics/*) ;; *) exit 2 ;; esac
-case "$STAGE" in reference|micro2|micro4|all) ;; *) exit 2 ;; esac
+case "$STAGE" in reference|micro2|micro4|micro8|micro16|all) ;; *) exit 2 ;; esac
 HOST=$(hostname -s)
 COMMON_ARGS=(
   --dataset-manifest "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json"

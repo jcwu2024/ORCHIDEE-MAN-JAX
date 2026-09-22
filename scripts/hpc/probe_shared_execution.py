@@ -133,7 +133,9 @@ def selected_microbatch_sizes(stage, config):
     if stage == "all":
         return declared
     size = int(stage.removeprefix("micro"))
-    if size not in declared:
+    # Explicit larger stages extend execution coverage without changing the
+    # fixed-data reference identity or the original protocol's default sweep.
+    if size not in (*declared, 8, 16):
         raise ValueError(f"{stage} is absent from the benchmark protocol")
     return (size,)
 
@@ -299,9 +301,10 @@ def run(args):
         initialize_state_store(state_dir, jax, identity)
         report.update(stage_request=args.stage, state_dir=str(state_dir))
         selected_sizes = selected_microbatch_sizes(args.stage, config)
+        report["selected_microbatch_sizes"] = list(selected_sizes)
         reference = _load_stage_record(
             state_dir, "reference", identity,
-            required=args.stage in ("micro2", "micro4"),
+            required=args.stage.startswith("micro"),
         )
         require_components = reference is not None and bool(selected_sizes)
         daily_component = _load_stage_record(
@@ -569,7 +572,7 @@ def parser():
     result.description = __doc__
     result.add_argument("--benchmark-protocol", type=Path, required=True)
     result.add_argument(
-        "--stage", choices=("reference", "micro2", "micro4", "all"), default="all"
+        "--stage", choices=("reference", "micro2", "micro4", "micro8", "micro16", "all"), default="all"
     )
     result.add_argument("--state-dir", type=Path)
     return result
