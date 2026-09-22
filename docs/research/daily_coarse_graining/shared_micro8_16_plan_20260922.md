@@ -35,3 +35,23 @@ Choose the fastest numerically admitted full-update configuration that fits
 memory, considering actual compiled/live allocator memory rather than JAX's
 reserved pool. Compilation cost is reported separately. A single fixed-batch
 probe is execution admission, not a learning/scientific accuracy result.
+
+## Prepared deployment
+
+Source ef8c23f is deployed at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1`.
+27 local tests pass;11 relevant stage tests pass in deployed GPU Python with
+CPU backend (4.65s). Both actual Slurm-entry dry-run expansions select the
+requested micro8/micro16 stage and110min main limit. At preparation, nodes
+ibc13b03n05/06 were bothIDLE,CPUAlloc0/112,CPULoad0.01.
+
+From the deployed checkout, prepared commands are:
+
+```bash
+STAGE=micro8 CODE_ROOT=$PWD /rmprog/slurm/v22.05.7/bin/sbatch --job-name=shared-micro8 --nodelist=ibc13b03n05 scripts/hpc/job_shared_staged_execution.sh
+STAGE=micro16 CODE_ROOT=$PWD /rmprog/slurm/v22.05.7/bin/sbatch --job-name=shared-micro16 --nodelist=ibc13b03n06 scripts/hpc/job_shared_staged_execution.sh
+```
+
+Reference is already complete; no dependency hold is required. Recheck node
+availability and submit only after incremental11.04yuan approval. No paid8/16
+jobs submitted yet. Existing2/4 approval does not cover this additional pair.

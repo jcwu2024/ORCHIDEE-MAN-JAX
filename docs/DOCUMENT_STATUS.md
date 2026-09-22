@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_micro8_16_plan_20260922.md` |ef8c23f deployed;27 local/11 deployed tests, target-shell expansion pass; incremental11.04yuan approval pending | Larger parallel microbatch probes using completed scalar32 reference |
 | `research/daily_coarse_graining/shared_staged_execution_plan_20260922.md` |6302071 deployed; paid15329444/15329445 submitted held, automatically released by free helper36324 after reference6597 completes; combined cap11.04yuan | Resumable reference, same-allocation scalar/micro timings and bounded budget |
 | `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md` | Free108553 and paid15329407 COMPLETED0; actual cross-node daily cache hit,0 backend compiles; paid8m57s/~0.41yuan | Resume staged execution measurement; do not infer cold-compile contention causality or candidate speedup |
 | `runtime-archival-20260922.md` |55 inactive code working trees archived and verified; runtime216367 entries | Restore historical source paths; protect Git dependencies and active runs; manage file quota |

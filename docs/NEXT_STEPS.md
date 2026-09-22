@@ -8,6 +8,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Reference6597 completed and automatically released15329444/15329445; both
+paid jobs are RUNNING on their declared nodes, have loaded reference graphs,
+timed scalar32 and entered micro2/micro4 compilation without logged errors.
+User requested larger sizes: micro8/micro16 are prepared at ef8c23f in
+`runtime/checkouts/shared-staged-large-v1`;27 local/11 deployed stage tests and
+both actual launcher expansions pass. Request incremental approval for two
+1V100/8CPU/64GiB/2h jobs,11.04yuan total, preferably idleibc13b03n05/06.
+They share the completed reference and need no dependency hold. Do not treat
+the already-approved2/4 budget as approval for8/16. Read
+`research/daily_coarse_graining/shared_micro8_16_plan_20260922.md`.
+The earlier HELD/RUNNING-reference snapshots below are superseded.
+
 User approved immediate paid parallel submission. Jobs15329444(micro2,
 ibc13b03n03) and15329445(micro4,ibc13b03n04) are SUBMITTED/HELD pending the
 free reference6597, each1V100/8CPU/64GiB/2h, combined11.04yuan maximum.
