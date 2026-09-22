@@ -18,7 +18,7 @@ The32 sequential daily gradients cost14.91s, T7/T30 together13.66s. Implement
 matched micro2/4 vs scalar32 full-gradient/update/timing benchmark at source100;
 and prepare concurrent dual placement following the user's idle-paid-GPU
 request. Scalar32 dual testing does not depend on the microbatch result.
-No changes to model/loss/data/optimizer, no paid submission yet. Protocol and limits:
+No changes to model/loss/data/optimizer. Approved paid launch is recorded below. Protocol and limits:
 `research/daily_coarse_graining/shared_execution_plan_20260922.md`.
 Implementation0507e1b passes17 local tests,10 deployed tiny tests, source100
 CPU checkpoint validation and actual shell expansion. Free GPU1 benchmark

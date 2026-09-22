@@ -99,6 +99,11 @@ The earlier pending/no-submission statements describe the preparation phase.
 Free microbatch38944 is still running independently. Collect the real GPU
 runtime checks and benchmark stages; launch alone establishes no speedup.
 
+Both deployed GPU startup checks passed. The two-device synthetic check took
+2.58s and both optimizer updates matched the serial reference exactly. The
+main benchmark verified source100 and entered `load_runtime` at6.4s; real-model
+gradient parity, compilation, memory and timing are still pending.
+
 Query with `squeue -j 15328832`; inspect the report/log at the prefix above.
 After queue removal, use `sacct -j 15328832 --format=JobID,State,Elapsed,ExitCode`.
 Cancel only on explicit instruction with `scancel 15328832`.

@@ -27,7 +27,7 @@ check; checkout`shared-execution-0507e1b`, report/log prefix
 `runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`.
 Collect the matched scalar32/micro2/micro4 results. Concurrent dual preparation
 is specified in `shared_dual_execution_plan_20260922.md` and
-`shared_dual_execution_benchmark_v1.json`; no measured speedup or paid job yet.
+`shared_dual_execution_benchmark_v1.json`; no measured speedup yet.
 Dual implementation8cce49e is deployed as`shared-dual-8cce49e`: local9tests,
 deployed2tiny tests (34.71s), source100 CPU preparation (31.0s) and actual
 shell/Slurm-entry expansion pass. User approved2GPU/8CPU/64GiB/3h,
@@ -36,6 +36,8 @@ shell/Slurm-entry expansion pass. User approved2GPU/8CPU/64GiB/3h,
 `runtime/outputs/diagnostics/shared-dual-15328832`. Collect runtime checks,
 serial/dual parity, changing-data updates, memory and full timing/cost.
 Free38944 remains running independently; do not duplicate either task.
+Both15328832 GPU startup checks pass (two synthetic updates exactly match);
+main benchmark has verified source100 and entered runtime loading.
 Broader training waits for a measured execution policy.
 
 Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,
