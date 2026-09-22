@@ -59,3 +59,26 @@ the full-batch adapter. Ruff passes. The benchmark delegates joint combination
 and the single AdamW step to the same `execute_learning_update` implementation;
 its candidate daily callback returns the whole32-row mean exactly once.
 These small tests do not establish real-model memory or performance.
+
+## Deployed checks and launch
+
+Immutable0507e1b deployed to`runtime/checkouts/shared-execution-0507e1b`.
+Actual CPU/GPU target-shell expansion and shell syntax pass. Free test02
+loaded the869MiB source100 checkpoint and verified its method/cursor in38.8s,
+exit0. The actual GPU Python environment (CPU backend for tiny fixtures)
+passes10 microbatch tests in16.19s, including two successive changing-data
+joint updates. An initial combined remote test invocation returned exit1 with
+no captured diagnostics; it is not counted as a pass. The logged focused rerun
+passes; disabling pytest's cache emits a harmless cache_dir config warning.
+
+Both free GPUs were idle immediately before launching GPU1 wrapper38944.
+It runs the separate5min-bounded synthetic GPU runtime check followed by the
+180min-bounded real-model benchmark. Report/log prefix:
+`runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`.
+The reference snapshot will be a single `.reference.pkl` under that prefix;
+no candidate proposals become training checkpoints. No paid job.
+
+Next collect full-gradient/optimizer parity, compiled memory and complete
+update timings. A faster admitted microbatch is only fixed-data execution
+evidence; changing-data dual placement and sustained learning remain subsequent
+steps. Do not duplicate this benchmark while38944 is running.

@@ -18,6 +18,13 @@ no paid submission. Read
 `research/daily_coarse_graining/shared_execution_plan_20260922.md` and
 `shared_execution_benchmark_v1.json`. Broader learning is queued behind this
 bounded execution work; no architecture/loss change is authorized by it.
+At0507e1b, local17 tests/Ruff, deployed10 tiny tests (16.19s), source100 CPU
+checkpoint validation (38.8s), actual shell CPU/GPU expansion and syntax pass.
+Free gln01 GPU1 wrapper38944 is RUNNING, main180min plus separate5min runtime
+check; checkout`shared-execution-0507e1b`, report/log prefix
+`runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`.
+Collect the matched scalar32/micro2/micro4 results before dual placement or
+broader training. No measured speedup yet; no paid task.
 
 Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,
 all0/20/100 physical panels pass, actual peak7.999GiB, warm29.90s/update.

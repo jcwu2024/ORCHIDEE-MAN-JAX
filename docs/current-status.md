@@ -19,6 +19,10 @@ matched micro2/4 vs scalar32 full-gradient/update/timing benchmark at source100;
 then test dual placement if warranted by measured branch balance. No changes
 to model/loss/data/optimizer, no paid task. Protocol and limits:
 `research/daily_coarse_graining/shared_execution_plan_20260922.md`.
+Implementation0507e1b passes17 local tests,10 deployed tiny tests, source100
+CPU checkpoint validation and actual shell expansion. Free GPU1 benchmark
+wrapper38944 is RUNNING, main180min plus5min runtime check, report prefix
+`runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`. No speed result yet.
 
 Shared learning87042 COMPLETED0 at4408daf:100 updates in5824.47s (97.07min).
 All64 fixed windows pass physical gates at0/20/100, actual peak7.999GiB,
