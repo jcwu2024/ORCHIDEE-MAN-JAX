@@ -1,12 +1,26 @@
 # Current Roadmap
 
-Last updated: 2026-09-22.
+Last updated: 2026-09-23.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
+
+User2026-09-23 prioritizes training speed before broader/longer learning.
+micro2 job15329444 andmicro4 job15329445 COMPLETED0:0. Full-update medians
+23.924/21.457s vs same-allocation scalar28.671/28.701s; all existing numerical,
+physical and full-update parity checks pass. Actual allocator peaks13.673/
+23.292GiB; reserved25.391GiB is not live usage. Candidate compile stages45.53/
+44.37min. micro8/16 jobs15329519/15329520 remain RUNNING at collection.
+Read`research/daily_coarse_graining/shared_execution_micro24_results_20260923.md`.
+Finish these probes, then prioritize reusable startup and balanced dual-device
+execution based on current component timings(daily7.77s,T7 2.61s,T30 11.01s
+for micro4). Do not resubmit original all-in-one dual probe or claim idealized
+split arithmetic as measured speedup. Prepared100->500 data/plan remains valid;
+its GPU launch is behind execution throughput work and a measured budget.
+Earlier all-four-RUNNING statements below are superseded for2/4.
 
 While the four execution probes run, the next learning stage is prepared in
 `research/daily_coarse_graining/shared_learning_extension_plan_20260922.md`.

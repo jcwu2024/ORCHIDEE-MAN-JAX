@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-22.
+Last updated: 2026-09-23.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_execution_micro24_results_20260923.md` |15329444/45 completed with parity; micro4 full update21.46s,25.24% less time;8/16 pending | Speed-first priority, actual memory, compilation overhead and balanced dual-device next work |
 | `research/daily_coarse_graining/shared_pilot_error_diagnosis_20260922.md` | Saved-curve analysis complete;7 pooled endpoints reproduce existing summary; no inference | Window concentration, signed accumulation, respiration compensation and RH coverage |
 | `research/daily_coarse_graining/shared_learning_extension_plan_20260922.md` | Preparation-only100->500 plan; actual500-artifact free CPU audit passed93.61s; no training submitted | Data coverage, fixed physical panels, reproducibility, remaining runner integration |
 | `research/daily_coarse_graining/shared_micro8_16_plan_20260922.md` |ef8c23f;27 local/11 deployed tests pass; approved15329519/15329520 RUNNING23:20:43CST, incremental cap11.04yuan | Larger parallel microbatch probes using completed scalar32 reference |

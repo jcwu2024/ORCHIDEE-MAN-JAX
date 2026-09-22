@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-22.
+Last updated: 2026-09-23.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,16 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+User2026-09-23 sets training throughput as the main priority before larger
+learning. micro2/4 jobs15329444/15329445 completed0:0, all parity/hard gates
+pass, full updates23.924/21.457s vs matched28.671/28.701s (16.56/25.24% time
+reduction). Actual peaks13.673/23.292GiB; candidate compilation45.53/44.37min.
+Reference cache hits are real(0 backend compiles), yet lowering/loading still
+consume startup. Cost estimates3.39+3.31=6.70yuan. micro8/16 still run.
+See`research/daily_coarse_graining/shared_execution_micro24_results_20260923.md`.
+Next balance daily/T7/T30 work and preserve executable reuse;100->500 launch
+waits for execution results. No new paid allocation in this collection.
 
 Parallel preparation for a proposed100->500 learning extension passed on free
 test02 in93.61s. Actual500 prepared artifacts reproduce original100 coverage,
