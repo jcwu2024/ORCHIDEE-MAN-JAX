@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+User2026-09-23 adds same-microbatch memory regression as a co-equal efficiency
+target. Oldmicro8 compiled-live14.42GiB vs new40.33GiB; temporary storage grows
+13.60->39.76GiB while weights shrink. Newmicro2/4/8 estimates scale nearly
+linearly at~4.8GiB/additional row. Optimize repeated live intermediates as well
+as work; bounded packing must not trade away memory admission. Details/limits
+are in`shared_execution_cost_profile_20260923.md` in the research docs.
+
 micro8 job15329519 COMPLETED0:0 at00:38:42CST; candidate is resource_limited,
 final compiled-live40.33GiB, exceeding the32GiB card. No candidate execution or
 speedup. Compile52.71min; allocation1:17:59/~3.59yuan. micro16 remains RUNNING

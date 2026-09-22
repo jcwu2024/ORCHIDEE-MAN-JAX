@@ -94,6 +94,36 @@ FLOP estimates can omit custom calls and are not total measured hardware FLOPs.
 
 ## Cost finding and recommended next bounded work
 
+### Memory regression is a co-equal target
+
+User2026-09-23 explicitly asks to investigate the larger memory footprint at
+the same micro8. Old report`outputs/mixed-learning-dual-paid-15230086.json`,
+`dual_compilation.daily_gpu0.memory`, estimates14.4207GiB live and13.6029GiB
+temporary storage for the old micro8 daily gradient. Its actual whole-process
+GPU0 allocator peak was15.662GiB; reserved pool26.978GiB is a separate quantity.
+Current micro8 estimates40.3283GiB live and39.7619GiB temporary storage, and
+was never executed. The same compiled-live accounting therefore grows2.80x;
+do not compare current estimated40.33GiB to old reserved memory or call it an
+observed OOM/allocator peak. Models and objectives differ, so this is a resource
+regression comparison, not a controlled decoder attribution.
+
+The current micro2/4/8 compiled-live estimates are11.3912/21.0152/40.3283GiB.
+The added storage is nearly linear, about4.8GiB per concurrent daily sample.
+FP32 weights alone decreased from0.408GiB(old109.46M) to0.282GiB(new75.58M).
+The increase is in compiler temporary storage, not a larger parameter tree.
+This category includes AD intermediates and execution workspaces; exact
+buffer-level attribution remains open. The current code differentiates the
+mean of vmapped losses once; it does not explicitly construct eight full
+per-example parameter-gradient trees.
+
+Evaluate projection reuse and query packing against BOTH full-update wall
+time and compiled/actual peak memory. Reuse must reduce repeated live tensors
+where possible; larger query packs can increase simultaneous activations and
+must be bounded. Retain existing micro4 as an executable reference. Merely
+making micro8 fit by extra recomputation is not a speed acceptance. Do not
+infer that the same microbatch implies the same activation size across models,
+or justify narrower auxiliary heads from memory alone.
+
 The independent source-shape calculator and accepted-layout comparison are in
 `shared_decoder_cost_audit_20260923.md`. It estimates 35.99G forward MACs in
 shared input/backbone and 215.80G in the coordinate decoder. Within the decoder,
