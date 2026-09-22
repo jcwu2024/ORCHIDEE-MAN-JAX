@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_staged_execution_plan_20260922.md` |08e7f48 deployed;25 deployed tests/CPU preparation pass; free reference6597 RUNNING; paid micro2 pending approval | Resumable reference, same-allocation scalar/micro timings and bounded budget |
 | `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md` | Free108553 and paid15329407 COMPLETED0; actual cross-node daily cache hit,0 backend compiles; paid8m57s/~0.41yuan | Resume staged execution measurement; do not infer cold-compile contention causality or candidate speedup |
 | `runtime-archival-20260922.md` |55 inactive code working trees archived and verified; runtime216367 entries | Restore historical source paths; protect Git dependencies and active runs; manage file quota |
 | `research/daily_coarse_graining/shared_execution_timeout_results_20260922.md` | Both probes exited124 during reference work; no candidate performance result | Compilation-time regression, preserved partial evidence and next diagnosis |

@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-22.
 
+`probe_shared_execution.py` now supports persistent reference/micro2/micro4
+stages. `run_shared_staged_execution.sh` prepares on free CPU, loads cached
+reference gradients on free GPU, or measures one approved paid candidate.
+`job_shared_staged_execution.sh` declares the pending1GPU/8CPU/2h micro2 request.
+Partial reference files survive interruption. Both scalar and candidate warm
+timings execute the full joint update; saved gradients are not timing shortcuts.
+
 `scripts/hpc/probe_shared_dual.py` owns the bounded scalar32 serial-versus-dual
 execution comparison for the consolidated shared model, including peer sync
 and two changing-data optimizer steps. `run_shared_dual_execution.sh` prepares

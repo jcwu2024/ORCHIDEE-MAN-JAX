@@ -13,6 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Staged benchmark08e7f48: local/deployed25 tests pass; source100 CPU preparation
+passes41.5s; actual free/paid argument expansion passes. Free gln01 GPU1
+reference RUNNING, wrapper6597,22:16:54CST September22,40min limit, immutable
+`runtime/checkouts/shared-staged-v1`. Log/report prefix:
+`runtime/outputs/diagnostics/shared-staged-08e7f48-free`.
+Persistent components and complete proposal go to
+`runtime/outputs/diagnostics/shared-staged-source100-v1`.
+New micro2 paid allocation remains unapproved/unsubmitted, maximum5.52yuan.
+No measured microbatch speedup yet; no architecture/loss change. The following
+preparation-only snapshots are historical; see the staged execution plan.
+
 Free daily cache diagnostic108553 COMPLETED0 in462.275s: found the exact prior
 free benchmark daily key and readable34.5MB cache; no backend compile attempted.
 Lowering alone233.17s. Paid15329407 COMPLETED0:0 in8m57s onibc13b03n03,

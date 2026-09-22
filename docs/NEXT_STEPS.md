@@ -8,6 +8,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Staged benchmark08e7f48 is deployed in`runtime/checkouts/shared-staged-v1`.
+Local/deployed25 focused tests pass; actual CPU preparation passes41.5s;
+CPU/free/paid shell argument expansions pass. Free gln01 GPU1 reference is
+RUNNING, wrapper6597, started22:16:54CST September22,40min cap. Report/log:
+`runtime/outputs/diagnostics/shared-staged-08e7f48-free`.
+Collect the saved daily/T7/T30 components and full reference from
+`runtime/outputs/diagnostics/shared-staged-source100-v1`; preserve partial
+results if interrupted. Reuse cached graphs; a cache miss is reported without
+starting a cold reference compile. Then request the prepared micro2 allocation:
+1V100/8CPU/64GiB/2h,5.52yuan maximum, explicit idle node. No new paid job is
+approved/submitted. micro4 follows measured micro2 evidence, not automatically.
+Read`research/daily_coarse_graining/shared_staged_execution_plan_20260922.md`.
+The earlier next-action snapshots below are superseded by this live stage.
+
 Daily-only free cache diagnostic108553 COMPLETED0 in462.275s: bootstrap224.85s,
 lowering233.17s; same daily key as the earlier free benchmark,34.5MB cache
 entry exists/readable, no backend compile or executable load attempted.

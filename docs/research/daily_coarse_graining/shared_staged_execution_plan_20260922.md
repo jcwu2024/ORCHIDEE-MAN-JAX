@@ -53,3 +53,25 @@ Launchers:`run_shared_staged_execution.sh` and `job_shared_staged_execution.sh`.
 Workdir/command use the immutable deployed checkout, recorded after deployment.
 Request final paid approval only after code, actual-shell checks and the
 reference prerequisite are ready. No paid job is launched by this document.
+
+## Deployment and current run
+
+Implementation08e7f48 is deployed at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-v1`.
+25 focused tests pass locally and in the deployed GPU Python/JAX environment
+on test02 using the CPU backend (46.79s). CPU preparation checks actual
+source100 checkpoint/metadata in41.5s. CPU/free GPU/paid entry shell expansions
+pass. Existing scientific/runtime evidence is reused.
+
+Free gln01 GPU1 reference wrapper6597 started2026-09-22 22:16:54CST with40min
+limit; GPU was idle immediately before launch. Source verification passed and
+runtime loading started. Report/log prefix:
+`runtime/outputs/diagnostics/shared-staged-08e7f48-free`.
+Query from gln01 with`ps -p 6597 -o pid,etime,pcpu,comm`; this wrapper's CPU
+percentage is not the Python child's utilization. Confirm completion from the
+JSON status and log`run_exit_status`, not process absence alone.
+
+After reference completion, the prepared paid command is
+`CODE_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-v1 /rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n03 scripts/hpc/job_shared_staged_execution.sh`
+from that checkout, subject to user approval and a fresh idle-node check.
+No new paid allocation is approved or submitted. No micro2 speedup is claimed.
