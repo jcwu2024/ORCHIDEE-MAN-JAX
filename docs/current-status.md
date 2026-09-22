@@ -27,6 +27,9 @@ wrapper38944 is RUNNING, main180min plus5min runtime check, report prefix
 Concurrent dual plan: `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md`.
 Proposed gnall2GPU/8CPU/64GiB/3h ceiling costs at most14.88yuan under the
 documented additive rates. Implementation/checks precede explicit paid approval.
+Prepared8cce49e is deployed independently:9local tests,2deployed tiny tests
+(34.71s), source100 CPU preparation (31.0s) and shell/Slurm-entry expansion
+pass. Await concrete paid approval; no dual GPU numerical/performance result.
 
 Shared learning87042 COMPLETED0 at4408daf:100 updates in5824.47s (97.07min).
 All64 fixed windows pass physical gates at0/20/100, actual peak7.999GiB,

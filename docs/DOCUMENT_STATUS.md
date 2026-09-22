@@ -20,7 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md` | Concurrent scalar32 dual comparison in preparation; paid approval pending | Same-method gradients/two changing-data updates, full timing, memory and cost |
+| `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md` | Ready at8cce49e; local/deployed tiny tests and CPU source check pass; paid approval pending | Same-method gradients/two changing-data updates, full timing, memory and cost |
 | `research/daily_coarse_graining/shared_execution_plan_20260922.md` | Micro2/4 benchmark RUNNING38944 at0507e1b; local/deployed tiny tests pass | Same checkpoint/data/gradient/update comparison, memory/speed; dual preparation concurrent |
 | `research/daily_coarse_graining/shared_learning_results_20260922.md` |87042 COMPLETED100 updates,97.07min; learning visible, scientific accuracy still insufficient | Fixed physical improvements, biomass-change scale, canopy/litter regressions, runtime and next coverage extension |
 | `research/daily_coarse_graining/shared_learning_runtime_fix_20260922.md` |83621 API error at0 updates; fixed4408daf, deployed tiny monitor tests pass, recovery87042 RUNNING | Same fresh initialization, unchanged method; collect learning panels |

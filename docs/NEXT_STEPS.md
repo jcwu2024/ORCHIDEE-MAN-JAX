@@ -28,6 +28,11 @@ check; checkout`shared-execution-0507e1b`, report/log prefix
 Collect the matched scalar32/micro2/micro4 results. Concurrent dual preparation
 is specified in `shared_dual_execution_plan_20260922.md` and
 `shared_dual_execution_benchmark_v1.json`; no measured speedup or paid job yet.
+Dual implementation8cce49e is deployed as`shared-dual-8cce49e`: local9tests,
+deployed2tiny tests (34.71s), source100 CPU preparation (31.0s) and actual
+shell/Slurm-entry expansion pass. Ready for explicit2GPU/8CPU/64GiB/3h,
+14.88yuan-ceiling approval; exact command is in the dual plan. Do not restart
+the free benchmark or imply the dual benchmark has already run.
 Broader training waits for a measured execution policy.
 
 Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,

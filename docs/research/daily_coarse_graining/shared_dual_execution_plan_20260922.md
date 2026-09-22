@@ -1,6 +1,6 @@
 # Shared dual-device execution comparison
 
-The user requested concurrent use of idle paid GPUs on2026-09-22. Prepare
+The user requested concurrent use of idle paid GPUs on2026-09-22. Prepared
 this comparison alongside free microbatch wrapper38944, without modifying
 its immutable checkout or waiting for its result. This is execution work,
 not a new architecture, objective, data-generation or learning experiment.
@@ -56,3 +56,34 @@ on completion; three hours is a ceiling, not a predicted runtime. At current
 documented rates, max additive cost is(2*2.20+8*0.07)*3 = CNY14.88.
 The two-device recompile dominates uncertainty; do not imply the benchmark
 itself needs three hours of warm computation. No paid job has been submitted.
+
+## Prepared checkout and completed checks
+
+Implementation8cce49e is deployed independently at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dual-8cce49e`.
+Sol/high implemented the bounded executor; the lead reviewed integration,
+added repeated non-persisting replay checks and prepared deployment.
+Local tests: two new integration/preparation tests and seven existing runner
+tests pass; Ruff passes. The new integration test uses a separate process
+with two CPU devices and checks repeat-without-mutation, two changing-data
+updates, clipping, full optimizer/gradient/parameter parity, peer placement,
+zero-gradient components, nonfinite inputs and physical failures. It is not
+real-model GPU acceptance. The separate synthetic device runtime check also
+passes two local CPU-device updates.
+
+On free test02, the actual GPU Python environment (JAX0.4.38, CPU backend)
+passes both new tests in34.71s. Source100 method/checkpoint/metadata preparation
+passes in31.0s. Actual target-shell CPU/GPU dry-runs and the Slurm entry's
+simulated allocated-device argument expansion pass. The original free38944
+benchmark remains independent and was running at the last observation.
+
+Pending approved submission from cln01, working directory and exact command:
+
+```bash
+cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dual-8cce49e
+CODE_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dual-8cce49e /rmprog/slurm/v22.05.7/bin/sbatch scripts/hpc/job_shared_dual_execution.sh
+```
+
+The script declares gnall2GPU/8CPU/64GiB/03:00:00, CNY14.88 worst case.
+No `sbatch` has been invoked. Main real-model GPU placement, numerical parity,
+memory and measured speed/cost remain the purpose of the proposed allocation.
