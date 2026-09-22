@@ -30,9 +30,12 @@ is specified in `shared_dual_execution_plan_20260922.md` and
 `shared_dual_execution_benchmark_v1.json`; no measured speedup or paid job yet.
 Dual implementation8cce49e is deployed as`shared-dual-8cce49e`: local9tests,
 deployed2tiny tests (34.71s), source100 CPU preparation (31.0s) and actual
-shell/Slurm-entry expansion pass. Ready for explicit2GPU/8CPU/64GiB/3h,
-14.88yuan-ceiling approval; exact command is in the dual plan. Do not restart
-the free benchmark or imply the dual benchmark has already run.
+shell/Slurm-entry expansion pass. User approved2GPU/8CPU/64GiB/3h,
+14.88yuan ceiling; submitted15328832, RUNNING onibc13b02n03 from
+2026-09-22 16:33:09, hard end19:33:09 (cluster clock). Report/log prefix
+`runtime/outputs/diagnostics/shared-dual-15328832`. Collect runtime checks,
+serial/dual parity, changing-data updates, memory and full timing/cost.
+Free38944 remains running independently; do not duplicate either task.
 Broader training waits for a measured execution policy.
 
 Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,

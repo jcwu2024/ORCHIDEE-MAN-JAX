@@ -87,3 +87,18 @@ CODE_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dual-8
 The script declares gnall2GPU/8CPU/64GiB/03:00:00, CNY14.88 worst case.
 No `sbatch` has been invoked. Main real-model GPU placement, numerical parity,
 memory and measured speed/cost remain the purpose of the proposed allocation.
+
+## Approved launch
+
+The user approved the above exact request. Submitted once from cln01 as
+15328832 on2026-09-22 at16:32:58. Slurm reports RUNNING onibc13b02n03,
+start16:33:09 and hard end19:33:09, all times from the cluster clock.
+Allocation matches2GPUs/8CPUs/64GiB/3h. Checkout8cce49e remains immutable.
+Output prefix:`runtime/outputs/diagnostics/shared-dual-15328832`.
+The earlier pending/no-submission statements describe the preparation phase.
+Free microbatch38944 is still running independently. Collect the real GPU
+runtime checks and benchmark stages; launch alone establishes no speedup.
+
+Query with `squeue -j 15328832`; inspect the report/log at the prefix above.
+After queue removal, use `sacct -j 15328832 --format=JobID,State,Elapsed,ExitCode`.
+Cancel only on explicit instruction with `scancel 15328832`.
