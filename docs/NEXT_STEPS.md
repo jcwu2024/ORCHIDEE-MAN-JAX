@@ -8,6 +8,11 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+micro8 job15329519 COMPLETED0:0 at00:38:42CST; candidate is resource_limited,
+final compiled-live40.33GiB, exceeding the32GiB card. No candidate execution or
+speedup. Compile52.71min; allocation1:17:59/~3.59yuan. micro16 remains RUNNING
+at00:38:57. micro4 remains fastest admitted. Details in the cost-profile report.
+
 Bounded cost review2026-09-23 is complete at source-shape level. The decoder
 accounts for85.7% of counted backbone+decoder forward MACs; repeated dynamic
 axis/local K/V and FFNs dominate, not attention score dots. Accepted layout

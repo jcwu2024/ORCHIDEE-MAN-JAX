@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest00:38:57CST: micro8 paid15329519 COMPLETED0:0/1:17:59, but candidate
+resource_limited: final compiled-live40.33GiB>32GiB hardware. Candidate not
+executed, no measured speed/parity/actual peak. Compile52.71min, tariff estimate
+3.59yuan. Intermediate30.79GiB warning was not the final compiled total.
+micro16 remains RUNNING; micro4 is still fastest admitted. Local report
+`outputs/shared-staged-15329519.json`; details in cost-profile document below.
+
 Cost review2026-09-23: accepted-layout static audit confirms161fields,
 8550eligible/39006full coordinates,265field-local chunks and9046padded query
 slots. Source-shape forward estimates are35.99G backbone/input and215.80G

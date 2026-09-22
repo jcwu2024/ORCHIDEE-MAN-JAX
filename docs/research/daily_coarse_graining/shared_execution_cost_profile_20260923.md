@@ -143,8 +143,19 @@ trajectory learning and later longer-horizon evaluation.
 
 ## Existing micro8/16 jobs
 
-At 00:36 CST jobs15329519 and15329520 remained RUNNING. Compiler
-rematerialization warnings estimated 30.79 and63.22GiB respectively, above the
-existing 24GiB compiled-live limit. These warnings are neither final compiled
-memory reports nor observed OOM outcomes. Preserve their eventual results;
-do not expand memory limits or submit replacements from this snapshot.
+At00:38:57CST job15329519(micro8) was COMPLETED0:0 after1:17:59. The benchmark
+completed normally but classified the candidate `resource_limited`: final
+compiled-live estimate43,302,192,072bytes=40.33GiB, temporaries39.76GiB. This
+exceeds both the existing24GiB operating gate and the physical32GiB card.
+Candidate compilation took3162.65s=52.71min. The micro8 candidate was not
+executed, so there is no candidate runtime peak, numerical parity or speedup.
+Matched scalar baseline did run at28.6311s and reproduced its saved reference.
+Estimated allocation charge is3.59yuan at2.76yuan/hour; no retained updates.
+Local report:`outputs/shared-staged-15329519.json`.
+
+The earlier30.79GiB rematerialization warning was an intermediate compiler
+estimate, not the final live total. Do not report it as observed allocator use.
+At the same collection micro16 job15329520 remained RUNNING with a63.22GiB
+intermediate warning only. Preserve its eventual result; do not expand memory
+limits or submit replacements from this snapshot. micro4 remains the fastest
+admitted measured variant, pending the final16 report and execution changes.
