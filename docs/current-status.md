@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User now prioritizes execution optimization before expanding shared learning.
+The32 sequential daily gradients cost14.91s, T7/T30 together13.66s. Implement
+matched micro2/4 vs scalar32 full-gradient/update/timing benchmark at source100;
+then test dual placement if warranted by measured branch balance. No changes
+to model/loss/data/optimizer, no paid task. Protocol and limits:
+`research/daily_coarse_graining/shared_execution_plan_20260922.md`.
+
 Shared learning87042 COMPLETED0 at4408daf:100 updates in5824.47s (97.07min).
 All64 fixed windows pass physical gates at0/20/100, actual peak7.999GiB,
 warm median29.90s/update. Held-out T30 cumulative GPP/NPP and AGB/BGB-change

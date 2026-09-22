@@ -1,0 +1,17 @@
+{
+  "schema_version": "shared_execution_benchmark_v1",
+  "source_update": 100,
+  "artifact_id": 742,
+  "daily_count": 32,
+  "microbatch_sizes": [2, 4],
+  "warmups": 1,
+  "timed_replays": 3,
+  "compiled_memory_limit_gib": 24,
+  "main_wall_minutes": 180,
+  "comparison_rtol": 0.00001,
+  "comparison_atol": 0.000001,
+  "source_is_diagnostic_only": true,
+  "retained_training_updates": 0,
+  "paid_submission": false,
+  "learning_method_changed": false
+}

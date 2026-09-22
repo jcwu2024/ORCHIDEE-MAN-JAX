@@ -34,6 +34,10 @@ daily gradients plus oneT7/oneT30 before one full-network AdamW update.
 `shared_learning_monitor.py` reports fixed TRAIN-fit and held-out development
 physical curves at0/20/100 through the canonical forward rollout. It does not
 change losses, select a best checkpoint or claim final scientific acceptance.
+`shared_daily_microbatch.py` batches the existing per-row objective before AD
+and accumulates sample-mean gradients. `probe_shared_execution.py` and
+`run_shared_execution.sh` benchmark its full joint update against original
+scalar32 at a fixed trained checkpoint, without retaining optimizer proposals.
 `run_shared_transformer_admission.py` and its shell launcher own bounded CPU
 shape/scales and free GPU forward/gradient/two-update admission. The admission
 manifest is not a production-training contract. Existing runners below remain

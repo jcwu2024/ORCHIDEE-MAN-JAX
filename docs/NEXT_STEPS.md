@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+User decision: optimize shared execution before expanding learning. The prior
+architecture's batch64/micro8 and dual-device performance was not carried into
+the new scalar32 pilot. Implement/measure micro2/4 against scalar32 using the
+same shared update100 checkpoint, artifact742, T7/T30, loss and AdamW. Require
+numerical/full-update parity, measure complete warm timings and memory; then
+evaluate dual placement using measured branch balance. Free resources only,
+no paid submission. Read
+`research/daily_coarse_graining/shared_execution_plan_20260922.md` and
+`shared_execution_benchmark_v1.json`. Broader learning is queued behind this
+bounded execution work; no architecture/loss change is authorized by it.
+
 Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,
 all0/20/100 physical panels pass, actual peak7.999GiB, warm29.90s/update.
 Held-out T30 GPP/NPP/AGB/BGB-change RMSE falls60.63/62.23/61.43/64.18%
@@ -15,7 +26,7 @@ from untrained initialization. This is meaningful bounded learning, not final
 accuracy: AGB/BGB-change error exceeds Teacher change RMS; canopy carbon
 and belowground litter regress, RH targets are zero. Read
 `research/daily_coarse_graining/shared_learning_results_20260922.md`.
-Next prepare a bounded extension on more distinct existing TRAIN artifacts,
+After the execution optimization above, prepare a bounded extension on more distinct existing TRAIN artifacts,
 same shared architecture/objective/full-network optimizer, fixed physical
 panels. Declare its data order/endpoint/budget before execution. Do not reopen
 AD or add heads based solely on this pilot. No new job is running from this
