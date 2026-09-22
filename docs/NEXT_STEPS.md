@@ -8,6 +8,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Pilot83621 atbd50f51 FAILED with a runtime API error after268.15s,0 updates:
+monitor cache signature called `jax.typeof`, absent in deployed GPU JAX.
+Fresh update0 checkpoint is preserved. Fix only this monitoring compatibility,
+test the tiny monitor in the deployed Python environment, then resume the same
+declared method/checkpoint on a free GPU. Do not repeat joint AD admission or
+interpret this as numerical/scientific failure. Read
+`research/daily_coarse_graining/shared_learning_runtime_fix_20260922.md`.
+The RUNNING83621 snapshot below is superseded.
+
 Joint numerical admission7359 COMPLETED0 in13939.51s: all native gradients,
 T7/T30 direction checks, two full updates and physical/checkpoint gates pass;
 peak8.108GiB. T30 losses improve44.62%/64.40%, but artifact982 T7 and both

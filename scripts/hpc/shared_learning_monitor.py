@@ -456,12 +456,14 @@ def build_shared_learning_monitor(
     executable_metadata: dict[tuple[Any, ...], Mapping[str, Any]] = {}
 
     def argument_signature(arguments: tuple[Any, ...], horizon: int) -> tuple[Any, ...]:
-        leaves, tree = jax.tree_util.tree_flatten(arguments)
+        # eval_shape is available on the deployed JAX as well as local JAX.
+        # Abstract the identity only: no model execution or device copies.
+        abstract_arguments = jax.eval_shape(lambda values: values, arguments)
+        leaves, tree = jax.tree_util.tree_flatten(abstract_arguments)
         descriptors = []
-        for leaf in leaves:
-            abstract = jax.typeof(leaf)
+        for abstract in leaves:
             shape = tuple(int(value) for value in getattr(abstract, "shape", ()))
-            dtype = str(getattr(abstract, "dtype", type(leaf).__name__))
+            dtype = str(abstract.dtype)
             weak_type = bool(getattr(abstract, "weak_type", False))
             descriptors.append((shape, dtype, weak_type))
         return (int(horizon), str(tree), tuple(descriptors))

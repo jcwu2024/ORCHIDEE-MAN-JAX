@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Pilot83621 atbd50f51 exited1 after268.15s with0 updates. It failed before
+the first monitor forward compilation because deployed JAX lacks `jax.typeof`.
+The fresh update0 checkpoint is intact. This is a monitoring API compatibility
+bug missed by local tests/metadata-only preparation, not OOM, bad gradients or
+scientific rejection. A public `jax.eval_shape` identity-based cache signature
+passes two focused local tests with `jax.typeof` explicitly unavailable.
+Next actual deployed tiny monitor test, then same-method free-GPU resume.
+See `research/daily_coarse_graining/shared_learning_runtime_fix_20260922.md`.
+Older RUNNING83621 statements below are historical.
+
 Joint7359 is COMPLETED0,13939.51s, both full updates, all physical/checkpoint
 gates pass. T7/T30 AD directional differences8.246e-8/5.464e-9, peak8.108GiB.
 T30 improves on both technical samples; oneT7 and both daily contributions

@@ -213,6 +213,8 @@ def _install_tiny_monitor_dependencies(monkeypatch):
 
 
 def test_monitor_reports_source_npp_units_masks_common_initial_and_negative_stock_gate(monkeypatch):
+    # The deployed JAX lacks typeof; exercise the complete monitor without it.
+    monkeypatch.delattr(jax, "typeof", raising=False)
     _install_tiny_monitor_dependencies(monkeypatch)
 
     class Assembler:
