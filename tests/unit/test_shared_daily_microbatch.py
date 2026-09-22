@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
-
-jax = pytest.importorskip("jax")
-jnp = pytest.importorskip("jax.numpy")
 
 from research.daily_coarse_graining.daily_operator.fresh_start_training import make_update
 from research.daily_coarse_graining.daily_operator.target_oriented_training import (
