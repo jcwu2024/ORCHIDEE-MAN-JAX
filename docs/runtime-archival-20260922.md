@@ -72,4 +72,34 @@ Do not treat absent archived working files as intentional source
 deletions to commit. Historical experiment reports keep their original source
 paths; this manifest documents how to restore them.
 
-Execution result and after-counts are recorded below once complete.
+## Completed result
+
+Both operation reports reached `archived_and_working_files_removed`, exit0.
+The45 checkouts reduced118870 working entries (116263 regular files net of
+restore markers), archive511838380 bytes. The10 worktrees reduced16258 entries
+(15680 regular files net), archive70720864 bytes. Total targeted reduction:
+135128 entries and131943 regular files. All removed working files are recoverable
+from the two verified archives. Git stores were retained in place; a historical
+leaf clone still resolves commit2918966 through its dependency chain.
+
+The redundant496320512-byte interrupted `.tar.partial` was removed only after
+both final archives were verified and original working-file cleanup succeeded.
+It contained no remaining unique data. Original55-tree inventory JSON is kept
+as history; the two split operation reports are the completion authority.
+Local copies are under`outputs/runtime-archive-{checkouts,worktrees}-20260922.json`.
+
+Final runtime scan on2026-09-22:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| Filesystem entries |351386|216367|
+| Regular files |341543|209651|
+| Regular files under64KiB |169078|41670|
+| Logical file sizes, GiB |506.781|505.456|
+
+Net total entry reduction is135019 (about38.4%); the small difference from the
+targeted135128 reflects newly created reports/test fixtures and concurrent
+runtime activity. Counts are a point-in-time runtime scan, not an account-wide
+quota claim. Paid15328832 and free38944 both remained RUNNING after cleanup;
+their complete source checkouts are retained. Training data, weights, results
+and current JAX caches were not selected for archival.

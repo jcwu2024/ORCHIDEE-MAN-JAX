@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `runtime-archival-20260922.md` |55 inactive code working trees archived and verified; runtime216367 entries | Restore historical source paths; protect Git dependencies and active runs; manage file quota |
 | `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md` | Approved and RUNNING15328832 at8cce49e;2GPU/8CPU/3h, max14.88yuan | Same-method gradients/two changing-data updates, full timing, memory and cost |
 | `research/daily_coarse_graining/shared_execution_plan_20260922.md` | Micro2/4 benchmark RUNNING38944 at0507e1b; local/deployed tiny tests pass | Same checkpoint/data/gradient/update comparison, memory/speed; dual preparation concurrent |
 | `research/daily_coarse_graining/shared_learning_results_20260922.md` |87042 COMPLETED100 updates,97.07min; learning visible, scientific accuracy still insufficient | Fixed physical improvements, biomass-change scale, canopy/litter regressions, runtime and next coverage extension |

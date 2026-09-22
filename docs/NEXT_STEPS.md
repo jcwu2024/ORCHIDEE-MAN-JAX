@@ -8,6 +8,11 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Runtime housekeeping is complete:55 inactive working trees archived; total
+runtime entries351386 ->216367. Both active GPU sources and all Git dependency
+stores remain in place. Before using an old marked checkout, restore it as
+described in`runtime-archival-20260922.md`. This does not change the science gate.
+
 User decision: optimize shared execution before expanding learning. The prior
 architecture's batch64/micro8 and dual-device performance was not carried into
 the new scalar32 pilot. Implement/measure micro2/4 against scalar32 using the
