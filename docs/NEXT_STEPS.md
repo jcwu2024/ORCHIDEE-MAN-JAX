@@ -8,13 +8,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
-Daily-only cache diagnostic is implemented and RUNNING as free GPU1 wrapper
-108553 (15min ceiling), report/log prefix
-`runtime/outputs/diagnostics/shared-compile-key-free-20260922`.
-It records real JAX cache keys and stops before full-gradient backend compilation.
-Local6 tests, actual JAX0.4.38 CPU self-tests and target-shell expansion pass.
-Prepared idle-node paid fallback is1GPU/8CPU/64GiB/45min,2.07yuan ceiling,
-not yet submitted. Read `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md`.
+Daily-only free cache diagnostic108553 COMPLETED0 in462.275s: bootstrap224.85s,
+lowering233.17s; same daily key as the earlier free benchmark,34.5MB cache
+entry exists/readable, no backend compile or executable load attempted.
+User approved the1GPU/8CPU/64GiB/45min/2.07yuan comparison on an idle node.
+Paid15329407 RUNNING onibc13b03n03 from21:31:01, hard end22:16:01; initial
+node load0.16, GPU empty. Report/log prefix
+`runtime/outputs/diagnostics/shared-compile-15329407`. Collect actual cache
+loading/compilation counters and timing before another full benchmark.
+Read `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md`.
 
 Both execution probes have now exited124 during reference work: free38944
 compiled daily/T7/T30 in175.03min and entered reference measurement just before
@@ -24,7 +26,8 @@ No OOM/numerical exception is logged. The earlier RUNNING snapshots below
 are superseded. See `research/daily_coarse_graining/shared_execution_timeout_results_20260922.md`.
 Next diagnose compilation/cache reuse before another full benchmark; do not
 resubmit either unchanged. Original100-update learning/science evidence is
-unchanged. Runtime archival is paused. No GPU job remains from these two runs.
+unchanged. Runtime archival is paused. No GPU job remains from these two old runs;
+the approved daily-only diagnostic above is the sole new paid job.
 
 Runtime housekeeping is complete:55 inactive working trees archived; total
 runtime entries351386 ->216367. Both active GPU sources and all Git dependency

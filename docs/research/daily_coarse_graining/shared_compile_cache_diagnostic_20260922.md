@@ -66,3 +66,29 @@ above. Report/log prefix:`runtime/outputs/diagnostics/shared-compile-key-free-20
 Both GPUs had no compute processes immediately before launch. Read the result
 before duplicating it or submitting the prepared paid comparison. It makes no
 training updates and cannot enter the full daily-gradient backend compile.
+
+## Free result and approved paid launch
+
+Free108553 COMPLETED0: `key_observed` in462.275s, bootstrap224.848s,
+daily lowering233.168s and compiler-boundary inspection4.250s. The actual key
+is `jit_objective-db7ca6aaaec397cc1a2baf822dd4d22c99adca10b992d9aa18a4069b6c3d66c0`,
+matching the34,519,297-byte entry written by the earlier free benchmark at16:41.
+Caching is enabled, the file exists and is readable, metadata inclusion is
+false and the custom hook is empty. Backend compilation calls0; executable
+deserialization was intentionally not attempted, so this is not yet a proven
+usable cache hit. Initial load averages0.31/0.19/0.12; CPU affinity56CPUs.
+Raw result is preserved locally as `outputs/shared-compile-key-free-20260922.json`.
+
+The user explicitly approved the concrete1GPU/8CPU/64GiB/45min/2.07yuan
+envelope through the async question. Recheckedibc13b03n03:IDLE,CPUAlloc0,
+CPULoad0.01. Submitted once as15329407 from the declared0507e1b workdir;
+RUNNING from2026-09-22 21:31:01, hard end22:16:01, main40min limit.
+The scheduler confirms the selected node and resources. Initial node load
+was0.16/0.05/0.06 and the allocated GPU had0MiB and no compute processes.
+This records conditions at launch, not whole-node exclusivity for the run.
+
+Paid report/log prefix:`runtime/outputs/diagnostics/shared-compile-15329407`.
+It uses the same8f9dd88 diagnostic driver overlay with the unchanged0507e1b
+model source. Collect actual cache-load versus backend-compile counters and
+timings; no additional approval is needed to finish this already submitted job.
+Do not duplicate it. The earlier pending statements record preparation history.

@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Free daily cache diagnostic108553 COMPLETED0 in462.275s: found the exact prior
+free benchmark daily key and readable34.5MB cache; no backend compile attempted.
+Lowering alone233.17s. Approved idle-node daily-only paid comparison15329407
+RUNNING onibc13b03n03 from21:31:01 to at most22:16:01,1GPU/8CPU/45min,
+2.07yuan ceiling. Initial load0.16 and allocated GPU empty. Read
+`research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md`.
+
 Execution probes38944 and15328832 have ended with launcher timeout124; paid
 Slurm elapsed02:51:39, estimated charge14.19yuan. Free scalar-reference
 compilation alone took175.03min versus19.51min in the previous learning run;

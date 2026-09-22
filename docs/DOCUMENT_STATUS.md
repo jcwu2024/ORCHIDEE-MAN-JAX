@@ -20,7 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md` | Free key-only wrapper108553 RUNNING; paid daily-only comparison prepared, not submitted | Distinguish lowering, cache lookup, cold compile and host contention |
+| `research/daily_coarse_graining/shared_compile_cache_diagnostic_20260922.md` | Free108553 COMPLETED0; prior key/cache file found. Approved paid15329407 RUNNING on idle-selected node | Distinguish lowering, actual cache loading, cold compile and host contention |
 | `runtime-archival-20260922.md` |55 inactive code working trees archived and verified; runtime216367 entries | Restore historical source paths; protect Git dependencies and active runs; manage file quota |
 | `research/daily_coarse_graining/shared_execution_timeout_results_20260922.md` | Both probes exited124 during reference work; no candidate performance result | Compilation-time regression, preserved partial evidence and next diagnosis |
 | `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md` |15328832 timed out before dual comparison; result supersedes RUNNING snapshot | Same-method gradients/two changing-data updates, full timing, memory and cost |
