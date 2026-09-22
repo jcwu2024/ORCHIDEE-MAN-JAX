@@ -22,6 +22,13 @@ bounded changing-data updates and a measured resource proposal. The existing
 runner remains fixed100; do not silently edit max_updates or claim ready training.
 No additional GPU training submitted by this preparation.
 
+Saved-curve diagnosis is complete without inference:
+`research/daily_coarse_graining/shared_pilot_error_diagnosis_20260922.md`.
+Same3of24 held-out T30 windows account for57-61% of primary SSE; respiration
+components substantially cancel, RH has no nonzero targets. Preserve per-window
+and component readouts in the extension; do not train on these development
+windows or infer causal feedback/50-year behavior from this association.
+
 User approved the additional8/16 pair. Jobs15329519(micro8,ibc13b03n05) and
 15329520(micro16,ibc13b03n06) are RUNNING from23:20:43CST September22,
 hard end01:20:43 September23, each1V100/8CPU/64GiB/2h. Incremental cost cap

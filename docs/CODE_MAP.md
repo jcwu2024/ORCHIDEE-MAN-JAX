@@ -17,6 +17,9 @@ reads500 existing prepared batches on CPU to count unique dates and validate
 shape/development separation, and never executes a neural model. Its manifest
 `shared_learning_extension_preparation_v1.json` is preparation-only; the old
 100-update runner does not automatically accept it as a training contract.
+`analyze_shared_pilot_curves.py` reads the saved0/20/100 physical curves only,
+reporting T30 window concentration, within-window accumulation and respiration
+component cancellation. It runs no inference and does not alter training data.
 
 `scripts/hpc/probe_shared_dual.py` owns the bounded scalar32 serial-versus-dual
 execution comparison for the consolidated shared model, including peer sync

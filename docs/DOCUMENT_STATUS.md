@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_pilot_error_diagnosis_20260922.md` | Saved-curve analysis complete;7 pooled endpoints reproduce existing summary; no inference | Window concentration, signed accumulation, respiration compensation and RH coverage |
 | `research/daily_coarse_graining/shared_learning_extension_plan_20260922.md` | Preparation-only100->500 plan; actual500-artifact free CPU audit passed93.61s; no training submitted | Data coverage, fixed physical panels, reproducibility, remaining runner integration |
 | `research/daily_coarse_graining/shared_micro8_16_plan_20260922.md` |ef8c23f;27 local/11 deployed tests pass; approved15329519/15329520 RUNNING23:20:43CST, incremental cap11.04yuan | Larger parallel microbatch probes using completed scalar32 reference |
 | `research/daily_coarse_graining/shared_staged_execution_plan_20260922.md` |6302071 deployed; paid15329444/15329445 submitted held, automatically released by free helper36324 after reference6597 completes; combined cap11.04yuan | Resumable reference, same-allocation scalar/micro timings and bounded budget |
