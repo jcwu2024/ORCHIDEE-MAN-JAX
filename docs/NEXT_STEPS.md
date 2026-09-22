@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+User approved the additional8/16 pair. Jobs15329519(micro8,ibc13b03n05) and
+15329520(micro16,ibc13b03n06) are RUNNING from23:20:43CST September22,
+hard end01:20:43 September23, each1V100/8CPU/64GiB/2h. Incremental cost cap
+11.04yuan; all four micro2/4/8/16 jobs combined cap22.08yuan. Immutable
+ef8c23f checkout`runtime/checkouts/shared-staged-large-v1`; startup logs show
+idle GPUs and host load0.00. Collect`shared-staged-15329519/15329520.json/.log`
+under`runtime/outputs/diagnostics`. Earlier15329444/15329445 are also RUNNING.
+All four allocations are authorized; do not duplicate them or request approval
+again. No measured candidate speedup yet. Earlier pending8/16 approval wording
+below is superseded by this launch record.
+
 Reference6597 completed and automatically released15329444/15329445; both
 paid jobs are RUNNING on their declared nodes, have loaded reference graphs,
 timed scalar32 and entered micro2/micro4 compilation without logged errors.

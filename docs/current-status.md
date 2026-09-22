@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Four parallel execution probes are now RUNNING:15329444 micro2 onibc13b03n03,
+15329445 micro4 onibc13b03n04,15329519 micro8 onibc13b03n05,15329520 micro16
+onibc13b03n06. Reference6597 completed in1387.6s, exit0. The8/16 pair uses
+immutableef8c23f, started23:20:43CST September22,2h scheduler limits. User
+approved additional11.04yuan, combined four-job ceiling22.08yuan. Startup
+logs show idle GPUs/load0.00. No candidate speedup result yet; collect the
+four per-job reports. Earlier held/pending-approval snapshots are superseded.
+
 Paid parallel jobs15329444(micro2,ibc13b03n03) and15329445(micro4,
 ibc13b03n04) submitted with user approval22:25:27/28CST September22.
 Each1V100/8CPU/64GiB/2h, combined11.04yuan maximum; immutable6302071 at

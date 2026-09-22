@@ -1,5 +1,19 @@
 # Parallel micro8 and micro16 execution extension
 
+## Approved launch
+
+User approved the incremental11.04yuan pair. Submitted15329519 micro8 and
+15329520 micro16; both RUNNING from2026-09-22 23:20:43CST onibc13b03n05/06.
+Scheduler hard end2026-09-23 01:20:43CST,110min main timeout, each1V100,
+8CPU,64GiB. Working checkout remains immutableef8c23f, as declared below.
+Node checks before submission showedIDLE,CPUAlloc0/112,CPULoad0.01;
+startup logs show host load0.00 and no other visible GPU compute processes.
+Scheduler records confirm expected nodes/resources/workdir/time limits.
+Log/report prefixes:`runtime/outputs/diagnostics/shared-staged-15329519` and
+`shared-staged-15329520`. Reference6597 completed1387.6s,exit0, so neither
+new job needs a hold. Existing2/4 pair still runs. Total cap for all four is
+22.08yuan. Preparation-phase approval-pending text below is historical.
+
 The user requested larger microbatches while micro2/4 jobs15329444/15329445
 run. Prepare two additional independent probes, not new scientific training.
 Both reuse the completed source100/artifact742 scalar32 reference in
