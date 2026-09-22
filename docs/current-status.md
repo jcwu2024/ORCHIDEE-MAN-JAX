@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest execution admission: cfc518d dynamic projection reuse passed26local
+checks, deployed JAX0.4.38 CUDA runtime and3 serialization/update tests. Free
+gln01 PID25756(daily micro4,90min) and25757(T7/T30,120min) started01:46:44CST
+September23(server clock); real-model memory/speed/parity pending. No paid
+submission or retained training updates. See the dynamic-reuse protocol below.
+
 Current2026-09-23: micro16 paid15329520 COMPLETED0:0, candidate resource_limited,
 compiled-live78.01GiB, no execution; compile3226.34s, allocation1:18:57/~3.63yuan.
 All four paid micro probes finished. Optional identical dynamic K/V projection

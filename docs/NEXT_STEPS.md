@@ -8,9 +8,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
-Current2026-09-23: optional dynamic axis/local projection reuse is implemented
-and undergoing local numerical admission. Default gather_reuse is unchanged.
-Next run the bounded free-node daily micro4 and T7/T30 component comparison,
+Latest launch: immutable cfc518d, local26checks passed, deployed CUDA runtime
+and3 serialization/update plumbing tests passed. Free gln01 GPU0PID25756
+daily micro4(90min) andGPU1PID25757 T7/T30(120min) started01:46:44CST
+September23(server clock). Collect`shared-dynamic-reuse-daily/recurrent.json`
+under runtime diagnostics. No new paid job. After all components pass, execute
+the25min joint replay from saved executables; only then assess adoption.
+
+Current2026-09-23: optional dynamic axis/local projection reuse is implemented,
+locally checked and undergoing free-GPU admission. Default gather_reuse is unchanged.
+Collect the bounded free-node daily micro4 and T7/T30 component comparison,
 then complete AdamW replay, as specified in
 `research/daily_coarse_graining/shared_dynamic_projection_reuse_admission_20260923.md`.
 Preserve widths, masks, outputs, losses and gradients; no paid submission or

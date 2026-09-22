@@ -98,3 +98,27 @@ It depends on`runtime/checkouts/shared-staged-large-v1/.git/objects` and that
 repository's existing alternates. Preserve those object stores while the new
 checkout is active. Store candidate components in
 `runtime/outputs/diagnostics/shared-dynamic-reuse-v1`; do not overwrite references.
+
+## Deployed launch record
+
+Immutable candidate commit`cfc518d095efa468b9ceb2a317fe9dfe035f7c62`.
+Actual shell expansion for CPU, daily and recurrent branches passed. Free test02
+checkpoint/method metadata preparation passed1.6s. Free gln01 JAX0.4.38 CUDA
+runtime check passed59.90s, and3 executable-serialization/AdamW plumbing tests
+passed6.18s. These are technical checks, not real-model scientific evidence.
+Reports:`shared-dynamic-reuse-preflight.json` and
+`shared-dynamic-reuse-preflight-runtime.json` under runtime diagnostics.
+
+Started2026-09-23 01:46:44CST (server clock) on gln01/ibc13b02n04, both GPUs
+0MiB/0% immediately beforehand; host load0.34/0.14/0.08. No paid submission.
+GPU0 wrapperPID25756 runs daily micro4,90min ceiling; GPU1 wrapperPID25757 runs
+T7 thenT30,120min ceiling. Both use`run_shared_projection_reuse.sh`, same source
+checkpoint/identity and separate component files. JSON/log basenames under
+`runtime/outputs/diagnostics`: `shared-dynamic-reuse-daily` and
+`shared-dynamic-reuse-recurrent`. PID files are in the candidate component dir.
+Query on gln01 with`ps -p 25756,25757 -o pid,etime,pcpu,comm`; wrapper CPU use
+does not describe its Python child. Result JSON and log exit status decide success.
+
+Next collect component parity, compiled/actual memory and timings. Only if all
+three pass, run the25min joint executable reload/full-update comparison. Do not
+rebuild references or start learning while these admissions are incomplete.
