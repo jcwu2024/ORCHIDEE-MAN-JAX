@@ -27,6 +27,13 @@ gradients, native directional checks and two full-network joint updates.
 Its CPU mode validates the existing reports/configuration only; the GPU mode
 is free-node-only. It is not a production training or independent science
 evaluation runner. See `shared_joint_gpu_admission_20260922.md` in research docs.
+`shared_learning_plan.py` freezes seeded artifact order and development panels;
+`prepare_shared_learning_data.py` checks actual selected coverage/shapes on CPU.
+`run_shared_learning.py/.sh` runs the fresh bounded100-update pilot, averaging32
+daily gradients plus oneT7/oneT30 before one full-network AdamW update.
+`shared_learning_monitor.py` reports fixed TRAIN-fit and held-out development
+physical curves at0/20/100 through the canonical forward rollout. It does not
+change losses, select a best checkpoint or claim final scientific acceptance.
 `run_shared_transformer_admission.py` and its shell launcher own bounded CPU
 shape/scales and free GPU forward/gradient/two-update admission. The admission
 manifest is not a production-training contract. Existing runners below remain

@@ -20,7 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_learning_protocol_20260922.md` | Fresh100-update free learning pilot declared; implementation/data preparation in progress |32 daily rows, oneT7/oneT30, fixed fit and48 held-out development windows, milestones0/20/100 |
+| `research/daily_coarse_graining/shared_learning_protocol_20260922.md` | Fresh100-update free learning pilot implemented; actual CPU data preparation passed, GPU launch next |32 daily rows, oneT7/oneT30, fixed fit and48 held-out development windows, milestones0/20/100 |
 | `research/daily_coarse_graining/shared_joint_results_20260922.md` | Joint7359 COMPLETED0; AD/two updates admitted, learning tradeoffs remain |8.108GiB peak, native directional checks, T30 improvements and T7/daily regressions |
 | `research/daily_coarse_graining/shared_joint_gpu_admission_20260922.md` | Completed protocol/launch record; result supersedes RUNNING snapshot | Fixed daily/T7/T30 objective, fresh initialization, stage preservation, two updates and240min ceiling |
 | `research/daily_coarse_graining/shared_v3_admission_results_20260922.md` | Daily100848 and CPU45145 COMPLETED0; next joint GPU admission runner | Numerical daily AD/two updates,7.522GiB peak, two-sample loss tradeoff, passed recurrent CPU shapes |

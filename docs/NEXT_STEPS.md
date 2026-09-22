@@ -13,12 +13,16 @@ T7/T30 direction checks, two full updates and physical/checkpoint gates pass;
 peak8.108GiB. T30 losses improve44.62%/64.40%, but artifact982 T7 and both
 daily contributions regress. No stable-learning/scientific acceptance.
 Read `research/daily_coarse_graining/shared_joint_results_20260922.md`.
-Next implement/prepare the fixed fresh100-update free-node learning pilot:
+Next execute the fixed fresh100-update free-node learning pilot:
 32 daily rows + oneT7/oneT30 per update, evaluations0/20/100, existing48
 held-out development windows, no architecture/loss changes or inherited weights.
 Protocol:`shared_learning_v1.json`; explanation:
 `research/daily_coarse_graining/shared_learning_protocol_20260922.md`.
-Actual data coverage/shape preparation on CPU precedes GPU launch. No paid
+Free CPU actual-data preparation at3af6fe8 PASSED in58.50s:100 artifacts,
+3200 distinct daily samples,6899 union point/year/days,523 points,1720
+point-years,39 years, no held-out point-year overlap. All three component
+shape classes match admitted819. Runner/monitor integration is in progress;
+the next action is actual shell/config checks and one free GPU launch. No paid
 task. The RUNNING7359 snapshot below is historical; do not rerun its admission.
 
 The joint admission runner is implemented atc2498e4;38 unique local tests,

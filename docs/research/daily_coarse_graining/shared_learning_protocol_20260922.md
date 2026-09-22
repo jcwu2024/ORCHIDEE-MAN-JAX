@@ -1,6 +1,7 @@
 # First bounded learning run of the consolidated shared Transformer
 
-Status: declared before training, implementation/preparation in progress.
+Status: declared before training; implementation and actual CPU data preparation
+complete, target-shell checks and free GPU launch next.
 The user's2026-09-22 continuation authorizes this bounded free-node work;
 no paid computation is authorized. Numerical daily/T7/T30 admission7359 has
 passed. This is a learning pilot, not the final paper training run.
@@ -66,3 +67,26 @@ remaining cost; a later paid run requires a separate concrete approval.
 After this pilot, decide the next data/learning budget from fixed TRAIN-fit
 and held-out physical curves, including tradeoffs and uncertainty.365-day,
 long-site, GateD2 and product acceptance remain outstanding.
+
+## Completed data preparation
+
+Free test02 preparation at3af6fe8 completed in58.50seconds. It inspected the
+100 selected existing artifacts without executing a neural model or generating
+Teacher data. The declared draws contain3200 distinct single-day samples,
+700 distinct days within T7 windows and3000 within T30 windows. Their union
+contains6899 point/year/day keys, covering523 landpoints,1720 point-years and
+39 years (1961-2004, not every year). This remains a bounded pilot, not an epoch.
+There are zero point-year overlaps with the48-window held-out development panel.
+Each training component has one shape/dtype class, identical to admission819.
+Evidence: `outputs/shared-learning-prep-3af6fe8.json` locally and the same name
+under remote `runtime/outputs/diagnostics/`.
+
+## Local implementation verification
+
+The runner, plan and monitor test suite passes13 tests, including direct
+comparison of32-gradient averaging plus T7/T30 against the complete toy loss,
+one AdamW update, exact same-method optimizer resumption, physical/nonfinite
+rejection, fixed panels, stock curves and input-signature cache reuse.
+The monitor plus adjacent recurrent loss/validation tests passes19 tests
+(30 distinct tests across both suites). Ruff passes. These are local contract
+tests, not actual-model GPU execution or scientific accuracy evidence.

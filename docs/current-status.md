@@ -20,8 +20,12 @@ regress. Update2's own batch loss rises6.27%; no stable-learning accuracy
 claim. See `research/daily_coarse_graining/shared_joint_results_20260922.md`.
 Next fixed fresh100-update pilot under `shared_learning_v1.json`:32 daily
 rows plus oneT7/oneT30, evaluations0/20/100 including existing48 held-out
-development windows. Implementation and free CPU preparation in progress;
-no new GPU or paid task yet. Older RUNNING snapshots below are historical.
+development windows. Free CPU data preparation PASSED58.50s at3af6fe8:
+100 artifacts,3200 distinct daily samples,6899 union point/year/days,
+523 points,1720 point-years,39 years; zero held-out point-year overlap.
+All training shape/dtype classes match admission819. Runner/monitor integration
+is in progress; no new GPU or paid task yet. Older RUNNING snapshots below
+are historical.
 
 Shared joint numerical admission is now running on free gln01 GPU1,
 wrapper7359, immutablec2498e4, checkout`shared-joint-c2498e4-full`,240min main
