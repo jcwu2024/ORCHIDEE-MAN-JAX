@@ -2,14 +2,21 @@
 
 Last updated: 2026-09-22.
 
-`probe_shared_execution.py` now supports persistent reference/micro2/micro4
+`probe_shared_execution.py` now supports persistent reference/micro2/micro4/micro8/micro16
 stages. `run_shared_staged_execution.sh` prepares on free CPU, loads cached
 reference gradients on free GPU, or measures one approved paid candidate.
-`job_shared_staged_execution.sh` requires STAGE=micro2 or micro4 and declares
-one1GPU/8CPU/2h job. Two independent submissions will measure them in parallel,
+`job_shared_staged_execution.sh` requires one named micro stage and declares
+one1GPU/8CPU/2h job. Four independent submissions measure them in parallel,
 sharing the completed read-only reference and writing distinct candidate files.
 Partial reference files survive interruption. Both scalar and candidate warm
 timings execute the full joint update; saved gradients are not timing shortcuts.
+
+`prepare_shared_extension_data.py` prepares the next seeded400-artifact
+extension of the completed100-update pilot. It verifies the actual pilot prefix,
+reads500 existing prepared batches on CPU to count unique dates and validate
+shape/development separation, and never executes a neural model. Its manifest
+`shared_learning_extension_preparation_v1.json` is preparation-only; the old
+100-update runner does not automatically accept it as a training contract.
 
 `scripts/hpc/probe_shared_dual.py` owns the bounded scalar32 serial-versus-dual
 execution comparison for the consolidated shared model, including peer sync

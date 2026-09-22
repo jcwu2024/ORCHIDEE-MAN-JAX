@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Parallel preparation for a proposed100->500 learning extension passed on free
+test02 in93.61s. Actual500 prepared artifacts reproduce original100 coverage,
+add400 distinct IDs and27525 unseen union dates; cumulative34424 union dates,
+15985 daily dates,535points/7502point-years/all44years. No overlap with fixed
+development point-years; same shape/dtype class. Existing750-artifact registry
+is distinct from the346539-day expanded pool and full Teacher release.
+Plan:`research/daily_coarse_graining/shared_learning_extension_plan_20260922.md`.
+No model executed or new training submitted. Execution integration and explicit
+100->500 checkpoint provenance remain before training launch.
+
 Four parallel execution probes are now RUNNING:15329444 micro2 onibc13b03n03,
 15329445 micro4 onibc13b03n04,15329519 micro8 onibc13b03n05,15329520 micro16
 onibc13b03n06. Reference6597 completed in1387.6s, exit0. The8/16 pair uses

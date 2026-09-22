@@ -1,0 +1,19 @@
+{
+  "schema_version": "shared_learning_extension_preparation_v1",
+  "status": "data_preparation_only_not_executable_training_contract",
+  "source_update": 100,
+  "target_update": 500,
+  "sampling_seed": 20260922,
+  "daily_rows_per_update": 32,
+  "recurrent_window_index": 0,
+  "proposed_milestones": [100, 200, 300, 500],
+  "proposed_checkpoint_interval": 25,
+  "checkpoint_selection": "declared_final_update_500_no_best_panel_selection",
+  "initialization": "adaptive_extension_of_declared_fresh_seed_pilot_update100_with_AdamW",
+  "method_changes": "none_to_architecture_loss_scales_precision_or_optimizer",
+  "execution_policy": "pending_microbatch_benchmark_selection",
+  "paid_training_authorized": false,
+  "scientific_acceptance": false,
+  "teacher_regeneration": false,
+  "sealed_test_access": false
+}

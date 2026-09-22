@@ -8,6 +8,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+While the four execution probes run, the next learning stage is prepared in
+`research/daily_coarse_graining/shared_learning_extension_plan_20260922.md`.
+Free test02 actual500-artifact audit passed93.61s: original100 prefix/coverage
+reproduced,400 new artifactIDs,27525 net new union dates, cumulative34424 dates,
+535 points/7502 point-years/all44years,15985 unique daily rows,zero development
+point-year overlap,one shape/dtype class. No Teacher regeneration or model run.
+Proposed continuation is100->500 with same architecture/objective/full-network
+AdamW and fixed16fit+48development windows. This is an adaptive exploration,
+not the final paper recipe. After benchmark selection, explicitly implement
+compatible extension provenance/resumption and selected micro execution, then
+bounded changing-data updates and a measured resource proposal. The existing
+runner remains fixed100; do not silently edit max_updates or claim ready training.
+No additional GPU training submitted by this preparation.
+
 User approved the additional8/16 pair. Jobs15329519(micro8,ibc13b03n05) and
 15329520(micro16,ibc13b03n06) are RUNNING from23:20:43CST September22,
 hard end01:20:43 September23, each1V100/8CPU/64GiB/2h. Incremental cost cap
