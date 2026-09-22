@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_dynamic_projection_reuse_admission_20260923.md` | Active optional execution candidate; local/free admission, no paid submission; micro16 closed resource_limited78.01GiB | Identical dynamic K/V reuse, numerical and memory gates, persisted executable joint replay |
 | `research/daily_coarse_graining/shared_decoder_cost_audit_20260923.md` | Complete source-shape/accepted-layout audit; no model edits or runtime attribution | Repeated dynamic projections, decoder FFNs, bounded packing and unchanged-capacity next candidate |
 | `research/daily_coarse_graining/shared_execution_cost_profile_20260923.md` | Cost synthesis; realT7 cache-miss exits before execution; micro8 completed resource_limited40.33GiB, micro16 still running; no new paid task | Measured component/startup costs, diagnostic limits, balanced two-card arithmetic and next execution test |
 | `research/daily_coarse_graining/shared_architecture_efficiency_gate_20260923.md` | User-directed joint architecture/efficiency review before larger training; design discussion before structural changes | Cost attribution, scientific usefulness, function-preserving optimization and formal training admission |

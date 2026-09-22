@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current2026-09-23: micro16 paid15329520 COMPLETED0:0, candidate resource_limited,
+compiled-live78.01GiB, no execution; compile3226.34s, allocation1:18:57/~3.63yuan.
+All four paid micro probes finished. Optional identical dynamic K/V projection
+reuse is now implemented and undergoing numerical admission; current default
+and scientific method remain unchanged. Its local/free-GPU protocol is
+`research/daily_coarse_graining/shared_dynamic_projection_reuse_admission_20260923.md`.
+No speedup or memory improvement is established for this new candidate yet.
+These facts supersede the older RUNNING statements below.
+
 Latest00:38:57CST: micro8 paid15329519 COMPLETED0:0/1:17:59, but candidate
 resource_limited: final compiled-live40.33GiB>32GiB hardware. Candidate not
 executed, no measured speed/parity/actual peak. Compile52.71min, tariff estimate

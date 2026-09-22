@@ -81,10 +81,13 @@ class SharedTransformerConfig:
             raise ValueError("readout width and output chunk size must be positive")
         if not 0.0 < self.normalization_epsilon < 1.0:
             raise ValueError("normalization epsilon must lie in (0, 1)")
-        if self.decoder_execution not in {"original", "gather_only", "gather_reuse"}:
-            raise ValueError(
-                "decoder execution must be original, gather_only, or gather_reuse"
-            )
+        if self.decoder_execution not in {
+            "original",
+            "gather_only",
+            "gather_reuse",
+            "gather_dynamic_reuse",
+        }:
+            raise ValueError("decoder execution must be original, gather_only, gather_reuse, or gather_dynamic_reuse")
 
 
 class SharedTransformerContext(NamedTuple):
@@ -154,7 +157,9 @@ def _initialize_tokenizer_parameters(
             next(next_key), (layout.forcing_family_index.size, config.forcing_width), config.forcing_width
         ),
         "forcing_position_embedding": _normal(
-            next(next_key), (int(np.asarray(inputs.forcing.values).shape[0]), config.forcing_width), config.forcing_width
+            next(next_key),
+            (int(np.asarray(inputs.forcing.values).shape[0]), config.forcing_width),
+            config.forcing_width,
         ),
         "state_field_embedding": _normal(
             next(next_key), (layout.state_field_pool.shape[0], config.input_width), config.input_width
@@ -174,16 +179,12 @@ def _initialize_tokenizer_parameters(
         "process_static_position_embedding": _normal(
             next(next_key), (process_positions, config.input_width), config.input_width
         ),
-        "expert_embedding": _normal(
-            next(next_key), (len(layout.expert_names), config.input_width), config.input_width
-        ),
+        "expert_embedding": _normal(next(next_key), (len(layout.expert_names), config.input_width), config.input_width),
         "axis_role_embedding": _normal(
             next(next_key), (len(layout.axis_names), config.input_width), config.input_width
         ),
         "axis_position_embedding": tuple(
-            None
-            if axis == "pft"
-            else _normal(next(next_key), (extent, config.input_width), config.input_width)
+            None if axis == "pft" else _normal(next(next_key), (extent, config.input_width), config.input_width)
             for axis, extent in zip(layout.axis_names, layout.axis_extents, strict=True)
         ),
     }
@@ -215,9 +216,7 @@ def initialize_shared_transformer_parameters(
     carbon = {}
     if carbon_state_layout is not None:
         carbon = {
-            "field_embedding": _normal(
-                next(keys), (len(carbon_state_layout.field_names), config.width), config.width
-            ),
+            "field_embedding": _normal(next(keys), (len(carbon_state_layout.field_names), config.width), config.width),
             "axis_role_embedding": _normal(
                 next(keys), (len(carbon_state_layout.axis_role_names), config.width), config.width
             ),
@@ -240,18 +239,12 @@ def initialize_shared_transformer_parameters(
         ),
         "field_embedding": _normal(next(keys), (len(schema.fields), config.width), config.width),
         "label_embedding": _normal(next(keys), (len(schema.labels), config.width), config.width),
-        "output_axis_role_embedding": _normal(
-            next(keys), (len(layout.axis_names), config.width), config.width
-        ),
+        "output_axis_role_embedding": _normal(next(keys), (len(layout.axis_names), config.width), config.width),
         "output_axis_position_embedding": tuple(
-            None
-            if axis == "pft"
-            else _normal(next(keys), (extent, config.width), config.width)
+            None if axis == "pft" else _normal(next(keys), (extent, config.width), config.width)
             for axis, extent in zip(layout.axis_names, layout.axis_extents, strict=True)
         ),
-        "axis_slot_embedding": _normal(
-            next(keys), (layout.max_output_rank, config.width), config.width
-        ),
+        "axis_slot_embedding": _normal(next(keys), (layout.max_output_rank, config.width), config.width),
         "local_value_input": _linear_parameters(next(keys), 2, config.width),
         "readout_first": _linear_parameters(next(keys), config.width, config.readout_width),
         "readout_second": _linear_parameters(next(keys), config.readout_width, 1),
@@ -333,6 +326,20 @@ class _DecoderBlockProjection(NamedTuple):
     process_value: Any
     carbon_key: Any | None
     carbon_value: Any | None
+    axis_key: Any | None
+    axis_value: Any | None
+    local_key: Any | None
+    local_value: Any | None
+
+
+class _DecoderDynamicPlan(NamedTuple):
+    axis_expert_index: np.ndarray
+    axis_slot_index: np.ndarray
+    axis_role_index: np.ndarray
+    axis_position_index: np.ndarray
+    local_state_indices: np.ndarray
+    field_axis_indices: tuple[np.ndarray, ...]
+    field_local_indices: tuple[np.ndarray, ...]
 
 
 def _project_key_value(parameters: Mapping[str, Any], tokens: Any) -> tuple[Any, Any]:
@@ -345,30 +352,65 @@ def _decoder_projection_cache(
     family_tokens: Any,
     *,
     carbon_tokens: Any | None,
+    dynamic_plan: _DecoderDynamicPlan | None = None,
+    inputs: AssembledDailyOperatorInput | None = None,
+    input_normalization: NeuralInputNormalization | None = None,
+    layout: StrongBaselineLayout | None = None,
 ) -> tuple[tuple[_DecoderBlockProjection, ...], ...]:
     """Project banks shared by coordinate queries once per expert and block."""
 
     blocks = parameters["shared_transformer"]["coordinate_blocks"]
-    carbon_by_block = []
+    dynamic_tokens = None
+    if dynamic_plan is not None:
+        if inputs is None or input_normalization is None or layout is None:
+            raise ValueError("dynamic decoder projection reuse requires inputs and layout")
+        dynamic_tokens = _decoder_dynamic_tokens(
+            parameters,
+            context,
+            inputs,
+            input_normalization=input_normalization,
+            layout=layout,
+            plan=dynamic_plan,
+        )
+
+    shared_by_block = []
     for block in blocks:
         if carbon_tokens is None:
-            carbon_by_block.append((None, None))
+            carbon_key = carbon_value = None
         else:
-            carbon_by_block.append(
-                _project_key_value(block["attention"], carbon_tokens)
+            carbon_key, carbon_value = _project_key_value(block["attention"], carbon_tokens)
+        if dynamic_tokens is None:
+            axis_key = axis_value = local_key = local_value = None
+        else:
+            axis_key, axis_value = _project_key_value(block["attention"], dynamic_tokens[0])
+            local_key, local_value = _project_key_value(block["attention"], dynamic_tokens[1])
+        shared_by_block.append(
+            (
+                carbon_key,
+                carbon_value,
+                axis_key,
+                axis_value,
+                local_key,
+                local_value,
             )
+        )
 
     result = []
     for expert_index in range(int(context.process_tokens.shape[0])):
         expert = []
         for block_index, block in enumerate(blocks):
-            family_key, family_value = _project_key_value(
-                block["attention"], family_tokens[expert_index]
-            )
+            family_key, family_value = _project_key_value(block["attention"], family_tokens[expert_index])
             process_key, process_value = _project_key_value(
                 block["attention"], context.process_tokens[expert_index][None, :]
             )
-            carbon_key, carbon_value = carbon_by_block[block_index]
+            (
+                carbon_key,
+                carbon_value,
+                axis_key,
+                axis_value,
+                local_key,
+                local_value,
+            ) = shared_by_block[block_index]
             expert.append(
                 _DecoderBlockProjection(
                     family_key=family_key,
@@ -377,6 +419,10 @@ def _decoder_projection_cache(
                     process_value=process_value,
                     carbon_key=carbon_key,
                     carbon_value=carbon_value,
+                    axis_key=axis_key,
+                    axis_value=axis_value,
+                    local_key=local_key,
+                    local_value=local_value,
                 )
             )
         result.append(tuple(expert))
@@ -388,6 +434,8 @@ def _attention_from_projected_segments(
     query: Any,
     dynamic_tokens: Any,
     *,
+    dynamic_key: Any | None,
+    dynamic_value: Any | None,
     family_key: Any,
     family_value: Any,
     family_mask: Any,
@@ -404,7 +452,8 @@ def _attention_from_projected_segments(
     """Attend to shared and query-local banks with one normalization."""
 
     projected_query = _linear(parameters["query"], query)
-    dynamic_key, dynamic_value = _project_key_value(parameters, dynamic_tokens)
+    if dynamic_key is None or dynamic_value is None:
+        dynamic_key, dynamic_value = _project_key_value(parameters, dynamic_tokens)
     width = int(projected_query.shape[-1])
     head_width = width // int(heads)
 
@@ -452,24 +501,16 @@ def _attention_from_projected_segments(
     weights = jax.nn.softmax(jnp.where(row_valid, combined_logits, 0.0), axis=-1)
     weights = jnp.where(head_mask, weights, 0.0)
 
-    offsets = np.cumsum(
-        (0, family_key.shape[-2], dynamic_key.shape[-2], process_key.shape[-2])
-    )
-    result = jnp.einsum(
-        "...hqk,hkd->...hqd", weights[..., offsets[0] : offsets[1]], head_family_value
-    )
+    offsets = np.cumsum((0, family_key.shape[-2], dynamic_key.shape[-2], process_key.shape[-2]))
+    result = jnp.einsum("...hqk,hkd->...hqd", weights[..., offsets[0] : offsets[1]], head_family_value)
     result += jnp.einsum(
         "...hqk,...hkd->...hqd",
         weights[..., offsets[1] : offsets[2]],
         head_dynamic_value,
     )
-    result += jnp.einsum(
-        "...hqk,hkd->...hqd", weights[..., offsets[2] : offsets[3]], head_process_value
-    )
+    result += jnp.einsum("...hqk,hkd->...hqd", weights[..., offsets[2] : offsets[3]], head_process_value)
     if head_carbon_value is not None:
-        result += jnp.einsum(
-            "...hqk,hkd->...hqd", weights[..., offsets[3] :], head_carbon_value
-        )
+        result += jnp.einsum("...hqk,hkd->...hqd", weights[..., offsets[3] :], head_carbon_value)
     result = result.swapaxes(-3, -2).reshape(result.shape[:-3] + (result.shape[-2], width))
     return _linear(parameters["output"], result)
 
@@ -485,12 +526,42 @@ def _run_coordinate_blocks_reusing_projections(
     blocks: Any,
     projections: tuple[_DecoderBlockProjection, ...],
     config: SharedTransformerConfig,
+    dynamic_projection_indices: tuple[Any, Any, Any] | None = None,
 ) -> Any:
     for block, projected in zip(blocks, projections, strict=True):
+        dynamic_key = dynamic_value = None
+        if dynamic_projection_indices is not None:
+            axis_indices, local_indices, dynamic_active = dynamic_projection_indices
+            dynamic_key = jnp.concatenate(
+                (
+                    projected.axis_key[axis_indices],
+                    projected.local_key[local_indices, None, :],
+                ),
+                axis=1,
+            )
+            dynamic_value = jnp.concatenate(
+                (
+                    projected.axis_value[axis_indices],
+                    projected.local_value[local_indices, None, :],
+                ),
+                axis=1,
+            )
+            dynamic_key = jnp.where(
+                dynamic_active[:, None, None],
+                dynamic_key,
+                block["attention"]["key"]["bias"],
+            )
+            dynamic_value = jnp.where(
+                dynamic_active[:, None, None],
+                dynamic_value,
+                block["attention"]["value"]["bias"],
+            )
         message = _attention_from_projected_segments(
             block["attention"],
             query,
             dynamic_tokens,
+            dynamic_key=dynamic_key,
+            dynamic_value=dynamic_value,
             family_key=projected.family_key,
             family_value=projected.family_value,
             family_mask=family_mask,
@@ -675,7 +746,9 @@ def _normalized_local_state(
     mapped = indices >= 0
     safe = np.maximum(indices, 0)
     safe_indices = jnp.asarray(safe, dtype=jnp.int32)
-    defined = jnp.asarray(mapped, dtype=jnp.bool_) & jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_)[safe_indices]
+    defined = (
+        jnp.asarray(mapped, dtype=jnp.bool_) & jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_)[safe_indices]
+    )
     mean = jnp.asarray(normalization.continuous_mean)[safe_indices]
     raw = jnp.asarray(inputs.state.other)[safe_indices]
     value = standardize_continuous(
@@ -690,6 +763,144 @@ def _normalized_local_state(
         ),
     )
     return jnp.asarray(value, dtype=jnp.float32), defined
+
+
+def _decoder_dynamic_plan(
+    *,
+    schema: NeuralOutputSchema,
+    layout: StrongBaselineLayout,
+) -> _DecoderDynamicPlan:
+    """Build compact identities for decoder-local axis and state tokens."""
+
+    axis_lookup: dict[tuple[int, int, int, int], int] = {}
+    axis_variants: list[tuple[int, int, int, int]] = []
+    local_lookup: dict[int, int] = {}
+    local_variants: list[int] = []
+    field_axis_indices = []
+    field_local_indices = []
+    active_pft_lookup = {
+        int(full_index): compact_index for compact_index, full_index in enumerate(layout.active_pft_indices)
+    }
+
+    for field_index, (field, ownership) in enumerate(zip(schema.fields, layout.ledger, strict=True)):
+        selected = _static_field_coordinate_indices(field, ownership, layout)
+        coordinates = np.asarray(field_coordinates(field.shape), dtype=np.int32)[selected]
+        expert_index = int(layout.field_expert_index[field_index])
+        per_axis = []
+        for slot, axis_name in enumerate(ownership.axes):
+            if axis_name == "landpoint":
+                continue
+            canonical = layout.axis_names.index(axis_name)
+            raw_positions = coordinates[:, slot]
+            if axis_name == "pft" and field.full_pft_axis:
+                positions = np.asarray(
+                    [active_pft_lookup[int(value)] for value in raw_positions],
+                    dtype=np.int32,
+                )
+            else:
+                positions = raw_positions
+            inverse = np.empty((coordinates.shape[0],), dtype=np.int32)
+            for coordinate_index, position in enumerate(positions):
+                key = (expert_index, slot, canonical, int(position))
+                bank_index = axis_lookup.get(key)
+                if bank_index is None:
+                    bank_index = len(axis_variants)
+                    axis_lookup[key] = bank_index
+                    axis_variants.append(key)
+                inverse[coordinate_index] = bank_index
+            per_axis.append(inverse)
+        if per_axis:
+            field_axis_indices.append(np.stack(tuple(per_axis), axis=1))
+        else:
+            field_axis_indices.append(np.zeros((coordinates.shape[0], 0), dtype=np.int32))
+
+        local_indices = np.asarray(layout.local_state_indices[field_index], dtype=np.int32).reshape(-1)
+        if local_indices.size:
+            local_indices = local_indices[selected]
+        else:
+            local_indices = np.full((coordinates.shape[0],), -1, dtype=np.int32)
+        local_inverse = np.empty((coordinates.shape[0],), dtype=np.int32)
+        for coordinate_index, state_index in enumerate(local_indices):
+            key = int(state_index)
+            bank_index = local_lookup.get(key)
+            if bank_index is None:
+                bank_index = len(local_variants)
+                local_lookup[key] = bank_index
+                local_variants.append(key)
+            local_inverse[coordinate_index] = bank_index
+        field_local_indices.append(local_inverse)
+
+    if axis_variants:
+        axis_values = np.asarray(axis_variants, dtype=np.int32)
+    else:
+        axis_values = np.zeros((0, 4), dtype=np.int32)
+    return _DecoderDynamicPlan(
+        axis_expert_index=axis_values[:, 0],
+        axis_slot_index=axis_values[:, 1],
+        axis_role_index=axis_values[:, 2],
+        axis_position_index=axis_values[:, 3],
+        local_state_indices=np.asarray(local_variants, dtype=np.int32),
+        field_axis_indices=tuple(field_axis_indices),
+        field_local_indices=tuple(field_local_indices),
+    )
+
+
+def _decoder_dynamic_tokens(
+    parameters: Mapping[str, Any],
+    context: SharedTransformerContext,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    input_normalization: NeuralInputNormalization,
+    layout: StrongBaselineLayout,
+    plan: _DecoderDynamicPlan,
+) -> tuple[Any, Any]:
+    """Materialize each distinct dynamic token once before K/V projection."""
+
+    shared = parameters["shared_transformer"]
+    experts = jnp.asarray(plan.axis_expert_index, dtype=jnp.int32)
+    slots = jnp.asarray(plan.axis_slot_index, dtype=jnp.int32)
+    roles = jnp.asarray(plan.axis_role_index, dtype=jnp.int32)
+    positions = jnp.asarray(plan.axis_position_index, dtype=jnp.int32)
+    if plan.axis_expert_index.size:
+        extents = jnp.asarray(layout.axis_extents, dtype=jnp.int32)[roles]
+        dynamic_positions = jnp.minimum(positions, extents - 1)
+        axis_tokens = jnp.zeros(
+            (plan.axis_expert_index.size, config_width(parameters)),
+            dtype=jnp.float32,
+        )
+        if "pft" in layout.axis_names:
+            pft_role = layout.axis_names.index("pft")
+            safe_pft_positions = jnp.minimum(dynamic_positions, context.pft_tokens.shape[0] - 1)
+            axis_tokens += jnp.where(
+                (roles == pft_role)[:, None],
+                context.pft_tokens[safe_pft_positions],
+                0.0,
+            )
+        offsets = jnp.asarray(layout.axis_offsets, dtype=jnp.int32)[roles]
+        dynamic_indices = offsets + dynamic_positions
+        dynamic = context.expert_axis_tokens[experts, dynamic_indices]
+        dynamic_mask = context.expert_axis_mask[experts, dynamic_indices]
+        axis_tokens += jnp.where(dynamic_mask[:, None], dynamic, 0.0)
+        axis_tokens += shared["output_axis_role_embedding"][roles]
+        for role, embedding in enumerate(shared["output_axis_position_embedding"]):
+            if embedding is not None:
+                selected = roles == role
+                safe_positions = jnp.where(selected, dynamic_positions, 0)
+                axis_tokens += jnp.where(selected[:, None], embedding[safe_positions], 0.0)
+        axis_tokens += shared["axis_slot_embedding"][slots]
+    else:
+        axis_tokens = jnp.zeros((0, config_width(parameters)), dtype=jnp.float32)
+
+    local, local_defined = _normalized_local_state(
+        inputs,
+        input_normalization,
+        plan.local_state_indices,
+    )
+    local_tokens = _linear(
+        shared["local_value_input"],
+        jnp.stack((local, local_defined.astype(jnp.float32)), axis=1),
+    )
+    return axis_tokens, local_tokens
 
 
 def _field_coordinate_inputs(
@@ -784,9 +995,10 @@ def _validate_carbon_layout_parameters(
     if carbon_parameters["axis_role_embedding"].shape[0] != role_count:
         raise ValueError("carbon state axis-role layout drift")
     position_embeddings = carbon_parameters["axis_position_embedding"]
-    if len(position_embeddings) != role_count or tuple(
-        int(embedding.shape[0]) for embedding in position_embeddings
-    ) != extents:
+    if (
+        len(position_embeddings) != role_count
+        or tuple(int(embedding.shape[0]) for embedding in position_embeddings) != extents
+    ):
         raise ValueError("carbon state axis-position layout drift")
 
     state_indices = np.asarray(carbon_state_layout.state_indices)
@@ -879,14 +1091,11 @@ def _decode_field(
     carbon_defined: Any | None,
     carbon_state_layout: Any | None,
     projection_cache: tuple[_DecoderBlockProjection, ...] | None,
+    dynamic_projection_indices: tuple[np.ndarray, np.ndarray] | None,
 ) -> tuple[Any, Any]:
     gather = config.decoder_execution != "original"
-    coordinate_indices = (
-        _static_field_coordinate_indices(field, ownership, layout) if gather else None
-    )
-    _full_coordinates, full_active, _full_owner = _field_active_and_pft_owner(
-        context, field, ownership, layout
-    )
+    coordinate_indices = _static_field_coordinate_indices(field, ownership, layout) if gather else None
+    _full_coordinates, full_active, _full_owner = _field_active_and_pft_owner(context, field, ownership, layout)
     (
         features,
         active,
@@ -927,17 +1136,49 @@ def _decode_field(
     axis_chunks = padded(axis_tokens, axis_tokens.shape[1:]).reshape(
         (chunk_count, chunk, axis_tokens.shape[1], config.width)
     )
-    axis_mask_chunks = padded(axis_mask, axis_mask.shape[1:]).reshape(
-        (chunk_count, chunk, axis_mask.shape[1])
-    )
-    local_chunks = padded(local_token, local_token.shape[1:]).reshape(
-        (chunk_count, chunk, config.width)
-    )
+    axis_mask_chunks = padded(axis_mask, axis_mask.shape[1:]).reshape((chunk_count, chunk, axis_mask.shape[1]))
+    local_chunks = padded(local_token, local_token.shape[1:]).reshape((chunk_count, chunk, config.width))
     local_mask_chunks = jnp.pad(local_defined & active, ((0, pad),)).reshape((chunk_count, chunk))
+    if dynamic_projection_indices is not None:
+        axis_projection_indices, local_projection_indices = dynamic_projection_indices
+        axis_projection_chunks = jnp.pad(
+            jnp.asarray(axis_projection_indices, dtype=jnp.int32),
+            ((0, pad), (0, 0)),
+        ).reshape((chunk_count, chunk, axis_tokens.shape[1]))
+        local_projection_chunks = jnp.pad(jnp.asarray(local_projection_indices, dtype=jnp.int32), ((0, pad),)).reshape(
+            (chunk_count, chunk)
+        )
     shared = parameters["shared_transformer"]
 
     def decode_chunk(values: tuple[Any, ...]) -> Any:
-        chunk_features, chunk_active, chunk_owner, chunk_axis, chunk_axis_mask, chunk_local, chunk_local_mask = values
+        if dynamic_projection_indices is None:
+            (
+                chunk_features,
+                chunk_active,
+                chunk_owner,
+                chunk_axis,
+                chunk_axis_mask,
+                chunk_local,
+                chunk_local_mask,
+            ) = values
+            chunk_dynamic_projection_indices = None
+        else:
+            (
+                chunk_features,
+                chunk_active,
+                chunk_owner,
+                chunk_axis,
+                chunk_axis_mask,
+                chunk_local,
+                chunk_local_mask,
+                chunk_axis_projection_indices,
+                chunk_local_projection_indices,
+            ) = values
+            chunk_dynamic_projection_indices = (
+                chunk_axis_projection_indices,
+                chunk_local_projection_indices,
+                chunk_active,
+            )
         count = chunk_features.shape[0]
         family_valid = chunk_active[:, None] & family_mask[expert_index][None, :]
         raw_mask = None
@@ -952,12 +1193,8 @@ def _decode_field(
                 family_tokens[expert_index][None, :, :],
                 (count, family_tokens.shape[1], config.width),
             )
-            process = jnp.broadcast_to(
-                context.process_tokens[expert_index], (count, 1, config.width)
-            )
-            bank = jnp.concatenate(
-                (families, chunk_axis, chunk_local[:, None, :], process), axis=1
-            )
+            process = jnp.broadcast_to(context.process_tokens[expert_index], (count, 1, config.width))
+            bank = jnp.concatenate((families, chunk_axis, chunk_local[:, None, :], process), axis=1)
             mask = jnp.concatenate(
                 (
                     family_valid,
@@ -996,14 +1233,11 @@ def _decode_field(
                 dynamic_mask=dynamic_valid[:, None, :],
                 family_mask=family_valid[:, None, :],
                 process_mask=chunk_active[:, None, None],
-                carbon_mask=(
-                    raw_mask[:, None, :]
-                    if raw_mask is not None
-                    else None
-                ),
+                carbon_mask=(raw_mask[:, None, :] if raw_mask is not None else None),
                 blocks=shared["coordinate_blocks"],
                 projections=projection_cache,
                 config=config,
+                dynamic_projection_indices=chunk_dynamic_projection_indices,
             )[:, 0, :]
         raw = _linear(
             shared["readout_second"],
@@ -1011,18 +1245,18 @@ def _decode_field(
         )[:, 0]
         return jnp.where(chunk_active, raw, 0.0)
 
-    decoded = jax.lax.map(
-        decode_chunk,
-        (
-            feature_chunks,
-            active_chunks,
-            owner_chunks,
-            axis_chunks,
-            axis_mask_chunks,
-            local_chunks,
-            local_mask_chunks,
-        ),
-    ).reshape(-1)[:size]
+    map_values = (
+        feature_chunks,
+        active_chunks,
+        owner_chunks,
+        axis_chunks,
+        axis_mask_chunks,
+        local_chunks,
+        local_mask_chunks,
+    )
+    if dynamic_projection_indices is not None:
+        map_values += (axis_projection_chunks, local_projection_chunks)
+    decoded = jax.lax.map(decode_chunk, map_values).reshape(-1)[:size]
     if coordinate_indices is None:
         raw = decoded
     else:
@@ -1056,13 +1290,20 @@ def shared_transformer_raw_outputs(
             input_normalization,
             carbon_state_layout,
         )
+    dynamic_plan = None
+    if config.decoder_execution == "gather_dynamic_reuse":
+        dynamic_plan = _decoder_dynamic_plan(schema=schema, layout=layout)
     projection_cache = None
-    if config.decoder_execution == "gather_reuse":
+    if config.decoder_execution in {"gather_reuse", "gather_dynamic_reuse"}:
         projection_cache = _decoder_projection_cache(
             parameters,
             context,
             family_tokens,
             carbon_tokens=raw_carbon,
+            dynamic_plan=dynamic_plan,
+            inputs=inputs,
+            input_normalization=input_normalization,
+            layout=layout,
         )
     outputs = {}
     masks = {}
@@ -1083,9 +1324,15 @@ def shared_transformer_raw_outputs(
             carbon_defined=carbon_defined,
             carbon_state_layout=carbon_state_layout,
             projection_cache=(
+                None if projection_cache is None else projection_cache[int(layout.field_expert_index[field_index])]
+            ),
+            dynamic_projection_indices=(
                 None
-                if projection_cache is None
-                else projection_cache[int(layout.field_expert_index[field_index])]
+                if dynamic_plan is None
+                else (
+                    dynamic_plan.field_axis_indices[field_index],
+                    dynamic_plan.field_local_indices[field_index],
+                )
             ),
         )
         outputs[field.name] = raw

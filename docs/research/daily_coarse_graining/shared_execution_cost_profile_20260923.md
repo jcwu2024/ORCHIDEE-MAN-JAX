@@ -189,3 +189,12 @@ At the same collection micro16 job15329520 remained RUNNING with a63.22GiB
 intermediate warning only. Preserve its eventual result; do not expand memory
 limits or submit replacements from this snapshot. micro4 remains the fastest
 admitted measured variant, pending the final16 report and execution changes.
+
+Final micro16 collection supersedes the preceding RUNNING snapshot:
+15329520 COMPLETED0:0 after1:18:57, final compiled-live83,762,349,048bytes
+(78.01GiB), temp83,150,656,288bytes. Compile3226.34s; estimated allocation
+charge3.63yuan. Candidate resource_limited and never executed. Local report:
+`outputs/shared-staged-15329520.json`. All four paid micro probes are finished.
+The optional dynamic projection reuse implementation and admission protocol are
+in`shared_dynamic_projection_reuse_admission_20260923.md`; no measured candidate
+speedup or memory reduction is claimed yet.

@@ -6,7 +6,7 @@ CODE_ROOT=${CODE_ROOT:?set immutable checkout}
 OUTPUT=${OUTPUT:?set report JSON under runtime/outputs}
 MODE=${MODE:-gpu}
 ENTRY_MODULE=${ENTRY_MODULE:-scripts.hpc.run_shared_learning}
-case "$ENTRY_MODULE" in scripts.hpc.run_shared_learning|scripts.hpc.probe_shared_execution) ;; *) exit 2 ;; esac
+case "$ENTRY_MODULE" in scripts.hpc.run_shared_learning|scripts.hpc.probe_shared_execution|scripts.hpc.probe_shared_projection_reuse) ;; *) exit 2 ;; esac
 case "$CODE_ROOT" in "$ROOT"/runtime/checkouts/*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT"/runtime/outputs/*.json) ;; *) exit 2 ;; esac
 DRY_RUN=0
@@ -57,7 +57,7 @@ elif [[ $MODE == gpu ]]; then
     "$ROOT/.venvs/orcjax_gpu/bin/python")
   COMMAND=(timeout --signal=TERM "${RUN_TIMEOUT:-240m}" "${CONTAINER[@]}"
     -m "$ENTRY_MODULE" "${COMMON_ARGS[@]}" "$@")
-  if [[ $ENTRY_MODULE == scripts.hpc.probe_shared_execution ]]; then
+  if [[ $ENTRY_MODULE == scripts.hpc.probe_shared_execution || ${CHECK_RUNTIME:-0} == 1 ]]; then
     RUNTIME_CHECK=(timeout --signal=TERM 5m "${CONTAINER[@]}"
       -m scripts.hpc.check_daily_training_runtime --backend gpu --output "${OUTPUT%.json}-runtime.json")
   fi

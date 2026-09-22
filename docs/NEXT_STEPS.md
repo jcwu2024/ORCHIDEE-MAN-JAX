@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Current2026-09-23: optional dynamic axis/local projection reuse is implemented
+and undergoing local numerical admission. Default gather_reuse is unchanged.
+Next run the bounded free-node daily micro4 and T7/T30 component comparison,
+then complete AdamW replay, as specified in
+`research/daily_coarse_graining/shared_dynamic_projection_reuse_admission_20260923.md`.
+Preserve widths, masks, outputs, losses and gradients; no paid submission or
+500-step training is implied. Adopt only after numerical, memory and time evidence.
+micro16 job15329520 has also COMPLETED0:0: compiled-live78.01GiB, not executed,
+allocation1:18:57/~3.63yuan. All four paid micro probes are now finished;
+earlier RUNNING snapshots below are superseded. micro4 remains fastest admitted.
+
 User2026-09-23 adds same-microbatch memory regression as a co-equal efficiency
 target. Oldmicro8 compiled-live14.42GiB vs new40.33GiB; temporary storage grows
 13.60->39.76GiB while weights shrink. Newmicro2/4/8 estimates scale nearly

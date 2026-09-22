@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from research.daily_coarse_graining.daily_operator.shared_transformer import (
+    _decoder_dynamic_plan,
     assemble_shared_transformer_context,
     initialize_shared_transformer_parameters,
     shared_transformer_raw_outputs,
@@ -31,11 +32,7 @@ def execution_setup():
     setup = shared_transformer_setup.__wrapped__()
     selected_names = (GPP, MAINTENANCE, HYDROLOGY, THERMAL)
     selected = tuple(
-        next(
-            index
-            for index, field in enumerate(setup["learned_schema"].fields)
-            if field.name == name
-        )
+        next(index for index, field in enumerate(setup["learned_schema"].fields) if field.name == name)
         for name in selected_names
     )
     schema = replace(
@@ -59,6 +56,25 @@ def execution_setup():
         config=config,
         carbon_state_layout=setup["carbon_layout"],
     )
+    shared = dict(parameters["shared_transformer"])
+    biased_blocks = []
+    for block_index, block in enumerate(shared["coordinate_blocks"]):
+        current = dict(block)
+        attention = dict(current["attention"])
+        for projection_index, name in enumerate(("key", "value")):
+            projection = dict(attention[name])
+            projection["bias"] = jnp.linspace(
+                0.01 * (block_index + 1) * (projection_index + 1),
+                0.02 * (block_index + 1) * (projection_index + 1),
+                config.width,
+                dtype=jnp.float32,
+            )
+            attention[name] = projection
+        current["attention"] = attention
+        biased_blocks.append(current)
+    shared["coordinate_blocks"] = tuple(biased_blocks)
+    parameters = dict(parameters)
+    parameters["shared_transformer"] = shared
     return setup | {
         "schema": schema,
         "layout": layout,
@@ -134,6 +150,14 @@ def test_static_coordinate_plan_matches_canonical_layout(execution_setup):
         if ownership.pft_axis is None or not field.full_pft_axis:
             assert indices.size == int(np.prod(field.shape, dtype=np.int64))
 
+    dynamic = _decoder_dynamic_plan(
+        schema=setup["learned_schema"],
+        layout=setup["full_layout"],
+    )
+    assert dynamic.axis_expert_index.size == 339
+    assert dynamic.local_state_indices.size == 1_798
+    assert -1 in dynamic.local_state_indices
+
 
 def test_execution_modes_match_with_padding_masks_permutation_and_carbon(execution_setup):
     setup = execution_setup
@@ -141,10 +165,19 @@ def test_execution_modes_match_with_padding_masks_permutation_and_carbon(executi
     reference = _run(setup, inputs, execution="original")
     gather_only = _run(setup, inputs, execution="gather_only")
     optimized = _run(setup, inputs, execution="gather_reuse")
+    dynamic_reuse = _run(setup, inputs, execution="gather_dynamic_reuse")
     _assert_output_equivalent(reference, gather_only)
     _assert_output_equivalent(reference, optimized)
+    _assert_output_equivalent(optimized, dynamic_reuse)
+    for block in setup["parameters"]["shared_transformer"]["coordinate_blocks"]:
+        assert np.all(np.asarray(block["attention"]["key"]["bias"]) != 0.0)
+        assert np.all(np.asarray(block["attention"]["value"]["bias"]) != 0.0)
 
     permuted = _permuted_candidate_inputs(setup | {"layout": setup["full_layout"]})
+    _assert_output_equivalent(
+        _run(setup, permuted, execution="gather_reuse"),
+        _run(setup, permuted, execution="gather_dynamic_reuse"),
+    )
     _assert_output_equivalent(
         _run(setup, permuted, execution="original"),
         _run(setup, permuted, execution="gather_reuse"),
@@ -160,7 +193,13 @@ def test_execution_modes_match_with_padding_masks_permutation_and_carbon(executi
     )
     masked_reference = _run(setup, all_pfts_masked, execution="original")
     masked_optimized = _run(setup, all_pfts_masked, execution="gather_reuse")
+    masked_dynamic = _run(
+        setup,
+        all_pfts_masked,
+        execution="gather_dynamic_reuse",
+    )
     _assert_output_equivalent(masked_reference, masked_optimized)
+    _assert_output_equivalent(masked_optimized, masked_dynamic)
     for raw in masked_optimized[0].values():
         assert np.all(np.isfinite(np.asarray(raw)))
     assert not np.any(np.asarray(masked_optimized[1][GPP]))
@@ -168,17 +207,23 @@ def test_execution_modes_match_with_padding_masks_permutation_and_carbon(executi
     assert not np.any(np.asarray(masked_optimized[1][THERMAL]))
 
     thermal = np.asarray(optimized[0][THERMAL]).reshape(-1)
-    retained = shared_transformer_static_coordinate_indices(
-        schema=setup["schema"], layout=setup["layout"]
-    )[THERMAL]
+    retained = shared_transformer_static_coordinate_indices(schema=setup["schema"], layout=setup["layout"])[THERMAL]
     excluded = np.setdiff1d(np.arange(thermal.size, dtype=np.int32), retained)
     assert retained.size == 64
     assert excluded.size == 384
     np.testing.assert_array_equal(thermal[excluded], 0.0)
 
 
-def _objective_vector(setup, execution, parameters, state_other, pft_parameters):
-    inputs = setup["assembled"]
+def _objective_vector(
+    setup,
+    execution,
+    parameters,
+    state_other,
+    pft_parameters,
+    *,
+    base_inputs=None,
+):
+    inputs = setup["assembled"] if base_inputs is None else base_inputs
     state = inputs.state._replace(other=state_other)
     pft = inputs.pft._replace(pft_parameters=pft_parameters)
     differentiated_inputs = inputs._replace(
@@ -239,12 +284,88 @@ def test_per_field_parameter_state_and_pft_input_gradients_match(execution_setup
     _assert_jacobian_tree_close(reference, gather_only)
     _assert_jacobian_tree_close(reference, optimized)
 
+    dynamic_parameter_jacobian = jax.jacrev(
+        lambda parameters: _objective_vector(
+            setup,
+            "gather_dynamic_reuse",
+            parameters,
+            jnp.asarray(inputs.state.other),
+            jnp.asarray(inputs.pft.pft_parameters),
+        )
+    )(setup["parameters"])
+    dynamic_state_jacobian = jax.jacrev(
+        lambda state_other: _objective_vector(
+            setup,
+            "gather_dynamic_reuse",
+            setup["parameters"],
+            state_other,
+            jnp.asarray(inputs.pft.pft_parameters),
+        )
+    )(jnp.asarray(inputs.state.other))
+    _assert_jacobian_tree_close(optimized[0], dynamic_parameter_jacobian)
+    _assert_jacobian_tree_close(optimized[1], dynamic_state_jacobian)
+
     parameter_jacobian, state_jacobian, pft_parameter_jacobian = optimized
-    assert np.linalg.norm(
-        np.asarray(
-            parameter_jacobian["shared_transformer"]["coordinate_blocks"][0]["attention"]["key"]["kernel"]
-        )[0]
-    ) > 0.0
+    assert (
+        np.linalg.norm(
+            np.asarray(parameter_jacobian["shared_transformer"]["coordinate_blocks"][0]["attention"]["key"]["kernel"])[
+                0
+            ]
+        )
+        > 0.0
+    )
     carbon_indices = np.asarray(setup["carbon_layout"].state_indices, dtype=np.int32)
     assert np.linalg.norm(np.asarray(state_jacobian)[0, carbon_indices]) > 0.0
     np.testing.assert_array_equal(np.asarray(pft_parameter_jacobian), 0.0)
+
+
+def test_dynamic_reuse_gradients_match_when_all_pfts_are_inactive(execution_setup):
+    setup = execution_setup
+    inputs = setup["assembled"]
+    pft = inputs.pft._replace(
+        pft_fraction=np.zeros_like(np.asarray(inputs.pft.pft_fraction)),
+        active_pft_mask=np.zeros_like(np.asarray(inputs.pft.active_pft_mask)),
+    )
+    masked_inputs = inputs._replace(
+        pft=pft,
+        canonical_input=inputs.canonical_input._replace(pft=pft),
+    )
+    state_other = jnp.asarray(masked_inputs.state.other)
+    pft_parameters = jnp.asarray(masked_inputs.pft.pft_parameters)
+
+    def scalar_objective(execution, parameters, continuous_state):
+        return jnp.sum(
+            _objective_vector(
+                setup,
+                execution,
+                parameters,
+                continuous_state,
+                pft_parameters,
+                base_inputs=masked_inputs,
+            )
+        )
+
+    reference_parameter_gradient = jax.grad(
+        lambda parameters: scalar_objective("gather_reuse", parameters, state_other)
+    )(setup["parameters"])
+    candidate_parameter_gradient = jax.grad(
+        lambda parameters: scalar_objective("gather_dynamic_reuse", parameters, state_other)
+    )(setup["parameters"])
+    _assert_jacobian_tree_close(
+        reference_parameter_gradient,
+        candidate_parameter_gradient,
+    )
+
+    reference_state_gradient = jax.grad(
+        lambda continuous_state: scalar_objective("gather_reuse", setup["parameters"], continuous_state)
+    )(state_other)
+    candidate_state_gradient = jax.grad(
+        lambda continuous_state: scalar_objective("gather_dynamic_reuse", setup["parameters"], continuous_state)
+    )(state_other)
+    np.testing.assert_allclose(
+        np.asarray(candidate_state_gradient),
+        np.asarray(reference_state_gradient),
+        rtol=5.0e-4,
+        atol=2.0e-5,
+    )
+    assert np.linalg.norm(np.asarray(reference_state_gradient)) > 0.0

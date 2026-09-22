@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-23.
 
+`shared_transformer.py` adds opt-in `gather_dynamic_reuse` for identical
+axis/local K/V projections within each differentiable invocation; gather_reuse
+remains default. `probe_shared_projection_reuse.py` compares each daily/T7/T30
+gradient with saved real-model references, preserves results and exact-runtime
+executables, and later replays a full AdamW update. The free-only wrapper is
+`run_shared_projection_reuse.sh`; no architecture/loss or paid-submission change.
+
 `audit_shared_decoder_cost.py` computes source-shape forward MAC/coordinate
 counts without neural initialization or Teacher reads and compares the layout
 to accepted CPU admission metadata. Its optimistic reuse/packing ceilings are
