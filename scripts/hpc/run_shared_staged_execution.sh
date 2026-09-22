@@ -73,6 +73,8 @@ cd "$CODE_ROOT"
 trap 'STATUS=$?; echo "run_exit_status=$STATUS"' EXIT
 date '+%F %T %Z'
 echo "host=$HOST code=$(git rev-parse --short HEAD) stage=$STAGE"
+echo "slurm_cpus=${SLURM_CPUS_PER_TASK:-unset} omp_threads=${SLURM_CPUS_PER_TASK:-4}"
+grep '^Cpus_allowed_list:' /proc/self/status
 uptime
 free -m
 if [[ $MODE == gpu ]]; then
