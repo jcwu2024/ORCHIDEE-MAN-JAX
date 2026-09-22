@@ -19,7 +19,11 @@ The fresh update0 checkpoint is intact. This is a monitoring API compatibility
 bug missed by local tests/metadata-only preparation, not OOM, bad gradients or
 scientific rejection. A public `jax.eval_shape` identity-based cache signature
 passes two focused local tests with `jax.typeof` explicitly unavailable.
-Next actual deployed tiny monitor test, then same-method free-GPU resume.
+The two tiny monitor tests also pass in actual GPU Python (CPU backend,
+16.85s). At4408daf, same-method free gln01 GPU1 recovery wrapper87042 is
+RUNNING with240min ceiling, restoring the saved update0 checkpoint; report
+prefix`runtime/outputs/diagnostics/shared-learning-4408daf-gpu`.
+No new optimizer/science result yet. Actual resume argument expansion passes.
 See `research/daily_coarse_graining/shared_learning_runtime_fix_20260922.md`.
 Older RUNNING83621 statements below are historical.
 

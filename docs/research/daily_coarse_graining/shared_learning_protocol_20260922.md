@@ -1,6 +1,8 @@
 # First bounded learning run of the consolidated shared Transformer
 
-Status: declared before training; free GPU pilot RUNNING83621 atbd50f51.
+Status: declared before training;83621 failed at0 updates (monitor API),
+same-method free recovery87042 RUNNING at4408daf. See
+`shared_learning_runtime_fix_20260922.md`. The original launch below is history.
 The user's2026-09-22 continuation authorizes this bounded free-node work;
 no paid computation is authorized. Numerical daily/T7/T30 admission7359 has
 passed. This is a learning pilot, not the final paper training run.
