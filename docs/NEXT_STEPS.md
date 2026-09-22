@@ -21,9 +21,14 @@ Protocol:`shared_learning_v1.json`; explanation:
 Free CPU actual-data preparation at3af6fe8 PASSED in58.50s:100 artifacts,
 3200 distinct daily samples,6899 union point/year/days,523 points,1720
 point-years,39 years, no held-out point-year overlap. All three component
-shape classes match admitted819. Runner/monitor integration is in progress;
-the next action is actual shell/config checks and one free GPU launch. No paid
-task. The RUNNING7359 snapshot below is historical; do not rerun its admission.
+shape classes match admitted819. Atbd50f51 the pilot is RUNNING on free
+gln01 GPU1, wrapper83621,240min ceiling; checkout`shared-learning-bd50f51`,
+report/log prefix`runtime/outputs/diagnostics/shared-learning-bd50f51-gpu`.
+Local30 distinct tests, Ruff, target-shell CPU/GPU expansion and actual free
+CPU configuration check (22.7s) pass. Collect0/20/100 fixed physical panels,
+component losses, clipping, memory and warm timings. Do not duplicate this
+run or inherit an older exploratory checkpoint. No paid task. The RUNNING7359
+snapshot below is historical; do not rerun its admission.
 
 The joint admission runner is implemented atc2498e4;38 unique local tests,
 Ruff, shell syntax and actual target-shell CPU/GPU argument expansion pass.

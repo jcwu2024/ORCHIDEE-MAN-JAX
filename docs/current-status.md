@@ -23,9 +23,14 @@ rows plus oneT7/oneT30, evaluations0/20/100 including existing48 held-out
 development windows. Free CPU data preparation PASSED58.50s at3af6fe8:
 100 artifacts,3200 distinct daily samples,6899 union point/year/days,
 523 points,1720 point-years,39 years; zero held-out point-year overlap.
-All training shape/dtype classes match admission819. Runner/monitor integration
-is in progress; no new GPU or paid task yet. Older RUNNING snapshots below
-are historical.
+All training shape/dtype classes match admission819. Atbd50f51,30 distinct
+local tests/Ruff, actual target-shell expansion and free CPU configuration
+check (22.7s) pass. Pilot wrapper83621 is RUNNING on free gln01 GPU1,
+240min ceiling, checkout`shared-learning-bd50f51`, report/log prefix
+`runtime/outputs/diagnostics/shared-learning-bd50f51-gpu`. It starts fresh
+and records fixed TRAIN-fit16 plus held-out48 physical windows at0/20/100.
+No new learning/scientific result yet, no paid task. Older RUNNING snapshots
+below are historical.
 
 Shared joint numerical admission is now running on free gln01 GPU1,
 wrapper7359, immutablec2498e4, checkout`shared-joint-c2498e4-full`,240min main

@@ -1,7 +1,6 @@
 # First bounded learning run of the consolidated shared Transformer
 
-Status: declared before training; implementation and actual CPU data preparation
-complete, target-shell checks and free GPU launch next.
+Status: declared before training; free GPU pilot RUNNING83621 atbd50f51.
 The user's2026-09-22 continuation authorizes this bounded free-node work;
 no paid computation is authorized. Numerical daily/T7/T30 admission7359 has
 passed. This is a learning pilot, not the final paper training run.
@@ -90,3 +89,23 @@ rejection, fixed panels, stock curves and input-signature cache reuse.
 The monitor plus adjacent recurrent loss/validation tests passes19 tests
 (30 distinct tests across both suites). Ruff passes. These are local contract
 tests, not actual-model GPU execution or scientific accuracy evidence.
+
+## Free-node launch
+
+Immutable codebd50f51 deployed to
+`runtime/checkouts/shared-learning-bd50f51`. Actual target-shell CPU/GPU
+argument expansion and shell syntax pass. Free test02 configuration execution
+completed0 in22.7s; both gln01 GPUs were idle immediately before launch.
+GPU1 wrapper83621 runs the declared pilot with240min ceiling. No paid job.
+The runtime/AD boundary is unchanged, so accepted7359 evidence is reused,
+without repeated synthetic runtime tests or directional full-model gradients.
+
+Report/log prefix:
+`runtime/outputs/diagnostics/shared-learning-bd50f51-gpu`.
+Query from the workstation with `ssh gln01 'ps -p 83621 -o pid,etime,pcpu,comm'`;
+no process row means read the report/log to distinguish completion from failure.
+The first observed stage is configuration/runtime loading, not a completed
+optimizer update. Wait for fixed0/20/100 physical outcomes before judging
+learning. Recovery checkpoints retain the declared fresh-method cursor and
+optimizer plus completed milestone metrics; do not substitute admission7359
+or an exploratory checkpoint as initialization.
