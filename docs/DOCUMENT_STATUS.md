@@ -20,7 +20,9 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_joint_gpu_admission_20260922.md` | Free GPU1 wrapper7359 RUNNING atc2498e4;38 local tests and deployed prerequisites pass | Fixed daily/T7/T30 objective, fresh initialization, stage preservation, two updates and240min ceiling |
+| `research/daily_coarse_graining/shared_learning_protocol_20260922.md` | Fresh100-update free learning pilot declared; implementation/data preparation in progress |32 daily rows, oneT7/oneT30, fixed fit and48 held-out development windows, milestones0/20/100 |
+| `research/daily_coarse_graining/shared_joint_results_20260922.md` | Joint7359 COMPLETED0; AD/two updates admitted, learning tradeoffs remain |8.108GiB peak, native directional checks, T30 improvements and T7/daily regressions |
+| `research/daily_coarse_graining/shared_joint_gpu_admission_20260922.md` | Completed protocol/launch record; result supersedes RUNNING snapshot | Fixed daily/T7/T30 objective, fresh initialization, stage preservation, two updates and240min ceiling |
 | `research/daily_coarse_graining/shared_v3_admission_results_20260922.md` | Daily100848 and CPU45145 COMPLETED0; next joint GPU admission runner | Numerical daily AD/two updates,7.522GiB peak, two-sample loss tradeoff, passed recurrent CPU shapes |
 | `research/daily_coarse_graining/shared_recurrent_preparation_20260921.md` | T7/T30 interface implemented; CPU preparation passed, see September22 results | Exact joint weights, recurrent state, common initial masks; numerical recurrent AD still pending |
 | `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md` | v3 forward COMPLETED0; later daily AD/two updates also passed, see September22 results | Initial losses0.457/0.479, corrected state anchors, unchanged carbon science at initialization |

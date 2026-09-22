@@ -8,6 +8,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Joint numerical admission7359 COMPLETED0 in13939.51s: all native gradients,
+T7/T30 direction checks, two full updates and physical/checkpoint gates pass;
+peak8.108GiB. T30 losses improve44.62%/64.40%, but artifact982 T7 and both
+daily contributions regress. No stable-learning/scientific acceptance.
+Read `research/daily_coarse_graining/shared_joint_results_20260922.md`.
+Next implement/prepare the fixed fresh100-update free-node learning pilot:
+32 daily rows + oneT7/oneT30 per update, evaluations0/20/100, existing48
+held-out development windows, no architecture/loss changes or inherited weights.
+Protocol:`shared_learning_v1.json`; explanation:
+`research/daily_coarse_graining/shared_learning_protocol_20260922.md`.
+Actual data coverage/shape preparation on CPU precedes GPU launch. No paid
+task. The RUNNING7359 snapshot below is historical; do not rerun its admission.
+
 The joint admission runner is implemented atc2498e4;38 unique local tests,
 Ruff, shell syntax and actual target-shell CPU/GPU argument expansion pass.
 Free test02 report/config prerequisite validation COMPLETED0 in0.1s.

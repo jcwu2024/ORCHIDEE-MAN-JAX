@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Joint7359 is COMPLETED0,13939.51s, both full updates, all physical/checkpoint
+gates pass. T7/T30 AD directional differences8.246e-8/5.464e-9, peak8.108GiB.
+T30 improves on both technical samples; oneT7 and both daily contributions
+regress. Update2's own batch loss rises6.27%; no stable-learning accuracy
+claim. See `research/daily_coarse_graining/shared_joint_results_20260922.md`.
+Next fixed fresh100-update pilot under `shared_learning_v1.json`:32 daily
+rows plus oneT7/oneT30, evaluations0/20/100 including existing48 held-out
+development windows. Implementation and free CPU preparation in progress;
+no new GPU or paid task yet. Older RUNNING snapshots below are historical.
+
 Shared joint numerical admission is now running on free gln01 GPU1,
 wrapper7359, immutablec2498e4, checkout`shared-joint-c2498e4-full`,240min main
 ceiling plus separate5min runtime check.38 unique local tests and deployed

@@ -1,6 +1,7 @@
 # Shared daily/T7/T30 numerical admission
 
-Status: free GPU admission RUNNING as wrapper7359; authorized by the user's
+Status: wrapper7359 COMPLETED0; see `shared_joint_results_20260922.md`.
+The launch snapshots below are historical. Authorized by the user's
 2026-09-22 continuation. No paid task or scientific acceptance.
 
 Daily-v3 numerical admission100848 and recurrent CPU preparation45145 both
