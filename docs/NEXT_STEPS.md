@@ -8,6 +8,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,
+all0/20/100 physical panels pass, actual peak7.999GiB, warm29.90s/update.
+Held-out T30 GPP/NPP/AGB/BGB-change RMSE falls60.63/62.23/61.43/64.18%
+from untrained initialization. This is meaningful bounded learning, not final
+accuracy: AGB/BGB-change error exceeds Teacher change RMS; canopy carbon
+and belowground litter regress, RH targets are zero. Read
+`research/daily_coarse_graining/shared_learning_results_20260922.md`.
+Next prepare a bounded extension on more distinct existing TRAIN artifacts,
+same shared architecture/objective/full-network optimizer, fixed physical
+panels. Declare its data order/endpoint/budget before execution. Do not reopen
+AD or add heads based solely on this pilot. No new job is running from this
+collection; all RUNNING87042/83621 snapshots below are historical.
+
 Pilot83621 atbd50f51 FAILED with a runtime API error after268.15s,0 updates:
 monitor cache signature called `jax.typeof`, absent in deployed GPU JAX.
 Fixed at4408daf using identity `jax.eval_shape`; two tiny monitor tests pass

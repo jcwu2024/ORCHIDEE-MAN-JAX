@@ -1,8 +1,10 @@
 # First bounded learning run of the consolidated shared Transformer
 
 Status: declared before training;83621 failed at0 updates (monitor API),
-same-method free recovery87042 RUNNING at4408daf. See
-`shared_learning_runtime_fix_20260922.md`. The original launch below is history.
+same-method free recovery87042 COMPLETED100 updates at4408daf in97.07min.
+See `shared_learning_results_20260922.md` for outcomes and limitations;
+`shared_learning_runtime_fix_20260922.md` for the compatibility fix.
+The original launch below is history.
 The user's2026-09-22 continuation authorizes this bounded free-node work;
 no paid computation is authorized. Numerical daily/T7/T30 admission7359 has
 passed. This is a learning pilot, not the final paper training run.

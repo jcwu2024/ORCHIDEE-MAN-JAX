@@ -13,6 +13,19 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Shared learning87042 COMPLETED0 at4408daf:100 updates in5824.47s (97.07min).
+All64 fixed windows pass physical gates at0/20/100, actual peak7.999GiB,
+warm median29.90s/update. Held-out T30 cumulative GPP/NPP and AGB/BGB-change
+RMSE improves60.63/62.23/61.43/64.18% versus fresh update0. The fixed TRAIN
+panel also improves; however final biomass-change errors remain larger than
+Teacher change RMS, canopy/belowground litter regress and RH coverage is
+zero. No long-term/scientific acceptance. All100 gradients were clipped;
+that fact alone is not an optimization diagnosis. Full interpretation:
+`research/daily_coarse_graining/shared_learning_results_20260922.md`.
+Next bounded coverage/learning extension preparation, preserving the shared
+architecture and joint objective. No new compute launched at collection.
+Earlier RUNNING87042/83621 statements below are historical.
+
 Pilot83621 atbd50f51 exited1 after268.15s with0 updates. It failed before
 the first monitor forward compilation because deployed JAX lacks `jax.typeof`.
 The fresh update0 checkpoint is intact. This is a monitoring API compatibility
