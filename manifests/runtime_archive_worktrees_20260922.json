@@ -1,0 +1,29 @@
+{
+  "purpose": "Archive inactive working files only; preserve every .git dependency store, all data, weights and caches",
+  "nodes": [
+    "test01",
+    "test02",
+    "test03",
+    "test04",
+    "gln01"
+  ],
+  "python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+  "protected": [
+    "checkouts/shared-dual-8cce49e",
+    "checkouts/shared-execution-0507e1b",
+    "checkouts/shared-joint-c2498e4-full",
+    "checkouts/shared-learning-4408daf"
+  ],
+  "targets": [
+    "worktrees/checkpoint-handoff-5b77cb2",
+    "worktrees/coordinate-coupled-doc-transition-v4-b903dac",
+    "worktrees/doc-status-branch-magnitude-v5-e9fc0d8",
+    "worktrees/fast-owner-gate-df542e9",
+    "worktrees/fast-owner-gpu-probe-4b2cdd6",
+    "worktrees/fast-owner-statistics-c9f35c0",
+    "worktrees/hierarchical-attention-smoke-f40b77d",
+    "worktrees/mechanistic-output-smoke-20260817",
+    "worktrees/mechanistic-output-v2-17a0e75",
+    "worktrees/mechanistic-output-v2-attainability-local"
+  ]
+}

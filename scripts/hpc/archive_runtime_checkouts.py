@@ -11,6 +11,7 @@ import json
 import os
 import shutil
 import subprocess
+import tarfile
 import time
 from pathlib import Path
 
@@ -163,7 +164,9 @@ def run(args):
     archive = args.archive.absolute()
     if archive.parent != ROOT / 'archives' or not archive.name.endswith('.tar.gz'):
         raise ValueError('archive must be a named runtime/archives/*.tar.gz')
-    if archive.exists() or archive.with_suffix('.partial').exists():
+    resume = getattr(args, 'resume_packed', False)
+    partial = archive.with_suffix('.partial')
+    if not resume and (archive.exists() or partial.exists()):
         raise FileExistsError(archive)
     report = dict(started=time.strftime('%Y-%m-%dT%H:%M:%S'), targets={},
                   archive=str(archive), git_metadata_retained=True, status='inventoried')
@@ -183,16 +186,26 @@ def run(args):
     if not args.apply:
         return
     snapshots = {path: working_snapshot(path) for path in paths}
-    partial = archive.with_suffix('.partial')
-    relative_names = b''.join(str(path.relative_to(ROOT)).encode() + b'\0' for path in paths)
-    subprocess.run(['tar', '--create', '--gzip', '--numeric-owner', '--file', str(partial),
-                    '--exclude=.git', '--directory', str(ROOT), '--null',
-                    '--files-from=-'], input=relative_names, check=True)
+    packed = archive if resume and archive.exists() else partial
+    if resume:
+        expected = {str(path.relative_to(ROOT)) for path in paths}
+        expected.update(str(path.relative_to(ROOT) / name)
+                        for path in paths for name in snapshots[path])
+        with tarfile.open(packed, 'r|gz') as source:
+            members = {item.name.rstrip('/') for item in source}
+        if members != expected:
+            raise RuntimeError('existing archive member set differs from current working files')
+    else:
+        relative_names = b''.join(str(path.relative_to(ROOT)).encode() + b'\0' for path in paths)
+        subprocess.run(['tar', '--create', '--gzip', '--numeric-owner', '--file', str(partial),
+                        '--exclude=.git', '--directory', str(ROOT), '--null',
+                        '--files-from=-'], input=relative_names, check=True)
     save('packed')
     # Byte comparison with the source also reads/decompresses every archived file.
-    subprocess.run(['tar', '--compare', '--gzip', '--numeric-owner', '--file', str(partial),
+    subprocess.run(['tar', '--compare', '--gzip', '--numeric-owner', '--file', str(packed),
                     '--directory', str(ROOT)], check=True)
-    partial.rename(archive)
+    if packed != archive:
+        packed.rename(archive)
     report['archive_bytes'] = archive.stat().st_size
     save('verified')
     report['activity_before_removal'] = check_activity(
@@ -228,5 +241,7 @@ if __name__ == '__main__':
     parser.add_argument('--manifest', type=Path)
     parser.add_argument('--archive', type=Path)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--resume-packed', action='store_true',
+                        help='Reuse a complete packed archive after interruption; verify members and bytes again')
     parser.add_argument('--processes-only', action='store_true')
     run(parser.parse_args())

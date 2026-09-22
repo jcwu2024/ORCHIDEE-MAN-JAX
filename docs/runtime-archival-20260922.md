@@ -33,25 +33,42 @@ The archive is recoverable code history, not a retained training checkpoint.
 
 Sol/high reviewed destructive scope and dependency handling; identified path
 normalization, multiple process-reference occurrences and file-set completeness
-issues were addressed before execution. Four tiny tests pass on free test02
+issues were addressed before execution. Five tiny tests pass on free test02
 using its native GNU tar1.26, including byte-preserving restore of tracked and
-untracked fixtures and refusal to remove newly created files. Initial container
+untracked fixtures, resume after a completed pack, and refusal to remove newly created files. Initial container
 tests exposed group-name remapping (fixed with numeric owners); native execution
 exposed an unsupported redundant tar flag, removed before any removal occurred.
 
-Archive destination:
-`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkout-working-files-20260922.tar.gz`.
-The adjacent `.tar.json` is the compact archive manifest and operation report.
-This operation runs on free test02; no paid job or GPU work is added.
+Final archive destinations (both under the canonical runtime `archives/`):
+
+- `inactive-checkouts-20260922.tar.gz`:45 checkout working trees.
+- `inactive-worktrees-20260922.tar.gz`:10 historical worktree working trees.
+
+Their adjacent `.tar.json` files are compact manifests and operation reports.
+The exact split target lists are `manifests/runtime_archive_checkouts_20260922.json`
+and `manifests/runtime_archive_worktrees_20260922.json`. No paid job or GPU work
+is added; packing/verifying runs on free test02/test03.
+
+The first55-tree pack reached its20min bound while writing the worktree tail;
+no working files were removed. `repack_runtime_checkout_prefix.py` recovered
+the complete45-checkout prefix (118960 archive members), stopping at the first
+worktree header before the truncated portion. This avoided rereading/repacking
+the completed checkout source files. The recovered archive must still pass
+the exact current member-set check plus GNU tar byte comparison before any
+cleanup; this is the tool's tested `--resume-packed` path. The remaining10
+worktrees are packed separately. Revised free-operation limits are60min for
+checkout verification/removal and30min for the smaller worktree operation.
 
 Restore one working tree before using its archived source path:
 
 ```bash
-tar -xzf /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkout-working-files-20260922.tar.gz -C /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime checkouts/NAME_FROM_MANIFEST
+tar -xzf /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkouts-20260922.tar.gz -C /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime checkouts/NAME_FROM_MANIFEST
 ```
 
 Existing `.git` metadata remains in place; restore the working files into the
-same path. Do not treat absent archived working files as intentional source
+same path, then remove only that checkout's `ARCHIVED_WORKING_FILES.md` marker.
+For a historical worktree, use the worktrees archive and `worktrees/NAME_FROM_MANIFEST`.
+Do not treat absent archived working files as intentional source
 deletions to commit. Historical experiment reports keep their original source
 paths; this manifest documents how to restore them.
 

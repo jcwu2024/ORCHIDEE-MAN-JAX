@@ -14,8 +14,8 @@ def test_rejects_broad_or_symlink_targets(tmp_path):
         archive.validate_targets(tmp_path, ['checkouts/..'])
 
 
-@pytest.mark.parametrize('changed', [False, True])
-def test_verified_archive_restores_and_detects_new_files(tmp_path, monkeypatch, changed):
+@pytest.mark.parametrize('changed,resume', [(False, False), (True, False), (False, True)])
+def test_verified_archive_restores_and_detects_new_files(tmp_path, monkeypatch, changed, resume):
     if not shutil.which('tar') or 'GNU tar' not in subprocess.run(
             ['tar', '--version'], capture_output=True, text=True).stdout:
         pytest.skip('production archiver requires GNU tar')
@@ -37,6 +37,8 @@ def test_verified_archive_restores_and_detects_new_files(tmp_path, monkeypatch, 
         calls.append(1)
         if len(calls) == 2 and changed:
             (checkout / 'new-after-packing').write_text('must not be deleted\n')
+        if len(calls) == 2 and resume:
+            raise RuntimeError('simulated interruption after packing')
         return {}
 
     monkeypatch.setattr(archive, 'check_activity', activity)
@@ -48,6 +50,11 @@ def test_verified_archive_restores_and_detects_new_files(tmp_path, monkeypatch, 
         assert (checkout / 'new-after-packing').exists()
         assert (checkout / 'source.py').exists()
         return
+    if resume:
+        with pytest.raises(RuntimeError, match='simulated interruption'):
+            archive.run(args)
+        assert (checkout / 'source.py').exists()
+        args.resume_packed = True
     archive.run(args)
     assert (checkout / '.git' / 'HEAD').read_text() == 'preserve dependency metadata\n'
     assert not (checkout / 'source.py').exists()
