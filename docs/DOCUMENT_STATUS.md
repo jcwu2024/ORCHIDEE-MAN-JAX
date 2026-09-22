@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_architecture_efficiency_gate_20260923.md` | User-directed joint architecture/efficiency review before larger training; design discussion before structural changes | Cost attribution, scientific usefulness, function-preserving optimization and formal training admission |
 | `research/daily_coarse_graining/shared_execution_micro24_results_20260923.md` |15329444/45 completed with parity; micro4 full update21.46s,25.24% less time;8/16 pending | Speed-first priority, actual memory, compilation overhead and balanced dual-device next work |
 | `research/daily_coarse_graining/shared_pilot_error_diagnosis_20260922.md` | Saved-curve analysis complete;7 pooled endpoints reproduce existing summary; no inference | Window concentration, signed accumulation, respiration compensation and RH coverage |
 | `research/daily_coarse_graining/shared_learning_extension_plan_20260922.md` | Preparation-only100->500 plan; actual500-artifact free CPU audit passed93.61s; no training submitted | Data coverage, fixed physical panels, reproducibility, remaining runner integration |

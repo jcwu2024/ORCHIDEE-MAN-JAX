@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User2026-09-23 explicitly includes architecture/computational viability in the
+pre-formal-training gate. The shared100-step pilot is not a final architecture
+acceptance. Next bounded work separates actual model cost from execution
+overhead, then presents any architectural revision before implementation.
+`research/daily_coarse_graining/shared_architecture_efficiency_gate_20260923.md`
+controls this priority;500-step continuation stays prepared but unsubmitted.
+
 User2026-09-23 sets training throughput as the main priority before larger
 learning. micro2/4 jobs15329444/15329445 completed0:0, all parity/hard gates
 pass, full updates23.924/21.457s vs matched28.671/28.701s (16.56/25.24% time

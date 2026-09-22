@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+User2026-09-23 clarifies the priority includes architecture efficiency, not only
+speeding up the current implementation. Before broader training, review whether
+the shared design is scientifically justified AND computationally viable, while
+improving architecture-independent execution. First map actual per-day cost and
+separate model changes from function-preserving optimizations; discuss a concrete
+architecture revision before building it. Keep Attention and physical/long-term
+objectives in scope. Read
+`research/daily_coarse_graining/shared_architecture_efficiency_gate_20260923.md`.
+The prepared500-step continuation remains on hold behind this review. Existing
+micro8/16 jobs continue; no new paid task is implied by this prioritization.
+
 User2026-09-23 prioritizes training speed before broader/longer learning.
 micro2 job15329444 andmicro4 job15329445 COMPLETED0:0. Full-update medians
 23.924/21.457s vs same-allocation scalar28.671/28.701s; all existing numerical,
