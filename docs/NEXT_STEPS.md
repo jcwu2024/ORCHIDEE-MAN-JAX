@@ -8,6 +8,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Bounded cost review2026-09-23 is complete at source-shape level. The decoder
+accounts for85.7% of counted backbone+decoder forward MACs; repeated dynamic
+axis/local K/V and FFNs dominate, not attention score dots. Accepted layout
+matches161fields/8550eligible coordinates. Next implement optional identical
+axis/local projection reuse with unchanged weights/capacity/masks, retain the
+current path as reference, and verify forward plus parameter/state gradients
+before a bounded deployed complete-update timing/memory comparison. Consider
+bounded query packing after reuse; do not materialize all outputs together.
+Do not narrow historical auxiliary heads or change architecture by default.
+Read`research/daily_coarse_graining/shared_decoder_cost_audit_20260923.md`
+and`research/daily_coarse_graining/shared_execution_cost_profile_20260923.md`.
+Free T7 profiler18199 exited2/cache_miss after470.98s; no cold model compile,
+real T7 trace or new timing. A bounded source review found no obvious argument
+discrepancy. Do not make another cache audit a prerequisite for execution work;
+attach profiling to the next actual evaluator measurement if useful. At00:36CST
+micro8/16 paid jobs15329519/15329520 still run; collect without duplicates.
+No new paid allocation. The500-step continuation remains on hold.
+
 User2026-09-23 clarifies the priority includes architecture efficiency, not only
 speeding up the current implementation. Before broader training, review whether
 the shared design is scientifically justified AND computationally viable, while

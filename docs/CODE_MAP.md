@@ -1,6 +1,17 @@
 # Code Map
 
-Last updated: 2026-09-22.
+Last updated: 2026-09-23.
+
+`audit_shared_decoder_cost.py` computes source-shape forward MAC/coordinate
+counts without neural initialization or Teacher reads and compares the layout
+to accepted CPU admission metadata. Its optimistic reuse/packing ceilings are
+not compiler or runtime measurements. `profile_shared_execution.py` selects one
+unchanged cached gradient for bounded GPU profiling through the existing
+diagnostic-script launcher override; it stops on a cold model cache miss.
+`analyze_shared_execution_trace.py` summarizes GPU events, overlap, kernel
+categories and HLO source/BLAS-shape hints, excluding nested host events.
+The first realT7 profile missed cache; only its tiny GPU plumbing test produced
+a trace. No model/architecture change is implemented by these diagnostic files.
 
 `probe_shared_execution.py` now supports persistent reference/micro2/micro4/micro8/micro16
 stages. `run_shared_staged_execution.sh` prepares on free CPU, loads cached

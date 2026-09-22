@@ -13,6 +13,22 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Cost review2026-09-23: accepted-layout static audit confirms161fields,
+8550eligible/39006full coordinates,265field-local chunks and9046padded query
+slots. Source-shape forward estimates are35.99G backbone/input and215.80G
+decoder MACs; decoder dynamicK/V100.59G andFFN85.37G dominate. Optimistic
+source/dynamic projection reuse plus packing ceiling is251.79G->128.00G
+counted MACs, NOT a measured49.2% runtime reduction. No model implementation
+or capacity change. Next bounded unchanged-function candidate is identical
+axis/local projection reuse, followed by packing if useful; no further paid
+submission or500-step learning launch. See`shared_decoder_cost_audit_20260923.md`
+and`shared_execution_cost_profile_20260923.md` in the research docs.
+Free GPU profiler plumbing passed, including real GPU trace export. RealT7
+wrapper18199 then stopped cache_miss/exit2 after470.98s, before model execution
+or cold backend compile. Cause is unresolved; source comparison found no obvious
+argument mismatch. Four local trace-analysis tests pass. Paidmicro8/16 remain
+RUNNING at00:36CST, with memory warnings only, not terminal outcomes.
+
 User2026-09-23 explicitly includes architecture/computational viability in the
 pre-formal-training gate. The shared100-step pilot is not a final architecture
 acceptance. Next bounded work separates actual model cost from execution
