@@ -77,6 +77,8 @@ It runs the separate5min-bounded synthetic GPU runtime check followed by the
 `runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`.
 The reference snapshot will be a single `.reference.pkl` under that prefix;
 no candidate proposals become training checkpoints. No paid job.
+The synthetic GPU check PASSED in34.87s on deployed JAX0.4.38. Main benchmark
+has verified the checkpoint and entered actual runtime loading.
 
 Next collect full-gradient/optimizer parity, compiled memory and complete
 update timings. A faster admitted microbatch is only fixed-data execution
