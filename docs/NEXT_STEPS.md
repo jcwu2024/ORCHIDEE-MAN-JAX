@@ -12,9 +12,11 @@ User decision: optimize shared execution before expanding learning. The prior
 architecture's batch64/micro8 and dual-device performance was not carried into
 the new scalar32 pilot. Implement/measure micro2/4 against scalar32 using the
 same shared update100 checkpoint, artifact742, T7/T30, loss and AdamW. Require
-numerical/full-update parity, measure complete warm timings and memory; then
-evaluate dual placement using measured branch balance. Free resources only,
-no paid submission. Read
+numerical/full-update parity, measure complete warm timings and memory. User
+then requested concurrent dual-device testing while paid GPUs are idle: prepare
+a separate scalar32 daily-GPU0 / T7+T30-GPU1 comparison now, without waiting
+for microbatch results. Paid resources/time/cost approval remains required
+before submission. Read
 `research/daily_coarse_graining/shared_execution_plan_20260922.md` and
 `shared_execution_benchmark_v1.json`. Broader learning is queued behind this
 bounded execution work; no architecture/loss change is authorized by it.
@@ -23,8 +25,10 @@ checkpoint validation (38.8s), actual shell CPU/GPU expansion and syntax pass.
 Free gln01 GPU1 wrapper38944 is RUNNING, main180min plus separate5min runtime
 check; checkout`shared-execution-0507e1b`, report/log prefix
 `runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`.
-Collect the matched scalar32/micro2/micro4 results before dual placement or
-broader training. No measured speedup yet; no paid task.
+Collect the matched scalar32/micro2/micro4 results. Concurrent dual preparation
+is specified in `shared_dual_execution_plan_20260922.md` and
+`shared_dual_execution_benchmark_v1.json`; no measured speedup or paid job yet.
+Broader training waits for a measured execution policy.
 
 Shared learning87042 COMPLETED0 at4408daf:100 full joint updates in97.07min,
 all0/20/100 physical panels pass, actual peak7.999GiB, warm29.90s/update.

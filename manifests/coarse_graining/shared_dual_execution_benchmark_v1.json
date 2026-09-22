@@ -1,0 +1,17 @@
+{
+  "schema_version": "shared_dual_execution_v1",
+  "source_update": 100,
+  "artifact_ids": [742, 275],
+  "continuous_updates": 2,
+  "daily_count": 32,
+  "warmups": 1,
+  "timed_replays": 3,
+  "compiled_memory_limit_gib": 24,
+  "main_wall_minutes": 170,
+  "comparison_rtol": 0.00001,
+  "comparison_atol": 0.000001,
+  "source_is_diagnostic_only": true,
+  "retained_training_updates": 0,
+  "paid_submission_requires_approval": true,
+  "learning_method_changed": false
+}

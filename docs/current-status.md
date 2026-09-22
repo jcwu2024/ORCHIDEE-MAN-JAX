@@ -16,13 +16,17 @@ describe an earlier gate without being rewritten.
 User now prioritizes execution optimization before expanding shared learning.
 The32 sequential daily gradients cost14.91s, T7/T30 together13.66s. Implement
 matched micro2/4 vs scalar32 full-gradient/update/timing benchmark at source100;
-then test dual placement if warranted by measured branch balance. No changes
-to model/loss/data/optimizer, no paid task. Protocol and limits:
+and prepare concurrent dual placement following the user's idle-paid-GPU
+request. Scalar32 dual testing does not depend on the microbatch result.
+No changes to model/loss/data/optimizer, no paid submission yet. Protocol and limits:
 `research/daily_coarse_graining/shared_execution_plan_20260922.md`.
 Implementation0507e1b passes17 local tests,10 deployed tiny tests, source100
 CPU checkpoint validation and actual shell expansion. Free GPU1 benchmark
 wrapper38944 is RUNNING, main180min plus5min runtime check, report prefix
 `runtime/outputs/diagnostics/shared-execution-0507e1b-gpu`. No speed result yet.
+Concurrent dual plan: `research/daily_coarse_graining/shared_dual_execution_plan_20260922.md`.
+Proposed gnall2GPU/8CPU/64GiB/3h ceiling costs at most14.88yuan under the
+documented additive rates. Implementation/checks precede explicit paid approval.
 
 Shared learning87042 COMPLETED0 at4408daf:100 updates in5824.47s (97.07min).
 All64 fixed windows pass physical gates at0/20/100, actual peak7.999GiB,

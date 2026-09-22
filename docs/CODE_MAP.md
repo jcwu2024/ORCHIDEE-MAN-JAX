@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-22.
 
+`scripts/hpc/probe_shared_dual.py` owns the bounded scalar32 serial-versus-dual
+execution comparison for the consolidated shared model, including peer sync
+and two changing-data optimizer steps. `run_shared_dual_execution.sh` prepares
+on free CPU or runs in an approved gnall allocation;
+`job_shared_dual_execution.sh` declares the pending2GPU/8CPU/3h paid request.
+This diagnostic route does not retain training updates or replace the common
+science loss. Its counterpart `probe_shared_execution.py` measures micro2/4
+on a free GPU independently.
+
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
 

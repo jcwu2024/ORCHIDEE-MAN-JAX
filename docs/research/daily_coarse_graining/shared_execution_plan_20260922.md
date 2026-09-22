@@ -36,10 +36,18 @@ and tiny helper tests in deployed JAX before the real-model run. No paid job,
 Teacher regeneration, architecture reduction or new science loss. Do not rerun
 the prior expensive JVP suite for unchanged recurrent objectives.
 
-## Following step
+## Concurrent dual-device preparation (user clarification)
+
+The user requested use of idle paid GPUs for dual execution in parallel with
+the free microbatch test. Prepare a separate scalar32 comparison now; it does
+not depend on whether micro2/4 passes. See
+`shared_dual_execution_plan_20260922.md`. Concrete paid budget approval is
+still pending. The original free benchmark remains unchanged.
+
+## Combining accepted execution changes
 
 After measured microbatch parity/memory/throughput, select the fastest admitted
-daily execution (or retain scalar if none improves). Then measure the unchanged
+daily execution (or retain scalar if none improves). Measure the unchanged
 joint update with daily work on one GPU and T7/T30 on another, joining gradients
 before one AdamW update and synchronizing the next parameters. Check changing
 data and subsequent updates, not only identical-weight replays; report GPU-hour
@@ -82,5 +90,6 @@ has verified the checkpoint and entered actual runtime loading.
 
 Next collect full-gradient/optimizer parity, compiled memory and complete
 update timings. A faster admitted microbatch is only fixed-data execution
-evidence; changing-data dual placement and sustained learning remain subsequent
-steps. Do not duplicate this benchmark while38944 is running.
+evidence; changing-data dual placement is now prepared concurrently, while
+sustained learning remains subsequent. Do not duplicate this benchmark
+while38944 is running.

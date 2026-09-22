@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from scripts.hpc.check_daily_training_runtime import _atomic_json, _tree_error
+from scripts.hpc.checked_recurrent_execution import device_helper_cache
 from scripts.hpc.mixed_learning_dual_device import split_components
 
 
@@ -44,7 +45,7 @@ def run(args):
     backward = jax.jit(jax.value_and_grad(loss))
     executables = {}
     for device in devices:
-        with jax.default_device(device):
+        with jax.default_device(device), device_helper_cache(device):
             placed = jax.device_put(parameters, device)
             executables[device.id] = {
                 h: backward.lower(placed, jax.device_put(data[h], device)).compile()
@@ -59,12 +60,12 @@ def run(args):
             peer_parameters = jax.device_put(parameters, secondary)
 
             def daily():
-                with jax.default_device(primary):
+                with jax.default_device(primary), device_helper_cache(primary):
                     return executables[primary.id][1](parameters, jax.device_put(data[1], primary))
 
             def recurrent(device):
                 weights = parameters if device == primary else peer_parameters
-                with jax.default_device(device):
+                with jax.default_device(device), device_helper_cache(device):
                     return tuple(executables[device.id][h](weights, jax.device_put(data[h], device))
                                  for h in (7, 30))
 
@@ -73,7 +74,7 @@ def run(args):
                 day, windows = split_components(
                     daily, lambda: recurrent(secondary if dual else primary),
                     executor=executor if dual else None)
-                with jax.default_device(primary):
+                with jax.default_device(primary), device_helper_cache(primary):
                     gradient = day[1]
                     for _, recurrent_gradient in windows:
                         gradient = combine(gradient, jax.device_put(recurrent_gradient, primary), 1., .5)
