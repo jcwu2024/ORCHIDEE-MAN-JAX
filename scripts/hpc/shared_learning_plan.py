@@ -1,4 +1,4 @@
-"""Metadata-only plan for the first bounded shared-Transformer learning run."""
+"""Metadata-only plans for bounded shared-Transformer learning runs."""
 from __future__ import annotations
 
 import json
@@ -43,9 +43,26 @@ def load_learning_configuration(protocol_path, joint_admission_report_path,
 
     path = Path(protocol_path)
     config = read(path)
-    if (config["schema_version"] != "shared_learning_v1"
-            or config["max_updates"] != 100 or config["daily_rows_per_update"] != 32
-            or config["checkpoint_interval"] != 5 or config["milestones"] != [0, 20, 100]
+    schema = config.get("schema_version")
+    if schema == "shared_learning_v1":
+        schedule = (100, 5, [0, 20, 100])
+    elif schema == "shared_learning_v2":
+        schedule = (500, 25, [0, 100, 250, 500])
+        if config.get("daily_microbatch_size") != 4:
+            raise ValueError("shared learning v2 requires four-row daily microbatches")
+        if (config.get("model_protocol") != "shared_transformer_split_width_v1.json"
+                or config.get("joint_protocol") != "shared_split_recurrent_admission_v1.json"
+                or config.get("initialization")
+                != "fresh_model_seed_and_fresh_AdamW_no_exploratory_weights"
+                or config.get("gradient_accumulation")
+                != "mean_32_daily_gradients_evaluated_in_micro4_plus_T7_plus_T30_then_one_AdamW_update"):
+            raise ValueError("shared learning v2 method identity differs from the declared split method")
+    else:
+        raise ValueError("unsupported shared learning schema")
+    if (config["max_updates"] != schedule[0]
+            or config["daily_rows_per_update"] != 32
+            or config["checkpoint_interval"] != schedule[1]
+            or config["milestones"] != schedule[2]
             or config["recurrent_windows_per_horizon"] != 1
             or config["recurrent_window_index"] != 0 or config["fit_artifact_count"] != 8
             or config["paid_submission"] or config["teacher_regeneration"]

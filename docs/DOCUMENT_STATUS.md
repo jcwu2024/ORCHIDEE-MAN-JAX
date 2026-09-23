@@ -20,7 +20,8 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_dense_stage_admission_20260923.md` | Actual-helper prototype and local/tiny CUDA AD pass; width768 paid component probe prepared, not submitted | Dense-stage packing, unchanged physics/capacity,1.38yuan bounded performance envelope |
+| `research/daily_coarse_graining/shared_split_width_proposal_20260923.md` | User authorized implementation;64,884,481 parameters; new numerical/runtime admission in progress | Uniform384 decoder with768 backbone, preserved routes, reproducible cost estimate, full-update admission then fresh500 learning |
+| `research/daily_coarse_graining/shared_dense_stage_admission_20260923.md` |15344733 COMPLETED in3m42s; numerical pass, micro4 only5.3% less time with38.5% larger temporary memory; not adopted | Completed packing evidence and why another full-model compile is not justified |
 | `research/daily_coarse_graining/shared_execution_cost_profile_20260923.md` | Real daily micro4 profile complete; pooling too small; grouped proxy not admitted (memory/numerics) | Actual GPU costs and bounded production dense-stage packing next |
 | `research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md` | Global reuse rejected; field-local f220013 daily103428 completed: full gradient parity,32samples/6.626s,21.972GiB compiled | Completed daily result, honest historical64sample comparison, unresolved recurrent/joint efficiency |
 | `research/daily_coarse_graining/shared_dynamic_projection_reuse_admission_20260923.md` | cfc518d;26local checks/deployed runtime/3plumbing tests pass; free25756daily/25757T7T30 running; no paid submission | Identical dynamic K/V reuse, numerical and memory gates, persisted executable joint replay |

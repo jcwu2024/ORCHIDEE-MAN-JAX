@@ -21,11 +21,23 @@ def shared_config(specification):
         coordinate_blocks=specification["decoder_blocks"],
         output_chunk_size=specification["query_chunk_size"],
         decoder_execution=specification.get("decoder_execution", "gather_reuse"),
+        decoder_width=specification.get("decoder_width"),
+        decoder_ffn_width=specification.get("decoder_ffn_width"),
+        decoder_attention_heads=specification.get("decoder_heads"),
     )
 
 
 def hard_ok(auxiliary):
     return all(int(value) == 0 for value in auxiliary["hard"].values())
+
+
+def admission_daily_objective(jax, jnp, objective, microbatch_size):
+    """Reuse the public equal-row mean, keeping legacy scalar admission intact."""
+    if microbatch_size == 1:
+        return objective
+    from scripts.hpc.shared_daily_microbatch import make_microbatch_objective
+
+    return make_microbatch_objective(jax, jnp, objective)
 
 
 def memory_sizes(compiled):
@@ -57,6 +69,9 @@ def run(args):
 
     started = time.perf_counter()
     protocol = json.loads(args.protocol.read_text(encoding="utf-8"))
+    microbatch_size = int(protocol["admission"].get("daily_microbatch_size", 1))
+    if microbatch_size not in (1, 4):
+        raise ValueError("daily admission supports scalar or declared micro4 execution")
     from scripts.hpc.shared_admission_recovery import load_resume_report, restore_gradient
 
     resume_path = getattr(args, "resume_report", None)
@@ -146,11 +161,19 @@ def run(args):
             runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
             runtime["contract"], flux_basis=FLUX_KEYS)
         objective = make_shared_daily_objective(runtime, head, template, state_scales, scale_mapping)
-        # Row zero from two selected TRAIN artifacts exercises reuse; this is not a learning experiment.
-        samples = [jax.tree_util.tree_map(lambda value: value[0], artifact.batch.one_day)
+        objective = admission_daily_objective(jax, jnp, objective, microbatch_size)
+        # Two different TRAIN artifacts exercise updates; micro4 uses their first four rows.
+        if any(int(jax.tree_util.tree_leaves(artifact.batch.one_day)[0].shape[0]) < microbatch_size
+               for artifact in artifacts[:2]):
+            raise ValueError("admission artifact lacks the declared daily rows")
+        samples = [jax.tree_util.tree_map(
+                       lambda value: value[0] if microbatch_size == 1 else value[:microbatch_size],
+                       artifact.batch.one_day)
                    for artifact in artifacts[:2]]
-        report["admission_rows"] = [next(row for row in metadata["calibration_daily_rows"]
-                                         if row["artifact_id"] == identifier) for identifier in ids[:2]]
+        report["admission_rows"] = [row for identifier in ids[:2]
+                                    for row in [item for item in metadata["calibration_daily_rows"]
+                                                if item["artifact_id"] == identifier][:microbatch_size]]
+        report["daily_microbatch_size"] = microbatch_size
         if prior is not None and report["admission_rows"] != prior["admission_rows"]:
             raise ValueError("recovered gradient admission rows differ")
         def initializer():
@@ -196,7 +219,9 @@ def run(args):
             summarize_state_anchor,
         )
 
-        forward = jax.jit(make_shared_daily_objective(
+        # Coordinate attribution is a scalar diagnostic; do not average state
+        # masks/coordinates across unrelated rows and present it as attribution.
+        forward = jax.jit(objective) if microbatch_size > 1 else jax.jit(make_shared_daily_objective(
             runtime, head, template, state_scales, scale_mapping,
             include_state_diagnostics=True))
 
@@ -209,11 +234,14 @@ def run(args):
             emit("initial_canonical_forward")
             initial = [forward(parameters, sample) for sample in samples]
             jax.block_until_ready(initial)
-            attribution = [summarize_state_anchor(auxiliary["state_diagnostics"], state_scales, owners)
-                           for _loss, auxiliary in initial]
-            for detail, (_loss, auxiliary) in zip(attribution, initial, strict=True):
-                detail["matches_state_anchor"] = bool(np.isclose(
-                    detail["total"], float(auxiliary["state_change_anchor"]), rtol=1e-10, atol=1e-10))
+            attribution = ([summarize_state_anchor(auxiliary["state_diagnostics"], state_scales, owners)
+                            for _loss, auxiliary in initial] if microbatch_size == 1 else [])
+            if microbatch_size > 1:
+                report["state_anchor_attribution_scope"] = "omitted_for_multirow_mean_not_a_single_state"
+            if microbatch_size == 1:
+                for detail, (_loss, auxiliary) in zip(attribution, initial, strict=True):
+                    detail["matches_state_anchor"] = bool(np.isclose(
+                        detail["total"], float(auxiliary["state_change_anchor"]), rtol=1e-10, atol=1e-10))
         else:
             initial, attribution = prior["initial"], prior["state_anchor_attribution"]
             report["initial_forward_reused"] = True
@@ -256,6 +284,17 @@ def run(args):
             persist_tree(saved, jax, dict(parameters=parameters, gradient=gradient, value=value,
                                           protocol=protocol, source_git_head=report["source_git_head"]))
         emit("gradient_preserved", gradient_artifact=str(saved))
+        if compiled is not None and protocol["admission"].get("warm_repeats", 0):
+            timings = []
+            for _ in range(int(protocol["admission"]["warm_repeats"])):
+                tick = time.perf_counter()
+                measured = compiled(parameters, samples[0])
+                jax.block_until_ready(measured)
+                timings.append(time.perf_counter() - tick)
+                del measured
+            emit("warm_gradient_measured", warm_gradient_seconds=timings,
+                 warm_gradient_median_seconds=float(np.median(timings)),
+                 timing_scope=f"fixed_data_daily_micro{microbatch_size}_value_gradient_not_full_joint_update")
         direction = jax.tree_util.tree_map(lambda g: (g / numeric["l2_norm"]).astype(g.dtype), gradient)
         tangent = jax.jit(lambda p, d, sample: jax.jvp(
             lambda current: objective(current, sample)[0], (p,), (d,))[1])

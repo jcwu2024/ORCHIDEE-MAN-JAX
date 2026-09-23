@@ -13,11 +13,41 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Newest: user delegates technical decisions and authorizes the announced
+split-width implementation. Shared model code and micro4/500 learning support
+are implemented, not yet deployed/numerically admitted. Exact full-layout
+shape count64,884,481 (tokenizer3,667,840,shared61,216,641); no weights inherited.
+Local checks pass:9 historical shared-model tests,7 split-width/mask/state-AD
+tests,24 learning integration tests,14 daily microbatch/recovery tests.
+Next collect actual deployed daily/T7/T30/whole-update evidence before learning.
+
+Prior proposal snapshot: discuss the concrete split-width architecture proposal
+`research/daily_coarse_graining/shared_split_width_proposal_20260923.md`.
+Backbone768x8 retained; common decoder384x2/FFN1536/8heads for all outputs;
+masked token-local bridge, unchanged output routes/physics/losses/native AD.
+No implementation or new paid task. Arithmetic-only script reproduces162.119G
+to68.487G source-shape MACs versus current field-local reuse; approx65M total
+parameters (upper bound65.149M before embedding savings). Main review plus
+Sol/high independent review support this candidate for testing, not scientific
+acceptance. Training path after technical admission is fresh500 joint updates,
+with existing535-point/7502-point-year selection and fixed physical panels.
+
+Latest: actual-decoder dense-stage job15344733 COMPLETED0:0 in3m42s;
+estimated cost0.17yuan. Both micro sizes pass output/parameter/payload checks.
+Micro4 packed-all is14.695->13.916ms (5.30% less time), with compiler temporary
+storage145.13->201.00MB (+38.49%); packed128 is slower and larger. This component
+optimization does not resolve full-model throughput/memory regression. Not
+adopted; no full-model compile or training is justified by this result alone.
+Raw reports copied to outputs/shared-dense-stages-15344733-micro{1,4}.json.
+Prior RUNNING snapshot below is historical.
+
 Newest: separate actual-decoder dense-stage packing prototype passes4local
 tests and tiny JAX0.4.38 CUDA complete output/parameter/payload comparisons.
-Production-width performance remains pending; free GPUs occupied. Prepared
-idle-node gnall component probe1V100/8CPU/32GiB/30min,1.38yuan maximum; not
-submitted. No new architecture/capacity/loss change or trained-model claim.
+Production-width performance remains pending; free GPUs occupied. Explicitly
+approved gnall component job15344733 is RUNNING on ibc13b03n04 with
+1V100/8CPU/32GiB/30min,1.38yuan maximum. Start17:27:27CST September23(server
+clock); startup GPU0MiB/0%, host load0.03, CPU affinity0-3,56-59.
+No new architecture/capacity/loss change or trained-model claim.
 See`research/daily_coarse_graining/shared_dense_stage_admission_20260923.md`.
 
 Latest: f220013 field-local daily103428 completed, full75,578,497 gradient

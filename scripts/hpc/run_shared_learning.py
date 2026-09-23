@@ -1,4 +1,4 @@
-"""Run the bounded fresh 100-update shared daily/T7/T30 learning method."""
+"""Run bounded fresh shared daily/T7/T30 learning methods."""
 from __future__ import annotations
 
 import argparse
@@ -112,6 +112,11 @@ def make_tree_operations(jax: Any, jnp: Any, daily_count: int) -> Mapping[str, C
             lambda d, s, t: d / daily_count + s + t, daily, seven, thirty
         )
     )
+    combine_daily_mean = jax.jit(
+        lambda daily, seven, thirty: jax.tree_util.tree_map(
+            lambda d, s, t: d + s + t, daily, seven, thirty
+        )
+    )
 
     def finite(tree):
         leaves = jax.tree_util.tree_leaves(tree)
@@ -131,6 +136,7 @@ def make_tree_operations(jax: Any, jnp: Any, daily_count: int) -> Mapping[str, C
         "zero": zero,
         "daily_mean": daily_mean,
         "combine": combine,
+        "combine_daily_mean": combine_daily_mean,
         "finite": jax.jit(finite),
         "norm": jax.jit(norm),
     }
@@ -172,32 +178,61 @@ def execute_learning_update(
     jax: Any,
     parameters: Any,
     optimizer: Any,
-    daily_samples: Sequence[Any],
+    daily_samples: Any,
     seven_case: Sequence[Any],
     thirty_case: Sequence[Any],
     evaluators: Mapping[str, Callable[..., Any]],
     operations: Mapping[str, Callable[..., Any]],
     update: Callable[..., Any],
+    daily_accumulator: Callable[[Any, Any], Any] | None = None,
 ) -> tuple[Any, Any, Mapping[str, Any]]:
-    """Average 32 admitted daily gradients, add T7/T30 once, update once."""
-    if len(daily_samples) != int(operations["daily_count"]):
+    """Combine the declared daily mean with T7/T30, then update once."""
+    if daily_accumulator is None and len(daily_samples) != int(operations["daily_count"]):
         raise ValueError("learning update daily row count differs from the declared mean")
     began = time.perf_counter()
-    daily_total = operations["zero"](parameters)
     daily_values = []
     daily_terms = []
     daily_started = time.perf_counter()
-    for row_index, sample in enumerate(daily_samples):
-        (value, auxiliary), gradient = evaluators["daily"](parameters, sample)
+    if daily_accumulator is None:
+        daily_total = operations["zero"](parameters)
+        for row_index, sample in enumerate(daily_samples):
+            (value, auxiliary), gradient = evaluators["daily"](parameters, sample)
+            _check_gradient_component(
+                name="daily",
+                value=value,
+                auxiliary=auxiliary,
+                gradient=gradient,
+                finite=operations["finite"],
+                row=row_index,
+            )
+            daily_total = operations["add"](daily_total, gradient)
+            daily_values.append(float(value))
+            daily_terms.append(
+                {
+                    key: float(auxiliary[key])
+                    for key in ("process_day", "flux", "stock", "joint_daily_contribution")
+                    if key in auxiliary
+                }
+            )
+    else:
+        from scripts.hpc.shared_daily_microbatch import MicrobatchFailure
+
+        try:
+            (value, auxiliary), daily_total = daily_accumulator(parameters, daily_samples)
+        except MicrobatchFailure as error:
+            raise LearningFailure(
+                error.reason,
+                component="daily",
+                microbatch_index=error.microbatch_index,
+                **error.details,
+            ) from error
         _check_gradient_component(
             name="daily",
             value=value,
             auxiliary=auxiliary,
-            gradient=gradient,
+            gradient=daily_total,
             finite=operations["finite"],
-            row=row_index,
         )
-        daily_total = operations["add"](daily_total, gradient)
         daily_values.append(float(value))
         daily_terms.append(
             {
@@ -232,13 +267,22 @@ def execute_learning_update(
         recurrent_gradients[name] = gradient
         recurrent_seconds[name] = time.perf_counter() - started
 
-    combined = operations["combine"](
+    combine = (
+        operations["combine"]
+        if daily_accumulator is None else operations["combine_daily_mean"]
+    )
+    combined = combine(
         daily_total, recurrent_gradients["T7"], recurrent_gradients["T30"]
     )
     if not bool(np.asarray(operations["finite"](combined))):
         raise LearningFailure("combined_gradient_nonfinite")
     component_norms = {
-        "daily_mean": float(operations["norm"](operations["daily_mean"](daily_total))),
+        "daily_mean": float(
+            operations["norm"](
+                operations["daily_mean"](daily_total)
+                if daily_accumulator is None else daily_total
+            )
+        ),
         "T7": float(operations["norm"](recurrent_gradients["T7"])),
         "T30": float(operations["norm"](recurrent_gradients["T30"])),
         "combined": float(operations["norm"](combined)),
@@ -268,7 +312,10 @@ def execute_learning_update(
         "optimizer_gradient_norm": gradient_norm,
         "clip_scale": clip_scale,
         "timing_seconds": {
-            "daily_32_sequential": daily_seconds,
+            (
+                "daily_32_sequential"
+                if daily_accumulator is None else "daily_32_microbatch_4"
+            ): daily_seconds,
             "T7": recurrent_seconds["T7"],
             "T30": recurrent_seconds["T30"],
             "optimizer": update_seconds,
@@ -288,8 +335,9 @@ def compile_gradient_evaluators(
     thirty_case: Sequence[Any],
     memory_limit_bytes: int,
     emit: Callable[..., None],
+    daily_microbatch_size: int | None = None,
 ) -> tuple[Mapping[str, Callable[..., Any]], Mapping[str, Any]]:
-    """Compile exactly one stable scalar reverse executable per admitted shape."""
+    """Compile one stable reverse executable per admitted component shape."""
     daily_backward = jax.jit(jax.value_and_grad(daily_objective, has_aux=True))
     recurrent_backward = jax.jit(jax.value_and_grad(recurrent_objective, has_aux=True))
     definitions = (
@@ -302,7 +350,25 @@ def compile_gradient_evaluators(
     for name, function, arguments in definitions:
         emit("compile_gradient_graph", component=name)
         started = time.perf_counter()
-        compiled = function.lower(*arguments).compile()
+        if name == "daily" and daily_microbatch_size is not None:
+            import jax.numpy as jnp
+
+            from scripts.hpc.shared_daily_microbatch import (
+                compile_microbatch_evaluator,
+                make_microbatch_objective,
+            )
+
+            if daily_microbatch_size != 4:
+                raise ValueError("shared learning supports only four-row daily microbatches")
+            microbatch_objective = make_microbatch_objective(jax, jnp, daily_objective)
+            compiled = compile_microbatch_evaluator(
+                jax=jax,
+                parameters=parameters,
+                microbatch_objective=microbatch_objective,
+                microbatch_example=daily_sample,
+            )
+        else:
+            compiled = function.lower(*arguments).compile()
         memory = memory_sizes(compiled)
         metadata[name] = {
             "compile_seconds": time.perf_counter() - started,
@@ -321,7 +387,11 @@ def compile_gradient_evaluators(
 def _method_identity(loaded: Mapping[str, Any]) -> Mapping[str, Any]:
     admission = loaded["admission"]
     return {
-        "schema_version": "shared_learning_method_identity_v1",
+        "schema_version": (
+            "shared_learning_method_identity_v2"
+            if loaded["config"]["schema_version"] == "shared_learning_v2"
+            else "shared_learning_method_identity_v1"
+        ),
         "configuration": loaded["config"],
         "daily_protocol": loaded["daily_protocol"],
         "joint_protocol": admission["protocol"],
@@ -370,6 +440,11 @@ def run(args: Any) -> Mapping[str, Any]:
         )
         method = _method_identity(loaded)
         config = loaded["config"]
+        microbatch_size = (
+            int(config["daily_microbatch_size"])
+            if config["schema_version"] == "shared_learning_v2"
+            else None
+        )
         plan = loaded["plan"]
         daily_protocol = loaded["daily_protocol"]
         report.update(
@@ -607,15 +682,19 @@ def run(args: Any) -> Mapping[str, Any]:
             validate_shared_artifact_metadata(runtime["index"], (identifier,), (artifact,))
             return artifact
 
-        def artifact_cases(artifact: Any) -> tuple[list[Any], Any, Any]:
+        def artifact_cases(artifact: Any) -> tuple[Any, Any, Any]:
             one_day = artifact.batch.one_day
             row_count = int(np.shape(one_day.inputs.continuous_state)[0])
             if row_count != int(config["daily_rows_per_update"]):
                 raise ValueError("training artifact does not contain the declared 32 daily rows")
-            samples = [
-                jax.tree_util.tree_map(lambda value, row=row: value[row], one_day)
-                for row in range(row_count)
-            ]
+            samples = (
+                one_day
+                if microbatch_size is not None
+                else [
+                    jax.tree_util.tree_map(lambda value, row=row: value[row], one_day)
+                    for row in range(row_count)
+                ]
+            )
             seven = prepare_shared_window(
                 head,
                 artifact.batch.seven_day,
@@ -636,18 +715,35 @@ def run(args: Any) -> Mapping[str, Any]:
             first_artifact = load_training_artifact(training_ids[completed])
             bootstrap_artifacts = ()
             first_samples, first_seven, first_thirty = artifact_cases(first_artifact)
+            daily_example = (
+                jax.tree_util.tree_map(lambda value: value[:microbatch_size], first_samples)
+                if microbatch_size is not None
+                else first_samples[0]
+            )
             evaluators, graph_metadata = compile_gradient_evaluators(
                 jax=jax,
                 parameters=parameters,
                 daily_objective=daily_objective,
-                daily_sample=first_samples[0],
+                daily_sample=daily_example,
                 recurrent_objective=recurrent_objective,
                 seven_case=first_seven,
                 thirty_case=first_thirty,
                 memory_limit_bytes=int(config["gradient_memory_limit_gib"]) * 2**30,
                 emit=emit,
+                daily_microbatch_size=microbatch_size,
             )
             report["compiled_gradient_graphs"] = graph_metadata
+        daily_accumulator = None
+        if microbatch_size is not None and evaluators is not None:
+            from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
+
+            daily_accumulator = make_daily_accumulator(
+                jax=jax,
+                jnp=jnp,
+                microbatch_size=microbatch_size,
+                evaluator=evaluators["daily"],
+                expected_count=int(config["daily_rows_per_update"]),
+            )
         update_function = make_update(daily_protocol)
         for index in range(completed, int(config["max_updates"])):
             identifier = training_ids[index]
@@ -674,6 +770,7 @@ def run(args: Any) -> Mapping[str, Any]:
                 evaluators=evaluators,
                 operations=operations,
                 update=update_function,
+                daily_accumulator=daily_accumulator,
             )
             row = {
                 "update": index + 1,
@@ -698,7 +795,11 @@ def run(args: Any) -> Mapping[str, Any]:
         emit(
             "completed",
             status="passed",
-            classification="bounded_shared_joint_100_update_learning_completed",
+            classification=(
+                "bounded_shared_split_500_update_learning_completed"
+                if config["schema_version"] == "shared_learning_v2"
+                else "bounded_shared_joint_100_update_learning_completed"
+            ),
             final_checkpoint=report["checkpoint"],
             checkpoint_selection=config["checkpoint_selection"],
             device_memory=runtime["devices"][0].memory_stats(),

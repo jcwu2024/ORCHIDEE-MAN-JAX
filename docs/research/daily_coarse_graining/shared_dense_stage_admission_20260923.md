@@ -1,8 +1,54 @@
 # Actual-decoder dense-stage packing: bounded admission
 
-Status: implemented as a separate prototype; local and tiny deployed CUDA
-numerical checks pass. Production-width performance is pending. No change to
-the default model, weights, loss, data, or training schedule; no paid submission.
+Status: component evaluation completed; numerical checks pass, performance
+benefit is modest and micro4 temporary memory increases. Not adopted. No
+change to the default model, weights, loss, data, or training schedule.
+
+## Completed paid result
+
+Job15344733 COMPLETED0:0 in3m42s on ibc13b03n04. Estimated charge using the
+approved rates:222/3600*(2.20+8*0.07)=0.1702yuan. Both micro stages completed.
+Times below are median warm component output-and-gradient executions, not
+complete daily updates. Temporary memory is compiler-estimated decimal MB,
+not total live memory or the cumulative allocator peak.
+
+| Micro | Variant | Median ms | Temporary MB |
+| --- | --- | ---: | ---: |
+| 1 | reference | 7.581 | 100.762 |
+| 1 | packed-all | 6.835 | 100.740 |
+| 1 | packed128 | 8.403 | 123.072 |
+| 4 | reference | 14.695 | 145.131 |
+| 4 | packed-all | 13.916 | 200.996 |
+| 4 | packed128 | 15.869 | 294.318 |
+
+Packed-all reduces time9.84% at micro1 and5.30% at micro4. Micro4 temporary
+storage increases38.49%; packed128 increases time and memory at both sizes.
+All output,14,372,865 component parameter-gradient coordinates and payload
+gradient coordinates pass unchanged tolerances. Packed-all outputs match
+reference exactly in these runs; parameter relativeL2 is2.16e-7/micro1 and
+2.33e-7/micro4. This does not certify the full75.58M model.
+
+Recorded compile-or-cache-load seconds for micro1 are36.49/16.34/17.29,
+and micro4 are21.87/17.51/17.97, in reference/packed-all/packed128 order.
+Do not extrapolate these component figures to full-model cold compilation.
+
+Decision: retain as diagnostic evidence, do not integrate by default or launch
+another expensive full-model compile. A5.3% component time reduction with
+increased temporary storage does not resolve the current training-throughput
+and memory regression. Next prepare an evidence-based decoder cost/architecture
+proposal; architecture or capacity changes require discussion before building.
+Reports preserved locally in outputs/shared-dense-stages-15344733-micro1.json
+and outputs/shared-dense-stages-15344733-micro4.json and at remote paths below.
+
+## Historical launch snapshot
+
+Approved paid job **15344733** started on ibc13b03n04 at17:27:27CST
+September23(server clock), status RUNNING at17:27:52. Allocation matches the
+envelope below. Immediately before submission the node was IDLE, CPUAlloc0/112,
+CPULoad0.01. Startup records host load0.03, GPU0MiB/0%, CPU affinity0-3,56-59.
+Results: runtime/outputs/diagnostics/shared-dense-stages-15344733-micro{1,4}.json;
+log: shared-dense-stages-15344733.log in the same directory. Collect component
+numerical, memory and timing results before deciding on integration.
 
 ## Mechanism and reference
 
@@ -75,7 +121,7 @@ Command from that working directory:
 /rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n04 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/tools/shared-dense-stages-20260923/job_shared_dense_stages.sh
 ```
 
-Submission requires approval of this new envelope. Source scripts:
+User explicitly approved this envelope; submitted once as15344733. Source scripts:
 `scripts/hpc/job_shared_dense_stages.sh` and `run_shared_dense_stages.sh`.
 If free GPU availability returns first, the same bounded probe can use it
 without a paid submission; record contention and do not confuse noisy shared

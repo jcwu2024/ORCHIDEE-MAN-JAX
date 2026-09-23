@@ -59,12 +59,33 @@ class SharedTransformerConfig:
     forcing_ffn_width: int = 1024
     forcing_blocks: int = 2
     axial_blocks: int = 1
+    decoder_width: int | None = None
+    decoder_ffn_width: int | None = None
+    decoder_attention_heads: int | None = None
+
+    @property
+    def resolved_decoder_width(self) -> int:
+        return self.width if self.decoder_width is None else self.decoder_width
+
+    @property
+    def resolved_decoder_ffn_width(self) -> int:
+        return self.ffn_width if self.decoder_ffn_width is None else self.decoder_ffn_width
+
+    @property
+    def resolved_decoder_attention_heads(self) -> int:
+        return self.attention_heads if self.decoder_attention_heads is None else self.decoder_attention_heads
 
     def validate(self) -> None:
         if self.width <= 0 or self.input_width <= 0 or self.forcing_width <= 0:
             raise ValueError("shared Transformer widths must be positive")
         if self.width % self.attention_heads:
             raise ValueError("shared Transformer width must divide its head count")
+        if self.resolved_decoder_width <= 0 or self.resolved_decoder_attention_heads <= 0:
+            raise ValueError("decoder width and head count must be positive")
+        if self.resolved_decoder_width % self.resolved_decoder_attention_heads:
+            raise ValueError("decoder width must divide its head count")
+        if self.resolved_decoder_ffn_width != 4 * self.resolved_decoder_width:
+            raise ValueError("decoder FFN width must be four times decoder width")
         if self.input_width % self.input_attention_heads:
             raise ValueError("input width must divide its head count")
         if self.forcing_width % self.forcing_heads:
@@ -213,15 +234,18 @@ def initialize_shared_transformer_parameters(
         inputs=inputs,
         config=config,
     )
+    decoder_width = config.resolved_decoder_width
     carbon = {}
     if carbon_state_layout is not None:
         carbon = {
-            "field_embedding": _normal(next(keys), (len(carbon_state_layout.field_names), config.width), config.width),
+            "field_embedding": _normal(
+                next(keys), (len(carbon_state_layout.field_names), decoder_width), decoder_width
+            ),
             "axis_role_embedding": _normal(
-                next(keys), (len(carbon_state_layout.axis_role_names), config.width), config.width
+                next(keys), (len(carbon_state_layout.axis_role_names), decoder_width), decoder_width
             ),
             "axis_position_embedding": tuple(
-                _normal(next(keys), (int(extent), config.width), config.width)
+                _normal(next(keys), (int(extent), decoder_width), decoder_width)
                 for extent in carbon_state_layout.axis_role_extents
             ),
         }
@@ -234,22 +258,24 @@ def initialize_shared_transformer_parameters(
             for _ in range(config.backbone_blocks)
         ),
         "coordinate_blocks": tuple(
-            _residual_block_parameters(next(keys), config.width, config.ffn_width)
+            _residual_block_parameters(next(keys), decoder_width, config.resolved_decoder_ffn_width)
             for _ in range(config.coordinate_blocks)
         ),
-        "field_embedding": _normal(next(keys), (len(schema.fields), config.width), config.width),
-        "label_embedding": _normal(next(keys), (len(schema.labels), config.width), config.width),
-        "output_axis_role_embedding": _normal(next(keys), (len(layout.axis_names), config.width), config.width),
+        "field_embedding": _normal(next(keys), (len(schema.fields), decoder_width), decoder_width),
+        "label_embedding": _normal(next(keys), (len(schema.labels), decoder_width), decoder_width),
+        "output_axis_role_embedding": _normal(next(keys), (len(layout.axis_names), decoder_width), decoder_width),
         "output_axis_position_embedding": tuple(
-            None if axis == "pft" else _normal(next(keys), (extent, config.width), config.width)
+            None if axis == "pft" else _normal(next(keys), (extent, decoder_width), decoder_width)
             for axis, extent in zip(layout.axis_names, layout.axis_extents, strict=True)
         ),
-        "axis_slot_embedding": _normal(next(keys), (layout.max_output_rank, config.width), config.width),
-        "local_value_input": _linear_parameters(next(keys), 2, config.width),
-        "readout_first": _linear_parameters(next(keys), config.width, config.readout_width),
+        "axis_slot_embedding": _normal(next(keys), (layout.max_output_rank, decoder_width), decoder_width),
+        "local_value_input": _linear_parameters(next(keys), 2, decoder_width),
+        "readout_first": _linear_parameters(next(keys), decoder_width, config.readout_width),
         "readout_second": _linear_parameters(next(keys), config.readout_width, 1),
         "carbon": carbon,
     }
+    if decoder_width != config.width:
+        shared["decoder_bridge"] = _linear_parameters(next(keys), config.width, decoder_width)
     return {"tokenizer": tokenizer, "shared_transformer": shared}
 
 
@@ -296,13 +322,15 @@ def _run_blocks(
     mask: Any,
     blocks: Any,
     config: SharedTransformerConfig,
+    *,
+    heads: int | None = None,
 ) -> Any:
     for block in blocks:
         message = _normalized_attention(
             block["attention"],
             query,
             bank,
-            heads=config.attention_heads,
+            heads=config.attention_heads if heads is None else heads,
             mask=mask,
             normalization_epsilon=config.normalization_epsilon,
         )
@@ -407,12 +435,8 @@ def _field_dynamic_projection_cache(
         projections,
         strict=True,
     ):
-        axis_key, axis_value = _project_key_value(
-            block["attention"], field_axis_tokens
-        )
-        local_key, local_value = _project_key_value(
-            block["attention"], field_local_tokens
-        )
+        axis_key, axis_value = _project_key_value(block["attention"], field_axis_tokens)
+        local_key, local_value = _project_key_value(block["attention"], field_local_tokens)
         result.append(
             projected._replace(
                 axis_key=axis_key,
@@ -567,7 +591,7 @@ def _run_coordinate_blocks_reusing_projections(
             carbon_key=projected.carbon_key,
             carbon_value=projected.carbon_value,
             carbon_mask=carbon_mask,
-            heads=config.attention_heads,
+            heads=config.resolved_decoder_attention_heads,
             normalization_epsilon=config.normalization_epsilon,
         )
         query = _layer_norm(
@@ -653,6 +677,29 @@ def _source_family_bank(
     ) / jnp.maximum(count[..., None], 1.0)
     valid = count > 0.0
     return jnp.where(valid[..., None], tokens, 0.0), valid
+
+
+def _project_decoder_context(
+    parameters: Mapping[str, Any],
+    context: SharedTransformerContext,
+    family_tokens: Any,
+    family_mask: Any,
+) -> tuple[SharedTransformerContext, Any]:
+    """Bridge lawful backbone tokens once, restoring masked zeros after bias."""
+
+    bridge = parameters["shared_transformer"].get("decoder_bridge")
+    if bridge is None:
+        return context, family_tokens
+    axis_tokens = _linear(bridge, context.expert_axis_tokens)
+    pft_tokens = _linear(bridge, context.pft_tokens)
+    decoder_context = context._replace(
+        expert_axis_tokens=jnp.where(context.expert_axis_mask[..., None], axis_tokens, 0.0),
+        pft_tokens=jnp.where(context.pft_mask[..., None], pft_tokens, 0.0),
+        process_tokens=_linear(bridge, context.process_tokens),
+    )
+    projected_family = _linear(bridge, family_tokens)
+    projected_family = jnp.where(family_mask[..., None], projected_family, 0.0)
+    return decoder_context, projected_family
 
 
 def _field_active_and_pft_owner(
@@ -834,9 +881,7 @@ def _decoder_dynamic_plan(
     for indices in field_axis_indices:
         bank, inverse = np.unique(indices, return_inverse=True)
         field_axis_bank_indices.append(bank.astype(np.int32, copy=False))
-        field_axis_local_indices.append(
-            inverse.astype(np.int32, copy=False).reshape(indices.shape)
-        )
+        field_axis_local_indices.append(inverse.astype(np.int32, copy=False).reshape(indices.shape))
     field_local_bank_indices = []
     field_local_local_indices = []
     for indices in field_local_indices:
@@ -871,14 +916,10 @@ def _decoder_dynamic_tokens(
 
     shared = parameters["shared_transformer"]
     selected_axis = (
-        np.arange(plan.axis_expert_index.size, dtype=np.int32)
-        if axis_bank_indices is None
-        else axis_bank_indices
+        np.arange(plan.axis_expert_index.size, dtype=np.int32) if axis_bank_indices is None else axis_bank_indices
     )
     selected_local = (
-        np.arange(plan.local_state_indices.size, dtype=np.int32)
-        if local_bank_indices is None
-        else local_bank_indices
+        np.arange(plan.local_state_indices.size, dtype=np.int32) if local_bank_indices is None else local_bank_indices
     )
     experts = jnp.asarray(plan.axis_expert_index[selected_axis], dtype=jnp.int32)
     slots = jnp.asarray(plan.axis_slot_index[selected_axis], dtype=jnp.int32)
@@ -888,7 +929,7 @@ def _decoder_dynamic_tokens(
         extents = jnp.asarray(layout.axis_extents, dtype=jnp.int32)[roles]
         dynamic_positions = jnp.minimum(positions, extents - 1)
         axis_tokens = jnp.zeros(
-            (selected_axis.size, config_width(parameters)),
+            (selected_axis.size, decoder_width(parameters)),
             dtype=jnp.float32,
         )
         if "pft" in layout.axis_names:
@@ -912,7 +953,7 @@ def _decoder_dynamic_tokens(
                 axis_tokens += jnp.where(selected[:, None], embedding[safe_positions], 0.0)
         axis_tokens += shared["axis_slot_embedding"][slots]
     else:
-        axis_tokens = jnp.zeros((0, config_width(parameters)), dtype=jnp.float32)
+        axis_tokens = jnp.zeros((0, decoder_width(parameters)), dtype=jnp.float32)
 
     local, local_defined = _normalized_local_state(
         inputs,
@@ -997,13 +1038,13 @@ def _field_coordinate_inputs(
         stacked_axis = jnp.stack(tuple(axis_tokens), axis=1)
         stacked_mask = jnp.stack(tuple(axis_masks), axis=1)
     else:
-        stacked_axis = jnp.zeros((coordinates.shape[0], 0, config_width(parameters)), dtype=jnp.float32)
+        stacked_axis = jnp.zeros((coordinates.shape[0], 0, decoder_width(parameters)), dtype=jnp.float32)
         stacked_mask = jnp.zeros((coordinates.shape[0], 0), dtype=jnp.bool_)
     return features, active, pft_owner, stacked_axis, stacked_mask, local_token, local_defined
 
 
-def config_width(parameters: Mapping[str, Any]) -> int:
-    return int(parameters["shared_transformer"]["process_query"].shape[-1])
+def decoder_width(parameters: Mapping[str, Any]) -> int:
+    return int(parameters["shared_transformer"]["field_embedding"].shape[-1])
 
 
 def _validate_carbon_layout_parameters(
@@ -1116,6 +1157,7 @@ def _decode_field(
     projection_cache: tuple[_DecoderBlockProjection, ...] | None,
     dynamic_projection_indices: tuple[np.ndarray, np.ndarray] | None,
 ) -> tuple[Any, Any]:
+    width = config.resolved_decoder_width
     gather = config.decoder_execution != "original"
     coordinate_indices = _static_field_coordinate_indices(field, ownership, layout) if gather else None
     _full_coordinates, full_active, _full_owner = _field_active_and_pft_owner(context, field, ownership, layout)
@@ -1153,14 +1195,12 @@ def _decode_field(
     def padded(value: Any, trailing: tuple[int, ...]) -> Any:
         return jnp.pad(value, ((0, pad),) + tuple((0, 0) for _ in trailing))
 
-    feature_chunks = padded(features, features.shape[1:]).reshape((chunk_count, chunk, config.width))
+    feature_chunks = padded(features, features.shape[1:]).reshape((chunk_count, chunk, width))
     active_chunks = jnp.pad(active, ((0, pad),)).reshape((chunk_count, chunk))
     owner_chunks = jnp.pad(pft_owner, ((0, pad),), constant_values=-1).reshape((chunk_count, chunk))
-    axis_chunks = padded(axis_tokens, axis_tokens.shape[1:]).reshape(
-        (chunk_count, chunk, axis_tokens.shape[1], config.width)
-    )
+    axis_chunks = padded(axis_tokens, axis_tokens.shape[1:]).reshape((chunk_count, chunk, axis_tokens.shape[1], width))
     axis_mask_chunks = padded(axis_mask, axis_mask.shape[1:]).reshape((chunk_count, chunk, axis_mask.shape[1]))
-    local_chunks = padded(local_token, local_token.shape[1:]).reshape((chunk_count, chunk, config.width))
+    local_chunks = padded(local_token, local_token.shape[1:]).reshape((chunk_count, chunk, width))
     local_mask_chunks = jnp.pad(local_defined & active, ((0, pad),)).reshape((chunk_count, chunk))
     if dynamic_projection_indices is not None:
         axis_projection_indices, local_projection_indices = dynamic_projection_indices
@@ -1214,9 +1254,9 @@ def _decode_field(
         if projection_cache is None:
             families = jnp.broadcast_to(
                 family_tokens[expert_index][None, :, :],
-                (count, family_tokens.shape[1], config.width),
+                (count, family_tokens.shape[1], width),
             )
-            process = jnp.broadcast_to(context.process_tokens[expert_index], (count, 1, config.width))
+            process = jnp.broadcast_to(context.process_tokens[expert_index], (count, 1, width))
             bank = jnp.concatenate((families, chunk_axis, chunk_local[:, None, :], process), axis=1)
             mask = jnp.concatenate(
                 (
@@ -1230,7 +1270,7 @@ def _decode_field(
             if raw_mask is not None:
                 raw_carbon = jnp.broadcast_to(
                     carbon_tokens[None, :, :],
-                    (count, carbon_tokens.shape[0], config.width),
+                    (count, carbon_tokens.shape[0], width),
                 )
                 bank = jnp.concatenate((bank, raw_carbon), axis=1)
                 mask = jnp.concatenate((mask, raw_mask), axis=1)
@@ -1240,6 +1280,7 @@ def _decode_field(
                 mask[:, None, :],
                 shared["coordinate_blocks"],
                 config,
+                heads=config.resolved_decoder_attention_heads,
             )[:, 0, :]
         else:
             dynamic = jnp.concatenate((chunk_axis, chunk_local[:, None, :]), axis=1)
@@ -1305,6 +1346,7 @@ def shared_transformer_raw_outputs(
     if tuple(field.name for field in schema.fields) != tuple(field.name for field in layout.ledger):
         raise ValueError("shared Transformer schema and layout drift")
     family_tokens, family_mask = _source_family_bank(context, layout)
+    context, family_tokens = _project_decoder_context(parameters, context, family_tokens, family_mask)
     raw_carbon = carbon_defined = None
     if carbon_state_layout is not None:
         raw_carbon, carbon_defined = _carbon_tokens(
@@ -1328,9 +1370,7 @@ def shared_transformer_raw_outputs(
     masks = {}
     for field_index, (field, ownership) in enumerate(zip(schema.fields, layout.ledger, strict=True)):
         field_projection_cache = (
-            None
-            if projection_cache is None
-            else projection_cache[int(layout.field_expert_index[field_index])]
+            None if projection_cache is None else projection_cache[int(layout.field_expert_index[field_index])]
         )
         if dynamic_plan is not None:
             field_dynamic_tokens = _decoder_dynamic_tokens(

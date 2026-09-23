@@ -8,11 +8,47 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Current implementation: user authorized technical execution of backbone768x8
+with uniform decoder384x2. New full-schema parameter count64,884,481.
+Split config, masked token-local bridge and micro4/500-update training support
+are implemented; local/deployed admission is in progress. Use model protocol
+shared_transformer_split_width_v1.json; new recurrent/learning protocols are
+shared_split_recurrent_admission_v1.json and shared_split_learning_v1.json.
+Do not initialize from old update100; do not start500 learning until actual
+new-model numerical/physical and full-update efficiency results are available.
+No new paid work. The prior proposal discussion below is now approved.
+
+Approved architecture: retain backbone768x8; uniformly use decoder384x2,
+FFN1536/8heads for every output, with a token-local768->384 bridge and all
+local/raw-carbon/ownership routes preserved. This is a capacity change,
+not an execution-equivalent optimization; user approved implementation.
+Read `research/daily_coarse_graining/shared_split_width_proposal_20260923.md`.
+Main source/cost review and independent Sol/high review agree on this first
+candidate. Static field-local reference162.119G->68.487G counted forward MACs
+is an opportunity, not measured speed or memory. Implementation is complete.
+Next complete native-AD/physical/full-update runtime
+admission, then prepare fresh500-update joint learning using the existing audited
+data sequence; do not inherit update100 weights or automatically submit paid work.
+
+Latest result: job15344733 COMPLETED0:0 in3m42s, estimated0.17yuan.
+Both micro1/micro4 pass output and complete component parameter/payload gradients.
+At micro4 dense packing reduces14.695ms to13.916ms (5.30% time reduction),
+but compiler temporary bytes rise145.13MB to201.00MB (+38.49%). Packed128
+is slower15.869ms and uses294.32MB temporary storage. Do not adopt or launch
+a full-model compile from this evidence. Full-model speed/memory remain unknown.
+Next review the decoder compute/memory tradeoff and prepare a concrete efficient
+architecture/execution proposal; discuss any capacity/architecture change with
+the user before implementation. Preserve current scientific output requirements.
+The launch snapshot below is superseded; no task15344733 remains running.
+
 Newest: actual-decoder block-major dense-stage prototype implemented separately;
 4local tests and actual JAX0.4.38 tiny CUDA output/parameter/payload AD checks
 pass. No default-model change. Width768 micro1/micro4 component performance
-job is prepared and deployed, not submitted:1V100/8CPU/32GiB/30min,1.38yuan
-maximum, prefer idleibc13b03n04. Both free GPUs are currently occupied.
+job 15344733 is RUNNING after explicit approval: 1V100/8CPU/32GiB/30min,
+1.38yuan maximum, on ibc13b03n04. Started 17:27:27 CST September23 (server
+clock); startup GPU empty, host load0.03. Both free GPUs were occupied.
+Collect runtime/outputs/diagnostics/shared-dense-stages-15344733-micro{1,4}.json
+and shared-dense-stages-15344733.log. Micro4 follows only if micro1 passes.
 Read`research/daily_coarse_graining/shared_dense_stage_admission_20260923.md`.
 Collect bounded speed/memory evidence before any full-model integration/compile.
 

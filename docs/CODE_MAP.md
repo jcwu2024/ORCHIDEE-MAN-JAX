@@ -2,6 +2,26 @@
 
 Last updated: 2026-09-23.
 
+`shared_transformer.py` now accepts optional decoder width/FFN/head settings;
+legacy defaults and initialization are preserved. The split route adds one
+masked token-local `decoder_bridge` after lawful family pooling and constructs
+all coordinate/local/raw-carbon representations directly at decoder width.
+`run_shared_transformer_admission.py` reads those settings; the new admission
+uses the existing public microbatch mean for4rows, preserving scalar legacy
+behavior. Model/recurrent/learning contracts are
+`shared_transformer_split_width_v1.json`, `shared_split_recurrent_admission_v1.json`,
+and `shared_split_learning_v1.json`. `shared_learning_plan.py` and
+`run_shared_learning.py` support the declared fresh500-update/micro4 method;
+the old100-update scalar protocol remains reproducible. New tests cover width
+boundaries, masks/gradients and exactmean32/T7/T30 update/recovery behavior.
+
+`estimate_shared_decoder_width.py` is an arithmetic-only proposal calculator:
+reads saved layout audits, compares the measured field-local-reuse architecture
+with a proposed uniform384 decoder/768 backbone, includes context-bridge cost,
+and distinguishes logical activation volume from peak memory. It constructs no
+model and does not alter production configuration. See
+`shared_split_width_proposal_20260923.md` before any architecture implementation.
+
 `shared_decoder_dense.py` is a separate actual-decoder execution prototype:
 field-local production attention, row-packed shared normalization/FFN/readout,
 optional dense chunks, unchanged reference helper. It is not wired into the
