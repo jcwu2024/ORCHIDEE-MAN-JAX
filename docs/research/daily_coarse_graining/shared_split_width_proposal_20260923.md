@@ -134,11 +134,18 @@ GPP、NPP、维持/生长呼吸、RH、AGB/BGB、冠层/DOC/凋落物的变化�
 不修改500步正式配置、不继承为正式训练；需要先完成新模型recurrent准入。
 
 部署代码a1fa82a位于`runtime/checkouts/shared-split-width-v1`；
-免费test02的PID65781正在进行真实数据micro4损失/完整梯度shape检查，
+免费test02的PID65781已于500秒完成真实数据micro4损失/完整梯度shape检查，
 报告`runtime/outputs/diagnostics/shared-split-a1fa82a-cpu.json`。
 新checkout通过Git alternates依赖`shared-dynamic-local-v2/.git/objects`，
 后者继续依赖`shared-dynamic-reuse-v1/.git/objects`；这些Git对象目录需保留。
 本轮仅启动免费检查，没有提交付费作业。
+
+随后启动免费gln01 GPU1单日验收，launcher PID112232、上限90分钟；
+免费test02同步准备T7/T30形状，launcher PID67596、上限20分钟。
+报告分别为`runtime/outputs/diagnostics/shared-split-a1fa82a-daily.json`和
+`shared-split-a1fa82a-recurrent-cpu.json`，日志同stem、后缀`.log`。
+GPU启动前GPU1为0MiB/0%占用；GPU0由其他任务占用，未干预。
+单日GPU报告仍待完成，不得据CPU形状通过声明数值、速度或学习成功。
 
 - `shared_transformer.py`: 配置40起；初始化193起；context586起；coordinate inputs929起；
   解码1100起。`config_width()`及所有width相关shape必须随实现审查。

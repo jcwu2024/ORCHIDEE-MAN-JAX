@@ -18,10 +18,17 @@ Do not initialize from old update100; do not start500 learning until actual
 new-model numerical/physical and full-update efficiency results are available.
 Code a1fa82a is deployed at runtime/checkouts/shared-split-width-v1.
 Local split/mask/state-AD, legacy, update-mean and recovery tests pass.
-Free test02 PID65781 is checking actual-data daily micro4 forward/gradient shapes.
-Daily report: runtime/outputs/diagnostics/shared-split-a1fa82a-cpu.json.
-Next free GPU daily admission, in parallel with CPU T7/T30 preparation after
-daily shapes/calibration pass. No new paid work.
+Free test02 PID65781 completed actual-data daily micro4 forward/gradient shapes
+in500s:64,884,481 parameters,161fields,8550eligible coordinates.
+Report: runtime/outputs/diagnostics/shared-split-a1fa82a-cpu.json.
+Free gln01 GPU1 daily admission launcher PID112232 is RUNNING; free test02
+T7/T30 CPU preparation launcher PID67596 is RUNNING. Collect
+runtime/outputs/diagnostics/shared-split-a1fa82a-{daily,recurrent-cpu}.json
+and matching logs. Daily bounded90min; CPU preparation20min. No paid work.
+Local61a9671 also adds --technical-updates 2 to the v2 learning runner for
+actual32/micro4+T7/T30 timing after recurrent admission; it is not yet deployed.
+That mode skips science monitors and uses an isolated technical checkpoint
+identity. Formal500 learning remains a fresh independent run.
 
 Approved architecture: retain backbone768x8; uniformly use decoder384x2,
 FFN1536/8heads for every output, with a token-local768->384 bridge and all

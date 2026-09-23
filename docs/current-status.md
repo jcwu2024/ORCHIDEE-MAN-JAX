@@ -15,11 +15,17 @@ describe an earlier gate without being rewritten.
 
 Newest: user delegates technical decisions and authorizes the announced
 split-width implementation. Shared model code and micro4/500 learning support
-are implemented, not yet deployed/numerically admitted. Exact full-layout
+are implemented and deployed as a1fa82a, not yet numerically admitted. Exact full-layout
 shape count64,884,481 (tokenizer3,667,840,shared61,216,641); no weights inherited.
 Local checks pass:9 historical shared-model tests,7 split-width/mask/state-AD
 tests,24 learning integration tests,14 daily microbatch/recovery tests.
 Next collect actual deployed daily/T7/T30/whole-update evidence before learning.
+Actual-data CPU daily shape check passed500s (161fields/8550eligible coordinates).
+Free GPU1 daily launcher112232 and test02 recurrent CPU launcher67596 now run
+from runtime/checkouts/shared-split-width-v1, reports under
+runtime/outputs/diagnostics/shared-split-a1fa82a-{daily,recurrent-cpu}.json.
+Local61a9671 adds bounded complete-update timing,26 related tests pass; no
+new paid job and no500-update learning launched.
 
 Prior proposal snapshot: discuss the concrete split-width architecture proposal
 `research/daily_coarse_graining/shared_split_width_proposal_20260923.md`.
