@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest completed result: split daily112232 passed84.54min, two optimizer updates,
+all64,884,481 gradient coordinates finite and JVP/reverse relative difference
+8.73e-8. Fixed-data micro4 value/gradient median0.52635s; actual peak11.217GiB
+(JAX reservation25.391GiB is not actual usage). Reverse compile49.9min remains
+slow. Recurrent CPU67596 passed13.66min, shapes only. Next GPU T7/T30 numerical
+admission then real32/micro4 joint timing, before fresh500 learning. Both launch
+snapshots below are historical. See shared_split_width_daily_results_20260923.md.
+
 Newest: user delegates technical decisions and authorizes the announced
 split-width implementation. Shared model code and micro4/500 learning support
 are implemented and deployed as a1fa82a, not yet numerically admitted. Exact full-layout
