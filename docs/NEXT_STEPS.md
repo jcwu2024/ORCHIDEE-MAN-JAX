@@ -8,6 +8,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Newest: actual-decoder block-major dense-stage prototype implemented separately;
+4local tests and actual JAX0.4.38 tiny CUDA output/parameter/payload AD checks
+pass. No default-model change. Width768 micro1/micro4 component performance
+job is prepared and deployed, not submitted:1V100/8CPU/32GiB/30min,1.38yuan
+maximum, prefer idleibc13b03n04. Both free GPUs are currently occupied.
+Read`research/daily_coarse_graining/shared_dense_stage_admission_20260923.md`.
+Collect bounded speed/memory evidence before any full-model integration/compile.
+
 Latest: field-local f220013 daily103428 completed: all75.58M parameter-gradient
 coordinates and hard counters pass; daily32/micro4 median6.626s, compiled-live
 21.972GiB/actualpeak23.405GiB, compile49.3min. Old109M model really processed

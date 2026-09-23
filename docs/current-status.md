@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Newest: separate actual-decoder dense-stage packing prototype passes4local
+tests and tiny JAX0.4.38 CUDA complete output/parameter/payload comparisons.
+Production-width performance remains pending; free GPUs occupied. Prepared
+idle-node gnall component probe1V100/8CPU/32GiB/30min,1.38yuan maximum; not
+submitted. No new architecture/capacity/loss change or trained-model claim.
+See`research/daily_coarse_graining/shared_dense_stage_admission_20260923.md`.
+
 Latest: f220013 field-local daily103428 completed, full75,578,497 gradient
 coordinates pass(maxabs1.49e-7,relL2 5.50e-7), all hard counters zero. Daily32
 micro4 median6.626s, compiled21.972GiB, actualpeak23.405GiB; compile49.3min.

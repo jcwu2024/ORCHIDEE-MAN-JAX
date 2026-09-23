@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-23.
 
+`shared_decoder_dense.py` is a separate actual-decoder execution prototype:
+field-local production attention, row-packed shared normalization/FFN/readout,
+optional dense chunks, unchanged reference helper. It is not wired into the
+default process head. `probe_shared_dense_stages.py` checks complete component
+parameter/payload AD and memory/time without Teacher data; its free/allocated
+runner and prepared30min Slurm wrapper are `run_shared_dense_stages.sh` and
+`job_shared_dense_stages.sh`. See `shared_dense_stage_admission_20260923.md`.
+
 `audit_shared_decoder_packing.py` derives exact-shape decoder field groups and
 optionally compares native parameter/payload gradients, graph size, compiler
 memory and runtime of unrolled/scalar-map/batched-map synthetic execution.
