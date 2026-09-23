@@ -1,5 +1,36 @@
 # Dynamic projection reuse: partial results and memory regression
 
+## Latest: field-local daily result collected
+
+Free wrapper103428 completed successfully. Immutable f220013, daily32/micro4:
+warm6.80851/6.62601/6.60759s (median6.62601s); lowering+compile2958.44s,
+total3188.76s. All75,578,497 gradient coordinates pass against saved reference,
+maximum absolute1.490116e-7, relativeL2 5.50415e-7; all hard counters zero.
+Loss0.298775508397 vs reference0.298775521382.
+
+Compiled-live21.972GiB; actual cumulative allocator peak23.405GiB. The25.391GiB
+allocator pool is reserved capacity, not actual live use. Field-local reuse
+removes the previous27.214GiB rejection but does not beat the original
+gather_reuse21.015GiB compiled footprint. Daily time is about15% below the
+preceding new-model7.77s context; nodes differ, so not a matched speedup claim.
+Revised T7/T30 and full joint-update parity remain unmeasured. No training
+updates were retained and no scientific acceptance follows from this check.
+
+The user's historical comparison is correct: old109,464,375-parameter model
+used64 daily samples/micro8 in median6.53646s, not32. Its measured full dual
+update was7.22209s. Evidence:`outputs/mixed-learning-dual-paid-15230086.json`.
+The6.53646s includes daily-only optimizer/checks (underlying daily branch
+median6.42775s); the new6.62601s is daily gradient accumulation only.
+New daily throughput32/6.62601=4.83 samples/s vs old64/6.53646=9.79 samples/s,
+about49.3% of the historical throughput. Different architectures/losses/hardware
+allocations prevent interpreting this as a matched science or efficiency
+ablation; they do not justify ignoring the gap. New-model training stays on
+hold while execution grouping and actual device costs are investigated.
+
+Raw completed evidence:`outputs/shared-dynamic-local-v2-daily.json` and remote
+`runtime/outputs/diagnostics/shared-dynamic-local-v2-daily.json/.log`.
+Earlier running/pending statements below are historical launch snapshots.
+
 Source cfc518d, free gln01 wrappers25756/25757 have exited. Neither is still
 running. No paid charge and no retained training updates. Do not adopt this
 execution candidate or proceed to the joint replay on these results.

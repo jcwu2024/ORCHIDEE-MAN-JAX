@@ -8,13 +8,27 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
-Latest: field-local f220013 passes4focused local parity tests and deployed
-runtime. Actual V100 bounded fragment compiled temp312.62->96.97MiB; this is
-not full-model memory/speed evidence. Free gln01GPU0PID103428 launched only
-full daily micro4 at11:19:56CST September23(server clock),90min ceiling.
-Collect`shared-dynamic-local-v2-daily.json/.log` under runtime diagnostics.
-No paid job; do not run recurrent or joint stages before daily results support
-them. Candidate checkout is`runtime/checkouts/shared-dynamic-local-v2`.
+Latest: field-local f220013 daily103428 completed: all75.58M parameter-gradient
+coordinates and hard counters pass; daily32/micro4 median6.626s, compiled-live
+21.972GiB/actualpeak23.405GiB, compile49.3min. Old109M model really processed
+daily64/micro8 in6.536s; the new throughput is about49.3% of that historical
+context, not comparable sample counts. See completed result at the top of
+`research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md`.
+Continue bounded decoder execution-grouping and actual-device cost analysis;
+source-family pooling alone measured only1.09ms per micro4 and cannot explain
+the gap. Saved-executable profile39607 completed272.5s without model compilation:
+micro4median0.822s,65006GPU events,50.5%GEMM/46.1%fused summed device time,
+all identified GEMM FP32. Follow-up width768 synthetic field grouping completed:
+scalar map slows8.346->13.197ms; batch4 reaches7.024ms but temporary memory
+rises2.90x and unchanged numerical gates fail. Do not integrate this outer-map
+prototype or cold-compile the full model. Next bounded actual-decoder test packs
+shared per-row dense/FFN/readout stages across fields while keeping each block's
+attention masks/order unchanged; compare complete parameter/payload gradients,
+memory and time. This needs production-helper evidence, not toy extrapolation. See
+`research/daily_coarse_graining/shared_execution_cost_profile_20260923.md`.
+No new paid allocation or learning continuation; revised recurrent/joint
+acceptance follows a supported efficiency candidate. Older launch states below
+are historical. Candidate checkout remains`runtime/checkouts/shared-dynamic-local-v2`.
 
 Targeted revision is locally verified: field-local token construction/KV banks
 remove whole-global-bank cotangents inside each field's reverse chunk map.

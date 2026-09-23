@@ -13,11 +13,21 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Latest: field-local projection fix f220013 passed4focused numerical tests,
-deployed runtime and bounded V100 compile. Fragment temporary estimate
-312.62->96.97MiB supports the mechanism; not full-model acceptance. FreeGPU0
-daily micro4 wrapper103428 started11:19:56CST September23(server clock),90min.
-Collect`shared-dynamic-local-v2-daily`; old dynamic probes are finished.
+Latest: f220013 field-local daily103428 completed, full75,578,497 gradient
+coordinates pass(maxabs1.49e-7,relL2 5.50e-7), all hard counters zero. Daily32
+micro4 median6.626s, compiled21.972GiB, actualpeak23.405GiB; compile49.3min.
+The old109M daily benchmark was64samples/micro8 at6.536s; current throughput
+is about half that historical context. No revised recurrent/joint acceptance
+or retained learning updates. Saved-GPU profile39607 completed272.5s without
+model compilation:65006GPU events per micro4,50.5%GEMM/46.1%fused device time;
+all identified GEMM FP32. GPU field-grouping proxy completed: scalar map slower;
+batch4~15.8% faster but2.90x temporary bytes and numerical gate failures. No
+production adoption. Next bounded actual-decoder dense-stage packing across
+independent queries, preserving block order/attention masks. Source-family
+pooling is too small a cost to explain the gap. No task from this turn remains
+running; no paid allocation or retained training updates.
+Detailed results supersede older launch states below:
+`research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md`.
 
 Current: dynamic-reuse probes finished. daily micro4 regresses21.015->27.214GiB
 compiled-live and was not executed; T7 full-gradient/physical parity passes,

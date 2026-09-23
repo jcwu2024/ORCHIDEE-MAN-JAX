@@ -2,6 +2,18 @@
 
 Last updated: 2026-09-23.
 
+`audit_shared_decoder_packing.py` derives exact-shape decoder field groups and
+optionally compares native parameter/payload gradients, graph size, compiler
+memory and runtime of unrolled/scalar-map/batched-map synthetic execution.
+`--synthetic-only` runs without local layout fixtures; reports survive a parity
+rejection. Its synthetic results do not certify the real decoder or full model.
+`probe_shared_family_pooling.py` compares only synthetic source-family pooling
+forward/native VJP on production-shaped inputs, without Teacher/model data;
+it is not a full-model performance estimate. `probe_shared_projection_reuse.py
+--profile-saved` directly loads an exact serialized component for a short GPU
+trace without model retracing/compilation and without rewriting accepted
+gradient artifacts. Both support the bounded execution-cost investigation.
+
 `inspect_shared_cached_executable.py` loads named persistent GPU executables
 directly to extract compiled memory and compressed optimized HLO, without
 Teacher/model execution or new JAX graph compilation. Large-instruction byte

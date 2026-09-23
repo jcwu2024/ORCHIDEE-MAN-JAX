@@ -1,9 +1,173 @@
 # Shared architecture: bounded execution cost investigation
 
-Status: static cost audit complete; real-model GPU trace unavailable, 2026-09-23.
+Status: static cost audit and exact-saved daily micro4 GPU trace complete, 2026-09-23.
 No architecture change or new
 paid allocation. The 100-to-500 learning extension remains on hold under
 `shared_architecture_efficiency_gate_20260923.md`.
+
+## Follow-up: pooling fragment and exact executable profile
+
+The field-local revision's full daily result is in
+`shared_dynamic_projection_results_20260923.md`: daily32 at6.626s, still about
+half the historical old-model daily64 throughput. Parameters/outputs/losses
+have not changed during this follow-up.
+
+`probe_shared_family_pooling.py` isolates the source-family broadcast/reduction
+and an equivalent FP32 highest-precision contraction, including native token
+VJP, empty families/experts and dynamically masked sources. Local small tests
+and actual JAX0.4.38 V100 production-shaped probes pass unchanged2e-5/2e-6
+forward/gradient tolerances. FreeGPU1, width768,393sources,20families,7experts:
+
+| Shape | Broadcast ms | Contraction ms | Broadcast temp bytes | Contraction temp bytes |
+| --- | ---: | ---: | ---: | ---: |
+| micro1 |0.365|0.326|868896|1648664|
+| micro4 |1.091|0.296|1730720|5201808|
+
+Forward maxabs2.384e-7; token-gradient maxabs1.192e-7; masks exact, masked
+source gradients/empty expert/family outputs zero. Warm medians use20replays.
+No production pooling change is made: sub-millisecond savings per microbatch
+cannot by itself explain hundreds of milliseconds per microbatch, and temporary
+memory rises. Compiler fusion avoided materializing the huge logical broadcast
+in this fragment. This is not a full-model hotspot measurement or memory claim.
+Raw evidence:`outputs/shared-family-pooling-20260923.json` (same remote basename
+under runtime diagnostics); no Teacher/model checkpoint was read by this probe.
+
+The exact f220013 daily executable was already serialized. The new diagnostic
+`probe_shared_projection_reuse.py --profile-saved` loads it directly, without
+model lowering/backend compilation, and profiles one micro4 invocation rather
+than all32samples. It reads existing source checkpoint/artifact metadata and
+does not rewrite saved gradients/executables or retain optimizer updates.
+Three local existing serialization/update tests pass and actual free-node
+shell expansion was checked. Diagnostic code is an overlay under
+`runtime/transfers/probe_shared_projection_reuse_profile.py`; model checkout
+`shared-dynamic-local-v2` stays immutable. FreeGPU1 wrapper39607 launched with
+25min ceiling. Report/log:`shared-saved-profile-20260923.json/.log` under
+runtime diagnostics. This supersedes the earlier cache-lookup-only attempt.
+
+Wrapper39607 completed in272.5s: existing runtime/data/bootstrap185.8s,
+saved executable ready229.3s, profile began233.6s. No model graph was lowered
+or compiled. One micro4 warm times0.82749/0.82081/0.82244s; median0.82244s
+is consistent with the prior32-sample6.626s context. This is not a fresh
+32-sample benchmark or optimizer timing. Report:
+`outputs/shared-saved-profile-20260923.json`.
+
+Free test02 analyzed the real trace and saved HLO. Summary:
+`outputs/shared-saved-profile-20260923.summary.json`.
+
+| GPU event category | Events | Summed device seconds | Share |
+| --- | ---: | ---: | ---: |
+| Matrix multiplication |7293|0.399778|50.52%|
+| Fused kernels |52227|0.364545|46.07%|
+| Other kernels |1101|0.015670|1.98%|
+| Memory transfer/set |4385|0.011298|1.43%|
+
+There are65006device events,52665<=10microseconds. Active union0.791290s,
+device span0.872700s and intervening gaps0.081410s. These are instrumented
+timings; CUPTI warned of tracing overhead. They support investigating fragmented
+execution, not a claim that all gaps are removable launch overhead. Every one
+of the7293 matrix-kernel names explicitly identifies SGEMM/FP32; this does not
+prove the rest of retained physics contains no FP64 arithmetic.
+
+Mapped cuBLAS shapes include M256/N768/K3072 (0.06202s), M256/N3072/K768
+(0.05913s), M256/N768/K768 (0.04525s), and M14924/N768/K768 (0.03882s).
+The first shapes match chunk/microbatch-wide FFN/projection work. A kernel's
+generic `_linear` source location is shared across callers, so the summary
+does not assign all such time exclusively to a neural module. About41.7% of
+device time lacks unique source-line mapping. No new physics/science inference
+or full-update parity is claimed from the performance trace.
+
+Next bounded test: homogeneous decoder field groups preserving exact existing
+coordinate and field-local bank sizes, with native AD and optional small field
+batching. Measure graph size, complete parameter/payload gradients, temporary
+memory and runtime before a real-model integration or another long compile.
+An outer scalar loop alone need not reduce GPU kernel count; its graph/memory
+benefit must be distinguished from packing multiple fields into larger GEMMs.
+
+## Concrete execution candidate: exact-shape field groups
+
+`audit_shared_decoder_packing.py` partitions the actual161field layout by
+eligible-coordinate count, chunk geometry, axis slots, field-local axis/local
+bank sizes and carbon-bank presence. Result:34signatures,26multi-field groups
+cover153fields,8singletons,largest group45fields. Padded queries stay9046;
+field-local unique axis/local projections stay1380/3249. This is an execution
+organization proposal, not fewer outputs, parameters or attention blocks.
+Static evidence:`outputs/shared-decoder-packing-audit-20260923.json`.
+
+Initial integration sketch before the bounded GPU result (not admitted; see
+the result and revised next experiment below):
+
+1. Factor `_decode_field` preparation from its chunk evaluator. Build the same
+   field features/masks/owner/local payload; retain static per-field scatter
+   indices for reconstructing every complete output shape.
+2. Stack only compatible field payloads. Run one outer native `lax.map` per
+   signature; construct/project the compact field-local bank inside the body,
+   then retain its bounded inner chunk evaluation. Dynamically select the small
+   expert family/process projections. Keep GPP's raw-carbon route isolated.
+3. First verify scalar field grouping, then optionally batch two/four fields
+   through the same body if actual memory/time supports it. Preserve the
+   current ungrouped path as the numerical reference, not a new science model.
+4. Test genuine multi-field groups, nonzero K/V biases, empty/inactive PFTs,
+   missing local state, differing expert masks and state/parameter gradients.
+   Existing four-field tests may contain only singleton signatures and cannot
+   alone demonstrate the new grouped branch. No custom reverse or tolerance
+   relaxation. Full saved-reference daily and later T7/T30/joint parity remain
+   required before production adoption or resumed learning.
+
+The bounded8field CPU prototype compares shared parameter and query/bank
+payload gradients. All pass existing forward2e-5/2e-6 and gradient5e-4/2e-5
+tolerances. Graph equations389/397 for scalar/batch4 maps vs3160unrolled;
+this supports a smaller repeated graph. Tiny-width CPU temporary memory did
+not improve (174480/201744 vs113488bytes). Do not predict full-model memory
+from graph size or static summed cotangent shapes. A prior161field unrolled
+CPU compile was stopped after exceeding4min; the diagnostic now defaults to
+16fields and accepts explicit dimensions plus `--synthetic-only` for the
+remote environment without local metadata fixtures.
+
+### Completed V100 structural proxy: do not adopt the outer map
+
+The width768/two-block synthetic8field x64query probe completed on freeGPU1.
+Both scalar and batch4 outer-map variants fail at least one unchanged numerical
+gate. `outputs/shared-decoder-packing-gpu-20260923.json` retains all results.
+The first invocation raised at the first output comparison before writing the
+report; reporting was corrected, then the same computation/tolerances reran.
+This is a diagnostic reporting correction, not a training-gradient fix.
+
+| Execution | Warm median ms | Compiler temporary bytes |
+| --- | ---: | ---: |
+| Python-unrolled reference |8.346|45583368|
+| Scalar field map |13.197|123158472|
+| Field map batch4 |7.024|132269384|
+
+Scalar grouping is58.1% slower; batch4 is15.8% faster, with2.90times the
+reference temporary bytes. These are fragment-only numbers. The rerun's
+compile/load timings can include persistent cache reuse and are not evidence
+of cold GPU compilation speedup. Forward comparisons include512outputs+loss:
+scalar1/513 fails, batch4 3/513 fail; scalar parameter/query/bank gradients all
+pass, batch4 fails174/14,746,368 parameter coordinates and1/36,864 bank
+coordinates. Whole-vector relative differences are small (scalar parameter
+L2 4.31e-6; batch4 9.15e-6), but the pointwise gates remain unchanged and failed.
+There is no model/optimizer adoption, production-code change or claim that
+native AD is incorrect. This toy lacks production normalized attention,
+field/chunk projection reuse, GPP carbon routing and recurrent physics.
+
+The smaller graph therefore is not sufficient evidence to implement the
+whole-field outer map. Do not start a long full-model compile for it now.
+Next use the actual decoder operations in a bounded **block-major dense-work
+packing** experiment: keep independent field attention routing/masks, then
+concatenate independent query rows for the shared per-row attention residual
+normalization, FFN and readout, and split/scatter back before the next block.
+Do not move an FFN across an attention block, normalize across coordinates,
+or mix attention source banks. Per-row shared dense/nonlinear work can be
+batched without reducing capacity; numerical and parameter/state VJP evidence
+must come from actual production helpers, not this generic proxy.
+
+Why this next test: measured FFN/projection GEMMs and many small fused operations
+are substantial, whereas pooling is negligible and whole-field outer-map
+reverse increased temporary memory. Packing just the common dense stages
+could reduce repeated small GEMMs and shared-weight gradient partials. The
+large packed hidden activation is a real countervailing memory cost; measure
+it with bounded rows/chunks before choosing a batch size. This is a testable
+execution hypothesis, not a promised speedup or an accepted architecture.
 
 ## Questions and evidence boundaries
 

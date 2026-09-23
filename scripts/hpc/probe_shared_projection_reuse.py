@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 import pickle
 import platform
@@ -248,6 +249,48 @@ def run(args):
                 emit("joint_completed")
                 continue
             objective, arguments = definitions[name]
+            if args.profile_saved:
+                # Load the admitted exact-runtime artifact without tracing or
+                # lowering the model again. Profile one microbatch/window only.
+                emit("load_saved_profile_executable", current_component=name)
+                with (args.candidate_dir / f"{name}.executable.pkl").open("rb") as handle:
+                    package = pickle.load(handle)
+                if package["identity"] != identity or package["component"] != name:
+                    raise ValueError("profile executable source/component mismatch")
+                compiled = deserialize_and_load(*package["executable"])
+                memory = memory_sizes(compiled)
+                if memory["estimated_live_bytes"] > limit:
+                    raise ValueError("profile executable exceeds admitted memory envelope")
+                row = {
+                    "status": "running",
+                    "compiled_memory": memory,
+                    "profile_sample_count": args.microbatch_size if name == "daily" else 1,
+                    "model_lowering_or_compilation": False,
+                }
+                report["components"][name] = row
+                emit("profile_warmup")
+                result = jax.block_until_ready(compiled(*arguments))
+                times = []
+                for _ in range(3):
+                    started = time.perf_counter()
+                    result = jax.block_until_ready(compiled(*arguments))
+                    times.append(time.perf_counter() - started)
+                row["warm_seconds"] = times
+                row["warm_median_seconds"] = float(np.median(times))
+                row["value"] = float(result[0][0])
+                trace_dir = args.output.with_suffix(f".{name}.trace")
+                emit("profile_started", trace_directory=str(trace_dir))
+                with jax.profiler.trace(trace_dir, create_perfetto_link=False):
+                    with jax.profiler.TraceAnnotation("shared_cached_gradient", component=name):
+                        result = jax.block_until_ready(compiled(*arguments))
+                row["trace_files"] = [str(p) for p in trace_dir.rglob("*") if p.is_file()]
+                hlo_path = args.output.with_suffix(f".{name}.hlo.txt.gz")
+                with gzip.open(hlo_path, "wt", encoding="utf-8") as handle:
+                    handle.write(compiled.as_text())
+                row.update(status="passed", optimized_hlo=str(hlo_path), process_memory=jax.devices()[0].memory_stats())
+                emit("profile_completed")
+                del result, compiled, package
+                continue
             emit("compile_started", current_component=name)
             started = time.perf_counter()
             compiled = jax.jit(jax.value_and_grad(objective, has_aux=True)).lower(*arguments).compile()
@@ -310,7 +353,11 @@ def run(args):
         emit(
             "completed",
             status="passed" if passed else "rejected",
-            scope="execution_parity_and_free_node_diagnostic_timing_not_scientific_acceptance",
+            scope=(
+                "saved_executable_profile_not_new_parity_or_scientific_acceptance"
+                if args.profile_saved
+                else "execution_parity_and_free_node_diagnostic_timing_not_scientific_acceptance"
+            ),
         )
         return report
     except Exception as error:
@@ -324,6 +371,11 @@ def parser():
     result.add_argument("--components", choices=("daily", "T7", "T30", "joint"), nargs="+", default=["daily"])
     result.add_argument("--candidate-dir", required=True, type=Path)
     result.add_argument("--microbatch-size", type=int, choices=(2, 4), default=4)
+    result.add_argument(
+        "--profile-saved",
+        action="store_true",
+        help="profile one saved exact-runtime executable per component; no model compile",
+    )
     return result
 
 
@@ -332,5 +384,7 @@ if __name__ == "__main__":
     arguments = argument_parser.parse_args()
     if arguments.state_dir is None or arguments.resume_checkpoint is None:
         argument_parser.error("saved --state-dir and --resume-checkpoint are required")
+    if arguments.profile_saved and "joint" in arguments.components:
+        argument_parser.error("--profile-saved profiles individual components only")
     outcome = run(arguments)
     raise SystemExit(0 if outcome["status"] == "passed" else 2)
