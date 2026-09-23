@@ -338,6 +338,8 @@ class _DecoderDynamicPlan(NamedTuple):
     axis_role_index: np.ndarray
     axis_position_index: np.ndarray
     local_state_indices: np.ndarray
+    field_axis_bank_indices: tuple[np.ndarray, ...]
+    field_local_bank_indices: tuple[np.ndarray, ...]
     field_axis_indices: tuple[np.ndarray, ...]
     field_local_indices: tuple[np.ndarray, ...]
 
@@ -352,48 +354,17 @@ def _decoder_projection_cache(
     family_tokens: Any,
     *,
     carbon_tokens: Any | None,
-    dynamic_plan: _DecoderDynamicPlan | None = None,
-    inputs: AssembledDailyOperatorInput | None = None,
-    input_normalization: NeuralInputNormalization | None = None,
-    layout: StrongBaselineLayout | None = None,
 ) -> tuple[tuple[_DecoderBlockProjection, ...], ...]:
     """Project banks shared by coordinate queries once per expert and block."""
 
     blocks = parameters["shared_transformer"]["coordinate_blocks"]
-    dynamic_tokens = None
-    if dynamic_plan is not None:
-        if inputs is None or input_normalization is None or layout is None:
-            raise ValueError("dynamic decoder projection reuse requires inputs and layout")
-        dynamic_tokens = _decoder_dynamic_tokens(
-            parameters,
-            context,
-            inputs,
-            input_normalization=input_normalization,
-            layout=layout,
-            plan=dynamic_plan,
-        )
-
-    shared_by_block = []
+    carbon_by_block = []
     for block in blocks:
         if carbon_tokens is None:
             carbon_key = carbon_value = None
         else:
             carbon_key, carbon_value = _project_key_value(block["attention"], carbon_tokens)
-        if dynamic_tokens is None:
-            axis_key = axis_value = local_key = local_value = None
-        else:
-            axis_key, axis_value = _project_key_value(block["attention"], dynamic_tokens[0])
-            local_key, local_value = _project_key_value(block["attention"], dynamic_tokens[1])
-        shared_by_block.append(
-            (
-                carbon_key,
-                carbon_value,
-                axis_key,
-                axis_value,
-                local_key,
-                local_value,
-            )
-        )
+        carbon_by_block.append((carbon_key, carbon_value))
 
     result = []
     for expert_index in range(int(context.process_tokens.shape[0])):
@@ -403,14 +374,7 @@ def _decoder_projection_cache(
             process_key, process_value = _project_key_value(
                 block["attention"], context.process_tokens[expert_index][None, :]
             )
-            (
-                carbon_key,
-                carbon_value,
-                axis_key,
-                axis_value,
-                local_key,
-                local_value,
-            ) = shared_by_block[block_index]
+            carbon_key, carbon_value = carbon_by_block[block_index]
             expert.append(
                 _DecoderBlockProjection(
                     family_key=family_key,
@@ -419,13 +383,44 @@ def _decoder_projection_cache(
                     process_value=process_value,
                     carbon_key=carbon_key,
                     carbon_value=carbon_value,
-                    axis_key=axis_key,
-                    axis_value=axis_value,
-                    local_key=local_key,
-                    local_value=local_value,
+                    axis_key=None,
+                    axis_value=None,
+                    local_key=None,
+                    local_value=None,
                 )
             )
         result.append(tuple(expert))
+    return tuple(result)
+
+
+def _field_dynamic_projection_cache(
+    parameters: Mapping[str, Any],
+    projections: tuple[_DecoderBlockProjection, ...],
+    dynamic_tokens: tuple[Any, Any],
+) -> tuple[_DecoderBlockProjection, ...]:
+    """Project only the distinct dynamic tokens consumed by one field."""
+
+    field_axis_tokens, field_local_tokens = dynamic_tokens
+    result = []
+    for block, projected in zip(
+        parameters["shared_transformer"]["coordinate_blocks"],
+        projections,
+        strict=True,
+    ):
+        axis_key, axis_value = _project_key_value(
+            block["attention"], field_axis_tokens
+        )
+        local_key, local_value = _project_key_value(
+            block["attention"], field_local_tokens
+        )
+        result.append(
+            projected._replace(
+                axis_key=axis_key,
+                axis_value=axis_value,
+                local_key=local_key,
+                local_value=local_value,
+            )
+        )
     return tuple(result)
 
 
@@ -834,14 +829,30 @@ def _decoder_dynamic_plan(
         axis_values = np.asarray(axis_variants, dtype=np.int32)
     else:
         axis_values = np.zeros((0, 4), dtype=np.int32)
+    field_axis_bank_indices = []
+    field_axis_local_indices = []
+    for indices in field_axis_indices:
+        bank, inverse = np.unique(indices, return_inverse=True)
+        field_axis_bank_indices.append(bank.astype(np.int32, copy=False))
+        field_axis_local_indices.append(
+            inverse.astype(np.int32, copy=False).reshape(indices.shape)
+        )
+    field_local_bank_indices = []
+    field_local_local_indices = []
+    for indices in field_local_indices:
+        bank, inverse = np.unique(indices, return_inverse=True)
+        field_local_bank_indices.append(bank.astype(np.int32, copy=False))
+        field_local_local_indices.append(inverse.astype(np.int32, copy=False))
     return _DecoderDynamicPlan(
         axis_expert_index=axis_values[:, 0],
         axis_slot_index=axis_values[:, 1],
         axis_role_index=axis_values[:, 2],
         axis_position_index=axis_values[:, 3],
         local_state_indices=np.asarray(local_variants, dtype=np.int32),
-        field_axis_indices=tuple(field_axis_indices),
-        field_local_indices=tuple(field_local_indices),
+        field_axis_bank_indices=tuple(field_axis_bank_indices),
+        field_local_bank_indices=tuple(field_local_bank_indices),
+        field_axis_indices=tuple(field_axis_local_indices),
+        field_local_indices=tuple(field_local_local_indices),
     )
 
 
@@ -853,19 +864,31 @@ def _decoder_dynamic_tokens(
     input_normalization: NeuralInputNormalization,
     layout: StrongBaselineLayout,
     plan: _DecoderDynamicPlan,
+    axis_bank_indices: np.ndarray | None = None,
+    local_bank_indices: np.ndarray | None = None,
 ) -> tuple[Any, Any]:
     """Materialize each distinct dynamic token once before K/V projection."""
 
     shared = parameters["shared_transformer"]
-    experts = jnp.asarray(plan.axis_expert_index, dtype=jnp.int32)
-    slots = jnp.asarray(plan.axis_slot_index, dtype=jnp.int32)
-    roles = jnp.asarray(plan.axis_role_index, dtype=jnp.int32)
-    positions = jnp.asarray(plan.axis_position_index, dtype=jnp.int32)
-    if plan.axis_expert_index.size:
+    selected_axis = (
+        np.arange(plan.axis_expert_index.size, dtype=np.int32)
+        if axis_bank_indices is None
+        else axis_bank_indices
+    )
+    selected_local = (
+        np.arange(plan.local_state_indices.size, dtype=np.int32)
+        if local_bank_indices is None
+        else local_bank_indices
+    )
+    experts = jnp.asarray(plan.axis_expert_index[selected_axis], dtype=jnp.int32)
+    slots = jnp.asarray(plan.axis_slot_index[selected_axis], dtype=jnp.int32)
+    roles = jnp.asarray(plan.axis_role_index[selected_axis], dtype=jnp.int32)
+    positions = jnp.asarray(plan.axis_position_index[selected_axis], dtype=jnp.int32)
+    if selected_axis.size:
         extents = jnp.asarray(layout.axis_extents, dtype=jnp.int32)[roles]
         dynamic_positions = jnp.minimum(positions, extents - 1)
         axis_tokens = jnp.zeros(
-            (plan.axis_expert_index.size, config_width(parameters)),
+            (selected_axis.size, config_width(parameters)),
             dtype=jnp.float32,
         )
         if "pft" in layout.axis_names:
@@ -894,7 +917,7 @@ def _decoder_dynamic_tokens(
     local, local_defined = _normalized_local_state(
         inputs,
         input_normalization,
-        plan.local_state_indices,
+        plan.local_state_indices[selected_local],
     )
     local_tokens = _linear(
         shared["local_value_input"],
@@ -1300,14 +1323,31 @@ def shared_transformer_raw_outputs(
             context,
             family_tokens,
             carbon_tokens=raw_carbon,
-            dynamic_plan=dynamic_plan,
-            inputs=inputs,
-            input_normalization=input_normalization,
-            layout=layout,
         )
     outputs = {}
     masks = {}
     for field_index, (field, ownership) in enumerate(zip(schema.fields, layout.ledger, strict=True)):
+        field_projection_cache = (
+            None
+            if projection_cache is None
+            else projection_cache[int(layout.field_expert_index[field_index])]
+        )
+        if dynamic_plan is not None:
+            field_dynamic_tokens = _decoder_dynamic_tokens(
+                parameters,
+                context,
+                inputs,
+                input_normalization=input_normalization,
+                layout=layout,
+                plan=dynamic_plan,
+                axis_bank_indices=dynamic_plan.field_axis_bank_indices[field_index],
+                local_bank_indices=dynamic_plan.field_local_bank_indices[field_index],
+            )
+            field_projection_cache = _field_dynamic_projection_cache(
+                parameters,
+                field_projection_cache,
+                field_dynamic_tokens,
+            )
         raw, active = _decode_field(
             parameters,
             context,
@@ -1323,9 +1363,7 @@ def shared_transformer_raw_outputs(
             carbon_tokens=raw_carbon,
             carbon_defined=carbon_defined,
             carbon_state_layout=carbon_state_layout,
-            projection_cache=(
-                None if projection_cache is None else projection_cache[int(layout.field_expert_index[field_index])]
-            ),
+            projection_cache=field_projection_cache,
             dynamic_projection_indices=(
                 None
                 if dynamic_plan is None

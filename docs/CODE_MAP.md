@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-23.
 
+`inspect_shared_cached_executable.py` loads named persistent GPU executables
+directly to extract compiled memory and compressed optimized HLO, without
+Teacher/model execution or new JAX graph compilation. Large-instruction byte
+counts are not simultaneous live-memory estimates. The field-local revision
+of dynamic projection reuse is recorded in`shared_dynamic_projection_results_20260923.md`.
+
 `shared_transformer.py` adds opt-in `gather_dynamic_reuse` for identical
 axis/local K/V projections within each differentiable invocation; gather_reuse
 remains default. `probe_shared_projection_reuse.py` compares each daily/T7/T30

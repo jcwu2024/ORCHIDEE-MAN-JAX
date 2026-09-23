@@ -256,6 +256,10 @@ def run(args):
             report["components"][name] = row
             emit("compiled")
             if memory["estimated_live_bytes"] > limit:
+                # Preserve an expensive rejected compile for memory inspection.
+                # It has no passed component record and cannot enter joint replay.
+                package = {"identity": identity, "component": name, "executable": serialize(compiled)}
+                persist_tree(args.candidate_dir / f"{name}.resource_limited.executable.pkl", jax, package)
                 row.update(status="resource_limited")
                 emit("resource_limited", status="resource_limited")
                 return report

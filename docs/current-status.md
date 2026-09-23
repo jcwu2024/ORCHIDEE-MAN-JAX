@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current: dynamic-reuse probes finished. daily micro4 regresses21.015->27.214GiB
+compiled-live and was not executed; T7 full-gradient/physical parity passes,
+2.254s warm,3.419GiB compiled/4.278GiB actual peak. T30 compilation timed out
+at120min. No default adoption, joint replay or scientific acceptance. Next
+memory/residual attribution reuses existing executables; no new paid task.
+See`research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md`.
+
 Latest execution admission: cfc518d dynamic projection reuse passed26local
 checks, deployed JAX0.4.38 CUDA runtime and3 serialization/update tests. Free
 gln01 PID25756(daily micro4,90min) and25757(T7/T30,120min) started01:46:44CST

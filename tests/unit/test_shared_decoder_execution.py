@@ -157,6 +157,32 @@ def test_static_coordinate_plan_matches_canonical_layout(execution_setup):
     assert dynamic.axis_expert_index.size == 339
     assert dynamic.local_state_indices.size == 1_798
     assert -1 in dynamic.local_state_indices
+    assert sum(indices.size for indices in dynamic.field_axis_bank_indices) == 1_380
+    assert sum(indices.size for indices in dynamic.field_local_bank_indices) == 3_249
+
+    width = 768
+    microbatch = 4
+    blocks_and_key_value = 2 * 2
+    global_dense_cotangent_bytes = (
+        len(setup["learned_schema"].fields)
+        * blocks_and_key_value
+        * microbatch
+        * (dynamic.axis_expert_index.size + dynamic.local_state_indices.size)
+        * width
+        * np.dtype(np.float32).itemsize
+    )
+    field_local_dense_cotangent_bytes = (
+        blocks_and_key_value
+        * microbatch
+        * (
+            sum(indices.size for indices in dynamic.field_axis_bank_indices)
+            + sum(indices.size for indices in dynamic.field_local_bank_indices)
+        )
+        * width
+        * np.dtype(np.float32).itemsize
+    )
+    assert global_dense_cotangent_bytes == 16_911_089_664
+    assert field_local_dense_cotangent_bytes == 227_524_608
 
 
 def test_execution_modes_match_with_padding_masks_permutation_and_carbon(execution_setup):

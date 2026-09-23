@@ -8,6 +8,22 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Targeted revision is locally verified: field-local token construction/KV banks
+remove whole-global-bank cotangents inside each field's reverse chunk map.
+4focused forward/parameter/state tests and3persistence/update tests pass.
+Actual failed GPU HLO independently confirms hundreds of dense global-bank
+scatter/add/copy instructions. Next bounded deployed synthetic compile with
+outer micro4 and64queries, then one daily micro4 real-model probe if supported.
+Preserve source checkpoints and24GiB/90min gates; hold recurrent/learning runs.
+
+Current result supersedes launches below: dynamic reuse25756 daily micro4
+resource_limited27.214GiB vs prior21.015GiB;25757 T7 passed full-gradient and
+physical parity at2.254s, but T30 compilation hit120min/exit124. Neither runs.
+Do not adopt or launch joint replay. Preserve T7 gradient/executable. Next
+inspect existing executable memory and bounded native AD residuals to explain
+the daily regression before patching; hold T30/learning. Read
+`research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md`.
+
 Latest launch: immutable cfc518d, local26checks passed, deployed CUDA runtime
 and3 serialization/update plumbing tests passed. Free gln01 GPU0PID25756
 daily micro4(90min) andGPU1PID25757 T7/T30(120min) started01:46:44CST
