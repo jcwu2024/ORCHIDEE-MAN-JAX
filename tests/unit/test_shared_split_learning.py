@@ -1,5 +1,8 @@
 import json
+from argparse import Namespace
 from pathlib import Path
+from types import SimpleNamespace
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -11,10 +14,13 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
     initialize_target_oriented_adamw,
 )
 from scripts.hpc.run_shared_learning import (
+    _method_identity,
     compile_gradient_evaluators,
     execute_learning_update,
     load_learning_checkpoint,
     make_tree_operations,
+    parser,
+    run,
     save_learning_checkpoint,
 )
 from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
@@ -220,4 +226,152 @@ def test_micro4_runner_matches_scalar_updates_and_resume(tmp_path):
         load_learning_checkpoint(
             checkpoint,
             expected_method={"configuration": {"max_updates": 500}, "identity": "other"},
+        )
+
+
+def test_technical_mode_rejects_v1_prepare_and_resume_before_runtime(tmp_path, monkeypatch):
+    import scripts.hpc.shared_learning_plan as learning_plan
+
+    required = (
+        "dataset-manifest", "acceptance-report", "base-statistics",
+        "process-statistics", "fast-statistics", "prepared-manifest",
+        "joint-admission-report", "validation-manifest", "output",
+    )
+    argv = [value for name in required for value in (f"--{name}", str(tmp_path / "x.json"))]
+    with pytest.raises(SystemExit):
+        parser().parse_args([*argv, "--technical-updates", "1"])
+
+    config = {"schema_version": "shared_learning_v1"}
+    monkeypatch.setattr(learning_plan, "load_learning_configuration", lambda *_: {"config": config})
+    args = parser().parse_args([*argv, "--technical-updates", "2"])
+    with pytest.raises(ValueError, match="requires the shared learning v2"):
+        run(args)
+
+    config["schema_version"] = "shared_learning_v2"
+    args.resume_checkpoint = tmp_path / "old.pkl"
+    with pytest.raises(ValueError, match="fresh execution"):
+        run(args)
+    args.resume_checkpoint = None
+    args.prepare_only = True
+    with pytest.raises(ValueError, match="fresh execution"):
+        run(args)
+
+
+def test_technical_mode_runs_two_changing_updates_without_monitors(tmp_path, monkeypatch):
+    import research.daily_coarse_graining.daily_operator.shared_persistent_outputs as persistent
+    import research.daily_coarse_graining.daily_operator.shared_process_head as process_head
+    import research.daily_coarse_graining.daily_operator.shared_recurrent_training as recurrent
+    import research.daily_coarse_graining.daily_operator.shared_training as shared_training
+    import scripts.hpc.run_shared_learning as learning_runner
+    import scripts.hpc.shared_learning_monitor as learning_monitor
+    import scripts.hpc.shared_learning_plan as learning_plan
+    import scripts.hpc.shared_transformer_runtime as shared_runtime
+
+    class Inputs(NamedTuple):
+        continuous_state: object
+
+    class OneDay(NamedTuple):
+        inputs: Inputs
+
+    def artifact(values, seven, thirty):
+        return SimpleNamespace(batch=SimpleNamespace(
+            one_day=OneDay(Inputs(jnp.asarray(values, dtype=jnp.float32))),
+            seven_day=jnp.asarray(seven, dtype=jnp.float32),
+            thirty_day=jnp.asarray(thirty, dtype=jnp.float32),
+        ))
+
+    first = artifact(np.linspace(-1.0, 0.4, 32), 0.2, -0.3)
+    second = artifact(np.linspace(0.7, -0.5, 32), -0.2, 0.5)
+    identity = {"pool": "toy"}
+    optimizer = {
+        "name": "AdamW", "learning_rate": 2e-3, "clip_norm": 0.05,
+        "beta1": 0.9, "beta2": 0.999, "epsilon": 1e-8,
+        "weight_decay": 0.0,
+    }
+    daily_protocol = {
+        "seed": 42,
+        "architecture": {"parameter_count": 2, "thermal_transform": "toy"},
+        "optimizer": optimizer,
+    }
+    config = {
+        "schema_version": "shared_learning_v2", "max_updates": 500,
+        "daily_microbatch_size": 4, "daily_rows_per_update": 32,
+        "recurrent_window_index": 0, "gradient_memory_limit_gib": 24,
+        "milestones": [0, 100, 250, 500], "checkpoint_interval": 25,
+        "checkpoint_selection": "declared_final_update_500_no_best_panel_selection",
+    }
+    loaded = {
+        "config": config,
+        "daily_protocol": daily_protocol,
+        "admission": {"protocol": {"joint": "toy"}, "scales": {"scale": 1}},
+        "plan": {"training_artifact_ids": [11, 12], "fit_artifact_ids": [11],
+                 "prepared_manifest_identity": identity},
+        "validation_panel": {"panel_sha256": "toy-panel", "rows": []},
+    }
+    monkeypatch.setattr(learning_plan, "load_learning_configuration", lambda *_: loaded)
+    monkeypatch.setattr(learning_runner, "shared_config", lambda architecture: architecture)
+    monkeypatch.setattr(persistent, "build_shared_persistent_coordinates", lambda *_: None)
+    monkeypatch.setattr(process_head, "build_shared_process_head", lambda *_args, **_kwargs: SimpleNamespace(
+        initialize=lambda _assembled, *, seed: {
+            "weight": jnp.asarray(0.45, dtype=jnp.float32),
+            "bias": jnp.asarray(-0.12, dtype=jnp.float32),
+        }
+    ))
+    monkeypatch.setattr(shared_training, "derive_shared_state_change_scales", lambda *_: None)
+    monkeypatch.setattr(
+        recurrent, "make_shared_joint_daily_objective",
+        lambda *_: lambda parameters, sample: _daily(parameters, sample.inputs.continuous_state),
+    )
+    monkeypatch.setattr(recurrent, "make_shared_recurrent_objective", lambda *_: (None, _recurrent))
+    monkeypatch.setattr(recurrent, "prepare_shared_window", lambda _head, value, **_kwargs: (value,))
+    monkeypatch.setattr(
+        learning_monitor, "build_shared_learning_monitor",
+        lambda *_args, **_kwargs: pytest.fail("technical mode constructed a science monitor"),
+    )
+
+    class Device:
+        def memory_stats(self):
+            return {"peak_bytes_in_use": 2048}
+
+    runtime = {
+        "jax": jax, "base_statistics": SimpleNamespace(arrays={"state_delta": None}),
+        "probe_assembled": None, "devices": [Device()], "index": None,
+    }
+    monkeypatch.setattr(
+        shared_runtime, "load_shared_runtime",
+        lambda _args, _ids: (runtime, SimpleNamespace(learned_schema=None, contract=None),
+                             None, [first], {}),
+    )
+    monkeypatch.setattr(
+        shared_runtime, "_load_prepared_artifacts",
+        lambda _path, _ids: ([second], {"identity": identity}),
+    )
+    monkeypatch.setattr(shared_runtime, "validate_shared_artifact_metadata", lambda *_: None)
+
+    args = Namespace(
+        output=tmp_path / "technical.json", protocol=tmp_path / "protocol.json",
+        joint_admission_report=tmp_path / "joint.json",
+        prepared_manifest=tmp_path / "prepared.json",
+        validation_manifest=tmp_path / "validation.json",
+        prepare_only=False, resume_checkpoint=None, technical_updates=2,
+    )
+    result = run(args)
+    assert result["status"] == "passed"
+    assert result["classification"] == "shared_split_two_update_technical_timing_only"
+    assert result["completed_updates"] == 2
+    assert [row["artifact_id"] for row in result["updates"]] == [11, 12]
+    assert result["monitors"] == []
+    assert result["science_monitors_executed"] is False
+    assert result["formal_learning_completed"] is False
+    assert result["declared_formal_max_updates"] == 500
+    assert result["device_peak_bytes_in_use"] == 2048
+    assert set(result["compiled_gradient_graphs"]) == {"daily", "T7", "T30"}
+    assert result["first_update_timing_seconds"] == result["updates"][0]["timing_seconds"]
+    assert result["warm_second_update_timing_seconds"] == result["updates"][1]["timing_seconds"]
+    assert int(load_learning_checkpoint(
+        Path(result["final_checkpoint"]), expected_method=result["method"]
+    )["optimizer"].step) == 2
+    with pytest.raises(ValueError, match="method, data, or cursor"):
+        load_learning_checkpoint(
+            Path(result["final_checkpoint"]), expected_method=_method_identity(loaded)
         )

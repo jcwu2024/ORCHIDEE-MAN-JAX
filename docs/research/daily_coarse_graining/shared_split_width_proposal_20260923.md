@@ -128,6 +128,17 @@ GPP、NPP、维持/生长呼吸、RH、AGB/BGB、冠层/DOC/凋落物的变化�
 
 本地检查已通过：旧配置9项、分宽/掩码/状态梯度7项、训练集成24项、
 单日microbatch与恢复14项。尚不代表真实GPU完整模型或科学精度验收。
+完整更新计时入口已补为`run_shared_learning.py --technical-updates 2`，
+直接调用同一daily32/micro4+T7/T30更新路径。26项相关测试通过（含上述24项），
+新增实际两次小模型更新/不同数据和隔离checkpoint测试。计时模式不运行科学面板，
+不修改500步正式配置、不继承为正式训练；需要先完成新模型recurrent准入。
+
+部署代码a1fa82a位于`runtime/checkouts/shared-split-width-v1`；
+免费test02的PID65781正在进行真实数据micro4损失/完整梯度shape检查，
+报告`runtime/outputs/diagnostics/shared-split-a1fa82a-cpu.json`。
+新checkout通过Git alternates依赖`shared-dynamic-local-v2/.git/objects`，
+后者继续依赖`shared-dynamic-reuse-v1/.git/objects`；这些Git对象目录需保留。
+本轮仅启动免费检查，没有提交付费作业。
 
 - `shared_transformer.py`: 配置40起；初始化193起；context586起；coordinate inputs929起；
   解码1100起。`config_width()`及所有width相关shape必须随实现审查。

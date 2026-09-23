@@ -384,14 +384,18 @@ def compile_gradient_evaluators(
     return evaluators, metadata
 
 
-def _method_identity(loaded: Mapping[str, Any]) -> Mapping[str, Any]:
+def _method_identity(
+    loaded: Mapping[str, Any], *, technical_updates: int | None = None
+) -> Mapping[str, Any]:
     admission = loaded["admission"]
+    if technical_updates is not None:
+        schema_version = "shared_split_technical_timing_method_identity_v1"
+    elif loaded["config"]["schema_version"] == "shared_learning_v2":
+        schema_version = "shared_learning_method_identity_v2"
+    else:
+        schema_version = "shared_learning_method_identity_v1"
     return {
-        "schema_version": (
-            "shared_learning_method_identity_v2"
-            if loaded["config"]["schema_version"] == "shared_learning_v2"
-            else "shared_learning_method_identity_v1"
-        ),
+        "schema_version": schema_version,
         "configuration": loaded["config"],
         "daily_protocol": loaded["daily_protocol"],
         "joint_protocol": admission["protocol"],
@@ -399,6 +403,7 @@ def _method_identity(loaded: Mapping[str, Any]) -> Mapping[str, Any]:
         "scales": admission["scales"],
         "validation_panel_sha256": loaded["validation_panel"]["panel_sha256"],
         "initialization": "fresh_declared_seed_no_exploratory_weights",
+        **({"technical_updates": technical_updates} if technical_updates is not None else {}),
     }
 
 
@@ -438,8 +443,15 @@ def run(args: Any) -> Mapping[str, Any]:
             args.prepared_manifest,
             args.validation_manifest,
         )
-        method = _method_identity(loaded)
         config = loaded["config"]
+        technical_updates = getattr(args, "technical_updates", None)
+        if technical_updates is not None:
+            if config["schema_version"] != "shared_learning_v2" or technical_updates != 2:
+                raise ValueError("two-update technical timing requires the shared learning v2 method")
+            if args.resume_checkpoint is not None or args.prepare_only:
+                raise ValueError("technical timing requires fresh execution without prepare-only or resume")
+        method = _method_identity(loaded, technical_updates=technical_updates)
+        update_limit = technical_updates if technical_updates is not None else int(config["max_updates"])
         microbatch_size = (
             int(config["daily_microbatch_size"])
             if config["schema_version"] == "shared_learning_v2"
@@ -460,6 +472,15 @@ def run(args: Any) -> Mapping[str, Any]:
                 "mean_32_joint_daily_contributions_plus_T7_plus_T30_no_extra_averaging"
             ),
         )
+        if technical_updates is not None:
+            report.update(
+                classification="shared_split_two_update_technical_timing_running",
+                technical_updates=technical_updates,
+                declared_formal_max_updates=int(config["max_updates"]),
+                formal_learning_completed=False,
+                science_monitors_executed=False,
+                technical_scope="fresh_two_changing_data_updates_not_500_update_learning",
+            )
         if args.prepare_only:
             emit(
                 "completed",
@@ -600,24 +621,25 @@ def run(args: Any) -> Mapping[str, Any]:
         if report["completed_updates"] == 0 and args.resume_checkpoint is None:
             save_checkpoint(retained=True)
 
-        from scripts.hpc.fresh_method_validation_pool import SPLITS, FreshMethodValidationPool
-        from scripts.hpc.shared_learning_monitor import (
-            SharedFitPool,
-            build_shared_learning_monitor,
-        )
+        if technical_updates is None:
+            from scripts.hpc.fresh_method_validation_pool import SPLITS, FreshMethodValidationPool
+            from scripts.hpc.shared_learning_monitor import (
+                SharedFitPool,
+                build_shared_learning_monitor,
+            )
 
-        monitor = build_shared_learning_monitor(
-            runtime,
-            head,
-            template,
-            state_scales,
-            science_scales,
-            memory_limit_bytes=int(config["gradient_memory_limit_gib"]) * 2**30,
-        )
-        fit_pool = SharedFitPool(
-            runtime, head, args.prepared_manifest, plan["fit_artifact_ids"]
-        )
-        validation_pool = FreshMethodValidationPool(args.validation_manifest)
+            monitor = build_shared_learning_monitor(
+                runtime,
+                head,
+                template,
+                state_scales,
+                science_scales,
+                memory_limit_bytes=int(config["gradient_memory_limit_gib"]) * 2**30,
+            )
+            fit_pool = SharedFitPool(
+                runtime, head, args.prepared_manifest, plan["fit_artifact_ids"]
+            )
+            validation_pool = FreshMethodValidationPool(args.validation_manifest)
 
         def run_monitor(update_number: int) -> None:
             existing = next(
@@ -666,7 +688,7 @@ def run(args: Any) -> Mapping[str, Any]:
             save_checkpoint(retained=False)
             save_checkpoint(retained=True)
 
-        if int(report["completed_updates"]) in config["milestones"]:
+        if technical_updates is None and int(report["completed_updates"]) in config["milestones"]:
             run_monitor(int(report["completed_updates"]))
 
         def load_training_artifact(identifier: int) -> Any:
@@ -711,7 +733,7 @@ def run(args: Any) -> Mapping[str, Any]:
 
         completed = int(report["completed_updates"])
         evaluators = None
-        if completed < int(config["max_updates"]):
+        if completed < update_limit:
             first_artifact = load_training_artifact(training_ids[completed])
             bootstrap_artifacts = ()
             first_samples, first_seven, first_thirty = artifact_cases(first_artifact)
@@ -745,7 +767,7 @@ def run(args: Any) -> Mapping[str, Any]:
                 expected_count=int(config["daily_rows_per_update"]),
             )
         update_function = make_update(daily_protocol)
-        for index in range(completed, int(config["max_updates"])):
+        for index in range(completed, update_limit):
             identifier = training_ids[index]
             began = time.perf_counter()
             if index == completed:
@@ -784,13 +806,43 @@ def run(args: Any) -> Mapping[str, Any]:
             emit("optimizer_update_completed")
             del artifact, daily_samples, seven_case, thirty_case
 
-            due_interval = (index + 1) % int(config["checkpoint_interval"]) == 0
-            due_milestone = index + 1 in config["milestones"]
+            due_interval = (
+                technical_updates is None
+                and (index + 1) % int(config["checkpoint_interval"]) == 0
+            )
+            due_milestone = technical_updates is None and index + 1 in config["milestones"]
             if due_interval or due_milestone:
                 save_checkpoint(retained=False)
             if due_milestone:
                 save_checkpoint(retained=True)
                 run_monitor(index + 1)
+
+        if technical_updates is not None:
+            save_checkpoint(retained=False)
+            save_checkpoint(retained=True)
+            first, warm = report["updates"]
+            memories = [row["device_memory"] or {} for row in report["updates"]]
+            peaks = [
+                row["peak_bytes_in_use"]
+                for row in memories
+                if row.get("peak_bytes_in_use") is not None
+            ]
+            emit(
+                "completed",
+                status="passed",
+                classification="shared_split_two_update_technical_timing_only",
+                first_update_timing_seconds=first["timing_seconds"],
+                warm_second_update_timing_seconds=warm["timing_seconds"],
+                first_update_wall_seconds=first["wall_seconds"],
+                warm_second_update_wall_seconds=warm["wall_seconds"],
+                device_peak_bytes_in_use=max(peaks) if peaks else None,
+                device_memory=runtime["devices"][0].memory_stats(),
+                final_checkpoint=report["checkpoint"],
+                checkpoint_selection="technical_update_2_not_formal_learning",
+                scientific_acceptance=False,
+                next_gate="review_complete_update_runtime_and_physical_evidence_before_training",
+            )
+            return report
 
         emit(
             "completed",
@@ -836,6 +888,7 @@ def parser() -> argparse.ArgumentParser:
     )
     result.add_argument("--prepare-only", action="store_true")
     result.add_argument("--resume-checkpoint", type=Path)
+    result.add_argument("--technical-updates", type=int, choices=(2,))
     return result
 
 

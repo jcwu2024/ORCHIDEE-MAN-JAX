@@ -6,7 +6,7 @@ This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-22)
+## Current execution gate (2026-09-23)
 
 Current implementation: user authorized technical execution of backbone768x8
 with uniform decoder384x2. New full-schema parameter count64,884,481.
@@ -16,7 +16,12 @@ shared_transformer_split_width_v1.json; new recurrent/learning protocols are
 shared_split_recurrent_admission_v1.json and shared_split_learning_v1.json.
 Do not initialize from old update100; do not start500 learning until actual
 new-model numerical/physical and full-update efficiency results are available.
-No new paid work. The prior proposal discussion below is now approved.
+Code a1fa82a is deployed at runtime/checkouts/shared-split-width-v1.
+Local split/mask/state-AD, legacy, update-mean and recovery tests pass.
+Free test02 PID65781 is checking actual-data daily micro4 forward/gradient shapes.
+Daily report: runtime/outputs/diagnostics/shared-split-a1fa82a-cpu.json.
+Next free GPU daily admission, in parallel with CPU T7/T30 preparation after
+daily shapes/calibration pass. No new paid work.
 
 Approved architecture: retain backbone768x8; uniformly use decoder384x2,
 FFN1536/8heads for every output, with a token-local768->384 bridge and all

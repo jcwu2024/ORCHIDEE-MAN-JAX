@@ -14,6 +14,11 @@ and `shared_split_learning_v1.json`. `shared_learning_plan.py` and
 `run_shared_learning.py` support the declared fresh500-update/micro4 method;
 the old100-update scalar protocol remains reproducible. New tests cover width
 boundaries, masks/gradients and exactmean32/T7/T30 update/recovery behavior.
+`run_shared_learning.py --technical-updates 2` exercises that exact v2 complete
+update path on two changing TRAIN artifacts, with fresh initialization and no
+science monitors. Its separate checkpoint identity cannot resume formal500
+learning. Use its first/second stage timings and memory before the budget review;
+the older recurrent admission only uses one scalar daily sample per update.
 
 `estimate_shared_decoder_width.py` is an arithmetic-only proposal calculator:
 reads saved layout audits, compares the measured field-local-reuse architecture
