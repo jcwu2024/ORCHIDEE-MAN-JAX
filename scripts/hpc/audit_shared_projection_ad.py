@@ -297,6 +297,11 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--global-bank", type=int, default=2_137)
     result.add_argument("--field-bank", type=int, default=32)
     result.add_argument("--compile", action="store_true")
+    result.add_argument(
+        "--bounded-only",
+        action="store_true",
+        help="Skip canonical metadata fixtures; use the already recorded local layout audit.",
+    )
     return result
 
 
@@ -306,7 +311,9 @@ def main() -> None:
         raise ValueError("width must be positive and divide heads")
     report = {
         "status": "passed",
-        "canonical": canonical_surface(
+        "canonical": None
+        if args.bounded_only
+        else canonical_surface(
             width=args.width,
             blocks=args.blocks,
             microbatch=args.microbatch,

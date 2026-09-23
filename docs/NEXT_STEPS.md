@@ -8,6 +8,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-22)
 
+Latest: field-local f220013 passes4focused local parity tests and deployed
+runtime. Actual V100 bounded fragment compiled temp312.62->96.97MiB; this is
+not full-model memory/speed evidence. Free gln01GPU0PID103428 launched only
+full daily micro4 at11:19:56CST September23(server clock),90min ceiling.
+Collect`shared-dynamic-local-v2-daily.json/.log` under runtime diagnostics.
+No paid job; do not run recurrent or joint stages before daily results support
+them. Candidate checkout is`runtime/checkouts/shared-dynamic-local-v2`.
+
 Targeted revision is locally verified: field-local token construction/KV banks
 remove whole-global-bank cotangents inside each field's reverse chunk map.
 4focused forward/parameter/state tests and3persistence/update tests pass.

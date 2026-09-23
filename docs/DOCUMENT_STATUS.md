@@ -20,7 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md` | daily memory regression27.214GiB, T7 parity pass2.254s, T30 compile timeout; not adopted | Existing executable/AD residual attribution and next bounded memory fix |
+| `research/daily_coarse_graining/shared_dynamic_projection_results_20260923.md` | Global reuse rejected; field-local f220013 passes local parity and bounded GPU memory check; free daily103428 running | Dense global cotangent diagnosis, field-local correction, full daily memory/time pending |
 | `research/daily_coarse_graining/shared_dynamic_projection_reuse_admission_20260923.md` | cfc518d;26local checks/deployed runtime/3plumbing tests pass; free25756daily/25757T7T30 running; no paid submission | Identical dynamic K/V reuse, numerical and memory gates, persisted executable joint replay |
 | `research/daily_coarse_graining/shared_decoder_cost_audit_20260923.md` | Complete source-shape/accepted-layout audit; no model edits or runtime attribution | Repeated dynamic projections, decoder FFNs, bounded packing and unchanged-capacity next candidate |
 | `research/daily_coarse_graining/shared_execution_cost_profile_20260923.md` | Cost synthesis; realT7 cache-miss exits before execution; micro8/16 completed resource_limited40.33/78.01GiB; no new paid task | Measured component/startup costs, diagnostic limits, balanced two-card arithmetic and next execution test |

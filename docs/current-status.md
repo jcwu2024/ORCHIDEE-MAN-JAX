@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest: field-local projection fix f220013 passed4focused numerical tests,
+deployed runtime and bounded V100 compile. Fragment temporary estimate
+312.62->96.97MiB supports the mechanism; not full-model acceptance. FreeGPU0
+daily micro4 wrapper103428 started11:19:56CST September23(server clock),90min.
+Collect`shared-dynamic-local-v2-daily`; old dynamic probes are finished.
+
 Current: dynamic-reuse probes finished. daily micro4 regresses21.015->27.214GiB
 compiled-live and was not executed; T7 full-gradient/physical parity passes,
 2.254s warm,3.419GiB compiled/4.278GiB actual peak. T30 compilation timed out

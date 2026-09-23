@@ -88,3 +88,43 @@ The executable persistence/update plumbing3tests also passed2.63s. No tolerances
 were changed. `audit_shared_projection_ad.py` records native reverse shapes;
 optional bounded compilation separates outer microbatch vmap from queries
 within a day and must not be reported as full-model GPU memory acceptance.
+
+## Deployed field-local fragment and single-day launch
+
+Model candidate checkout`runtime/checkouts/shared-dynamic-local-v2` is immutable
+f220013852d1ad7777a154090c360b9ef9cdc920. It shares Git objects with
+`shared-dynamic-reuse-v1`, which in turn depends on`shared-staged-large-v1` and
+its pre-existing alternates; preserve that dependency chain while active.
+
+The deployed JAX0.4.38 CUDA runtime check passed56.62s. The first fragment
+invocation stopped before compilation because canonical metadata fixtures were
+local-only. The standalone audit now accepts`--bounded-only`, reusing already
+recorded local layout evidence and requiring no dataset metadata. This helper
+was transferred separately; the candidate model checkout was not mutated.
+Actual shell daily argument expansion and launch shell syntax passed.
+
+Free V100 bounded compilation, width768, outer micro4,64queries,4fields,
+2chunks,1represented block:
+
+| Executable | Compile seconds | Compiler temporary bytes |
+| --- | ---: | ---: |
+| global projected banks |18.251|327804888|
+| field-local banks |2.688|101676920|
+
+Thus this fragment's compiler temporary estimate falls312.62->96.97MiB,
+about69.0%. It is neither full-model peak memory nor a runtime speed benchmark.
+The two shapes also have different token-input/output storage; temporary bytes
+are reported separately rather than conflating that with weight memory.
+Raw report:`outputs/shared-dynamic-local-v2-fragment.json`; remote equivalent
+under runtime diagnostics. Runtime report:`shared-dynamic-local-v2-runtime.json`.
+
+With local parity and this deployed mechanism check passed, started only the
+full daily micro4 probe on free gln01GPU0, wrapperPID103428 at11:19:56CST
+2026-09-23(server clock),90min ceiling. Both GPUs were0MiB/0% immediately
+beforehand; host load0.14/0.16/0.81. Source checkpoint100/artifact742, reference
+gradients and24GiB limit are unchanged. Logs/JSON:
+`runtime/outputs/diagnostics/shared-dynamic-local-v2-daily.log/.json`;
+component artifacts/PID:`runtime/outputs/diagnostics/shared-dynamic-local-v2`.
+No paid allocation and no retained updates. Next collect numerical parity,
+compiled/actual memory and warm daily32 time. T7/T30 and joint replay remain
+on hold until this result supports them.
