@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User prioritizes trainability, faster training and more actual sample exposure
+over present fit metrics. Physical/numerical and native-AD correctness remain.
+Free GPU1 launcher18069 now runs new-model T7/T30 native-AD/two-update admission
+from deployedcaed647,240min ceiling; previous prerequisite reports reused.
+Report runtime/outputs/diagnostics/shared-split-caed647-recurrent-gpu.json.
+Full daily32/micro4+T7/T30 timing launcher prepared/dry-run checked, not launched;
+it follows recurrent pass. No new paid task. Source checkout was fast-forwarded
+while idle, retaining prior a1fa82a reports/gradients/checkpoints.
+
 Latest completed result: split daily112232 passed84.54min, two optimizer updates,
 all64,884,481 gradient coordinates finite and JVP/reverse relative difference
 8.73e-8. Fixed-data micro4 value/gradient median0.52635s; actual peak11.217GiB

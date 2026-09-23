@@ -8,6 +8,25 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+User priority clarification: current phase targets trainability, throughput and
+more actual TRAIN sample coverage. Do not make scientific fit thresholds the
+primary engineering bottleneck. Retain finite/physical/native-AD correctness;
+scientific long-horizon acceptance is deferred, not weakened. Track sample/day
+exposures per wall-hour, distinct dates/points/years, startup/IO/compute and cost.
+
+Active: free gln01 GPU1 launcher18069 runs native-AD T7/T30 admission from
+caed647 at runtime/checkouts/shared-split-width-v1 (fast-forwarded only after
+earlier tasks completed). Prerequisites passed on test02; target-shell dry-run
+passed. GPU empty at launch23:27CST; bounded240min. Report
+runtime/outputs/diagnostics/shared-split-caed647-recurrent-gpu.json.
+The exact full-update timing mode is now deployed. Its launcher
+runtime/transfer/launch_shared_split_timing_caed647.sh has passed target-shell
+dry-run and is prepared, NOT launched; requires the successful recurrent report.
+It runs two fresh changing-data daily32/micro4+T7/T30 updates, bounded180min.
+Next use complete timings/memory to choose larger microbatch or dual-device
+execution and more TRAIN coverage, then budget the fixed500-update run. No paid
+submission. Historical deployment statements below are superseded.
+
 Current implementation: user authorized technical execution of backbone768x8
 with uniform decoder384x2. New full-schema parameter count64,884,481.
 Split config, masked token-local bridge and micro4/500-update training support
