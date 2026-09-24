@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Newest: full-batch timing11143 timed out180min,0updates, after daily/T7 compilation.
+No actual full-update time measured. Free GPU1 recovery21040 RUNNING with
+code1c70fa4 compiler observer; mathematical graph and training method unchanged.
+Daily/T7 completed caches must load (otherwise stop before expensive compile),
+T30 allowed compile,240min cap. Report shared-split-1c70fa4-full-timing.json
+under runtime/outputs/diagnostics; separate.cache.json records real hits.
+See shared_split_timing_recovery_20260924.md for bootstrap-template hypothesis,
+validation evidence and preserved prior outputs. No new paid allocation.
+
 Latest:100157 completed0, recurrent technical admission passed two full-network
 joint updates,131.79min. T30 gradient/JVP pass1.086e-7 relative difference;
 actualpeak4.664GiB for scalar daily+T7/T30 scope. First loss decreases, second

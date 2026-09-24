@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_split_timing_recovery_20260924.md` |11143 timed out at0updates; observed-cache recovery21040 RUNNING, unchanged math | Completed daily/T7 cache reuse, remaining T30 compile, actual full-batch throughput pending |
 | `research/daily_coarse_graining/shared_split_recurrent_partial_20260924.md` |100157 PASSED2joint updates,4.664GiB peak; first18069 timeout retained as history; full timing11143 RUNNING | Completed native T7/T30 admission then actual32/micro4 full-update throughput |
 | `research/daily_coarse_graining/shared_split_width_daily_results_20260923.md` | Daily112232 numerical/physical/two updates PASS; CPU67596 T7/T30 shapes PASS |0.526s/micro4,11.217GiB actualpeak, slow49.9min compile; next GPU recurrent and full update timing |
 | `research/daily_coarse_graining/shared_split_width_proposal_20260923.md` | a1fa82a deployed;64,884,481 parameters; real CPU shapes pass500s; free GPU112232 and recurrent CPU67596 running | Uniform384 decoder with768 backbone, preserved routes, full-update timing mode61a9671 then fresh500 learning |

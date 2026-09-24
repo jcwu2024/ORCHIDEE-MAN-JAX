@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-23.
 
+`probe_shared_split_timing_cache.py` wraps the unchanged learning compiler
+boundary for recovery of the timed-out split full-batch probe. It records actual
+hits/backend calls, permits T30 compilation and prevents repeating the completed
+daily/T7 cold compiles on a cache miss. Hooks are scoped/restored; no model or
+training math changes. Uses tested JAX0.4.38 diagnostic interface.
+
 `shared_transformer.py` now accepts optional decoder width/FFN/head settings;
 legacy defaults and initialization are preserved. The split route adds one
 masked token-local `decoder_bridge` after lawful family pooling and constructs

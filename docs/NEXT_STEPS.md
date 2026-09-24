@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+Newest September24: full-timing11143 exited124 at180min before any update.
+Daily micro4 compile2849s and T7 compile5442s completed; T30 unfinished.
+No full-update throughput yet. Same-run daily/T7 caches exist but require actual
+reuse evidence. Read shared_split_timing_recovery_20260924.md in research/daily_coarse_graining.
+Free GPU1 recovery21040 RUNNING20:29CST,240min cap, same mathematical method,
+code1c70fa4 (compiler observer only). Daily/T7 must reuse their completed caches;
+T30 may compile. Report runtime/outputs/diagnostics/shared-split-1c70fa4-full-timing.json,
+matching.log and.cache.json. Local3tests and actual JAX0.4.38 tiny cache replay
+pass; target-shell dry-run passes. No paid work or new physical/AD gate.
+Previous11143 RUNNING snapshot below is historical. Preserve compiled caches.
+
 Latest September24: recovery100157 PASSED, two scalar-daily+T7/T30 joint
 updates completed in131.79min; T30 native-AD direction relative difference
 1.086e-7, all physical checks pass, actual peak4.664GiB. Read completed recovery
