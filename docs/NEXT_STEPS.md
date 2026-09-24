@@ -8,6 +8,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September24 latest:18069 exited124 at240min while compiling T30 gradient,
+zero joint updates. Daily/T7 gradient and T7 JVP pass; all four recurrent
+forwards pass physical checks. Not OOM or a numerical rejection. Free GPU1
+recovery launcher100157 is RUNNING,240min limit, same caed647; saved gradients
+and T7 direction reused. Collect runtime/outputs/diagnostics/
+shared-split-caed647-recurrent-resume1.json and matching log. Read
+research/daily_coarse_graining/shared_split_recurrent_partial_20260924.md.
+Full-update timing launcher now points to resume1, still not launched.
+Earlier18069 RUNNING snapshot below is superseded; no paid allocation.
+
 User priority clarification: current phase targets trainability, throughput and
 more actual TRAIN sample coverage. Do not make scientific fit thresholds the
 primary engineering bottleneck. Retain finite/physical/native-AD correctness;

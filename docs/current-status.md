@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September24: recurrent18069 timed out240min in T30 gradient compilation,
+zero optimizer updates. All T7/T30 forwards and daily/T7 gradients pass;
+T7 JVP relative difference1.427e-7. Saved743MiB gradient payload retained.
+Free GPU1 recovery100157 RUNNING with same code/loss/tolerance,240min cap;
+report shared-split-caed647-recurrent-resume1.json under runtime/outputs/diagnostics.
+No T30 gradient or complete-update speed/memory acceptance yet. Cold compile
+is the present blocker, not an observed physical/numerical failure or OOM.
+
 User prioritizes trainability, faster training and more actual sample exposure
 over present fit metrics. Physical/numerical and native-AD correctness remain.
 Free GPU1 launcher18069 now runs new-model T7/T30 native-AD/two-update admission
