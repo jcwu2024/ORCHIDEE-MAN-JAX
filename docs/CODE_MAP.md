@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-23.
 
+`probe_shared_split_profile.py` reuses all three completed split caches, saves
+trusted executables/optimized HLO, and profiles fixed-weight32/64daily plus
+T7/T30 execution. `summarize_shared_split_profile.py` analyzes saved traces/HLO
+offline; `estimate_shared_training_scale.py` labels measured and hypothetical
+full-TRAIN throughput separately. `probe_shared_dual.make_microbatch_daily_branch`
+adapts the existing exact-mean accumulator to the existing dual executor;
+it does not enable a new default training method or establish real-GPU speed.
+
 `probe_shared_split_timing_cache.py` wraps the unchanged learning compiler
 boundary for recovery of the timed-out split full-batch probe. It records actual
 hits/backend calls, permits T30 compilation and prevents repeating the completed

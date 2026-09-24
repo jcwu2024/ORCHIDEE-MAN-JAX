@@ -20,7 +20,10 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_split_timing_recovery_20260924.md` |21040 PASSED2full updates,16.473s warm wall,11.477GiB actual peak;11143 timeout historical | Daily/T7 real cache hits,T30 compile complete; fresh500 startup/monitor budget next |
+| `research/daily_coarse_graining/shared_split_efficiency_work_20260924.md` | Profile31906 RUNNING; microbatch dual bridge local/deployed synthetic checks pass | Active efficiency gate before long learning; real kernel mix and32/64 sample throughput |
+| `research/daily_coarse_graining/shared_split_compile_audit_20260924.md` | Source audit and offline analyzer complete |161-field staging; conditional cache-template hypothesis, no compiler hotspot claim |
+| `research/daily_coarse_graining/shared_split_throughput_scale_20260924.md` | Reproducible arithmetic tool complete |8,591,565 TRAIN scale, ideal multi-device bounds distinguished from measured throughput |
+| `research/daily_coarse_graining/shared_split_timing_recovery_20260924.md` |21040 PASSED2full updates,16.473s warm wall,11.477GiB actual peak;11143 timeout historical | Daily/T7 real cache hits,T30 compile complete; efficiency follow-up supersedes immediate fresh500 launch |
 | `research/daily_coarse_graining/shared_split_recurrent_partial_20260924.md` |100157 PASSED2joint updates,4.664GiB peak; first18069 timeout retained as history; full timing11143 RUNNING | Completed native T7/T30 admission then actual32/micro4 full-update throughput |
 | `research/daily_coarse_graining/shared_split_width_daily_results_20260923.md` | Daily112232 numerical/physical/two updates PASS; CPU67596 T7/T30 shapes PASS |0.526s/micro4,11.217GiB actualpeak, slow49.9min compile; next GPU recurrent and full update timing |
 | `research/daily_coarse_graining/shared_split_width_proposal_20260923.md` | a1fa82a deployed;64,884,481 parameters; real CPU shapes pass500s; free GPU112232 and recurrent CPU67596 running | Uniform384 decoder with768 backbone, preserved routes, full-update timing mode61a9671 then fresh500 learning |

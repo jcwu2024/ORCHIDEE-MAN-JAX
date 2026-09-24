@@ -24,6 +24,7 @@ from scripts.hpc.run_shared_learning import (
     shared_config,
 )
 from scripts.hpc.run_shared_learning import parser as learning_parser
+from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
 
 
 def compile_evaluator_on_device(
@@ -80,6 +81,57 @@ def make_scalar_daily_branch(
         return {
             "gradient": gradient,
             "loss": float(np.mean(values, dtype=np.float64)),
+            "norm": norm,
+            "hard": hard,
+            "seconds": time.perf_counter() - began,
+        }
+
+    return branch
+
+
+def make_microbatch_daily_branch(
+    *,
+    jax: Any,
+    jnp: Any,
+    device: Any,
+    evaluator: Callable[..., Any],
+    operations: Mapping[str, Callable[..., Any]],
+    microbatch_size: int,
+    expected_count: int,
+) -> Callable[[Any, Any], Mapping[str, Any]]:
+    """Return the exact equal-row mean-gradient branch using bounded chunks."""
+
+    accumulate = make_daily_accumulator(
+        jax=jax,
+        jnp=jnp,
+        microbatch_size=microbatch_size,
+        evaluator=evaluator,
+        expected_count=expected_count,
+    )
+
+    def branch(parameters: Any, samples: Any) -> Mapping[str, Any]:
+        began = time.perf_counter()
+        with jax.default_device(device), device_helper_cache(device):
+            local_parameters = jax.device_put(parameters, device)
+            local_samples = jax.device_put(samples, device)
+            (value, auxiliary), gradient = accumulate(local_parameters, local_samples)
+            hard = {
+                name: int(np.asarray(item))
+                for name, item in auxiliary["hard"].items()
+            }
+            norm = float(np.asarray(operations["norm"](gradient)))
+            _check_gradient_component(
+                name="dual_daily",
+                value=value,
+                auxiliary=auxiliary,
+                gradient=gradient,
+                finite=operations["finite"],
+            )
+            if not np.isfinite(norm):
+                raise ValueError("dual_daily_numerical_or_physical: nonfinite gradient norm")
+        return {
+            "gradient": gradient,
+            "loss": float(np.asarray(value)),
             "norm": norm,
             "hard": hard,
             "seconds": time.perf_counter() - began,

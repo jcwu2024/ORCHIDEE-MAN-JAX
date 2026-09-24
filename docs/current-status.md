@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Efficiency follow-up: freeGPU1 profile31906 RUNNING from22:50CST, c599236,
+90min cap, all three large graphs must hit cache. Same-method two updates,
+fixed-weight32/64daily and recurrent replays, saved executables/HLO and GPU
+traces. Report shared-split-profile-c599236.json under runtime diagnostics.
+Microbatch-to-dual bridge implemented;13local tests and actual JAX0.4.38
+two-CPU-device integration passed22.01s. Real-model dual/micro8 speed pending.
+See shared_split_efficiency_work_20260924.md; no paid work or long training.
+
 User-directed efficiency work supersedes immediate500-update budgeting:
 8,591,565 TRAIN daily rows imply51.2days at the one observed32/16.47s rate;
 64/10s is unmeasured and still implies15.5days. Preparing cache-only real GPU

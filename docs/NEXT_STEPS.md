@@ -19,6 +19,13 @@ with source compile audit and honest multi-device/full-TRAIN scaling estimates.
 64-row timing uses two real artifacts; repeated benchmark draws are not new
 unique coverage or learning. No new paid allocation.
 
+Profile31906 RUNNING freeGPU1 from22:50CST, code c599236,90min ceiling.
+Report shared-split-profile-c599236.json/log/assets under runtime diagnostics.
+The microbatch-to-dual bridge is implemented;13local tests and deployed
+two-CPU-device64-row/two-update integration pass. Real-model dual speed remains
+unmeasured. See shared_split_efficiency_work_20260924.md for launch, tests,
+offline analysis tools and bounded next decision. Do not update its checkout.
+
 Completed September24: recovery21040 PASSED/exit0 in109.22min, two full
 daily32/micro4+T7+T30 updates on different artifacts. Second wall16.473s
 (daily4.538s,T7 2.014s,T30 8.140s), actual peak11.477GiB. Daily/T7 cache hits;
