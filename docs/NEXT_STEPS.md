@@ -1,12 +1,23 @@
 # Current Roadmap
 
-Last updated: 2026-09-23.
+Last updated: 2026-09-24.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
+
+September24 user decision: finish the current compilation/admission and measure
+warm complete-update throughput before another optimization. Keep the running
+model/graph immutable; preserve saved gradients and persistent executables.
+If throughput is still inadequate, address execution and compilation costs in
+the same next revision. Do not divert into compiler redesign now. Reuse is
+conditional on compatible graph/shapes/dtypes/static configuration/runtime;
+ordinary new sample values and weights should reuse fixed-shape executables.
+Verify new-route reuse through actual repeated updates/cache evidence, not a
+promise of universal lifetime compatibility. Incomplete interrupted backend
+compilation cannot be resumed from its internal progress.
 
 September24 latest:18069 exited124 at240min while compiling T30 gradient,
 zero joint updates. Daily/T7 gradient and T7 JVP pass; all four recurrent

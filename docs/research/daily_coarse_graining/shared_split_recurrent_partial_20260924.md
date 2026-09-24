@@ -35,3 +35,10 @@ daily32/micro4+T7/T30 timing via prepared --technical-updates2 launcher. Its
 admission path must use the successful resume report. Do not start formal500
 learning or claim stable full training before these complete. Startup compilation
 is an observed bottleneck; a warm speed claim must report this separately.
+
+User follow-up: accept the present cold cost provisionally, finish this route's
+speed measurement first, and co-optimize compilation with execution only in a
+later necessary revision. Recovery log reaches T30 gradient compilation at399s
+after reusing the saved daily/T7 results and T7 directional record. This does
+not mean the interrupted T30 compiler itself resumed; that unfinished compile
+must restart. There is no measured completion percentage or ETA.
