@@ -8,6 +8,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+Latest September24: recovery100157 PASSED, two scalar-daily+T7/T30 joint
+updates completed in131.79min; T30 native-AD direction relative difference
+1.086e-7, all physical checks pass, actual peak4.664GiB. Read completed recovery
+section in shared_split_recurrent_partial_20260924.md. Earlier timeout/running
+snapshots below are historical. Present task is throughput, not another model change.
+Free GPU1 full-batch timing launcher11143 is RUNNING from unchangedcaed647,
+180min cap, two fresh daily32/micro4+T7/T30 updates. Report/log:
+runtime/outputs/diagnostics/shared-split-caed647-full-timing.{json,log}.
+Actual new-report preparation passed40.7s on test02; target-shell dry-run passed.
+Same deployed runtime/AD evidence reused; no redundant daily check, no paid work.
+Collect first and second component/wall timings, compiled/actual memory and
+startup costs; derive exposure/hour before500-update budget and any microbatch
+or dual-device optimization. Keep formal initialization independent.
+
 September24 user decision: finish the current compilation/admission and measure
 warm complete-update throughput before another optimization. Keep the running
 model/graph immutable; preserve saved gradients and persistent executables.

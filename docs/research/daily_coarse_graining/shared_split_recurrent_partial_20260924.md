@@ -1,5 +1,36 @@
 # Split-width recurrent admission: timeout and preserved progress
 
+## Completed recovery (September24)
+
+Recovery100157 COMPLETED0 in7907.20s (131.79min). Report status passed,
+classification shared_daily_T7_T30_two_update_technical_admission_only,
+completed_updates2. The earlier timeout remains part of total startup cost.
+All component and combined parameter gradients are finite; T30 JVP3.91242063216
+versus reverse3.91242105707 passes, relative difference1.086e-7. Earlier T7
+directional evidence was reused. Both updates and final replays pass physical
+counters. Allocator actual cumulative peak4.6638GiB; T30 compiled gradient
+live estimate1.8381GiB. This admission uses one scalar daily sample plusT7/T30,
+not the intended32/micro4 full training batch.
+
+T30 gradient compilation finished6055.8s after starting399.0s:5656.8s (~94.28min).
+T30 direction compilation769.3s. At update2 the newly compiled T30 executable
+was reused (5.7s compile/retrieval/report interval); daily/T7 executables restored
+after gradient-only recovery took351/630s in their compile/cache paths. No
+backend-cache-hit instrumentation here: do not label those timings proven
+persistent cache hits. No steady full-update throughput is established yet.
+
+Joint loss before/after update1:0.66748->0.36509; update2:0.41668->0.48246.
+Technical pass does not assert monotonic learning or scientific accuracy. User's
+present priority is trainability/throughput/data exposure; retain this mixed
+learning evidence without using it to derail the scheduled throughput measure.
+
+Next actual two-update daily32/micro4+T7/T30 timing uses the samecaed647
+checkout, fresh initialization and isolated technical checkpoint identity,
+and the passed resume1 report. No architecture/AD/loss changes or daily
+revalidation. Preserve all completed compiled caches and numerical artifacts.
+
+## Original timeout and recovery launch
+
 Free GPU launcher18069 exited124 at the240min timeout. It is not a completed
 training or numerical rejection. The JSON still says running because timeout
 terminated the process during T30 gradient compilation; the launcher log is

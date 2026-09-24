@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest:100157 completed0, recurrent technical admission passed two full-network
+joint updates,131.79min. T30 gradient/JVP pass1.086e-7 relative difference;
+actualpeak4.664GiB for scalar daily+T7/T30 scope. First loss decreases, second
+increases; not scientific learning acceptance. Full daily32/micro4+T7/T30
+timing11143 now RUNNING on freeGPU1 from unchangedcaed647,180min cap.
+Report runtime/outputs/diagnostics/shared-split-caed647-full-timing.json.
+No new paid job or architecture change. Historical running/timeout notes below
+are superseded by the completed recovery section in shared_split_recurrent_partial_20260924.md.
+
 September24: recurrent18069 timed out240min in T30 gradient compilation,
 zero optimizer updates. All T7/T30 forwards and daily/T7 gradients pass;
 T7 JVP relative difference1.427e-7. Saved743MiB gradient payload retained.
