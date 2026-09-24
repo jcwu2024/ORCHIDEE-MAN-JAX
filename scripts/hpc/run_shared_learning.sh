@@ -6,7 +6,7 @@ CODE_ROOT=${CODE_ROOT:?set immutable checkout}
 OUTPUT=${OUTPUT:?set report JSON under runtime/outputs}
 MODE=${MODE:-gpu}
 ENTRY_MODULE=${ENTRY_MODULE:-scripts.hpc.run_shared_learning}
-case "$ENTRY_MODULE" in scripts.hpc.run_shared_learning|scripts.hpc.probe_shared_execution|scripts.hpc.probe_shared_projection_reuse) ;; *) exit 2 ;; esac
+case "$ENTRY_MODULE" in scripts.hpc.run_shared_learning|scripts.hpc.probe_shared_execution|scripts.hpc.probe_shared_projection_reuse|scripts.hpc.probe_shared_split_timing_cache) ;; *) exit 2 ;; esac
 case "$CODE_ROOT" in "$ROOT"/runtime/checkouts/*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT"/runtime/outputs/*.json) ;; *) exit 2 ;; esac
 DRY_RUN=0
