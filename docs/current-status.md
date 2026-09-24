@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-24.
+Last updated: 2026-09-25.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,13 +13,19 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Efficiency follow-up: freeGPU1 profile31906 RUNNING from22:50CST, c599236,
-90min cap, all three large graphs must hit cache. Same-method two updates,
-fixed-weight32/64daily and recurrent replays, saved executables/HLO and GPU
-traces. Report shared-split-profile-c599236.json under runtime diagnostics.
-Microbatch-to-dual bridge implemented;13local tests and actual JAX0.4.38
-two-CPU-device integration passed22.01s. Real-model dual/micro8 speed pending.
-See shared_split_efficiency_work_20260924.md; no paid work or long training.
+September25: profile31906 PASSED/exit0,57.89min; daily/T7/T30 all cache hits,
+zero backend compiles. Two changing-data updates passed, second16.105s.
+Uninstrumented daily32/64 medians4.269/8.609s; T7/T30 1.813/7.688s. Actual
+peak11.962GiB. Fixed-weight benchmark repetitions are not learning exposure.
+Graph-ready startup28.79min; diagnostic executable/HLO export added25.45min.
+Free direct-load49083 PASSED/exit0: three saved executables loaded in6.45min,
+without model execution or Teacher reads. Integrating/loading and verifying
+actual updates is next; this is not yet an end-to-end startup speed claim.
+Offline HLO/trace analysis complete; about63k GPU events per micro4, mostly
+short, with source attribution predominantly unresolved. No new paid task.
+Read shared_split_profile_results_20260925.md for results, scope and next work.
+Dual bridge13local/deployed synthetic checks pass; real dual speed pending.
+The earlier preparation/RUNNING snapshots below are historical.
 
 User-directed efficiency work supersedes immediate500-update budgeting:
 8,591,565 TRAIN daily rows imply51.2days at the one observed32/16.47s rate;

@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-24.
+Last updated: 2026-09-25.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -12,19 +12,23 @@ User priority September24 after full timing: compilation, update latency and
 sample throughput remain inadequate for8,591,565 TRAIN rows. Hold the500-update
 learning launch while investigating efficiency. Keep the admitted split model
 as the reference; do not change architecture/loss or regenerate Teacher data.
-Next cache-only profile reuses daily/T7/T30, saves executable/HLO artifacts,
-measures repeated micro4/daily32/daily64/T7/T30 and profiles one micro4 andT7.
-No cold recompilation is permitted in this diagnostic. Pair these observations
-with source compile audit and honest multi-device/full-TRAIN scaling estimates.
-64-row timing uses two real artifacts; repeated benchmark draws are not new
-unique coverage or learning. No new paid allocation.
+Profile31906 PASSED/exit0, all three cache hits and zero backend compiles.
+Second complete update16.105s; replay daily32/64 takes4.269/8.609s, so simply
+accumulating more micro4 batches does not improve sample throughput. T7/T30
+replays1.813/7.688s. About63k GPU events per micro4 identify fragmented work;
+source attribution remains mostly ambiguous. No scientific fit claim.
+Direct-load49083 also PASSED: all three executables loaded in6.45min without
+model tracing, versus28.79min prior graph-ready startup including bootstrap.
+The scopes differ; actual resumed-update correctness and total startup remain
+to be checked. Both free probes and offline CPU analysis are complete.
 
-Profile31906 RUNNING freeGPU1 from22:50CST, code c599236,90min ceiling.
-Report shared-split-profile-c599236.json/log/assets under runtime diagnostics.
-The microbatch-to-dual bridge is implemented;13local tests and deployed
-two-CPU-device64-row/two-update integration pass. Real-model dual speed remains
-unmeasured. See shared_split_efficiency_work_20260924.md for launch, tests,
-offline analysis tools and bounded next decision. Do not update its checkout.
+Read shared_split_profile_results_20260925.md. Next integrate direct loading
+at the existing compile factory and verify two changing-data updates; then
+test an actual-helper execution revision before another whole-model compile.
+Keep masks/capacity/full gradients unchanged. Microbatch dual bridge13local
+and deployed two-CPU-device tests pass; real-model dual speed is unmeasured.
+Ideal dual64 still implies14.76days per full TRAIN row-count equivalent before
+overhead, so dual alone is insufficient. No new paid allocation or500 launch.
 
 Completed September24: recovery21040 PASSED/exit0 in109.22min, two full
 daily32/micro4+T7+T30 updates on different artifacts. Second wall16.473s
@@ -34,7 +38,7 @@ Next prepare unchanged fresh500 learning with explicit startup/monitor budget;
 update work alone extrapolates2.29h from one warm observation. Preserve caches;
 do not inherit the technical checkpoint. No paid submission. Completed evidence
 is at the top of shared_split_timing_recovery_20260924.md. All RUNNING snapshots
-below are historical; T30 cross-process cache reuse remains unmeasured.
+below are historical; the newer profile proves T30 cross-process cache reuse.
 
 Newest September24: full-timing11143 exited124 at180min before any update.
 Daily micro4 compile2849s and T7 compile5442s completed; T30 unfinished.

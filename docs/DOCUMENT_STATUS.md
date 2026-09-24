@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-23.
+Last updated: 2026-09-25.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -20,7 +20,8 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_split_efficiency_work_20260924.md` | Profile31906 RUNNING; microbatch dual bridge local/deployed synthetic checks pass | Active efficiency gate before long learning; real kernel mix and32/64 sample throughput |
+| `research/daily_coarse_graining/shared_split_profile_results_20260925.md` |31906 and49083 PASSED; all three cache hits; direct load6.45min, actual loaded-update verification pending | Active efficiency findings, fragmented execution, daily32/64 throughput, bounded next work |
+| `research/daily_coarse_graining/shared_split_efficiency_work_20260924.md` | Implementation record; profile completed in September25 results; microbatch dual bridge local/deployed synthetic checks pass | Profile method and integration tests |
 | `research/daily_coarse_graining/shared_split_compile_audit_20260924.md` | Source audit and offline analyzer complete |161-field staging; conditional cache-template hypothesis, no compiler hotspot claim |
 | `research/daily_coarse_graining/shared_split_throughput_scale_20260924.md` | Reproducible arithmetic tool complete |8,591,565 TRAIN scale, ideal multi-device bounds distinguished from measured throughput |
 | `research/daily_coarse_graining/shared_split_timing_recovery_20260924.md` |21040 PASSED2full updates,16.473s warm wall,11.477GiB actual peak;11143 timeout historical | Daily/T7 real cache hits,T30 compile complete; efficiency follow-up supersedes immediate fresh500 launch |

@@ -1,6 +1,8 @@
 # Split training efficiency: profile and microbatch dual bridge
 
-Status: implementation and bounded checks complete; real profile running.
+Status: profile31906 and direct-load49083 completed successfully. Results and
+current next steps: `shared_split_profile_results_20260925.md`. Running/next
+measurement text below records the original launch, not current task state.
 The user prioritizes compiler startup, sample throughput and full-TRAIN scale
 before long training. The prior500-update launch is on hold. Preserve the
 admitted64,884,481-parameter architecture, physical constraints, objective,

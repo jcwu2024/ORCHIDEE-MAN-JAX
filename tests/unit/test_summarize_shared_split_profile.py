@@ -10,6 +10,7 @@ from scripts.dev.summarize_shared_split_profile import (
     source_category,
     summarize_assets,
     summarize_hlo,
+    summarize_hlo_lines,
     summarize_trace_sources,
 )
 
@@ -42,8 +43,47 @@ def test_tuple_hlo_shape_and_colliding_op_names_remain_unmapped():
     summary = summarize_hlo(hlo)
     assert summary["instruction_count"] == 2
     assert summary["operation_counts"] == {"tuple": 2}
-    assert summary["ambiguous_instruction_names"] == 1
+    assert summary["selected_conflicting_source_count"] == 1
     assert "pair" not in _hlo_instruction_sources(hlo)
+
+
+def test_binary_line_iterable_is_consumed_once_and_only_trace_names_retained():
+    class Once:
+        def __init__(self, rows):
+            self.rows = rows
+            self.started = False
+
+        def __iter__(self):
+            assert not self.started
+            self.started = True
+            yield from self.rows
+
+    rows = Once(
+        [
+            b"ENTRY %main (x: f32[]) -> f32[] {\n",
+            b'  %used = f32[] add(%x, %x), metadata={op_name="trace" source_file="/repo/shared_transformer.py" source_line=537}\n',
+            b"  ROOT %other = f32[] constant(1.0)\n",
+            b"}\n",
+        ]
+    )
+    summary, sources, shapes = summarize_hlo_lines(rows, {"used"})
+    assert summary["line_count"] == 4
+    assert summary["text_bytes"] == sum(map(len, rows.rows))
+    assert summary["instruction_count"] == 2
+    assert summary["constant_instruction_line_bytes"] == len(rows.rows[2])
+    assert summary["selected_hlo_op_names"] == 1
+    assert sources == {"used": ("/repo/shared_transformer.py", 537)}
+    assert shapes == {}
+
+
+def test_opcode_after_long_tuple_shape_is_not_silently_omitted():
+    shape = b"(" + b"f32[]," * 1000 + b"f32[])"
+    row = b"  ROOT %wide = " + shape + b" tuple(%x, %x)\n"
+    summary, _, _ = summarize_hlo_lines(iter([row]), set())
+    assert summary["instruction_count"] == 1
+    assert summary["operation_counts"] == {"tuple": 1}
+    assert summary["unparsed_assignment_lines"] == 0
+    assert summary["longest_lines"][0]["bytes"] == len(row)
 
 
 def test_trace_uses_only_gpu_events_and_preserves_unmapped():
@@ -78,7 +118,10 @@ def test_saved_asset_layout_can_be_summarized_without_jax(tmp_path):
     }
     with gzip.open(trace_dir / "host.trace.json.gz", "wt", encoding="utf-8") as handle:
         json.dump(trace, handle)
-    report = summarize_assets(tmp_path)
+    progress = []
+    report = summarize_assets(tmp_path, on_progress=lambda partial, name: progress.append(name))
+    assert progress == ["daily", "T7", "T30"]
+    assert report["status"] == "completed"
     assert report["components"]["daily"]["hlo"]["instruction_count"] == 1
     assert report["components"]["daily"]["trace"]["event_count"] == 1
     assert report["components"]["T7"]["status"] == "missing_hlo"

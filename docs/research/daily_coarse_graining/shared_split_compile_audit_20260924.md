@@ -1,5 +1,11 @@
 # Split shared model: compilation and source-cost audit
 
+September25 completion: `shared_split_profile_results_20260925.md` records all
+three actual cache hits, measured optimized HLO/trace sizes and direct loading.
+T30 reuse is now proven for this route. The cache-template hypothesis below
+remains unproven and is not the active priority; direct-load update integration
+and fragmented execution are the next bounded work. Historical text follows.
+
 Status: source/read-only audit, 2026-09-24. The new cache-reused split profile
 is running separately; this note does not claim its result. No architecture,
 math, loss, training route, or paid job was changed.

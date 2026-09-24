@@ -1,6 +1,13 @@
 # Code Map
 
-Last updated: 2026-09-23.
+Last updated: 2026-09-25.
+
+`probe_shared_serialized_load.py` loads all three trusted saved executables
+without tracing the model; free GPU probe49083 completed in6.45min. It does
+not run inference or updates. `summarize_shared_split_profile.py` streams
+multi-GB HLO, retaining mappings only for traced symbols; six tests cover
+long tuple shapes and conservative source attribution. Completed measurements
+and next integration boundary: `shared_split_profile_results_20260925.md`.
 
 `probe_shared_split_profile.py` reuses all three completed split caches, saves
 trusted executables/optimized HLO, and profiles fixed-weight32/64daily plus
