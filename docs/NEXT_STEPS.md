@@ -8,10 +8,33 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+User priority September24 after full timing: compilation, update latency and
+sample throughput remain inadequate for8,591,565 TRAIN rows. Hold the500-update
+learning launch while investigating efficiency. Keep the admitted split model
+as the reference; do not change architecture/loss or regenerate Teacher data.
+Next cache-only profile reuses daily/T7/T30, saves executable/HLO artifacts,
+measures repeated micro4/daily32/daily64/T7/T30 and profiles one micro4 andT7.
+No cold recompilation is permitted in this diagnostic. Pair these observations
+with source compile audit and honest multi-device/full-TRAIN scaling estimates.
+64-row timing uses two real artifacts; repeated benchmark draws are not new
+unique coverage or learning. No new paid allocation.
+
+Completed September24: recovery21040 PASSED/exit0 in109.22min, two full
+daily32/micro4+T7+T30 updates on different artifacts. Second wall16.473s
+(daily4.538s,T7 2.014s,T30 8.140s), actual peak11.477GiB. Daily/T7 cache hits;
+T30 cold stage88.40min completed. No science monitors or final fit claim.
+Next prepare unchanged fresh500 learning with explicit startup/monitor budget;
+update work alone extrapolates2.29h from one warm observation. Preserve caches;
+do not inherit the technical checkpoint. No paid submission. Completed evidence
+is at the top of shared_split_timing_recovery_20260924.md. All RUNNING snapshots
+below are historical; T30 cross-process cache reuse remains unmeasured.
+
 Newest September24: full-timing11143 exited124 at180min before any update.
 Daily micro4 compile2849s and T7 compile5442s completed; T30 unfinished.
-No full-update throughput yet. Same-run daily/T7 caches exist but require actual
-reuse evidence. Read shared_split_timing_recovery_20260924.md in research/daily_coarse_graining.
+No full-update throughput yet. At21:50CST recovery21040 confirms actual daily/T7
+cache hits with zero backend compiles; whole startup stages347.6s/572.0s versus
+prior cold2849s/5442s. T30 still compiling; no optimizer update yet.
+Read shared_split_timing_recovery_20260924.md in research/daily_coarse_graining.
 Free GPU1 recovery21040 RUNNING20:29CST,240min cap, same mathematical method,
 code1c70fa4 (compiler observer only). Daily/T7 must reuse their completed caches;
 T30 may compile. Report runtime/outputs/diagnostics/shared-split-1c70fa4-full-timing.json,

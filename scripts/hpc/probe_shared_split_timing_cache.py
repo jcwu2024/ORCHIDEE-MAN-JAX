@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def observe_compiler(compiler, component, publish):
+def observe_compiler(compiler, component, publish, *, required_cached=("daily", "T7")):
     original_lookup = compiler.compile_or_get_cached
     original_backend = compiler.backend_compile
     active = None
@@ -18,7 +18,7 @@ def observe_compiler(compiler, component, publish):
     def backend(*args, **kwargs):
         if active is not None:
             active["backend_compile_calls"] += 1
-            if active["component"] in ("daily", "T7"):
+            if active["component"] in required_cached:
                 active["status"] = "completed_graph_cache_miss"
                 publish(dict(active))
                 raise RuntimeError(

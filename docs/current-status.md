@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-23.
+Last updated: 2026-09-24.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,12 +13,29 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User-directed efficiency work supersedes immediate500-update budgeting:
+8,591,565 TRAIN daily rows imply51.2days at the one observed32/16.47s rate;
+64/10s is unmeasured and still implies15.5days. Preparing cache-only real GPU
+profiling and32/64-row replay measurements, with independent compile-source
+audit and scale calculator. No architecture/loss change or paid submission.
+
+Completed22:19CST September24:21040 PASSED/exit0, two full daily32/micro4+
+T7+T30 updates,109.22min total. First wall66.423s, second16.473s on changed
+data; actual device peak11.477GiB. Daily/T7 persistent caches hit; T30 cold
+compile completed. Full timing and preserved raw artifacts are documented in
+shared_split_timing_recovery_20260924.md. No scientific monitor/fit acceptance.
+Next budget declared fresh500 learning including startup and monitoring;
+2.29h is update-only extrapolation, not a job ceiling. No new paid allocation.
+The following RUNNING snapshots are historical.
+
 Newest: full-batch timing11143 timed out180min,0updates, after daily/T7 compilation.
 No actual full-update time measured. Free GPU1 recovery21040 RUNNING with
 code1c70fa4 compiler observer; mathematical graph and training method unchanged.
 Daily/T7 completed caches must load (otherwise stop before expensive compile),
 T30 allowed compile,240min cap. Report shared-split-1c70fa4-full-timing.json
 under runtime/outputs/diagnostics; separate.cache.json records real hits.
+At21:50CST daily/T7 both confirm cache_hit, zero backend compiles; whole
+trace/lower/load347.6s/572.0s. T30 still compiling, zero updates so far.
 See shared_split_timing_recovery_20260924.md for bootstrap-template hypothesis,
 validation evidence and preserved prior outputs. No new paid allocation.
 
