@@ -20,7 +20,9 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/shared_split_profile_results_20260925.md` |31906 and49083 PASSED; all three cache hits; direct load6.45min, actual loaded-update verification pending | Active efficiency findings, fragmented execution, daily32/64 throughput, bounded next work |
+| `research/daily_coarse_graining/shared_split_serialized_updates_20260925.md` | Two real updates and full parameter/AdamW parity pass; scalar report dtype correction offline; startup8.85min | Direct executable reuse verified, warm throughput still unresolved |
+| `research/daily_coarse_graining/shared_split_fused_attention_screen_20260925.md` | FreeGPU52409 parity pass;8.36% helper gain,73.4% more temporary memory; not promoted | Bounded execution screen and next exact-shape field-group candidate |
+| `research/daily_coarse_graining/shared_split_profile_results_20260925.md` |31906 and49083 PASSED; all three cache hits; load-only6.45min; later two-update verification in September25 integration report | Efficiency findings, fragmented execution and daily32/64 throughput |
 | `research/daily_coarse_graining/shared_split_efficiency_work_20260924.md` | Implementation record; profile completed in September25 results; microbatch dual bridge local/deployed synthetic checks pass | Profile method and integration tests |
 | `research/daily_coarse_graining/shared_split_compile_audit_20260924.md` | Source audit and offline analyzer complete |161-field staging; conditional cache-template hypothesis, no compiler hotspot claim |
 | `research/daily_coarse_graining/shared_split_throughput_scale_20260924.md` | Reproducible arithmetic tool complete |8,591,565 TRAIN scale, ideal multi-device bounds distinguished from measured throughput |

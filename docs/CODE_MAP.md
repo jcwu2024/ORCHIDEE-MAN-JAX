@@ -2,6 +2,18 @@
 
 Last updated: 2026-09-25.
 
+`probe_shared_serialized_updates.py` loads the three native executables at the
+existing `run_shared_learning.compile_gradient_evaluators` boundary and runs
+unchanged two-update training. It compares all parameters/AdamW arrays and
+normalizes only scalar report dtypes across JSON serialization. Four local
+tests, three initial deployed-runtime tests, real V100 replay and corrected
+offline report comparison pass. `run_shared_serialized_updates.sh` runs this
+bounded diagnostic against its original immutable checkout.
+
+`shared_decoder_attention_fused.py` and its probe are diagnostic-only: combined
+K/V contractions pass strict parity but the V100 helper gain is8.36% with73.4%
+more temporary memory. Not wired into the production decoder.
+
 `probe_shared_serialized_load.py` loads all three trusted saved executables
 without tracing the model; free GPU probe49083 completed in6.45min. It does
 not run inference or updates. `summarize_shared_split_profile.py` streams

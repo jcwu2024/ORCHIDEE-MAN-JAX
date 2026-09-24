@@ -22,9 +22,20 @@ model tracing, versus28.79min prior graph-ready startup including bootstrap.
 The scopes differ; actual resumed-update correctness and total startup remain
 to be checked. Both free probes and offline CPU analysis are complete.
 
-Read shared_split_profile_results_20260925.md. Next integrate direct loading
-at the existing compile factory and verify two changing-data updates; then
-test an actual-helper execution revision before another whole-model compile.
+September25 integration50963 completed: direct-loaded executables run both
+changing-data updates; all parameters and AdamW coordinates pass reference
+comparison. Graph-ready530.72s (8.85min), warm update15.63s. Original wrapper
+exit1 was a scalar-report NumPy/JSON dtype mismatch; offline corrected report
+passes at unchanged tolerance, no GPU rerun. Read
+shared_split_serialized_updates_20260925.md and its .corrected.json evidence.
+
+Free fused-attention fragment52409 completed: strict output/full-gradient
+parity passes, only8.36% helper gain with73.4% more temporary memory; do not
+promote to full-model compile. Next bounded candidate: exact-shape within-
+expert Q1 field grouping, preserving field-local tokens/projections/masks.
+Read shared_split_fused_attention_screen_20260925.md and
+shared_split_profile_results_20260925.md. Screen actual helpers before another
+whole-model compile; direct loading does not solve slow sample throughput.
 Keep masks/capacity/full gradients unchanged. Microbatch dual bridge13local
 and deployed two-CPU-device tests pass; real-model dual speed is unmeasured.
 Ideal dual64 still implies14.76days per full TRAIN row-count equivalent before
