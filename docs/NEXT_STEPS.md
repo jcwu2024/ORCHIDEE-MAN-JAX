@@ -8,6 +8,22 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 five-field448-coordinate GPU screen and matched controls complete.
+Grouped128 passes scalar/micro4 strict output/full component-gradient checks:
+51.98->32.15ms scalar,80.45->61.19ms micro4; micro4 temporary storage+9.71%.
+Field-local128 also passes but is slower/more memory intensive (67.55ms micro4).
+Grouping alone at64 does not improve warm time. Both256 schedules have one
+output gate failure in a mode; do not select256 or relax tolerance. Four local
+tests pass; all free probes ended. Fixture deployment errors were corrected
+before decoder compilation; no paid allocation or optimizer update.
+Read shared_split_carbon_group_screen_20260925.md. Next integrate only the
+tested five-field grouped128 and22-field Q1 schedules into real feature assembly
+and output restoration, preserving all other field execution. Verify native
+parameter/state gradients and masks locally, inspect graph/lowering cost, then
+measure actual daily micro4 and joint-update speed using saved references.
+No global chunk128 change:896-coordinate DOC fields with896-entry local banks
+need separate evidence before broader changes. No500 learning launch yet.
+
 User priority September24 after full timing: compilation, update latency and
 sample throughput remain inadequate for8,591,565 TRAIN rows. Hold the500-update
 learning launch while investigating efficiency. Keep the admitted split model
@@ -35,10 +51,9 @@ promote to full-model compile. Exact-shape within-expert Q1 grouping now
 passes scalar and micro4 free V100 helper tests53850/54879: micro4 warm
 6.995->2.836ms, temporary13.351->8.052MB; strict output/full parameter/input
 gradient parity passes. This is22 small fields, not a full-model59% speedup.
-Read shared_split_q1_group_screen_20260925.md. Next screen a higher-work
-same-expert group (five448-coordinate litter/carbon fields) and bounded query
-chunk sizes, keeping per-field projection reuse/masks/capacity. Do not compile
-the whole model just for the4.16ms Q1 fragment saving. All free tests complete.
+Read shared_split_q1_group_screen_20260925.md. The higher-work five448-row
+screen and bounded chunk-size controls are now complete as reported above.
+Do not compile the whole model just for the4.16ms Q1 fragment saving.
 Read shared_split_fused_attention_screen_20260925.md and
 shared_split_profile_results_20260925.md. Screen actual helpers before another
 whole-model compile; direct loading does not solve slow sample throughput.

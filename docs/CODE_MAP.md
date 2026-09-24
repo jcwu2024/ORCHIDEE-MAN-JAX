@@ -2,6 +2,17 @@
 
 Last updated: 2026-09-25.
 
+`shared_decoder_carbon_group.py` and `probe_shared_decoder_carbon_group.py`
+are diagnostic five-field448-coordinate decoder scheduling experiments.
+The reference keeps field-local64-query maps; grouping preserves separate
+dynamic banks/masks, and optional field-local128/256 controls isolate chunk
+size. A compact exported layout artifact avoids a remote dependency on
+unit-test dataset manifests. `run_shared_decoder_carbon_group.sh` runs bounded
+free-GPU scalar/micro4 screens against immutable c599236. Grouped128 and
+field-local128 pass;256 has mode-specific output-gate failures. Grouped128
+micro4 takes61.19ms versus80.45ms reference, with9.71% more compiler temporary
+storage. Four local tests include JSON-only layout admission. Not production code.
+
 `shared_decoder_q1_group.py` and `probe_shared_decoder_q1_group.py` are
 diagnostic same-expert scalar-field grouping, preserving separate queries,
 local K/V, masks and outputs while combining two-block decoder/readout calls.

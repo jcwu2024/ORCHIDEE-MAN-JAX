@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+Latest bounded performance investigation:
+`research/daily_coarse_graining/shared_split_carbon_group_screen_20260925.md`
+records completed five448-coordinate GPU grouping and matched controls:
+grouped128 passes scalar/micro4 and takes61.19ms versus80.45ms reference;
+256 schedules have mode-specific output-gate failures and are not selected.
+Four local checks and deployment corrections are recorded; all probes ended.
+It is a component screen, not a new architecture or training protocol.
+
 Use this page to decide what must be read and what is historical evidence.
 
 ## Authority Order

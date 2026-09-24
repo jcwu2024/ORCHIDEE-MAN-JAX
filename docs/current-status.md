@@ -13,12 +13,26 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 larger decoder screen completed: grouped128 for five448-row
+litter/DOC fields passes strict scalar/micro4 output and all component
+parameter/input gradients. Warm scalar51.98->32.15ms; micro4 80.45->61.19ms;
+micro4 compiler temporary bytes+9.71%. Field-local128 controls pass but are
+slower (micro4 67.55ms) and use more temporary storage. Grouped256/micro4
+and fieldlocal256/scalar each have one output tolerance failure; all gradients
+pass, tolerance unchanged, neither256 schedule selected. Scalar59816 exit0,
+micro4 59873 exit1 on gate; controls61700 exit1/61729 exit0. No active probe.
+Earlier wrapper/static-fixture failures were fixed before decoder compilation;
+compact32KB coordinate metadata removes the remote dataset-fixture dependency.
+Four local tests pass. Next scoped integration of five-field grouped128 and
+the accepted Q1 helper, then actual-model AD/mask/runtime checks; no global
+chunk change, paid job,500 training or new scientific fit evidence. See
+shared_split_carbon_group_screen_20260925.md for full results and limitations.
+
 September25 Q1 grouping follow-up: freeGPU53850/54879 both exit0, scalar and
 micro4 output/full parameter+input-gradient parity pass. Micro4 helper6.995ms
 to2.836ms, compiler temporary13.351MB to8.052MB. All current free tests ended.
 This covers22 scalar hydrology fields only; it does not establish full-model
-speedup. Next bounded work targets a larger same-expert carbon-field group and
-query chunk sizes before production integration/full compilation. See
+speedup. The larger carbon-field/chunk-size follow-up is now complete above. See
 shared_split_q1_group_screen_20260925.md. No new paid task or long learning.
 
 September25 follow-up: direct-loaded two-update integration50963 completes
