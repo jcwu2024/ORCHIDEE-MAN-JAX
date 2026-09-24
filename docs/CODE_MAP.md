@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+`shared_decoder_q1_group.py` and `probe_shared_decoder_q1_group.py` are
+diagnostic same-expert scalar-field grouping, preserving separate queries,
+local K/V, masks and outputs while combining two-block decoder/readout calls.
+Scalar and outer-vmapped micro4 native parameter/input gradients pass on V100;
+micro4 helper time2.836ms versus6.995ms, with less compiler temporary memory.
+No production integration; one22-field group does not imply whole-model speed.
+Two local tests include audited field selection and micro4 gradient parity.
+
 `probe_shared_serialized_updates.py` loads the three native executables at the
 existing `run_shared_learning.compile_gradient_evaluators` boundary and runs
 unchanged two-update training. It compares all parameters/AdamW arrays and

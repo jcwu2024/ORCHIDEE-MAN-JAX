@@ -31,8 +31,14 @@ shared_split_serialized_updates_20260925.md and its .corrected.json evidence.
 
 Free fused-attention fragment52409 completed: strict output/full-gradient
 parity passes, only8.36% helper gain with73.4% more temporary memory; do not
-promote to full-model compile. Next bounded candidate: exact-shape within-
-expert Q1 field grouping, preserving field-local tokens/projections/masks.
+promote to full-model compile. Exact-shape within-expert Q1 grouping now
+passes scalar and micro4 free V100 helper tests53850/54879: micro4 warm
+6.995->2.836ms, temporary13.351->8.052MB; strict output/full parameter/input
+gradient parity passes. This is22 small fields, not a full-model59% speedup.
+Read shared_split_q1_group_screen_20260925.md. Next screen a higher-work
+same-expert group (five448-coordinate litter/carbon fields) and bounded query
+chunk sizes, keeping per-field projection reuse/masks/capacity. Do not compile
+the whole model just for the4.16ms Q1 fragment saving. All free tests complete.
 Read shared_split_fused_attention_screen_20260925.md and
 shared_split_profile_results_20260925.md. Screen actual helpers before another
 whole-model compile; direct loading does not solve slow sample throughput.

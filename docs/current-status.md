@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 Q1 grouping follow-up: freeGPU53850/54879 both exit0, scalar and
+micro4 output/full parameter+input-gradient parity pass. Micro4 helper6.995ms
+to2.836ms, compiler temporary13.351MB to8.052MB. All current free tests ended.
+This covers22 scalar hydrology fields only; it does not establish full-model
+speedup. Next bounded work targets a larger same-expert carbon-field group and
+query chunk sizes before production integration/full compilation. See
+shared_split_q1_group_screen_20260925.md. No new paid task or long learning.
+
 September25 follow-up: direct-loaded two-update integration50963 completes
 with parameter and full optimizer parity. Graph-ready8.85min versus28.79min;
 warm wall15.63s remains inadequate. Scalar report comparison had a NumPy/JSON
@@ -20,7 +28,7 @@ dtype false rejection, corrected offline without GPU rerun or tolerance change;
 preserve original exit1 and corrected report. Read
 shared_split_serialized_updates_20260925.md. Fused-attention GPU fragment52409
 passes parity but only8.36% helper gain at73.4% more temporary memory, so no
-full-model integration. Exact-shape Q1 field-group helper prototype is next.
+full-model integration. The newer Q1 helper results are above.
 The earlier deserialize-only pending statements below are historical.
 
 September25: profile31906 PASSED/exit0,57.89min; daily/T7/T30 all cache hits,
