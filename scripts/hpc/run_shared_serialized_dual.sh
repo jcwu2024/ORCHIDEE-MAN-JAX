@@ -12,7 +12,7 @@ WORKER_GPU_DEVICE=${WORKER_GPU_DEVICE:-1}
 case $(hostname -s) in gln01|ibgln01|ibc13b02n04) ;; *) [[ $DRY_RUN == 1 ]] || exit 2 ;; esac
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
-COMMAND=(timeout --signal=TERM 30m env -u LD_LIBRARY_PATH
+COMMAND=(timeout --signal=TERM --kill-after=30s 30m env -u LD_LIBRARY_PATH
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs
   SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_DEVICE"
   SINGULARITYENV_JAX_ENABLE_X64=true SINGULARITYENV_JAX_PLATFORMS=cuda,cpu

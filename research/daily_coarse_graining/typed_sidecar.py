@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping, NamedTuple, Sequence
@@ -349,6 +351,47 @@ class TypedSidecarIndex:
                 )
 
 
+def _resolve_coherent_typed_shard(
+    root: Path,
+    name: str,
+    resolved_directories: dict[Path, Path],
+) -> Path:
+    """Resolve shared directories once, retaining per-file symlink checks."""
+    candidate = root / name
+    if candidate == root or candidate.name == "..":
+        path = candidate.resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as error:
+            raise ValueError(f"typed shard path escapes dataset root: {path}") from error
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        return path
+    directory = candidate.parent
+    resolved_directory = resolved_directories.get(directory)
+    if resolved_directory is None:
+        resolved_directory = directory.resolve()
+        resolved_directories[directory] = resolved_directory
+    path = resolved_directory / candidate.name
+    try:
+        mode = os.lstat(path).st_mode
+    except FileNotFoundError:
+        try:
+            path.relative_to(root)
+        except ValueError as error:
+            raise ValueError(f"typed shard path escapes dataset root: {path}") from error
+        raise FileNotFoundError(path) from None
+    if stat.S_ISLNK(mode):
+        path = path.resolve()
+    try:
+        path.relative_to(root)
+    except ValueError as error:
+        raise ValueError(f"typed shard path escapes dataset root: {path}") from error
+    if not stat.S_ISREG(mode) and not path.is_file():
+        raise FileNotFoundError(path)
+    return path
+
+
 def load_typed_sidecar_index(
     manifest_path: str | Path,
     *,
@@ -472,16 +515,13 @@ def load_coherent_typed_sidecar_index(
     }
     references = []
     root = manifest_path.parent
+    resolved_directories: dict[Path, Path] = {}
     for item in raw.get("shards", ()):
         key = (str(item["landpoint_id"]), int(item["year"]))
         parent = parent_by_key[key]
-        path = (root / str(item["typed_shard"])).resolve()
-        try:
-            path.relative_to(root)
-        except ValueError as error:
-            raise ValueError(f"typed shard path escapes dataset root: {path}") from error
-        if not path.is_file():
-            raise FileNotFoundError(path)
+        path = _resolve_coherent_typed_shard(
+            root, str(item["typed_shard"]), resolved_directories
+        )
         expected_hash = str(item["typed_shard_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
             raise ValueError(f"typed shard hash mismatch for {key[0]}:{key[1]}")

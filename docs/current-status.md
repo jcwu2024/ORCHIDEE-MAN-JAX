@@ -21,6 +21,15 @@ acceptance yet. A deployed tiny diagnostic proves saved JAX0.4.38 executables
 cannot be retargeted to logical cuda1 by changing default device/compile options;
 the dual probe uses a persistent second process with physicalGPU1 as logical0,
 and includes IPC in timings. Free resources only; no new paid task.
+Tiny deployed worker proof passed two changed rounds. Full dual attempt95004
+was stopped after16min of Lustre metadata waiting during bootstrap, exit143,
+no model-gradient loads or updates; not a dual/AD numerical failure. Scalar/
+micro4 whole-decoder screens96824/96825 also stalled before JAX initialization
+and were stopped around11:44. A free test02 metadata query was also delayed.
+No actual GPU performance result exists for these attempts. Small read recovery
+is required before resuming; no paid allocation. Local typed-index directory
+resolution reuse passes30tests,2Windows symlink skips; not deployed and not a
+fix for a single blocked Lustre request.
 
 September25 larger decoder screen completed: grouped128 for five448-row
 litter/DOC fields passes strict scalar/micro4 output and all component

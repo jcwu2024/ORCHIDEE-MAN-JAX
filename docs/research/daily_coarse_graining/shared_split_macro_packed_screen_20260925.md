@@ -3,7 +3,8 @@
 Status: local scalar and micro4 CPU numerical probes pass, 2026-09-25.
 This is an unpromoted diagnostic fragment. The accepted decoder, model
 parameters, training runner, masks, outputs and loss are unchanged. No
-deployed GPU or full-model compile was run.
+successful deployed GPU or full-model compile was run. The first actual-layout
+GPU attempts below stopped before compilation because of filesystem waiting.
 
 ## Source-layout scope
 
@@ -94,3 +95,23 @@ static builder to fail, and checks runtime loading plus 160-field
 synthetic fixture construction. The changed tiny CLI path passes. No
 actual-layout or width-384 compilation was run locally; deployed GPU
 results are pending.
+
+## Deployed attempts and current blocker
+
+Free gln01 scalar/micro4 launchers96824/96825 began around11:39CST on
+September25, after both cards were released from the filesystem-blocked dual
+attempt. Both target-shell command expansions had passed dry-run. By11:44,
+Python96900/96960 each had zero CPU use and waited in `ptlrpc_set_wait` before
+JAX initialization; both GPUs remained at0MiB. Even a `stat` of the staged
+probe from free test02 produced no file result within its10second timeout.
+This broadens the evidence beyond Teacher inventory access; it does not
+establish the server-side cause of the Lustre delay. The lead sent TERM to
+both verified owned Python processes. No reference or candidate compile,
+timing, numerical comparison or optimizer update was completed.
+
+Logs remain at
+`runtime/outputs/diagnostics/shared-split-macro-packed-20260925-micro{1,4}.log`.
+No new paid work was submitted. Next first confirm a small metadata/read check
+on free resources returns promptly, then resume these bounded screens and the
+saved-executable dual comparison. The local launchers now add30seconds of
+kill-after grace to their finite20/30minute caps; retransfer them before reuse.

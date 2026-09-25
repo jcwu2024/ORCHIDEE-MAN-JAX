@@ -20,6 +20,20 @@ process for this diagnostic rather than recompiling gradients. No new paid
 allocation or formal learning launch. Report complete samples/second and
 card-hour tradeoffs before selecting an execution path.
 
+Free dual launcher95004/Python95059 started11:21CST and was stopped with
+TERM after16minutes stalled in Lustre metadata calls (`ptlrpc_set_wait`/
+`lstat`), before model-gradient loading or updates. Launcher exited143; do not
+classify this as model compilation/AD failure or immediately rerun unchanged.
+Actual-layout macro scalar/micro4 screens96824/96825 also stalled in filesystem
+calls before JAX initialization (Python96900/96960,0CPU/0GPU), then received TERM
+at~11:44. A free test02 stat check also failed to return file metadata promptly.
+No new throughput result or paid allocation. First verify small filesystem
+reads recover, then retransfer bounded launchers and resume both prepared
+screens; do not rerun expensive gradient compilation. Local typed-index path
+optimization passes30tests (2Windows symlink skips); it reduces repeated
+directory resolution, preserves file/symlink checks, and does not fix a hung
+Lustre call. It is not deployed into the immutable reference checkout.
+
 September25 five-field448-coordinate GPU screen and matched controls complete.
 Grouped128 passes scalar/micro4 strict output/full component-gradient checks:
 51.98->32.15ms scalar,80.45->61.19ms micro4; micro4 temporary storage+9.71%.

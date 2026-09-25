@@ -9,6 +9,9 @@ full results pending. `shared_split_macro_packed_screen_20260925.md` records
 the whole non-GPP decoder candidate and actual-layout export; tiny checks do
 not establish V100 throughput. These supersede immediate scoped integration
 of small component gains; see NEXT_STEPS.md.
+Both first full probes were stopped before gradient execution because of
+observed Lustre metadata waiting on free nodes. Their dated notes distinguish
+this external blocker from numerical/compile failures. No GPU probe is active.
 
 Latest bounded performance investigation:
 `research/daily_coarse_graining/shared_split_carbon_group_screen_20260925.md`

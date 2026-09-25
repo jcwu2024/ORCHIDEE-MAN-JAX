@@ -1,7 +1,8 @@
 # Saved-Executable Dual-Process Throughput Diagnostic
 
-Status: small deployed GPU worker proof passed; complete-update benchmark running
-as of 2026-09-25. No measured full-model dual speedup is claimed here.
+Status: small deployed GPU worker proof passed; first complete-update attempt
+stopped during filesystem-blocked bootstrap on2026-09-25. No measured
+full-model dual speedup is claimed here.
 
 ## Boundary
 
@@ -59,11 +60,34 @@ The worker's tiny recurrent/total times were 0.8766/0.8848 seconds on the
 first round and 0.00416/0.00921 seconds on the second. These are protocol
 checks, not full-model throughput measurements.
 
-The full saved-executable benchmark is running through
+The first full saved-executable benchmark ran through
 `scripts/hpc/run_shared_serialized_dual.sh`; its report and log are
 `runtime/outputs/diagnostics/shared-split-serialized-dual-20260925.json`
 and `runtime/outputs/diagnostics/shared-split-serialized-dual-20260925.log`.
 Its throughput, transfer overhead and cost outcome remain pending.
+
+Launcher PID95004, Python PID95059, began11:21CST on free gln01
+(hostname ibc13b02n04),30min bound, both GPUs initially idle. At11:34 it
+remained in bootstrap, with only28seconds cumulative Python CPU time and
+the main thread waiting in `ptlrpc_set_wait`. A bounded5second strace
+observed `lstat` of the canonical v6 typed-shard path under
+`workers/worker-099-of-100/typed/spatial-train_temporal-train/`.
+The concurrent175KB overlay transfer also took several minutes. These are
+observations of filesystem metadata waiting during this startup, not evidence
+of slow model compilation or a GPU contention explanation for earlier runs.
+The26.34GB visible GPU0 allocation is the configured JAX reserved pool, not
+measured live model memory. No full gradient binary had loaded at this check.
+
+At~11:37, after more than16minutes without leaving bootstrap, the lead sent
+TERM to the verified owned Python95059. Launcher exited143 and Python exited;
+no optimizer updates or full-gradient loads were lost. Do not report this as
+an AD, compilation, numerical or dual-execution failure. The existing JSON
+retains its last running stage; this documented termination supersedes it.
+No paid job or identical immediate rerun followed. Free GPUs were instead
+assigned to the staged scalar/micro4 actual-layout decoder screens, which do
+not load the Teacher inventory. The narrow index-path optimization being
+tested locally can reduce repeated metadata calls but cannot cure an
+individual stalled Lustre call.
 
 ## Code and Local Verification
 
