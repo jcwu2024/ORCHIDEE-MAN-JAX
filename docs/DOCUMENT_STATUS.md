@@ -14,7 +14,9 @@ observed Lustre metadata waiting on free nodes. Their dated notes distinguish
 this external blocker from numerical/compile failures. Resumed free dual104560
 started13:24 through cln01 but remains filesystem-bound at13:47. Same-expert
 whole-decoder packing passes tiny native-gradient checks and6tests; actual
-performance pending. `shared_split_dual_idle_node_proposal_20260925.md` is a
+performance pending. Free104560 subsequently timed out124 during bootstrap
+at13:54; confirmed exited13:55, no active job or new update evidence.
+`shared_split_dual_idle_node_proposal_20260925.md` is a
 prepared2.48yuan/30min paid proposal, awaiting explicit approval, not submitted.
 
 Latest bounded performance investigation:

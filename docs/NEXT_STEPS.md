@@ -8,6 +8,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+Latest13:55CST: free recovery104560 exited124 at its30min limit, still in
+bootstrap with zero optimizer updates/model-gradient loads. Python exited and
+both GPUs are clear. Filesystem-bound startup persists despite successful
+small reads via cln01. Do not repeat the same free attempt. Prepared idle-node
+paid dual comparison awaits the user's2.48yuan approval; no submission yet.
+Same-expert whole-decoder code/local native-gradient checks are complete and
+staged; actual-layout GPU screen remains pending. Running snapshots below are
+historical and superseded by this completed attempt.
+
 September25 13:24CST recovery: user clarified cln01=.1 and cln02=.2 are
 interchangeable login choices, selected by current usability. Small reads
 through .1 and on gln01 passed; resumed bounded dual probe104560, Python104627,

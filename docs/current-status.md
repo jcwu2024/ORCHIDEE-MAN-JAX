@@ -13,6 +13,11 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+At13:55CST free recovery104560 completed with timeout124 during filesystem-
+bound bootstrap; no updates or full-gradient binary loads. Python exited and
+GPUs cleared. No active job. The prepared2.48yuan paid idle-node comparison
+awaits approval; same-expert packed decoder GPU speed remains unmeasured.
+
 September25 13:24 resumed free dual104560 through cln01(.1), using existing
 binaries. Small reads passed, but at13:47 bootstrap still waited on Lustre,
 20CPU-seconds across23min; no new throughput outcome. User clarified cln01/.1

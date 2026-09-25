@@ -8,6 +8,11 @@ waiting in Lustre calls. The same Python library file was readable from cln01
 in0.11seconds. This does not establish the storage fault's cause, but supports
 trying a different compute node rather than recompiling the model.
 
+At13:55 the free attempt was confirmed exited124 at its30minute bound,
+still in bootstrap with no optimizer update or full-gradient binary load.
+Python exited and no GPU process remained. Do not treat the last JSON's
+running stage as current; the launcher log records the timeout.
+
 ## Exact proposed allocation
 
 - Partition: gnall,1node,2V100,8allocated CPUs,64GiB,30minutes maximum.

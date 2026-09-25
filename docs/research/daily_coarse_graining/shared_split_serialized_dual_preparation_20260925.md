@@ -4,6 +4,14 @@ Status: small deployed GPU worker proof passed; first complete-update attempt
 stopped during filesystem-blocked bootstrap on2026-09-25. No measured
 full-model dual speedup is claimed here.
 
+Recovery through cln01 started13:24CST as launcher104560/Python104627,
+report/log `shared-split-serialized-dual-20260925-resume1.{json,log}`.
+Small script reads succeeded, but Python imports and bootstrap still waited
+in `ptlrpc_set_wait`/`cl_sync_io_wait`. It exited124 at30minutes, confirmed
+13:55 with no remaining Python/GPU process. No optimizer update or full-model
+gradient binary load completed. A different idle-node paid comparison is
+prepared in `shared_split_dual_idle_node_proposal_20260925.md`, not submitted.
+
 ## Boundary
 
 The immutable `c599236` method and three trusted JAX 0.4.38 V100 executable
