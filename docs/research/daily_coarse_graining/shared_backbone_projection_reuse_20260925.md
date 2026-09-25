@@ -1,5 +1,17 @@
 # Shared-source backbone projection diagnostic
 
+Free99428 one-block diagnosis has completed. Full-bank versus split-source
+standalone FP32 K/V are bit-identical over2,865,408 values; independent FP64
+projections agree to roughly1e-14. Separated normalized keys, attention logits
+and messages are also identical. One complete block output differs by at most
+5.96e-7 and passes the existing threshold. This does not identify a projection
+formula defect and does not resolve the eight-block reverse discrepancy below.
+Do not pay for a full8-block FP64 gradient oracle merely to close that question;
+prioritize the separate decoder real-loss/throughput admission and leave
+backbone reuse disabled. Evidence is
+`outputs/shared-backbone-roundoff-20260925.json` and remote matching arrays/log.
+Four focused local tests now pass, including independent FP64 projection.
+
 Status: actual-shape scalar V100 screen completed with a numerical gate failure;
 micro4 was not executed and production integration is not admitted.
 This preserves the declared network function and capacity and is not wired

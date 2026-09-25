@@ -8,6 +8,30 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 17:48CST: both roundoff diagnoses99428/99429 have ended and both
+free GPUs are idle. Decoder expert128 retains its failed strict old-FP32
+output gate; all24,108,801 gradient coordinates pass. At both failing output
+coordinates, an independent NumPy FP64 oracle finds candidate closer than
+reference (details in shared_split_macro_packed_screen_20260925.md). Proceed
+to diagnostic real-input daily micro4 loss/full-gradient/timing admission,
+keeping GPP and the backbone unchanged. Prepare head/template/scales once on
+free CPU, reuse existing input bundle/fresh update0 and saved daily binary.
+Do not combine new daily with old recurrent gradients as a full candidate
+update. Candidate T7/T30 and complete-update timing follow daily admission.
+Backbone one-block projections are exactly equal, but full8-block reverse
+discrepancies remain unresolved; that optimization stays separate. No new
+paid allocation, production change or scientific training is authorized here.
+
+Earlier completed screens and launch snapshots below are historical.
+
+Both free candidate screens have ended. Decoder96056: expert128 micro4
+276.315ms;24,108,801 gradient coordinates pass, one loss/output coordinate
+fails (max absolute difference1.669e-6). Backbone96055 has the previously
+recorded scalar discrepancy. Prioritize bounded independent roundoff/formula
+localization for both, preserving references; no production integration or
+new full-model compile yet. Output-coordinate logging is being added to avoid
+another result that only says pass/fail. No paid job active or authorized.
+
 Latest17:05CST: backbone96055 completed quickly but exited1 on scalar numerical
 parity. Helper27.572->14.406ms; output/parameter/input-gradient differences
 need independent localization, not automatic tolerance relaxation or production

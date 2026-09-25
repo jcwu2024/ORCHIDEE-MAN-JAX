@@ -13,6 +13,26 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 17:48CST:99428/99429 completed. Expert128 decoder follow-up
+preserves strict output-gate failure at two raw outputs, while all24.11M
+gradient coordinates pass. Independent FP64 calculation is closer to the
+candidate at both failures: candidate/reference absolute errors5.62e-7/
+6.82e-7 for DOC incoming, and1.30e-7/1.23e-6 for gross DOC decomposition.
+This justifies real-loss diagnostic integration, not numerical tolerance
+relaxation or full-model acceptance. Both free GPUs idle at this check.
+Next prepare a compact real-objective bundle on free CPU and compare actual
+daily micro4 loss/full gradients and warm time against the saved original.
+Keep GPP, backbone, physical routes and loss fixed; no optimizer retention.
+Backbone isolated K/V projection agrees exactly over2,865,408 FP32 values;
+one-block output passes, but prior full8-block gradient mismatch is unresolved.
+
+September25 follow-up:96056 ended1 with a bounded numerical discrepancy,
+not a runtime/compile timeout. Expert128 micro4 took276.315ms, lower16.17s,
+compile108.47s, compiler temp9.07GB. All24.11million gradient coordinates
+pass;1/34,193 combined loss/output entries exceeds the unchanged threshold.
+Both candidate screens are complete. Next independently localize numerical
+differences, retaining completed references and adding exact output locations.
+
 September25 17:05CST: backbone96055 exited1, scalar helper speed27.572->14.406ms
 but output/full-gradient coordinate gates fail (no runtime exception).
 Reference retained; micro4 not reached. Diagnose projection/reduction numerical

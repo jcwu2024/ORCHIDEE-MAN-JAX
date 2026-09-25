@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-25.
 
+`scripts/hpc/shared_decoder_roundoff_oracle.py` independently evaluates
+selected diagnostic decoder outputs with NumPy FP64. The macro probe saves
+candidate/reference outputs and maps bounded failures to field/batch/row.
+`diagnose_shared_backbone_projection_reuse.py` isolates one-block projections
+and attention formulas, saving arrays and timing separately from whole-model
+claims. These diagnostics neither change production defaults nor train weights.
+
 `shared_backbone_projection_reuse.py` is a diagnostic helper which projects
 common source K/V once per backbone block and preserves expert-axis banks,
 masks and native AD. Its probe saves full reference gradients before candidate

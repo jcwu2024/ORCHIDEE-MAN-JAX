@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+Latest: `shared_split_macro_packed_screen_20260925.md` records completed
+99429 and independent FP64 output localization; candidate is closer at both
+strict-gate failures and full helper gradients pass. Real daily objective
+admission is next; no complete candidate training evidence yet.
+`shared_backbone_projection_reuse_20260925.md` records99428 one-block
+projection/formula agreement, leaving full8-block gradient differences open.
+These findings supersede pending-localization language in older snapshots.
+
 `research/daily_coarse_graining/shared_backbone_projection_reuse_20260925.md`
 records free96055's completed scalar screen: helper1.914x faster but numerical
 parity fails; independent localization pending, micro4 not reached. It is

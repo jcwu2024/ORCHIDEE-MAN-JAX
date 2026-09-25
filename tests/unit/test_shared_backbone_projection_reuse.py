@@ -12,6 +12,7 @@ from research.daily_coarse_graining.daily_operator.shared_backbone_projection_re
 )
 from research.daily_coarse_graining.daily_operator.shared_transformer import SharedTransformerConfig, _run_blocks
 from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import _residual_block_parameters
+from scripts.hpc.diagnose_shared_backbone_projection_reuse import project_oracle64
 
 
 @pytest.mark.parametrize("batch", [None, 4])
@@ -74,3 +75,25 @@ def test_common_source_projection_rejects_mismatched_mask():
             (),
             config,
         )
+
+
+def test_projection_oracle_uses_float64_arithmetic_from_fp32_inputs():
+    source = jnp.asarray([[0.1, -0.2], [0.3, 0.4]], dtype=jnp.float32)
+    axis = jnp.asarray([[[0.5, -0.6]], [[0.7, 0.8]]], dtype=jnp.float32)
+    key = jnp.asarray([[0.9, -1.1], [1.3, 1.5]], dtype=jnp.float32)
+    value = jnp.asarray([[-0.7, 0.2], [0.4, 1.2]], dtype=jnp.float32)
+    attention = {
+        "key": {"kernel": key, "bias": jnp.asarray([0.03, -0.04], dtype=jnp.float32)},
+        "value": {"kernel": value, "bias": jnp.asarray([-0.05, 0.06], dtype=jnp.float32)},
+    }
+    bank = np.concatenate((np.broadcast_to(np.asarray(source), (2, 2, 2)), np.asarray(axis)), axis=1)
+    with jax.enable_x64():
+        full = project_oracle64(attention, source, axis, split=False)
+        split = project_oracle64(attention, source, axis, split=True)
+    for projection, expected in zip(full, (attention["key"], attention["value"]), strict=True):
+        direct = bank.astype(np.float64) @ np.asarray(expected["kernel"], dtype=np.float64)
+        direct += np.asarray(expected["bias"], dtype=np.float64)
+        assert projection.dtype == jnp.float64
+        np.testing.assert_allclose(projection, direct, rtol=0, atol=1e-14)
+    for actual, expected in zip(split, full, strict=True):
+        np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-14)

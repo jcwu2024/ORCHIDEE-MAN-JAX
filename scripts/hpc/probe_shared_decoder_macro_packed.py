@@ -470,6 +470,59 @@ def compare(actual, expected, *, rtol=1e-5, atol=1e-6):
     return {"passed": failed == 0, "coordinates": coordinates, "failed": failed, "max_abs": maximum, "rtol": rtol, "atol": atol}
 
 
+def output_discrepancies(actual, expected, specs, *, layout=None, limit=8):
+    """Locate failing output coordinates without changing the comparison gate."""
+    actual, expected = np.asarray(actual), np.asarray(expected)
+    if actual.shape != expected.shape or actual.ndim not in (1, 2):
+        raise ValueError("output comparison requires equal [rows] or [batch, rows] shapes")
+    if actual.shape[-1] != sum(item[1] for item in specs):
+        raise ValueError("output rows do not match declared field layout")
+    if actual.ndim == 1:
+        actual, expected = actual[None, :], expected[None, :]
+    boundaries = np.cumsum([item[1] for item in specs])
+    failed = np.argwhere(~np.isclose(actual, expected, rtol=1e-5, atol=1e-6))
+    rows = []
+    for batch_index, output_index in failed[:limit]:
+        field_index = int(np.searchsorted(boundaries, output_index, side="right"))
+        offset = int(boundaries[field_index - 1]) if field_index else 0
+        got, want = float(actual[batch_index, output_index]), float(expected[batch_index, output_index])
+        rows.append({
+            "batch_index": int(batch_index), "output_index": int(output_index),
+            "field_index": field_index, "field_row": int(output_index) - offset,
+            "expert_index": int(specs[field_index][0]),
+            "field_name": None if layout is None else layout["fields"][field_index]["field_name"],
+            "candidate": got, "reference": want, "absolute_difference": abs(got - want),
+            "allowed_absolute_difference": 1e-6 + 1e-5 * abs(want),
+        })
+    return {"failed": len(failed), "reported": len(rows), "coordinates": rows}
+
+
+def evaluate_output_oracle(module_path, details, shared, payload, masks, config, microbatch):
+    """Independent high-precision checks for only the bounded failing coordinates."""
+    spec = importlib.util.spec_from_file_location("shared_decoder_roundoff_oracle", module_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"cannot load output oracle: {module_path}")
+    oracle = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(oracle)
+    rows = []
+    for coordinate in details["coordinates"]:
+        sample = payload if microbatch == 1 else jax.tree_util.tree_map(
+            lambda value: value[coordinate["batch_index"]], payload,
+        )
+        result = oracle.coordinate_oracle(
+            shared, sample, masks[coordinate["field_index"]],
+            coordinate["field_index"], coordinate["field_row"], coordinate["expert_index"],
+            heads=config.resolved_decoder_attention_heads, epsilon=config.normalization_epsilon,
+        )
+        value = float(result["output"])
+        rows.append({
+            **coordinate, "oracle": result,
+            "candidate_absolute_error_to_oracle": abs(coordinate["candidate"] - value),
+            "reference_absolute_error_to_oracle": abs(coordinate["reference"] - value),
+        })
+    return rows
+
+
 def run(args, decoder):
     if args.width <= 0 or args.width % 8 or args.repeats <= 0:
         raise ValueError("width must be divisible by eight and repeats positive")
@@ -568,10 +621,12 @@ def run(args, decoder):
                 return jnp.mean(losses), outputs
 
         function = jax.jit(jax.value_and_grad(objective, argnums=(0, 1), has_aux=True))
-        save(f"{mode}_trace_lower_compile")
+        save(f"{mode}_trace_lower")
         start = time.perf_counter()
         lowered = function.lower(shared, payload)
         trace_lower_seconds = time.perf_counter() - start
+        report["variants"][mode] = {"trace_and_lower_seconds": trace_lower_seconds}
+        save(f"{mode}_compile")
         start = time.perf_counter()
         executable = lowered.compile()
         compile_seconds = time.perf_counter() - start
@@ -598,10 +653,26 @@ def run(args, decoder):
             jax.block_until_ready(current)
             timings.append((time.perf_counter() - start) * 1000.0)
         row["median_warm_ms"] = float(np.median(timings))
+        # Preserve cheap forward evidence even if the numerical gate fails.
+        output_artifact = args.output.with_suffix(f".{mode}.outputs.npz")
+        np.savez(output_artifact, candidate=np.asarray(result[0][1]),
+                 reference=np.asarray(reference[0][1]),
+                 candidate_loss=np.asarray(result[0][0]), reference_loss=np.asarray(reference[0][0]))
+        row["output_artifact"] = str(output_artifact)
         report["comparison"][mode] = {
             "loss_output": compare(result[0], reference[0]),
+            "loss": compare(result[0][0], reference[0][0]),
+            "output": compare(result[0][1], reference[0][1]),
             "parameter_payload_gradients": compare(result[1], reference[1]),
         }
+        details = output_discrepancies(result[0][1], reference[0][1], specs, layout=layout)
+        report.setdefault("output_discrepancies", {})[mode] = details
+        oracle_file = getattr(args, "roundoff_oracle_module_file", None)
+        if oracle_file is not None and details["coordinates"]:
+            save(f"{mode}_independent_output_oracle")
+            report.setdefault("output_oracle", {})[mode] = evaluate_output_oracle(
+                oracle_file, details, shared, payload, masks, config, args.microbatch,
+            )
         if not all(item["passed"] for item in report["comparison"][mode].values()):
             report["status"] = "numerical_rejection"
             save(f"{mode}_numerical_rejection")
@@ -622,6 +693,7 @@ def main():
     parser.add_argument("--reference-fields-per-block", type=int, default=8)
     parser.add_argument("--reference-only", action="store_true")
     parser.add_argument("--candidate-module-file", type=Path)
+    parser.add_argument("--roundoff-oracle-module-file", type=Path)
     parser.add_argument("--export-layout-only", type=Path)
     parser.add_argument("--layout-metadata-file", type=Path)
     parser.add_argument(

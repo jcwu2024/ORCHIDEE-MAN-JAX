@@ -1,5 +1,47 @@
 # Cross-expert non-GPP decoder macro-row screen
 
+## Independent output diagnosis and next gate
+
+Free99429 completed the saved-reference follow-up. Expert128 micro4 again
+takes about276.3ms, with about107s backend compilation. All24,108,801 helper
+parameter/input gradient coordinates pass the unchanged1e-5/1e-6 gate.
+Two raw-output coordinates fail that comparison; the old failed report is
+preserved and the tolerance is unchanged. Independent NumPy FP64 evaluation
+using the exact FP32 inputs/weights gives:
+
+| Batch / field / row | Candidate | Original FP32 reference | FP64 oracle | Candidate / reference absolute error |
+| --- | ---: | ---: | ---: | ---: |
+| 0 / inventory.carbon.DOC.incoming_amount / 165 | -0.007913798093795776 | -0.007915042340755463 | -0.007914359889860924 | 5.618e-7 / 6.825e-7 |
+| 1 / typed.ok_leak.doc_flood_gross_decomposition / 295 | -0.007408492267131805 | -0.0074098557233810425 | -0.007408622143096122 | 1.299e-7 / 1.234e-6 |
+
+These are raw neural outputs, not negative physical carbon stocks. Candidate
+is closer to the independent oracle at both coordinates. The synthetic
+old-FP32 output comparison therefore does not identify a mathematical defect
+at these locations. It also does not certify a real physical loss or rollout.
+Keep the strict comparison result visible and proceed to a separate actual
+daily micro4 objective admission: canonical real-input assembly, same fresh
+weights/data/loss, original GPP/backbone, full gradients and hard-count checks,
+then warm timing/memory. No retained update and no mixed candidate claim from
+candidate daily plus original recurrent executables. Only a successful real
+daily test justifies later T7/T30 and complete mixed-update performance work.
+
+Artifacts: `outputs/shared-macro-roundoff-20260925-micro4.json` locally and
+the matching remote JSON/log plus `.expert128.outputs.npz` under
+`runtime/outputs/diagnostics`. Oracle implementation has a tiny independent
+FP64 test across46 active/masked/local-zero coordinates. Previous sections
+are chronological snapshots, not the current execution gate.
+
+Candidate96056 completed (exit1, numerical gate): expert128 micro4 native
+forward/backward276.315ms, trace/lower16.172s, backend compile108.465s,
+compiler temporary storage9,065,221,136bytes. All24,108,801 parameter/input
+gradient coordinates pass unchanged rtol1e-5/atol1e-6, maximum absolute
+difference8.94e-8. One of34,193 combined loss/output coordinates fails,
+maximum absolute difference1.669e-6. The original report did not isolate its
+field/value, so do not infer a model bug or harmless rounding from this count.
+Next replay once with saved-reference reuse and a bounded output-coordinate
+report/independent FP64 oracle; preserve the forward evidence for later reuse.
+No full-model speedup or production admission follows from this helper time.
+
 Latest17:03CST: both reference-only probes completed/exit0 with20groups each.
 Scalar trace/lower177.58s plus compile679.88s; micro4 205.26s plus680.94s.
 Consolidated reference artifacts35,142,067/96,732,246bytes. These preparation
