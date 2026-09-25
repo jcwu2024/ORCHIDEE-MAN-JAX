@@ -19,11 +19,22 @@ Its `expert_decode_fields` alternative packs within each expert and reuses
 common family/process projection caches through the production helper.
 Tiny scalar/micro4 output/full-gradient checks and6tests pass; actual V100
 throughput is pending. The bounded launcher compares packed128 and expert128.
+The probe now builds its correctness reference in bounded native-AD field
+groups, using a global objective denominator and summing shared-parameter/input
+gradients. Four additional tests cover scalar/micro4 partition parity and
+interrupted checkpoint preservation. `--reference-only`,
+`--reference-fields-per-block` and `--resume-reference` preserve completed
+pieces in one consolidated artifact; modular timings are not a production
+performance baseline. The launcher supports isolated OVERLAY and forwards
+additional arguments after its target-shell-checked `--dry-run` branch.
 `job_shared_serialized_dual.sh` prepares a30min/2GPU allocated-node replay,
 with short filesystem reads before startup and actual Slurm GPU selectors;
 job15386166 consumed the declared2.48yuan approval and timed out in startup.
 It is not standing approval for another submission.
 These are diagnostic candidates, not enabled production execution.
+
+Compact replay80665 has completed full changing-update/reference comparisons
+and matched32/64 timing; see shared_split_dual_compact_results_20260925.md.
 
 `shared_decoder_carbon_group.py` and `probe_shared_decoder_carbon_group.py`
 are diagnostic five-field448-coordinate decoder scheduling experiments.

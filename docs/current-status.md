@@ -13,6 +13,29 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 16:41CST: partitioned reference implementation passes10focused
+tests, tiny CLI save/resume and target-shell dry-run. Free scalar/micro4
+screens83546/83547 now running,20min each, stages saved before each group's
+lower/compile and results retained between groups. No candidate timing yet.
+Parallel diagnostic implementation targets repeated backbone source K/V;
+parameter capacity, masks and native gradients remain unchanged.
+
+September25 16:37CST: compact dual80665 completed/exit0. Same-work daily32
+serial14.851s versus dual11.193s (1.327x); daily64 serial20.391s versus
+dual11.336s (1.799x). Full gradient/parameter/AdamW and previous-reference
+checks pass, two changing updates. No scientific acceptance or10x result.
+Graph-ready748.5s includes duplicate serial/dual loading; deserialization has
+substantial CPU cost. See shared_split_dual_compact_results_20260925.md and
+shared_training_tenfold_budget_20260925.md for limits and next execution work.
+
+September25 16:17CST: user prioritizes order-of-magnitude training throughput,
+not just modest helper/startup improvement. Feasibility remains unproven.
+CPU input preparation98568 passed,201.4s,one50MiB-scale bundle for742/275.
+Macro485/486 both timed out124 compiling reference64 before candidate testing.
+Free compact dual80665 began16:13:54,30min bound, loading existing binaries
+without the full bootstrap. Local work now covers a same-workload10x budget
+and bounded reference decomposition. No production architecture/loss change.
+
 September25 15:49CST: compact replay path implemented;10focused local tests
 and Ruff pass, CPU/GPU target-shell dry-runs pass. CPU preparation98568 began
 15:48:44 on test02,30min limit; prepares one consolidated two-artifact bundle

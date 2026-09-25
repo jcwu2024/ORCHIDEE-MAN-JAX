@@ -1,10 +1,36 @@
 # Cross-expert non-GPP decoder macro-row screen
 
+Latest16:41CST: partitioned native-AD reference implemented and checked locally:
+four new tests and six existing decoder tests pass, Ruff/compile checks clean,
+and a tiny CLI reference-only/save/resume smoke passes. Fields from expert5
+appear across partitions in scalar/micro4 parity tests. The objective uses
+global-row normalization and sums all native shared-parameter/input gradients.
+Completed pieces are saved atomically in one artifact; trace/lower and backend
+compile are reported separately, with a stage saved before each operation.
+Reference timings must not be used as the original monolithic baseline.
+
+Free scalar/micro4 reference-only probes83546/83547 began16:41:11 on gln01
+GPUs0/1, each20min ceiling; both GPUs empty at dispatch. Isolated overlay
+`runtime/transfer/shared-macro-partitioned-20260925`; report/log/artifact stem
+`runtime/outputs/diagnostics/shared-macro-partitioned-20260925-micro{1,4}`.
+Shell syntax and actual target-shell argument expansion pass. These prepare
+the correctness oracle only; candidate speed measurement follows a completed
+reference. No whole-model compile, paid submission or scientific training.
+
 Status: local scalar and micro4 CPU numerical probes pass, 2026-09-25.
 This is an unpromoted diagnostic fragment. The accepted decoder, model
 parameters, training runner, masks, outputs and loss are unchanged. No
 successful deployed GPU or full-model compile was run. The first actual-layout
 GPU attempts below stopped before compilation because of filesystem waiting.
+
+Completed: both resumed probes485/486 exited124 at20minutes during
+`reference64_trace_lower_compile`. Micro4 emitted XLA's slow-compilation alarm.
+Neither saved a reference result nor executed a candidate; no GPU speed or
+numerical candidate verdict. Do not repeat this monolithic reference compile.
+Next construct the same synthetic objective's reference outputs/native
+gradients in bounded independent pieces, preserving summed shared-parameter
+contributions. Such modular-oracle timing is not the original monolithic
+performance reference and must not inflate a candidate speedup claim.
 
 September25 15:36:23CST: resumed free scalar/micro4 screens485/486 on GPUs0/1,
 each20min bound, after a bounded JAX import/CPU-device check completed. They

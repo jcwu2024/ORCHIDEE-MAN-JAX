@@ -235,8 +235,12 @@ def fixture(width, *, seed=20260925, layout_metadata=None):
 
 
 def prepare_fields(shared, payload, masks, *, specs=FIELD_SPECS):
+    used_experts = tuple(sorted({item[0] for item in specs}))
     expert_projections = []
     for expert in range(EXPERT_COUNT):
+        if expert not in used_experts:
+            expert_projections.append(None)
+            continue
         blocks = []
         for block in shared["coordinate_blocks"]:
             family_key, family_value = _project_key_value(block["attention"], payload["family"][expert])
@@ -279,6 +283,181 @@ def prepare_fields(shared, payload, masks, *, specs=FIELD_SPECS):
     return tuple(fields), tuple(expert_projections)
 
 
+def _reference_groups(specs, fields_per_block):
+    if fields_per_block <= 0:
+        raise ValueError("reference fields per block must be positive")
+    return tuple(
+        tuple(range(start, min(start + fields_per_block, len(specs))))
+        for start in range(0, len(specs), fields_per_block)
+    )
+
+
+def _reference_piece(parameters, inputs, *, masks, specs, indices, config, decoder,
+                    output_offset, total_rows, microbatch):
+    piece_specs = tuple(specs[index] for index in indices)
+    piece_masks = tuple(masks[index] for index in indices)
+    piece_inputs = dict(inputs)
+    piece_inputs["fields"] = tuple(inputs["fields"][index] for index in indices)
+
+    def one(sample):
+        fields, _ = prepare_fields(parameters, sample, piece_masks, specs=piece_specs)
+        values = decoder.reference_decode_fields(parameters, fields, config)
+        outputs = jnp.concatenate(values)
+        target = jnp.sin(
+            jnp.arange(output_offset, output_offset + outputs.size, dtype=jnp.float32) * 0.13
+        )
+        # Each piece uses the full objective denominator; piece losses therefore add exactly.
+        return jnp.sum((outputs - target) ** 2) / total_rows, outputs
+
+    if microbatch == 1:
+        return one(piece_inputs)
+    losses, outputs = jax.vmap(one)(piece_inputs)
+    return jnp.mean(losses), outputs
+
+
+def _tree_add(left, right):
+    return jax.tree_util.tree_map(lambda a, b: a + b, left, right)
+
+
+def _write_reference_artifact(path, state):
+    temporary = path.with_name(path.name + ".tmp")
+    with temporary.open("wb") as stream:
+        pickle.dump(state, stream, protocol=pickle.HIGHEST_PROTOCOL)
+    os.replace(temporary, path)
+
+
+def _build_modular_reference(args, decoder, shared, payload, masks, specs, config,
+                             identity, reference_artifact, report, save):
+    fields_per_block = getattr(args, "reference_fields_per_block", 8)
+    groups = _reference_groups(specs, fields_per_block)
+    state = {"identity": identity, "completed_groups": 0, "outputs": [],
+             "loss": 0.0, "parameter_gradients": None, "input_gradients": None,
+             "group_metrics": []}
+    if args.resume_reference:
+        with reference_artifact.open("rb") as stream:
+            saved = pickle.load(stream)
+        if saved.get("identity") != identity:
+            raise ValueError("reference artifact identity differs from requested probe")
+        if "result" in saved:
+            report["variants"]["reference64"] = {"status": "loaded_from_artifact"}
+            save("reference64_restored")
+            return saved["result"]
+        state.update(saved)
+
+    total_rows = sum(spec[1] for spec in specs)
+    output_offset = 0
+    group_rows = state["group_metrics"]
+    trace_and_lower_seconds = sum(row["trace_and_lower_seconds"] for row in group_rows)
+    compile_seconds_total = sum(row["compile_seconds"] for row in group_rows)
+    first_execution_seconds_total = sum(row["first_execution_seconds"] for row in group_rows)
+    for group_index, indices in enumerate(groups):
+        group_size = sum(specs[index][1] for index in indices)
+        if group_index < state["completed_groups"]:
+            output_offset += group_size
+            continue
+        def objective(p, x):
+            return _reference_piece(
+                p, x, masks=masks, specs=specs, indices=indices, config=config,
+                decoder=decoder, output_offset=output_offset, total_rows=total_rows,
+                microbatch=args.microbatch,
+            )
+        function = jax.jit(jax.value_and_grad(objective, argnums=(0, 1), has_aux=True))
+        report["variants"]["reference64"] = {
+            "status": "trace_and_lower_in_progress", "group_index": group_index,
+            "group_count": len(groups), "completed_groups": state["completed_groups"],
+            "timing_scope": "modular reference only; not a monolithic-reference comparison",
+        }
+        save(f"reference64_group_{group_index}_trace_lower")
+        start = time.perf_counter()
+        lowered = function.lower(shared, payload)
+        trace_and_lower_seconds_for_group = time.perf_counter() - start
+        report["variants"]["reference64"] = {
+            "status": "compile_in_progress", "group_index": group_index,
+            "group_count": len(groups), "completed_groups": state["completed_groups"],
+            "trace_and_lower_seconds": trace_and_lower_seconds_for_group,
+            "timing_scope": "modular reference only; not a monolithic-reference comparison",
+        }
+        save(f"reference64_group_{group_index}_compile")
+        start = time.perf_counter()
+        executable = lowered.compile()
+        compile_seconds = time.perf_counter() - start
+        trace_and_lower_seconds += trace_and_lower_seconds_for_group
+        compile_seconds_total += compile_seconds
+        memory = executable.memory_analysis()
+        if memory.temp_size_in_bytes > args.max_compiler_temp_gib * (1024**3):
+            report["status"] = "resource_limited"
+            report["variants"]["reference64"] = {
+                "status": "resource_limited", "group_index": group_index,
+                "compiler_temporary_bytes": memory.temp_size_in_bytes,
+            }
+            save(f"reference64_group_{group_index}_resource_limited")
+            return None
+        start = time.perf_counter()
+        result = executable(shared, payload)
+        jax.block_until_ready(result)
+        first_execution_seconds = time.perf_counter() - start
+        first_execution_seconds_total += first_execution_seconds
+        (loss, outputs), (parameter_gradients, input_gradients) = result
+        state["outputs"].append(jax.device_get(outputs))
+        state["loss"] = state["loss"] + jax.device_get(loss)
+        state["parameter_gradients"] = (
+            jax.device_get(parameter_gradients) if state["parameter_gradients"] is None
+            else _tree_add(state["parameter_gradients"], jax.device_get(parameter_gradients))
+        )
+        state["input_gradients"] = (
+            jax.device_get(input_gradients) if state["input_gradients"] is None
+            else _tree_add(state["input_gradients"], jax.device_get(input_gradients))
+        )
+        state["completed_groups"] = group_index + 1
+        group_rows.append({
+            "group_index": group_index, "field_start": indices[0],
+            "field_stop": indices[-1] + 1, "fields": len(indices),
+            "rows": group_size,
+            "trace_and_lower_seconds": trace_and_lower_seconds_for_group,
+            "compile_seconds": compile_seconds,
+            "first_execution_seconds": first_execution_seconds,
+            "compiler_temporary_bytes": memory.temp_size_in_bytes,
+        })
+        state["group_metrics"] = group_rows
+        checkpoint = dict(state)
+        reference_artifact.parent.mkdir(parents=True, exist_ok=True)
+        _write_reference_artifact(reference_artifact, checkpoint)
+        report["variants"]["reference64"] = {
+            "status": "modular_reference_in_progress",
+            "completed_groups": state["completed_groups"],
+            "group_count": len(groups), "fields_per_group": fields_per_block,
+            "group_metrics": group_rows,
+            "trace_and_lower_seconds": trace_and_lower_seconds,
+            "compile_seconds": compile_seconds_total,
+            "first_execution_seconds": first_execution_seconds_total,
+            "timing_scope": "modular reference only; not a monolithic-reference comparison",
+            "artifact_bytes": reference_artifact.stat().st_size,
+        }
+        save(f"reference64_group_{group_index}_complete")
+        output_offset += group_size
+
+    outputs = jnp.concatenate(tuple(jnp.asarray(item) for item in state["outputs"]), axis=-1)
+    result = (
+        (jnp.asarray(state["loss"]), outputs),
+        (state["parameter_gradients"], state["input_gradients"]),
+    )
+    state["result"] = result
+    state["status"] = "complete"
+    reference_artifact.parent.mkdir(parents=True, exist_ok=True)
+    _write_reference_artifact(reference_artifact, state)
+    report["variants"]["reference64"] = {
+        "status": "modular_reference_complete", "group_count": len(groups),
+        "fields_per_group": fields_per_block, "group_metrics": group_rows,
+        "trace_and_lower_seconds": trace_and_lower_seconds,
+        "compile_seconds": compile_seconds_total,
+        "first_execution_seconds": first_execution_seconds_total,
+        "timing_scope": "modular reference only; not a monolithic-reference comparison",
+        "artifact_bytes": reference_artifact.stat().st_size,
+    }
+    save("reference64_complete")
+    return result
+
+
 def compare(actual, expected, *, rtol=1e-5, atol=1e-6):
     failed = coordinates = 0
     maximum = 0.0
@@ -306,12 +485,13 @@ def run(args, decoder):
         )
     )
     variants = args.variants or (ACTUAL_VARIANTS[1:] if layout is not None else VARIANTS[1:])
-    modes = ("reference64",) + tuple(variants)
+    modes = tuple(variants)
     reference_artifact = args.reference_artifact or args.output.with_suffix(".reference.pkl")
     identity = {"width": args.width, "microbatch": args.microbatch,
-                "layout_sha256": _layout_digest(layout) if layout is not None else None}
-    if args.resume_reference and layout is None:
-        raise ValueError("reference resume requires actual layout metadata")
+                "layout_sha256": _layout_digest(layout) if layout is not None else None,
+                "fixture_seed": 20260925,
+                "reference_fields_per_block": getattr(args, "reference_fields_per_block", 8),
+                "reference_method": "field_group_sum_global_denominator_v1"}
     shared, payload, masks = fixture(args.width, layout_metadata=layout)
     if args.microbatch == 4:
         samples = [payload]
@@ -340,7 +520,7 @@ def run(args, decoder):
         "field_specs": specs,
         "layout_sha256": identity["layout_sha256"],
         "layout_metadata_file": str(args.layout_metadata_file) if layout is not None else None,
-        "reference_artifact": str(reference_artifact) if layout is not None else None,
+        "reference_artifact": str(reference_artifact),
         "variants": {},
         "comparison": {},
         "retained_updates": 0,
@@ -353,21 +533,20 @@ def run(args, decoder):
         args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         print(stage, flush=True)
 
-    reference = None
-    if args.resume_reference:
-        with reference_artifact.open("rb") as stream:
-            saved = pickle.load(stream)
-        if saved.get("identity") != identity:
-            raise ValueError("reference artifact identity differs from requested probe")
-        reference = saved["result"]
-        report["variants"]["reference64"] = {"status": "loaded_from_artifact"}
-        save("reference64_restored")
-    for mode in modes if reference is None else modes[1:]:
+    reference = _build_modular_reference(
+        args, decoder, shared, payload, masks, specs, config, identity,
+        reference_artifact, report, save,
+    )
+    if reference is None:
+        return report
+    if getattr(args, "reference_only", False):
+        report["status"] = "passed"
+        save("reference_only_complete")
+        return report
+    for mode in modes:
         def one(parameters, inputs):
             fields, projections = prepare_fields(parameters, inputs, masks, specs=specs)
-            if mode == "reference64":
-                values = decoder.reference_decode_fields(parameters, fields, config)
-            elif mode.startswith("packed"):
+            if mode.startswith("packed"):
                 values = decoder.packed_decode_fields(
                     parameters, fields, experts, projections, config,
                     chunk_size=int(mode.removeprefix("packed")),
@@ -390,18 +569,16 @@ def run(args, decoder):
 
         function = jax.jit(jax.value_and_grad(objective, argnums=(0, 1), has_aux=True))
         save(f"{mode}_trace_lower_compile")
-        equations = len(jax.make_jaxpr(lambda p, x: objective(p, x)[0])(shared, payload).jaxpr.eqns)
         start = time.perf_counter()
         lowered = function.lower(shared, payload)
-        lower_seconds = time.perf_counter() - start
+        trace_lower_seconds = time.perf_counter() - start
         start = time.perf_counter()
         executable = lowered.compile()
         compile_seconds = time.perf_counter() - start
         memory = executable.memory_analysis()
         row = {
-            "primal_jaxpr_equations": equations,
-            "lower_seconds": lower_seconds,
-            "compile_or_cache_load_seconds": compile_seconds,
+            "trace_and_lower_seconds": trace_lower_seconds,
+            "compile_seconds": compile_seconds,
             "compiler_temporary_bytes": memory.temp_size_in_bytes,
             "compiler_argument_bytes": memory.argument_size_in_bytes,
             "compiler_output_bytes": memory.output_size_in_bytes,
@@ -421,23 +598,14 @@ def run(args, decoder):
             jax.block_until_ready(current)
             timings.append((time.perf_counter() - start) * 1000.0)
         row["median_warm_ms"] = float(np.median(timings))
-        if reference is None:
-            reference = result
-            if layout is not None:
-                reference_artifact.parent.mkdir(parents=True, exist_ok=True)
-                with reference_artifact.open("wb") as stream:
-                    pickle.dump({"identity": identity, "result": jax.device_get(result)}, stream,
-                                protocol=pickle.HIGHEST_PROTOCOL)
-                row["reference_artifact_bytes"] = reference_artifact.stat().st_size
-        else:
-            report["comparison"][mode] = {
-                "loss_output": compare(result[0], reference[0]),
-                "parameter_payload_gradients": compare(result[1], reference[1]),
-            }
-            if not all(item["passed"] for item in report["comparison"][mode].values()):
-                report["status"] = "numerical_rejection"
-                save(f"{mode}_numerical_rejection")
-                continue
+        report["comparison"][mode] = {
+            "loss_output": compare(result[0], reference[0]),
+            "parameter_payload_gradients": compare(result[1], reference[1]),
+        }
+        if not all(item["passed"] for item in report["comparison"][mode].values()):
+            report["status"] = "numerical_rejection"
+            save(f"{mode}_numerical_rejection")
+            continue
         save(f"{mode}_complete")
     if report["status"] == "running":
         report["status"] = "passed"
@@ -451,6 +619,8 @@ def main():
     parser.add_argument("--microbatch", type=int, choices=(1, 4), default=1)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--max-compiler-temp-gib", type=float, default=4.0)
+    parser.add_argument("--reference-fields-per-block", type=int, default=8)
+    parser.add_argument("--reference-only", action="store_true")
     parser.add_argument("--candidate-module-file", type=Path)
     parser.add_argument("--export-layout-only", type=Path)
     parser.add_argument("--layout-metadata-file", type=Path)

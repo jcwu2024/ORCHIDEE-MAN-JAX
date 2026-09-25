@@ -3,7 +3,9 @@
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT="$ROOT/runtime/checkouts/shared-split-width-v1"
-OVERLAY="$ROOT/runtime/transfer"
+OVERLAY=${OVERLAY:-"$ROOT/runtime/transfer"}
+DRY_RUN=0
+if [[ ${1:-} == --dry-run ]]; then DRY_RUN=1; shift; fi
 MICROBATCH=${MICROBATCH:-1}
 GPU_INDEX=${GPU_INDEX:-0}
 case "$MICROBATCH" in 1|4) ;; *) exit 2 ;; esac
@@ -25,8 +27,8 @@ COMMAND=(timeout --signal=TERM --kill-after=30s 20m env -u LD_LIBRARY_PATH
   --layout-metadata-file "$OVERLAY/shared-decoder-macro-layout-20260925.json"
   --require-gpu --width 384 --repeats 10 --microbatch "$MICROBATCH"
   --max-compiler-temp-gib 20 --variants packed128 expert128
-  --output "$OUTPUT")
-if [[ ${1:-} == --dry-run ]]; then printf '%q ' "${COMMAND[@]}"; printf '\n'; exit 0; fi
+  --output "$OUTPUT" "$@")
+if [[ $DRY_RUN == 1 ]]; then printf '%q ' "${COMMAND[@]}"; printf '\n'; exit 0; fi
 case $(hostname -s) in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac
 trap 'STATUS=$?; echo "run_exit_status=$STATUS"' EXIT
 date --iso-8601=seconds

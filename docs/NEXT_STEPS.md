@@ -8,7 +8,43 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
-Latest15:49CST: compact replay implementation and10focused local tests pass.
+Active16:41CST: free partitioned-reference screens83546/83547 on gln01
+GPUs0/1 (scalar/micro4), each20min maximum, output stem
+`shared-macro-partitioned-20260925-micro{1,4}`. Ten relevant local tests and
+target-shell CLI expansion pass. This is resumable correctness-reference
+preparation, not measured candidate speed. Common-source backbone K/V reuse
+is a parallel local diagnostic assignment; production behavior remains unchanged.
+
+User priority September25: pursue approximately10x complete training throughput,
+with startup and compile improvements tracked separately. This is a target,
+not demonstrated feasibility. Compare the same daily32+T7+T30 work and report
+GPU count/card-hours; changing daily/recurrent sampling ratios is a separate
+method proposal. Do not treat component gains or two-card scaling as10x success.
+Quantify arithmetic, fragmentation and attainable whole-update gains before
+new full-model compilations. Preserve approved architecture/loss/masks/AD.
+
+Latest16:37CST: compact dual80665 PASSED/exit0. Matched daily32+T7+T30:
+serial14.851s/dual11.193s (1.327x; estimated charge+35.4%). Daily64:
+serial20.391s/dual11.336s (1.799x; estimated charge approximately equal).
+Both changing updates and all gradient/parameter/AdamW/reference comparisons
+pass. More daily rows change the sampling mix; neither result is10x.
+Read `research/daily_coarse_graining/shared_split_dual_compact_results_20260925.md`
+and `shared_training_tenfold_budget_20260925.md`. Next prioritize common-source
+backbone K/V reuse and same-expert decoder execution, with bounded native-AD
+reference pieces rather than another monolithic reference compile. Diagnostic
+implementation only; no architecture/capacity/loss change or new paid approval.
+
+Earlier16:17CST: preparation98568 PASSED/exit0,201.4s measured preparation,
+one50MiB-scale bundle for real artifacts742/275. Macro485/486 both exited124
+at20min during reference64 compilation; no numerical reference or candidate
+timing completed. Do not repeat the same monolithic reference test.
+Compact free dual80665 started16:13:54 on gln01,30min limit, both GPUs idle
+at dispatch. It bypassed full bootstrap and is loading saved gradient binaries;
+output `shared-split-dual-compact-20260925.{json,log}`. No paid task.
+Parallel local work: quantify the10x budget and partition the diagnostic
+reference into bounded native-AD pieces; no production math/architecture change.
+
+Earlier15:49CST: compact replay implementation and10focused local tests pass.
 CPU preparation98568 started15:48:44 on test02 with a30min bound, output
 `shared-split-dual-inputs-c599236-preparation.{json,log}` and one consolidated
 `shared-split-dual-inputs-c599236.pkl`. Source/method unchanged c599236;

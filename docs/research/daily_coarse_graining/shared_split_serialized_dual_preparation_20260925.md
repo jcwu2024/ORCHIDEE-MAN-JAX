@@ -1,8 +1,9 @@
 # Saved-Executable Dual-Process Throughput Diagnostic
 
-Status: small deployed GPU worker proof passed; first complete-update attempt
-stopped during filesystem-blocked bootstrap on2026-09-25. No measured
-full-model dual speedup is claimed here.
+Status: compact replay80665 now PASSED/exit0. Full results in
+shared_split_dual_compact_results_20260925.md:14.851->11.193s daily32 and
+20.391->11.336s daily64, with full changing-update/reference parity.
+The preparation and failed-attempt chronology below is historical.
 
 Latest: paid15386166 also timed out124 after28min6s on idle ibc13b03n04,
 with zero updates; daily/T7 binaries loaded, T30 incomplete. See
@@ -11,6 +12,15 @@ Next prepare compact exact replay arguments once on free CPU and reuse the
 declared fresh update0 checkpoint, avoiding full bootstrap on each GPU replay.
 
 ## Compact preparation follow-up
+
+Deployed preparation98568 PASSED/exit0:201.4025s measured preparation,
+130.37CPU-seconds,one~50MiB file, artifacts742/275. Both exact method/source
+validation and actual window preparation completed. Free compact dual80665
+started16:13:54CST on gln01,30min bound, logs/results
+`shared-split-dual-compact-20260925.{log,json}`. The initial stages bypassed
+full runtime bootstrap and loaded daily before proceeding toT7; no complete
+update comparison at this snapshot. GPU0/1 were empty at dispatch; host
+load1.92/11.09/9.72, so report the actual environment with eventual timings.
 
 Implemented in the same diagnostic entry point; production learning and
 gradient math are unchanged. `--prepare-input-bundle --input-bundle PATH`

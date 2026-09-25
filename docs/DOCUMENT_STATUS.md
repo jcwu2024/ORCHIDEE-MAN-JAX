@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+Latest completed performance evidence:
+`research/daily_coarse_graining/shared_split_dual_compact_results_20260925.md`
+supersedes pending full-dual outcomes below: free80665 passed, with1.327x
+same-work daily32 and1.799x daily64 speedups and full update/reference parity.
+`shared_training_tenfold_budget_20260925.md` is an active feasibility/decision
+budget, not measured10x evidence. It distinguishes arithmetic estimates,
+same-method execution, changed sampling, precision and extra-card costs.
+
 Active complete-throughput investigation:
 `research/daily_coarse_graining/shared_split_serialized_dual_preparation_20260925.md`
 defines actual serial/dual32/64 comparison; small deployed worker proof passed,
@@ -24,7 +32,10 @@ Earlier pending-approval and RUNNING notes are historical.
 
 `shared_split_serialized_dual_preparation_20260925.md` now also defines the
 compact CPU input bundle/replay boundary. Implementation passes10local tests;
-real test02 preparation98568 is in progress, not GPU throughput acceptance.
+real test02 preparation98568 passed, followed by the completed80665 comparison.
+The macro-screen note now tracks partitioned native-AD reference preparation:
+10local tests pass; free83546/83547 began16:41CST,20min limits. It is an
+execution diagnostic, not scientific acceptance or production integration.
 
 Latest bounded performance investigation:
 `research/daily_coarse_graining/shared_split_carbon_group_screen_20260925.md`
