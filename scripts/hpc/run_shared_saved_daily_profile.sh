@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT="$ROOT/runtime/checkouts/shared-split-width-v1"
-OVERLAY="$ROOT/runtime/transfer/shared-saved-daily-profile-20260925"
+OVERLAY=${OVERLAY:-"$ROOT/runtime/transfer/shared-saved-daily-profile-20260925"}
 GPU_INDEX=${GPU_INDEX:-1}
 DRY_RUN=0
 if [[ ${1:-} == --dry-run ]]; then DRY_RUN=1; shift; fi

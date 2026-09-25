@@ -55,9 +55,12 @@ def run(args):
         args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         print(f"saved_daily_profile stage={stage} seconds={report['elapsed_seconds']:.1f}", flush=True)
 
+    candidate_name = admission.get("variant", "expert128")
+    if candidate_name not in ("expert128", "expert128+backbone_source_reuse"):
+        raise ValueError(f"unsupported admitted execution variant: {candidate_name}")
     for name, path in (
         ("original", context["daily_executable"]),
-        ("expert128", admission["candidate_executable"]),
+        (candidate_name, admission["candidate_executable"]),
     ):
         emit(f"load_{name}")
         with Path(path).open("rb") as handle:
