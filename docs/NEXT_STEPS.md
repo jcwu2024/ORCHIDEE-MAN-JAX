@@ -8,6 +8,12 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+Latest17:05CST: backbone96055 completed quickly but exited1 on scalar numerical
+parity. Helper27.572->14.406ms; output/parameter/input-gradient differences
+need independent localization, not automatic tolerance relaxation or production
+integration. Saved scalar reference retained; micro4 not run. Decoder96056
+continues after restoring reference, at expert128 trace/lower/compile.
+
 User clarification September25: optimize long-run training throughput, while
 temporarily prioritizing startup/compile fixes that unblock repeated speed
 experiments. Track time-to-valid-measurement (preparation, load/compile,

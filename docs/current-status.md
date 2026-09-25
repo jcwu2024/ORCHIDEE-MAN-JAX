@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 17:05CST: backbone96055 exited1, scalar helper speed27.572->14.406ms
+but output/full-gradient coordinate gates fail (no runtime exception).
+Reference retained; micro4 not reached. Diagnose projection/reduction numerical
+differences before promotion; see shared_backbone_projection_reuse_20260925.md.
+Decoder96056 restored its reference and is compiling expert128. The rapid
+helper result exemplifies the user's experiment-turnaround priority, not10x
+training acceptance.
+
 September25 17:03CST: free reference probes83546/83547 completed20/20 groups,
 exit0. Scalar lower/compile177.58/679.88s, micro4 205.26/680.94s, with
 35.14/96.73MB saved reference artifacts. Those are preparation phase times,

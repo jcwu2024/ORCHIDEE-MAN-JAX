@@ -1,8 +1,22 @@
 # Shared-source backbone projection diagnostic
 
-Status: implemented and locally checked; actual-shape V100 probe running.
+Status: actual-shape scalar V100 screen completed with a numerical gate failure;
+micro4 was not executed and production integration is not admitted.
 This preserves the declared network function and capacity and is not wired
 into the production process head. No formal training or paid submission.
+
+Free96055 exited1 after scalar parity checks. Reference/candidate native
+forward+backward helper medians27.572/14.406ms (1.914x component speedup),
+lower0.769/0.679s, compile8.905/6.598s. Compiler temporary storage315.13/
+257.18MB. This is not a full-update speedup. Both executed, with no runtime
+exception. The loss comparison passes;7/5376 output coordinates,61954/
+56,702,976 parameter-gradient coordinates and7/1,059,840 input-gradient
+coordinates fail the unchanged rtol1e-5/atol1e-6 check. Maximum absolute
+differences are2.265e-6/8.106e-6/2.205e-6 respectively. Do not conclude
+gradient implementation failure, benign roundoff or scientific equivalence
+from these counts alone. Preserve the scalar reference; next localize the
+projection/reduction differences independently before any integration or
+tolerance decision. Original JSON/log and reference pickle remain available.
 
 ## Mechanism and evidence boundary
 
@@ -49,8 +63,8 @@ were empty at dispatch. Report/log stem is
 runtime/outputs/diagnostics/shared-backbone-reuse-20260925. GPU1 runs the
 separate expert128 screen, so host CPU is shared by the two diagnostics.
 
-Next: collect this bounded helper result and require output/
-full-gradient parity plus material measured benefit before integrating it.
+Next: diagnose this numerical discrepancy independently and require output/
+full-gradient evidence plus material measured benefit before integrating it.
 Any full-model integration must compare actual complete updates and retain
 state/parameter gradients and physical checks. A helper pass alone does not
 establish10x throughput, scientific accuracy, or final training admission.

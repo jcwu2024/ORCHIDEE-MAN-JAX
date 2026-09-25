@@ -3,8 +3,8 @@
 Last updated: 2026-09-25.
 
 `research/daily_coarse_graining/shared_backbone_projection_reuse_20260925.md`
-is an implemented, locally checked execution diagnostic; free GPU96055 is
-running from17:03:39CST. It is
+records free96055's completed scalar screen: helper1.914x faster but numerical
+parity fails; independent localization pending, micro4 not reached. It is
 not an architecture change or production performance/scientific acceptance.
 
 Latest completed performance evidence:
