@@ -1,5 +1,32 @@
 # Real daily admission for expert-grouped decoder execution
 
+## Completed real daily result
+
+Free104632 completed0;907.34s main probe. Actual daily micro4 loss, all160
+auxiliary coordinates and all64,884,481 parameter-gradient coordinates pass
+unchanged rtol1e-5/atol1e-6. Every physical hard count is zero. Maximum gradient
+absolute difference2.384e-7; relativeL2 difference3.236e-7.
+
+| Same daily micro4 contribution | Original | Expert128 |
+| --- | ---: | ---: |
+| Median warm forward/reverse | 0.503751s | 0.418954s |
+| Compiler estimated live memory | 10.484GiB | 10.790GiB |
+
+This is1.202x throughput /16.83% less time with2.92% more estimated live
+memory. It is not measured allocator peak, a complete mixed-update speedup,
+or learning/scientific acceptance. Candidate lower114.86s; backend compile
+725.65s. Original deserialization44.49s. Both full results and the candidate
+executable are saved at the report stem with `.reference.pkl`, `.candidate.pkl`
+and `.candidate.executable.pkl`, respectively.
+
+Next address structural repeated backbone source projections and profile the
+two admitted saved binaries to identify remaining device work. The new combined
+candidate must pass the same real loss/physical/full-gradient comparisons;
+the old synthetic eight-block discrepancy is not silently reclassified.
+Reuse context and original reference; no repeat Teacher preparation, no paid
+allocation and no default architecture/loss change. T7/T30 plus complete-update
+checks remain necessary before production promotion. Earlier snapshots follow.
+
 Latest18:26CST: CPU1517 completed0,256.18s. Context is14,465,399bytes and
 passed pickle round-trip plus canonical objective construction. FreeGPU0
 launcher104632 started18:25:25CST on ibc13b02n04 (host load0.00; both GPUs

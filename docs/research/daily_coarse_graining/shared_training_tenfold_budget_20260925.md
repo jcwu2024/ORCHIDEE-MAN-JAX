@@ -1,5 +1,12 @@
 # A tenfold shared-training throughput budget
 
+Latest measured evidence: expert128 actual daily micro4 passes all64.884M
+parameter-gradient coordinates and physical checks, with1.202x admission /
+1.213x saved-binary replay throughput. Device events fall62,617->30,801 while
+matrix/fused work remains substantial; see shared_saved_daily_profile_20260925.md.
+Common-source backbone reuse is the next bounded real-loss diagnostic, not
+an accepted optimization. The10x full-work target below remains unachieved.
+
 Status: decision budget, 2026-09-25. This is not a measured speedup or a
 proposal to change the model, loss, data, optimizer schedule, precision, or
 parameter/state-gradient boundary. The comparison axis is about 10x *warm

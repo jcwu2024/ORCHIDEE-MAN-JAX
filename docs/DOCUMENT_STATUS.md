@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-25.
 
+The real-daily admission note now records104632 PASSED:1.202x warm daily
+micro4 throughput, all64.884M parameter-gradient coordinates/physical checks
+pass, no complete recurrent/optimizer result. Next investigate common-source
+backbone projection execution and saved-binary device profiles. Older pending
+implementation/real-daily language below is superseded by this result.
+
 `research/daily_coarse_graining/shared_expert_real_daily_admission_20260925.md`
 is the current bounded diagnostic plan for actual daily micro4 loss/full
 parameter-gradient/timing admission. Implementation is in progress; helper

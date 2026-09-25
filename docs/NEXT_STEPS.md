@@ -8,6 +8,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 completed104632: real daily expert128 PASSED loss/auxiliary,
+all64,884,481 parameter-gradient coordinates and physical hard counts.
+Median micro4 .503751->.418954s (1.202x), estimated live10.484->10.790GiB.
+Lower114.86s/compile725.65s; both results and candidate binary saved.
+This gain is insufficient for the user's order-of-magnitude goal. Next
+implement a diagnostic real-input backbone source-projection reuse adapter,
+combine with admitted expert128 for bounded actual daily comparison against
+the saved original, and profile saved original/expert binaries without new
+gradient compilation. Prior full8 synthetic discrepancy remains documented;
+new actual loss acceptance must be measured, not assumed. Preserve all model
+capacity/loss/gradients. No new paid allocation. See the real-daily admission
+note for results; T7/T30/full mixed updates remain pending.
+
 September25 18:26CST: CPU preparation1517 passed in256.18s,14,465,399-byte
 context pickle round-trip and canonical objective reconstruction passed.
 Free gln01 GPU0 launcher104632 started18:25:25CST; deployed JAX0.4.38 tiny

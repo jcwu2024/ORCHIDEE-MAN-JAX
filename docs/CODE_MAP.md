@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-25.
 
+`profile_shared_saved_daily.py` loads the admitted original/expert daily
+binaries and one compact context, measures warm replay and exports a device
+trace per variant without compiling a new gradient. Its free-only launcher
+bounds execution to10minutes. `analyze_shared_execution_trace.py` summarizes
+those traces. Actual warm1.213x and event-count evidence are in the saved-daily
+profile note; no complete mixed-update result follows from these traces.
+
 `shared_decoder_expert_execution.py` is an opt-in real-input adapter: canonical
 coordinate assembly and full-shape restoration, unchanged GPP decoder, and
 expert128 execution for non-GPP fields. `probe_shared_expert_real_daily.py`

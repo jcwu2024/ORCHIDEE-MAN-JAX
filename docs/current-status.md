@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25:104632 completed0, actual expert128 daily micro4 admission passed
+all64.884M gradient coordinates, loss/auxiliary and zero physical hard counts.
+Median .503751->.418954s, estimated live10.484->10.790GiB. Lower114.86s,
+compile725.65s, total907.34s. This is bounded1.202x daily throughput, not
+mixed-update or scientific acceptance. Next structural candidate is common
+source projection reuse in the backbone; preserve saved inputs/results/binary.
+
 September25 18:26CST: free CPU preparation completed in256.18s; reusable
 14.47MB context saved and reloaded with canonical objective validation.
 FreeGPU0 launcher104632 began18:25:25CST; tiny deployed runtime check passed
