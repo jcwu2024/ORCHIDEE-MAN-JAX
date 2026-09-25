@@ -1,6 +1,17 @@
 # Code Map
 
-Last updated: 2026-09-25.
+Last updated: 2026-09-26.
+
+`probe_shared_combined_recurrent.py` is a horizon-selective diagnostic for
+the combined decoder/backbone execution. It reuses the compact real-data
+bundle and prepared context, loads only the selected trusted T7/T30 binary,
+saves the original full result before candidate compilation, and compares
+the unchanged shared native-checkpointed objective. It does not implement
+another rollout loss or optimizer. Its `--inspect-only` mode checks prepared
+assets without GPU compilation; `--reference-result` reuses a saved original
+result. The free-only wrapper selects CPU inspection or one GPU with a
+60minute main ceiling. Read shared_combined_recurrent_admission_20260926.md
+for admission scope and historical recurrent compile risks.
 
 `shared_backbone_execution.py` adds an opt-in canonical context assembler
 using common-source K/V reuse. It preserves all context fields and production
