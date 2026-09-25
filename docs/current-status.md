@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26: combined actual daily92971 completed0. Original-vs-candidate
+loss/160auxiliary/all64.884M gradients pass unchanged1e-5/1e-6; all physical
+hard counts0. Median daily micro4 .503751->.381383s(1.321x); estimated live
+10.565GiB, lower115.31s/compile707.67s. Full original/expert128 comparisons
+and candidate executable saved. Local synthetic FP32 discrepancies remain
+explicitly recorded; real daily pass is bounded, not T7/T30/full-update or
+science admission. FreeGPU0 saved-binary matched profile95604 completed0:
+.501539->.374680s(1.339x), candidate reload11.53s. No new gradient compile
+or paid job. Next implement horizon-selective T7/T30 candidate admission.
+
 September25 23:48CST: profile90516 completed without gradient compilation:
 matched warm original/expert128 .504113/.415650s, device events62,617/30,801,
 candidate deserialization11.47s. New combined backbone/decoder real daily

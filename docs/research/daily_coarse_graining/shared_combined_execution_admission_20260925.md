@@ -1,9 +1,58 @@
 # Combined backbone and decoder execution admission
 
-Status: diagnostic implementation, free resources only. The completed
-expert128 real daily result is the predecessor, not scientific model acceptance.
+Status: real daily admission PASSED; free resources only, no scientific model
+acceptance. FreeGPU0 launcher92971 completed with exit0. Same fresh update0,
+TRAIN artifact742 first4daily rows, unchanged canonical daily objective.
 
-FreeGPU0 launcher92971 is running from approximately23:47CST2026-09-25,
+## Completed actual daily result
+
+Loss,160auxiliary coordinates and all64,884,481 parameter-gradient coordinates
+pass unchanged rtol1e-5/atol1e-6 against the saved original. Maximum gradient
+difference2.384185791e-7, relativeL2 3.275725072e-7; all11physical hard counts
+are zero. Against the decoder-only expert128 result, loss/auxiliary are exactly
+equal and all parameter gradients pass (max2.980232239e-8, relativeL2
+7.996956026e-8). The local synthetic FP32 discrepancies below remain recorded;
+this actual-loss pass does not retroactively erase them.
+
+Warm median original0.503750591s, expert128-only0.418953888s, combined
+0.381383050s for daily micro4. Combined versus original is1.320852x throughput,
+24.29%less time; versus expert128-only8.97%less time. These are separate-run
+timings. Compiler estimated live memory is10.565GiB, below the declared24GiB
+bound (original10.484GiB); this is not observed allocator peak. Lowering
+115.31s, backend compilation707.67s, main probe838.56s. Runtime preflight
+took24.49s; the probe timer excludes initial imports/context loading.
+
+Result, full candidate gradient and serialized executable are retained under
+`runtime/outputs/diagnostics/shared-combined-real-daily-20260925` with suffixes
+`.json`, `.candidate.pkl`, `.candidate.executable.pkl`; the local JSON and
+runtime check are in `outputs/`. Saved-reference identity is unchanged.
+No optimizer update, T7/T30 or complete mixed-update speed claim follows yet.
+The gain is real but remains far below the10x research target.
+
+The no-new-compilation matched profile95604 completed0 on freeGPU0 within its
+10minute ceiling, using the saved original and combined executables. Output:
+`runtime/outputs/diagnostics/shared-combined-profile-20260925.{json,log}`.
+The combined profiler variant label and actual target-shell arguments have
+been checked. Both GPUs were idle before launch; no paid task submitted.
+
+Matched warm medians are0.501538822s(original) and0.374680011s(combined):
+1.338579x throughput,25.29%less time. Saved executable reload is45.04s and
+11.53s respectively. Main profiling timer73.87s excludes earlier imports and
+context/checkpoint loading; no new gradient compilation occurred.
+
+Device events drop62,617->30,868, <=10us events55,203->23,401. Instrumented
+device span .519109->.381806s, active union .483892->.363783s, gaps
+.035217->.018024s. Summed matrix kernels .205161->.129780s; fused kernels
+.258038->.211745s. The backbone change cuts matrix work further relative to
+the decoder-only profile. Remaining fused/matrix device work still dominates;
+halving event counts is not a twofold throughput gain. CUPTI per-thread-buffer
+and missing TensorFlow-hook warnings remain; GPU events are present in both
+traces, and unprofiled warm timing is the performance evidence. Summaries are
+local `outputs/shared-combined-profile-{original,candidate}-20260925.summary.json`.
+
+## Prior launch and local evidence
+
+FreeGPU0 launcher92971 started at approximately23:47CST2026-09-25,
 30minute main-probe ceiling after the deployed runtime check. JAX0.4.38 runtime
 check passed in24.49s; original result reuse completed in3.1s and candidate
 lowering began at3.6s. Both GPUs were empty before dispatch. Overlay:

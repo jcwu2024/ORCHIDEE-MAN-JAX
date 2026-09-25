@@ -1,6 +1,13 @@
 # Documentation Status
 
-Last updated: 2026-09-25.
+Last updated: 2026-09-26.
+
+`shared_combined_execution_admission_20260925.md` now records completed92971:
+actual daily loss/auxiliary/all64.884M parameter gradients and physical checks
+pass; combined warm throughput1.321x versus original (separate runs).
+Matched profile95604 also completed0(1.339x, no new compile). The pending task
+is horizon-selective T7/T30 admission, not another Teacher preparation. Earlier
+launch snapshots below are historical. No complete-update or scientific pass.
 
 `shared_saved_daily_profile_20260925.md` records completed90516's warm replay,
 device-event categories and serialized reload evidence. Active bounded plan

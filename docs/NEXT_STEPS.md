@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26: combined backbone-source reuse + expert128 actual daily92971
+completed0. Loss/auxiliary/all64,884,481 gradient coordinates pass unchanged
+tolerance; physical hard counts zero. Micro4 median .503751->.381383s,
+1.321x throughput (separate-run); live estimate10.565GiB, compile707.67s.
+Saved binary/result retained. Matched no-recompile profile95604 completed0:
+.501539->.374680s(1.339x), candidate reload11.53s. Next prepare T7 thenT30 admission
+using saved original evidence/inputs, followed by complete same-work updates.
+No new paid allocation, model acceptance or10x result. Read
+`research/daily_coarse_graining/shared_combined_execution_admission_20260925.md`.
+Earlier running snapshots below are historical.
+
 September25 23:48CST: saved-binary profile90516 completed; warm .504113->
 .415650s and GPU events62,617->30,801. Candidate reload11.47s versus44.45s
 original; no new gradient compilation. Matrix/fused device work still dominates.
