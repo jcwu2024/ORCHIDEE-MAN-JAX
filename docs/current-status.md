@@ -13,6 +13,11 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 18:19:16CST: six local adapter/probe tests passed; free test02
+preparation1517 started. This is one-time context preparation, not training.
+It will precede real daily micro4 comparison against the saved original
+executable. New adapter is diagnostic-only; production defaults unchanged.
+
 September25 17:48CST:99428/99429 completed. Expert128 decoder follow-up
 preserves strict output-gate failure at two raw outputs, while all24.11M
 gradient coordinates pass. Independent FP64 calculation is closer to the

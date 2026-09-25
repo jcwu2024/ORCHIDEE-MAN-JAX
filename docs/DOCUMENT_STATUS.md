@@ -2,6 +2,11 @@
 
 Last updated: 2026-09-25.
 
+`research/daily_coarse_graining/shared_expert_real_daily_admission_20260925.md`
+is the current bounded diagnostic plan for actual daily micro4 loss/full
+parameter-gradient/timing admission. Implementation is in progress; helper
+results alone do not admit recurrent or formal training.
+
 Latest: `shared_split_macro_packed_screen_20260925.md` records completed
 99429 and independent FP64 output localization; candidate is closer at both
 strict-gate failures and full helper gradients pass. Real daily objective

@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+`shared_decoder_expert_execution.py` is an opt-in real-input adapter: canonical
+coordinate assembly and full-shape restoration, unchanged GPP decoder, and
+expert128 execution for non-GPP fields. `probe_shared_expert_real_daily.py`
+prepares a compact head/template/scales context on CPU, then compares the
+actual daily micro4 objective against the saved original gradient executable.
+Its free-only shell wrapper separates preparation from GPU admission. It does
+not run T7/T30, AdamW or scientific training; production defaults are unchanged.
+
 `scripts/hpc/shared_decoder_roundoff_oracle.py` independently evaluates
 selected diagnostic decoder outputs with NumPy FP64. The macro probe saves
 candidate/reference outputs and maps bounded failures to field/batch/row.

@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 18:19:16CST: real daily adapter/probe implemented, six local tests
+pass, both target-shell launch modes checked. Free test02 preparation1517 is
+running with15minute ceiling. Next inspect its context pickle round-trip and
+canonical objective reconstruction, then launch the free GPU daily micro4
+comparison if preparation passes. See
+`research/daily_coarse_graining/shared_expert_real_daily_admission_20260925.md`.
+
 September25 17:48CST: both roundoff diagnoses99428/99429 have ended and both
 free GPUs are idle. Decoder expert128 retains its failed strict old-FP32
 output gate; all24,108,801 gradient coordinates pass. At both failing output
