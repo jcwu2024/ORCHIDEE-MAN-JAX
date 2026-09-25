@@ -40,13 +40,20 @@ def load_evaluators(profile, *, deserialize, memory_sizes, memory_limit_bytes, e
     for name in ("daily", "T7", "T30"):
         emit("load_saved_gradient", component=name)
         began = time.perf_counter()
+        cpu_began = time.process_time()
         path = Path(profile["executables"][name]["executable"])
         with path.open("rb") as handle:
             payload = pickle.load(handle)
         read_seconds = time.perf_counter() - began
+        read_cpu_seconds = time.process_time() - cpu_began
+        emit("deserialize_saved_gradient", component=name,
+             executable_read_seconds=read_seconds,
+             executable_read_cpu_seconds=read_cpu_seconds)
         began = time.perf_counter()
+        cpu_began = time.process_time()
         executable = deserialize(*payload)
         load_seconds = time.perf_counter() - began
+        load_cpu_seconds = time.process_time() - cpu_began
         del payload
         memory = memory_sizes(executable)
         if memory["estimated_live_bytes"] > memory_limit_bytes:
@@ -55,7 +62,9 @@ def load_evaluators(profile, *, deserialize, memory_sizes, memory_limit_bytes, e
         metadata[name] = {
             "source_executable": str(path),
             "read_seconds": read_seconds,
+            "read_cpu_seconds": read_cpu_seconds,
             "deserialize_seconds": load_seconds,
+            "deserialize_cpu_seconds": load_cpu_seconds,
             "memory": memory,
             "cache_policy": "trusted_serialized_executable_no_trace_or_lower",
         }

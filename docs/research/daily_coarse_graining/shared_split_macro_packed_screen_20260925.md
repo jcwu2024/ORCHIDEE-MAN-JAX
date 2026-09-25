@@ -6,6 +6,13 @@ parameters, training runner, masks, outputs and loss are unchanged. No
 successful deployed GPU or full-model compile was run. The first actual-layout
 GPU attempts below stopped before compilation because of filesystem waiting.
 
+September25 15:36:23CST: resumed free scalar/micro4 screens485/486 on GPUs0/1,
+each20min bound, after a bounded JAX import/CPU-device check completed. They
+progressed to `reference64_trace_lower_compile`; Python PIDs610/611. Outputs
+use `shared-split-macro-packed-20260925-micro{1,4}-resume2.{json,log}`.
+The comparison is reference64 versus packed128 and expert128; no speed
+claim until measured results and full output/gradient parity complete.
+
 ## Source-layout scope
 
 `outputs/shared-decoder-packing-audit-20260923.json` records 161 decoder

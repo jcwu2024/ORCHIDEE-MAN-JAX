@@ -4,6 +4,46 @@ Status: small deployed GPU worker proof passed; first complete-update attempt
 stopped during filesystem-blocked bootstrap on2026-09-25. No measured
 full-model dual speedup is claimed here.
 
+Latest: paid15386166 also timed out124 after28min6s on idle ibc13b03n04,
+with zero updates; daily/T7 binaries loaded, T30 incomplete. See
+`shared_split_dual_idle_node_proposal_20260925.md` for measured stage times.
+Next prepare compact exact replay arguments once on free CPU and reuse the
+declared fresh update0 checkpoint, avoiding full bootstrap on each GPU replay.
+
+## Compact preparation follow-up
+
+Implemented in the same diagnostic entry point; production learning and
+gradient math are unchanged. `--prepare-input-bundle --input-bundle PATH`
+runs on free CPU, uses the original declared source/method, validates the two
+existing real TRAIN artifacts742/275, prepares the exact32-row/T7/T30 argument
+trees, and writes one consolidated pickle. It references the original profile's
+fresh update0 checkpoint; it does not regenerate Teacher data or initialize
+another model. A completed matching bundle is reused without rebuilding it.
+
+GPU `--input-bundle PATH` uses those saved pytrees and update0 through the
+existing probe's comparison/timing hooks. It skips the coherent-index scan,
+canonical-example and retained-template/head reconstruction and fresh
+initializer. Two changing updates still compare all gradients, parameters,
+AdamW state and original reference losses/checkpoint;32/64 fixed-weight
+complete timings remain unchanged. The returned diagnostic checkpoint is
+not formal training. CPU-prepared inputs still require deployed GPU parity;
+local tests cannot certify that result.
+
+Ten focused tests pass, including the saved native reverse, changing inputs,
+private worker protocol, and mocked two-payload compact replay/checkpoint.
+Ruff passes. Target-shell CPU and GPU `--dry-run` expansions pass.
+Preparation launcher98568 started15:48:44CST on test02 with a30min limit.
+Files under `runtime/outputs/diagnostics`:
+
+- `shared-split-dual-inputs-c599236-preparation.json` and `.log`.
+- `shared-split-dual-inputs-c599236.pkl` (written only after completion).
+
+Overlay files are isolated under `runtime/transfer/shared-dual-compact-20260925`.
+Launcher variables: `PREPARE_INPUT_BUNDLE=1`, `INPUT_BUNDLE`, `ENTRY_FILE` and
+`OUTPUT`; replay omits preparation mode and retains the physical GPU selectors.
+The source checkout remains c599236. Stage reports now include CPU and wall
+time; saved-executable loads separately record file read and deserialization.
+
 Recovery through cln01 started13:24CST as launcher104560/Python104627,
 report/log `shared-split-serialized-dual-20260925-resume1.{json,log}`.
 Small script reads succeeded, but Python imports and bootstrap still waited

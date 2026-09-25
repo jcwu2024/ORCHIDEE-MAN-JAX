@@ -17,7 +17,14 @@ whole-decoder packing passes tiny native-gradient checks and6tests; actual
 performance pending. Free104560 subsequently timed out124 during bootstrap
 at13:54; confirmed exited13:55, no active job or new update evidence.
 `shared_split_dual_idle_node_proposal_20260925.md` is a
-prepared2.48yuan/30min paid proposal, awaiting explicit approval, not submitted.
+user-approved2.48yuan/30min paid comparison, submitted as15386166 and ended
+14:38:11CST FAILED124 after28min6s. It records startup/deserialization timings
+and the next compact-preparation correction; no complete update was measured.
+Earlier pending-approval and RUNNING notes are historical.
+
+`shared_split_serialized_dual_preparation_20260925.md` now also defines the
+compact CPU input bundle/replay boundary. Implementation passes10local tests;
+real test02 preparation98568 is in progress, not GPU throughput acceptance.
 
 Latest bounded performance investigation:
 `research/daily_coarse_graining/shared_split_carbon_group_screen_20260925.md`

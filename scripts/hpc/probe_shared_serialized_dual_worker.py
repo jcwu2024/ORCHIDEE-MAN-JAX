@@ -42,16 +42,36 @@ def serve(profile_path, memory_limit_bytes):
     evaluators, metadata = {}, {}
     for name in ("T7", "T30"):
         path = Path(profile["executables"][name]["executable"])
+        print(f"recurrent_worker stage=read_saved_gradient component={name}", file=sys.stderr, flush=True)
         began = time.perf_counter()
+        cpu_began = time.process_time()
         with path.open("rb") as handle:
             payload = pickle.load(handle)
+        read_seconds = time.perf_counter() - began
+        read_cpu_seconds = time.process_time() - cpu_began
+        print(f"recurrent_worker stage=deserialize_saved_gradient component={name} "
+              f"read_seconds={read_seconds:.3f} read_cpu_seconds={read_cpu_seconds:.3f}",
+              file=sys.stderr, flush=True)
+        load_began = time.perf_counter()
+        cpu_began = time.process_time()
         executable = deserialize_and_load(*payload)
+        deserialize_seconds = time.perf_counter() - load_began
+        deserialize_cpu_seconds = time.process_time() - cpu_began
+        del payload
         memory = memory_sizes(executable)
         if memory["estimated_live_bytes"] > memory_limit_bytes:
             raise ValueError(f"saved worker {name} executable exceeds memory limit")
         evaluators[int(name[1:])] = executable
         metadata[name] = {"source_executable": str(path), "memory": memory,
-                          "load_seconds": time.perf_counter() - began}
+                          "load_seconds": time.perf_counter() - began,
+                          "read_seconds": read_seconds,
+                          "read_cpu_seconds": read_cpu_seconds,
+                          "deserialize_seconds": deserialize_seconds,
+                          "deserialize_cpu_seconds": deserialize_cpu_seconds}
+        print(f"recurrent_worker stage=saved_gradient_loaded component={name} "
+              f"deserialize_seconds={deserialize_seconds:.3f} "
+              f"deserialize_cpu_seconds={deserialize_cpu_seconds:.3f}",
+              file=sys.stderr, flush=True)
     operations = make_tree_operations(jax, jnp, 32)
     branch = make_recurrent_branch(
         jax=jax, device=device, evaluators=evaluators, operations=operations

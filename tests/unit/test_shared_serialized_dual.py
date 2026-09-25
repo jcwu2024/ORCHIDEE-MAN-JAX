@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import namedtuple
+from contextlib import nullcontext
 from types import SimpleNamespace
 
 import numpy as np
@@ -10,6 +11,8 @@ import pytest
 from scripts.hpc.probe_shared_serialized_dual import (
     RecurrentWorker,
     RemoteDualExecutor,
+    _compact_learning_run,
+    _validate_bundle,
     measure_complete_updates,
     require_distinct_batches,
 )
@@ -29,6 +32,94 @@ def test_real_64_row_batch_requires_two_distinct_full_artifacts():
         require_distinct_batches(jax, (11, 12), left, {**right, "mask": right["mask"][:16]})
     with pytest.raises(ValueError, match="incompatible trees"):
         require_distinct_batches(jax, (11, 12), left, {"features": right["features"]})
+
+
+def test_compact_bundle_requires_exact_reference_identity_and_fresh_checkpoint(tmp_path):
+    checkpoint = tmp_path / "trusted.update-000000.checkpoint.pkl"
+    method = {"training_plan": {"training_artifact_ids": [11, 12, 13]}}
+    reference = {
+        "source_git_head": "original-commit", "method": method,
+        "checkpoints": [{"update": 0, "retained_milestone": True,
+                         "path": str(checkpoint)}],
+    }
+    bundle = {
+        "schema_version": "shared_serialized_dual_inputs_v1",
+        "source_git_head": "original-commit", "profile_sha256": "profile-digest",
+        "method": method, "artifact_ids": (11, 12),
+        "initial_checkpoint": str(checkpoint), "payloads": [object(), object()],
+    }
+    kwargs = dict(profile_sha256="profile-digest", reference=reference,
+                  source_head="original-commit")
+    assert _validate_bundle(bundle, **kwargs) == (11, 12)
+    with pytest.raises(ValueError, match="source/profile/method"):
+        _validate_bundle({**bundle, "profile_sha256": "other"}, **kwargs)
+    with pytest.raises(ValueError, match="declared artifacts"):
+        _validate_bundle({**bundle, "artifact_ids": (11, 11)}, **kwargs)
+    with pytest.raises(ValueError, match="checkpoint differs"):
+        _validate_bundle({**bundle, "initial_checkpoint": str(tmp_path / "other.pkl")}, **kwargs)
+    with pytest.raises(ValueError, match="exactly two prepared payloads"):
+        _validate_bundle({**bundle, "payloads": [object()]}, **kwargs)
+    with pytest.raises(ValueError, match="exactly one retained update-0"):
+        _validate_bundle(bundle, **{**kwargs, "reference": {**reference, "checkpoints": []}})
+
+
+def test_compact_replay_feeds_two_saved_payloads_and_persists_checkpoint(monkeypatch, tmp_path):
+    import jax
+
+    from research.daily_coarse_graining.daily_operator import fresh_start_training
+    from scripts.hpc import run_shared_learning as learning
+    from scripts.hpc import shared_daily_microbatch
+
+    Optimizer = namedtuple("Optimizer", "step")
+    device = SimpleNamespace(platform="gpu", process_index=0, id=0,
+                             memory_stats=lambda: {"peak_bytes_in_use": 17})
+    monkeypatch.setattr(jax, "local_devices", lambda: [device])
+    monkeypatch.setattr(jax, "default_device", lambda *_: nullcontext())
+    monkeypatch.setattr(jax, "device_put", lambda value, *_: value)
+    monkeypatch.setattr(jax, "block_until_ready", lambda value: value)
+    monkeypatch.setattr(learning, "load_learning_checkpoint", lambda *_a, **_kw: {
+        "completed_updates": 0, "parameters": {"w": np.array([1.], dtype=np.float32)},
+        "optimizer": Optimizer(0),
+    })
+    monkeypatch.setattr(learning, "make_tree_operations", lambda *_a: {"finite": lambda _: True})
+    monkeypatch.setattr(learning, "compile_gradient_evaluators", lambda **_kw: ({"daily": "saved"}, {}))
+    monkeypatch.setattr(shared_daily_microbatch, "make_daily_accumulator", lambda **_kw: "accumulate")
+    monkeypatch.setattr(fresh_start_training, "make_update", lambda *_a: "update")
+    observed, saved = [], []
+
+    def execute(**kwargs):
+        observed.append((float(kwargs["daily_samples"]["row"][0]),
+                         kwargs["seven_case"], kwargs["thirty_case"],
+                         kwargs["daily_accumulator"]))
+        return kwargs["parameters"], Optimizer(kwargs["optimizer"].step + 1), {
+            "loss": {"joint": 1.0}, "gradient_norms": {},
+            "optimizer_gradient_norm": 1.0, "clip_scale": 1.0,
+        }
+
+    monkeypatch.setattr(learning, "execute_learning_update", execute)
+    monkeypatch.setattr(learning, "save_learning_checkpoint",
+                        lambda path, **kwargs: saved.append((path, kwargs)))
+    output = tmp_path / "replay.updates.json"
+    bundle = {
+        "initial_checkpoint": str(tmp_path / "original.update-000000.checkpoint.pkl"),
+        "source_git_head": "original", "method": {"configuration": {"gradient_memory_limit_gib": 24},
+                                                    "daily_protocol": {}},
+        "artifact_ids": (11, 12),
+        "payloads": [
+            {"daily": {"row": np.full(32, value, dtype=np.float32)},
+             "cases": {7: f"seven-{value}", 30: f"thirty-{value}"}}
+            for value in (1, 2)
+        ],
+    }
+    args = SimpleNamespace(output=output, input_bundle=tmp_path / "bundle.pkl")
+    result = _compact_learning_run(args, bundle=bundle, reference={"method": bundle["method"]})
+    assert observed == [(1.0, "seven-1", "thirty-1", "accumulate"),
+                        (2.0, "seven-2", "thirty-2", "accumulate")]
+    assert result["status"] == "passed" and result["completed_updates"] == 2
+    assert [row["artifact_id"] for row in result["updates"]] == [11, 12]
+    assert saved[0][1]["completed_updates"] == 2
+    assert saved[0][1]["optimizer"].step == 2
+    assert saved[0][1]["method"] == bundle["method"]
 
 
 def test_complete_update_timing_includes_proposals_and_three_interleaved_repeats():

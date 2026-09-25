@@ -13,6 +13,29 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 15:49CST: compact replay path implemented;10focused local tests
+and Ruff pass, CPU/GPU target-shell dry-runs pass. CPU preparation98568 began
+15:48:44 on test02,30min limit; prepares one consolidated two-artifact bundle
+without new Teacher data or model initialization. GPU replay then reuses the
+original declared fresh update0 checkpoint and preserves all comparisons.
+Free macro485/486 are compiling the actual-layout reference. No paid job active.
+
+September25 15:37CST: paid15386166 ended14:38:11, FAILED124 at28min6s,
+zero complete updates, estimated elapsed charge2.32yuan. It reached T30
+deserialization after lengthy bootstrap; daily/T7 pickle reads<0.5s each,
+deserialization43.96/158.82s. This is not measured training/update throughput.
+Next remove repeated full-model/data bootstrap from the diagnostic using
+one-time free-CPU prepared arguments and the original fresh update0 state.
+Free macro scalar/micro4 screens485/486 started15:36:23,20min limit; no
+whole-decoder GPU result yet. Detailed outcome is in the idle-node report.
+
+September25 14:10CST: approved paid job15386166 RUNNING on ibc13b03n04,
+2V100/8CPU/64GiB/30min, maximum2.48yuan. Start14:10:05, deadline14:40:05.
+Node was IDLE with CPUAlloc0/CPULoad0.01 before submission; actual start
+load0.00, allocated GPUs0,1. Initial small reads passed and configuration
+loading began. Complete serial/dual32/64 update timings and parity are pending.
+This supersedes the no-active-job/pending-approval snapshots below.
+
 At13:55CST free recovery104560 completed with timeout124 during filesystem-
 bound bootstrap; no updates or full-gradient binary loads. Python exited and
 GPUs cleared. No active job. The prepared2.48yuan paid idle-node comparison

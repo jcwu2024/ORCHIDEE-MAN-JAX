@@ -8,7 +8,35 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
-Latest13:55CST: free recovery104560 exited124 at its30min limit, still in
+Latest15:49CST: compact replay implementation and10focused local tests pass.
+CPU preparation98568 started15:48:44 on test02 with a30min bound, output
+`shared-split-dual-inputs-c599236-preparation.{json,log}` and one consolidated
+`shared-split-dual-inputs-c599236.pkl`. Source/method unchanged c599236;
+replay uses its original fresh update0 checkpoint and two real TRAIN artifacts.
+Both macro screens485/486 are actually tracing/lowering/compiling reference64,
+not stuck before Python startup. No new paid task or measured speedup yet.
+Next inspect these bounded results, then use prepared inputs for free dual
+replay once both GPUs are available; do not repeat the full bootstrap.
+
+Earlier15:37CST:15386166 FAILED124 after28min6s, ended14:38:11; zero updates.
+Runtime/head preparation took1218.6s between coarse stage messages. Daily/T7
+pickle reads each<0.5s but deserialization43.96/158.82s; T30 loading timed out.
+Do not attribute the whole delay to IO/compilation or repeat the paid job.
+Implement one-time free-CPU prepared replay arguments and reuse fresh update0
+to bypass redundant full bootstrap; retain all numerical comparisons.
+Free macro screens485/486 started15:36:23, scalar GPU0/micro4 GPU1,20min bound,
+outputs `shared-split-macro-packed-20260925-micro{1,4}-resume2.{json,log}`.
+Current JAX imports still show shared-module read waiting, but a bounded
+CPU import/device check completed in33.52s. No GPU speed result yet.
+
+Earlier14:10CST: user approved the exact2.48yuan paid comparison. Job15386166
+is RUNNING on ibc13b03n04,2V100/8CPU/64GiB/30min, started14:10:05 and due
+by14:40:05. Pre-submission node IDLE/CPUAlloc0/CPULoad0.01; actual start
+load0.00 and GPUs0,1. Initial bounded reads passed; configuration loading
+began. No complete-update result yet. Read the dated idle-node proposal for
+the exact command and report paths. Do not submit a duplicate.
+
+Earlier13:55CST: free recovery104560 exited124 at its30min limit, still in
 bootstrap with zero optimizer updates/model-gradient loads. Python exited and
 both GPUs are clear. Filesystem-bound startup persists despite successful
 small reads via cln01. Do not repeat the same free attempt. Prepared idle-node

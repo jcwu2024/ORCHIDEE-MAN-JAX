@@ -7,7 +7,12 @@ and two-process dual execution using trusted saved model-gradient binaries.
 Each process sees one GPU as logical0; private pipes carry full parameters and
 recurrent gradients. Two changing-data updates and matched32/64 fixed-weight
 proposals check full gradients/AdamW and include transport in elapsed time.
-`run_shared_serialized_dual.sh` is a bounded free-node diagnostic, not training.
+Its `--prepare-input-bundle` route prepares the two real argument pytrees once
+on free CPU, then `--input-bundle` skips runtime/head reconstruction and
+reuses the trusted fresh update0 checkpoint. All existing changing-update,
+reference-checkpoint and complete-timing comparisons remain in the same probe.
+`run_shared_serialized_dual.sh` selects free CPU preparation with
+`PREPARE_INPUT_BUNDLE=1` or allocated/free GPU replay; it is not formal training.
 `shared_decoder_macro_packed.py` and its probe test160-field non-GPP batching
 with exact exported index layouts; the GPP raw-carbon path stays separate.
 Its `expert_decode_fields` alternative packs within each expert and reuses
@@ -16,7 +21,8 @@ Tiny scalar/micro4 output/full-gradient checks and6tests pass; actual V100
 throughput is pending. The bounded launcher compares packed128 and expert128.
 `job_shared_serialized_dual.sh` prepares a30min/2GPU allocated-node replay,
 with short filesystem reads before startup and actual Slurm GPU selectors;
-no paid submission follows without the declared2.48yuan approval.
+job15386166 consumed the declared2.48yuan approval and timed out in startup.
+It is not standing approval for another submission.
 These are diagnostic candidates, not enabled production execution.
 
 `shared_decoder_carbon_group.py` and `probe_shared_decoder_carbon_group.py`

@@ -49,7 +49,9 @@ def test_serialized_reverse_preserves_two_updates_and_changed_data(tmp_path):
                 np.testing.assert_allclose(a, b, rtol=1e-5, atol=1e-6)
         current = jax.tree_util.tree_map(lambda p, g: p - 0.01*g, current, expected[1])
     assert set(metadata) == {"daily", "T7", "T30"}
-    assert events == ["load_saved_gradient", "saved_gradient_loaded"] * 3
+    assert events == [
+        "load_saved_gradient", "deserialize_saved_gradient", "saved_gradient_loaded"
+    ] * 3
 
 
 def test_method_and_source_guard_rejects_incompatible_saved_graphs():

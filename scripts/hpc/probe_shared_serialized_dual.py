@@ -7,6 +7,7 @@ operations may be JIT-compiled. A 64-row result combines two distinct real
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -73,6 +74,168 @@ def require_distinct_batches(jax, identifiers, left, right, *, rows=32):
         raise ValueError("daily artifact batches have incompatible trees")
     if any(np.shape(a)[0] != rows or np.shape(b)[0] != rows for a, b in zip(left_leaves, right_leaves)):
         raise ValueError("64-row proposal requires two complete real 32-row batches")
+
+
+def _source_head():
+    from scripts.hpc.run_shared_learning import ROOT
+
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+
+
+def _reference_and_profile(args):
+    profile_bytes = args.source_profile.read_bytes()
+    profile = json.loads(profile_bytes)
+    reference = json.loads(Path(profile["technical_update_report"]).read_text(encoding="utf-8"))
+    require_reference(profile, reference)
+    return profile, reference, hashlib.sha256(profile_bytes).hexdigest()
+
+
+def _initial_checkpoint(reference):
+    candidates = [row for row in reference["checkpoints"]
+                  if row["update"] == 0 and row["retained_milestone"]]
+    if len(candidates) != 1:
+        raise ValueError("reference must identify exactly one retained update-0 checkpoint")
+    return Path(candidates[0]["path"])
+
+
+def _validate_bundle(bundle, *, profile_sha256, reference, source_head):
+    if bundle.get("schema_version") != "shared_serialized_dual_inputs_v1":
+        raise ValueError("unrecognized compact diagnostic bundle")
+    if (bundle["source_git_head"] != source_head
+            or bundle["source_git_head"] != reference["source_git_head"]
+            or bundle["profile_sha256"] != profile_sha256
+            or bundle["method"] != reference["method"]):
+        raise ValueError("compact bundle source/profile/method differs from reference")
+    ids = tuple(reference["method"]["training_plan"]["training_artifact_ids"][:2])
+    if tuple(bundle["artifact_ids"]) != ids or len(set(ids)) != 2:
+        raise ValueError("compact bundle does not contain the two declared artifacts")
+    if Path(bundle["initial_checkpoint"]).resolve() != _initial_checkpoint(reference).resolve():
+        raise ValueError("compact bundle update-0 checkpoint differs from reference")
+    if len(bundle["payloads"]) != 2:
+        raise ValueError("compact bundle needs exactly two prepared payloads")
+    return ids
+
+
+def _prepare_compact_bundle(args, emit):
+    """One-time free-CPU preparation; never initializes or compiles a model gradient."""
+    from scripts.hpc import run_shared_learning as learning
+
+    profile, reference, profile_sha256 = _reference_and_profile(args)
+    source_head = _source_head()
+    if source_head != reference["source_git_head"]:
+        raise ValueError("prepare bundle in the original source checkout")
+    if args.input_bundle.is_file():
+        with args.input_bundle.open("rb") as handle:
+            existing = pickle.load(handle)
+        ids = _validate_bundle(existing, profile_sha256=profile_sha256,
+                               reference=reference, source_head=source_head)
+        return {"status": "passed", "bundle": str(args.input_bundle),
+                "artifact_ids": ids, "source_git_head": source_head,
+                "reused_existing_bundle": True}
+    emit("load_learning_configuration")
+    from research.daily_coarse_graining.daily_operator.shared_persistent_outputs import (
+        build_shared_persistent_coordinates,
+    )
+    from research.daily_coarse_graining.daily_operator.shared_process_head import (
+        build_shared_process_head,
+    )
+    from research.daily_coarse_graining.daily_operator.shared_recurrent_training import prepare_shared_window
+    from scripts.hpc.shared_learning_plan import load_learning_configuration
+    from scripts.hpc.shared_transformer_runtime import (
+        _load_prepared_artifacts,
+        load_shared_runtime,
+        validate_shared_artifact_metadata,
+    )
+    loaded = load_learning_configuration(
+        args.protocol, args.joint_admission_report,
+        args.prepared_manifest, args.validation_manifest,
+    )
+    if learning._method_identity(loaded, technical_updates=2) != reference["method"]:
+        raise ValueError("preparation arguments differ from the trusted technical method")
+    emit("learning_configuration_validated")
+    ids = tuple(reference["method"]["training_plan"]["training_artifact_ids"][:2])
+    checkpoint = _initial_checkpoint(reference)
+    learning.load_learning_checkpoint(checkpoint, expected_method=reference["method"])
+    args.cpu_forward_only = True
+    emit("load_shared_runtime", bootstrap_artifact_id=ids[0])
+    runtime, parent, template, first, _ = load_shared_runtime(args, ids[:1])
+    emit("shared_runtime_loaded")
+    second, manifest = _load_prepared_artifacts(args.prepared_manifest, ids[1:])
+    if manifest["identity"] != reference["method"]["training_plan"]["prepared_manifest_identity"]:
+        raise ValueError("prepared manifest identity differs from reference")
+    validate_shared_artifact_metadata(runtime["index"], ids[1:], second)
+    coordinates = build_shared_persistent_coordinates(
+        parent.learned_schema, parent.contract,
+        runtime["base_statistics"].arrays["state_delta"],
+    )
+    architecture = reference["method"]["daily_protocol"]["architecture"]
+    head = build_shared_process_head(
+        parent, template, config=learning.shared_config(architecture),
+        thermal_transform=architecture["thermal_transform"],
+        persistent_coordinates=coordinates, source_bare_cimean=True,
+    )
+    import jax
+
+    emit("prepare_windows", artifact_ids=ids)
+    payloads = []
+    window_index = reference["method"]["configuration"]["recurrent_window_index"]
+    for artifact in (*first, *second):
+        daily = artifact.batch.one_day
+        if np.shape(daily.inputs.continuous_state)[0] != 32:
+            raise ValueError("prepared artifact must contain exactly 32 daily rows")
+        cases = {
+            horizon: prepare_shared_window(
+                head, getattr(artifact.batch, "seven_day" if horizon == 7 else "thirty_day"),
+                window_index=window_index, horizon=horizon,
+            )
+            for horizon in (7, 30)
+        }
+        payloads.append({"daily": jax.device_get(daily),
+                         "cases": jax.device_get(cases)})
+    require_distinct_batches(jax, ids, payloads[0]["daily"], payloads[1]["daily"])
+    emit("windows_prepared")
+    bundle = {
+        "schema_version": "shared_serialized_dual_inputs_v1",
+        "source_git_head": source_head, "profile_sha256": profile_sha256,
+        "method": reference["method"], "artifact_ids": ids,
+        "initial_checkpoint": str(checkpoint.resolve()), "payloads": payloads,
+    }
+    _validate_bundle(bundle, profile_sha256=profile_sha256,
+                     reference=reference, source_head=source_head)
+    args.input_bundle.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="shared-dual-inputs-", dir=args.input_bundle.parent) as staging:
+        temporary = Path(staging) / args.input_bundle.name
+        with temporary.open("wb") as handle:
+            pickle.dump(bundle, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        temporary.replace(args.input_bundle)
+    return {"status": "passed", "bundle": str(args.input_bundle),
+            "artifact_ids": ids, "source_git_head": source_head}
+
+
+def prepare_compact_bundle(args):
+    started, cpu_started = time.perf_counter(), time.process_time()
+    report = {"status": "running", "scope": "compact_real_input_preparation",
+              "source_profile": str(args.source_profile),
+              "input_bundle": str(args.input_bundle),
+              "scientific_acceptance": False}
+
+    def emit(stage, **values):
+        report.update(stage=stage, elapsed_seconds=time.perf_counter() - started,
+                      cpu_seconds=time.process_time() - cpu_started, **values)
+        _atomic_json(args.output, report)
+        print(f"serialized_dual_prepare stage={stage} seconds={report['elapsed_seconds']:.1f}",
+              flush=True)
+
+    try:
+        emit("validate_reference")
+        result = _prepare_compact_bundle(args, emit)
+        emit("completed", **result)
+        return report
+    except Exception as error:
+        emit("exception", status="error", error_type=type(error).__name__, error=str(error))
+        raise
 
 
 def _device_tree(jax, tree, device):
@@ -303,6 +466,96 @@ def measure_complete_updates(*, jax, serial_once, dual, daily,
     return result
 
 
+def _compact_learning_run(args, *, bundle, reference):
+    """Feed the original diagnostic hooks from saved real inputs and update-0."""
+    import jax
+    import jax.numpy as jnp
+
+    from research.daily_coarse_graining.daily_operator.fresh_start_training import make_update
+    from scripts.hpc import run_shared_learning as learning
+    from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
+
+    device, = jax.local_devices()
+    if device.platform != "gpu":
+        raise ValueError("compact replay requires one visible GPU")
+    require_distinct_batches(
+        jax, bundle["artifact_ids"],
+        bundle["payloads"][0]["daily"], bundle["payloads"][1]["daily"],
+    )
+    if any(set(payload["cases"]) != {7, 30} for payload in bundle["payloads"]):
+        raise ValueError("compact bundle lacks a prepared T7 or T30 case")
+    checkpoint = learning.load_learning_checkpoint(
+        Path(bundle["initial_checkpoint"]), expected_method=reference["method"]
+    )
+    if checkpoint["completed_updates"] != 0:
+        raise ValueError("compact replay requires the trusted fresh update-0 checkpoint")
+    with jax.default_device(device), device_helper_cache(device):
+        parameters, optimizer = jax.device_put(
+            (checkpoint["parameters"], checkpoint["optimizer"]), device
+        )
+        operations = learning.make_tree_operations(jax, jnp, 32)
+    if not bool(np.asarray(operations["finite"]((parameters, optimizer)))):
+        raise ValueError("compact replay update-0 state is nonfinite")
+    report = {
+        "status": "running", "technical_updates": 2, "completed_updates": 0,
+        "source_git_head": bundle["source_git_head"], "method": bundle["method"],
+        "updates": [], "monitors": [], "checkpoints": [],
+        "scientific_acceptance": False,
+        "classification": "compact_saved_executable_two_update_diagnostic",
+        "input_bundle": str(args.input_bundle),
+    }
+    _atomic_json(args.output, report)
+    config = reference["method"]["configuration"]
+    first = bundle["payloads"][0]
+    evaluators, metadata = learning.compile_gradient_evaluators(
+        jax=jax, parameters=parameters, daily_objective=None,
+        daily_sample=jax.tree_util.tree_map(lambda value: value[:4], first["daily"]),
+        recurrent_objective=None, seven_case=first["cases"][7],
+        thirty_case=first["cases"][30],
+        memory_limit_bytes=int(config["gradient_memory_limit_gib"]) * 2**30,
+        emit=lambda *_a, **_kw: None, daily_microbatch_size=4,
+    )
+    report["compiled_gradient_graphs"] = metadata
+    accumulator = make_daily_accumulator(
+        jax=jax, jnp=jnp, microbatch_size=4,
+        evaluator=evaluators["daily"], expected_count=32,
+    )
+    update = make_update(reference["method"]["daily_protocol"])
+    for index, (identifier, payload) in enumerate(
+        zip(bundle["artifact_ids"], bundle["payloads"], strict=True)
+    ):
+        with jax.default_device(device), device_helper_cache(device):
+            daily, cases = jax.device_put((payload["daily"], payload["cases"]), device)
+            began = time.perf_counter()
+            parameters, optimizer, row = learning.execute_learning_update(
+                jax=jax, parameters=parameters, optimizer=optimizer,
+                daily_samples=daily, seven_case=cases[7], thirty_case=cases[30],
+                evaluators=evaluators, operations=operations, update=update,
+                daily_accumulator=accumulator,
+            )
+            jax.block_until_ready((parameters, optimizer))
+        report["updates"].append({
+            "update": index + 1, "artifact_id": identifier, **row,
+            "wall_seconds": time.perf_counter() - began,
+            "device_memory": device.memory_stats(),
+        })
+        report["completed_updates"] = index + 1
+        _atomic_json(args.output, report)
+    checkpoint_path = learning.checkpoint_path(args.output, 2)
+    learning.save_learning_checkpoint(
+        checkpoint_path, jax=jax, parameters=parameters, optimizer=optimizer,
+        completed_updates=2, method=bundle["method"],
+        updates=report["updates"], monitors=(),
+    )
+    report.update(
+        status="passed", checkpoint=str(checkpoint_path),
+        warm_second_update_wall_seconds=report["updates"][1]["wall_seconds"],
+        device_peak_bytes_in_use=(device.memory_stats() or {}).get("peak_bytes_in_use"),
+    )
+    _atomic_json(args.output, report)
+    return report
+
+
 def run(args):
     from scripts.hpc import run_shared_learning as learning
     from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
@@ -311,9 +564,15 @@ def run(args):
         raise ValueError("serialized dual probe requires fresh --technical-updates 2")
     if args.repeats < 3:
         raise ValueError("at least three complete-update timing repeats are required")
-    profile = json.loads(args.source_profile.read_text(encoding="utf-8"))
-    reference = json.loads(Path(profile["technical_update_report"]).read_text(encoding="utf-8"))
-    require_reference(profile, reference)
+    if not args.worker_cuda_device:
+        raise ValueError("replay requires --worker-cuda-device")
+    profile, reference, profile_sha256 = _reference_and_profile(args)
+    bundle = None
+    if getattr(args, "input_bundle", None) is not None:
+        with args.input_bundle.open("rb") as handle:
+            bundle = pickle.load(handle)
+        _validate_bundle(bundle, profile_sha256=profile_sha256,
+                         reference=reference, source_head=_source_head())
     output = args.output
     update_output = output.with_suffix(".updates.json")
     if update_output.resolve() == Path(profile["technical_update_report"]).resolve():
@@ -329,6 +588,7 @@ def run(args):
     started = time.perf_counter()
     original_compile = learning.compile_gradient_evaluators
     original_execute = learning.execute_learning_update
+    original_run = learning.run
     context = {"batches": [], "cases": []}
 
     def emit(stage, **values):
@@ -478,6 +738,10 @@ def run(args):
 
     learning.compile_gradient_evaluators = load_instead_of_compile
     learning.execute_learning_update = execute_compared
+    if bundle is not None:
+        learning.run = lambda compact_args: _compact_learning_run(
+            compact_args, bundle=bundle, reference=reference
+        )
     args.output = update_output
     try:
         emit("run_two_real_artifacts")
@@ -597,6 +861,7 @@ def run(args):
             context["worker"].close()
         learning.compile_gradient_evaluators = original_compile
         learning.execute_learning_update = original_execute
+        learning.run = original_run
         args.output = output
 
 
@@ -607,8 +872,12 @@ def parser():
     result.description = __doc__
     result.add_argument("--source-profile", type=Path, required=True)
     result.add_argument("--repeats", type=int, default=3)
-    result.add_argument("--worker-cuda-device", required=True,
+    result.add_argument("--worker-cuda-device",
                         help="physical CUDA selector hidden from the parent process")
+    result.add_argument("--input-bundle", type=Path,
+                        help="CPU-prepared real input bundle for fast diagnostic replay")
+    result.add_argument("--prepare-input-bundle", action="store_true",
+                        help="prepare --input-bundle once on free CPU; do not run updates")
     return result
 
 
@@ -709,5 +978,11 @@ if __name__ == "__main__":
             )
         result = run_worker_smoke(Path(sys.argv[3]), sys.argv[4])
     else:
-        result = run(parser().parse_args())
+        args = parser().parse_args()
+        if args.prepare_input_bundle:
+            if args.input_bundle is None:
+                raise SystemExit("--prepare-input-bundle requires --input-bundle")
+            result = prepare_compact_bundle(args)
+        else:
+            result = run(args)
     raise SystemExit(0 if result["status"] == "passed" else 1)
