@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 17:03CST: free reference probes83546/83547 completed20/20 groups,
+exit0. Scalar lower/compile177.58/679.88s, micro4 205.26/680.94s, with
+35.14/96.73MB saved reference artifacts. Those are preparation phase times,
+not production execution timings. New20min free probes96055/GPU0(backbone
+source reuse) and96056/GPU1(expert128 micro4) began17:03:39; both GPUs idle
+at launch. The decoder reuses its saved reference. User clarifies compilation
+work should unblock repeated measurements, with training throughput remaining
+the final priority. No new paid job or measured candidate speedup.
+
 September25 16:41CST: partitioned reference implementation passes10focused
 tests, tiny CLI save/resume and target-shell dry-run. Free scalar/micro4
 screens83546/83547 now running,20min each, stages saved before each group's

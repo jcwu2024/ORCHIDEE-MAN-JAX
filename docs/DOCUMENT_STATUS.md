@@ -3,7 +3,8 @@
 Last updated: 2026-09-25.
 
 `research/daily_coarse_graining/shared_backbone_projection_reuse_20260925.md`
-is an implemented, locally checked, GPU-pending execution diagnostic. It is
+is an implemented, locally checked execution diagnostic; free GPU96055 is
+running from17:03:39CST. It is
 not an architecture change or production performance/scientific acceptance.
 
 Latest completed performance evidence:
@@ -38,7 +39,8 @@ Earlier pending-approval and RUNNING notes are historical.
 compact CPU input bundle/replay boundary. Implementation passes10local tests;
 real test02 preparation98568 passed, followed by the completed80665 comparison.
 The macro-screen note now tracks partitioned native-AD reference preparation:
-10local tests pass; free83546/83547 began16:41CST,20min limits. It is an
+10local tests pass; free83546/83547 completed all reference groups. Free96056
+now tests expert128 micro4 reusing that reference,20min limit. It is an
 execution diagnostic, not scientific acceptance or production integration.
 
 Latest bounded performance investigation:

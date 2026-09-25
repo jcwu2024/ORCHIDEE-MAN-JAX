@@ -1,5 +1,15 @@
 # Cross-expert non-GPP decoder macro-row screen
 
+Latest17:03CST: both reference-only probes completed/exit0 with20groups each.
+Scalar trace/lower177.58s plus compile679.88s; micro4 205.26s plus680.94s.
+Consolidated reference artifacts35,142,067/96,732,246bytes. These preparation
+times are not a monolithic warm-execution baseline. Free expert128 micro4
+candidate96056 began17:03:39 onGPU1,20min bound, restoring the saved micro4
+reference. Only expert128 runs in this first candidate screen to reduce time
+to a useful result; packed128 remains available for a later justified control.
+Output `shared-macro-expert128-20260925-micro4.{json,log}`. Actual target-shell
+resume/variant argument expansion checked; no fresh reference compilation.
+
 Latest16:41CST: partitioned native-AD reference implemented and checked locally:
 four new tests and six existing decoder tests pass, Ruff/compile checks clean,
 and a tiny CLI reference-only/save/resume smoke passes. Fields from expert5

@@ -8,15 +8,32 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+User clarification September25: optimize long-run training throughput, while
+temporarily prioritizing startup/compile fixes that unblock repeated speed
+experiments. Track time-to-valid-measurement (preparation, load/compile,
+correctness and warm timing) separately from complete-update samples/s.
+Reuse invariant inputs/references/executables, test representative components,
+then integrate candidates with material evidence. Do not require perfect
+startup before throughput work or claim startup savings as faster training.
+Once bounded experiments complete reliably, throughput regains priority.
+
+Latest17:03:39CST: both partitioned reference probes completed20/20 groups,
+exit0, with saved scalar/micro4 reference artifacts. Free candidate probes
+96055/GPU0 (backbone source reuse, scalar/micro4) and96056/GPU1 (expert128
+decoder, micro4) are running,20min each. The decoder restores the completed
+reference and does not repeat its compilation; only expert128 is screened
+initially to shorten turnaround. No full-model or paid training launch.
+Outputs: `shared-backbone-reuse-20260925` and
+`shared-macro-expert128-20260925-micro4` under runtime/outputs/diagnostics.
+
 Common-source backbone K/V reuse is implemented in an isolated helper:
 three focused tests and tiny compiled/resume parity pass, with explicit FP32
-payloads under x64-enabled JAX. Its20min free-node launcher is staged and
-target-shell checked, not launched while both GPUs are occupied. See
+payloads under x64-enabled JAX. Its20min free-node launcher is target-shell checked. See
 `research/daily_coarse_graining/shared_backbone_projection_reuse_20260925.md`.
-After current reference probes release a GPU, test this helper before any
-production integration or new whole-model compile.
+Collect these bounded outcomes before any production integration or new
+whole-model compile.
 
-Active16:41CST: free partitioned-reference screens83546/83547 on gln01
+Earlier16:41CST: free partitioned-reference screens83546/83547 on gln01
 GPUs0/1 (scalar/micro4), each20min maximum, output stem
 `shared-macro-partitioned-20260925-micro{1,4}`. Ten relevant local tests and
 target-shell CLI expansion pass. This is resumable correctness-reference

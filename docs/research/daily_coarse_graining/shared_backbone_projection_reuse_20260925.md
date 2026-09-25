@@ -1,6 +1,6 @@
 # Shared-source backbone projection diagnostic
 
-Status: implemented and locally checked; actual-shape V100 timing pending.
+Status: implemented and locally checked; actual-shape V100 probe running.
 This preserves the declared network function and capacity and is not wired
 into the production process head. No formal training or paid submission.
 
@@ -43,10 +43,13 @@ to20minutes and supports GPU_INDEX, OUTPUT, OVERLAY and CLI passthrough.
 Target-shell syntax and actual `--dry-run --microbatches 1 4` expansion pass.
 The code is staged under
 `runtime/transfer/shared-backbone-reuse-20260925`, against unchanged c599236
-in `runtime/checkouts/shared-split-width-v1`. It has not been launched because
-both free GPUs are occupied by the bounded macro-reference probes.
+in `runtime/checkouts/shared-split-width-v1`. After both reference probes
+completed, free launcher96055 began17:03:39CST onGPU0,20min bound; both GPUs
+were empty at dispatch. Report/log stem is
+runtime/outputs/diagnostics/shared-backbone-reuse-20260925. GPU1 runs the
+separate expert128 screen, so host CPU is shared by the two diagnostics.
 
-Next: inspect GPU availability, run this bounded helper, and require output/
+Next: collect this bounded helper result and require output/
 full-gradient parity plus material measured benefit before integrating it.
 Any full-model integration must compare actual complete updates and retain
 state/parameter gradients and physical checks. A helper pass alone does not
