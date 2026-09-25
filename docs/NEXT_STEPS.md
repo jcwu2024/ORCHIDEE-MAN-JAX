@@ -8,6 +8,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 18:26CST: CPU preparation1517 passed in256.18s,14,465,399-byte
+context pickle round-trip and canonical objective reconstruction passed.
+Free gln01 GPU0 launcher104632 started18:25:25CST; deployed JAX0.4.38 tiny
+runtime gate passed in22.25s, then the real daily probe began loading the saved
+original executable. GPU comparison has30minute ceiling after preflight.
+Inspect `shared-expert-real-daily-20260925.{json,log}` before further work;
+retain reference/candidate artifacts. No complete throughput result yet.
+
 September25 18:19:16CST: real daily adapter/probe implemented, six local tests
 pass, both target-shell launch modes checked. Free test02 preparation1517 is
 running with15minute ceiling. Next inspect its context pickle round-trip and

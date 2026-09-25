@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 18:26CST: free CPU preparation completed in256.18s; reusable
+14.47MB context saved and reloaded with canonical objective validation.
+FreeGPU0 launcher104632 began18:25:25CST; tiny deployed runtime check passed
+in22.25s on JAX0.4.38, and original daily executable is loading. Candidate
+real-objective gradient/timing results remain pending, no paid task.
+
 September25 18:19:16CST: six local adapter/probe tests passed; free test02
 preparation1517 started. This is one-time context preparation, not training.
 It will precede real daily micro4 comparison against the saved original

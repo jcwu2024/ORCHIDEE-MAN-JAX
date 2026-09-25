@@ -1,5 +1,14 @@
 # Real daily admission for expert-grouped decoder execution
 
+Latest18:26CST: CPU1517 completed0,256.18s. Context is14,465,399bytes and
+passed pickle round-trip plus canonical objective construction. FreeGPU0
+launcher104632 started18:25:25CST on ibc13b02n04 (host load0.00; both GPUs
+empty before dispatch). The deployed JAX0.4.38 runtime gate passed in22.25s;
+real probe is loading the original saved daily executable. GPU report/log:
+`runtime/outputs/diagnostics/shared-expert-real-daily-20260925.{json,log}`;
+runtime check uses the same stem with `.runtime.json`. No measured real
+candidate speed or gradient result yet. Earlier preparation status follows.
+
 Status: all six local adapter/probe tests pass. Free test02 preparation1517
 started2026-09-25 18:19:16CST (server clock),15minute ceiling. Diagnostic only; no
 scientific training, retained weight update or paid allocation.
