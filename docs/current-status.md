@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 throughput follow-up: real dual32/64 complete-update comparison
+and whole non-GPP decoder packing are under implementation/testing. This
+supersedes immediate full-model integration of only the small component wins
+below. Both preserve the admitted model/loss; neither has real-GPU speed
+acceptance yet. A deployed tiny diagnostic proves saved JAX0.4.38 executables
+cannot be retargeted to logical cuda1 by changing default device/compile options;
+the dual probe uses a persistent second process with physicalGPU1 as logical0,
+and includes IPC in timings. Free resources only; no new paid task.
+
 September25 larger decoder screen completed: grouped128 for five448-row
 litter/DOC fields passes strict scalar/micro4 output and all component
 parameter/input gradients. Warm scalar51.98->32.15ms; micro4 80.45->61.19ms;

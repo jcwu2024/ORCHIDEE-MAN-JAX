@@ -1,0 +1,713 @@
+"""Measure complete serial and dual updates with the trusted split executables.
+
+This diagnostic runs the unchanged two-artifact learning bootstrap and update
+contract. It never lowers or compiles a model gradient; only small tree/update
+operations may be JIT-compiled. A 64-row result combines two distinct real
+32-row artifacts and is a fixed-weight proposal, not the formal batch recipe.
+"""
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import pickle
+import subprocess
+import sys
+import tempfile
+import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import numpy as np
+
+from scripts.hpc.checked_recurrent_execution import device_helper_cache
+from scripts.hpc.probe_shared_execution import compare_trees
+from scripts.hpc.probe_shared_split_profile import concatenate_daily
+from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+
+
+def _load_adjacent_overlay(name):
+    """Load diagnostics absent or older in the immutable source checkout."""
+    module_name = f"scripts.hpc.{name}"
+    path = Path(__file__).with_name(name + ".py").resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"required diagnostic overlay missing: {path}")
+    existing = sys.modules.get(module_name)
+    if existing is not None and Path(existing.__file__).resolve() == path:
+        return
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules[module_name]
+        raise
+
+
+_load_adjacent_overlay("probe_shared_dual")
+_load_adjacent_overlay("probe_shared_serialized_updates")
+_dual_module = sys.modules["scripts.hpc.probe_shared_dual"]
+_serialized_module = sys.modules["scripts.hpc.probe_shared_serialized_updates"]
+_serial_mixed = _dual_module._serial_mixed
+dual_cost_comparison = _dual_module.dual_cost_comparison
+make_component_combiner = _dual_module.make_component_combiner
+make_microbatch_daily_branch = _dual_module.make_microbatch_daily_branch
+make_recurrent_branch = _dual_module.make_recurrent_branch
+compare_update_reports = _serialized_module.compare_update_reports
+load_evaluators = _serialized_module.load_evaluators
+require_reference = _serialized_module.require_reference
+require_same_method = _serialized_module.require_same_method
+
+RTOL = 1e-5
+ATOL = 1e-6
+
+
+def require_distinct_batches(jax, identifiers, left, right, *, rows=32):
+    """Reject nominal 64-row coverage made from one artifact or wrong shapes."""
+    if len(identifiers) != 2 or identifiers[0] == identifiers[1]:
+        raise ValueError("64-row proposal requires two distinct artifact IDs")
+    left_leaves, left_tree = jax.tree_util.tree_flatten(left)
+    right_leaves, right_tree = jax.tree_util.tree_flatten(right)
+    if left_tree != right_tree or not left_leaves:
+        raise ValueError("daily artifact batches have incompatible trees")
+    if any(np.shape(a)[0] != rows or np.shape(b)[0] != rows for a, b in zip(left_leaves, right_leaves)):
+        raise ValueError("64-row proposal requires two complete real 32-row batches")
+
+
+def _device_tree(jax, tree, device):
+    with jax.default_device(device), device_helper_cache(device):
+        result = jax.device_put(tree, device)
+        jax.block_until_ready(result)
+        return result
+
+
+class RecurrentWorker:
+    """Private inherited pipes, no listening port and no per-update files."""
+
+    def __init__(self, profile_path, *, cuda_device, memory_limit_bytes, echo_test=False):
+        if not cuda_device or "," in cuda_device:
+            raise ValueError("worker needs exactly one physical CUDA device selector")
+        environment = os.environ.copy()
+        environment["CUDA_VISIBLE_DEVICES"] = cuda_device
+        command = [
+            sys.executable, str(Path(__file__).with_name("probe_shared_serialized_dual_worker.py")),
+            "--source-profile", str(profile_path),
+            "--memory-limit-bytes", str(memory_limit_bytes),
+        ]
+        if echo_test:
+            command.append("--echo-test")
+        self.process = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None,
+            env=environment, bufsize=0, cwd=Path(__file__).resolve().parents[2],
+        )
+        self.closed = False
+        ready = self._receive()
+        if ready.get("status") != "ready":
+            self.close()
+            raise RuntimeError(f"recurrent worker startup failed: {ready}")
+        self.metadata = ready
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
+    def _receive(self):
+        try:
+            return pickle.load(self.process.stdout)
+        except (EOFError, OSError) as error:
+            raise RuntimeError(
+                f"recurrent worker pipe closed (exit={self.process.poll()})"
+            ) from error
+
+    def evaluate(self, jax, parameters, cases):
+        # Host transfer, serialization, worker GPU upload/execution and the
+        # gradient response are all inside the measured complete update.
+        message = {
+            "kind": "evaluate", "parameters": jax.device_get(parameters),
+            "cases": jax.device_get(cases),
+        }
+        pickle.dump(message, self.process.stdin, protocol=pickle.HIGHEST_PROTOCOL)
+        self.process.stdin.flush()
+        response = self._receive()
+        if response.get("status") != "passed":
+            raise RuntimeError(f"recurrent worker evaluation failed: {response}")
+        return response["result"], response["recurrent_seconds"], response["worker_total_seconds"]
+
+    def close(self):
+        if self.closed:
+            return
+        self.closed = True
+        if self.process.poll() is None:
+            try:
+                pickle.dump({"kind": "close"}, self.process.stdin)
+                self.process.stdin.flush()
+                self._receive()
+            except (BrokenPipeError, RuntimeError):
+                pass
+        if self.process.stdin:
+            self.process.stdin.close()
+        if self.process.stdout:
+            self.process.stdout.close()
+        self.process.wait(timeout=30)
+
+
+class RemoteDualExecutor:
+    """Overlap local daily AD with remote saved recurrent AD, then update once."""
+
+    def __init__(self, *, jax, parameters, optimizer, daily_branch, worker,
+                 combine, update, finite):
+        self.jax = jax
+        self.parameters = parameters
+        self.optimizer = optimizer
+        self.daily_branch = daily_branch
+        self.worker = worker
+        self.combine = combine
+        self.update = update
+        self.finite = finite
+        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="remote_recurrent")
+
+    def close(self):
+        self.pool.shutdown(wait=True)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
+    def step(self, *, daily_payload, recurrent_payload, persist):
+        began = time.perf_counter()
+        future = self.pool.submit(
+            self.worker.evaluate, self.jax, self.parameters, recurrent_payload
+        )
+        try:
+            daily = self.daily_branch(self.parameters, daily_payload)
+        except BaseException:
+            future.result()
+            raise
+        recurrent, recurrent_seconds, worker_total_seconds = future.result()
+        branch_seconds = time.perf_counter() - began
+        hard = {"daily": daily["hard"],
+                "T7": recurrent[7]["hard"], "T30": recurrent[30]["hard"]}
+        if any(int(value) != 0 for item in hard.values() for value in item.values()):
+            raise ValueError("remote dual branch returned nonzero physical counters")
+        merge_started = time.perf_counter()
+        seven = self.jax.device_put(recurrent[7]["gradient"])
+        thirty = self.jax.device_put(recurrent[30]["gradient"])
+        mixed = self.combine(daily["gradient"], seven, thirty)
+        self.jax.block_until_ready(mixed)
+        losses = {"daily": daily["loss"], "T7": recurrent[7]["loss"],
+                  "T30": recurrent[30]["loss"]}
+        norms = {"daily": daily["norm"], "T7": recurrent[7]["norm"],
+                 "T30": recurrent[30]["norm"]}
+        if (not all(np.isfinite(value) for value in losses.values())
+                or not all(np.isfinite(value) and value >= 0 for value in norms.values())
+                or not bool(np.asarray(self.finite(mixed)))):
+            raise ValueError("remote dual component or mixed gradient is nonfinite")
+        proposal, next_optimizer, gradient_norm, clip_scale = self.update(
+            self.parameters, mixed, self.optimizer
+        )
+        self.jax.block_until_ready((proposal, next_optimizer, gradient_norm, clip_scale))
+        if (not bool(np.asarray(self.finite((proposal, next_optimizer))))
+                or not np.isfinite(float(gradient_norm))
+                or not 0.0 < float(clip_scale) <= 1.0
+                or int(np.asarray(next_optimizer.step))
+                != int(np.asarray(self.optimizer.step)) + 1):
+            raise ValueError("remote dual AdamW proposal is invalid")
+        merge_seconds = time.perf_counter() - merge_started
+        if persist:
+            self.parameters, self.optimizer = proposal, next_optimizer
+        record = {
+            "loss": {**losses, "joint": sum(losses.values())},
+            "gradient_norms": norms,
+            "optimizer_gradient_norm": float(gradient_norm),
+            "clip_scale": float(clip_scale),
+            "optimizer_step": int(np.asarray(next_optimizer.step)),
+            "hard": hard, "all_hard_counts_zero": True,
+            "timing_seconds": {
+                "daily_microbatch": daily["seconds"],
+                "recurrent_worker_total": worker_total_seconds,
+                "recurrent_gpu_branch": recurrent_seconds,
+                "branches_elapsed_including_ipc": branch_seconds,
+                "merge_checks_optimizer": merge_seconds,
+                "total": time.perf_counter() - began,
+            },
+        }
+        return record, {"gradient": mixed, "parameters": proposal,
+                        "optimizer": next_optimizer}
+
+
+def compare_proposal(jax, dual_values, serial_values):
+    comparisons = {
+        name: compare_trees(jax, dual_values[name], serial_values[name], rtol=RTOL, atol=ATOL)
+        for name in ("gradient", "parameters", "optimizer")
+    }
+    return comparisons
+
+
+def measure_complete_updates(*, jax, serial_once, dual, daily,
+                             secondary_cases, repeats, serial_gradient=None):
+    """Time complete proposals at the same weights, with blocked interleaving."""
+    if repeats < 3:
+        raise ValueError("complete-update timing requires at least three repeats")
+    serial_once()
+    dual.step(daily_payload=daily, recurrent_payload=secondary_cases, persist=False)
+    serial_rows, dual_rows = [], []
+    serial_result = dual_result = dual_record = None
+    for index in range(repeats):
+        order = ("serial", "dual") if index % 2 == 0 else ("dual", "serial")
+        for mode in order:
+            began = time.perf_counter()
+            if mode == "serial":
+                serial_result = serial_once()
+                jax.block_until_ready(serial_result[:2])
+                serial_rows.append(time.perf_counter() - began)
+            else:
+                dual_record, dual_result = dual.step(
+                    daily_payload=daily, recurrent_payload=secondary_cases,
+                    persist=False,
+                )
+                dual_rows.append(time.perf_counter() - began)
+    serial_median = float(np.median(serial_rows))
+    dual_median = float(np.median(dual_rows))
+    result = {
+        "serial_seconds": serial_rows, "dual_seconds": dual_rows,
+        "serial_median_seconds": serial_median, "dual_median_seconds": dual_median,
+        "comparison": dual_cost_comparison(serial_median, dual_median),
+        "timing_scope": "complete_gradient_parameter_and_gradient_ipc_physical_checks_adamw",
+        "interleaved": True,
+    }
+    if serial_gradient is not None:
+        serial_values = {
+            "gradient": serial_gradient,
+            "parameters": serial_result[0], "optimizer": serial_result[1],
+        }
+        result["full_tree_comparisons"] = compare_proposal(jax, dual_result, serial_values)
+        result["joint_loss_close"] = bool(np.isclose(
+            dual_record["loss"]["joint"], serial_result[2]["loss"]["joint"],
+            rtol=RTOL, atol=ATOL,
+        ))
+        result["optimizer_scalars_close"] = all(
+            np.isclose(dual_record[key], serial_result[2][key], rtol=RTOL, atol=ATOL)
+            for key in ("optimizer_gradient_norm", "clip_scale")
+        )
+        result["status"] = (
+            "passed" if result["joint_loss_close"] and result["optimizer_scalars_close"] and all(
+                value["passed"] for value in result["full_tree_comparisons"].values()
+            ) else "rejected"
+        )
+    return result
+
+
+def run(args):
+    from scripts.hpc import run_shared_learning as learning
+    from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
+
+    if args.technical_updates != 2 or args.prepare_only or args.resume_checkpoint:
+        raise ValueError("serialized dual probe requires fresh --technical-updates 2")
+    if args.repeats < 3:
+        raise ValueError("at least three complete-update timing repeats are required")
+    profile = json.loads(args.source_profile.read_text(encoding="utf-8"))
+    reference = json.loads(Path(profile["technical_update_report"]).read_text(encoding="utf-8"))
+    require_reference(profile, reference)
+    output = args.output
+    update_output = output.with_suffix(".updates.json")
+    if update_output.resolve() == Path(profile["technical_update_report"]).resolve():
+        raise ValueError("probe output must preserve the reference report/checkpoints")
+    report = {
+        "status": "running", "scope": "saved_executable_dual_complete_update_probe",
+        "source_profile": str(args.source_profile),
+        "scientific_acceptance": False, "retained_formal_training_updates": 0,
+        "comparison_rtol": RTOL, "comparison_atol": ATOL,
+        "comparison_tolerance_source": "shared_execution_benchmark_v1.json",
+        "timings": {}, "changing_data": [],
+    }
+    started = time.perf_counter()
+    original_compile = learning.compile_gradient_evaluators
+    original_execute = learning.execute_learning_update
+    context = {"batches": [], "cases": []}
+
+    def emit(stage, **values):
+        report.update(stage=stage, elapsed_seconds=time.perf_counter() - started, **values)
+        _atomic_json(output, report)
+        print(f"serialized_dual stage={stage} seconds={report['elapsed_seconds']:.1f}", flush=True)
+
+    def load_instead_of_compile(**kwargs):
+        jax = kwargs["jax"]
+        _require_supported_jax(jax)
+        devices = tuple(jax.local_devices())
+        if len(devices) != 1 or devices[0].platform != "gpu":
+            raise ValueError("parent requires one visible GPU; worker owns the other")
+        parent_selector = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+        if not parent_selector or "," in parent_selector or parent_selector == args.worker_cuda_device:
+            raise ValueError("parent and worker must select different single physical GPUs")
+        if kwargs["daily_microbatch_size"] != 4:
+            raise ValueError("saved daily executable requires microbatch4")
+        current = json.loads(update_output.read_text(encoding="utf-8"))
+        require_same_method(current, reference)
+        from jax.experimental.serialize_executable import deserialize_and_load
+
+        primary = devices[0]
+        context.update(jax=jax, device=primary, memory_limit=kwargs["memory_limit_bytes"])
+        with jax.default_device(primary), device_helper_cache(primary):
+            primary_evaluators, primary_metadata = load_evaluators(
+                profile, deserialize=deserialize_and_load,
+                memory_sizes=learning.memory_sizes,
+                memory_limit_bytes=kwargs["memory_limit_bytes"], emit=emit,
+            )
+        emit("start_recurrent_worker", worker_cuda_device=args.worker_cuda_device)
+        context["worker"] = RecurrentWorker(
+            args.source_profile, cuda_device=args.worker_cuda_device,
+            memory_limit_bytes=kwargs["memory_limit_bytes"],
+        )
+        report["worker"] = context["worker"].metadata
+        report["worker"]["physical_cuda_selector"] = args.worker_cuda_device
+        report["worker"]["transport"] = "private_persistent_pickle_pipes_no_disk_per_update"
+        report["worker"]["parameter_policy"] = "full_parameter_host_transfer_each_update"
+        report["native_retarget_supported"] = False
+        emit("gradients_ready_no_model_compile")
+        return primary_evaluators, primary_metadata
+
+    def execute_compared(**kwargs):
+        jax = kwargs["jax"]
+        import jax.numpy as jnp
+
+        primary = context["device"]
+        if context.get("dual") is None:
+            context["initial_parameters"] = kwargs["parameters"]
+            context["initial_optimizer"] = kwargs["optimizer"]
+            context["update"] = kwargs["update"]
+            context["evaluators"] = kwargs["evaluators"]
+            operations = kwargs["operations"]
+            with jax.default_device(primary), device_helper_cache(primary):
+                combine = make_component_combiner(jax)
+            context["combine"] = combine
+            context["primary_operations32"] = operations
+            context["dual"] = RemoteDualExecutor(
+                jax=jax, parameters=kwargs["parameters"], optimizer=kwargs["optimizer"],
+                daily_branch=make_microbatch_daily_branch(
+                    jax=jax, jnp=jnp, device=primary,
+                    evaluator=kwargs["evaluators"]["daily"], operations=operations,
+                    microbatch_size=4, expected_count=32,
+                ),
+                worker=context["worker"], combine=combine,
+                update=kwargs["update"], finite=operations["finite"],
+            )
+        dual = context["dual"]
+        if len(context["batches"]) >= 2:
+            raise ValueError("serialized dual probe accepts exactly two changing artifacts")
+        batch = kwargs["daily_samples"]
+        primary_cases = {7: kwargs["seven_case"], 30: kwargs["thirty_case"]}
+        remote_cases = primary_cases
+        if not context["batches"]:
+            context["serial_parameters"] = kwargs["parameters"]
+            context["serial_optimizer"] = kwargs["optimizer"]
+        serial_kwargs = {
+            **kwargs, "parameters": context["serial_parameters"],
+            "optimizer": context["serial_optimizer"],
+        }
+        emit("serial_changing_update", update=len(context["batches"]) + 1)
+        serial_began = time.perf_counter()
+        serial_parameters, serial_optimizer, serial_row = original_execute(**serial_kwargs)
+        jax.block_until_ready((serial_parameters, serial_optimizer))
+        serial_seconds = time.perf_counter() - serial_began
+        # The runner does not expose its mixed gradient. Reuse identical saved
+        # evaluators at the same serial start weights for a full-tree comparison.
+        primary_daily = make_microbatch_daily_branch(
+            jax=jax, jnp=jnp, device=primary, evaluator=kwargs["evaluators"]["daily"],
+            operations=kwargs["operations"], microbatch_size=4, expected_count=32,
+        )
+        primary_recurrent = make_recurrent_branch(
+            jax=jax, device=primary,
+            evaluators={7: kwargs["evaluators"]["T7"],
+                        30: kwargs["evaluators"]["T30"]},
+            operations=kwargs["operations"],
+        )
+        serial_gradient, _ = _serial_mixed(
+            parameters=context["serial_parameters"], daily_payload=batch,
+            recurrent_payload=primary_cases, daily_branch=primary_daily,
+            recurrent_branch=primary_recurrent, combine=context["combine"],
+        )
+        emit("dual_changing_update", update=len(context["batches"]) + 1)
+        dual_began = time.perf_counter()
+        dual_record, dual_values = dual.step(
+            daily_payload=batch, recurrent_payload=remote_cases, persist=True,
+        )
+        dual_seconds = time.perf_counter() - dual_began
+        comparisons = compare_proposal(jax, dual_values, {
+            "gradient": serial_gradient, "parameters": serial_parameters,
+            "optimizer": serial_optimizer,
+        })
+        scalar_close = bool(np.isclose(
+            dual_record["loss"]["joint"], serial_row["loss"]["joint"],
+            rtol=RTOL, atol=ATOL,
+        ))
+        optimizer_scalars_close = all(
+            np.isclose(dual_record[key], serial_row[key], rtol=RTOL, atol=ATOL)
+            for key in ("optimizer_gradient_norm", "clip_scale")
+        )
+        passed = scalar_close and optimizer_scalars_close and all(
+            row["passed"] for row in comparisons.values()
+        )
+        index = len(context["batches"])
+        context["batches"].append(batch)
+        context["cases"].append(primary_cases)
+        context["serial_parameters"] = serial_parameters
+        context["serial_optimizer"] = serial_optimizer
+        report["changing_data"].append({
+            "update": index + 1, "status": "passed" if passed else "rejected",
+            "serial_wall_seconds": serial_seconds, "dual_wall_seconds": dual_seconds,
+            "comparisons": comparisons, "joint_loss_close": scalar_close,
+            "optimizer_scalars_close": optimizer_scalars_close,
+            "serial_optimizer_step": int(np.asarray(serial_optimizer.step)),
+            "dual_optimizer_step": dual_record["optimizer_step"],
+        })
+        emit("changing_update_compared", update=index + 1)
+        if not passed:
+            raise ValueError("dual changing-data full update differs from serial")
+        # The unchanged runner owns checkpoint persistence. Its report's loss
+        # and science terms are supplied by the checked serial computation.
+        return dual_values["parameters"], dual_values["optimizer"], {
+            **serial_row, "timing_seconds": dual_record["timing_seconds"],
+            "serialized_dual_wall_seconds": dual_seconds,
+        }
+
+    learning.compile_gradient_evaluators = load_instead_of_compile
+    learning.execute_learning_update = execute_compared
+    args.output = update_output
+    try:
+        emit("run_two_real_artifacts")
+        outcome = learning.run(args)
+        report["technical_update_report"] = str(update_output)
+        if outcome["status"] != "passed":
+            emit("rejected", status="rejected", reason="technical_updates_failed")
+            return report
+        jax = context["jax"]
+        import jax.numpy as jnp
+
+        primary = context["device"]
+        identifiers = [row["artifact_id"] for row in outcome["updates"]]
+        require_distinct_batches(jax, identifiers, *context["batches"])
+        report["artifact_ids"] = identifiers
+        report["technical_update_comparison"] = compare_update_reports(
+            jax, outcome, reference, rtol=RTOL, atol=ATOL,
+        )
+        saved = learning.load_learning_checkpoint(
+            Path(reference["checkpoint"]), expected_method=reference["method"]
+        )
+        replay = learning.load_learning_checkpoint(
+            Path(outcome["checkpoint"]), expected_method=reference["method"]
+        )
+        report["reference_checkpoint_comparisons"] = {
+            name: compare_trees(jax, replay[key], saved[key], rtol=RTOL, atol=ATOL)
+            for name, key in (("parameters", "parameters"), ("full_adamw_state", "optimizer"))
+        }
+        emit("changing_updates_and_reference_compared")
+        if not report["technical_update_comparison"]["passed"] or not all(
+            row["passed"] for row in report["reference_checkpoint_comparisons"].values()
+        ):
+            raise ValueError("serialized dual technical replay differs from trusted reference")
+        context["dual"].close()
+        context["dual"] = None
+
+        # Fixed-weight proposals use the same fresh initial parameters and
+        # optimizer for both modes. No proposal is retained as formal training.
+        parameters = context["initial_parameters"]
+        optimizer = context["initial_optimizer"]
+        evaluators = context["evaluators"]
+        cases0 = context["cases"][0]
+        batches = {
+            32: context["batches"][0],
+            64: _device_tree(
+                jax, concatenate_daily(jax, *context["batches"]), primary
+            ),
+        }
+        for count, batch in batches.items():
+            emit("measure_complete_update", daily_rows=count)
+            operations = learning.make_tree_operations(jax, jnp, count)
+            with jax.default_device(primary), device_helper_cache(primary):
+                combine = make_component_combiner(jax)
+            daily_branch = make_microbatch_daily_branch(
+                jax=jax, jnp=jnp, device=primary, evaluator=evaluators["daily"],
+                operations=operations, microbatch_size=4, expected_count=count,
+            )
+            recurrent_primary = make_recurrent_branch(
+                jax=jax, device=primary,
+                evaluators={7: evaluators["T7"], 30: evaluators["T30"]},
+                operations=operations,
+            )
+            from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
+
+            accumulate = make_daily_accumulator(
+                jax=jax, jnp=jnp, microbatch_size=4,
+                evaluator=evaluators["daily"], expected_count=count,
+            )
+
+            def serial_once():
+                with jax.default_device(primary), device_helper_cache(primary):
+                    return original_execute(
+                        jax=jax, parameters=parameters, optimizer=optimizer,
+                        daily_samples=batch, seven_case=cases0[7],
+                        thirty_case=cases0[30], evaluators=evaluators,
+                        operations=operations, update=context["update"],
+                        daily_accumulator=accumulate,
+                    )
+
+            with RemoteDualExecutor(
+                jax=jax, parameters=parameters, optimizer=optimizer,
+                daily_branch=daily_branch, worker=context["worker"],
+                combine=combine, update=context["update"], finite=operations["finite"],
+            ) as dual:
+                serial_gradient, _ = _serial_mixed(
+                    parameters=parameters, daily_payload=batch,
+                    recurrent_payload=cases0, daily_branch=daily_branch,
+                    recurrent_branch=recurrent_primary, combine=combine,
+                )
+                result = measure_complete_updates(
+                    jax=jax, serial_once=serial_once, dual=dual, daily=batch,
+                    secondary_cases=cases0,
+                    repeats=args.repeats, serial_gradient=serial_gradient,
+                )
+            result["daily_rows_per_update"] = count
+            result["distinct_daily_artifact_ids"] = identifiers[:count // 32]
+            result["recurrent_case_artifact_id"] = identifiers[0]
+            result["unique_daily_row_coverage_claimed"] = False
+            result["weight_policy"] = "same_fresh_initial_weights_discard_each_proposal"
+            result["serial_daily_rows_per_second"] = count / result["serial_median_seconds"]
+            result["dual_daily_rows_per_second"] = count / result["dual_median_seconds"]
+            report["timings"][str(count)] = result
+            emit("complete_update_measured", daily_rows=count, timing_status=result["status"])
+            if result["status"] != "passed":
+                raise ValueError(f"serialized dual {count}-row proposal differs from serial")
+        report["parent_device_memory"] = primary.memory_stats()
+        emit("completed", status="passed", retained_formal_training_updates=0,
+             final_batch_recipe_unchanged=True)
+        return report
+    except Exception as error:
+        emit("exception", status="error", error_type=type(error).__name__, error=str(error))
+        raise
+    finally:
+        if context.get("dual") is not None:
+            context["dual"].close()
+        if context.get("worker") is not None:
+            context["worker"].close()
+        learning.compile_gradient_evaluators = original_compile
+        learning.execute_learning_update = original_execute
+        args.output = output
+
+
+def parser():
+    from scripts.hpc.run_shared_learning import parser as base_parser
+
+    result = base_parser()
+    result.description = __doc__
+    result.add_argument("--source-profile", type=Path, required=True)
+    result.add_argument("--repeats", type=int, default=3)
+    result.add_argument("--worker-cuda-device", required=True,
+                        help="physical CUDA selector hidden from the parent process")
+    return result
+
+
+def run_worker_smoke(output, worker_cuda_device):
+    """Tiny same-binary, two-process recurrent proof without Teacher inputs."""
+    import jax
+    import jax.numpy as jnp
+    from jax.experimental.serialize_executable import serialize
+
+    from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
+
+    _require_supported_jax(jax)
+    devices = tuple(jax.local_devices())
+    if len(devices) != 1 or devices[0].platform != "gpu":
+        raise ValueError("smoke parent requires exactly one visible GPU")
+
+    def objective(parameters, sample):
+        residual = parameters["weight"] * sample - parameters["target"]
+        loss = jnp.sum(residual * residual)
+        return loss, {"hard": {"synthetic_failure": jnp.asarray(0, dtype=jnp.int32)}}
+
+    report = {"status": "running", "scope": "tiny_saved_recurrent_worker_same_binary",
+              "parent_device": str(devices[0]), "worker_cuda_selector": worker_cuda_device,
+              "full_model_loaded": False, "teacher_data_loaded": False}
+    output.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_json(output, report)
+    with tempfile.TemporaryDirectory(prefix="serialized-dual-smoke-", dir=output.parent) as temp:
+        temporary = Path(temp)
+        parameters = {"weight": jnp.asarray([0.3, -0.7], dtype=jnp.float32),
+                      "target": jnp.asarray([0.2, 0.4], dtype=jnp.float32)}
+        samples = {
+            7: jnp.asarray([0.8, -0.1], dtype=jnp.float32),
+            30: jnp.asarray([-0.2, 0.9], dtype=jnp.float32),
+        }
+        profile = {"executables": {}}
+        compiled = {}
+        for horizon in (7, 30):
+            executable = jax.jit(jax.value_and_grad(objective, has_aux=True)).lower(
+                parameters, samples[horizon]
+            ).compile()
+            path = temporary / f"T{horizon}.executable.pkl"
+            with path.open("wb") as handle:
+                pickle.dump(serialize(executable), handle, protocol=pickle.HIGHEST_PROTOCOL)
+            profile["executables"][f"T{horizon}"] = {"executable": str(path)}
+            compiled[horizon] = executable
+        profile_path = temporary / "profile.json"
+        profile_path.write_text(json.dumps(profile), encoding="utf-8")
+        report["stage"] = "tiny_binaries_saved"
+        _atomic_json(output, report)
+        with RecurrentWorker(
+            profile_path, cuda_device=worker_cuda_device, memory_limit_bytes=2**30
+        ) as worker:
+            report["worker"] = worker.metadata
+            report["stage"] = "tiny_worker_loaded"
+            _atomic_json(output, report)
+            comparisons = []
+            for index in range(2):
+                current = jax.tree_util.tree_map(
+                    lambda value: value + index * 0.05, parameters
+                )
+                cases = {horizon: (samples[horizon] + index * 0.1,)
+                         for horizon in (7, 30)}
+                actual, recurrent_seconds, worker_total = worker.evaluate(jax, current, cases)
+                for horizon in (7, 30):
+                    expected = compiled[horizon](current, *cases[horizon])
+                    expected_gradient = jax.device_get(expected[1])
+                    np.testing.assert_allclose(
+                        actual[horizon]["gradient"]["weight"],
+                        expected_gradient["weight"], rtol=RTOL, atol=ATOL,
+                    )
+                    np.testing.assert_allclose(
+                        actual[horizon]["gradient"]["target"],
+                        expected_gradient["target"], rtol=RTOL, atol=ATOL,
+                    )
+                    np.testing.assert_allclose(
+                        actual[horizon]["loss"], float(expected[0][0]),
+                        rtol=RTOL, atol=ATOL,
+                    )
+                    if any(actual[horizon]["hard"].values()):
+                        raise ValueError("tiny worker returned nonzero physical counters")
+                comparisons.append({"round": index + 1, "status": "passed",
+                                    "worker_recurrent_seconds": recurrent_seconds,
+                                    "worker_total_seconds": worker_total})
+                report["comparisons"] = comparisons
+                report["stage"] = "tiny_round_compared"
+                _atomic_json(output, report)
+    report.update(stage="completed", status="passed")
+    _atomic_json(output, report)
+    return report
+
+
+if __name__ == "__main__":
+    if len(sys.argv) >= 2 and sys.argv[1] == "--smoke-worker":
+        if len(sys.argv) != 5 or sys.argv[2] != "--output":
+            raise SystemExit(
+                "usage: probe_shared_serialized_dual.py --smoke-worker "
+                "--output PATH WORKER_CUDA_DEVICE"
+            )
+        result = run_worker_smoke(Path(sys.argv[3]), sys.argv[4])
+    else:
+        result = run(parser().parse_args())
+    raise SystemExit(0 if result["status"] == "passed" else 1)

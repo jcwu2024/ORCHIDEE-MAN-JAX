@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+Active complete-throughput investigation:
+`research/daily_coarse_graining/shared_split_serialized_dual_preparation_20260925.md`
+defines actual serial/dual32/64 comparison; small deployed worker proof passed,
+full results pending. `shared_split_macro_packed_screen_20260925.md` records
+the whole non-GPP decoder candidate and actual-layout export; tiny checks do
+not establish V100 throughput. These supersede immediate scoped integration
+of small component gains; see NEXT_STEPS.md.
+
 Latest bounded performance investigation:
 `research/daily_coarse_graining/shared_split_carbon_group_screen_20260925.md`
 records completed five448-coordinate GPU grouping and matched controls:

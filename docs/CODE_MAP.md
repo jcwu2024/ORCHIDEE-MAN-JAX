@@ -2,6 +2,16 @@
 
 Last updated: 2026-09-25.
 
+`probe_shared_serialized_dual.py` and its `_worker.py` compare complete serial
+and two-process dual execution using trusted saved model-gradient binaries.
+Each process sees one GPU as logical0; private pipes carry full parameters and
+recurrent gradients. Two changing-data updates and matched32/64 fixed-weight
+proposals check full gradients/AdamW and include transport in elapsed time.
+`run_shared_serialized_dual.sh` is a bounded free-node diagnostic, not training.
+`shared_decoder_macro_packed.py` and its probe test160-field non-GPP batching
+with exact exported index layouts; the GPP raw-carbon path stays separate.
+These are diagnostic candidates, not enabled production execution.
+
 `shared_decoder_carbon_group.py` and `probe_shared_decoder_carbon_group.py`
 are diagnostic five-field448-coordinate decoder scheduling experiments.
 The reference keeps field-local64-query maps; grouping preserves separate

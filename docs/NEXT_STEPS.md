@@ -8,6 +8,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 throughput follow-up supersedes the scoped-integration next step
+below. Hold a whole-model compile solely for small Q1/five-field gains. Two
+bounded execution investigations are in progress: (1) actual complete serial
+versus dual32/64 updates using saved executables, including parameter/gradient
+transport and AdamW; (2) packing all160 non-GPP decoder fields/8548 coordinates
+while preserving capacity, banks, masks and native gradients. Tiny local checks
+are not real-model throughput evidence. Existing JAX0.4.38 saved binaries retain
+logical cuda0 even with a retargeted loader; use one visible GPU per persistent
+process for this diagnostic rather than recompiling gradients. No new paid
+allocation or formal learning launch. Report complete samples/second and
+card-hour tradeoffs before selecting an execution path.
+
 September25 five-field448-coordinate GPU screen and matched controls complete.
 Grouped128 passes scalar/micro4 strict output/full component-gradient checks:
 51.98->32.15ms scalar,80.45->61.19ms micro4; micro4 temporary storage+9.71%.
