@@ -8,6 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 23:48CST: saved-binary profile90516 completed; warm .504113->
+.415650s and GPU events62,617->30,801. Candidate reload11.47s versus44.45s
+original; no new gradient compilation. Matrix/fused device work still dominates.
+Combined expert128+source-reuse diagnostic92971 now runs on freeGPU0; runtime
+check passed24.49s and old reference was reused. Inspect
+`shared-combined-real-daily-20260925.{json,log}` before further action.
+Local FP32 full-context parameter comparisons still have sparse discrepancies;
+bounded independent FP64 is closer to candidate at the first failing coordinate.
+Do not claim synthetic closure or relax actual-loss gates. Read
+`research/daily_coarse_graining/shared_combined_execution_admission_20260925.md`.
+
 September25 completed104632: real daily expert128 PASSED loss/auxiliary,
 all64,884,481 parameter-gradient coordinates and physical hard counts.
 Median micro4 .503751->.418954s (1.202x), estimated live10.484->10.790GiB.

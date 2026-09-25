@@ -146,3 +146,92 @@ def test_explicit_staged_adapter_loader_uses_sibling_files():
     assert adapter.__name__ == "shared_transformer_raw_outputs_expert128"
     with pytest.raises(FileNotFoundError, match="staged diagnostic"):
         probe.load_staged_adapter(directory / "missing" / "shared_decoder_expert_execution.py")
+
+
+def test_backbone_loader_and_parser_options(tmp_path, monkeypatch):
+    package = "research.daily_coarse_graining.daily_operator"
+    for stem in ("shared_backbone_projection_reuse", "shared_backbone_execution"):
+        name = f"{package}.{stem}"
+        monkeypatch.setitem(__import__("sys").modules, name, __import__("sys").modules.get(name))
+    helper_path = tmp_path / "shared_backbone_projection_reuse.py"
+    helper_path.write_text("VALUE = 'staged-helper'\n", encoding="utf-8")
+    module_path = tmp_path / "shared_backbone_execution.py"
+    module_path.write_text(
+        "from .shared_backbone_projection_reuse import VALUE\n"
+        "def assemble_shared_transformer_context_with_source_reuse(*args, **kwargs):\n"
+        "    return VALUE\n",
+        encoding="utf-8",
+    )
+    assembler = probe.load_backbone_assembler(module_path)
+    assert assembler() == "staged-helper"
+    with pytest.raises(FileNotFoundError, match="staged backbone"):
+        probe.load_backbone_assembler(tmp_path / "absent.py")
+    options = probe.parser()._option_string_actions
+    assert {"--backbone-module-file", "--reference-result", "--comparison-result"} <= set(options)
+
+
+def test_result_artifact_requires_matching_identity(tmp_path):
+    artifact = tmp_path / "candidate.pkl"
+    with artifact.open("wb") as stream:
+        pickle.dump({"identity": {"checkpoint": "update0"}, "result": "result"}, stream)
+    loaded = probe.load_result_artifact(artifact, {"checkpoint": "update0"}, role="expert128 comparison")
+    assert loaded["result"] == "result"
+    with pytest.raises(ValueError, match="identity differs"):
+        probe.load_result_artifact(artifact, {"checkpoint": "other"}, role="expert128 comparison")
+    with pytest.raises(ValueError, match="overwrite"):
+        probe.check_artifact_output_collisions((artifact,), (artifact,))
+
+
+def test_expert128_comparison_accepts_legacy_tag_only_with_matching_identity(tmp_path):
+    artifact = tmp_path / "legacy-expert128.pkl"
+    value = {"identity": {"artifact_id": 17}, "result": ((0.0, {"hard": {"count": 0}}), {})}
+    with artifact.open("wb") as stream:
+        pickle.dump(value, stream)
+    loaded = probe.load_expert128_comparison(artifact, {"artifact_id": 17})
+    assert "variant" not in loaded
+    with pytest.raises(ValueError, match="identity differs"):
+        probe.load_expert128_comparison(artifact, {"artifact_id": 19})
+    value["variant"] = "another-candidate"
+    with artifact.open("wb") as stream:
+        pickle.dump(value, stream)
+    with pytest.raises(ValueError, match="not the expert128"):
+        probe.load_expert128_comparison(artifact, {"artifact_id": 17})
+
+
+@pytest.mark.parametrize("failure", ["lower", "compile"])
+def test_candidate_process_head_patches_restore_after_failure(failure):
+    original_raw = object()
+    original_assembler = object()
+    adapter = object()
+    replacement_assembler = object()
+    process_head = SimpleNamespace(
+        shared_transformer_raw_outputs=original_raw,
+        assemble_shared_transformer_context=original_assembler,
+    )
+
+    class Lowered:
+        def compile(self):
+            assert process_head.shared_transformer_raw_outputs is adapter
+            assert process_head.assemble_shared_transformer_context is replacement_assembler
+            if failure == "compile":
+                raise RuntimeError("compile failed")
+            return "executable"
+
+    class Backward:
+        def lower(self, parameters, daily4):
+            assert process_head.shared_transformer_raw_outputs is adapter
+            assert process_head.assemble_shared_transformer_context is replacement_assembler
+            if failure == "lower":
+                raise RuntimeError("lower failed")
+            return Lowered()
+
+    with pytest.raises(RuntimeError, match=f"{failure} failed"):
+        probe.lower_and_compile_candidate(
+            Backward(),
+            "parameters",
+            "daily4",
+            lambda *args, **kwargs: None,
+            probe.candidate_process_head_patches(process_head, adapter, replacement_assembler),
+        )
+    assert process_head.shared_transformer_raw_outputs is original_raw
+    assert process_head.assemble_shared_transformer_context is original_assembler

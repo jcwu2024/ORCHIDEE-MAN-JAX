@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 23:48CST: profile90516 completed without gradient compilation:
+matched warm original/expert128 .504113/.415650s, device events62,617/30,801,
+candidate deserialization11.47s. New combined backbone/decoder real daily
+diagnostic92971 RUNNING on freeGPU0, runtime check passed and references reused.
+Tiny context output/state gradients pass but original-FP32 full parameter
+comparison has sparse discrepancies; a trueFP64 backbone coordinate check
+finds candidate closer. Actual GPU full-gradient/physical admission pending.
+
 September25:104632 completed0, actual expert128 daily micro4 admission passed
 all64.884M gradient coordinates, loss/auxiliary and zero physical hard counts.
 Median .503751->.418954s, estimated live10.484->10.790GiB. Lower114.86s,

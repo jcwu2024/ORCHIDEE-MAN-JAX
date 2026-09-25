@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-25.
 
+`shared_saved_daily_profile_20260925.md` records completed90516's warm replay,
+device-event categories and serialized reload evidence. Active bounded plan
+`shared_combined_execution_admission_20260925.md` records source-reuse integration,
+known local FP32 comparison discrepancies, independent FP64 evidence and free
+GPU92971 launch. These are execution diagnostics; complete training remains pending.
+
 The real-daily admission note now records104632 PASSED:1.202x warm daily
 micro4 throughput, all64.884M parameter-gradient coordinates/physical checks
 pass, no complete recurrent/optimizer result. Next investigate common-source

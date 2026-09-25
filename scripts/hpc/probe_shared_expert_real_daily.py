@@ -13,6 +13,7 @@ import pickle
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -195,6 +196,92 @@ def load_staged_adapter(path: Path):
     return sys.modules[f"{package}.shared_decoder_expert_execution"].shared_transformer_raw_outputs_expert128
 
 
+def load_backbone_assembler(path: Path):
+    """Load the explicitly staged source-reuse context assembler."""
+
+    package = "research.daily_coarse_graining.daily_operator"
+    helper_path = path.with_name("shared_backbone_projection_reuse.py")
+    if not helper_path.is_file():
+        raise FileNotFoundError(f"required staged backbone helper absent: {helper_path}")
+    helper_name = f"{package}.shared_backbone_projection_reuse"
+    helper_spec = importlib.util.spec_from_file_location(helper_name, helper_path)
+    if helper_spec is None or helper_spec.loader is None:
+        raise ValueError(f"cannot load staged backbone helper: {helper_path}")
+    helper_module = importlib.util.module_from_spec(helper_spec)
+    sys.modules[helper_name] = helper_module
+    helper_spec.loader.exec_module(helper_module)
+
+    name = f"{package}.shared_backbone_execution"
+    if not path.is_file():
+        raise FileNotFoundError(f"required staged backbone module absent: {path}")
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"cannot load staged backbone module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    function = getattr(module, "assemble_shared_transformer_context_with_source_reuse", None)
+    if not callable(function):
+        raise ValueError(f"staged backbone module lacks source-reuse assembler: {path}")
+    return function
+
+
+@contextmanager
+def candidate_process_head_patches(shared_process_head: Any, adapter: Any, backbone_assembler: Any = None):
+    original_raw = shared_process_head.shared_transformer_raw_outputs
+    original_assembler = shared_process_head.assemble_shared_transformer_context
+    if original_raw is adapter:
+        raise ValueError("diagnostic adapter already installed in production process-head module")
+    if backbone_assembler is not None and original_assembler is backbone_assembler:
+        raise ValueError("diagnostic backbone assembler already installed in production process-head module")
+    try:
+        shared_process_head.shared_transformer_raw_outputs = adapter
+        if backbone_assembler is not None:
+            shared_process_head.assemble_shared_transformer_context = backbone_assembler
+        yield
+    finally:
+        shared_process_head.shared_transformer_raw_outputs = original_raw
+        shared_process_head.assemble_shared_transformer_context = original_assembler
+
+
+def lower_and_compile_candidate(backward: Any, parameters: Any, daily4: Any, emit, patches: Any):
+    with patches:
+        began = time.perf_counter()
+        lowered = backward.lower(parameters, daily4)
+        lower_seconds = time.perf_counter() - began
+        emit("candidate_before_backend_compile", lower_seconds=lower_seconds)
+        began = time.perf_counter()
+        candidate = lowered.compile()
+        compile_seconds = time.perf_counter() - began
+    return candidate, lower_seconds, compile_seconds
+
+
+def load_result_artifact(path: Path, expected_identity: Mapping[str, Any], *, role: str) -> dict[str, Any]:
+    if not path.is_file():
+        raise FileNotFoundError(f"{role} result artifact not found: {path}")
+    with path.open("rb") as stream:
+        saved = pickle.load(stream)
+    if not isinstance(saved, Mapping) or saved.get("identity") != expected_identity:
+        raise ValueError(f"{role} result artifact method/checkpoint/input identity differs")
+    return dict(saved)
+
+
+def load_expert128_comparison(path: Path, expected_identity: Mapping[str, Any]) -> dict[str, Any]:
+    saved = load_result_artifact(path, expected_identity, role="expert128 comparison")
+    if saved.get("variant", "expert128") != "expert128":
+        raise ValueError("comparison result is not the expert128 variant")
+    if any(hard_counts(saved["result"][0][1]).values()):
+        raise ValueError("expert128 comparison result hard gate failed")
+    return saved
+
+
+def check_artifact_output_collisions(inputs: tuple[Path | None, ...], outputs: tuple[Path, ...]) -> None:
+    output_paths = {path.resolve() for path in outputs}
+    collisions = [str(path) for path in inputs if path is not None and path.resolve() in output_paths]
+    if collisions:
+        raise ValueError(f"refusing to overwrite input result artifact(s): {', '.join(collisions)}")
+
+
 def compare_trees(jax: Any, actual: Any, reference: Any) -> dict[str, Any]:
     actual_leaves, actual_tree = jax.tree_util.tree_flatten(actual)
     reference_leaves, reference_tree = jax.tree_util.tree_flatten(reference)
@@ -295,15 +382,22 @@ def gpu_run(args: Any, emit) -> dict[str, Any]:
         raise ValueError("update-0 parameter tree count differs from declared architecture")
     daily4 = jax.device_put(context["daily4"])
     limit = int(reference["method"]["configuration"]["gradient_memory_limit_gib"]) * 2**30
-    reference_path = args.output.with_suffix(".reference.pkl")
+    default_reference_path = args.output.with_suffix(".reference.pkl")
+    reference_path = args.reference_result or default_reference_path
     candidate_path = args.output.with_suffix(".candidate.pkl")
     candidate_executable_path = args.output.with_suffix(".candidate.executable.pkl")
     result_identity = expected_identity | {"jax_version": jax.__version__, "executable": str(expected_executable)}
-    if args.reuse_reference:
-        with reference_path.open("rb") as stream:
-            saved = pickle.load(stream)
-        if saved.get("identity") != result_identity:
-            raise ValueError("saved daily reference result identity differs")
+    output_paths = [args.output, candidate_path, candidate_executable_path]
+    if args.reference_result is None and not args.reuse_reference:
+        output_paths.append(default_reference_path)
+    check_artifact_output_collisions((args.reference_result, args.comparison_result), tuple(output_paths))
+    if args.reference_result is not None:
+        saved = load_result_artifact(reference_path, result_identity, role="canonical reference")
+        reference_result = saved["result"]
+        reference_times = saved.get("warm_seconds", [])
+        emit("explicit_daily_reference_reused", reference_artifact=str(reference_path))
+    elif args.reuse_reference:
+        saved = load_result_artifact(reference_path, result_identity, role="canonical reference")
         reference_result = saved["result"]
         reference_times = saved.get("warm_seconds", [])
         emit("trusted_daily_reference_reused", reference_artifact=str(reference_path))
@@ -326,13 +420,27 @@ def gpu_run(args: Any, emit) -> dict[str, Any]:
             raise ValueError(f"trusted daily reference hard gate failed: {reference_hard}")
         emit("save_trusted_daily_reference", hard_counts=reference_hard)
         atomic_pickle(
-            reference_path, {"identity": result_identity, "result": reference_result, "warm_seconds": reference_times}
+            reference_path,
+            {
+                "identity": result_identity,
+                "variant": "canonical_reference",
+                "result": reference_result,
+                "warm_seconds": reference_times,
+            },
         )
         del trusted, result
     if any(hard_counts(reference_result[0][1]).values()):
         raise ValueError("saved daily reference hard gate failed")
 
+    comparison_saved = None
+    if args.comparison_result is not None:
+        comparison_saved = load_expert128_comparison(args.comparison_result, result_identity)
+
     adapter = load_staged_adapter(args.candidate_module_file)
+    backbone_assembler = (
+        load_backbone_assembler(args.backbone_module_file) if args.backbone_module_file is not None else None
+    )
+    variant = "expert128+backbone_source_reuse" if backbone_assembler is not None else "expert128"
     daily_objective = make_shared_joint_daily_objective(
         context["runtime"],
         context["head"],
@@ -342,32 +450,34 @@ def gpu_run(args: Any, emit) -> dict[str, Any]:
     )
     microbatch_objective = make_microbatch_objective(jax, jnp, daily_objective)
     backward = jax.jit(jax.value_and_grad(microbatch_objective, has_aux=True))
-    original = shared_process_head.shared_transformer_raw_outputs
-    if original is adapter:
-        raise ValueError("diagnostic adapter already installed in production process-head module")
     emit("candidate_before_lower")
-    shared_process_head.shared_transformer_raw_outputs = adapter
-    try:
-        began = time.perf_counter()
-        lowered = backward.lower(parameters, daily4)
-        lower_seconds = time.perf_counter() - began
-        emit("candidate_before_backend_compile", lower_seconds=lower_seconds)
-        began = time.perf_counter()
-        candidate = lowered.compile()
-        compile_seconds = time.perf_counter() - began
-    finally:
-        shared_process_head.shared_transformer_raw_outputs = original
+    candidate, lower_seconds, compile_seconds = lower_and_compile_candidate(
+        backward,
+        parameters,
+        daily4,
+        emit,
+        candidate_process_head_patches(shared_process_head, adapter, backbone_assembler),
+    )
     candidate_memory = memory_sizes(candidate)
     emit("candidate_compiled", compile_seconds=compile_seconds, candidate_memory=candidate_memory)
     if candidate_memory["estimated_live_bytes"] > limit:
         raise ValueError("candidate daily gradient exceeds declared memory bound")
     emit("save_candidate_executable")
-    atomic_pickle(candidate_executable_path, serialize(candidate))
+    atomic_pickle(
+        candidate_executable_path,
+        serialize(candidate),
+    )
     result, candidate_times = benchmark(candidate, parameters, daily4, args.repeats)
     candidate_result = jax.device_get(result)
     emit("save_candidate_result")
     atomic_pickle(
-        candidate_path, {"identity": result_identity, "result": candidate_result, "warm_seconds": candidate_times}
+        candidate_path,
+        {
+            "identity": result_identity,
+            "variant": variant,
+            "result": candidate_result,
+            "warm_seconds": candidate_times,
+        },
     )
     reference_hard = hard_counts(reference_result[0][1])
     candidate_hard = hard_counts(candidate_result[0][1])
@@ -377,11 +487,34 @@ def gpu_run(args: Any, emit) -> dict[str, Any]:
         "all_parameter_gradients": compare_trees(jax, candidate_result[1], reference_result[1]),
     }
     passed = all(value["passed"] for value in comparisons.values()) and not any(candidate_hard.values())
+    comparison_vs_expert128 = None
+    if comparison_saved is not None:
+        expert128_result = comparison_saved["result"]
+        comparison_vs_expert128 = {
+            "artifact": str(args.comparison_result),
+            "legacy_variant_metadata": "variant" not in comparison_saved,
+            "provenance": (
+                "explicit_legacy_expert128_artifact_without_variant_tag"
+                if "variant" not in comparison_saved
+                else "explicit_expert128_artifact"
+            ),
+            "warm_seconds_separate_run": comparison_saved.get("warm_seconds", []),
+            "candidate_warm_seconds_separate_run": candidate_times,
+            "timing_note": "separate runs; not a matched fresh speed comparison",
+            "comparisons": {
+                "loss": compare_trees(jax, candidate_result[0][0], expert128_result[0][0]),
+                "auxiliary": compare_trees(jax, candidate_result[0][1], expert128_result[0][1]),
+                "all_parameter_gradients": compare_trees(jax, candidate_result[1], expert128_result[1]),
+            },
+        }
     return {
         "status": "passed" if passed else "parity_failed",
         "scope": "actual_canonical_daily_micro4_only_no_T7_T30_no_optimizer",
         "all_parameter_gradient_coordinates": comparisons["all_parameter_gradients"]["coordinates"],
         "comparisons": comparisons,
+        "variant": variant,
+        "identity": result_identity,
+        "comparison_vs_expert128": comparison_vs_expert128,
         "reference_hard": reference_hard,
         "candidate_hard": candidate_hard,
         "reference_warm_seconds": reference_times,
@@ -433,8 +566,11 @@ def parser():
     result.add_argument("--input-bundle", type=Path, required=True)
     result.add_argument("--prepared-context", type=Path, required=True)
     result.add_argument("--candidate-module-file", type=Path)
+    result.add_argument("--backbone-module-file", type=Path)
     result.add_argument("--require-gpu", action="store_true")
     result.add_argument("--reuse-reference", action="store_true")
+    result.add_argument("--reference-result", type=Path)
+    result.add_argument("--comparison-result", type=Path)
     result.add_argument("--repeats", type=int, default=3)
     return result
 

@@ -2,6 +2,17 @@
 
 Last updated: 2026-09-25.
 
+`shared_backbone_execution.py` adds an opt-in canonical context assembler
+using common-source K/V reuse. It preserves all context fields and production
+defaults. The real-daily probe accepts `--backbone-module-file`,
+`--reference-result` and `--comparison-result`; both process-head bindings are
+restored after candidate lowering/compilation. Saved executables retain the
+existing tuple format. Its eight focused tests pass. The backbone adapter's
+three tests cover masks/state gradients and independent two-block FP64
+formula/gradient identity. A separate callable strict FP32 diagnostic still
+reports27parameter-coordinate failures, not production acceptance. See the
+combined execution admission note for scope and pending real-GPU evidence.
+
 `profile_shared_saved_daily.py` loads the admitted original/expert daily
 binaries and one compact context, measures warm replay and exports a device
 trace per variant without compiling a new gradient. Its free-only launcher
