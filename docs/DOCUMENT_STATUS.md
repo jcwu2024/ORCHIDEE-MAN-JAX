@@ -2,6 +2,10 @@
 
 Last updated: 2026-09-26.
 
+`shared_combined_recurrent_admission_20260926.md` is the active bounded T7-first
+execution contract: implemented,7local tests/real CPU inspect pass, freeGPU0
+launcher97821 running60minute main ceiling. T30/full-update acceptance pending.
+
 `shared_combined_execution_admission_20260925.md` now records completed92971:
 actual daily loss/auxiliary/all64.884M parameter gradients and physical checks
 pass; combined warm throughput1.321x versus original (separate runs).

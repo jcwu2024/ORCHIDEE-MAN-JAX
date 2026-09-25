@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26 00:34CST: freeGPU0 T7 combined-execution admission97821 RUNNING,
+60minute main ceiling plus3minute preflight. Seven local tests and actual CPU
+prepared-input/adapter inspection(57.80s) pass; no Teacher preparation.
+Inspect `shared-combined-recurrent-T7-20260926.{json,log}` before continuing.
+T30 follows only after T7 admission. Read
+`research/daily_coarse_graining/shared_combined_recurrent_admission_20260926.md`.
+
 September26: combined backbone-source reuse + expert128 actual daily92971
 completed0. Loss/auxiliary/all64,884,481 gradient coordinates pass unchanged
 tolerance; physical hard counts zero. Micro4 median .503751->.381383s,

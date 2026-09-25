@@ -1,6 +1,16 @@
 # Combined execution: bounded recurrent admission
 
-Status: implementation preparation on local/free resources. Actual daily
+Status: T7 running on freeGPU0, launcher97821, since00:33:49CST September26.
+Local implementation1f3622b has7focused tests passing, Ruff/shell syntax clean.
+Actual test02 inspection passed in57.80s: artifact742 case/objective binding
+and both staged adapters loaded, no gradient compile or Teacher preparation.
+Actual CPU/GPU target-shell dry-run arguments pass. Both GPUs were idle and
+host load0.01before dispatch. Remote model checkout remains immutable c599236;
+new scripts/adapters are staged in `runtime/transfer/shared-combined-recurrent-20260926`.
+Inspect `runtime/outputs/diagnostics/shared-combined-recurrent-T7-20260926.{json,log}`
+before another action. There is no T30 launch yet and no paid allocation.
+
+Actual daily
 combined execution has passed all loss/gradient/physical comparisons and
 matched replay measures1.339x throughput; no recurrent or full-update claim.
 

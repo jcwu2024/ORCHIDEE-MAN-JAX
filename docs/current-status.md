@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26 00:34CST: T7 combined native-AD diagnostic97821 running on freeGPU0,
+60minute main ceiling plus3minute preflight. CPU inspect completed57.80s,
+staged adapters/public recurrent objective/real prepared case loaded correctly;
+7focused local tests pass. No new data preparation, T30 launch or paid task.
+See shared_combined_recurrent_admission_20260926.md for exact scope and paths.
+
 September26: combined actual daily92971 completed0. Original-vs-candidate
 loss/160auxiliary/all64.884M gradients pass unchanged1e-5/1e-6; all physical
 hard counts0. Median daily micro4 .503751->.381383s(1.321x); estimated live
