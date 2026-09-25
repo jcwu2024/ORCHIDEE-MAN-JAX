@@ -46,6 +46,7 @@ EXPERT_COUNT = 7
 FAMILY_COUNT = 20
 VARIANTS = ("reference64", "packed16", "packed32", "packed64")
 ACTUAL_VARIANTS = ("reference64", "packed128", "packed256", "packed512")
+EXPERT_VARIANTS = ("expert128", "expert256")
 LAYOUT_SCHEMA = "shared_decoder_macro_non_gpp_layout_v1"
 
 
@@ -366,10 +367,15 @@ def run(args, decoder):
             fields, projections = prepare_fields(parameters, inputs, masks, specs=specs)
             if mode == "reference64":
                 values = decoder.reference_decode_fields(parameters, fields, config)
-            else:
+            elif mode.startswith("packed"):
                 values = decoder.packed_decode_fields(
                     parameters, fields, experts, projections, config,
                     chunk_size=int(mode.removeprefix("packed")),
+                )
+            else:
+                values = decoder.expert_decode_fields(
+                    parameters, fields, experts, projections, config,
+                    chunk_size=int(mode.removeprefix("expert")),
                 )
             outputs = jnp.concatenate(values)
             target = jnp.sin(jnp.arange(outputs.size, dtype=jnp.float32) * 0.13)
@@ -431,9 +437,10 @@ def run(args, decoder):
             if not all(item["passed"] for item in report["comparison"][mode].values()):
                 report["status"] = "numerical_rejection"
                 save(f"{mode}_numerical_rejection")
-                return report
+                continue
         save(f"{mode}_complete")
-    report["status"] = "passed"
+    if report["status"] == "running":
+        report["status"] = "passed"
     save("complete")
     return report
 
@@ -447,7 +454,10 @@ def main():
     parser.add_argument("--candidate-module-file", type=Path)
     parser.add_argument("--export-layout-only", type=Path)
     parser.add_argument("--layout-metadata-file", type=Path)
-    parser.add_argument("--variants", nargs="+", choices=tuple(mode for mode in VARIANTS[1:] + ACTUAL_VARIANTS[1:]))
+    parser.add_argument(
+        "--variants", nargs="+",
+        choices=tuple(mode for mode in VARIANTS[1:] + ACTUAL_VARIANTS[1:] + EXPERT_VARIANTS),
+    )
     parser.add_argument("--reference-artifact", type=Path)
     parser.add_argument("--resume-reference", action="store_true")
     parser.add_argument("--require-gpu", action="store_true")

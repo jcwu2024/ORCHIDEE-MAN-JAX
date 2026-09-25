@@ -8,7 +8,7 @@ MICROBATCH=${MICROBATCH:-1}
 GPU_INDEX=${GPU_INDEX:-0}
 case "$MICROBATCH" in 1|4) ;; *) exit 2 ;; esac
 case "$GPU_INDEX" in 0|1) ;; *) exit 2 ;; esac
-OUTPUT="$ROOT/runtime/outputs/diagnostics/shared-split-macro-packed-20260925-micro${MICROBATCH}.json"
+OUTPUT=${OUTPUT:-"$ROOT/runtime/outputs/diagnostics/shared-split-macro-packed-20260925-micro${MICROBATCH}.json"}
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 COMMAND=(timeout --signal=TERM --kill-after=30s 20m env -u LD_LIBRARY_PATH
@@ -24,7 +24,7 @@ COMMAND=(timeout --signal=TERM --kill-after=30s 20m env -u LD_LIBRARY_PATH
   --candidate-module-file "$OVERLAY/shared_decoder_macro_packed.py"
   --layout-metadata-file "$OVERLAY/shared-decoder-macro-layout-20260925.json"
   --require-gpu --width 384 --repeats 10 --microbatch "$MICROBATCH"
-  --max-compiler-temp-gib 20 --variants packed128 packed256
+  --max-compiler-temp-gib 20 --variants packed128 expert128
   --output "$OUTPUT")
 if [[ ${1:-} == --dry-run ]]; then printf '%q ' "${COMMAND[@]}"; printf '\n'; exit 0; fi
 case $(hostname -s) in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac

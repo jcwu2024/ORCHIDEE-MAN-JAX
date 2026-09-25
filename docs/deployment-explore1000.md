@@ -6,9 +6,13 @@ explicitly approved trace work.
 
 ## Safety and Topology
 
-- Connect through the user's `cln01` SSH alias.
+- Login nodes are `cln01` (`192.168.11.1`) and `cln02` (`192.168.11.2`).
+  User clarification2026-09-25: use whichever works better at the time; neither
+  is a permanent primary/fallback. Reuse the user's SSH identity and override
+  HostName for an invocation if the corresponding alias is absent. Route
+  jump connections and transfers through the same selected endpoint.
 - Write only under `/WORK/liwei_work/jcwu/`.
-- Never run computation on `cln01`.
+- Never run computation on either login node.
 - Use `test01` through `test04` only for small correctness and compatibility
   smoke tests. They are shared resources and must not be used for accepted
   performance benchmarks.

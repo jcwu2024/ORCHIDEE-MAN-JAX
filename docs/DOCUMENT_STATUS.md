@@ -11,7 +11,11 @@ not establish V100 throughput. These supersede immediate scoped integration
 of small component gains; see NEXT_STEPS.md.
 Both first full probes were stopped before gradient execution because of
 observed Lustre metadata waiting on free nodes. Their dated notes distinguish
-this external blocker from numerical/compile failures. No GPU probe is active.
+this external blocker from numerical/compile failures. Resumed free dual104560
+started13:24 through cln01 but remains filesystem-bound at13:47. Same-expert
+whole-decoder packing passes tiny native-gradient checks and6tests; actual
+performance pending. `shared_split_dual_idle_node_proposal_20260925.md` is a
+prepared2.48yuan/30min paid proposal, awaiting explicit approval, not submitted.
 
 Latest bounded performance investigation:
 `research/daily_coarse_graining/shared_split_carbon_group_screen_20260925.md`

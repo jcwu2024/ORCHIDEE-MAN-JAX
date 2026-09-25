@@ -283,3 +283,89 @@ def packed_decode_fields(
     decoded = jax.lax.map(decode_chunk, mapped).reshape(-1)[:rows]
     offsets = (0,) + tuple(sum(sizes[:index]) for index in range(1, len(sizes))) + (rows,)
     return tuple(decoded[start:end] for start, end in zip(offsets[:-1], offsets[1:], strict=True))
+
+
+def expert_decode_fields(
+    shared: Mapping[str, Any],
+    fields: tuple[DenseDecoderField, ...],
+    expert_indices: tuple[int, ...],
+    expert_projections: tuple[tuple[_DecoderBlockProjection, ...], ...],
+    config: Any,
+    *,
+    chunk_size: int,
+) -> tuple[Any, ...]:
+    """Map heterogeneous fields per expert through production attention."""
+
+    _validate_fields(shared, fields, config)
+    if len(fields) != len(expert_indices) or chunk_size <= 0:
+        raise ValueError("one expert identity per field and positive chunk size required")
+    if any(index < 0 or index >= len(expert_projections) for index in expert_indices):
+        raise ValueError("expert index outside projected cache")
+    blocks = shared["coordinate_blocks"]
+    if any(len(item) != len(blocks) for item in expert_projections):
+        raise ValueError("expert projection block count mismatch")
+
+    outputs: list[Any] = [None] * len(fields)
+    for expert in sorted(set(expert_indices)):
+        positions = tuple(index for index, owner in enumerate(expert_indices) if owner == expert)
+        group = tuple(fields[index] for index in positions)
+        max_slots = max(int(field.dynamic_tokens.shape[1]) - 1 for field in group)
+        sizes = tuple(int(field.query.shape[0]) for field in group)
+
+        def padded_dynamic(field: DenseDecoderField) -> Any:
+            slots = int(field.dynamic_tokens.shape[1]) - 1
+            axis = jnp.pad(field.dynamic_tokens[:, :slots], ((0, 0), (0, max_slots - slots), (0, 0)))
+            return jnp.concatenate((axis, field.dynamic_tokens[:, slots : slots + 1]), axis=1)
+
+        def padded_mask(field: DenseDecoderField) -> Any:
+            slots = int(field.dynamic_tokens.shape[1]) - 1
+            mask = field.dynamic_mask[:, 0, :]
+            axis = jnp.pad(mask[:, :slots], ((0, 0), (0, max_slots - slots)))
+            return jnp.concatenate((axis, mask[:, slots : slots + 1]), axis=1)[:, None, :]
+
+        axis_parts = []
+        local_parts = []
+        axis_offset = local_offset = 0
+        for field in group:
+            slots = int(field.dynamic_tokens.shape[1]) - 1
+            axis_parts.append(jnp.pad(
+                field.dynamic_projection_indices[0] + axis_offset,
+                ((0, 0), (0, max_slots - slots)),
+            ))
+            local_parts.append(field.dynamic_projection_indices[1] + local_offset)
+            axis_offset += int(field.projections[0].axis_key.shape[0])
+            local_offset += int(field.projections[0].local_key.shape[0])
+
+        projections = []
+        for block_index, common in enumerate(expert_projections[expert]):
+            projections.append(_DecoderBlockProjection(
+                family_key=common.family_key,
+                family_value=common.family_value,
+                process_key=common.process_key,
+                process_value=common.process_value,
+                carbon_key=None,
+                carbon_value=None,
+                axis_key=jnp.concatenate(tuple(field.projections[block_index].axis_key for field in group)),
+                axis_value=jnp.concatenate(tuple(field.projections[block_index].axis_value for field in group)),
+                local_key=jnp.concatenate(tuple(field.projections[block_index].local_key for field in group)),
+                local_value=jnp.concatenate(tuple(field.projections[block_index].local_value for field in group)),
+            ))
+        decoded = _decode_mapped_rows(
+            shared,
+            query=jnp.concatenate(tuple(field.query for field in group)),
+            dynamic=jnp.concatenate(tuple(padded_dynamic(field) for field in group)),
+            dynamic_mask=jnp.concatenate(tuple(padded_mask(field) for field in group)),
+            family_mask=jnp.concatenate(tuple(field.family_mask for field in group)),
+            process_mask=jnp.concatenate(tuple(field.process_mask for field in group)),
+            active=jnp.concatenate(tuple(field.output_active for field in group)),
+            axis_indices=jnp.concatenate(tuple(axis_parts)),
+            local_indices=jnp.concatenate(tuple(local_parts)),
+            projections=tuple(projections),
+            config=config,
+            chunk_size=chunk_size,
+        )
+        offset = 0
+        for position, size in zip(positions, sizes, strict=True):
+            outputs[position] = decoded[offset : offset + size]
+            offset += size
+    return tuple(outputs)

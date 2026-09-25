@@ -10,6 +10,13 @@ proposals check full gradients/AdamW and include transport in elapsed time.
 `run_shared_serialized_dual.sh` is a bounded free-node diagnostic, not training.
 `shared_decoder_macro_packed.py` and its probe test160-field non-GPP batching
 with exact exported index layouts; the GPP raw-carbon path stays separate.
+Its `expert_decode_fields` alternative packs within each expert and reuses
+common family/process projection caches through the production helper.
+Tiny scalar/micro4 output/full-gradient checks and6tests pass; actual V100
+throughput is pending. The bounded launcher compares packed128 and expert128.
+`job_shared_serialized_dual.sh` prepares a30min/2GPU allocated-node replay,
+with short filesystem reads before startup and actual Slurm GPU selectors;
+no paid submission follows without the declared2.48yuan approval.
 These are diagnostic candidates, not enabled production execution.
 
 `shared_decoder_carbon_group.py` and `probe_shared_decoder_carbon_group.py`

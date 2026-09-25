@@ -96,6 +96,40 @@ synthetic fixture construction. The changed tiny CLI path passes. No
 actual-layout or width-384 compilation was run locally; deployed GPU
 results are pending.
 
+## Same-expert alternative
+
+`expert_decode_fields` groups the non-carbon fields by their seven expert
+identities, retaining field-local axis/local K/V banks and offset gathers.
+It pads axis slots only to each expert group's maximum and calls the
+existing `_decode_mapped_rows` / production coordinate-block helper with
+that expert's shared family/process projection cache. Thus it does not
+gather or renormalize the common bank per query as the cross-expert
+candidate does. No attention arithmetic is copied or changed. Outputs
+are restored to original field order and lengths; carbon banks remain
+explicitly unsupported.
+
+From the exported actual layout, expert-group 128/256 maps would use
+71/38 chunks, versus 264 field-local64 chunks and 67/34 global
+cross-expert chunks. Within-expert axis-slot padding raises the 32,595
+real slots to 39,680 (21.7%); global five-slot padding uses 42,740
+(31.1%). The largest expert, litter/DOC, owns 42 fields and 7,542 of
+8,548 rows. These are static work counts only; compilation, memory,
+warm speed, and full-model effects are unmeasured.
+
+The tiny heterogeneous fixture passes `--variants expert128 expert256`
+with scalar and micro4 native AD at the same `1e-5/1e-6` gate. Each
+mode has zero failures over 47 scalar or 185 micro4 output/loss
+coordinates and 25,825 scalar or 82,753 micro4 parameter/payload
+gradient coordinates. The maximum absolute gradient difference is
+5.63e-7 scalar and 3.06e-7 micro4. Reports are
+`outputs/shared-decoder-macro-expert-scalar-local.json` and
+`outputs/shared-decoder-macro-expert-micro4-local.json`. Every tiny
+expert group fits in one chunk, so this proves numerical routing and
+gradient parity, not a 128-versus-256 scheduling difference. The probe
+records a numerical rejection per candidate and continues to later
+candidates, while a compiler-memory limit still stops the run. The
+deployed actual-layout screen remains pending.
+
 ## Deployed attempts and current blocker
 
 Free gln01 scalar/micro4 launchers96824/96825 began around11:39CST on

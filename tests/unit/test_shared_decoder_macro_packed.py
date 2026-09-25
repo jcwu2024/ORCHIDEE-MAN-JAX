@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from argparse import Namespace
+
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
 
 from research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed import (
+    expert_decode_fields,
     packed_decode_fields,
     reference_decode_fields,
 )
@@ -33,6 +36,12 @@ def test_routing_padding_and_restored_shapes(case):
         packed = packed_decode_fields(shared, fields, identities, experts, config, chunk_size=chunk_size)
         assert tuple(value.shape for value in packed) == tuple((spec[1],) for spec in FIELD_SPECS)
         for actual, expected, field in zip(packed, reference, fields, strict=True):
+            np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
+            np.testing.assert_array_equal(np.asarray(actual)[~np.asarray(field.output_active)], 0.0)
+    for chunk_size in (128, 256):
+        grouped = expert_decode_fields(shared, fields, identities, experts, config, chunk_size=chunk_size)
+        assert tuple(value.shape for value in grouped) == tuple((spec[1],) for spec in FIELD_SPECS)
+        for actual, expected, field in zip(grouped, reference, fields, strict=True):
             np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
             np.testing.assert_array_equal(np.asarray(actual)[~np.asarray(field.output_active)], 0.0)
 
@@ -78,6 +87,8 @@ def test_carbon_bank_is_rejected(case):
     carbon_field = fields[0]._replace(carbon_mask=jnp.ones((1, 1, 1), dtype=bool))
     with pytest.raises(ValueError, match="carbon bank"):
         packed_decode_fields(shared, (carbon_field,) + fields[1:], identities, experts, config, chunk_size=16)
+    with pytest.raises(ValueError, match="carbon bank"):
+        expert_decode_fields(shared, (carbon_field,) + fields[1:], identities, experts, config, chunk_size=128)
 
 
 def test_actual_layout_json_only_runtime(tmp_path, monkeypatch):
@@ -105,3 +116,29 @@ def test_actual_layout_json_only_runtime(tmp_path, monkeypatch):
     modified["fields"][0]["field_name"] = "daily.fast_gpp"
     with pytest.raises(ValueError, match="identity"):
         probe.validate_layout_metadata(modified)
+
+
+def test_candidate_numerical_rejection_does_not_skip_next_mode(tmp_path, monkeypatch):
+    original_compare = probe.compare
+    first = True
+
+    def reject_first(actual, expected):
+        nonlocal first
+        result = original_compare(actual, expected)
+        if first:
+            first = False
+            return dict(result, passed=False, failed=1)
+        return result
+
+    monkeypatch.setattr(probe, "compare", reject_first)
+    args = Namespace(
+        width=8, microbatch=1, repeats=1, max_compiler_temp_gib=4.0,
+        candidate_module_file=None, layout_metadata_file=None,
+        variants=("packed16", "expert128"), reference_artifact=None,
+        resume_reference=False, require_gpu=False, output=tmp_path / "report.json",
+    )
+    report = probe.run(args, probe.load_candidate(None))
+    assert report["status"] == "numerical_rejection"
+    assert report["comparison"]["packed16"]["loss_output"]["failed"] == 1
+    assert report["comparison"]["expert128"]["loss_output"]["passed"]
+    assert report["comparison"]["expert128"]["parameter_payload_gradients"]["passed"]

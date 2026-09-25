@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September25 13:24 resumed free dual104560 through cln01(.1), using existing
+binaries. Small reads passed, but at13:47 bootstrap still waited on Lustre,
+20CPU-seconds across23min; no new throughput outcome. User clarified cln01/.1
+and cln02/.2 are interchangeable login choices by current usability.
+Same-expert160-field packing now passes tiny scalar/micro4 output/full gradient
+parity and6tests; GPU throughput pending. It preserves shared K/V banks within
+each expert and restores every output. A30min/2V100 idle-node dual comparison
+is prepared at2.48yuan maximum, awaiting approval, not submitted.
+
 September25 throughput follow-up: real dual32/64 complete-update comparison
 and whole non-GPP decoder packing are under implementation/testing. This
 supersedes immediate full-model integration of only the small component wins

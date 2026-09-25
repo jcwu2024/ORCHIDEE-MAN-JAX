@@ -8,6 +8,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September25 13:24CST recovery: user clarified cln01=.1 and cln02=.2 are
+interchangeable login choices, selected by current usability. Small reads
+through .1 and on gln01 passed; resumed bounded dual probe104560, Python104627,
+using unchanged c599236 model and saved binaries. Reports use
+`shared-split-serialized-dual-20260925-resume1.{json,log}` to preserve the first
+attempt. At~13:26 imports still intermittently wait on Lustre Python-library
+files; no gradient computation yet. Small-read success does not prove full
+filesystem recovery. Track this finite30min attempt rather than launching
+duplicates. Macro scalar/micro4 screens remain prepared, after dual frees GPUs.
+At13:47 free probe still bootstrap/20CPU-seconds across23minutes. Same-expert
+whole-decoder execution is now implemented: scalar/micro4 native output and
+full gradient parity pass;6focused tests pass. It uses71 expert128 chunks
+versus264 field-local64 chunks, retaining common projected banks. Actual GPU
+speed is unmeasured. Next screen packed128 versus expert128, not another wide
+chunk-size sweep. A different idle-node paid dual comparison is prepared,
+not submitted,2V100/8CPU/64GiB/30min/2.48yuan maximum; see
+`shared_split_dual_idle_node_proposal_20260925.md`. Explicit approval is pending.
+
 September25 throughput follow-up supersedes the scoped-integration next step
 below. Hold a whole-model compile solely for small Q1/five-field gains. Two
 bounded execution investigations are in progress: (1) actual complete serial
