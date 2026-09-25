@@ -2,6 +2,10 @@
 
 Last updated: 2026-09-25.
 
+`research/daily_coarse_graining/shared_backbone_projection_reuse_20260925.md`
+is an implemented, locally checked, GPU-pending execution diagnostic. It is
+not an architecture change or production performance/scientific acceptance.
+
 Latest completed performance evidence:
 `research/daily_coarse_graining/shared_split_dual_compact_results_20260925.md`
 supersedes pending full-dual outcomes below: free80665 passed, with1.327x

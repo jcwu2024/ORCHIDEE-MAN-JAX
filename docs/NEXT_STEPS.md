@@ -8,6 +8,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+Common-source backbone K/V reuse is implemented in an isolated helper:
+three focused tests and tiny compiled/resume parity pass, with explicit FP32
+payloads under x64-enabled JAX. Its20min free-node launcher is staged and
+target-shell checked, not launched while both GPUs are occupied. See
+`research/daily_coarse_graining/shared_backbone_projection_reuse_20260925.md`.
+After current reference probes release a GPU, test this helper before any
+production integration or new whole-model compile.
+
 Active16:41CST: free partitioned-reference screens83546/83547 on gln01
 GPUs0/1 (scalar/micro4), each20min maximum, output stem
 `shared-macro-partitioned-20260925-micro{1,4}`. Ten relevant local tests and

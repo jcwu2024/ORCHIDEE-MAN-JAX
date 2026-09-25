@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-25.
 
+`shared_backbone_projection_reuse.py` is a diagnostic helper which projects
+common source K/V once per backbone block and preserves expert-axis banks,
+masks and native AD. Its probe saves full reference gradients before candidate
+compilation and measures actual-shape helper execution only; three focused
+tests and tiny compiled/resume checks pass. The free-only launcher is staged;
+production behavior and measured full-update throughput remain unchanged.
+See shared_backbone_projection_reuse_20260925.md.
+
 `probe_shared_serialized_dual.py` and its `_worker.py` compare complete serial
 and two-process dual execution using trusted saved model-gradient binaries.
 Each process sees one GPU as logical0; private pipes carry full parameters and
