@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26 13:48CST: complete-update41280 completed0/passed,649.48s with
+zero large-gradient compiles. Median single12.553775s/dual10.270496s for
+daily32+T7+T30. All changing-update full-gradient/parameter/AdamW and original
+checkpoint comparisons pass unchanged tolerances. Historical speed gains
+remain modest(15.47%/8.24%less time). Dual wall reduction18.19% costs63.62%
+moreGPU-time versus combined serial. Parent live peak14.998GiB; pool25.391GiB.
+No active task here. Reusable execution admitted only within tested scope;
+scientific learning and10x remain pending. See complete-update result note.
+
 September26 13:24CST: complete-update probe41280 running on freeGPU0+GPU1,
 30minute ceiling. Local11tests, deployed CPU input/admission validation and
 target-shell dry-runs passed. Reuses combined daily/T7/T30 saved binaries

@@ -8,6 +8,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26 13:48CST:41280 completed0/passed in649.48s, zero model-gradient
+compiles. Unchanged daily32+T7+T30 complete median12.553775s singleGPU /
+10.270496s dualGPU; historical-original time reductions15.47%/8.24%.
+Both changing updates pass full mixed-gradient/parameter/AdamW comparisons;
+final parameters/AdamW and numerical records match original reference.
+Dual saves18.19%wall versus combined serial but needs63.62%moreGPU-time.
+No active task from this run. Exact-execution component/full-update gates
+are now bounded passes; scientific learning/10x remain unmet. Keep saved
+binaries, no repeat large compilation or blind microbatch/tile sweep.
+Next prepare a concrete larger-throughput proposal centered on recurrent
+computation and measured costs; discuss precision/capacity/training-method
+changes before implementation. Do not silently adopt more recurrent samples.
+Read shared_combined_full_update_20260926.md for evidence and limitations.
+Earlier running snapshots are historical. No new paid allocation.
+
 September26 13:24CST: free dual-GPU launcher41280 runs complete unchanged-work
 admission,30minute ceiling.11local tests, actual CPU admission/bundle check
 and CPU/GPU target-shell dry-runs passed. All components load the admitted

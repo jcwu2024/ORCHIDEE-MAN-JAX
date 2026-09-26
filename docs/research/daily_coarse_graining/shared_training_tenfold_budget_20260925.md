@@ -1,5 +1,15 @@
 # A tenfold shared-training throughput budget
 
+September26 full-update result41280: unchanged daily32+T7+T30 now12.553775s
+singleGPU/10.270496s dualGPU, all bounded full-update checks pass. Compared
+with previous separate-run14.851248/11.192650s this is15.47%/8.24%less time.
+Dual versus combined serial reduces wall18.19% but raisesGPU-time63.62%.
+Zero new model-gradient compiles; startup still406.2s to load all parent/
+worker binaries. This closes the bounded complete-execution comparison and
+confirms the10x goal is unmet. Stop treating branch-overlap dual32 or another
+small schedule change as the primary10x route. Prepare a concrete recurrent-
+compute proposal; precision/capacity/method changes still require discussion.
+
 September26 completed follow-up: T30 combined admission passes all gradients
 and physical gates,7.681579->6.730945s (12.38%less). Fixed-two-windowT7 vmap
 also passes:3.155881->2.241723s,1.407792x throughput versus combined serial,

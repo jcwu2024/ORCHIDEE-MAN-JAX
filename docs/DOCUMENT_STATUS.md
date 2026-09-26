@@ -2,6 +2,11 @@
 
 Last updated: 2026-09-26.
 
+`shared_combined_full_update_20260926.md` now records41280 completed0/passed:
+single12.553775s/dual10.270496s, full state/gradient/optimizer comparisons
+passed, zero model-gradient compilation. Exact-execution gain remains modest;
+no scientific or10x acceptance. Earlier running status below is historical.
+
 `shared_combined_full_update_20260926.md` is the active complete-update
 admission contract. Implemented,11local tests/real CPU inspection/dry-runs
 pass; free two-GPU launcher41280 running with30minute ceiling. It reuses

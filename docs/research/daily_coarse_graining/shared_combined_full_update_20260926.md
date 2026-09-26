@@ -1,11 +1,59 @@
 # Combined saved execution: complete-update admission
 
-Status: implemented; local11tests and actual test02 CPU inspection passed.
+Status: completed0/passed, free gln01 launcher41280. Local11tests and actual test02 CPU inspection passed.
 Actual CPU/GPU shell dry-runs passed; both free GPUs idle at13:23CST before
 dispatch. No paid job or formal learning. Daily, T7 and T30 components have passed unchanged loss/full
 parameter-gradient/physical checks. This next gate measures whole updates.
 Free gln01 launcher41280 started approximately13:24CST September26,
-GPU0 parent/GPU1 recurrent worker,30minute ceiling. Results pending.
+GPU0 parent/GPU1 recurrent worker,30minute ceiling. Main probe completed
+649.48s (10.82min); no model-gradient compilation.
+
+## Completed result
+
+Three interleaved complete fixed-weight proposals per mode, identical
+daily32+T7+T30 workload, including IPC/checks/AdamW:
+
+| Execution | Previous original run | Combined execution | Historical time reduction |
+| --- | ---: | ---: | ---: |
+| One V100 | 14.851248s | 12.553775s | 15.47% |
+| Two V100s | 11.192650s | 10.270496s | 8.24% |
+
+Original-vs-combined columns are different runs. Within the combined run,
+dual gives1.222314x throughput /18.19%less wall time than serial, but uses
+1.636240x GPU-seconds per update. Under the existing illustrative8CPU,
+0.07yuan/core-hour and2.20yuan/GPU-hour accounting, equal-work charge ratio
+is1.470245. This free test incurred no paid charge. Three repetitions are
+bounded measurements, not confidence intervals or sustained-training rates.
+
+Both changing updates pass64,884,481-coordinate mixed-gradient/parameter
+and129,768,963-coordinate AdamW serial/dual comparisons at unchanged
+rtol1e-5/atol1e-6. Largest serial/dual gradient difference5.960464478e-8;
+largest updated-parameter difference1.192092896e-7. Final checkpoint vs
+original also passes: maximum parameter difference9.685754776e-8 and full
+AdamW difference1.396983862e-9. All48technical loss/scalar coordinates pass.
+Physical checks pass. No tolerance or method changes, no formal weights.
+
+Graphs ready406.2s after the main timer; parent daily load~12.1s and recurrent
+loads~93.9/95.9s, worker recurrent loads98.49/99.40s. These are deserialization,
+not gradient compilation. Parent peak live allocations14.998GiB while JAX
+pool25.391GiB: the pool is not actual live memory; no worker peak captured.
+
+The second changing dual update records daily4.326s, recurrentGPU8.732s,
+branches including IPC10.842s and final merge/check/AdamW0.136s. This points
+to the recurrent branch and transport as the remaining dual critical path;
+these are one changing update's measurements, not the fixed-proposal medians.
+Do not label the whole difference as pure transfer without finer evidence.
+Update-report outer wall times include extra reference/comparison work and
+must not be reported as training update throughput.
+
+The exact-execution optimization now has bounded complete-update admission.
+It has not met the10x target. Keep these reusable binaries as an admitted
+diagnostic reference; do not launch another blind tile/microbatch sweep.
+Next frame a concrete larger throughput proposal against the observed
+recurrent cost, with numerical/architecture/method implications discussed
+before changing them. Dual32 is available but has a poor card-hour tradeoff.
+The passed two-window batching experiment remains a separate throughput
+option requiring an explicit production sampling decision.
 
 ## Fixed method and comparison
 
