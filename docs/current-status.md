@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26: savedT7 profile31735 completed0/passed, no new compilation.
+Matched warm1.807470->1.574453s; full-gradient/physical parity retained.
+299,552candidate GPU events,268,893<=10us; summed fused56.59%,matrix36.17%.
+These are broad device categories, not exclusive physics/module attribution.
+T30 admission29812 running; independent-window batching is the next specified
+throughput hypothesis, not an adopted training batch/mix change.
+
 September26 11:29CST: T7 combined97821 completed0, strict loss/19aux/all64.884M
 parameter gradients pass,14hard counters0. Median1.815832->1.588352s,
 12.53%less time; compiler live1.836->3.249GiB. Compile42.48min, main49.52min.

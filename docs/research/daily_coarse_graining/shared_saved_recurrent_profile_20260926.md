@@ -1,8 +1,48 @@
 # Saved T7 execution profile
 
-Status: freeGPU1 launcher31735 running with10minute ceiling, while independent
-T30 admission29812 usesGPU0. No new gradient compilation, HLO export, Teacher
+Status: freeGPU1 launcher31735 completed0/passed in324.39s main time,
+while independent T30 admission29812 usesGPU0. No new gradient compilation, HLO export, Teacher
 preparation, optimizer update, paid job or precision change.
+
+## Completed measurements
+
+All loss/auxiliary/64,884,481 parameter-gradient comparisons again pass the
+unchanged tolerance and physical hard counts are zero. Matched three-repeat
+warm medians: original1.807469821s, combined1.574453108s(12.89%less time).
+Original/candidate deserialization166.91/98.05s. Startup before the report's
+internal timer is additional; concurrent T30 compilation is recorded as host
+context, not evidence that it caused any measured slowdown.
+
+| Instrumented device quantity | Original | Combined |
+| --- | ---: | ---: |
+| GPU event count | 380,309 | 299,552 |
+| Events at most10us | 347,733 | 268,893 |
+| Event span seconds | 2.135319 | 1.743979 |
+| Active interval union seconds | 1.800707 | 1.569692 |
+| Gaps within span seconds | .334612 | .174287 |
+| Summed fused-kernel seconds | .971370 | .889196 |
+| Summed matrix seconds | .690804 | .568350 |
+| Summed transfer/set seconds | .082546 | .076367 |
+
+Candidate summed device time is56.59%fused kernels,36.17%matrix kernels and
+4.86%transfer/set. Explicit GEMM names identify FP32; they do not establish
+all fused-operation dtypes or full-module ownership. Prominent SGEMM names
+contain32x32/32x128 kernel tiles; these are not recovered operand dimensions.
+Short events are not automatically pure launch overhead. CUPTI activity-buffer
+and missing TensorFlow-hook warnings occurred, but both traces contain GPU
+events; unprofiled warm medians remain the speed evidence.
+
+This supports evaluating independent-window batching as a throughput
+hypothesis, alongside evidence-led scheduling/fusion work. Compare the SAME
+two existing trajectories serially versus batched, preserving full native
+recurrence and mean gradient. A later production batch-size/mix change is a
+separate training decision. No new batching/precision graph has been compiled.
+Do not infer10x, exclusive physics costs or a guaranteed batch speedup here.
+
+Local report: `outputs/shared-saved-recurrent-profile-T7-20260926.json`.
+Local traces/summaries: `outputs/shared-recurrent-profile-{original,candidate}-T7-20260926`
+with `.trace.json.gz` and `.summary.json` suffixes. Remote binaries remain
+unchanged and reusable.
 
 Reuse the original and combined executables from the passed T7 admission,
 the saved fresh update0 and artifact742/window0 compact case. The profiler

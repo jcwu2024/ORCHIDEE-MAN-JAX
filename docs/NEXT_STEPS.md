@@ -8,6 +8,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26: savedT7 profile31735 completed0 without compilation; warm
+1.807470->1.574453s and strict all-gradient/physical parity pass. Combined
+still has299,552GPU events,268,893<=10us; summed fused56.59%,matrix36.17%.
+T30 admission29812 remains running. FinishT30/full-update acceptance and
+specify an equal-two-window serial-vs-batched recurrent test using existing
+artifacts742/275; no formal batch-size/mix or precision change. See
+shared_saved_recurrent_profile_20260926.md for profiling limitations.
+
 September26: savedT7 profile31735 now runs on freeGPU1(10min ceiling),
 concurrent withT30 admission29812 onGPU0. It reloads admitted binaries and
 collects unprofiled timings/device traces without another gradient compile.

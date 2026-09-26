@@ -2,6 +2,10 @@
 
 Last updated: 2026-09-26.
 
+`shared_saved_recurrent_profile_20260926.md` records completed31735's saved
+T7 replay/trace and residual cost evidence. It motivates a bounded same-two-
+window batching comparison; it does not accept a new training method or10x.
+
 Active recurrent note now records T7 completed0/pass(12.53%less time) and
 T30 freeGPU0 launcher29812 running60min main ceiling. Earlier running-T7
 snapshots below are historical. Complete-update and scientific gates pending.
