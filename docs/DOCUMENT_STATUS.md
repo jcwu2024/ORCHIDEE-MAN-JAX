@@ -2,6 +2,11 @@
 
 Last updated: 2026-09-26.
 
+`shared_recurrent_window_batch_20260926.md` is implemented:10local tests and
+actual CPU abstract-forward/target-shell checks pass; freeGPU1 launcher34268
+is running. This is fixed-work execution research, not a production batch
+decision. T30 combined29812 and full-update acceptance remain pending.
+
 `shared_saved_recurrent_profile_20260926.md` records completed31735's saved
 T7 replay/trace and residual cost evidence. It motivates a bounded same-two-
 window batching comparison; it does not accept a new training method or10x.

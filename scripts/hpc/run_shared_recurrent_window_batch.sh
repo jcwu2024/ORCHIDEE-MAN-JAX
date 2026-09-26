@@ -1,0 +1,72 @@
+#!/bin/bash
+# Free-node diagnostic only: two independent T7 windows, no optimizer update.
+set -euo pipefail
+ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+CODE_ROOT="$ROOT/runtime/checkouts/shared-split-width-v1"
+OVERLAY=${OVERLAY:-"$ROOT/runtime/transfer/shared-recurrent-window-batch-20260926"}
+INSPECT_ONLY=${INSPECT_ONLY:-0}
+GPU_INDEX=${GPU_INDEX:-1}
+MAIN_TIMEOUT=${MAIN_TIMEOUT:-60m}
+OUTPUT=${OUTPUT:-"$ROOT/runtime/outputs/diagnostics/shared-recurrent-window-batch-T7-20260926.json"}
+COMBINED_REPORT=${COMBINED_REPORT:-"$ROOT/runtime/outputs/diagnostics/shared-combined-recurrent-T7-20260926.json"}
+PREPARED_CONTEXT=${PREPARED_CONTEXT:-"$ROOT/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl"}
+REFERENCE_RESULT=${REFERENCE_RESULT:-}
+DRY_RUN=0
+if [[ ${1:-} == --dry-run ]]; then DRY_RUN=1; shift; fi
+MODE_ARGS=()
+if [[ $INSPECT_ONLY == 1 ]]; then
+  case $(hostname -s) in test02|ibtest02) ;; *) [[ $DRY_RUN == 1 ]] || exit 2 ;; esac
+  BACKEND_ENV=(SINGULARITYENV_JAX_PLATFORMS=cpu SINGULARITYENV_CUDA_VISIBLE_DEVICES=)
+  CONTAINER_OPTIONS=(--bind /WORK:/WORK)
+  MODE_ARGS+=(--inspect-only)
+  RUN_TIMEOUT=10m
+elif [[ $INSPECT_ONLY == 0 ]]; then
+  case $(hostname -s) in gln01|ibgln01|ibc13b02n04) ;; *) [[ $DRY_RUN == 1 ]] || exit 2 ;; esac
+  case "$GPU_INDEX" in 0|1) ;; *) exit 2 ;; esac
+  CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
+  NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
+  BACKEND_ENV=(SINGULARITYENV_JAX_PLATFORMS=cuda,cpu SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_INDEX")
+  CONTAINER_OPTIONS=(--nv --bind "/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1")
+  RUN_TIMEOUT=$MAIN_TIMEOUT
+else
+  exit 2
+fi
+if [[ -n $REFERENCE_RESULT ]]; then MODE_ARGS+=(--reference-result "$REFERENCE_RESULT"); fi
+RUNTIME=(env -u LD_LIBRARY_PATH
+  SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs "${BACKEND_ENV[@]}"
+  SINGULARITYENV_JAX_ENABLE_X64=true SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false
+  SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$ROOT/runtime/cache/jax/orcjax_gpu/shared-transformer-v1"
+  SINGULARITYENV_ORCHIDEE_REPO_ROOT="$CODE_ROOT" SINGULARITYENV_PYTHONPATH="$CODE_ROOT"
+  SINGULARITYENV_ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime"
+  SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ROOT/runtime/data"
+  SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets"
+  SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs"
+  SINGULARITYENV_OPENBLAS_NUM_THREADS=1 SINGULARITYENV_OMP_NUM_THREADS=4
+  singularity exec "${CONTAINER_OPTIONS[@]}" --pwd "$CODE_ROOT"
+  /apps/soft/sif/foundationpose "$ROOT/.venvs/orcjax_gpu/bin/python")
+COMMAND=(timeout --signal=TERM --kill-after=30s "$RUN_TIMEOUT" "${RUNTIME[@]}"
+  "$OVERLAY/probe_shared_recurrent_window_batch.py"
+  --source-profile "$ROOT/runtime/outputs/diagnostics/shared-split-profile-c599236.json"
+  --input-bundle "$ROOT/runtime/outputs/diagnostics/shared-split-dual-inputs-c599236.pkl"
+  --prepared-context "$PREPARED_CONTEXT" --combined-report "$COMBINED_REPORT"
+  --candidate-module-file "$OVERLAY/shared_decoder_expert_execution.py"
+  --backbone-module-file "$OVERLAY/shared_backbone_execution.py"
+  --output "$OUTPUT" ${MODE_ARGS[@]+"${MODE_ARGS[@]}"} "$@")
+PREFLIGHT=(timeout --signal=TERM --kill-after=30s 3m "${RUNTIME[@]}"
+  "$CODE_ROOT/scripts/hpc/check_daily_training_runtime.py"
+  --backend gpu --output "${OUTPUT%.json}.runtime.json")
+if [[ $DRY_RUN == 1 ]]; then
+  if [[ $INSPECT_ONLY == 0 ]]; then printf '%q ' "${PREFLIGHT[@]}"; printf '\n'; fi
+  printf '%q ' "${COMMAND[@]}"; printf '\n'; exit 0
+fi
+cd "$CODE_ROOT"
+trap 'STATUS=$?; echo "run_exit_status=$STATUS"' EXIT
+date --iso-8601=seconds
+echo "host=$(hostname -s) code=$(git rev-parse --short HEAD) windows=2 horizon=7 inspect=$INSPECT_ONLY gpu=$GPU_INDEX timeout=$RUN_TIMEOUT"
+uptime
+grep Cpus_allowed_list /proc/self/status
+if [[ $INSPECT_ONLY == 0 ]]; then
+  nvidia-smi --query-compute-apps=pid,gpu_uuid,used_memory --format=csv,noheader
+  "${PREFLIGHT[@]}"
+fi
+"${COMMAND[@]}"

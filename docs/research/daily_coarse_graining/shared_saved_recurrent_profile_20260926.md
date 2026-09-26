@@ -32,6 +32,15 @@ Short events are not automatically pure launch overhead. CUPTI activity-buffer
 and missing TensorFlow-hook warnings occurred, but both traces contain GPU
 events; unprofiled warm medians remain the speed evidence.
 
+Duration-bucket analysis of the same saved traces (no new GPU run) shows
+<=10us events sum to1.027806s(original,56.99%of summed device time) and
+.820737s(candidate,52.24%). Thus their significance is not just a large
+event count. Candidate buckets are66,794events/.110989s at<=2us,
+202,099/.709748s at2-10us,29,961/.559632s at10-100us, and698/.190870s
+above100us. Bucket counts and durations reconcile to the aggregate report.
+These short events still perform actual computation/memory work; this is
+not evidence that half the time is removable launch overhead.
+
 This supports evaluating independent-window batching as a throughput
 hypothesis, alongside evidence-led scheduling/fusion work. Compare the SAME
 two existing trajectories serially versus batched, preserving full native

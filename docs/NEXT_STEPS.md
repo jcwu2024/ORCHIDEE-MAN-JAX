@@ -8,6 +8,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26: equal-two-window T7 batching probe34268 now runs on freeGPU1
+(60minute main ceiling plus3minute runtime gate). Real CPU shape-only forward
+inspection passed75.48s;10local tests passed. Actual GPU launcher dry-run
+caught an old-Bash empty-array expansion issue; fixed and rechecked before
+launch. Compare the same742/275 windows serially and batched, with full
+native recurrent gradients. No batch/mix or precision change adopted.
+T30 combined29812 remains onGPU0. Inspect both reports before further launches;
+complete-update acceptance remains pending. See shared_recurrent_window_batch_20260926.md.
+
 September26: savedT7 profile31735 completed0 without compilation; warm
 1.807470->1.574453s and strict all-gradient/physical parity pass. Combined
 still has299,552GPU events,268,893<=10us; summed fused56.59%,matrix36.17%.

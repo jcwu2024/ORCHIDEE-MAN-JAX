@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-26.
 
+`probe_shared_recurrent_window_batch.py` compares two saved independent T7
+windows serially with a vmap of the same public native recurrent objective.
+It reuses daily microbatch loss/counter aggregation, saves full reference
+gradients before compiling and records paired two-window throughput.
+`run_shared_recurrent_window_batch.sh` owns free CPU shape-only inspection
+and a bounded one-GPU comparison. Neither changes the optimizer or sampling.
+
 `profile_shared_saved_recurrent.py` replays original/combined T7 binaries
 using the prepared five-field case and fresh update0. It records warm timings
 and device traces, rechecks full-gradient parity and exports no giant HLO.

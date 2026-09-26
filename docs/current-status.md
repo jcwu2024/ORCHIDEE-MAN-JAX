@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26: freeGPU1 launcher34268 started the equal-two-window T7 execution
+comparison after actual CPU abstract-forward admission(75.48s),10local tests,
+and target-shell GPU dry-run. The dry-run exposed old-Bash empty-array handling;
+fixed before GPU launch. Uses identical artifacts742/275, fresh update0, full
+native recurrent AD and unchanged strict gates. No optimizer/mix change and
+no throughput result yet. Main ceiling60minutes after3minute runtime check.
+T30 combined29812 still compiling at12:06CST. No new paid job.
+
 September26: savedT7 profile31735 completed0/passed, no new compilation.
 Matched warm1.807470->1.574453s; full-gradient/physical parity retained.
 299,552candidate GPU events,268,893<=10us; summed fused56.59%,matrix36.17%.

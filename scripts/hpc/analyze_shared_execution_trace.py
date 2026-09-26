@@ -129,6 +129,16 @@ def summarize(trace, sources=None, gemm_shapes=None):
         "gaps_within_device_span_seconds": max(0.0, span-active),
         "trace_annotation_seconds": [e["dur"]*1e-6 for e in annotations],
         "events_at_most_10us": sum(e["dur"] <= 10 for e in gpu),
+        "events_at_most_10us_summed_seconds": sum(e["dur"] for e in gpu if e["dur"] <= 10) * 1e-6,
+        "duration_buckets": [
+            {"label": label,
+             "events": sum(low < e["dur"] <= high for e in gpu),
+             "summed_seconds": sum(e["dur"] for e in gpu if low < e["dur"] <= high) * 1e-6}
+            for label, low, high in (("at_most_2us", -math.inf, 2),
+                                     ("2_to_10us", 2, 10),
+                                     ("10_to_100us", 10, 100),
+                                     ("above_100us", 100, math.inf))
+        ],
         "categories": ranked(totals), "gemm_precision_by_explicit_kernel_name": ranked(precision),
         "top_kernel_names": ranked(names, 30), "top_hlo_source_locations": ranked(source_totals, 30),
         "top_cublas_operand_shapes": ranked(shape_totals, 40),

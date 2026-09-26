@@ -1,8 +1,22 @@
 # Equal-two-window recurrent batching diagnostic
 
-Status: local implementation preparation, free resources only. This tests
+Status: implemented; freeGPU1 launcher34268 running, free resources only. This tests
 execution efficiency for a fixed two-window workload; it does not change
 the production sampling mix, optimizer batch size, architecture or precision.
+
+Implementation checks:10local unit tests passed and Ruff clean. Real test02
+inspection completed75.48s, including69.09s shape-only forward tracing of the
+actual two-window objective with checkpoint-shaped parameters and both
+candidate adapters bound. This does not compile or certify real gradients.
+Actual gln01 GPU dry-run exposed Bash4 empty-array/nounset behavior; optional
+array expansion was repaired and target-shell dry-run then passed before
+launch. CPU inspection used a separate `.inspect.json` report.
+
+Remote overlay: `runtime/transfer/shared-recurrent-window-batch-20260926`.
+GPU report/log: `runtime/outputs/diagnostics/shared-recurrent-window-batch-T7-20260926.{json,log}`.
+LauncherPID34268 on gln01 GPU1; T30 combinedPID29812 usesGPU0 concurrently.
+No paired throughput or gradient result yet. Preserve references/binaries
+if either run reaches its ceiling; do not automatically repeat compilation.
 
 ## Hypothesis and fixed work
 
