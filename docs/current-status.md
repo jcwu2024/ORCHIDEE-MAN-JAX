@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26:47778 completed0/passed,13.09minutes, no gradient compilation.
+Daily32/64dual times9.8594/9.7690s;~2x daily throughput at near-equal wall.
+Dual64branches daily8.313s/recurrent8.326s, validating load balance. All full
+proposal gradient/parameter/AdamW and physical gates pass; actual64learning
+not tested. Parent process peak live15.055GiB (pool25.391GiB). No active task
+here. Per-day arithmetic speed remains unresolved; numerical-method changes
+require discussion. See shared_combined_daily64_balance_20260926.md.
+
 September26: free dualGPU47778 running user-requested daily32/64 load-balance
 comparison with admitted saved kernels. Both cards idle before launch;
 11local tests/realCPU inspect/target-shell dry-run passed. Main30minutes.

@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-26.
 
+Daily64balance note now records47778 completed0/passed: dual32/64wall
+9.8594/9.7690s, approximately double daily throughput and balanced8.3s
+branches, without new gradient compilation. Full proposal parity passes;
+64row learning and10x claims remain unaccepted. Earlier running snapshots
+below are historical. No task from this pair remains active.
+
 `shared_combined_daily64_balance_20260926.md` records the user-requested
 daily64 load-balance comparison. Implemented/tested and freeGPU0+GPU1
 launcher47778 running,30minute ceiling; no new model-gradient compilation.

@@ -6,6 +6,11 @@ authorized by this note. The admitted combined FP32 binaries remain the
 reference. The newly approved daily64 test is a separate load-balancing and
 sampling-count experiment, not a same-workload tenfold result.
 
+Follow-up47778 completed0/passed: dual daily32/64wall9.8594/9.7690s and
+64branches daily8.313s/recurrent8.326s. Larger daily count fills the idle
+interval and approximately doubles daily rows/s, but leaves both branches'
+~8.3sabsolute compute cost. The larger-speed reasoning below still applies.
+
 ## Recommendation
 
 Discuss **neural-only Tensor-Core mixed precision** as the next materially

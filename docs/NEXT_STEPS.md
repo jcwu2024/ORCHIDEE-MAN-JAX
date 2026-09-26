@@ -8,6 +8,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26 completed47778: daily64load balance PASSED, zero gradient
+compiles, main785.34s. Same-run dual32/64medians9.859359/9.769036s; daily
+throughput3.245647->6.551312rows/s (~2x, changed daily count). Dual64daily/
+recurrent medians8.313/8.326s, balanced. Serial64takes16.879s; dual64uses
+15.75%moreGPU-time than serial64, with42.12%less wall. All32/64proposal
+gradient/parameter/AdamW and physical checks pass. No active task from47778.
+Daily64is a supported throughput candidate, not yet learned-model acceptance.
+Do not repeat this benchmark or increase microbatch by default. Preserve the
+mean daily objective and declare64sampling before training. Next discuss
+the bounded neural mixed-precision proposal; it is not implemented/approved.
+Core per-day speed and10x remain unresolved. See daily64balance result note.
+Earlier running snapshots below are historical.
+
 September26: user requested daily64 load balancing after41280. Free two-GPU
 launcher47778 now runs32/64complete proposal comparison,30minute ceiling.
 11local tests, realCPU inspection and target-shell GPU dry-run pass. Reuses
