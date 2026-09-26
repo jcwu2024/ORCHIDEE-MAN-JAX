@@ -1,0 +1,68 @@
+{
+  "schema_version": "research_workspace_v1",
+  "purpose": "Task-directed source inventory, not a training or deployment protocol.",
+  "recovery_tag": "research/daily-before-context-cleanup-20260926",
+  "groups": {
+    "scientific_route": {
+      "status": "retained; training paused",
+      "seeds": [
+        "research/daily_coarse_graining/daily_operator/shared_transformer.py",
+        "research/daily_coarse_graining/daily_operator/shared_process_head.py",
+        "research/daily_coarse_graining/daily_operator/shared_training.py",
+        "research/daily_coarse_graining/daily_operator/shared_recurrent_training.py",
+        "scripts/hpc/run_shared_learning.py",
+        "scripts/hpc/shared_learning_plan.py",
+        "scripts/hpc/shared_transformer_runtime.py",
+        "scripts/hpc/shared_learning_monitor.py",
+        "scripts/hpc/summarize_shared_learning.py",
+        "scripts/hpc/run_shared_learning.sh",
+        "manifests/coarse_graining/shared_transformer_split_width_v1.json",
+        "manifests/coarse_graining/shared_split_learning_v1.json",
+        "manifests/coarse_graining/shared_split_recurrent_admission_v1.json"
+      ]
+    },
+    "performance_diagnostics": {
+      "status": "opt-in evidence only; no production precision adoption",
+      "seeds": [
+        "research/daily_coarse_graining/daily_operator/shared_decoder_expert_execution.py",
+        "research/daily_coarse_graining/daily_operator/shared_decoder_macro_packed.py",
+        "research/daily_coarse_graining/daily_operator/shared_decoder_dense.py",
+        "research/daily_coarse_graining/daily_operator/shared_backbone_execution.py",
+        "research/daily_coarse_graining/daily_operator/shared_backbone_projection_reuse.py",
+        "scripts/hpc/probe_shared_serialized_updates.py",
+        "scripts/hpc/probe_shared_serialized_dual.py",
+        "scripts/hpc/probe_shared_serialized_dual_worker.py",
+        "scripts/hpc/probe_shared_ffn_precision.py",
+        "scripts/hpc/probe_shared_ffn_algorithm.py",
+        "scripts/hpc/run_shared_combined_full_update.sh",
+        "scripts/hpc/run_shared_ffn_precision.sh",
+        "manifests/coarse_graining/shared_execution_benchmark_v1.json"
+      ]
+    },
+    "frozen_data_infrastructure": {
+      "status": "existing v6/prepared artifacts only; no generation authorization",
+      "seeds": [
+        "scripts/hpc/prepare_shared_learning_data.py",
+        "scripts/hpc/shared_daily_microbatch.py",
+        "scripts/hpc/shared_transformer_runtime.py",
+        "scripts/hpc/successor_small_fit_prepared.py",
+        "scripts/hpc/successor_staged_prepared.py"
+      ]
+    }
+  },
+  "retirement_candidates": [
+    "scripts/hpc/probe_successor_parameter_geometry.py",
+    "scripts/hpc/probe_successor_multibatch_direction.py"
+  ],
+  "retired_entrypoints": [
+    "scripts/hpc/run_successor_fast_owner_gpu_probe.sh",
+    "scripts/hpc/run_successor_process_head_canonical_gate.sh",
+    "scripts/hpc/run_successor_process_head_smoke.sh"
+  ],
+  "limitations": [
+    "Seeds identify tasks, not all accepted code or all scientific dependencies.",
+    "Static closure conservatively includes all imports, including inactive branches and package __init__ exports.",
+    "Dynamic module paths, external prepared data and serialized executables need their explicit runtime identities.",
+    "Outside a seed closure does not mean dead code or permission to delete."
+  ]
+}

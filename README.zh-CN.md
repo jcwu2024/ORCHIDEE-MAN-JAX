@@ -55,18 +55,17 @@
 后续训练使用这一连续一致的数据版本，不重新生成，也不混入历史 v5 数据。
 数据集验收通过，不等于日尺度模型的精度已经达标。
 
-### 研究进度：2026-09-08
+### 研究状态与研发入口
 
 日尺度模型、物理过程耦合和训练/多日模拟基础设施已经实现。当前架构采用带
 Q/K 归一化的 Transformer/Attention，训练目标包含单日状态和 7/30 日科学指标。
 **目前仍没有通过所需长期精度验收的日尺度模型。**
 
-近期在解决跨日反向传播的数值一致性问题。采用完整的逐日反向传播后，此前失败的
-一次训练更新已经能让直接 GPP、状态和 7/30 日综合损失同时下降，并通过物理检查。
-但有 7 个七日窗口在两种损失计算路径之间存在差异，因此整体验收仍未通过，也没有
-保存新权重。下一步先定位这些差异，再在独立的固定验收数据上确认改善能否迁移，
-之后才继续保留训练更新。详见
-[本次结果及下一步定位任务](docs/research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md)。
+当前任务、性能实测和未完成的验收统一记录在
+[下一步](docs/NEXT_STEPS.md)与[当前状态](docs/current-status.md)。
+这些精简入口替代不断累积的实验流水账。按照
+[研发上下文维护规则](docs/RESEARCH_WORKFLOW.md)选择本次任务所需的代码和证据；
+历史实验通过[历史索引](docs/research/daily_coarse_graining/HISTORY_INDEX.md)追溯。
 
 365 日模拟、长期留出点验证、日尺度模型的物理参数梯度验收（Gate D2）和产品
 验收仍是后续里程碑。教师模型的 Gate D1 不能替代神经模型的梯度验收。
@@ -85,7 +84,7 @@ GPU 用于训练；最终 CPU/GPU 推理性能和加速幅度需要通过完整�
 [`docs/CODE_MAP.md`](docs/CODE_MAP.md) 确认代码归属。
 [`docs/current-status.md`](docs/current-status.md) 记录详细证据，
 [`docs/DOCUMENT_STATUS.md`](docs/DOCUMENT_STATUS.md) 标明当前有效的合同及历史报告。
-这些页面的最新记录优先于上方带日期的进度摘要。超长的 `HANDOFF.md` 保留为
+当前事实在原位置更新，不再逐次追加旧的工作安排。超长的 `HANDOFF.md` 保留为
 实验与服务器任务历史，不再规定下一步。
 
 ## 仓库结构
@@ -97,7 +96,7 @@ GPU 用于训练；最终 CPU/GPU 推理性能和加速幅度需要通过完整�
 | `configs/` | 可移植的 PFT14 论文案例配置 |
 | `manifests/` | 外置数据契约和 669 个 landpoint 的元数据 |
 | `scripts/hpc/` | Explore1000 教师运行、数据准备、神经训练和诊断启动脚本 |
-| `scripts/dev/` | Oracle、审计、诊断和性能工具；不是正式运行依赖 |
+| `scripts/dev/` | Oracle、审计、诊断和性能工具；部分辅助函数也被研究代码复用 |
 | `tests/` | 单元、数值等价、Oracle 证据和集成测试 |
 | `docs/` | 用户文档和由源码驱动的等价性证据 |
 | `fortran_run_scripts/` | 不可变的论文历史运行协议溯源 |

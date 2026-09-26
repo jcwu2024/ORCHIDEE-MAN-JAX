@@ -64,22 +64,20 @@ transitions. See the
 Use this coherent release; do not regenerate it or mix historical v5 rows into
 training. Dataset acceptance does not establish daily-model accuracy.
 
-### Research status — 2026-09-21
+### Research status and development entry
 
 The daily model, physical coupling, and training/rollout infrastructure are
 implemented. Existing Transformer/Attention experiments use daily and 7/30-day
 science objectives and native checkpointed JAX differentiation. A model that
 passes the required long-term accuracy gates is **not yet available**.
 
-Recent training improved some short-window and carbon metrics but did not
-establish simultaneous productivity, respiration and biomass accuracy. Fresh
-full-network two-update integration passed execution checks, not scientific
-acceptance. Current work implements the user-approved simpler shared
-Transformer and explicit carbon-trajectory objectives, starting with local and
-free-node forward/gradient/update admission. No accuracy improvement is yet
-claimed for this candidate. The prior paid continuation proposal is on hold. See the
-[architecture and long-term-method proposal](docs/research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md)
-and [current work order](docs/NEXT_STEPS.md).
+The current work order, measured performance and unresolved acceptance gates
+are maintained in [NEXT_STEPS](docs/NEXT_STEPS.md) and
+[current status](docs/current-status.md). These compact pages replace the
+accumulated experiment chronology as the development entry point. Follow the
+[context maintenance workflow](docs/RESEARCH_WORKFLOW.md) to select only the
+code and evidence needed for a task. Historical experiments are accessible
+through the [history index](docs/research/daily_coarse_graining/HISTORY_INDEX.md).
 
 365-day rollouts, long-term held-out-site validation, daily-model physical-
 parameter gradient acceptance (Gate D2), and product acceptance remain later
@@ -101,8 +99,8 @@ Start with [`docs/START_HERE.md`](docs/START_HERE.md), then use
 [`docs/CODE_MAP.md`](docs/CODE_MAP.md) for repository ownership.
 [`docs/current-status.md`](docs/current-status.md) records detailed evidence;
 [`docs/DOCUMENT_STATUS.md`](docs/DOCUMENT_STATUS.md) identifies active contracts
-and historical reports. These pages take precedence over the dated snapshot
-above. The long research `HANDOFF.md` is a chronology, not the active roadmap.
+and historical reports. The long research `HANDOFF.md` is a chronology, not the
+active roadmap. Update current facts in place instead of appending old work orders.
 
 ## Repository Layout
 
@@ -113,7 +111,7 @@ above. The long research `HANDOFF.md` is a chronology, not the active roadmap.
 | `configs/` | Portable PFT14 paper-case configuration |
 | `manifests/` | External data contract and 669-landpoint metadata |
 | `scripts/hpc/` | Explore1000 Teacher, data preparation, neural training, and diagnostic launchers |
-| `scripts/dev/` | Oracle, audit, diagnosis, and performance tooling; not a runtime dependency |
+| `scripts/dev/` | Oracle, audit, diagnosis and performance tooling; some helpers are reused by research code |
 | `tests/` | Unit, parity, Oracle-evidence, and integration tests |
 | `docs/` | User documentation and source-driven equivalence evidence |
 | `fortran_run_scripts/` | Immutable historical paper protocol provenance |
