@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-26.
 
+`probe_shared_serialized_dual.py` now permits user-requested combined
+daily32/64fixed-weight proposals, retaining averaged daily loss and oneT7/
+oneT30. Each measured proposal records component timing; the inherited
+daily32timing label is normalized when reporting the64row branch. No
+microbatch, gradient, optimizer or production default changes.
+
 `probe_shared_serialized_updates.py` now validates explicit combined
 daily/T7/T30 admission reports and selects their saved binaries without
 rewriting the source profile. `probe_shared_serialized_dual.py` propagates

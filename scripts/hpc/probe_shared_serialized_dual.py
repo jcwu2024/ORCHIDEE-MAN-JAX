@@ -426,6 +426,7 @@ def measure_complete_updates(*, jax, serial_once, dual, daily,
     serial_once()
     dual.step(daily_payload=daily, recurrent_payload=secondary_cases, persist=False)
     serial_rows, dual_rows = [], []
+    serial_breakdown, dual_breakdown = [], []
     serial_result = dual_result = dual_record = None
     for index in range(repeats):
         order = ("serial", "dual") if index % 2 == 0 else ("dual", "serial")
@@ -435,12 +436,17 @@ def measure_complete_updates(*, jax, serial_once, dual, daily,
                 serial_result = serial_once()
                 jax.block_until_ready(serial_result[:2])
                 serial_rows.append(time.perf_counter() - began)
+                serial_breakdown.append({
+                    ("daily_microbatch" if key == "daily_32_microbatch_4" else key): value
+                    for key, value in serial_result[2].get("timing_seconds", {}).items()
+                })
             else:
                 dual_record, dual_result = dual.step(
                     daily_payload=daily, recurrent_payload=secondary_cases,
                     persist=False,
                 )
                 dual_rows.append(time.perf_counter() - began)
+                dual_breakdown.append(dict(dual_record.get("timing_seconds", {})))
     serial_median = float(np.median(serial_rows))
     dual_median = float(np.median(dual_rows))
     result = {
@@ -449,6 +455,8 @@ def measure_complete_updates(*, jax, serial_once, dual, daily,
         "comparison": dual_cost_comparison(serial_median, dual_median),
         "timing_scope": "complete_gradient_parameter_and_gradient_ipc_physical_checks_adamw",
         "interleaved": True,
+        "serial_timing_breakdown_seconds": serial_breakdown,
+        "dual_timing_breakdown_seconds": dual_breakdown,
     }
     if serial_gradient is not None:
         serial_values = {
@@ -582,14 +590,13 @@ def inspect_inputs(args):
                 raise ValueError("bundle recurrent case horizon differs")
     admissions = validate_admissions(profile, reference, admission_report_paths(args),
                                      profile_sha256=digest)
-    if admissions and getattr(args, "daily_counts", [32, 64]) != [32]:
-        raise ValueError("combined full-update diagnostic permits only --daily-counts 32")
     result = {"status": "passed", "scope": "cpu_saved_combined_admission_inspection",
               "source_profile": str(args.source_profile), "source_profile_sha256": digest,
               "source_git_head": reference["source_git_head"],
               "input_bundle": str(args.input_bundle), "artifact_ids": ids,
               "admitted_overrides": admissions, "model_gradient_compilations": 0,
               "gpu_executables_loaded": False, "teacher_preparation": False,
+              "daily_proposal_counts": getattr(args, "daily_counts", [32, 64]),
               "scientific_acceptance": False}
     _atomic_json(args.output, result)
     return result
@@ -610,8 +617,6 @@ def run(args):
     admissions = validate_admissions(profile, reference, admission_reports,
                                      profile_sha256=profile_sha256)
     daily_counts = getattr(args, "daily_counts", [32, 64])
-    if admissions and daily_counts != [32]:
-        raise ValueError("combined full-update diagnostic permits only --daily-counts 32")
     bundle = None
     if getattr(args, "input_bundle", None) is not None:
         with args.input_bundle.open("rb") as handle:
@@ -897,6 +902,10 @@ def run(args):
                     repeats=args.repeats, serial_gradient=serial_gradient,
                 )
             result["daily_rows_per_update"] = count
+            result["sampling_scope"] = (
+                "unchanged_daily32_plus_one_T7_one_T30" if count == 32 else
+                "daily64_mean_plus_one_T7_one_T30_fixed_weight_proposal_not_learning_acceptance"
+            )
             result["distinct_daily_artifact_ids"] = identifiers[:count // 32]
             result["recurrent_case_artifact_id"] = identifiers[0]
             result["unique_daily_row_coverage_claimed"] = False

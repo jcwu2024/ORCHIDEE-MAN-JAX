@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26: free dualGPU47778 running user-requested daily32/64 load-balance
+comparison with admitted saved kernels. Both cards idle before launch;
+11local tests/realCPU inspect/target-shell dry-run passed. Main30minutes.
+New proposal-level component timings separate daily/recurrent/IPC/optimizer
+costs; no model-gradient compile or production sampling promotion. Contract:
+shared_combined_daily64_balance_20260926.md.10x remains unachieved.
+
 September26 13:48CST: complete-update41280 completed0/passed,649.48s with
 zero large-gradient compiles. Median single12.553775s/dual10.270496s for
 daily32+T7+T30. All changing-update full-gradient/parameter/AdamW and original

@@ -8,6 +8,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26: user requested daily64 load balancing after41280. Free two-GPU
+launcher47778 now runs32/64complete proposal comparison,30minute ceiling.
+11local tests, realCPU inspection and target-shell GPU dry-run pass. Reuses
+all saved combined kernels, micro4, unchanged oneT7/oneT30; no new large
+gradient compilation. Records every timed proposal's serial/dual component
+durations. This changes daily sample count, not a same-work10x claim or a
+formal learning recipe. Inspect `shared-combined-daily64-20260926.{json,log}`;
+read shared_combined_daily64_balance_20260926.md. Larger structural route
+analysis proceeds separately; no precision/architecture change or paid job.
+
+Structural review is now in shared_next_structural_speed_route_20260926.md.
+Prior dense packing/attention concatenation had only bounded small gains;
+do not rebrand/retry them as the primary route. Proposed neural-only FP16
+matrix/FP32accumulation screen requires numerical-method discussion before
+implementation. Neither nominal TensorCore speed nor FFN-only work supports
+a10x full-update forecast; actual-payload preparation is itself unproven.
+Exact normalized-key caching remains unmeasured, not an adopted speed claim.
+
 September26 13:48CST:41280 completed0/passed in649.48s, zero model-gradient
 compiles. Unchanged daily32+T7+T30 complete median12.553775s singleGPU /
 10.270496s dualGPU; historical-original time reductions15.47%/8.24%.

@@ -2,6 +2,17 @@
 
 Last updated: 2026-09-26.
 
+`shared_combined_daily64_balance_20260926.md` records the user-requested
+daily64 load-balance comparison. Implemented/tested and freeGPU0+GPU1
+launcher47778 running,30minute ceiling; no new model-gradient compilation.
+Its larger daily count is a sampling proposal, not a same-work speedup.
+
+`shared_next_structural_speed_route_20260926.md` is a source/profile-based
+decision proposal, not an accepted numerical method. It recommends discussing
+a bounded neural-only mixed-precision screen, records already tested weak
+alternatives and honest gain limits. No precision change or GPU job authorized
+by that note; payload preparation must be established before execution.
+
 `shared_combined_full_update_20260926.md` now records41280 completed0/passed:
 single12.553775s/dual10.270496s, full state/gradient/optimizer comparisons
 passed, zero model-gradient compilation. Exact-execution gain remains modest;
