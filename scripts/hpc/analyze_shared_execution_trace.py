@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def interval_union(intervals):

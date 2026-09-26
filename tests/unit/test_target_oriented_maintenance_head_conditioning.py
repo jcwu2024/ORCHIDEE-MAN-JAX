@@ -168,31 +168,3 @@ def test_maintenance_head_classifier_stops_without_common_direction() -> None:
 
     assert result["classification"] == "common_direction_not_supported"
     assert result["candidates"] == []
-
-
-def test_maintenance_head_runner_is_free_and_differentiates_only_the_head() -> None:
-    preflight = (
-        ROOT / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py"
-    ).read_text(encoding="utf-8")
-    runner = (
-        ROOT
-        / "scripts"
-        / "hpc"
-        / "audit_target_oriented_maintenance_head_conditioning.py"
-    ).read_text(encoding="utf-8")
-    launcher = (
-        ROOT
-        / "scripts"
-        / "hpc"
-        / "run_target_oriented_maintenance_head_conditioning_audit.sh"
-    ).read_text(encoding="utf-8")
-
-    assert '"seven_maintenance_head_gradient"' in preflight
-    assert '"thirty_maintenance_head_gradient"' in preflight
-    assert "jax.value_and_grad" in preflight
-    assert "differentiated_head_parameter_count" in runner
-    assert '"optimizer_invoked": False' in runner
-    assert '"architecture_changed": False' in runner
-    assert "gln01|ibgln01|ibc13b02n04" in launcher
-    assert "sbatch" not in launcher
-    assert "gnall" not in launcher

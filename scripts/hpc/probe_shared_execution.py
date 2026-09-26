@@ -204,7 +204,7 @@ def pending_reference_components(state_dir, identity):
 
 
 def run(args):
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
     from scripts.hpc.shared_learning_plan import load_learning_configuration
 
     began = time.perf_counter()

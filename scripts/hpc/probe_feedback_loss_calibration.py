@@ -379,7 +379,7 @@ def _row_metadata(rows: Sequence[Any]) -> list[dict[str, Any]]:
 def run(args: Any) -> Mapping[str, Any]:
     from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory, _resolved_reference
     from scripts.hpc.run_fresh_start_one_day_pool import pool_plan
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     report: dict[str, Any] = {

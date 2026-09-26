@@ -20,7 +20,6 @@ from research.daily_coarse_graining.daily_operator.strong_baseline_architecture 
     _linear_parameters,
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_attention import _source_family_bank
-from scripts.hpc.run_mixed_learning import lowered_precision_summary
 
 jax.config.update('jax_enable_x64', True)
 
@@ -35,18 +34,6 @@ def _case():
     return parameters, q, kv, mask
 
 
-def test_explicit_fp32_removes_promoted_matrix_products():
-    parameters, q, kv, mask = _case()
-    legacy = jax.jit(lambda p, q, kv: _attention(p, q, kv, heads=4, mask=mask))
-    candidate = jax.jit(lambda p, q, kv: _attention(p, q, kv, heads=4, mask=mask,
-                                                  score_dtype=jnp.float32))
-    old = lowered_precision_summary(legacy.lower(parameters, q, kv))
-    new = lowered_precision_summary(candidate.lower(parameters, q, kv))
-    assert old['matrix_operation_result_types']['f64'] == 1
-    assert new['matrix_operation_result_types'].get('f64', 0) == 0
-    assert new['matrix_operation_result_types']['f32'] == 6
-    np.testing.assert_allclose(candidate(parameters, q, kv), legacy(parameters, q, kv),
-                               rtol=1e-5, atol=1e-6)
 
 
 @pytest.mark.parametrize('score_dtype', [None, jnp.float32])

@@ -28,17 +28,6 @@ from research.daily_coarse_graining.daily_operator.parameter_routing import (
 from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
     strong_baseline_parameter_count,
 )
-from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_day5_crossed_attribution import (
-    PARAMETER_FAMILY_COUNTS,
-    STATE_COMPONENT_COORDINATE_COUNTS,
-    resolve_crossed_gpp_state_components,
-)
-from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_objective import (
-    coupled_gpp_trainable_tree,
-)
-from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_snowheat_causal import (
-    resolve_coupled_gpp_snowheat_sources,
-)
 from tests.unit.test_daily_operator_hierarchical_coordinate_attention import (
     _complete_prediction_for_loss,
     _host_l2,
@@ -74,59 +63,6 @@ def coupled_gpp_setup():
     }
 
 
-def test_coupled_contract_layout_and_parameter_budget_are_exact(coupled_gpp_setup):
-    setup = coupled_gpp_setup
-    contract = setup["coupled_contract"]
-    layout = setup["candidate_head"].carbon_state_layout
-    parameters = setup["candidate_parameters"]
-    adapter = parameters["target_oriented"]["coupled_gpp_carbon_feedback"]
-
-    assert contract.sha256 == "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d"
-    assert len(layout.field_names) == 107
-    assert layout.state_indices.shape == (2_386,)
-    assert layout.field_index.shape == (2_386,)
-    assert layout.pft_owner_index.shape == (2_386,)
-    assert set(np.unique(layout.pft_owner_index)) == {-1, 0, 1}
-    assert "pft" not in layout.axis_role_names
-    assert layout.axis_role_index.shape == (2_386, 5)
-    assert layout.axis_position_index.shape == (2_386, 5)
-    assert strong_baseline_parameter_count(adapter) == 3_080_832
-    assert coupled_gpp_carbon_feedback_parameter_count(parameters) == 109_464_359
-    assert len(adapter["blocks"]) == 2
-    assert adapter["blocks"][0]["attention"]["query"]["kernel"].shape == (384, 384)
-    assert adapter["blocks"][0]["ffn"]["first"]["kernel"].shape == (384, 768)
-    assert len(adapter["residual_injections"]) == 3
-    assert all(projection["kernel"].shape == (384, 384) for projection in adapter["residual_injections"])
-    assert parameters["target_oriented"]["structured_gpp"] is setup["parent_parameters"]["target_oriented"][
-        "structured_gpp"
-    ]
-
-    leaves, routes = resolve_coupled_gpp_snowheat_sources(
-        setup["adapter"].contract,
-        setup["owner_contract"],
-        setup["candidate_head"].layout,
-    )
-    assert {leaf.key for leaf in leaves} == {
-        "diffuco_previous_step_state.snowheat",
-        "hydrol_previous_step_state.snowheat",
-    }
-    assert {record["source_family"] for record in routes.values()} == {
-        "state_canopy",
-        "state_water",
-    }
-    components = resolve_crossed_gpp_state_components(
-        setup["adapter"].contract,
-        setup["candidate_head"].layout,
-    )
-    assert {
-        name: record["state_coordinate_count"] for name, record in components.items()
-    } == STATE_COMPONENT_COORDINATE_COUNTS
-    assert all(record["canopy_gpp_admitted"] for record in components.values())
-    trainable = coupled_gpp_trainable_tree(parameters)
-    assert {
-        name: strong_baseline_parameter_count(value)
-        for name, value in trainable.items()
-    } == PARAMETER_FAMILY_COUNTS
 
 
 def test_coupled_forward_loss_gradients_and_parent_isolation(coupled_gpp_setup):
@@ -293,45 +229,3 @@ def test_coupled_gpp_parameter_routes_remain_isolated(coupled_gpp_setup):
             np.asarray(gradients[:, DEFAULT_PFT_PARAMETER_ROUTING.index(name)]),
             0.0,
         )
-
-
-def test_coupled_inference_has_no_subdaily_reconstruction_or_scan():
-    source = inspect.getsource(target_oriented_coupled_gpp_carbon_feedback_process_outputs)
-    attention_source = inspect.getsource(carbon_feedback_query_residuals)
-    assert "lax.scan" not in source
-    assert "lax.scan" not in attention_source
-    assert "48" not in source
-    assert "48" not in attention_source
-    assert "optimizer" not in source
-    assert "checkpoint" not in source
-
-    root = Path(__file__).resolve().parents[2]
-    runner = (
-        root
-        / "scripts/hpc/run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.py"
-    ).read_text(encoding="utf-8")
-    launcher = (
-        root
-        / "scripts/hpc/run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.sh"
-    ).read_text(encoding="utf-8")
-    assert '"training_updates": 0' in runner
-    assert '"optimizer_created": False' in runner
-    assert '"checkpoint_written": False' in runner
-    assert "initialize_target_oriented_adamw" not in runner
-    assert "write_broad_checkpoint" not in runner
-    assert "argnums=1" in runner
-    assert "free gln01" in launcher
-    assert "sbatch" not in launcher
-    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher
-
-    slurm_launcher = (
-        root
-        / "scripts/hpc/slurm_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.sh"
-    ).read_text(encoding="utf-8")
-    assert "#SBATCH --partition=gnall" in slurm_launcher
-    assert "#SBATCH --gres=gpu:1" in slurm_launcher
-    assert "#SBATCH --time=02:00:00" in slurm_launcher
-    assert "RUN_TIMEOUT=110m" in slurm_launcher
-    assert "run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.sh" in (
-        slurm_launcher
-    )

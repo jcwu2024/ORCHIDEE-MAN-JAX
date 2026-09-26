@@ -501,7 +501,7 @@ def execute_bounded_joint(
 
 
 def run(args: Any) -> Mapping[str, Any]:
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     report: dict[str, Any] = {
@@ -578,7 +578,7 @@ def run(args: Any) -> Mapping[str, Any]:
         from research.daily_coarse_graining.daily_operator.target_oriented_training import (
             initialize_target_oriented_adamw,
         )
-        from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+        from scripts.hpc.runtime_diagnostics import _tree_numeric_report
 
         daily = evidence["daily_protocol"]
         coordinates = build_shared_persistent_coordinates(

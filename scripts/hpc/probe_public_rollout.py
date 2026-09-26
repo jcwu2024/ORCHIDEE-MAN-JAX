@@ -80,7 +80,7 @@ def physical_checks(obs, targets, expected_discrete, templates, contract, scales
 
 
 def run(args):
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
     started = time.perf_counter()
     report = {'status':'running','updates':0,'horizon':args.horizon,'methods':{},'comparisons':{}}
 
@@ -104,7 +104,7 @@ def run(args):
             prepared_retained_days,
         )
         from research.daily_coarse_graining.daily_operator.rollout_loss import make_rollout_loss
-        from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+        from scripts.hpc.runtime_diagnostics import _tree_numeric_report
         manifest = json.loads(args.prepared_manifest.read_text())
         record = next(v for v in manifest['entries'] if v['update']==322)
         with gzip.open(args.prepared_manifest.parent/record['path'],'rb') as handle:

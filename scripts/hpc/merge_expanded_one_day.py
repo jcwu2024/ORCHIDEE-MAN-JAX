@@ -232,7 +232,7 @@ def _write_monitor_artifacts(
 def run(args):
     from research.daily_coarse_graining.daily_operator.prepared_one_day import PreparedOneDayPool
     from scripts.hpc.run_fresh_start_one_day_pool import pool_plan
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     plan_path = args.plan.resolve()

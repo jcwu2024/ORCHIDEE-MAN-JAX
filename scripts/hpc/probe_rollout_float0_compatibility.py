@@ -7,7 +7,7 @@ import numpy as np
 
 def run(output):
     from scripts.hpc.orcjax_gpu_runtime import initialize_gpu_backend
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     jax,devices = initialize_gpu_backend()
     import jax.numpy as jnp

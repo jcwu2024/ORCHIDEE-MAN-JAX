@@ -258,9 +258,8 @@ def test_load_shared_runtime_disables_neural_initialization_and_uses_cpu_backend
         target_oriented_contract,
     )
     from scripts.hpc import (
-        run_successor_fast_owner_gpu_probe,
-        run_target_oriented_attention_gpu_admission,
-        run_target_oriented_full_step_preflight,
+        canonical_training_runtime,
+        retained_training_runtime,
     )
 
     identity = _identity("001.0-071.0", 1961)
@@ -308,7 +307,7 @@ def test_load_shared_runtime_disables_neural_initialization_and_uses_cpu_backend
         calls["backend_initializer"] = kwargs["backend_initializer"]
         return dict(runtime)
 
-    monkeypatch.setattr(run_successor_fast_owner_gpu_probe, "_load_extended_runtime", fake_load)
+    monkeypatch.setattr(canonical_training_runtime, "_load_extended_runtime", fake_load)
     monkeypatch.setattr(strong_baseline_contract, "load_strong_baseline_contract", lambda: "architecture")
     monkeypatch.setattr(mechanistic_output_contract, "load_mechanistic_output_contract", lambda: "mechanism")
     monkeypatch.setattr(
@@ -319,12 +318,12 @@ def test_load_shared_runtime_disables_neural_initialization_and_uses_cpu_backend
     monkeypatch.setattr(mechanistic_process_head, "build_mechanistic_output_layout", lambda **kwargs: "layout")
     monkeypatch.setattr(target_oriented_contract, "load_target_oriented_contract", lambda: "target")
     monkeypatch.setattr(
-        run_target_oriented_attention_gpu_admission,
-        "_head",
+        retained_training_runtime,
+        "build_parent_process_head",
         lambda loaded, target: ("parent-head", target),
     )
     monkeypatch.setattr(
-        run_target_oriented_full_step_preflight,
+        retained_training_runtime,
         "_prepare_template",
         lambda loaded, entry: _Template(_StaticOwner()),
     )

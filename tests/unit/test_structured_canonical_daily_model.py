@@ -11,13 +11,6 @@ from research.daily_coarse_graining.canonical_daily_model import (
     canonical_model_apply,
     initialize_canonical_model,
 )
-from research.daily_coarse_graining.canonical_multistep import (
-    CanonicalMultistepSequence,
-    canonical_multistep_rollout,
-)
-from research.daily_coarse_graining.canonical_training import (
-    FastDayTargetRepresentation,
-)
 from research.daily_coarse_graining.daily_model_architecture import (
     CANONICAL_FLAT_V1,
     STRUCTURED_PROCESS_FILM_V1,
@@ -201,55 +194,3 @@ def test_checkpoint_architecture_defaults_old_assets_and_rejects_drift():
     drifted["model_architecture"]["state_groups_sha256"] = "bad"
     with pytest.raises(ValueError, match="drifted"):
         verify_checkpoint_architecture(drifted, definition)
-
-
-def test_structured_model_jits_and_differentiates_through_multiday_scan():
-    definition = build_daily_model_definition(
-        STRUCTURED_PROCESS_FILM_V1,
-        _config(),
-        _contract_metadata(),
-    )
-    parameters = definition.initialize(seed=23)
-    days = 2
-    sequence = CanonicalMultistepSequence(
-        forcing_native=jnp.ones((days, 5, 2)),
-        parameters=jnp.ones((days, 4)),
-        landpoint_static=jnp.ones((days, 5)),
-        annual_conditions=jnp.ones((days, 1)),
-        year=jnp.full((days,), 1962),
-        day_index=jnp.arange(2, 2 + days),
-        teacher_state=jnp.zeros((days, 8)),
-        teacher_fast_day_target=jnp.full((days, 6), 0.2),
-        teacher_next_state=jnp.full((days, 8), 0.4),
-        retained_tail_inputs=jnp.zeros((days, 1)),
-    )
-    representation = FastDayTargetRepresentation(
-        np.arange(6, dtype=np.int32),
-        np.asarray([0, 1], dtype=np.int32),
-        np.asarray([1.0e20, 1.0e20]),
-    )
-
-    def tail(state, discrete, fast_day, forcing, year, day_index):
-        del forcing, year, day_index
-        return state.at[:6].add(0.1 * fast_day), discrete
-
-    def loss(value):
-        return canonical_multistep_rollout(
-            value,
-            jnp.zeros((8,)),
-            {"flag": jnp.asarray([True])},
-            sequence,
-            statistics=_statistics(),
-            representation=representation,
-            fast_day_weights=jnp.full((6,), 1.0 / 6.0),
-            retained_tail_transition=tail,
-            model_apply=definition.apply,
-        ).loss
-
-    value, gradients = jax.jit(jax.value_and_grad(loss))(parameters)
-
-    assert np.isfinite(np.asarray(value))
-    assert all(
-        np.all(np.isfinite(np.asarray(gradient)))
-        for gradient in jax.tree_util.tree_leaves(gradients)
-    )

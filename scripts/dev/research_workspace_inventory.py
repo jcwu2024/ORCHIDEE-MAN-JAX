@@ -201,6 +201,7 @@ def build_report(root, manifest):
                     compatibility[path] = {"files": closure(targets + previous["files"], edges),
                                            "export_count": previous["export_count"] + len(exports)}
     return {"schema_version": "research_workspace_inventory_v1", "recovery_tag": manifest["recovery_tag"],
+            "source_retirement_tag": manifest.get("source_retirement_tag"),
             "groups": groups, "retirement_candidates": candidates, "parse_errors": errors,
             "retired_entrypoints": manifest.get("retired_entrypoints", []),
             "active_parse_errors": {path: error for path, error in errors.items() if path in active_files},

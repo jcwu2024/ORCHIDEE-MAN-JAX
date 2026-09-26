@@ -5,12 +5,19 @@ log. [NEXT_STEPS.md](NEXT_STEPS.md) controls operations.
 
 ## Work and authorization
 
-Current-context consolidation is complete: compact entry pages, task-based
-source inventory, historical recovery and three retired legacy shell launchers.
-Historical Python dependencies remain where needed. No GPU job, new paid
-allocation or neural training is active. Next is speed optimization before
-training; cleanup does not authorize production precision or architecture
-changes. The 10x throughput target is unmet and is not a promise.
+Entry-document consolidation and substantial source retirement are complete.
+Current shared helpers are detached from historical runners; obsolete
+experiment families and exclusive scripts/configurations/tests are retired.
+731 files retired; the final dependency check reports zero surviving owners
+referencing retired source/configuration, and all 3,014 unit tests collect.
+Targeted numerical/contract checks pass within the scope recorded in
+[WORKSPACE_INVENTORY.md](research/daily_coarse_graining/WORKSPACE_INVENTORY.md);
+this is not a full-suite or scientific revalidation claim. Teacher/source truth,
+data, weights and dated scientific reports are unchanged; pickle identities
+remain intact. Recovery is available from the source-retirement tag.
+No GPU job, new paid allocation or neural training is active. Speed optimization
+is next; production precision and architecture remain unchanged. The 10x
+throughput target is unmet and is not a promise.
 
 ## Accepted foundations and scope
 

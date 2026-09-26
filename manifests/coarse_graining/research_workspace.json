@@ -2,6 +2,7 @@
   "schema_version": "research_workspace_v1",
   "purpose": "Task-directed source inventory, not a training or deployment protocol.",
   "recovery_tag": "research/daily-before-context-cleanup-20260926",
+  "source_retirement_tag": "research/daily-before-source-retirement-20260926",
   "groups": {
     "scientific_route": {
       "status": "retained; training paused",
@@ -45,15 +46,14 @@
         "scripts/hpc/prepare_shared_learning_data.py",
         "scripts/hpc/shared_daily_microbatch.py",
         "scripts/hpc/shared_transformer_runtime.py",
+        "scripts/hpc/target_oriented_training_prepared.py",
+        "research/daily_coarse_graining/daily_operator/target_oriented_training.py",
         "scripts/hpc/successor_small_fit_prepared.py",
         "scripts/hpc/successor_staged_prepared.py"
       ]
     }
   },
-  "retirement_candidates": [
-    "scripts/hpc/probe_successor_parameter_geometry.py",
-    "scripts/hpc/probe_successor_multibatch_direction.py"
-  ],
+  "retirement_candidates": [],
   "retired_entrypoints": [
     "scripts/hpc/run_successor_fast_owner_gpu_probe.sh",
     "scripts/hpc/run_successor_process_head_canonical_gate.sh",

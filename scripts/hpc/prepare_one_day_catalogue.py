@@ -16,7 +16,7 @@ def run(args):
         load_target_oriented_training_contract,
     )
     from research.daily_coarse_graining.typed_sidecar import load_coherent_typed_sidecar_index
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
     started = time.perf_counter()
     source = json.loads(args.prepared_manifest.read_text())
     index = load_coherent_typed_sidecar_index(args.dataset_manifest, verify_hashes=False)

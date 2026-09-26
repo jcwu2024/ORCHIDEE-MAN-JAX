@@ -24,7 +24,7 @@ import numpy as np
 from scripts.hpc.checked_recurrent_execution import device_helper_cache
 from scripts.hpc.probe_shared_execution import compare_trees
 from scripts.hpc.probe_shared_split_profile import concatenate_daily
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def _load_adjacent_overlay(name):

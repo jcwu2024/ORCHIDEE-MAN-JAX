@@ -60,7 +60,7 @@ def persist_tree(path, jax, payload):
 def run(args):
     import json
 
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
     from scripts.hpc.shared_transformer_runtime import (
         load_shared_runtime,
         prepare_shared_trajectory_scales,
@@ -115,7 +115,7 @@ def run(args):
             derive_target_oriented_scales,
             initialize_target_oriented_adamw,
         )
-        from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+        from scripts.hpc.runtime_diagnostics import _tree_numeric_report
 
         emit("calibrate_train_scales", data=metadata)
         # Calibration is CPU work even when the model test runs on a GPU.

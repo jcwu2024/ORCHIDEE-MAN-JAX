@@ -171,7 +171,7 @@ def run(args):
         _resolved_reference,
         gradient_evaluators,
     )
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     configuration = json.loads(args.pool_protocol.read_text())
     protocol = json.loads((ROOT/configuration['model_protocol']).read_text())

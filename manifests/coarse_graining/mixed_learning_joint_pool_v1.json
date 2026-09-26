@@ -1,9 +1,0 @@
-{
-  "schema_version": "mixed_learning_stages_v1",
-  "name": "direct_joint_one_prepared_pool_pass_v1",
-  "total_updates": 5415,
-  "milestones": [0, 200, 600, 1000, 2500, 4000, 5415],
-  "phases": [
-    {"name": "joint_training", "objective": "mixed", "end_update": 5415, "outer_weights": {"daily": 1.0, "T7": 0.5, "T30": 0.5}}
-  ]
-}

@@ -14,9 +14,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = "research.daily_coarse_graining.daily_operator"
-# Ordered [public name, relative module, defining attribute] triples parsed from
-# the eager initializer at 273157c. CI does not need the local preservation tag.
-ORIGINAL_PUBLIC_MAP_SHA256 = "52c1caaa62df80ab4a01c0a138b87dd08109826ea85203a02bb4edf40d00ad58"
+# Ordered retained bindings after source retirement; core object identities
+# remain unchanged, while exports exclusive to removed experiments are absent.
+RETAINED_PUBLIC_MAP_SHA256 = "3e12a82dfd40812314a537c74a25a9a71312c3c1abf19ddf3068fe838d4e092f"
 
 
 def fresh(code):
@@ -28,13 +28,23 @@ def fresh(code):
     return json.loads(result.stdout.splitlines()[-1])
 
 
-def test_every_declared_export_and_order_matches_precleanup_snapshot():
+def test_every_retained_export_and_order_matches_retirement_contract():
     package = importlib.import_module(PACKAGE)
-    assert len(package.__all__) == len(set(package.__all__)) == 350
+    assert len(package.__all__) == len(set(package.__all__)) == 321
     assert list(package._PUBLIC_EXPORTS) == package.__all__
     triples = [[public, module, attribute] for public, (module, attribute) in package._PUBLIC_EXPORTS.items()]
     fingerprint = hashlib.sha256(json.dumps(triples, separators=(",", ":")).encode()).hexdigest()
-    assert fingerprint == ORIGINAL_PUBLIC_MAP_SHA256
+    assert fingerprint == RETAINED_PUBLIC_MAP_SHA256
+
+
+def test_retired_experiment_only_exports_and_modules_are_absent():
+    package = importlib.import_module(PACKAGE)
+    for name in ("masked_doc_status_branch_magnitude_loss", "build_gpp_state_reachability_layout",
+                 "load_coupled_gpp_optimizer_preflight_contract", "doc_status_branch_magnitude_loss",
+                 "target_oriented_coupled_gpp_objective", "target_oriented_gpp_state_reachability"):
+        assert name not in dir(package)
+        with pytest.raises(AttributeError):
+            getattr(package, name)
 
 
 def test_all_lazy_bindings_are_original_objects_and_cached():

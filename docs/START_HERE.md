@@ -1,7 +1,7 @@
 # Project Start Here
 
-Updated: 2026-09-26. Current-context consolidation is complete. The next research
-work is speed optimization before training; no GPU job or training is active.
+Updated: 2026-09-26. Entry-document and obsolete-source cleanup are complete.
+The next work is speed research before training; no GPU job or training is active.
 
 ## Two products, separate claims
 
@@ -52,6 +52,6 @@ Do not read the whole `HANDOFF.md` or dated report collection for onboarding.
   default final-method starting point. Scientific and product acceptance remain
   pending.
 
-Next, return to **speed optimization before training**. The 10x target
-is a research goal, not a measured result or promise. See NEXT_STEPS, not old
+Return to **speed optimization before training**. The 10x target is a research
+goal, not a measured result or promise. See NEXT_STEPS, not old
 reports' proposed launches, for what is authorized.

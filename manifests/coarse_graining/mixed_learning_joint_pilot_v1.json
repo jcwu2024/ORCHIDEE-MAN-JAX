@@ -1,9 +1,0 @@
-{
-  "schema_version": "mixed_learning_stages_v1",
-  "name": "pilot_joint600_timing_matched_v1",
-  "total_updates": 600,
-  "milestones": [0, 100, 200, 400, 600],
-  "phases": [
-    {"name": "joint_training", "objective": "mixed", "end_update": 600, "outer_weights": {"daily": 1.0, "T7": 0.5, "T30": 0.5}}
-  ]
-}

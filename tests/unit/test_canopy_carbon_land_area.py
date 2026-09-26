@@ -4,7 +4,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from research.daily_coarse_graining.daily_operator.forward_attribution import reduce_pool
 from research.daily_coarse_graining.daily_operator.successor_training import extract_biomass_productivity_trajectories
 
 
@@ -34,6 +33,3 @@ def test_canopy_storage_has_no_second_cover_factor_and_selects_carbon():
         np.testing.assert_allclose(ecosystem(fraction, active), 40.)
         np.testing.assert_allclose(jax.grad(ecosystem)(fraction, active), 0.)
     np.testing.assert_allclose(ecosystem(jnp.array([.25, .75]), jnp.array([False, True])), 30.)
-    leaf = SimpleNamespace(axis_names=('npts', 'nvm', 'nelements'))
-    np.testing.assert_allclose(reduce_pool(np.array([[[[10., 1000.], [30., 3000.]]]]),
-        [[.25, .75]], [[True, True]], leaf, 'interception_storage'), [40.])

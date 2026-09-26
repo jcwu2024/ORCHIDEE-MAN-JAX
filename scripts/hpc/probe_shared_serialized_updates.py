@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 
 from scripts.hpc.probe_shared_execution import compare_trees
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def require_reference(profile, reference):

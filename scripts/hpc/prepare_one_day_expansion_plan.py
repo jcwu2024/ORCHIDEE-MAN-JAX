@@ -9,7 +9,7 @@ from pathlib import Path
 def run(args):
     from research.daily_coarse_graining.daily_operator.one_day_expansion_plan import expansion_plan
     from research.daily_coarse_graining.typed_sidecar import load_coherent_typed_sidecar_index
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     with gzip.open(args.catalogue, 'rt') as handle:

@@ -29,6 +29,18 @@ chronology questions, but should not be loaded as routine current context.
 
 ## Exact pre-cleanup document recovery
 
+The later source-retirement snapshot is
+`research/daily-before-source-retirement-20260926` (commit `5682064`). It preserves
+the code after entry-document consolidation and before whole obsolete experiment
+families were removed. Historical reports keep their original commands and paths;
+run those experiments from their recorded revision or this recovery snapshot,
+not by mixing individual old runners into the current training checkout.
+List files retired since that snapshot with:
+
+```powershell
+git diff --name-only --diff-filter=D research/daily-before-source-retirement-20260926 HEAD
+```
+
 The annotated tag `research/daily-before-context-cleanup-20260926` preserves the
 tracked repository at commit `273157c6bafea340d0be32d91fffaef929fc8a62`.
 This avoids copying more than 13,000 obsolete entry-document lines into a new

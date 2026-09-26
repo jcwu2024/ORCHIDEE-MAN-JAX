@@ -8,15 +8,6 @@ from research.daily_coarse_graining.daily_operator.fd_convergence import admissi
 from research.daily_coarse_graining.daily_operator.fraction_monitoring import fraction_report
 
 
-def test_v3_preserves_model_training_settings_and_only_changes_admission_monitoring():
-    root = Path(__file__).resolve().parents[2]/'manifests/coarse_graining'
-    old = json.loads((root/'fresh_start_one_day_probe_v2.json').read_text())
-    new = json.loads((root/'fresh_start_one_day_probe_v3.json').read_text())
-    for key in ('seed', 'parameter_count', 'trainable_scope', 'initialization', 'input_conditioning',
-                'output_applicability', 'data', 'loss', 'fluxes', 'optimizer', 'training', 'learning_screen'):
-        assert new[key] == old[key]
-    for key in ('derivative_relative_tolerance', 'derivative_absolute_tolerance', 'budget_absolute_tolerance'):
-        assert new['admission'][key] == old['admission'][key]
 
 
 def test_legacy_rejects_coarse_failure_but_v3_requires_a_real_stable_plateau():

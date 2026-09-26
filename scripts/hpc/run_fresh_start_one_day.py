@@ -19,9 +19,11 @@ def bootstrap(args, protocol):
     # This loader owns existing v6 schemas/statistics and small example rows;
     # it loads no pretrained checkpoints. Disable its unused legacy probe
     # initialization; every candidate weight comes from our one seed.
-    from scripts.hpc.run_successor_fast_owner_gpu_probe import _load_extended_runtime
-    from scripts.hpc.run_target_oriented_attention_gpu_admission import _head
-    from scripts.hpc.run_target_oriented_full_step_preflight import _prepare_template
+    from scripts.hpc.canonical_training_runtime import _load_extended_runtime
+    from scripts.hpc.retained_training_runtime import (
+        build_parent_process_head as _head,
+        _prepare_template,
+    )
     backend = {}
     if args.shape_only or getattr(args, 'cpu_forward_only', False):
         def cpu_backend():
@@ -93,7 +95,7 @@ def bootstrap(args, protocol):
 
 
 def run(args):
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
     protocol = json.loads(args.protocol.read_text())
     if protocol['input_conditioning']['scope'] != 'slowproc_stomate_previous_step_state.DOC':
         raise ValueError('this prototype implements the declared DOC-only input policy')
@@ -126,7 +128,7 @@ def run(args):
         from research.daily_coarse_graining.daily_operator.target_oriented_training import (
             initialize_target_oriented_adamw,
         )
-        from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+        from scripts.hpc.runtime_diagnostics import _tree_numeric_report
         count = sum(v.size for v in jax.tree_util.tree_leaves(parameters))
         if count != protocol['parameter_count']:
             raise ValueError(f'fresh parameter count {count} differs')

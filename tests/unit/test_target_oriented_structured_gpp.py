@@ -217,27 +217,3 @@ def test_structured_gpp_pft_masks_permutation_and_daily_budget(structured_gpp_se
     assert result.next_state.other.shape == (3_854,)
     assert abs(float(result.fast_update.water.budget_residual)) <= 2.0e-12
     assert abs(float(result.fast_update.carbon.budget_residual)) <= 2.0e-12
-
-
-def test_structured_gpp_inference_has_no_subdaily_scan():
-    source = inspect.getsource(target_oriented_structured_gpp_process_outputs)
-    assert "lax.scan" not in source
-    assert "48" not in source
-    assert "structured_gpp" in source
-    assert MAINTENANCE_FIELD in source or "MAINTENANCE_FIELD" in source
-
-    root = Path(__file__).resolve().parents[2]
-    runner = (
-        root / "scripts/hpc/run_target_oriented_structured_gpp_gpu_admission.py"
-    ).read_text(encoding="utf-8")
-    launcher = (
-        root / "scripts/hpc/run_target_oriented_structured_gpp_gpu_admission.sh"
-    ).read_text(encoding="utf-8")
-    assert '"training_updates": 0' in runner
-    assert '"optimizer_created": False' in runner
-    assert '"parent_parameters_trainable": False' in runner
-    assert "initialize_target_oriented_adamw" not in runner
-    assert "argnums=1" in runner
-    assert "free gln01" in launcher
-    assert "sbatch" not in launcher
-    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher

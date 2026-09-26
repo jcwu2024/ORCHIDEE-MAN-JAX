@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from typing import Any, Callable, Mapping
 
 from scripts.hpc import probe_shared_execution as shared_probe
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 SUPPORTED_JAX_VERSION = "0.4.38"
 _CACHE_SUFFIX = "-cache"

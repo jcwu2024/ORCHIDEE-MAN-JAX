@@ -124,7 +124,7 @@ def recover_saved_projections(jax,jnp,arguments,reference,streamed,previous,chec
 
 def run(args):
     from scripts.hpc.probe_one_day_batch import _compiled_memory
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     report = {'status':'running','updates':0,'purpose':'discrepancy_diagnosis_not_admission',

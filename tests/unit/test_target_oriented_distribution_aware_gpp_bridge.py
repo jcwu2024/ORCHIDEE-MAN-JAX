@@ -105,23 +105,3 @@ def test_classifier_requires_absolute_gates_and_large_downstream_repairs() -> No
         contract=contract,
     )
     assert shared["classification"] == "shared_attention_or_state_scope_required"
-
-
-def test_runner_and_launcher_are_forward_only_free_gpu_diagnostics() -> None:
-    root = Path(__file__).resolve().parents[2]
-    launcher = (
-        root / "scripts" / "hpc" / "run_target_oriented_distribution_aware_gpp_bridge.sh"
-    ).read_text(encoding="utf-8")
-    runner = (
-        root / "scripts" / "hpc" / "audit_target_oriented_distribution_aware_gpp_bridge.py"
-    ).read_text(encoding="utf-8")
-    step_factory = (
-        root / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py"
-    ).read_text(encoding="utf-8")
-    assert "gln01|ibgln01|ibc13b02n04" in launcher
-    assert "sbatch" not in launcher
-    assert '"optimizer_created": False' in runner
-    assert '"training_updates": 0' in runner
-    assert "value_and_grad" not in runner
-    assert '"seven_teacher_gpp_bridge_acceptance_forward"' in step_factory
-    assert '"thirty_teacher_gpp_bridge_acceptance_forward"' in step_factory

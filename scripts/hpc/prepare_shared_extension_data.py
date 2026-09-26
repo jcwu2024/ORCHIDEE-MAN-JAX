@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from scripts.hpc.prepare_shared_learning_data import artifact_signatures, day_keys
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 from scripts.hpc.shared_learning_plan import build_learning_plan
 from scripts.hpc.shared_transformer_runtime import _load_prepared_artifacts
 

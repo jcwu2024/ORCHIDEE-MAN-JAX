@@ -14,7 +14,7 @@ import time
 import numpy as np
 
 from scripts.hpc.probe_shared_split_timing_cache import observe_compiler
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def benchmark_replays(invoke, synchronize, repeats):

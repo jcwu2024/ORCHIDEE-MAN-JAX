@@ -114,7 +114,7 @@ def feedback_hard_counts(feedback):
 
 
 def run(args):
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     if args.admission_only or args.cpu_forward_only:
         raise ValueError('use --shape-only for this forward screen preflight')

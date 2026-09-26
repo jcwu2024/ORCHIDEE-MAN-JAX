@@ -29,7 +29,7 @@ from scripts.hpc.run_shared_learning import (
     persist_tree,
     shared_config,
 )
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 EXECUTION = "gather_dynamic_reuse"
 GRADIENT_TOLERANCE = {"rtol": 5e-4, "atol": 2e-5}

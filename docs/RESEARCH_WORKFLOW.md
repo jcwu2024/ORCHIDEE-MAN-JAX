@@ -42,6 +42,11 @@ The tag is local until explicitly pushed with an authorized repository update.
 
 Retire files in bounded dependency groups, including their exclusive wrappers,
 configs and tests. Preserve shared helpers and source/scientific evidence.
+When only abandoned experiments depend on each other, retire that whole group;
+do not retain it solely because its old tests or launchers still import it.
+Extract current shared helpers from historical runners before retiring callers.
+Exclusively historical research APIs may retire with their experiments; preserve
+current interfaces and the module identities used by retained serialized data.
 Record what moved out of the current checkout and the exact recovery reference.
 Moving every old file into `archive/` alone does not reduce checkout size.
 Do not remove data, weights, results or remote checkouts as part of source cleanup.

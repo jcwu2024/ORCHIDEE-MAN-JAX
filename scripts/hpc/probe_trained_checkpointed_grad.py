@@ -40,7 +40,7 @@ def recurrent_probe_loss(runtime, head, protocol_path):
 
 def run(args):
     from scripts.hpc.probe_public_rollout_staged import StageStore
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     if args.admission_only or args.cpu_forward_only:
         raise ValueError('use --phase reverse/verify or --shape-only')
@@ -68,7 +68,7 @@ def run(args):
         from scripts.hpc.diagnose_public_rollout_discrepancy import project
         from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory
         from scripts.hpc.probe_public_rollout import physical_checks
-        from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+        from scripts.hpc.runtime_diagnostics import _tree_numeric_report
 
         pool = WindowPool(args.selection,method['source_identity'])
         row = selected_window(pool.selection,args.horizon)

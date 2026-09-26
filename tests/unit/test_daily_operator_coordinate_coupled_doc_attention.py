@@ -101,22 +101,6 @@ def _inactive_candidate_inputs(setup):
     return inactive, perturbed
 
 
-def test_coordinate_coupled_doc_contract_matches_executable_identity():
-    root = Path(__file__).resolve().parents[2]
-    payload = json.loads(
-        (root / "manifests" / "coarse_graining" / "coordinate_coupled_doc_transition_v4.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert payload["candidate_name"] == "coordinate_coupled_doc_transition_attention_v4"
-    assert tuple(payload["aligned_source_fields"]) == DOC_ALIGNED_SOURCE_FIELDS
-    assert payload["joint_transition_fields"] == {
-        "incoming": DOC_INCOMING_FIELD,
-        "outgoing": DOC_OUTGOING_FIELD,
-    }
-    assert payload["capacity"]["expected_parameter_count"] == 59_971_257
-    assert payload["inference_policy"]["reconstruct_48_forcing_records"] is False
-    assert payload["inference_policy"]["scan_48_state_steps"] is False
 
 
 def test_doc_alignment_matches_every_common_physical_coordinate(coupled_doc_setup):

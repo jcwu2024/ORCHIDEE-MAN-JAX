@@ -17,7 +17,7 @@ from scripts.hpc.probe_shared_compile_cache import (
 )
 from scripts.hpc.probe_shared_compile_cache import parser as base_parser
 from scripts.hpc.run_shared_learning import memory_sizes
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def run(args):

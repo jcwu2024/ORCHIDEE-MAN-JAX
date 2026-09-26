@@ -35,22 +35,6 @@ from tests.unit.test_daily_operator_mechanistic_output import (
 )
 
 
-def test_representative_gradient_probe_has_bounded_free_and_slurm_launchers():
-    root = Path(__file__).resolve().parents[2]
-    runner = (root / "scripts/hpc/run_target_oriented_representative_gradient_probe.sh").read_text(
-        encoding="utf-8"
-    )
-    slurm = (
-        root / "scripts/hpc/slurm_target_oriented_representative_gradient_probe.sh"
-    ).read_text(encoding="utf-8")
-
-    assert "--batches 1" in runner
-    assert "SLURM_JOB_ID" in runner
-    assert "#SBATCH --partition=gnall" in slurm
-    assert "#SBATCH --cpus-per-task=4" in slurm
-    assert "#SBATCH --gres=gpu:1" in slurm
-    assert "#SBATCH --time=01:00:00" in slurm
-    assert "run_target_oriented_representative_gradient_probe.sh" in slurm
 
 
 @pytest.fixture(scope="module")

@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from scripts.hpc.run_shared_transformer_admission import ROOT, shared_config
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 from scripts.hpc.shared_transformer_runtime import load_shared_runtime, select_artifact_ids
 
 

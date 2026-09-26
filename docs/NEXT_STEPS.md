@@ -3,21 +3,29 @@
 Updated: 2026-09-26. This page controls current operations; dated evidence does
 not authorize its old proposed next action.
 
-## Context cleanup: completed scope
+## Completed: source and context cleanup
 
-Current entry pages are consolidated, task-specific source groups are indexed,
-and three isolated historical shell launchers are retired with tag recovery.
-Shared old helpers remain where imports/tests still need them; this is not a
-claim that all historical source has been retired. Follow
-[RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md) to keep new context bounded.
-Scientific evidence, datasets, checkpoints and source provenance are preserved.
+Entry-document consolidation and substantive source retirement are complete.
+Current shared helpers are independent of historical runners; abandoned
+experimental implementations and their exclusive scripts, declarative
+configurations and tests have retired. Current shared model/data/performance
+paths, Teacher functionality, prepared-data class identities and scientific
+evidence are preserved. Architecture, loss, gradient and data semantics are
+unchanged. No further broad cleanup is the active work order.
+
+The source-retirement baseline is tag
+`research/daily-before-source-retirement-20260926` (`5682064`). Remaining
+dependencies, unit collection and targeted tests were checked; measured
+reduction and validation limits are in
+[WORKSPACE_INVENTORY.md](research/daily_coarse_graining/WORKSPACE_INVENTORY.md).
+Follow [RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md) to keep new context bounded.
 
 The pre-cleanup tracked documents are preserved at annotated Git tag
 `research/daily-before-context-cleanup-20260926` (`273157c6`). Recovery and
 question-based historical routing are in
 [HISTORY_INDEX.md](research/daily_coarse_graining/HISTORY_INDEX.md).
 
-## Next research action: speed only, before training
+## Now: speed only, before training
 
 Do not start neural training at the current throughput. Target an order of
 magnitude improvement in effective complete-update throughput, preserving

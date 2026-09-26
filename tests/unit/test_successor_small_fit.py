@@ -15,8 +15,6 @@ import research.daily_coarse_graining.daily_operator.successor_fast_owner_traini
 import research.daily_coarse_graining.daily_operator.successor_fit_checkpoint as fit_checkpoint
 import research.daily_coarse_graining.daily_operator.successor_frozen_coefficients as frozen_coefficients
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
-import scripts.hpc.probe_successor_per_output_gradients as per_output_gradients
-import scripts.hpc.run_successor_batch_diversity_short_fit as diversity_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 import scripts.hpc.run_successor_small_fit as production_fit
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
@@ -48,38 +46,11 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     successor_teacher_physical_outputs,
     verify_successor_small_fit_schedule,
 )
-from research.daily_coarse_graining.daily_operator.successor_staged_checkpoint import (
-    load_staged_recovery,
-    write_staged_best_checkpoint,
-    write_staged_recovery,
-)
-from research.daily_coarse_graining.daily_operator.successor_staged_training import (
-    advance_staged_validation_state,
-    validation_primary_composite,
-)
 from research.daily_coarse_graining.daily_operator.successor_training import (
     LONG_HORIZON_COMPONENTS,
     BiomassProductivityTrajectories,
     GradientRatioPreflightError,
     calibrate_gradient_ratio_coefficients,
-)
-from research.daily_coarse_graining.daily_operator.successor_training_assets import (
-    load_successor_training_assets,
-)
-from scripts.dev.audit_successor_multibatch_activity import _finite_summary
-from scripts.dev.freeze_successor_training_assets import _freeze_coefficients
-from scripts.hpc.prepare_successor_small_fit_batches import (
-    _finalize_worker_progress,
-    _worker_updates,
-)
-from scripts.hpc.probe_successor_batch_diversity import (
-    _gradient_summary,
-    _join_context_anchors,
-    _slice_context_batch,
-    _stack_contexts,
-)
-from scripts.hpc.probe_successor_multibatch_coefficients import (
-    _aggregate_coefficient_records,
 )
 from scripts.hpc.run_successor_small_fit import (
     _compile_reuse_passed,
@@ -112,10 +83,6 @@ from scripts.hpc.successor_staged_prepared import (
     load_staged_prepared_manifest,
     stage_update_range,
     staged_worker_updates,
-)
-from scripts.hpc.successor_staged_validation_prepared import (
-    STAGED_VALIDATION_PREPARED_SCHEMA,
-    load_staged_validation_prepared,
 )
 
 
@@ -162,117 +129,10 @@ def test_small_fit_schedule_is_deterministic_matched_and_excludes_first_row():
     verify_successor_small_fit_schedule(left, references, contract)
 
 
-def test_staged_schedule_is_prefix_stable_and_ranges_are_incremental():
-    root = Path(__file__).resolve().parents[2]
-    contract = load_successor_small_fit_contract(
-        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
-    )
-    references = tuple(
-        _Reference(
-            _Parent(f"{landpoint:03d}.0-071.0", year),
-            sha256=f"{landpoint + year:064x}"[-64:],
-        )
-        for landpoint in range(1, 601)
-        for year in range(1961, 1963)
-    )
-    first = build_successor_small_fit_schedule(references, contract, updates=500)
-    second = build_successor_small_fit_schedule(references, contract, updates=1000)
-
-    assert first["entries"] == second["entries"][:500]
-    assert stage_update_range(contract.sampling["stage_milestones"], 500) == (1, 500)
-    assert stage_update_range(contract.sampling["stage_milestones"], 1000) == (501, 1000)
-    assert stage_update_range(contract.sampling["stage_milestones"], 10000) == (5001, 10000)
-    assert staged_worker_updates(501, 506, 0, 2) == (501, 503, 505)
-    assert staged_worker_updates(501, 506, 1, 2) == (502, 504, 506)
 
 
-def test_training_sufficiency_contract_expands_data_exposure_without_changing_architecture():
-    root = Path(__file__).resolve().parents[2]
-    contract = load_successor_small_fit_contract(
-        root / "manifests" / "coarse_graining" / "successor_training_sufficiency_v2.json"
-    )
-
-    assert contract.sampling["maximum_updates_per_arm"] == 10000
-    assert contract.sampling["one_day_batch_size"] == 32
-    assert contract.sampling["rollout_batch_size"] == 4
-    assert contract.payload["matched_arms"] == [
-        "source_routed_process_attention_v2",
-        "source_routed_graph_mlp_control_v2",
-    ]
-    assert contract.payload["objective"]["bias_reduction_axis"] == ("joint_across_rollout_windows")
-    assert contract.payload["objective"]["coefficient_aggregation"] == (
-        "shared_median_gradient_ratio"
-    )
-    assert contract.payload["gates"]["budget_absolute_tolerance"] == 2e-12
 
 
-def test_staged_validation_panel_is_deterministic_and_excludes_formal_windows():
-    root = Path(__file__).resolve().parents[2]
-    contract = load_successor_small_fit_contract(
-        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
-    )
-    split_references = []
-    for slice_id, (spatial, temporal) in {
-        "temporal": ("train", "validation"),
-        "spatial": ("validation", "train"),
-        "joint": ("validation", "validation"),
-    }.items():
-        split_references.extend(
-            _Reference(
-                _Parent(
-                    f"{slice_id}-{ordinal:02d}",
-                    2005 + ordinal % 3,
-                    spatial_split=spatial,
-                    temporal_split=temporal,
-                ),
-                sha256=f"{slice_id}-{ordinal}",
-            )
-            for ordinal in range(10)
-        )
-    excluded = {
-        "plan_sha256": contract.payload["validation"][
-            "excluded_formal_window_plan_sha256"
-        ],
-        "slices": {
-            slice_id: {
-                "entries": [
-                    {
-                        "landpoint_id": f"{slice_id}-00",
-                        "year": 2005,
-                        "start_rows": [1, 31],
-                    }
-                ]
-            }
-            for slice_id in ("temporal", "spatial", "joint")
-        },
-    }
-    first = build_successor_validation_panel(
-        split_references,
-        contract,
-        excluded_window_plan=excluded,
-    )
-    second = build_successor_validation_panel(
-        tuple(reversed(split_references)),
-        contract,
-        excluded_window_plan=excluded,
-    )
-
-    assert first == second
-    assert first["sealed_test_used"] is False
-    assert first["milestones"] == [500, 1000, 2000, 5000, 10000]
-    for slice_id, cell in first["slices"].items():
-        assert len(cell["entries"]) == 8
-        assert len({entry["landpoint_id"] for entry in cell["entries"]}) == 8
-        assert all(len(entry["start_rows"]) == 2 for entry in cell["entries"])
-        assert all(
-            not (
-                entry["landpoint_id"] == f"{slice_id}-00"
-                and entry["year"] == 2005
-                and start in (1, 31)
-            )
-            for entry in cell["entries"]
-            for start in entry["start_rows"]
-        )
 
 
 def test_small_fit_schedule_rejects_non_train_reference():
@@ -414,194 +274,18 @@ def test_gradient_ratio_interval_failure_reports_the_unclamped_coefficient():
     assert captured.value.diagnostic["coefficient_minimum"] == 0.001
 
 
-def test_multibatch_coefficients_use_one_shared_lower_quantile_across_arms_and_batches():
-    records = [
-        {
-            "anchor_gradient_norm": 10.0,
-            "component_gradient_norms": {name: value for name in LONG_HORIZON_COMPONENTS},
-        }
-        for value in (10.0, 20.0, 30.0, 1000.0)
-    ]
-    result = _aggregate_coefficient_records(
-        records,
-        component_names=LONG_HORIZON_COMPONENTS,
-        targets={name: 0.1 for name in LONG_HORIZON_COMPONENTS},
-        coefficient_minimum=1e-6,
-        coefficient_maximum=10.0,
-        coefficient_aggregation="shared_lower_quantile_gradient_ratio",
-        coefficient_quantile=0.10,
-    )
-
-    expected = np.quantile(
-        [0.1, 0.05, 1.0 / 30.0, 0.001],
-        0.10,
-        method="lower",
-    )
-    assert result["record_count"] == 4
-    assert result["coefficient_quantile"] == 0.10
-    assert result["quantile_method"] == "lower"
-    assert result["coefficient_aggregation"] == ("shared_lower_quantile_gradient_ratio")
-    assert all(value == pytest.approx(expected) for value in result["resolved_coefficients"].values())
 
 
-def test_multibatch_v2_coefficients_remain_median_without_quantile_field():
-    records = [
-        {
-            "anchor_gradient_norm": 10.0,
-            "component_gradient_norms": {name: value for name in LONG_HORIZON_COMPONENTS},
-        }
-        for value in (10.0, 20.0, 30.0, 1000.0)
-    ]
-    result = _aggregate_coefficient_records(
-        records,
-        component_names=LONG_HORIZON_COMPONENTS,
-        targets={name: 0.1 for name in LONG_HORIZON_COMPONENTS},
-        coefficient_minimum=1e-6,
-        coefficient_maximum=10.0,
-        coefficient_aggregation="shared_median_gradient_ratio",
-    )
-
-    expected = np.median([0.1, 0.05, 1.0 / 30.0, 0.001])
-    assert "coefficient_quantile" not in result
-    assert all(value == pytest.approx(expected) for value in result["resolved_coefficients"].values())
 
 
-def test_multibatch_coefficient_wrapper_is_free_gpu_and_writes_no_checkpoint():
-    root = Path(__file__).resolve().parents[2]
-    wrapper = (root / "scripts" / "hpc" / "run_successor_multibatch_coefficient_probe.sh").read_text()
-
-    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in wrapper
-    assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu" in wrapper
-    assert "sbatch" not in wrapper
-    assert "checkpoint" not in wrapper.lower()
 
 
-def test_multibatch_activity_summary_respects_the_defined_mask():
-    summary = _finite_summary(
-        np.asarray([1.0, 1.0e20, np.nan, -3.0]),
-        np.asarray([True, False, True, True]),
-    )
-
-    assert summary == {
-        "count": 2,
-        "nonzero_count": 2,
-        "absolute_mean": 2.0,
-        "rms": pytest.approx(np.sqrt(5.0)),
-        "absolute_maximum": 3.0,
-    }
 
 
-def test_low_gradient_path_wrapper_is_free_gpu_and_zero_update():
-    root = Path(__file__).resolve().parents[2]
-    wrapper = (root / "scripts" / "hpc" / "run_successor_low_gradient_path_probe.sh").read_text()
-    probe = (root / "scripts" / "hpc" / "probe_successor_low_gradient_path.py").read_text()
-
-    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in wrapper
-    assert 'UPDATES=${UPDATES:-"12 15"}' in wrapper
-    assert "sbatch" not in wrapper
-    assert '"training_updates": 0' in probe
-    assert '"checkpoint_written": False' in probe
 
 
-def test_multibatch_coefficient_probe_reuses_rollout_for_hard_gates():
-    root = Path(__file__).resolve().parents[2]
-    wrapper = (root / "scripts" / "hpc" / "run_successor_multibatch_coefficient_probe.sh").read_text()
-    probe = (root / "scripts" / "hpc" / "probe_successor_multibatch_coefficients.py").read_text()
-
-    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in wrapper
-    assert "has_aux=True" in probe
-    assert '"hard_gate_counts": hard_counts_host' in probe
-    assert '"hard_failure_count": hard_failure_count' in probe
 
 
-def test_staged_training_assets_rederive_coefficients_and_are_hash_bound(tmp_path):
-    root = Path(__file__).resolve().parents[2]
-    contract = load_successor_small_fit_contract(
-        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
-    )
-    components = tuple(LONG_HORIZON_COMPONENTS)
-    measurements = [
-        {
-            "anchor_gradient_norm": 10.0,
-            "component_gradient_norms": {
-                name: float(record + index + 1)
-                for index, name in enumerate(components)
-            },
-        }
-        for record in range(32)
-    ]
-    resolved = _aggregate_coefficient_records(
-        measurements,
-        component_names=components,
-        targets=contract.payload["objective"]["gradient_ratio_targets"],
-        coefficient_minimum=contract.payload["objective"]["coefficient_minimum"],
-        coefficient_maximum=contract.payload["objective"]["coefficient_maximum"],
-        coefficient_aggregation="shared_lower_quantile_gradient_ratio",
-        coefficient_quantile=0.10,
-    )["resolved_coefficients"]
-    prepared_path = tmp_path / "prepared.json"
-    atomic_json(prepared_path, {"identity": {"schedule_sha256": "schedule"}})
-    report_path = tmp_path / "report.json"
-    atomic_json(
-        report_path,
-        {
-            "status": "passed",
-            "git_head": "a" * 40,
-            "runner_contract_sha256": contract.payload["identity"][
-                "coefficient_probe_runner_contract_sha256"
-            ],
-            "prepared_manifest_sha256": sha256_file(prepared_path),
-            "training_updates": 0,
-            "checkpoint_written": False,
-            "sealed_test_used": False,
-            "historical_v5_used": False,
-            "teacher_data_regenerated": False,
-            "hard_failure_count": 0,
-            "measurement_record_count": 32,
-            "coefficient_aggregation": "shared_median_gradient_ratio",
-            "measurements": measurements,
-            "aggregation": {
-                "record_count": 32,
-                "resolved_coefficients": {name: 9.0 for name in components},
-            },
-        },
-    )
-    coefficient_payload = _freeze_coefficients(
-        json.loads(report_path.read_text()),
-        report_path=report_path,
-        contract=contract,
-        prepared_manifest_path=prepared_path,
-    )
-    coefficient_path = tmp_path / "coefficients.json"
-    atomic_json(coefficient_path, coefficient_payload)
-
-    panel_payload = {
-        "schema_version": "successor_training_validation_panel_v1",
-        "runner_contract_sha256": contract.sha256,
-        "reported_horizons_days": [7, 30],
-        "milestones": [500, 1000, 2000, 5000, 10000],
-        "excluded_formal_window_plan_file_sha256": contract.payload["validation"][
-            "excluded_formal_window_plan_file_sha256"
-        ],
-        "excluded_formal_window_plan_sha256": contract.payload["validation"][
-            "excluded_formal_window_plan_sha256"
-        ],
-        "slices": {name: {} for name in ("temporal", "spatial", "joint")},
-        "sealed_test_used": False,
-    }
-    panel_payload["panel_sha256"] = small_fit._canonical_sha256(panel_payload)
-    panel_path = tmp_path / "panel.json"
-    atomic_json(panel_path, panel_payload)
-
-    assets = load_successor_training_assets(
-        coefficient_path,
-        panel_path,
-        coefficient_report_path=report_path,
-        prepared_manifest_path=prepared_path,
-        runner_contract=contract,
-        components=components,
-    )
-    assert assets.coefficients == resolved
 
 
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():
@@ -672,12 +356,6 @@ def test_replay_leaf_diagnostic_reports_undefined_representation_mismatch():
     ]
 
 
-def test_gpu_launcher_registers_cpu_for_jax_scan_partial_evaluation():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "run_successor_small_fit_probe.sh").read_text()
-
-    assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
-    assert "RUNNER_CONTRACT=${RUNNER_CONTRACT:-" in launcher
 
 
 def test_production_runner_trace_signature_excludes_dynamic_landpoint_year_arrays():
@@ -862,32 +540,6 @@ def test_rollout_prefix_diagnostic_slices_window_and_horizon():
     assert sliced.expected_next_discrete_state["counter"].shape == (1, 7, 3)
 
 
-def test_production_launcher_preserves_contract_and_dual_backend_boundary():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "run_successor_small_fit.sh").read_text()
-
-    assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
-    assert "SINGULARITYENV_PYTHONHASHSEED=0 \\" in launcher
-    assert '--updates "$UPDATES" \\' in launcher
-    assert "requires exactly 500 updates" in launcher
-    assert "successor_small_fit_runner_v1.json" in launcher
-    assert "successor_small_fit_checkpoint_handoff_v1.json" in launcher
-    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in launcher
-    assert '--prepared-manifest "$PREPARED_MANIFEST" \\' in launcher
-    assert "successor_small_fit_frozen_coefficients_v1.json" in launcher
-    assert '--coefficient-contract "$COEFFICIENT_CONTRACT" \\' in launcher
-    assert '--coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \\' in launcher
-    assert '--checkpoint-dir "$CHECKPOINT_DIR" \\' in launcher
-    assert '--recovery-path "$RECOVERY_PATH" \\' in launcher
-    assert "--recovery-interval 25" in launcher
-    assert 'EXTRA_ARGS="--replay-only-update $REPLAY_ONLY_UPDATE"' in launcher
-    assert "--diagnose-update $DIAGNOSE_UPDATE" in launcher
-    assert "--recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD" in launcher
-    assert "--diagnose-horizon $DIAGNOSE_HORIZON" in launcher
-    assert "--diagnose-window $DIAGNOSE_WINDOW" in launcher
-    assert "--diagnose-boundary-window $DIAGNOSE_BOUNDARY_WINDOW" in launcher
-    assert "$EXTRA_ARGS" in launcher
-    assert 'test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"' in launcher
 
 
 def test_rejected_paid_launcher_is_removed():
@@ -895,49 +547,10 @@ def test_rejected_paid_launcher_is_removed():
     assert not (root / "scripts" / "hpc" / "slurm_successor_small_fit.sh").exists()
 
 
-def test_two_stage_production_launchers_are_bounded_and_unsubmitted():
-    root = Path(__file__).resolve().parents[2]
-    cpu = (root / "scripts" / "hpc" / "slurm_prepare_successor_small_fit_500.sh").read_text()
-    gpu = (root / "scripts" / "hpc" / "slurm_successor_small_fit_500.sh").read_text()
-
-    assert "#SBATCH --partition=cnmix" in cpu
-    assert "#SBATCH --ntasks=4" in cpu
-    assert "#SBATCH --time=04:00:00" in cpu
-    assert "WORKER_COUNT=4" in cpu
-    assert "FINALIZE=true" in cpu
-    assert 'test ! -e "$OUTPUT_DIR/prepared_manifest.json"' in cpu
-    assert "CNY 1.12 worst case" in cpu
-
-    assert "#SBATCH --partition=gnall" in gpu
-    assert "#SBATCH --cpus-per-task=16" in gpu
-    assert "#SBATCH --gres=gpu:1" in gpu
-    assert "#SBATCH --time=02:00:00" in gpu
-    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:-" in gpu
-    assert "UPDATES=500" in gpu
-    assert 'test ! -e "$CHECKPOINT_DIR"' in gpu
-    assert "RECOVERY_PATH=" in gpu
-    assert "CNY 6.64 worst case" in gpu
 
 
-def test_prepared_batch_wrapper_exposes_bounded_artifact_compression():
-    root = Path(__file__).resolve().parents[2]
-    wrapper = (root / "scripts" / "hpc" / "prepare_successor_small_fit_batches.sh").read_text()
-
-    assert "ARTIFACT_COMPRESSION=${ARTIFACT_COMPRESSION:-none}" in wrapper
-    assert "none|gzip)" in wrapper
-    assert 'EXTRA_ARGS=(--artifact-compression "$ARTIFACT_COMPRESSION")' in wrapper
 
 
-def test_checkpoint_gpu_probe_is_serialization_only_and_removes_temporary_set():
-    root = Path(__file__).resolve().parents[2]
-    probe = (root / "scripts" / "hpc" / "probe_successor_checkpoint_handoff.py").read_text()
-
-    assert '"training_updates": 0' in probe
-    assert '"teacher_data_read": False' in probe
-    assert '"teacher_data_regenerated": False' in probe
-    assert '"historical_v5_used": False' in probe
-    assert "TemporaryDirectory" in probe
-    assert '"temporary_checkpoint_removed": True' in probe
 
 
 def test_checkpoint_handoff_contract_is_frozen_and_keeps_old_producer_identity():
@@ -1308,82 +921,6 @@ def test_staged_prepared_manifest_admits_global_update_interval(tmp_path):
         )
 
 
-def test_staged_validation_prepared_admits_fixed_panel_and_artifacts(tmp_path):
-    slices = {}
-    records = []
-    ordinal = 0
-    for slice_id in ("temporal", "spatial", "joint"):
-        entry = {
-            "landpoint_id": slice_id,
-            "year": 2006,
-            "parent_shard_sha256": "a" * 64,
-            "typed_shard_sha256": "b" * 64,
-            "day_count": 365,
-            "start_rows": [1, 31],
-        }
-        slices[slice_id] = {"entries": [entry]}
-        ordinal += 1
-        artifact = PreparedRolloutScreenArtifact(
-            ROLLOUT_PREPARED_ARTIFACT_SCHEMA,
-            slice_id,
-            entry,
-            "trace",
-            {"state": np.asarray([ordinal])},
-            (np.asarray([ordinal]),),
-        )
-        records.append(
-            {
-                "ordinal": ordinal,
-                "slice_id": slice_id,
-                "window_entry": entry,
-                "trace_signature": "trace",
-                **write_prepared_rollout_artifact(
-                    tmp_path / f"validation-{ordinal:03d}.pkl",
-                    artifact,
-                ),
-            }
-        )
-    panel = {
-        "schema_version": "successor_training_validation_panel_v1",
-        "runner_contract_sha256": "contract",
-        "slices": slices,
-        "sealed_test_used": False,
-    }
-    panel["panel_sha256"] = small_fit._canonical_sha256(panel)
-    panel_path = tmp_path / "validation_panel.json"
-    atomic_json(panel_path, panel)
-    manifest = {
-        "schema_version": STAGED_VALIDATION_PREPARED_SCHEMA,
-        "status": "passed",
-        "staged_training_contract_sha256": "contract",
-        "validation_panel": panel_path.name,
-        "validation_panel_sha256": panel["panel_sha256"],
-        "validation_panel_file_sha256": sha256_file(panel_path),
-        "artifact_count": 3,
-        "entries": records,
-        "sealed_test_used": False,
-        "teacher_data_regenerated": False,
-        "historical_v5_used": False,
-    }
-    manifest_path = tmp_path / "prepared_manifest.json"
-    atomic_json(manifest_path, manifest)
-
-    loaded, loaded_panel = load_staged_validation_prepared(
-        manifest_path,
-        staged_training_contract_sha256="contract",
-        validation_panel_sha256=panel["panel_sha256"],
-    )
-    assert loaded["manifest_sha256"] == sha256_file(manifest_path)
-    assert loaded_panel == panel
-
-    records[0]["slice_id"] = "joint"
-    atomic_json(manifest_path, manifest | {"entries": records})
-    with pytest.raises(ValueError, match="order drift"):
-        load_staged_validation_prepared(
-            manifest_path,
-            staged_training_contract_sha256="contract",
-            validation_panel_sha256=panel["panel_sha256"],
-        )
 
 
 def _staged_validation_report(score, *, hard_failures=0):
@@ -1413,478 +950,40 @@ def _staged_validation_report(score, *, hard_failures=0):
     }
 
 
-def test_staged_validation_state_stops_only_after_both_arms_plateau_twice():
-    root = Path(__file__).resolve().parents[2]
-    contract = load_successor_small_fit_contract(
-        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
-    )
-    attention, control = contract.payload["matched_arms"]
-    state = advance_staged_validation_state(
-        None,
-        milestone=500,
-        arm_reports={
-            attention: _staged_validation_report(1.0),
-            control: _staged_validation_report(1.0),
-        },
-        contract=contract,
-    )
-    assert validation_primary_composite(
-        _staged_validation_report(1.0),
-        primary_outputs=contract.payload["validation"]["primary_outputs"],
-    ) == pytest.approx(1.0)
-    assert state["stop_training"] is False
-
-    state = advance_staged_validation_state(
-        state,
-        milestone=1000,
-        arm_reports={
-            attention: _staged_validation_report(0.98),
-            control: _staged_validation_report(0.995),
-        },
-        contract=contract,
-    )
-    assert state["arms"][attention]["best_milestone"] == 1000
-    assert state["arms"][control]["best_milestone"] == 500
-    assert state["stop_training"] is False
-
-    state = advance_staged_validation_state(
-        state,
-        milestone=2000,
-        arm_reports={
-            attention: _staged_validation_report(0.975),
-            control: _staged_validation_report(1.01),
-        },
-        contract=contract,
-    )
-    assert state["stop_training"] is False
-    state = advance_staged_validation_state(
-        state,
-        milestone=5000,
-        arm_reports={
-            attention: _staged_validation_report(0.98),
-            control: _staged_validation_report(1.02),
-        },
-        contract=contract,
-    )
-    assert state["stop_training"] is True
-    assert state["stop_reason"] == "both_arms_plateaued_twice"
-    assert state["arms"][attention]["best_milestone"] == 1000
 
 
-def test_staged_validation_hard_failure_stops_without_selecting_checkpoint():
-    root = Path(__file__).resolve().parents[2]
-    contract = load_successor_small_fit_contract(
-        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
-    )
-    reports = {
-        arm: _staged_validation_report(1.0, hard_failures=int(index == 0))
-        for index, arm in enumerate(contract.payload["matched_arms"])
-    }
-    state = advance_staged_validation_state(
-        None,
-        milestone=500,
-        arm_reports=reports,
-        contract=contract,
-    )
-
-    assert state["stop_training"] is True
-    assert state["stop_reason"] == "validation_hard_failure"
-    assert state["arms"][contract.payload["matched_arms"][0]]["best_milestone"] is None
 
 
-def test_staged_recovery_and_best_checkpoint_round_trip(tmp_path):
-    arms, parameters, optimizers = _checkpoint_fixture()
-    identity = {"full_schedule_sha256": "schedule", "validation_panel_sha256": "panel"}
-    validation_state = {
-        "completed_milestones": [500],
-        "arms": {
-            arm: {
-                "best_milestone": 500,
-                "best_primary_composite": 1.0 + index,
-            }
-            for index, arm in enumerate(arms)
-        },
-    }
-    recovery_path = tmp_path / "recovery.pkl"
-    write_staged_recovery(
-        recovery_path,
-        identity=identity,
-        parameters=parameters,
-        optimizers=optimizers,
-        completed_updates=743,
-        parameter_counts={arm: 2 for arm in arms},
-        validation_state=validation_state,
-        best_parameters=parameters,
-        expected_arms=arms,
-    )
-    loaded = load_staged_recovery(
-        recovery_path,
-        identity=identity,
-        expected_arms=arms,
-        parameter_counts={arm: 2 for arm in arms},
-        minimum_completed_updates=500,
-        maximum_completed_updates=1000,
-    )
-    assert loaded["completed_updates"] == 743
-    assert loaded["validation_state"] == validation_state
-    with pytest.raises(ValueError, match="identity drift"):
-        load_staged_recovery(
-            recovery_path,
-            identity=identity,
-            expected_arms=arms,
-            parameter_counts={arm: 2 for arm in arms},
-            minimum_completed_updates=744,
-            maximum_completed_updates=1000,
-        )
-
-    best = write_staged_best_checkpoint(
-        tmp_path / "best.pkl",
-        identity=identity,
-        parameters=parameters,
-        parameter_counts={arm: 2 for arm in arms},
-        validation_state=validation_state,
-        expected_arms=arms,
-    )
-    assert best["best_milestones"] == {arm: 500 for arm in arms}
-    assert best["promotion_eligible"] is False
 
 
-def test_staged_runner_uses_prevalidated_artifacts_without_per_update_teacher_replay():
-    root = Path(__file__).resolve().parents[2]
-    runner = (root / "scripts" / "hpc" / "run_successor_staged_training.py").read_text()
-
-    assert "_teacher_replay_gate_with_transition" not in runner
-    assert "checkpoint_handoff" not in runner
-    assert "load_successor_training_assets(" in runner
-    assert "load_staged_validation_prepared(" in runner
-    assert "advance_staged_validation_state(" in runner
-    assert '"reconstructs_48_forcing_records": False' in runner
-    assert '"executes_48_step_state_scan": False' in runner
 
 
-def test_staged_smoke_launcher_separates_consumer_and_prepared_source_heads():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "run_successor_staged_training_probe.sh").read_text()
-
-    assert 'git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"' in launcher
-    assert '--prepared-source-git-head "$PREPARED_SOURCE_GIT_HEAD"' in launcher
-    assert '--prepared-source-git-head "$EXPECTED_GIT_HEAD"' not in launcher
 
 
-def test_staged_500_slurm_launchers_freeze_approved_resources_and_boundaries():
-    root = Path(__file__).resolve().parents[2]
-    prep = (root / "scripts" / "hpc" / "slurm_prepare_successor_staged_500.sh").read_text()
-    train = (root / "scripts" / "hpc" / "slurm_successor_staged_training_500.sh").read_text()
-    runner = (root / "scripts" / "hpc" / "run_successor_staged_training.sh").read_text()
-
-    assert "#SBATCH --partition=cnmix" in prep
-    assert "#SBATCH --ntasks=4" in prep
-    assert "#SBATCH --time=04:00:00" in prep
-    assert "MILESTONE=500" in prep
-    assert "--finalize" not in prep
-    assert 'FINALIZE=true' in prep
-
-    assert "#SBATCH --partition=gnall" in train
-    assert "#SBATCH --cpus-per-task=4" in train
-    assert "#SBATCH --gres=gpu:1" in train
-    assert "#SBATCH --time=02:00:00" in train
-    assert "MILESTONE=500" in train
-    assert "--dependency" not in train
-
-    assert "--recovery-interval 25" in runner
-    assert "--validation-prepared-manifest" in runner
-    assert "JAX_COMPILATION_CACHE_DIR" not in runner
-    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in runner
 
 
-def test_staged_1000_slurm_launchers_freeze_incremental_resume_boundary():
-    root = Path(__file__).resolve().parents[2]
-    prep = (root / "scripts" / "hpc" / "slurm_prepare_successor_staged_1000.sh").read_text()
-    train = (root / "scripts" / "hpc" / "slurm_successor_staged_training_1000.sh").read_text()
-
-    assert "#SBATCH --partition=cnmix" in prep
-    assert "#SBATCH --ntasks=4" in prep
-    assert "#SBATCH --time=04:00:00" in prep
-    assert "MILESTONE=1000" in prep
-    assert "successor-staged-prepared-0501-1000" in prep
-
-    assert "#SBATCH --partition=gnall" in train
-    assert "#SBATCH --cpus-per-task=4" in train
-    assert "#SBATCH --gres=gpu:1" in train
-    assert "#SBATCH --time=02:00:00" in train
-    assert "MILESTONE=1000" in train
-    assert 'sha256sum -c -' in train
-    assert 'cp "$PARENT_RECOVERY" "$RECOVERY_PATH"' in train
-    assert "--dependency" not in train
 
 
-def test_staged_2000_slurm_launchers_freeze_incremental_resume_boundary():
-    root = Path(__file__).resolve().parents[2]
-    prep = (root / "scripts" / "hpc" / "slurm_prepare_successor_staged_2000.sh").read_text()
-    train = (root / "scripts" / "hpc" / "slurm_successor_staged_training_2000.sh").read_text()
-
-    assert "#SBATCH --partition=cnall" in prep
-    assert "#SBATCH --ntasks=4" in prep
-    assert "#SBATCH --time=05:00:00" in prep
-    assert "MILESTONE=2000" in prep
-    assert "successor-staged-prepared-1001-2000" in prep
-
-    assert "#SBATCH --partition=gnall" in train
-    assert "#SBATCH --cpus-per-task=4" in train
-    assert "#SBATCH --gres=gpu:1" in train
-    assert "#SBATCH --time=02:00:00" in train
-    assert "MILESTONE=2000" in train
-    assert "1001-2000 manifest" in train
-    assert "update-1000 recovery" in train
-    assert 'sha256sum -c -' in train
-    assert 'cp "$PARENT_RECOVERY" "$RECOVERY_PATH"' in train
-    assert "--dependency" not in train
 
 
-def test_batch_diversity_slices_reconstruct_equal_sample_batch():
-    values = np.arange(32 * 2).reshape(32, 2)
-    rollouts = np.arange(4 * 30 * 2).reshape(4, 30, 2)
-    batch = small_fit.PreparedSuccessorSmallFitBatch(
-        anchor_inputs={"values": values},
-        anchor_targets={"values": values + 1},
-        rollout_inputs={"values": rollouts},
-        rollout_targets={"values": rollouts + 1},
-        expected_next_state=rollouts + 2,
-        expected_next_state_defined=np.ones_like(rollouts, dtype=np.bool_),
-        expected_fast_gpp=rollouts + 3,
-        expected_fast_gpp_defined=np.ones_like(rollouts, dtype=np.bool_),
-        expected_fast_day_target=rollouts + 4,
-        expected_next_discrete_state={"counter": rollouts.astype(np.int32)},
-    )
-
-    contexts = tuple(
-        _slice_context_batch(jax, batch, context_index=index) for index in range(4)
-    )
-    joined = _join_context_anchors(jax, contexts)
-    stacked = _stack_contexts(jax, contexts)
-
-    np.testing.assert_array_equal(joined.anchor_inputs["values"], values)
-    np.testing.assert_array_equal(joined.anchor_targets["values"], values + 1)
-    assert all(context.anchor_inputs["values"].shape == (8, 2) for context in contexts)
-    assert all(context.rollout_inputs["values"].shape == (1, 30, 2) for context in contexts)
-    np.testing.assert_array_equal(
-        np.concatenate([context.rollout_inputs["values"] for context in contexts]),
-        rollouts,
-    )
-    assert stacked.anchor_inputs["values"].shape == (4, 8, 2)
-    assert stacked.rollout_inputs["values"].shape == (4, 1, 30, 2)
 
 
-def test_batch_diversity_gradient_summary_reports_conflict_and_cancellation():
-    summary = _gradient_summary(
-        (
-            np.asarray([1.0, 0.0]),
-            np.asarray([0.0, 1.0]),
-            np.asarray([-1.0, 0.0]),
-            np.asarray([0.0, 1.0]),
-        ),
-        clip_norm=0.5,
-    )
-
-    assert summary["count"] == 4
-    assert summary["clip_count"] == 4
-    assert summary["pairwise_cosine_minimum"] == pytest.approx(-1.0)
-    assert summary["pairwise_negative_fraction"] == pytest.approx(1.0 / 6.0)
-    assert summary["cancellation_ratio"] == pytest.approx(0.5)
 
 
-def test_batch_diversity_launcher_is_free_no_update_probe():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "run_successor_batch_diversity_probe.sh").read_text()
-    source = (root / "scripts" / "hpc" / "probe_successor_batch_diversity.py").read_text()
-
-    assert "batch-diversity probe must run on gln01" in launcher
-    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
-    assert "successor-staged-prepared-1001-2000" not in launcher
-    assert 'RECOVERY_PATH=${RECOVERY_PATH:?' in launcher
-    assert '"training_updates": 0' in source
-    assert '"checkpoint_written": False' in source
-    assert "successor_adamw_update" not in source
 
 
-def test_batch_diversity_short_fit_classification_requires_shared_benefit(monkeypatch):
-    monkeypatch.setattr(
-        diversity_fit,
-        "validation_primary_composite",
-        lambda report, **_kwargs: report["composite"],
-    )
-    monkeypatch.setattr(
-        diversity_fit,
-        "validation_hard_failure_count",
-        lambda report: report.get("hard", 0),
-    )
-    arms = ("attention", "control")
-    baseline = {arm: {"composite": 1.0} for arm in arms}
-    validation = {
-        "single_point_year": {
-            "attention": {"composite": 1.01},
-            "control": {"composite": 1.00},
-        },
-        "four_point_year": {
-            "attention": {"composite": 1.00},
-            "control": {"composite": 1.00},
-        },
-    }
-
-    admitted = diversity_fit._classify(
-        validation,
-        baseline,
-        arms=arms,
-        primary_outputs=("gpp",),
-    )
-    assert admitted["status"] == "mixed_sampling_admitted"
-
-    validation["four_point_year"]["control"]["composite"] = 1.001
-    rejected = diversity_fit._classify(
-        validation,
-        baseline,
-        arms=arms,
-        primary_outputs=("gpp",),
-    )
-    assert rejected["status"] == "mixed_sampling_rejected"
-    assert rejected["mixed_no_worse_for_both_arms"] is False
 
 
-def test_batch_diversity_short_fit_launcher_is_free_and_report_only():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (
-        root / "scripts" / "hpc" / "run_successor_batch_diversity_short_fit.sh"
-    ).read_text()
-    source = (
-        root / "scripts" / "hpc" / "run_successor_batch_diversity_short_fit.py"
-    ).read_text()
-
-    assert "batch-diversity short fit must run on gln01" in launcher
-    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
-    assert "#SBATCH" not in launcher
-    assert '"short_updates": SHORT_UPDATES' in source
-    assert '"checkpoint_written": False' in source
-    assert "write_staged_recovery" not in source
-    assert "write_staged_best_checkpoint" not in source
 
 
-def test_per_output_gradient_pair_key_is_canonical():
-    expected = "npp__vs__maintenance_respiration"
-    assert per_output_gradients._pair_key("npp", "maintenance_respiration") == expected
-    assert per_output_gradients._pair_key("maintenance_respiration", "npp") == expected
 
 
-def test_per_output_gradient_field_contribution_uses_active_field_count():
-    def error(mse, bias_squared, count):
-        return SimpleNamespace(mse=mse, bias_squared=bias_squared, count=count)
-
-    active_target = error(4.0, 2.0, 1.0)
-    inactive_target = error(0.0, 0.0, 0.0)
-    result = SimpleNamespace(
-        by_horizon={
-            1: SimpleNamespace(
-                cumulative_flux={"target": active_target, "other": error(0.0, 0.0, 1.0)},
-                terminal_stock={},
-            ),
-            7: SimpleNamespace(
-                cumulative_flux={"target": active_target, "other": error(0.0, 0.0, 0.0)},
-                terminal_stock={},
-            ),
-            30: SimpleNamespace(
-                cumulative_flux={"target": inactive_target, "other": error(0.0, 0.0, 1.0)},
-                terminal_stock={},
-            ),
-        }
-    )
-
-    value = per_output_gradients._field_contribution(
-        jnp,
-        result,
-        "target",
-        {
-            "cumulative_flux_mse": 2.0,
-            "cumulative_flux_bias_squared": 3.0,
-            "terminal_stock_mse": 5.0,
-            "terminal_stock_bias_squared": 7.0,
-        },
-    )
-
-    assert float(value) == pytest.approx(7.0)
 
 
-def test_per_output_gradient_conflict_classification_requires_two_mitigated_pairs():
-    pairs = {
-        per_output_gradients._pair_key(left, right): {
-            "median": -0.2 if index < 2 else 0.0,
-            "negative_fraction": 0.75 if index < 2 else 0.25,
-        }
-        for index, (left, right) in enumerate(per_output_gradients.CONFLICT_PAIRS)
-    }
-    mixed_pairs = {
-        key: {
-            "median": value["median"] + (0.1 if index < 2 else 0.0),
-            "negative_fraction": value["negative_fraction"],
-        }
-        for index, (key, value) in enumerate(pairs.items())
-    }
-
-    result = per_output_gradients._conflict_classification(
-        {"pairs": pairs},
-        {"pairs": mixed_pairs},
-    )
-
-    assert result["status"] == "attention_mixed_conflict_mitigation_supported"
-    assert result["confirmed_conflict_pairs"] == 2
-    assert result["mitigated_conflict_pairs"] == 2
 
 
-def test_per_output_gradient_measurement_streams_exact_gradient_cosines():
-    def objective(parameters, factor):
-        base = jnp.sum(parameters["weight"] * factor)
-        values = base * jnp.arange(
-            1,
-            len(per_output_gradients.GRADIENT_LABELS) + 1,
-            dtype=jnp.float64,
-        )
-        zeros = jnp.asarray(0, dtype=jnp.int64)
-        return values, RolloutHardGateCounts(zeros, zeros, zeros, zeros, zeros)
-
-    measurement = per_output_gradients._make_measurement(jax, objective)
-    record = per_output_gradients._measurement_record(
-        jax,
-        measurement,
-        {"weight": jnp.asarray([2.0, 3.0], dtype=jnp.float64)},
-        jnp.asarray([1.0, 1.0], dtype=jnp.float64),
-    )
-
-    for index, label in enumerate(per_output_gradients.GRADIENT_LABELS, start=1):
-        assert record["gradient_norms"][label] == pytest.approx(index * np.sqrt(2.0))
-        assert record["nonfinite_gradient_values"][label] == 0
-        assert record["cosines"][label][per_output_gradients.GRADIENT_LABELS[0]] == (
-            pytest.approx(1.0)
-        )
-    assert sum(record["hard_gate_counts"].values()) == 0
 
 
-def test_per_output_gradient_launcher_is_free_zero_update_and_no_validation_values():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (
-        root / "scripts" / "hpc" / "run_successor_per_output_gradient_probe.sh"
-    ).read_text()
-    source = (
-        root / "scripts" / "hpc" / "probe_successor_per_output_gradients.py"
-    ).read_text()
-
-    assert "per-output gradient audit must run on gln01" in launcher
-    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
-    assert "#SBATCH" not in launcher
-    assert '"training_updates": 0' in source
-    assert '"checkpoint_written": False' in source
-    assert '"validation_values_evaluated": False' in source
-    assert "successor_adamw_update" not in source
-    assert "evaluate_staged_validation" not in source
-    assert "write_staged_recovery" not in source
-    assert "write_staged_best_checkpoint" not in source
 
 
 def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):
@@ -1959,69 +1058,8 @@ def test_prepared_manifest_binds_source_schedule_and_update_coverage(tmp_path):
         )
 
 
-def test_partitioned_preparation_finalizer_checks_and_merges_exact_coverage(tmp_path):
-    identity = {"source_git_head": "head", "schedule_sha256": "schedule"}
-    schedule = {"entries": [{"landpoint_id": f"{update:03d}.0-071.0", "year": 1960 + update} for update in range(1, 5)]}
-    assert _worker_updates(4, 0, 2) == (1, 3)
-    assert _worker_updates(4, 1, 2) == (2, 4)
-
-    partials = tmp_path / "partials"
-    for worker_index in range(2):
-        records = []
-        for update in _worker_updates(4, worker_index, 2):
-            entry = schedule["entries"][update - 1]
-            artifact = PreparedUpdateArtifact(
-                schema_version=PREPARED_ARTIFACT_SCHEMA,
-                schedule_entry=entry,
-                trace_signature="trace",
-                batch={"state": np.asarray([update])},
-                day_inputs=(np.asarray([update]),),
-            )
-            record = write_prepared_artifact(tmp_path / f"update-{update:04d}.pkl", artifact) | {
-                "update": update,
-                "landpoint_id": entry["landpoint_id"],
-                "year": entry["year"],
-                "trace_signature": "trace",
-            }
-            records.append(record)
-        atomic_json(
-            partials / f"worker-{worker_index:04d}.json",
-            {
-                "schema_version": PREPARED_MANIFEST_SCHEMA,
-                "status": "passed",
-                "identity": identity,
-                "updates": 4,
-                "worker": {"index": worker_index, "count": 2},
-                "entries": records,
-                "teacher_data_regenerated": False,
-                "historical_v5_used": False,
-            },
-        )
-
-    merged = _finalize_worker_progress(tmp_path, identity, schedule, 4, 2)
-    assert merged["status"] == "passed"
-    assert merged["worker_count"] == 2
-    assert [record["update"] for record in merged["entries"]] == [1, 2, 3, 4]
-    assert sha256_file(tmp_path / "prepared_manifest.json") == merged["manifest_sha256"]
-
-    partial = json.loads((partials / "worker-0001.json").read_text())
-    partial["entries"] = list(reversed(partial["entries"]))
-    atomic_json(partials / "worker-0001.json", partial)
-    with pytest.raises(ValueError, match="coverage or identity drift"):
-        _finalize_worker_progress(tmp_path, identity, schedule, 4, 2)
 
 
-def test_cpu_preparer_launcher_is_bounded_and_workspace_clean():
-    root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "prepare_successor_small_fit_batches.sh").read_text()
-
-    assert "$ROOT/.venvs/orcjax_cpu/bin/python" in launcher
-    assert "JAX_PLATFORMS=cpu" in launcher
-    assert "PYTHONHASHSEED=0" in launcher
-    assert "ORCHIDEE_DATA_ROOT=$ROOT/runtime/data" in launcher
-    assert "ORCHIDEE_REFERENCE_ROOT=$ROOT/runtime/assets" in launcher
-    assert 'test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"' in launcher
-    assert "prepare_successor_small_fit_batches" in launcher
 
 
 def test_extended_runtime_forwards_explicit_cpu_backend(monkeypatch):
@@ -2151,18 +1189,3 @@ def test_final_evaluation_reuses_compiled_train_step():
     assert '"final_evaluation_from_completed_recovery": resume_update == requested_updates' in runner
     assert '"optimizer_result_discarded": True' in runner
     assert "np.asarray(0.0, dtype=np.float64)" in runner
-
-
-def test_production_asset_admission_probe_is_cpu_only_and_zero_update():
-    root = Path(__file__).resolve().parents[2]
-    source = (root / "scripts" / "hpc" / "probe_successor_production_admission.py").read_text(encoding="utf-8")
-    launcher = (root / "scripts" / "hpc" / "probe_successor_production_admission.sh").read_text(encoding="utf-8")
-
-    assert "backend_initializer=_cpu_backend" in source
-    assert "admit_prepared_manifest_for_checkpoint_fit(" in source
-    assert "load_frozen_successor_coefficients(" in source
-    assert '"training_updates_executed": 0' in source
-    assert '"checkpoint_written": False' in source
-    assert "test01|test02|test03|test04|ibtest01|ibtest02|ibtest03|ibtest04" in launcher
-    assert "JAX_PLATFORMS=cpu" in launcher
-    assert "sbatch" not in launcher

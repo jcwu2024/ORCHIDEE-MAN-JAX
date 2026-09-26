@@ -1,7 +1,0 @@
-{
-  "schema_version": "mixed_learning_execution_v1",
-  "attention_score_dtype": "fp32",
-  "recurrent_execution": "split_checked_v1",
-  "source_family_pooling_dtype": "legacy",
-  "physical_dtype": "float64"
-}

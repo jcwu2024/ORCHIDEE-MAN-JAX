@@ -39,6 +39,10 @@ inputs/calibration; `shared_learning_plan.py` owns seeded ordering/panels;
 `run_shared_learning.py` composes full-network updates;
 `shared_learning_monitor.py` evaluates fixed scientific/physical panels;
 `shared_daily_microbatch.py` preserves sample-mean objective accumulation.
+`canonical_training_runtime.py` and `retained_training_runtime.py` own data
+bootstrap and retained templates; `training_artifact_io.py` and
+`runtime_diagnostics.py` provide shared host-side helpers. Current consumers
+use these modules rather than importing retired experimental runners.
 These executable paths are not authorization to resume training.
 
 Current candidate: 64,884,481 parameters, backbone 768/eight blocks, decoder
@@ -77,14 +81,15 @@ mixed precision or custom AD. Latest evidence is linked from NEXT_STEPS.
 
 ## History, tests and generated files
 
-- Historical neural families and 48-step Oracle/replay paths preserve evidence;
-  they are not accepted final-model implementations. Read
+- Retired neural experiment implementations are recoverable from the source
+  snapshot linked in HISTORY_INDEX. Scientific reports and retained Oracle/replay
+  evidence remain available. Read
   [failed architecture lessons](research/daily_coarse_graining/failed_architecture_lessons.md)
   before reopening a rejected architecture.
 - `tests/unit/`: lightweight model/contract/research checks; `tests/parity/`:
   external-data and Fortran comparisons; `tests/fortran_oracles/`: Oracle assets.
 - `scripts/dev/`: source/branch audits and local diagnostics; `scripts/hpc/`:
-  current plus historical launchers, classified by dependency and evidence.
+  current launchers, shared runtime helpers and retained diagnostics.
 - `outputs/`: new generated reports/assets; remote runtime belongs under the
   declared project runtime root. Neither is source truth.
 - [HISTORY_INDEX.md](research/daily_coarse_graining/HISTORY_INDEX.md) routes

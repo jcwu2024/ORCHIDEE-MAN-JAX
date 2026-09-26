@@ -262,28 +262,3 @@ def test_distribution_aware_preserves_parent_outputs_and_daily_boundary(
     assert result.next_state.other.shape == (3_854,)
     assert abs(float(result.fast_update.water.budget_residual)) <= 2.0e-12
     assert abs(float(result.fast_update.carbon.budget_residual)) <= 2.0e-12
-
-
-def test_distribution_aware_inference_contains_no_half_hour_reconstruction_or_scan():
-    source = inspect.getsource(target_oriented_distribution_aware_maintenance_process_outputs)
-    assert "lax.scan" not in source
-    assert "48" not in source
-
-    root = Path(__file__).resolve().parents[2]
-    runner = (root / "scripts/hpc/run_target_oriented_distribution_aware_maintenance_gpu_admission.py").read_text(
-        encoding="utf-8"
-    )
-    launcher = (root / "scripts/hpc/run_target_oriented_distribution_aware_maintenance_gpu_admission.sh").read_text(
-        encoding="utf-8"
-    )
-    assert '"training_updates": 0' in runner
-    assert '"optimizer_created": False' in runner
-    assert '"parent_parameters_trainable": False' in runner
-    assert "initialize_target_oriented_adamw" not in runner
-    assert "load_target_oriented_stage_checkpoint" in runner
-    assert "initialize_distribution_aware_maintenance_parameters" in runner
-    assert "build_target_oriented_distribution_aware_maintenance_head" in runner
-    assert "argnums=1" in runner
-    assert "free gln01" in launcher
-    assert "sbatch" not in launcher
-    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher

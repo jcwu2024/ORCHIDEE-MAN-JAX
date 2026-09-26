@@ -408,7 +408,7 @@ def _method_identity(
 
 
 def run(args: Any) -> Mapping[str, Any]:
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
     from scripts.hpc.shared_learning_plan import load_learning_configuration
 
     started = time.perf_counter()

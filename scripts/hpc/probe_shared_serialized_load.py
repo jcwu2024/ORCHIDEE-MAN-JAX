@@ -7,7 +7,7 @@ import pickle
 import time
 from pathlib import Path
 
-from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def run(args):

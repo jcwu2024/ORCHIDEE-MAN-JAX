@@ -28,9 +28,6 @@ from research.daily_coarse_graining.daily_operator.types import (
     StateDefinedMasks,
     StateFeatureGroups,
 )
-from scripts.hpc.prepare_target_oriented_training_batches import (
-    _retained_inputs_from_artifact,
-)
 from scripts.hpc.run_target_oriented_full_step_preflight import (
     _hard_failure_count,
     _validate_prepared_objective_shapes,
@@ -225,40 +222,6 @@ def test_dynamic_retained_binding_maps_each_sample_day_inputs(monkeypatch):
     np.testing.assert_array_equal(result, np.asarray([13.0, 25.0, 37.0]))
 
 
-def test_reuses_distinct_point_year_retained_inputs_from_prepared_artifact():
-    def record(point: int, starts: tuple[int, ...]):
-        return {
-            "landpoint_id": f"point-{point:03d}",
-            "year": 1979,
-            "parent_shard_sha256": f"parent-{point:03d}",
-            "typed_shard_sha256": f"typed-{point:03d}",
-            "start_rows": starts,
-        }
-
-    one_records = tuple(record(point, (2 * point + 1, 2 * point + 2)) for point in range(16))
-    seven_records = tuple(record(point, (point + 1,)) for point in range(16, 24))
-    thirty_records = tuple(record(point, (point + 1,)) for point in range(24, 28))
-    artifact = SimpleNamespace(
-        batch=SimpleNamespace(
-            one_day=SimpleNamespace(day_inputs=np.repeat(np.arange(16), 2)[:, None]),
-            seven_day=SimpleNamespace(day_inputs=np.arange(16, 24)[:, None]),
-            thirty_day=SimpleNamespace(day_inputs=np.arange(24, 28)[:, None]),
-        )
-    )
-    entry = {
-        "components": {
-            "one_day": one_records,
-            "seven_day": seven_records,
-            "thirty_day": thirty_records,
-        }
-    }
-
-    reused = _retained_inputs_from_artifact(jax, artifact, entry)
-
-    assert len(reused) == 28
-    for point in range(28):
-        identity = (f"point-{point:03d}", 1979, f"parent-{point:03d}", f"typed-{point:03d}")
-        np.testing.assert_array_equal(reused[identity], np.asarray([point]))
 
 
 def test_full_step_preflight_validates_complete_targets_and_state_scale_shapes():

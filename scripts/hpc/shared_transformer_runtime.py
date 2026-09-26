@@ -3,8 +3,8 @@
 The bootstrap is intentionally limited to the canonical v6 runtime, prepared
 TRAIN artifacts, retained-process templates, and the historical parent-head
 wrapper.  It never initializes neural parameters and never reads a checkpoint.
-The reused bootstrap provenance is ``scripts/hpc/run_fresh_start_one_day.py``
-lines 18-92.
+Data and retained-template helpers live in ``canonical_training_runtime`` and
+``retained_training_runtime``, independent of historical experiment runners.
 """
 
 from __future__ import annotations
@@ -251,7 +251,7 @@ def load_shared_runtime(
     if not identifiers or len(set(identifiers)) != len(identifiers):
         raise ValueError("shared runtime artifact ids must be nonempty and unique")
 
-    from scripts.hpc.run_successor_fast_owner_gpu_probe import _load_extended_runtime
+    from scripts.hpc.canonical_training_runtime import _load_extended_runtime
 
     backend = {}
     if getattr(args, "shape_only", False) or getattr(args, "cpu_forward_only", False):
@@ -281,8 +281,10 @@ def load_shared_runtime(
     from research.daily_coarse_graining.daily_operator.target_oriented_contract import (
         load_target_oriented_contract,
     )
-    from scripts.hpc.run_target_oriented_attention_gpu_admission import _head
-    from scripts.hpc.run_target_oriented_full_step_preflight import _prepare_template
+    from scripts.hpc.retained_training_runtime import (
+        build_parent_process_head,
+        _prepare_template,
+    )
 
     architecture = load_strong_baseline_contract()
     mechanism = load_mechanistic_output_contract()
@@ -319,7 +321,7 @@ def load_shared_runtime(
             include_modelout_diagnostics=False,
         ),
     )
-    parent_head = _head(runtime, target)
+    parent_head = build_parent_process_head(runtime, target)
     return runtime, parent_head, retained_template, artifacts, metadata
 
 

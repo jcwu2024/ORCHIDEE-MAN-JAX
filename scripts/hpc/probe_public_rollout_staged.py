@@ -48,7 +48,7 @@ class StageStore:
 
 def gradient_stage(name, component, arguments, store, emit, *, memory_limit=18*1024**3):
     """Reuse a durable stage or execute exactly one differentiation method."""
-    from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+    from scripts.hpc.runtime_diagnostics import _tree_numeric_report
 
     cached = store.read(name)
     if cached is not None:
@@ -185,7 +185,7 @@ def bootstrap_case(args, protocol):
 
 
 def run(args):
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     if args.admission_only or args.cpu_forward_only:
         raise ValueError('select a --stage, or use --shape-only')

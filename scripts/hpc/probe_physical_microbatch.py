@@ -25,8 +25,8 @@ def run(args):
     from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory, _resolved_reference
     from scripts.hpc.probe_public_rollout_staged import StageStore
     from scripts.hpc.run_fresh_start_one_day_pool import pool_plan
-    from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.runtime_diagnostics import _tree_numeric_report
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     report = dict(schema_version='physical_microbatch_probe_v1', status='running',

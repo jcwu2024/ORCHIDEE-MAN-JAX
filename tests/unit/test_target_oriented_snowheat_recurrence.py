@@ -98,18 +98,3 @@ def test_classifier_requires_both_extreme_windows() -> None:
         contract,
     )
     assert absent["classification"] == "snowheat_recurrence_not_causal"
-
-
-def test_launcher_and_step_factory_keep_the_intervention_diagnostic_only() -> None:
-    root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "run_target_oriented_snowheat_recurrence_intervention.sh").read_text(
-        encoding="utf-8"
-    )
-    assert "gln01|ibgln01|ibc13b02n04" in launcher
-    assert "sbatch" not in launcher
-    assert "audit_target_oriented_snowheat_recurrence" in launcher
-    assert "target-oriented-flux-gradient-path-53269af/report.json" in launcher
-    source = (root / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py").read_text(encoding="utf-8")
-    assert "diagnostic_teacher_carry_state_key: str | None = None" in source
-    assert '"seven_teacher_carry_flux_field_gradient"' in source
-    assert '"thirty_teacher_carry_flux_field_gradient"' in source

@@ -58,7 +58,7 @@ def observe_compiler(compiler, component, publish, *, required_cached=("daily", 
 def main():
     from scripts.hpc import run_shared_learning as learning
     from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     args = learning.parser().parse_args()
     if args.technical_updates != 2:

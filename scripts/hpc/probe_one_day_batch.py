@@ -174,7 +174,7 @@ def _scale_gradient(jax: Any, gradient: Any, scale: float) -> Any:
 
 
 def run(args: Any) -> Mapping[str, Any]:
-    from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
+    from scripts.hpc.training_artifact_io import _atomic_json
 
     started = time.perf_counter()
     report: dict[str, Any] = {
@@ -233,7 +233,7 @@ def run(args: Any) -> Mapping[str, Any]:
         from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective
         from research.daily_coarse_graining.daily_operator.prepared_one_day import PreparedOneDayPool
         from scripts.hpc.probe_public_rollout import gradient_comparison
-        from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
+        from scripts.hpc.runtime_diagnostics import _tree_numeric_report
 
         parameter_count = sum(int(value.size) for value in jax.tree_util.tree_leaves(parameters))
         if parameter_count != int(protocol["parameter_count"]):

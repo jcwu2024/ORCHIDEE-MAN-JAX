@@ -33,7 +33,6 @@ from research.daily_coarse_graining.daily_operator.strong_baseline_architecture 
     NeuralPrecisionPolicy,
     strong_baseline_parameter_count,
 )
-from scripts.hpc import audit_target_oriented_coupled_gpp_conditioned_attention as runner
 from tests.unit.test_daily_operator_hierarchical_coordinate_attention import (
     _complete_prediction_for_loss,
     _host_l2,
@@ -368,33 +367,3 @@ def test_conditioned_inference_has_no_subdaily_reconstruction_or_scan():
     assert "48" not in source
     assert "optimizer" not in source
     assert "checkpoint" not in source
-
-
-def test_conditioned_free_runner_contract_and_cli_are_wired_before_execution():
-    root = Path(__file__).resolve().parents[2]
-    parent_path = root / "outputs/diagnostics/target-oriented-coupled-gpp-attention-head-token-7788d6b.json"
-    parent, digest = runner._load_parent_report(parent_path)
-    wrapper = (root / "scripts/hpc/run_target_oriented_coupled_gpp_conditioned_attention.sh").read_text(
-        encoding="utf-8"
-    )
-    shared = (root / "scripts/hpc/run_target_oriented_coupled_gpp_multi_group_direction.sh").read_text(encoding="utf-8")
-    required = {
-        option
-        for action in runner._parser()._actions
-        if action.required
-        for option in action.option_strings
-        if option.startswith("--")
-    }
-
-    assert digest == runner.PARENT_REPORT_SHA256
-    assert parent["classification"] == runner.PARENT_CLASSIFICATION
-    assert "free gln01" in wrapper
-    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-45m}" in wrapper
-    assert "sbatch" not in wrapper
-    assert "CONDITIONING_CONTRACT" in wrapper
-    assert "HEAD_TOKEN_RESULT" in wrapper
-    assert sorted(option for option in required if option not in wrapper and option not in shared) == []
-    source = inspect.getsource(runner.run)
-    assert source.index("_load_parent_report") < source.index("_initialization_only")
-    assert source.index("load_coupled_gpp_conditioned_attention_contract") < source.index("_initialization_only")
-    assert source.count("reconstruct_localized_jump_parameters(args, bootstrap=bootstrap)") == 1
