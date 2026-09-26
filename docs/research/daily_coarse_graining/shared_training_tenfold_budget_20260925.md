@@ -1,5 +1,14 @@
 # A tenfold shared-training throughput budget
 
+September26 update: combined source-K/V reuse and expert128 now pass actual
+daily andT7 all-parameter/physical admission. Matched daily warm throughput
+is1.339x; T7 is1.143x(12.53%less time). T30 admission is running. Earlier
+"untested/next" wording below describes the prior hypothesis. These results
+confirm only modest execution gains; the10x objective remains unachieved.
+Next use savedT7 binaries to profile residual work without new compilation,
+while finishingT30/full-update admission. Hardware/precision/architecture
+routes must retain their separately stated resource or method costs.
+
 Latest measured evidence: expert128 actual daily micro4 passes all64.884M
 parameter-gradient coordinates and physical checks, with1.202x admission /
 1.213x saved-binary replay throughput. Device events fall62,617->30,801 while

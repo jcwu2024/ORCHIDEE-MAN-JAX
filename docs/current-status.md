@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-25.
+Last updated: 2026-09-26.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,13 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+September26 11:29CST: T7 combined97821 completed0, strict loss/19aux/all64.884M
+parameter gradients pass,14hard counters0. Median1.815832->1.588352s,
+12.53%less time; compiler live1.836->3.249GiB. Compile42.48min, main49.52min.
+T30 combined29812 running freeGPU0,60min main ceiling; real CPU inspect
+passed52.90s. Need saved T7 profile for remaining costs and complete-update
+acceptance after T30. No new paid task or method/precision change.
 
 September26 00:34CST: T7 combined native-AD diagnostic97821 running on freeGPU0,
 60minute main ceiling plus3minute preflight. CPU inspect completed57.80s,

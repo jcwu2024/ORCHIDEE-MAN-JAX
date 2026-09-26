@@ -2,6 +2,10 @@
 
 Last updated: 2026-09-26.
 
+Active recurrent note now records T7 completed0/pass(12.53%less time) and
+T30 freeGPU0 launcher29812 running60min main ceiling. Earlier running-T7
+snapshots below are historical. Complete-update and scientific gates pending.
+
 `shared_combined_recurrent_admission_20260926.md` is the active bounded T7-first
 execution contract: implemented,7local tests/real CPU inspect pass, freeGPU0
 launcher97821 running60minute main ceiling. T30/full-update acceptance pending.

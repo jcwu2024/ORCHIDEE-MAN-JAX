@@ -1,12 +1,21 @@
 # Current Roadmap
 
-Last updated: 2026-09-25.
+Last updated: 2026-09-26.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
+
+September26 11:29CST: T7 combined97821 completed0/passed all64.884M parameter
+gradients/loss/aux/physical gates. Warm1.815832->1.588352s(12.53%less),
+live1.836->3.249GiB, backend compile42.48min. T30 combined29812 now runs on
+freeGPU0 with60min main ceiling, using the same code after actual CPU case
+inspection. Inspect `shared-combined-recurrent-T30-20260926.{json,log}`.
+Prepare no-recompile T7 device profiling on the other free GPU to locate
+remaining structural costs; do not portray small execution gains as10x.
+No new paid allocation or precision/architecture change.
 
 September26 00:34CST: freeGPU0 T7 combined-execution admission97821 RUNNING,
 60minute main ceiling plus3minute preflight. Seven local tests and actual CPU

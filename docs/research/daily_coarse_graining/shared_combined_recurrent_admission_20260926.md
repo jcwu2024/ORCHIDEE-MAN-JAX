@@ -1,6 +1,29 @@
 # Combined execution: bounded recurrent admission
 
-Status: T7 running on freeGPU0, launcher97821, since00:33:49CST September26.
+Status: T7 completed0/passed; T30 launcher29812 running on freeGPU0 since
+approximately11:29CST September26. Same immutable overlay/code and60minute
+main ceiling; actual T30 CPU inspection passed52.90s, target GPU shell dry-run
+passed and both GPUs were idle before launch. T30 report/log use the stem
+`runtime/outputs/diagnostics/shared-combined-recurrent-T30-20260926`.
+No paid allocation.
+
+## Completed T7 result
+
+Launcher97821 completed0, all64,884,481 parameter-gradient coordinates pass
+unchanged rtol1e-5/atol1e-6, maximum difference7.450580597e-8 and relativeL2
+3.824144558e-7. Loss and19auxiliary coordinates pass; all14physical counters
+are zero. Warm median original1.815831535s, combined1.588351592s:
+1.143218x throughput,12.53%less time. This is a same-process sequential
+comparison with candidate compilation between the two measurements.
+Compiler live estimate1.835856->3.248723GiB, still below24GiB. Lower222.17s,
+backend compile2548.82s(42.48min), main probe2971.43s(49.52min); startup
+before its internal timer is additional. Saved original/candidate results
+and candidate executable remain available. Local result/runtime JSONs are
+in `outputs/`. The gain is useful but well below the user's throughput target.
+
+## Historical T7 launch
+
+T7 started on freeGPU0, launcher97821, at00:33:49CST September26.
 Local implementation1f3622b has7focused tests passing, Ruff/shell syntax clean.
 Actual test02 inspection passed in57.80s: artifact742 case/objective binding
 and both staged adapters loaded, no gradient compile or Teacher preparation.
@@ -8,7 +31,7 @@ Actual CPU/GPU target-shell dry-run arguments pass. Both GPUs were idle and
 host load0.01before dispatch. Remote model checkout remains immutable c599236;
 new scripts/adapters are staged in `runtime/transfer/shared-combined-recurrent-20260926`.
 Inspect `runtime/outputs/diagnostics/shared-combined-recurrent-T7-20260926.{json,log}`
-before another action. There is no T30 launch yet and no paid allocation.
+for the completed T7 result. T30 follows the active status above.
 
 Actual daily
 combined execution has passed all loss/gradient/physical comparisons and
