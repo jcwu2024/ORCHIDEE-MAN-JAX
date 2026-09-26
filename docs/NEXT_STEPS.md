@@ -8,14 +8,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
-September26: equal-two-window T7 batching probe34268 now runs on freeGPU1
-(60minute main ceiling plus3minute runtime gate). Real CPU shape-only forward
-inspection passed75.48s;10local tests passed. Actual GPU launcher dry-run
-caught an old-Bash empty-array expansion issue; fixed and rechecked before
-launch. Compare the same742/275 windows serially and batched, with full
-native recurrent gradients. No batch/mix or precision change adopted.
-T30 combined29812 remains onGPU0. Inspect both reports before further launches;
-complete-update acceptance remains pending. See shared_recurrent_window_batch_20260926.md.
+September26 13:07CST: both free tasks completed0/passed. T30 combined29812:
+7.681579->6.730945s (12.38%less), all64.884M gradients/physical gates pass.
+Two-window T7 batching34268: same windows serial3.155881s vs batched2.241723s
+(1.407792x throughput), all-gradient/physical gates pass, estimated live5.660GiB.
+Compile38.18min/49.12min respectively; binaries/results preserved. No active
+task from this pair and no new paid allocation. Next prepare full unchanged
+daily32+T7+T30 optimizer-update admission using these saved component binaries,
+retaining explicit executable provenance and original data/method identity.
+Do not fake the original profile or increase production recurrent counts to
+claim a same-method gain. Interleaved saved-binary replay can check timing
+without new gradient compilation.10x and scientific acceptance remain unmet.
+See shared_recurrent_window_batch_20260926.md and the combined recurrent note.
+Earlier running snapshots below are historical.
 
 September26: savedT7 profile31735 completed0 without compilation; warm
 1.807470->1.574453s and strict all-gradient/physical parity pass. Combined

@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26 13:07CST:29812 and34268 completed0/passed, neither still running.
+CombinedT30 median7.681579->6.730945s; fixed-two-windowT7 mean3.155881->2.241723s
+(1.407792x throughput). Both pass strict loss/aux/all64.884M parameter-gradient
+and physical gates. Compiler live3.251/5.660GiB; compile38.18/49.12minutes.
+No complete-update or scientific acceptance. Reuse saved executables for
+unchanged-work optimizer/transport admission before claiming training speed;
+batching evidence does not authorize a changed recurrent sampling mix.
+Earlier running snapshots are historical. No new paid allocation.
+
 September26: freeGPU1 launcher34268 started the equal-two-window T7 execution
 comparison after actual CPU abstract-forward admission(75.48s),10local tests,
 and target-shell GPU dry-run. The dry-run exposed old-Bash empty-array handling;

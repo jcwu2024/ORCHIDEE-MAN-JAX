@@ -1,11 +1,24 @@
 # Combined execution: bounded recurrent admission
 
-Status: T7 completed0/passed; T30 launcher29812 running on freeGPU0 since
-approximately11:29CST September26. Same immutable overlay/code and60minute
-main ceiling; actual T30 CPU inspection passed52.90s, target GPU shell dry-run
-passed and both GPUs were idle before launch. T30 report/log use the stem
+Status: T7 and T30 completed0/passed. T30 launcher29812 used freeGPU0,
+the same immutable overlay/code and60minute main ceiling. Actual T30 CPU
+inspection passed52.90s, target GPU shell dry-run passed and both GPUs were
+idle before launch. T30 report/log use the stem
 `runtime/outputs/diagnostics/shared-combined-recurrent-T30-20260926`.
 No paid allocation.
+
+## Completed T30 result
+
+Launcher29812 completed0. Loss,19auxiliary coordinates and all64,884,481
+parameter-gradient coordinates pass unchanged rtol1e-5/atol1e-6; maximum
+gradient difference3.725290298e-8, relativeL2 4.320496886e-7. All14physical
+hard counters are zero for both executions. Warm median7.681579->6.730945s:
+12.38%less time. Compiler estimated live1.838->3.251GiB; lower211.49s,
+backend compile2290.88s(38.18min), main2757.12s(45.95min).
+Results and executable saved before comparison; local report/runtime JSONs
+are in `outputs/`. This completes bounded daily/T7/T30 component admission,
+not optimizer/full-update or learning acceptance. Reference and candidate
+timings were separated by compilation; no interleaved T30 replay yet.
 
 ## Completed T7 result
 
@@ -78,9 +91,7 @@ before any retry. No new paid allocation is approved.
 
 ## Next decision
 
-If T7 passes, reuse the same code and inputs for T30 with its own reference
-and candidate artifacts. If either fails numerical or physical checks, retain
-the discrepancy and localize it without relaxing the gate. After both pass,
+Both horizons passed. Next reuse the saved admitted binaries and
 compare complete same-data updates, including gradient accumulation, AdamW,
 parameter/optimizer state, transport and one/two-GPU wall time. These
 component measurements alone cannot certify training throughput, learning,

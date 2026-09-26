@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-26.
 
+September26: combined recurrent and equal-window batching notes now record
+completed29812/34268, both passed. T30 time decreases12.38%; two-windowT7
+throughput increases1.407792x. Saved binaries are reusable; full-update,
+production sampling, scientific accuracy and10x claims remain unaccepted.
+Earlier running statuses below are historical.
+
 `shared_recurrent_window_batch_20260926.md` is implemented:10local tests and
 actual CPU abstract-forward/target-shell checks pass; freeGPU1 launcher34268
 is running. This is fixed-work execution research, not a production batch

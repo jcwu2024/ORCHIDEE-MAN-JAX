@@ -1,5 +1,15 @@
 # A tenfold shared-training throughput budget
 
+September26 completed follow-up: T30 combined admission passes all gradients
+and physical gates,7.681579->6.730945s (12.38%less). Fixed-two-windowT7 vmap
+also passes:3.155881->2.241723s,1.407792x throughput versus combined serial,
+estimated live5.660GiB. Compilation remains38.18min(T30)/49.12min(batching).
+These gains do not establish10x or complete-update speed. Next use saved
+binaries for unchanged daily32+T7+T30 optimizer/transport admission. Batching
+larger production windows needs explicit sampling design; do not multiply
+component ratios into an unmeasured full-update result. Earlier running
+and proposed-screen statements below are historical.
+
 September26 update: combined source-K/V reuse and expert128 now pass actual
 daily andT7 all-parameter/physical admission. Matched daily warm throughput
 is1.339x; T7 is1.143x(12.53%less time). T30 admission is running. Earlier

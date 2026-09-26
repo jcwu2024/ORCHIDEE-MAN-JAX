@@ -1,6 +1,6 @@
 # Equal-two-window recurrent batching diagnostic
 
-Status: implemented; freeGPU1 launcher34268 running, free resources only. This tests
+Status: freeGPU1 launcher34268 completed0/passed, free resources only. This tests
 execution efficiency for a fixed two-window workload; it does not change
 the production sampling mix, optimizer batch size, architecture or precision.
 
@@ -14,9 +14,31 @@ launch. CPU inspection used a separate `.inspect.json` report.
 
 Remote overlay: `runtime/transfer/shared-recurrent-window-batch-20260926`.
 GPU report/log: `runtime/outputs/diagnostics/shared-recurrent-window-batch-T7-20260926.{json,log}`.
-LauncherPID34268 on gln01 GPU1; T30 combinedPID29812 usesGPU0 concurrently.
-No paired throughput or gradient result yet. Preserve references/binaries
-if either run reaches its ceiling; do not automatically repeat compilation.
+LauncherPID34268 used gln01 GPU1; T30 combinedPID29812 usedGPU0 concurrently
+for part of startup/compilation. Both finished. References/binaries are saved.
+
+## Completed result
+
+Same two windows, same weights and averaged objective: serial mean3.155881s,
+batched mean2.241723s, throughput0.633738->0.892171windows/s (1.407792x),
+28.97%less time. This is a gain over the already optimized combined serial
+execution, not an original-model or complete-update speed comparison.
+The three serial timings precede candidate compilation and the three batch
+timings follow it; an interleaved replay has not yet been measured.
+
+Loss and19auxiliary coordinates pass; all64,884,481 parameter-gradient
+coordinates pass unchanged1e-5/1e-6, maximum difference5.215406418e-8 and
+relativeL2 5.004397213e-7. All14physical hard counters are zero for both.
+Compiler estimated live5.660GiB, versus3.249GiB for the single-window binary
+plus0.725GiB for the serial aggregation helper (not measured process peaks).
+Lower227.24s, backend compile2947.07s(49.12min), main3332.65s(55.54min).
+Runtime gate passed21.39s. Local result/runtime JSONs are in `outputs/`.
+
+Batching is now a demonstrated two-window throughput improvement, but is
+insufficient for10x. Do not silently change production from oneT7/oneT30
+to two windows per horizon. First accept complete unchanged-work updates
+with admitted daily/T7/T30 binaries, including optimizer and transport.
+Reuse these executables; no recompilation is needed merely to re-time them.
 
 ## Hypothesis and fixed work
 
