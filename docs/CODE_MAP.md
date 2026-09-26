@@ -2,6 +2,24 @@
 
 Last updated: 2026-09-26.
 
+`probe_shared_ffn_algorithm.py` tests native JAX dot-algorithm support and reuses
+the saved FFN payload/scheduling for FP32-storage, FP16-multiply/FP32-accumulate
+forward and native backward. It introduces no custom derivative. Capability
+mode records actual lowering and optional device trace; fragment mode requires
+successful deployed capability evidence. Ten targeted tests pass; this is
+diagnostic code, not a production precision default.
+
+`probe_shared_ffn_precision.py` is an isolated numerical/performance diagnostic,
+not a production precision switch. It extracts both decoder-block FFN inputs
+from actual update0/micro4 forward chunks, then compares FP32 with FP16 matrix
+operands and requested FP32 results. Forward and native parameter/input-VJP
+times, errors, memory and contraction dtypes are recorded; VJP seeds are
+explicitly synthetic. `run_shared_ffn_precision.sh` limits free-GPU capture
+and comparison separately to10minutes. No optimizer or physical process is
+changed. Nine tests cover fresh-process imports and micro4 vectorization.
+Actual V100 results and native-backward dtype limitation are recorded in
+`research/daily_coarse_graining/shared_ffn_precision_results_20260926.md`.
+
 `probe_shared_serialized_dual.py` now permits user-requested combined
 daily32/64fixed-weight proposals, retaining averaged daily loss and oneT7/
 oneT30. Each measured proposal records component timing; the inherited

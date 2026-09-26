@@ -2,6 +2,18 @@
 
 Last updated: 2026-09-26.
 
+Latest `shared_ffn_precision_results_20260926.md` adds native-algorithm policy:
+real FFN forward+VJP gains1.566x micro4/1.198x micro1, no handwritten AD. Actual
+capability trace confirms Tensor-Core kernels. This remains component/numerical
+evidence, not full-model speed or production acceptance; all free tests finished.
+
+`shared_ffn_precision_results_20260926.md` records completed real-activation
+FP32/mixed FFN micro1/micro4 screens: only1.022x/1.161x forward+VJP improvement,
+with all native backward dots stillFP32. Exact-route parity fails, values are
+finite, no production precision/training acceptance. The structural-speed
+proposal remains exploratory; full recurrent integration is not justified by
+this first result. Next bounded question is native backward precision support.
+
 Daily64balance note now records47778 completed0/passed: dual32/64wall
 9.8594/9.7690s, approximately double daily throughput and balanced8.3s
 branches, without new gradient compilation. Full proposal parity passes;
@@ -13,11 +25,12 @@ daily64 load-balance comparison. Implemented/tested and freeGPU0+GPU1
 launcher47778 running,30minute ceiling; no new model-gradient compilation.
 Its larger daily count is a sampling proposal, not a same-work speedup.
 
-`shared_next_structural_speed_route_20260926.md` is a source/profile-based
-decision proposal, not an accepted numerical method. It recommends discussing
-a bounded neural-only mixed-precision screen, records already tested weak
-alternatives and honest gain limits. No precision change or GPU job authorized
-by that note; payload preparation must be established before execution.
+`shared_next_structural_speed_route_20260926.md` now governs the bounded
+free-node FFN mixed-precision diagnostic following the user's direction to
+continue speed work. It is not an accepted production numerical method. It
+records already tested weak alternatives and honest gain limits; bounded
+actual-payload preparation must precede the fragment comparison. No training
+or new paid allocation is included.
 
 `shared_combined_full_update_20260926.md` now records41280 completed0/passed:
 single12.553775s/dual10.270496s, full state/gradient/optimizer comparisons

@@ -13,6 +13,29 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest September26: native dot-algorithm policy validated on V100; it preserves
+native AD and allows low-precision backward multiplication withFP32accumulation.
+Real FFN micro4 forward+VJP gains1.566x, micro1 gains1.198x; no full-update
+claim. All finite, exact-route parity fails, synthetic parameter-VJP relativeL2
+~0.278%. Capability device trace contains Tensor-Core kernels. Five-policy
+capability plus two real-input comparisons complete,10local tests pass.
+Production remains unchanged; no training/new paid job. Results and remaining
+broader-neural/physical/recurrent limits: shared_ffn_precision_results_20260926.md.
+
+September26: FFN capture and micro1/micro4 comparisons completed0 on free GPUs.
+Micro4 forward21.430→11.550ms but forward+nativeVJP72.240→62.239ms(1.161x);
+micro1 forward+VJP114.568→112.137ms(1.022x). Actual native backward matrix
+operands remainFP32. Finite throughout, but exact1e-5/1e-6 gate fails; synthetic
+cotangent evidence cannot admit a training precision method. Saved actual
+payload enables further short screens. No full-model speedup or training claim.
+Read shared_ffn_precision_results_20260926.md; no task from this pair remains.
+
+September26 latest direction: speed optimization only, no training at current
+throughput. A bounded real-decoder FFN FP16-operand/FP32-accumulation screen
+is being implemented, with actual-input extraction, native input/parameter
+VJPs, numerical-error reporting and short free-GPU execution limits. This is
+not production mixed-precision adoption. No new paid job is authorized.
+
 September26:47778 completed0/passed,13.09minutes, no gradient compilation.
 Daily32/64dual times9.8594/9.7690s;~2x daily throughput at near-equal wall.
 Dual64branches daily8.313s/recurrent8.326s, validating load balance. All full

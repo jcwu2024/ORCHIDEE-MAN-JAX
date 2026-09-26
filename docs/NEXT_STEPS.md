@@ -8,6 +8,37 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+Latest September26 result: native `F16_F16_F32` policy also accelerates FFN
+backward without custom AD. Real micro4 forward+VJP72.415→46.250ms(1.566x),
+micro1 114.759→95.827ms(1.198x). All finite; exact parity fails unchanged,
+parameter-VJP relativeL2~0.278% under synthetic cotangents. Tiny deployed
+capability trace confirms Tensor-Core kernels. All free tests complete, no
+active task. Next assess this candidate across the broader neural execution
+boundary with a declared numerical-error contract before full integration;
+do not call fragment speed a full-update gain or begin training. Reuse saved
+actual inputs; no Teacher prep, custom reverse or paid allocation. Read
+`research/daily_coarse_graining/shared_ffn_precision_results_20260926.md`.
+
+September26: real FFN precision screen completed on free V100s. Capture63001
+saved actual update0/micro4 activations in319.87s. Fragment68352/68500 took
+22.11/28.32s; micro4 forward improves1.855x but forward+VJP only1.161x,
+micro1 only1.022x. All finite; exact-route comparison fails unchanged tolerance.
+Deployed lowering exposes48 FP32 backward dots despite24 FP16-forward dots.
+Do not advance this version to full recurrent compilation. Next investigate
+native JAX precision policy for backward matrix arithmetic on a tiny capability
+screen, reusing the saved real payload; no custom adjoint or training.
+Read `research/daily_coarse_graining/shared_ffn_precision_results_20260926.md`.
+
+September26 latest user direction: speed work only; do not start neural
+training at the present throughput. Proceed with the discussed bounded
+real-decoder FFN mixed-precision component diagnostic on free resources.
+Keep FP32 parameters/biases/GELU and existing physical precision; test FP16
+matrix operands with requested FP32 accumulation, including native parameter
+and input VJPs. First demonstrate bounded extraction of actual micro4 inputs.
+Production precision adoption, a full recurrent compile and paid jobs are not
+part of this diagnostic. Retain the exact-route tolerance and report any
+mixed-precision discrepancy honestly. See the structural-speed route note.
+
 September26 completed47778: daily64load balance PASSED, zero gradient
 compiles, main785.34s. Same-run dual32/64medians9.859359/9.769036s; daily
 throughput3.245647->6.551312rows/s (~2x, changed daily count). Dual64daily/
@@ -16,8 +47,9 @@ recurrent medians8.313/8.326s, balanced. Serial64takes16.879s; dual64uses
 gradient/parameter/AdamW and physical checks pass. No active task from47778.
 Daily64is a supported throughput candidate, not yet learned-model acceptance.
 Do not repeat this benchmark or increase microbatch by default. Preserve the
-mean daily objective and declare64sampling before training. Next discuss
-the bounded neural mixed-precision proposal; it is not implemented/approved.
+mean daily objective and declare64sampling before any future training.
+The bounded neural mixed-precision diagnostic is now being implemented;
+it is not an adopted production precision policy.
 Core per-day speed and10x remain unresolved. See daily64balance result note.
 Earlier running snapshots below are historical.
 
@@ -34,8 +66,8 @@ analysis proceeds separately; no precision/architecture change or paid job.
 Structural review is now in shared_next_structural_speed_route_20260926.md.
 Prior dense packing/attention concatenation had only bounded small gains;
 do not rebrand/retry them as the primary route. Proposed neural-only FP16
-matrix/FP32accumulation screen requires numerical-method discussion before
-implementation. Neither nominal TensorCore speed nor FFN-only work supports
+matrix/FP32accumulation screen follows the subsequent user discussion and
+direction to continue speed work. Neither TensorCore speed nor FFN-only work supports
 a10x full-update forecast; actual-payload preparation is itself unproven.
 Exact normalized-key caching remains unmeasured, not an adopted speed claim.
 

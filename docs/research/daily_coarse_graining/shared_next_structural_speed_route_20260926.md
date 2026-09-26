@@ -1,10 +1,21 @@
 # Next structural speed route: neural arithmetic, not another tile sweep
 
-Status: evidence/decision proposal, September 26, 2026. No implementation,
-remote job, precision change, architecture change or training-method change is
-authorized by this note. The admitted combined FP32 binaries remain the
-reference. The newly approved daily64 test is a separate load-balancing and
-sampling-count experiment, not a same-workload tenfold result.
+Completed evidence now supersedes the preparation uncertainties below:
+[`shared_ffn_precision_results_20260926.md`](shared_ffn_precision_results_20260926.md).
+Actual-input capture and two arithmetic approaches completed on free V100s.
+The native dot-policy route gives1.566x micro4/1.198x micro1 FFN forward+VJP
+speed, with finite values and measurable numerical differences; production
+precision and full-update speed remain unaccepted. The next boundary is
+broader neural execution, not another FFN fixture or immediate training.
+
+Status: bounded component implementation, September 26, 2026. Following the
+precision proposal, the user directed continued speed work and explicitly
+rejected starting training at the present speed. Proceed with the free-node
+component diagnostic below, without adopting a production precision policy,
+changing architecture or starting training. No new paid allocation. The
+admitted combined FP32 binaries remain the reference. The completed daily64
+test is a separate load-balancing and sampling-count experiment, not a
+same-workload tenfold result.
 
 Follow-up47778 completed0/passed: dual daily32/64wall9.8594/9.7690s and
 64branches daily8.313s/recurrent8.326s. Larger daily count fills the idle
@@ -13,7 +24,26 @@ interval and approximately doubles daily rows/s, but leaves both branches'
 
 ## Recommendation
 
-Discuss **neural-only Tensor-Core mixed precision** as the next materially
+Implementation: `scripts/hpc/probe_shared_ffn_precision.py` and free-only
+`run_shared_ffn_precision.sh`. Capture63001 completed0 on freeGPU0 in319.87s
+after the81.10s runtime preflight. It saved576 FFN calls from four real samples,
+both coordinate blocks, in one112MiB payload. Six chunk sizes2/14/24/28/72/128
+are present;268 of288 calls per block have128rows. Source is the immutable
+c599236 checkout plus a small staged overlay, with no full checkout copy.
+Reports are `runtime/outputs/diagnostics/shared-ffn-{capture,fragment}-20260926.json`;
+saved inputs are `shared-ffn-payload-20260926.pkl`.
+
+First fragment67557 failed before backend compilation: importing the baseline
+FFN for the first time inside JAX tracing initialized a physical lookup table
+under a tracer. Eager module initialization fixes this diagnostic entry issue;
+eight tests including a fresh-process fragment CLI pass. Capture/preflight need
+no repetition. Review also caught a measurement-layout issue: real daily micro4
+uses vmap, whereas the initial fragment looped saved sample chunks serially.
+Repack the same saved inputs to preserve the four-sample batch axis before the
+speed comparison; keep a separate micro1 mode for recurrent-day shapes. This
+changes only diagnostic execution, not production sampling or architecture.
+
+Test **neural-only mixed precision** as the next materially
 different compute route, starting with the decoder's large FFN workload.
 Keep FP32 master parameters, optimizer/gradient accumulation, GELU,
 normalization and bounded attention scores/softmax. Preserve the current
@@ -21,7 +51,9 @@ precision of physical updates, retained processes and science losses, and
 the full checkpointed recurrent AD. Only named neural matrix operands would be candidates
 for FP16 conversion and FP32 accumulation/output. This changes numerical
 semantics, even with FP32 outputs: it is not an exact-FP32 optimization and
-needs a user decision and an explicit numerical/scientific validation contract.
+needs an explicit numerical/scientific validation contract before production
+adoption. This initial diagnostic reports accuracy and speed; it does not
+claim adoption or established Tensor-Core execution before kernel evidence.
 
 This is a way to test substantially different arithmetic throughput, **not a
 supported tenfold forecast**. Architecture reduction is not the default next
@@ -160,6 +192,28 @@ checks establish an accepted numerical method. The fragment alone proves
 neither recurrent gradient quality nor scientific accuracy.
 
 ## Honest gain bounds and the next decision
+
+For this first diagnostic, the report must separate three claims:
+
+- Speed: synchronized forward and forward-plus-native-VJP time for the same
+  saved activation calls, shapes and repetition order; include casts and
+  FP32 bias/GELU. Record both the absolute time saved and ratio, plus input
+  extraction, compilation and profiling time outside the warm measurement.
+- Numerics: compare output, every FFN parameter gradient and input gradient;
+  retain rtol1e-5/atol1e-6 as the exact-route diagnostic, and separately report
+  finite counts, absolute/relative L2 errors and cosine. A synthetic output
+  cotangent must be labeled as such: it is not the real daily/recurrent loss
+  derivative. Inspect backward contraction dtypes as well as forward dtypes.
+- Scope: finite arrays and a fast component do not admit a new numerical
+  training method. No optimizer, trained accuracy, physical budget or recurrent
+  derivative is established by this fragment. Production stays FP32.
+
+The bounded payload producer may execute unchanged neural-forward chunks
+sequentially and return their pre-FFN activations. It must record which
+checkpoint and real rows it used; a profile generated at technical update2
+must not be relabeled fresh initialization. This producer's diagnostic timing
+is not production throughput. Stop and preserve completed progress at its
+deadline rather than automatically expanding to a full-model compilation.
 
 If just the counted FFN arithmetic became8x faster, the optimistic neural
 MAC-only ratio is approximately `45.906 / (24.564 + 21.342/8) = 1.69x`.
