@@ -9,6 +9,34 @@ Next use savedT7 binaries to profile residual work without new compilation,
 while finishingT30/full-update admission. Hardware/precision/architecture
 routes must retain their separately stated resource or method costs.
 
+The updated decision is not to promise a sequence of small packing changes
+will reach10x. At the current one-V100 FP32 capacity, the optimistic1.21s
+dense-only arithmetic estimate below already consumes most of the1.56s
+target. This is a feasibility warning, not a proof of an exact lower bound.
+T30 remains central: daily/T7 gains alone leave the previous7.688s T30
+component, plus optimizer/transport/other work. More GPUs overlapping entire
+daily/T7/T30 branches cannot remove that sequential trajectory cost.
+
+The combined daily trace has about35.7% summed matrix time and58.2% fused
+kernel time. Even an ideal8x speedup of just those matrix kernels gives only
+about1.46x on this category accounting; infinite matrix speed gives~1.56x.
+These are illustrative Amdahl calculations, not exact wall-time bounds:
+summed device work can overlap and fused ownership remains ambiguous. They
+do rule out presenting a nominal Tensor Core8x figure as complete-training10x.
+
+The next exact-schedule experiment must be justified by the savedT7 profile,
+not by chunk counts alone. If it identifies material small-matrix/launch
+fragmentation, test one larger expert tile against the retained full result.
+If not, do not continue a blind tile sweep. A possible later precision route
+would use V100 FP16 Tensor Cores only at named neural GEMMs, while keeping
+FP32 master weights/Adam/gradient accumulation/norm/softmax and current
+physical/conservative/retained/trajectory precision. It needs an explicit
+numerical-method decision and a separate declared finite/gradient/learning
+and7/30-day drift contract. It cannot quietly relax the current1e-5/1e-6
+same-execution gate. No precision change has been implemented or approved.
+Width/depth/low-rank/output-head reductions likewise require an architecture
+discussion; auxiliary labels still do not justify removing active capacity.
+
 Latest measured evidence: expert128 actual daily micro4 passes all64.884M
 parameter-gradient coordinates and physical checks, with1.202x admission /
 1.213x saved-binary replay throughput. Device events fall62,617->30,801 while

@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-26.
 
+`profile_shared_saved_recurrent.py` replays original/combined T7 binaries
+using the prepared five-field case and fresh update0. It records warm timings
+and device traces, rechecks full-gradient parity and exports no giant HLO.
+Its helper is explicitly loaded from the staged overlay for c599236
+compatibility. `run_shared_saved_recurrent_profile.sh` bounds freeGPU1 work
+to10minutes. It changes no rollout/training code or compilation graph.
+
 `probe_shared_combined_recurrent.py` is a horizon-selective diagnostic for
 the combined decoder/backbone execution. It reuses the compact real-data
 bundle and prepared context, loads only the selected trusted T7/T30 binary,

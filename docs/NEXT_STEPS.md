@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26: savedT7 profile31735 now runs on freeGPU1(10min ceiling),
+concurrent withT30 admission29812 onGPU0. It reloads admitted binaries and
+collects unprofiled timings/device traces without another gradient compile.
+Read shared_saved_recurrent_profile_20260926.md; judge further scheduling
+work against actual residual costs. The10x target remains unmet; precision
+and architecture changes need their own discussion, not silent gate changes.
+
 September26 11:29CST: T7 combined97821 completed0/passed all64.884M parameter
 gradients/loss/aux/physical gates. Warm1.815832->1.588352s(12.53%less),
 live1.836->3.249GiB, backend compile42.48min. T30 combined29812 now runs on

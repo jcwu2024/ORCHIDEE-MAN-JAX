@@ -231,6 +231,14 @@ def run(args: Any) -> dict[str, Any]:
         parity_passed = all(value["passed"] for value in comparisons.values())
         report["comparisons"] = comparisons
         report["strict_reference_parity_passed"] = parity_passed
+        original_median = float(np.median(report["variants"]["original"]["warm_seconds"]))
+        candidate_median = float(np.median(report["variants"]["expert128_backbone_source_reuse"]["warm_seconds"]))
+        report["warm_timing_summary"] = {
+            "original_median_seconds": original_median,
+            "candidate_median_seconds": candidate_median,
+            "candidate_change_fraction": candidate_median / original_median - 1.0,
+            "comparison": "matched three-repeat warm runs in one process; separate executable runs",
+        }
         report["sum_warm_seconds_are_separate_runs"] = True
         report["trace_limitation"] = (
             "Use device event categories and concurrent interval summaries; overlapping summed kernel times "
