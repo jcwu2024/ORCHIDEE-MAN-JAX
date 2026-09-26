@@ -2,6 +2,14 @@
 
 Last updated: 2026-09-26.
 
+`probe_shared_serialized_updates.py` now validates explicit combined
+daily/T7/T30 admission reports and selects their saved binaries without
+rewriting the source profile. `probe_shared_serialized_dual.py` propagates
+identical admissions to its worker, inspects existing inputs on CPU and
+restricts combined timing to unchanged daily32+T7+T30 work. The free-only
+`run_shared_combined_full_update.sh` wrapper bounds CPU inspection to5minutes
+or dual-GPU replay to30minutes. Production gradients/method remain unchanged.
+
 `probe_shared_recurrent_window_batch.py` compares two saved independent T7
 windows serially with a vmap of the same public native recurrent objective.
 It reuses daily microbatch loss/counter aggregation, saves full reference

@@ -8,6 +8,7 @@ reference; it is not a general cross-version executable cache.
 from __future__ import annotations
 
 import json
+import hashlib
 import pickle
 import time
 from pathlib import Path
@@ -34,14 +35,95 @@ def require_same_method(current, reference):
         raise ValueError("bounded serialized replay requires the original source checkout")
 
 
-def load_evaluators(profile, *, deserialize, memory_sizes, memory_limit_bytes, emit):
+def admission_report_paths(args):
+    paths = {name: getattr(args, attribute, None) for name, attribute in (
+        ("daily", "daily_admission_report"), ("T7", "seven_admission_report"),
+        ("T30", "thirty_admission_report"))}
+    if any(paths.values()) and not all(paths.values()):
+        raise ValueError("combined overrides require all three admission reports")
+    return paths if all(paths.values()) else {}
+
+
+def add_admission_arguments(parser):
+    for flag in ("daily", "seven", "thirty"):
+        parser.add_argument(f"--{flag}-admission-report", type=Path)
+
+
+def validate_admissions(profile, reference, report_paths, *, profile_sha256):
+    """Bind admitted binaries to the original source, method and fresh inputs."""
+    if not report_paths:
+        return {}
+    if set(report_paths) != {"daily", "T7", "T30"}:
+        raise ValueError("combined overrides require daily, T7 and T30")
+    checkpoints = [row["path"] for row in reference["checkpoints"]
+                   if row["update"] == 0 and row["retained_milestone"]]
+    if len(checkpoints) != 1:
+        raise ValueError("admissions require exactly one retained update-0 checkpoint")
+    base = {"schema_version": "shared_expert_real_daily_context_v1",
+            "source_git_head": reference["source_git_head"], "method": reference["method"],
+            "initial_checkpoint": str(Path(checkpoints[0]).resolve()),
+            "artifact_id": int(reference["method"]["training_plan"]["training_artifact_ids"][0]),
+            "daily_rows": 4}
+    admissions = {}
+    for name, report_path in report_paths.items():
+        raw = Path(report_path).read_bytes()
+        report = json.loads(raw)
+        scope = ("actual_canonical_daily_micro4_only_no_T7_T30_no_optimizer" if name == "daily"
+                 else "actual_canonical_recurrent_single_horizon_no_daily_no_optimizer")
+        if (report.get("status") != "passed" or report.get("scope") != scope
+                or report.get("scientific_acceptance") is not False
+                or report.get("rtol") != 1e-5 or report.get("atol") != 1e-6):
+            raise ValueError(f"{name} admission status/scope/tolerance differs")
+        comparisons = report.get("comparisons", {})
+        if (set(comparisons) != {"loss", "auxiliary", "all_parameter_gradients"}
+                or any(row.get("passed") is not True or row.get("failed") != 0
+                       or row.get("nonfinite_actual") != 0 or row.get("nonfinite_reference") != 0
+                       for row in comparisons.values())
+                or comparisons["all_parameter_gradients"].get("coordinates") != 64884481
+                or report.get("all_parameter_gradient_coordinates") != 64884481
+                or not report.get("reference_hard") or not report.get("candidate_hard")
+                or any(report["reference_hard"].values()) or any(report["candidate_hard"].values())):
+            raise ValueError(f"{name} admission gradient/physical gates failed")
+        if name == "daily":
+            if report.get("variant") != "expert128+backbone_source_reuse":
+                raise ValueError("daily admission is not the combined variant")
+            identity = report.get("identity", {})
+        else:
+            if report.get("horizon") != int(name[1:]) or report.get("artifact_id") != base["artifact_id"]:
+                raise ValueError(f"{name} admission horizon/artifact differs")
+            # Recurrent reports predate inline identities; their preserved result
+            # carries the exact method/profile/checkpoint identity instead.
+            with Path(report["candidate_artifact"]).open("rb") as handle:
+                saved = pickle.load(handle)
+            identity = saved.get("identity", {})
+            del saved
+            if (identity.get("horizon") != int(name[1:])
+                    or identity.get("source_profile_sha256") != profile_sha256):
+                raise ValueError(f"{name} admission profile/horizon identity differs")
+        original = str(Path(profile["executables"][name]["executable"]).resolve())
+        if (any(identity.get(key) != value for key, value in base.items())
+                or identity.get("jax_version") != "0.4.38"
+                or str(Path(identity.get("executable", "")).resolve()) != original):
+            raise ValueError(f"{name} admission original method/checkpoint/executable differs")
+        path = Path(report["candidate_executable"])
+        if not path.is_file():
+            raise FileNotFoundError(f"admitted {name} binary absent: {path}")
+        admissions[name] = {"executable": str(path), "admission_report": str(report_path),
+                            "admission_report_sha256": hashlib.sha256(raw).hexdigest(),
+                            "original_executable": original, "identity": identity}
+    return admissions
+
+
+def load_evaluators(profile, *, deserialize, memory_sizes, memory_limit_bytes, emit,
+                    overrides=None, components=("daily", "T7", "T30")):
     """Load one existing executable per component, without a compile fallback."""
     evaluators, metadata = {}, {}
-    for name in ("daily", "T7", "T30"):
+    for name in components:
         emit("load_saved_gradient", component=name)
         began = time.perf_counter()
         cpu_began = time.process_time()
-        path = Path(profile["executables"][name]["executable"])
+        selected = (overrides or {}).get(name, profile["executables"][name])
+        path = Path(selected["executable"])
         with path.open("rb") as handle:
             payload = pickle.load(handle)
         read_seconds = time.perf_counter() - began
@@ -67,6 +149,7 @@ def load_evaluators(profile, *, deserialize, memory_sizes, memory_limit_bytes, e
             "deserialize_cpu_seconds": load_cpu_seconds,
             "memory": memory,
             "cache_policy": "trusted_serialized_executable_no_trace_or_lower",
+            "admission": (overrides or {}).get(name),
         }
         emit("saved_gradient_loaded", component=name, compiled_gradient_graphs=metadata)
     return evaluators, metadata
@@ -101,6 +184,8 @@ def run(args):
     profile = json.loads(args.source_profile.read_text(encoding="utf-8"))
     reference = json.loads(Path(profile["technical_update_report"]).read_text(encoding="utf-8"))
     require_reference(profile, reference)
+    admissions = validate_admissions(profile, reference, admission_report_paths(args),
+                                     profile_sha256=hashlib.sha256(args.source_profile.read_bytes()).hexdigest())
     output = args.output
     update_output = output.with_suffix(".updates.json")
     if update_output.resolve() == Path(profile["technical_update_report"]).resolve():
@@ -110,6 +195,7 @@ def run(args):
         "source_profile": str(args.source_profile), "scientific_acceptance": False,
         "comparison_rtol": 1e-5, "comparison_atol": 1e-6,
         "comparison_tolerance_source": "shared_execution_benchmark_v1.json",
+        "admitted_overrides": admissions,
     }
     started = time.perf_counter()
     original_compile = learning.compile_gradient_evaluators
@@ -135,6 +221,7 @@ def run(args):
         evaluators, metadata = load_evaluators(
             profile, deserialize=deserialize_and_load, memory_sizes=learning.memory_sizes,
             memory_limit_bytes=kwargs["memory_limit_bytes"], emit=emit,
+            overrides=admissions,
         )
         emit("gradients_ready", gradient_ready_seconds=time.perf_counter() - started)
         return evaluators, metadata
@@ -179,6 +266,7 @@ def parser():
 
     result = base_parser()
     result.add_argument("--source-profile", type=Path, required=True)
+    add_admission_arguments(result)
     return result
 
 

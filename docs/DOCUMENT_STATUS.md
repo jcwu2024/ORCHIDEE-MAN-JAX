@@ -2,6 +2,11 @@
 
 Last updated: 2026-09-26.
 
+`shared_combined_full_update_20260926.md` is the active complete-update
+admission contract. Implemented,11local tests/real CPU inspection/dry-runs
+pass; free two-GPU launcher41280 running with30minute ceiling. It reuses
+admitted binaries without model gradient compilation. Results pending.
+
 September26: combined recurrent and equal-window batching notes now record
 completed29812/34268, both passed. T30 time decreases12.38%; two-windowT7
 throughput increases1.407792x. Saved binaries are reusable; full-update,

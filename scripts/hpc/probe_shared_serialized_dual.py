@@ -59,6 +59,8 @@ compare_update_reports = _serialized_module.compare_update_reports
 load_evaluators = _serialized_module.load_evaluators
 require_reference = _serialized_module.require_reference
 require_same_method = _serialized_module.require_same_method
+admission_report_paths = _serialized_module.admission_report_paths
+validate_admissions = _serialized_module.validate_admissions
 
 RTOL = 1e-5
 ATOL = 1e-6
@@ -248,7 +250,8 @@ def _device_tree(jax, tree, device):
 class RecurrentWorker:
     """Private inherited pipes, no listening port and no per-update files."""
 
-    def __init__(self, profile_path, *, cuda_device, memory_limit_bytes, echo_test=False):
+    def __init__(self, profile_path, *, cuda_device, memory_limit_bytes, echo_test=False,
+                 admission_reports=None):
         if not cuda_device or "," in cuda_device:
             raise ValueError("worker needs exactly one physical CUDA device selector")
         environment = os.environ.copy()
@@ -260,6 +263,9 @@ class RecurrentWorker:
         ]
         if echo_test:
             command.append("--echo-test")
+        for name, flag in (("daily", "daily"), ("T7", "seven"), ("T30", "thirty")):
+            if name in (admission_reports or {}):
+                command.extend((f"--{flag}-admission-report", str(admission_reports[name])))
         self.process = subprocess.Popen(
             command,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None,
@@ -556,6 +562,39 @@ def _compact_learning_run(args, *, bundle, reference):
     return report
 
 
+def inspect_inputs(args):
+    """CPU-only admission/bundle check, without reading executable payloads."""
+    profile, reference, digest = _reference_and_profile(args)
+    if args.input_bundle is None:
+        raise ValueError("--inspect-only requires the original --input-bundle")
+    with args.input_bundle.open("rb") as handle:
+        bundle = pickle.load(handle)
+    ids = _validate_bundle(bundle, profile_sha256=digest, reference=reference,
+                           source_head=_source_head())
+    import jax
+    require_distinct_batches(jax, ids, *(payload["daily"] for payload in bundle["payloads"]))
+    for payload in bundle["payloads"]:
+        if set(payload["cases"]) != {7, 30}:
+            raise ValueError("bundle requires one T7 and one T30 case")
+        for horizon, case in payload["cases"].items():
+            if (len(case) != 5 or np.shape(case.days[0].continuous_state)[0] != horizon
+                    or np.shape(case.targets["state"])[0] != horizon):
+                raise ValueError("bundle recurrent case horizon differs")
+    admissions = validate_admissions(profile, reference, admission_report_paths(args),
+                                     profile_sha256=digest)
+    if admissions and getattr(args, "daily_counts", [32, 64]) != [32]:
+        raise ValueError("combined full-update diagnostic permits only --daily-counts 32")
+    result = {"status": "passed", "scope": "cpu_saved_combined_admission_inspection",
+              "source_profile": str(args.source_profile), "source_profile_sha256": digest,
+              "source_git_head": reference["source_git_head"],
+              "input_bundle": str(args.input_bundle), "artifact_ids": ids,
+              "admitted_overrides": admissions, "model_gradient_compilations": 0,
+              "gpu_executables_loaded": False, "teacher_preparation": False,
+              "scientific_acceptance": False}
+    _atomic_json(args.output, result)
+    return result
+
+
 def run(args):
     from scripts.hpc import run_shared_learning as learning
     from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
@@ -567,6 +606,12 @@ def run(args):
     if not args.worker_cuda_device:
         raise ValueError("replay requires --worker-cuda-device")
     profile, reference, profile_sha256 = _reference_and_profile(args)
+    admission_reports = admission_report_paths(args)
+    admissions = validate_admissions(profile, reference, admission_reports,
+                                     profile_sha256=profile_sha256)
+    daily_counts = getattr(args, "daily_counts", [32, 64])
+    if admissions and daily_counts != [32]:
+        raise ValueError("combined full-update diagnostic permits only --daily-counts 32")
     bundle = None
     if getattr(args, "input_bundle", None) is not None:
         with args.input_bundle.open("rb") as handle:
@@ -584,6 +629,12 @@ def run(args):
         "comparison_rtol": RTOL, "comparison_atol": ATOL,
         "comparison_tolerance_source": "shared_execution_benchmark_v1.json",
         "timings": {}, "changing_data": [],
+        "source_profile_sha256": profile_sha256, "admitted_overrides": admissions,
+        "model_gradient_compilations": 0,
+        "candidate_vs_original_gradient_evidence": (
+            "three_admitted_full_component_gradient_gates_at_fresh_update0_artifact742; "
+            "two_changing_updates_full_parameters_and_adamw_vs_original_checkpoint"
+            if admissions else "original_saved_executables"),
     }
     started = time.perf_counter()
     original_compile = learning.compile_gradient_evaluators
@@ -618,12 +669,21 @@ def run(args):
                 profile, deserialize=deserialize_and_load,
                 memory_sizes=learning.memory_sizes,
                 memory_limit_bytes=kwargs["memory_limit_bytes"], emit=emit,
+                overrides=admissions,
             )
         emit("start_recurrent_worker", worker_cuda_device=args.worker_cuda_device)
         context["worker"] = RecurrentWorker(
             args.source_profile, cuda_device=args.worker_cuda_device,
             memory_limit_bytes=kwargs["memory_limit_bytes"],
+            admission_reports=admission_reports,
         )
+        if context["worker"].metadata.get("admitted_overrides", {}) != admissions:
+            raise ValueError("worker admission provenance differs from parent")
+        for name in ("T7", "T30"):
+            expected = Path(admissions.get(name, profile["executables"][name])["executable"]).resolve()
+            actual = Path(context["worker"].metadata["executables"][name]["source_executable"]).resolve()
+            if actual != expected:
+                raise ValueError(f"worker {name} binary differs from parent selection")
         report["worker"] = context["worker"].metadata
         report["worker"]["physical_cuda_selector"] = args.worker_cuda_device
         report["worker"]["transport"] = "private_persistent_pickle_pipes_no_disk_per_update"
@@ -784,12 +844,12 @@ def run(args):
         optimizer = context["initial_optimizer"]
         evaluators = context["evaluators"]
         cases0 = context["cases"][0]
-        batches = {
-            32: context["batches"][0],
-            64: _device_tree(
+        batches = {32: context["batches"][0]}
+        if 64 in daily_counts:
+            batches[64] = _device_tree(
                 jax, concatenate_daily(jax, *context["batches"]), primary
-            ),
-        }
+            )
+        batches = {count: batches[count] for count in daily_counts}
         for count, batch in batches.items():
             emit("measure_complete_update", daily_rows=count)
             operations = learning.make_tree_operations(jax, jnp, count)
@@ -878,6 +938,9 @@ def parser():
                         help="CPU-prepared real input bundle for fast diagnostic replay")
     result.add_argument("--prepare-input-bundle", action="store_true",
                         help="prepare --input-bundle once on free CPU; do not run updates")
+    _serialized_module.add_admission_arguments(result)
+    result.add_argument("--daily-counts", type=int, nargs="+", choices=(32, 64), default=[32, 64])
+    result.add_argument("--inspect-only", action="store_true")
     return result
 
 
@@ -979,7 +1042,9 @@ if __name__ == "__main__":
         result = run_worker_smoke(Path(sys.argv[3]), sys.argv[4])
     else:
         args = parser().parse_args()
-        if args.prepare_input_bundle:
+        if args.inspect_only:
+            result = inspect_inputs(args)
+        elif args.prepare_input_bundle:
             if args.input_bundle is None:
                 raise SystemExit("--prepare-input-bundle requires --input-bundle")
             result = prepare_compact_bundle(args)

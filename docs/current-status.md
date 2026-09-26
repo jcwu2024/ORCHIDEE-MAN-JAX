@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+September26 13:24CST: complete-update probe41280 running on freeGPU0+GPU1,
+30minute ceiling. Local11tests, deployed CPU input/admission validation and
+target-shell dry-runs passed. Reuses combined daily/T7/T30 saved binaries
+with explicit provenance and original profile/method identity; no model
+gradient compilation. Checks two changing updates and complete32row serial/
+dual proposals, including IPC/physical checks/AdamW. Results pending; see
+shared_combined_full_update_20260926.md. No new paid task or training recipe.
+
 September26 13:07CST:29812 and34268 completed0/passed, neither still running.
 CombinedT30 median7.681579->6.730945s; fixed-two-windowT7 mean3.155881->2.241723s
 (1.407792x throughput). Both pass strict loss/aux/all64.884M parameter-gradient

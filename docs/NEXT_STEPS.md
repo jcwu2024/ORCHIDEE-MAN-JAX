@@ -8,6 +8,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-23)
 
+September26 13:24CST: free dual-GPU launcher41280 runs complete unchanged-work
+admission,30minute ceiling.11local tests, actual CPU admission/bundle check
+and CPU/GPU target-shell dry-runs passed. All components load the admitted
+combined saved binaries; no model-gradient compilation or new Teacher prep.
+Two changing daily32+T7+T30 updates, full serial/dual gradient/parameter/AdamW
+comparisons, original checkpoint comparison and interleaved complete timing.
+Read `research/daily_coarse_graining/shared_combined_full_update_20260926.md`.
+Inspect `shared-combined-full-update-20260926.{json,log}` before more work.
+No new paid allocation; production method and batch/mix unchanged.
+
 September26 13:07CST: both free tasks completed0/passed. T30 combined29812:
 7.681579->6.730945s (12.38%less), all64.884M gradients/physical gates pass.
 Two-window T7 batching34268: same windows serial3.155881s vs batched2.241723s

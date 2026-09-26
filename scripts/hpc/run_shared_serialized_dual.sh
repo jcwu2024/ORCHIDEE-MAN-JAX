@@ -11,14 +11,19 @@ GPU_DEVICE=${GPU_DEVICE:-0}
 WORKER_GPU_DEVICE=${WORKER_GPU_DEVICE:-1}
 RUN_TIMEOUT=${RUN_TIMEOUT:-30m}
 PREPARE_INPUT_BUNDLE=${PREPARE_INPUT_BUNDLE:-0}
+INSPECT_ONLY=${INSPECT_ONLY:-0}
 EXTRA_ARGS=()
 if [[ -n ${INPUT_BUNDLE:-} ]]; then EXTRA_ARGS+=(--input-bundle "$INPUT_BUNDLE"); fi
-if [[ $PREPARE_INPUT_BUNDLE == 1 ]]; then
+if [[ $PREPARE_INPUT_BUNDLE == 1 || $INSPECT_ONLY == 1 ]]; then
   [[ -n ${INPUT_BUNDLE:-} ]] || exit 2
   case $(hostname -s) in test0[1-4]|ibtest0[1-4]) ;; *) [[ $DRY_RUN == 1 ]] || exit 2 ;; esac
   BACKEND_ENV=(SINGULARITYENV_JAX_PLATFORMS=cpu SINGULARITYENV_CUDA_VISIBLE_DEVICES=)
   CONTAINER_OPTIONS=(--bind /WORK:/WORK)
-  EXTRA_ARGS+=(--prepare-input-bundle)
+  if [[ $INSPECT_ONLY == 1 ]]; then
+    EXTRA_ARGS+=(--inspect-only)
+  else
+    EXTRA_ARGS+=(--prepare-input-bundle)
+  fi
 elif [[ $PREPARE_INPUT_BUNDLE == 0 ]]; then
   case $(hostname -s) in gln01|ibgln01|ibc13b02n04) ;; *) [[ $DRY_RUN == 1 || -n ${SLURM_JOB_ID:-} ]] || exit 2 ;; esac
   CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -59,10 +64,10 @@ COMMAND=(timeout --signal=TERM --kill-after=30s "$RUN_TIMEOUT" env -u LD_LIBRARY
 if [[ $DRY_RUN == 1 ]]; then printf '%q ' "${COMMAND[@]}"; printf '\n'; exit 0; fi
 cd "$CODE_ROOT"
 trap 'STATUS=$?; echo "run_exit_status=$STATUS"' EXIT
-echo "host=$(hostname -s) code=$(git rev-parse --short HEAD) prepare=$PREPARE_INPUT_BUNDLE gpu=$GPU_DEVICE worker_gpu=$WORKER_GPU_DEVICE"
+echo "host=$(hostname -s) code=$(git rev-parse --short HEAD) prepare=$PREPARE_INPUT_BUNDLE inspect=$INSPECT_ONLY gpu=$GPU_DEVICE worker_gpu=$WORKER_GPU_DEVICE"
 uptime
 grep Cpus_allowed_list /proc/self/status
-if [[ $PREPARE_INPUT_BUNDLE == 0 ]]; then
+if [[ $PREPARE_INPUT_BUNDLE == 0 && $INSPECT_ONLY == 0 ]]; then
   nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader
 fi
 "${COMMAND[@]}"

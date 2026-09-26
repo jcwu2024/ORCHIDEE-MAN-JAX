@@ -7,8 +7,11 @@ diagnostics and exceptions go to standard error.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import importlib.util
 import contextlib
 import json
+import os
 import pickle
 import sys
 import time
@@ -16,8 +19,22 @@ from pathlib import Path
 
 PROTOCOL_OUTPUT = sys.stdout.buffer
 
+# The immutable checkout can contain older diagnostic helpers. Select the
+# staged overlays explicitly, just as the parent does.
+def load_overlays():
+    root = os.environ.get("ORCHIDEE_REPO_ROOT", str(Path(__file__).resolve().parents[2]))
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    for name in ("probe_shared_dual", "probe_shared_serialized_updates"):
+        module_name = f"scripts.hpc.{name}"
+        spec = importlib.util.spec_from_file_location(module_name, Path(__file__).with_name(name + ".py"))
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
 
-def serve(profile_path, memory_limit_bytes):
+
+def serve(profile_path, memory_limit_bytes, admission_reports=None):
+    load_overlays()
     import jax
     import jax.numpy as jnp
     from jax.experimental.serialize_executable import deserialize_and_load
@@ -25,6 +42,7 @@ def serve(profile_path, memory_limit_bytes):
     from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
     from scripts.hpc.probe_shared_dual import make_recurrent_branch
     from scripts.hpc.run_shared_learning import make_tree_operations, memory_sizes
+    from scripts.hpc.probe_shared_serialized_updates import validate_admissions
 
     def send(message):
         pickle.dump(message, PROTOCOL_OUTPUT, protocol=pickle.HIGHEST_PROTOCOL)
@@ -39,9 +57,16 @@ def serve(profile_path, memory_limit_bytes):
         raise ValueError("serialized recurrent worker requires exactly one logical GPU")
     device = devices[0]
     profile = json.loads(Path(profile_path).read_text(encoding="utf-8"))
+    admissions = {}
+    if admission_reports:
+        reference = json.loads(Path(profile["technical_update_report"]).read_text(encoding="utf-8"))
+        admissions = validate_admissions(
+            profile, reference, admission_reports,
+            profile_sha256=hashlib.sha256(Path(profile_path).read_bytes()).hexdigest(),
+        )
     evaluators, metadata = {}, {}
     for name in ("T7", "T30"):
-        path = Path(profile["executables"][name]["executable"])
+        path = Path(admissions.get(name, profile["executables"][name])["executable"])
         print(f"recurrent_worker stage=read_saved_gradient component={name}", file=sys.stderr, flush=True)
         began = time.perf_counter()
         cpu_began = time.process_time()
@@ -63,6 +88,7 @@ def serve(profile_path, memory_limit_bytes):
             raise ValueError(f"saved worker {name} executable exceeds memory limit")
         evaluators[int(name[1:])] = executable
         metadata[name] = {"source_executable": str(path), "memory": memory,
+                          "admission": admissions.get(name),
                           "load_seconds": time.perf_counter() - began,
                           "read_seconds": read_seconds,
                           "read_cpu_seconds": read_cpu_seconds,
@@ -77,7 +103,8 @@ def serve(profile_path, memory_limit_bytes):
         jax=jax, device=device, evaluators=evaluators, operations=operations
     )
     send({"status": "ready", "jax_version": jax.__version__,
-          "device": str(device), "executables": metadata})
+          "device": str(device), "executables": metadata,
+          "source_profile": str(profile_path), "admitted_overrides": admissions})
     while True:
         command = receive()
         if command["kind"] == "close":
@@ -124,6 +151,8 @@ def parser():
     result.add_argument("--source-profile", type=Path, required=True)
     result.add_argument("--memory-limit-bytes", type=int, required=True)
     result.add_argument("--echo-test", action="store_true")
+    for flag in ("daily", "seven", "thirty"):
+        result.add_argument(f"--{flag}-admission-report", type=Path)
     return result
 
 
@@ -133,4 +162,9 @@ if __name__ == "__main__":
         if args.echo_test:
             serve_echo_test()
         else:
-            serve(args.source_profile, args.memory_limit_bytes)
+            paths = {name: getattr(args, attribute) for name, attribute in (
+                ("daily", "daily_admission_report"), ("T7", "seven_admission_report"),
+                ("T30", "thirty_admission_report"))}
+            if any(paths.values()) and not all(paths.values()):
+                raise ValueError("worker requires all three admission reports")
+            serve(args.source_profile, args.memory_limit_bytes, paths if all(paths.values()) else {})
