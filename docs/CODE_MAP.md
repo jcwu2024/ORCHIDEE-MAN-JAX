@@ -79,6 +79,14 @@ profilers are opt-in function-preserving experiments, not a new model family.
 parameter VJPs. These are isolated precision diagnostics, not production
 mixed precision or custom AD. Latest evidence is linked from NEXT_STEPS.
 
+`shared_decoder_expert_execution.py` owns opt-in union dynamic projections;
+the default remains field execution. `probe_shared_dynamic_projection.py`
+tests that component; `probe_shared_neural_precision.py` owns the staged native
+daily AD diagnostic. `probe_shared_neural_transpose_lower.py`,
+`probe_shared_union_integrated.py` and `probe_shared_union_replay.py` preserve
+lowering, actual-loss parity and cache-replay experiments respectively. These
+are diagnostic interfaces, not the pending production micro4 speed comparison.
+
 ## History, tests and generated files
 
 - Retired neural experiment implementations are recoverable from the source

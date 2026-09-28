@@ -1,7 +1,7 @@
 # Project Start Here
 
 Updated: 2026-09-26. Entry-document and obsolete-source cleanup are complete.
-The next work is speed research before training; no GPU job or training is active.
+The current work is speed research before training; see NEXT_STEPS for job status.
 
 ## Two products, separate claims
 

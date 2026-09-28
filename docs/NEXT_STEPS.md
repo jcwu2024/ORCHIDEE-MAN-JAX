@@ -1,6 +1,6 @@
 # Current Work Order
 
-Updated: 2026-09-26. This page controls current operations; dated evidence does
+Updated: 2026-09-28. This page controls current operations; dated evidence does
 not authorize its old proposed next action.
 
 ## Completed: source and context cleanup
@@ -32,18 +32,32 @@ magnitude improvement in effective complete-update throughput, preserving
 data counts, daily/recurrent loss mix, parameter/state gradients and physical
 checks. Report GPU count/card-hours. Track startup/compile time separately.
 
-The latest bounded native `F16_F16_F32` FFN diagnostic is promising but changes
-numerics: finite forward/VJPs, strict exact-route comparison fails. It is not
-production precision admission. The next scientific work is to specify a
-bounded broader-neural assessment with an explicit numerical-error contract
-before integration. Reuse saved actual inputs, prepared references and
-unchanged executables. Do not launch a long recurrent compile or training
-from fragment evidence alone.
+FP32 union stays opt-in; default field remains. Actual row0 canonical loss and
+all64,884,481 parameter gradients pass strict1e-5/1e-6 against saved field
+binary replay; physical checks pass. State gradients are finite/undefined-zero
+but lack independent reference. Paid job15418739 completed0:0 in13:12
+(0.22card-hours; estimated CNY0.6072, not bill). Six route units are persisted;
+four physical/loss units reused. Repeats33.939/2.579/2.572s have unknown first-
+repeat overhead, not training throughput. Free observed cache replay ended124
+at its100s cold-call cap: neural forward hit cache, zero backend calls; no
+full result/warm attribution. Cold retracing budget was underestimated.
+Next define the original-four-row production micro4 comparison using public
+mean daily objective/full parameter-gradient interface and saved field binary;
+new union graph compile needed, proposed lower180/backend900/process1500s
+budgets informed by prior micro4 timings, not authorized by this result.
+No more generic profiler rerun. Retain the full state-gradient admission route;
+retain a small saved-field directional state check before production adoption,
+not a new gradient-infrastructure workstream. Preserve derivatives and physical
+gates. No GPU job is active. No new paid job, production adoption, tolerance
+change, recurrent run or training is launched by this result. Component27-
+coordinate failure remains separate. Preserve all references/cache artifacts.
 
 Read only these latest route/evidence pages for that decision:
 
+- [Union dynamic-bank component results](research/daily_coarse_graining/shared_dynamic_projection_results_20260927.md).
 - [Structural speed route](research/daily_coarse_graining/shared_next_structural_speed_route_20260926.md).
 - [FFN precision results](research/daily_coarse_graining/shared_ffn_precision_results_20260926.md).
+- [Broader-neural bounded assessment](research/daily_coarse_graining/shared_neural_precision_results_20260927.md).
 - [Daily64 balance results](research/daily_coarse_graining/shared_combined_daily64_balance_20260926.md).
 - [Unchanged-work complete-update results](research/daily_coarse_graining/shared_combined_full_update_20260926.md).
 
@@ -51,6 +65,27 @@ Daily64 + one T7 + one T30 is a measured load-balancing candidate, not the
 adopted training sampling recipe. Doubling daily rows changes sampling;
 approximately doubled daily rows/s does not prove same-workload 2x or 10x.
 Another small tile/packing sweep is not the default primary route.
+
+## Thread handoff
+
+Continue on `research/daily-coarse-graining`. The next micro4 comparison is
+specified in the union results page above but **not implemented or submitted**.
+Implement the production-interface comparison first; preserve the original four
+distinct rows and saved field reference. Do not rerun the capped row0 profiler
+or assume the existing integrated Slurm script implements this next experiment.
+No new paid allocation has approval; previous approval covered completed
+job15418739 only. Free bounded checks remain within the user's standing scope.
+
+Remote root: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. Reuse immutable checkout
+`runtime/checkouts/shared-split-width-v1` at `c599236bcf57b745e9bafed678298010f4c3b58f`.
+Under `runtime/outputs/diagnostics/`, preserve
+`shared-split-profile-c599236.json`, `shared-expert-real-daily-context-c599236.pkl`,
+`shared-union-integrated-20260927.pkl`, its `.field-reference.pkl`, and
+`shared-neural-reference-20260927-staged.stages-cache/`. Full result pickles
+stay on the server; small reports/logs are also local under `outputs/diagnostics/`.
+The old field-reference pickle uses repeated row0, so it is **not** the numerical
+reference for four distinct rows; use the admitted field executable with those
+original rows. See the dated union report for measured evidence and limits.
 
 ## Preserve the method
 

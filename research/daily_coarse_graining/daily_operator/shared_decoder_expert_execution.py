@@ -25,6 +25,38 @@ from .shared_transformer import (
 )
 
 
+def union_dynamic_projection_cache(
+    parameters: Mapping[str, Any], context: Any, inputs: Any, *,
+    input_normalization: Any, layout: Any, plan: Any, expert_projections: Any,
+) -> Any:
+    """Project global dynamic identities once with the original FP32 formulas.
+
+    Owners: shared_transformer::_decoder_dynamic_plan:810-900,
+    _decoder_dynamic_tokens:904-977 and _field_dynamic_projection_cache:424-448.
+    Only dynamic members of these projections are consumed by field gathers.
+    """
+    tokens = _decoder_dynamic_tokens(
+        parameters, context, inputs, input_normalization=input_normalization,
+        layout=layout, plan=plan,
+    )
+    return _field_dynamic_projection_cache(parameters, expert_projections[0], tokens)
+
+
+def gather_field_dynamic_projection_cache(
+    projections: Any, union: Any, axis_indices: Any, local_indices: Any,
+) -> Any:
+    """Restore the original field-local bank order, retaining expert constants."""
+    axis = jnp.asarray(axis_indices, dtype=jnp.int32)
+    local = jnp.asarray(local_indices, dtype=jnp.int32)
+    return tuple(
+        original._replace(
+            axis_key=bank.axis_key[axis], axis_value=bank.axis_value[axis],
+            local_key=bank.local_key[local], local_value=bank.local_value[local],
+        )
+        for original, bank in zip(projections, union, strict=True)
+    )
+
+
 def shared_transformer_raw_outputs_expert128(
     parameters: Mapping[str, Any],
     context: Any,
@@ -35,6 +67,7 @@ def shared_transformer_raw_outputs_expert128(
     input_normalization: Any,
     config: SharedTransformerConfig = SharedTransformerConfig(),
     carbon_state_layout: Any | None = None,
+    dynamic_projection_execution: str = "field",
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     """Return canonical raw outputs with non-GPP rows grouped by expert.
 
@@ -45,6 +78,8 @@ def shared_transformer_raw_outputs_expert128(
     """
 
     config.validate()
+    if dynamic_projection_execution not in {"field", "union"}:
+        raise ValueError("dynamic projection execution must be field or union")
     if config.decoder_execution != "gather_dynamic_reuse":
         raise ValueError("expert128 execution requires gather_dynamic_reuse configuration")
     if tuple(field.name for field in schema.fields) != tuple(field.name for field in layout.ledger):
@@ -66,6 +101,13 @@ def shared_transformer_raw_outputs_expert128(
         family_tokens,
         carbon_tokens=raw_carbon,
     )
+    union_projections = None
+    if dynamic_projection_execution == "union":
+        union_projections = union_dynamic_projection_cache(
+            parameters, decoder_context, inputs,
+            input_normalization=input_normalization, layout=layout,
+            plan=dynamic_plan, expert_projections=expert_projections,
+        )
 
     outputs_by_index: list[Any | None] = [None] * len(schema.fields)
     masks_by_index: list[Any | None] = [None] * len(schema.fields)
@@ -84,21 +126,20 @@ def shared_transformer_raw_outputs_expert128(
         )
         indices = dynamic_plan.field_axis_bank_indices[field_index]
         local_indices = dynamic_plan.field_local_bank_indices[field_index]
-        dynamic_tokens = _decoder_dynamic_tokens(
-            parameters,
-            decoder_context,
-            inputs,
-            input_normalization=input_normalization,
-            layout=layout,
-            plan=dynamic_plan,
-            axis_bank_indices=indices,
-            local_bank_indices=local_indices,
-        )
-        field_projections = _field_dynamic_projection_cache(
-            parameters,
-            expert_projections[expert_index],
-            dynamic_tokens,
-        )
+        if union_projections is None:
+            dynamic_tokens = _decoder_dynamic_tokens(
+                parameters, decoder_context, inputs,
+                input_normalization=input_normalization, layout=layout,
+                plan=dynamic_plan, axis_bank_indices=indices,
+                local_bank_indices=local_indices,
+            )
+            field_projections = _field_dynamic_projection_cache(
+                parameters, expert_projections[expert_index], dynamic_tokens,
+            )
+        else:
+            field_projections = gather_field_dynamic_projection_cache(
+                expert_projections[expert_index], union_projections, indices, local_indices,
+            )
 
         # Preserve the original GPP decoder path and its carbon-bank behavior.
         if field.name == "daily.fast_gpp":

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -167,3 +168,58 @@ def test_expert128_requires_static_dynamic_reuse_contract(expert_setup):
             input_normalization=setup["input_normalization"], config=invalid,
             carbon_state_layout=setup["carbon_layout"],
         )
+
+
+def test_union_projection_preserves_mixed_masks_bias_sentinel_and_native_ad(expert_setup):
+    setup = expert_setup
+    local_indices = [np.asarray(value).copy() for value in setup['layout'].local_state_indices]
+    for value in local_indices:
+        if value.size:
+            value.reshape(-1)[::3] = -1
+    setup = setup | {'layout': replace(setup['layout'], local_state_indices=tuple(local_indices))}
+    parameters = jax.tree_util.tree_map_with_path(
+        lambda path, value: value + jnp.linspace(0.03, 0.09, value.size).reshape(value.shape)
+        if isinstance(path[-1], jax.tree_util.DictKey) and path[-1].key == 'bias' else value,
+        setup['parameters'],
+    )
+    inputs = setup['assembled']
+    defined = jnp.asarray(inputs.state_defined.other).at[::4].set(False)
+    inputs = inputs._replace(
+        state_defined=inputs.state_defined._replace(other=defined),
+        state=inputs.state._replace(other=jnp.asarray(inputs.state.other) + 0.25),
+    )
+    pft = inputs.pft._replace(
+        active_pft_mask=jnp.asarray([True, False]),
+        pft_fraction=jnp.asarray(inputs.pft.pft_fraction).at[1].set(0.0),
+    )
+    inputs = inputs._replace(pft=pft, canonical_input=inputs.canonical_input._replace(pft=pft))
+    context = _context(setup | {'parameters': parameters}, inputs)
+    context = context._replace(expert_axis_mask=jnp.asarray(context.expert_axis_mask).at[:, ::2].set(False))
+    union = partial(shared_transformer_raw_outputs_expert128, dynamic_projection_execution='union')
+
+    expected, expected_masks = _run(setup, shared_transformer_raw_outputs_expert128, parameters, context, inputs)
+    actual, masks = _run(setup, union, parameters, context, inputs)
+    for name in expected:
+        np.testing.assert_allclose(actual[name], expected[name], rtol=1e-5, atol=1e-6)
+        np.testing.assert_array_equal(masks[name], expected_masks[name])
+        assert np.all(np.isfinite(actual[name]))
+    assert not bool(np.asarray(masks['daily.fast_gpp'])[0, 1])
+
+    def objective(function, p, c, x):
+        return _scalar_objective(_run(setup, function, p, c, x)[0])
+    expected_gradients = jax.grad(partial(objective, shared_transformer_raw_outputs_expert128),
+                                  argnums=(0, 1, 2), allow_int=True)(parameters, context, inputs)
+    actual_gradients = jax.grad(partial(objective, union), argnums=(0, 1, 2),
+                                allow_int=True)(parameters, context, inputs)
+    for a, b in zip(jax.tree_util.tree_leaves(actual_gradients),
+                    jax.tree_util.tree_leaves(expected_gradients), strict=True):
+        if np.asarray(a).dtype == jax.dtypes.float0:
+            continue
+        assert np.all(np.isfinite(a))
+        np.testing.assert_allclose(a, b, rtol=1e-5, atol=1e-6)
+    pgrad, cgrad, xgrad = actual_gradients
+    assert np.linalg.norm(pgrad['shared_transformer']['coordinate_blocks'][0]['attention']['key']['kernel']) > 1e-7
+    assert np.linalg.norm(pgrad['shared_transformer']['local_value_input']['kernel']) > 1e-7
+    assert np.linalg.norm(cgrad.expert_axis_tokens) > 1e-7
+    assert np.linalg.norm(xgrad.state.other) > 1e-7
+    np.testing.assert_array_equal(np.asarray(xgrad.state.other)[~np.asarray(defined)], 0.0)
