@@ -796,8 +796,13 @@ def staged_benchmark(args, recorder, lanes, second):
         # No preceding scalar closure may bind the batch's nested executable.
         driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
         group = lanes[:size]
-        inputs = jax.device_put((batch.stack_lanes(group), stack_second(group, second[:size])))
+        started = time.perf_counter()
+        host_inputs = batch.stack_lanes(group), stack_second(group, second[:size])
+        recorder.result["timing"][name + "_host_stack_seconds"] = time.perf_counter() - started
+        started = time.perf_counter()
+        inputs = jax.device_put(host_inputs)
         sync(inputs)
+        recorder.result["timing"][name + "_device_transfer_seconds"] = time.perf_counter() - started
         executable = lower_compile(batch.make_batch_transition(group), inputs[0], name, recorder)
         return executable, inputs
 
@@ -876,8 +881,10 @@ def staged_benchmark(args, recorder, lanes, second):
         run_stage("B4_gates", gates)
 
         def measurements(size, executable, inputs, scalar_fn):
+            started = time.perf_counter()
             device_pairs = jax.device_put([(lane.arguments, other) for lane, other in zip(lanes[:size], second[:size], strict=True)])
             sync(device_pairs)
+            recorder.result["timing"][f"B{size}_scalar_device_transfer_seconds"] = time.perf_counter() - started
             # A resumed timing stage also rechecks its actual scalar executable
             # against every previously independent reference before timing it.
             for index, pair in enumerate(device_pairs):

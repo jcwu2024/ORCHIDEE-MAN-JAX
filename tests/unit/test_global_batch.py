@@ -146,7 +146,9 @@ def test_stage_recovery_adopts_atomic_snapshot_after_manifest_interruption(tmp_p
     store.path.write_text(json.dumps(manifest))
     (tmp_path / "stage_scalar_b.pkl.abandoned.tmp").write_bytes(b"partial pickle")
     recovered = StageStore(tmp_path, identity)
-    assert recovered.load("scalar_a") == ({"output": 3.0}, {"independent": True})
+    value, record = recovered.load("scalar_a")
+    assert value == {"output": 3.0} and record["independent"]
+    assert not record["checkpoint_io"]["available"]
     assert recovered.manifest["stages"]["scalar_a"]["status"] == "complete"
     assert recovered.load("scalar_b") is None
 
@@ -163,6 +165,19 @@ def test_stage_recovery_rejects_corrupted_or_missing_complete_checkpoint(tmp_pat
     path.unlink()
     with pytest.raises(ValueError, match="missing"):
         store.load("scalar_a")
+
+
+def test_stage_checkpoint_io_records_actual_bytes_and_survives_resume(tmp_path):
+    from scripts.dev.global_batch_stage_store import StageStore
+
+    store = StageStore(tmp_path, {"inputs": "same"})
+    store.run("B4_candidate", lambda: (np.arange(16, dtype=np.float64), {}))
+    measured = store.manifest["stages"]["B4_candidate"]["checkpoint_io"]
+    assert measured["available"]
+    assert measured["bytes"] == store.checkpoint_path("B4_candidate").stat().st_size
+    assert measured["serialization_seconds"] >= 0 and measured["atomic_write_seconds"] >= 0
+    recovered = StageStore(tmp_path, {"inputs": "same"})
+    assert recovered.load("B4_candidate")[1]["checkpoint_io"] == measured
 
 
 def test_legacy_gpu_reference_requires_all_recorded_runtime_and_source_fields():
