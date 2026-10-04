@@ -3,7 +3,7 @@
 更新：2026-10-05。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
 工作分支：`research/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
 本轮保持科学过程不变，已实现编译前的外层 batch；本地 B1/B4 有界数值与计时通过。
-服务器诊断由协调主任务独立记录，本实现任务未启动远端或付费任务。
+本轮完成 Explore1000 免费 CPU 输入审计和有界 GPU 编译诊断；未提交付费作业。
 
 ## 首个实现的当前状态
 
@@ -90,7 +90,7 @@ compile95.345 s、首次同步双块4.490 s；device transfer0.03556 s、host ma
 不是公共CLI端到端速度。聚合证据为
 `outputs/research/global_throughput/local-milestone-summary.json`。
 
-协调主任务完成 Explore1000 免费有界诊断，并传回本分支证据：
+Explore1000 免费有界诊断的证据记录如下：
 `remote-cpu-audit-v2/` 的四点独立Day1、static/schema审计通过；wall267.49 s，
 实耗CPU0.0809944 core-hours，四核affinity容量0.2972111 core-hours，
 进程峰值6,391,112 KiB。它是共享test02输入审计，不是远端CPU吞吐基准。
