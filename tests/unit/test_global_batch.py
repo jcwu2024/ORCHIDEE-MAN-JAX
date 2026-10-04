@@ -321,3 +321,22 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
     if b1_mode == "scalar":
         assert "B1_validation" not in compiled and "B1_validation" not in resumed.result["required_stages"]
         assert "B1_scalar_baseline" in resumed.result["required_stages"]
+    assert resumed.result["pooled_scalar"]["all_four_current_executable_gates_passed"]
+    # A different pooled context must execute new gates/timings while retaining
+    # all candidate and independently executed reference checkpoints.
+    selected = harness.POINTS[1]
+    args.pooled_scalar_point = selected
+    changed = harness.Recorder(tmp_path)
+    changed.result["environment"] = {}
+    before = list(compiled)
+    try:
+        harness.staged_benchmark(args, changed, lanes, second)
+    finally:
+        changed.stop.set()
+    assert changed.result["all_required_stages_complete"]
+    assert changed.result["pooled_scalar"]["landpoint_id"] == selected
+    assert changed.result["pooled_scalar"]["all_four_current_executable_gates_passed"]
+    assert "B4_gates_pool_" + selected in changed.result["required_stages"]
+    assert compiled.count("B4_candidate") == before.count("B4_candidate")
+    assert compiled.count("scalar_" + selected) == before.count("scalar_" + selected)
+    assert not changed.result["timing_origins"]["B4_warm_frozen_state_core"]["reused_measurement"]
