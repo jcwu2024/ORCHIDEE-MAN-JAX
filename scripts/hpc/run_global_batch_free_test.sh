@@ -6,7 +6,13 @@ PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 BACKEND=cpu
 CODE_DIR=
 OUTPUT_DIR=
+WINDOW_DIR=
 ASSET_ROOT="$PROJECT/runtime/assets/teacher_669_a403cd3"
+ENTRY=benchmark
+CACHE_MODE=off
+CACHE_ROOT=
+GPU_INDEX=0
+BUDGET_FILE="$PROJECT/runtime/outputs/research/global_throughput/gpu-round2-budget.json"
 CPU_LIST=0-3
 TIMEOUT_SECONDS=1200
 DRY_RUN=0
@@ -16,6 +22,12 @@ while [[ $# -gt 0 ]]; do
     --backend) BACKEND=$2; shift 2 ;;
     --code-dir) CODE_DIR=$2; shift 2 ;;
     --output-dir) OUTPUT_DIR=$2; shift 2 ;;
+    --window-dir) WINDOW_DIR=$2; shift 2 ;;
+    --entry) ENTRY=$2; shift 2 ;;
+    --cache-mode) CACHE_MODE=$2; shift 2 ;;
+    --cache-root) CACHE_ROOT=$2; shift 2 ;;
+    --gpu-index) GPU_INDEX=$2; shift 2 ;;
+    --budget-file) BUDGET_FILE=$2; shift 2 ;;
     --asset-root) ASSET_ROOT=$2; shift 2 ;;
     --cpu-list) CPU_LIST=$2; shift 2 ;;
     --timeout-seconds) TIMEOUT_SECONDS=$2; shift 2 ;;
@@ -25,15 +37,23 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 [[ "$BACKEND" == cpu || "$BACKEND" == gpu ]]
-[[ "$TIMEOUT_SECONDS" =~ ^[0-9]+$ && "$TIMEOUT_SECONDS" -gt 0 && "$TIMEOUT_SECONDS" -le 1800 ]]
+[[ "$ENTRY" == benchmark || "$ENTRY" == cache-probe ]]
+[[ "$CACHE_MODE" == off || "$CACHE_MODE" == persistent ]]
+[[ "$GPU_INDEX" == 0 || "$GPU_INDEX" == 1 ]]
+[[ "$TIMEOUT_SECONDS" =~ ^[0-9]+$ && "$TIMEOUT_SECONDS" -ge 10 && "$TIMEOUT_SECONDS" -le 1800 ]]
 [[ -n "$CODE_DIR" && -n "$OUTPUT_DIR" ]]
-for TARGET in "$CODE_DIR" "$OUTPUT_DIR" "$ASSET_ROOT"; do
+WINDOW_DIR=${WINDOW_DIR:-"$OUTPUT_DIR/windows/$(date -u +%Y%m%dT%H%M%SZ)"}
+CACHE_ROOT=${CACHE_ROOT:-"$OUTPUT_DIR/xla_cache"}
+for TARGET in "$CODE_DIR" "$OUTPUT_DIR" "$WINDOW_DIR" "$ASSET_ROOT" "$CACHE_ROOT" "$BUDGET_FILE"; do
   RESOLVED=$(realpath -m "$TARGET")
   case "$RESOLVED" in /WORK/liwei_work/jcwu/*) ;; *) echo "path outside jcwu: $RESOLVED" >&2; exit 2 ;; esac
 done
 CODE_DIR=$(realpath "$CODE_DIR")
 OUTPUT_DIR=$(realpath -m "$OUTPUT_DIR")
 ASSET_ROOT=$(realpath "$ASSET_ROOT")
+WINDOW_DIR=$(realpath -m "$WINDOW_DIR")
+CACHE_ROOT=$(realpath -m "$CACHE_ROOT")
+BUDGET_FILE=$(realpath -m "$BUDGET_FILE")
 test -f "$CODE_DIR/scripts/dev/benchmark_global_batch.py"
 test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)"
 PYTHON="$PROJECT/.venvs/orcjax_${BACKEND}/bin/python"
@@ -53,12 +73,15 @@ export ORCHIDEE_OUTPUT_ROOT="$OUTPUT_DIR"
 export XDG_CACHE_HOME="$OUTPUT_DIR/xdg-cache"
 export CUDA_CACHE_PATH="$OUTPUT_DIR/cuda-cache"
 export ORCHJAX_DISABLE_COMPILATION_CACHE=1
+[[ "$CACHE_MODE" == off ]] || export ORCHJAX_DISABLE_COMPILATION_CACHE=0
 export JAX_ENABLE_X64=true
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 export MALLOC_ARENA_MAX=2
 if [[ "$BACKEND" == cpu ]]; then
   export JAX_PLATFORMS=cpu
-  COMMAND=("$PYTHON" "$CODE_DIR/scripts/dev/benchmark_global_batch.py")
+  SCRIPT=benchmark_global_batch.py
+  [[ "$ENTRY" == benchmark ]] || SCRIPT=probe_global_batch_cache.py
+  COMMAND=("$PYTHON" "$CODE_DIR/scripts/dev/$SCRIPT")
 else
   CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
   NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
@@ -66,7 +89,9 @@ else
   test -f "$NVML_DRIVER"
   BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
   export SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs
-  export SINGULARITYENV_CUDA_VISIBLE_DEVICES=0
+  export SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_INDEX"
+  export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=benchmark_global_batch.py
+  [[ "$ENTRY" == benchmark ]] || export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=probe_global_batch_cache.py
   export SINGULARITYENV_JAX_ENABLE_X64=true
   export SINGULARITYENV_ORCHIDEE_REPO_ROOT="$CODE_DIR"
   export SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ORCHIDEE_DATA_ROOT"
@@ -74,7 +99,7 @@ else
   export SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$OUTPUT_DIR"
   export SINGULARITYENV_XDG_CACHE_HOME="$XDG_CACHE_HOME"
   export SINGULARITYENV_CUDA_CACHE_PATH="$CUDA_CACHE_PATH"
-  export SINGULARITYENV_ORCHJAX_DISABLE_COMPILATION_CACHE=1
+  export SINGULARITYENV_ORCHJAX_DISABLE_COMPILATION_CACHE="$ORCHJAX_DISABLE_COMPILATION_CACHE"
   export SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
   export SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false
   export SINGULARITYENV_OMP_NUM_THREADS=1 SINGULARITYENV_OPENBLAS_NUM_THREADS=1
@@ -82,16 +107,21 @@ else
   COMMAND=(singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR"
     /apps/soft/sif/foundationpose "$PYTHON" "$CODE_DIR/scripts/hpc/global_batch_gpu_entry.py")
 fi
-COMMAND+=(--asset-root "$ASSET_ROOT" --output-dir "$OUTPUT_DIR" "${BENCH_ARGS[@]}")
+[[ "$ENTRY" != benchmark ]] || COMMAND+=(--asset-root "$ASSET_ROOT")
+COMMAND+=(--output-dir "$OUTPUT_DIR" --cache-mode "$CACHE_MODE" --cache-root "$CACHE_ROOT" "${BENCH_ARGS[@]}")
+SUPERVISOR=("$PROJECT/.venvs/orcjax_cpu/bin/python" "$CODE_DIR/scripts/hpc/global_batch_free_window.py"
+  --timeout-seconds "$TIMEOUT_SECONDS" --output-dir "$WINDOW_DIR" --report-dir "$OUTPUT_DIR")
+[[ "$BACKEND" != gpu ]] || SUPERVISOR+=(--budget-file "$BUDGET_FILE")
 if [[ "$DRY_RUN" -eq 1 ]]; then
   printf 'cwd=%q\n' "$CODE_DIR"
-  printf 'xdg_cache_home=%q cuda_cache_path=%q persistent_jax_cache=disabled\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
+  printf 'xdg_cache_home=%q cuda_cache_path=%q jax_cache_mode=%q cache_root=%q budget_file=%q\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH" "$CACHE_MODE" "$CACHE_ROOT" "$BUDGET_FILE"
   printf 'command='
-  printf '%q ' timeout "$TIMEOUT_SECONDS" taskset -c "$CPU_LIST" /usr/bin/time -v "${COMMAND[@]}"
+  printf '%q ' "${SUPERVISOR[@]}" -- taskset -c "$CPU_LIST" /usr/bin/time -v "${COMMAND[@]}"
   printf '\n'
   exit 0
 fi
-mkdir -p "$OUTPUT_DIR" "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
+test ! -e "$WINDOW_DIR/launch-status.json"
+mkdir -p "$OUTPUT_DIR" "$WINDOW_DIR" "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
 cd "$CODE_DIR"
 {
   date -u +%FT%TZ
@@ -100,17 +130,17 @@ cd "$CODE_DIR"
   git rev-parse HEAD
   taskset -pc $$
   printf 'cpu_list=%s backend=%s timeout_seconds=%s\n' "$CPU_LIST" "$BACKEND" "$TIMEOUT_SECONDS"
-  printf 'xdg_cache_home=%s cuda_cache_path=%s persistent_jax_cache=disabled\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
+  printf 'xdg_cache_home=%s cuda_cache_path=%s jax_cache_mode=%s cache_root=%s\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH" "$CACHE_MODE" "$CACHE_ROOT"
   if [[ "$BACKEND" == gpu ]]; then
     nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv
     nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
   fi
-} | tee "$OUTPUT_DIR/launch-context.txt"
+} | tee "$WINDOW_DIR/launch-context.txt"
 if [[ "$BACKEND" == gpu ]]; then
-  nvidia-smi -i 0 --query-gpu=timestamp,index,memory.used,utilization.gpu --format=csv --loop=1 \
-    > "$OUTPUT_DIR/gpu-memory-samples.csv" &
+  test -z "$(nvidia-smi -i "$GPU_INDEX" --query-compute-apps=pid --format=csv,noheader)"
+  nvidia-smi -i "$GPU_INDEX" --query-gpu=timestamp,index,memory.used,utilization.gpu --format=csv --loop=1 \
+    > "$WINDOW_DIR/gpu-memory-samples.csv" &
   MONITOR_PID=$!
   trap 'kill "$MONITOR_PID" 2>/dev/null || true' EXIT
 fi
-timeout "$TIMEOUT_SECONDS" taskset -c "$CPU_LIST" /usr/bin/time -v "${COMMAND[@]}" \
-  > "$OUTPUT_DIR/stdout.log" 2> "$OUTPUT_DIR/stderr.log"
+"${SUPERVISOR[@]}" -- taskset -c "$CPU_LIST" /usr/bin/time -v "${COMMAND[@]}"

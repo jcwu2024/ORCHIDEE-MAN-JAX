@@ -6,11 +6,14 @@ canonical deployment checkout. It changes only backend discovery, not physics.
 from __future__ import annotations
 
 import importlib
+import os
 import runpy
+import time
 from pathlib import Path
 
 
 def main() -> None:
+    os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START"] = str(time.perf_counter())
     import jax
     from jax._src import xla_bridge
 
@@ -28,8 +31,11 @@ def main() -> None:
     if len(devices) != 1 or any(device.platform != "gpu" for device in devices):
         raise RuntimeError(f"free-node diagnostic requires exactly one GPU: {devices}")
     jax.config.update("jax_enable_x64", True)
+    entry = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY", "benchmark_global_batch.py")
+    if entry not in {"benchmark_global_batch.py", "probe_global_batch_cache.py"}:
+        raise ValueError(f"unsupported diagnostic entry: {entry}")
     runpy.run_path(
-        str(Path(__file__).resolve().parents[1] / "dev" / "benchmark_global_batch.py"),
+        str(Path(__file__).resolve().parents[1] / "dev" / entry),
         run_name="__main__",
     )
 
