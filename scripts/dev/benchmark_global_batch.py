@@ -528,21 +528,56 @@ def benchmark(args, recorder, lanes, second):
     scalars = []
     scalar_device = []
     references = []
+    if args.resume_references:
+        origin = args.reference_origin_report
+        cleared = {
+            p.get("landpoint_id")
+            for p in origin["phases"]
+            if p["phase"] == "independent_scalar_nested_cache_cleared" and p.get("entries_after") == 0
+        }
+        if not {lane.landpoint_id for lane in lanes}.issubset(cleared):
+            raise ValueError("resume requires recorded independent per-point nested-cache clearing")
+        scientific_diff = subprocess.check_output(
+            ["git", "diff", "--name-only", "a33b82da9a1233f38e00d09435aecde4ba088111", "--", "jax_orchidee"],
+            cwd=ROOT,
+            text=True,
+        )
+        if scientific_diff.strip():
+            raise ValueError("scientific source changed since cached independent references")
+        recorder.result["reference_origin"] = {
+            "report": str(args.output_dir / "reference_origin_report.json"),
+            "commit": origin["environment"]["git_head"],
+            "policy": "reuse completed cache-independent references; verify pooled compatible scalar against each before timing",
+        }
     for index, (lane, s) in enumerate(zip(lanes, second, strict=True)):
-        fn = scalar if index == 0 else independent_scalar_executable(lane, "scalar_" + lane.landpoint_id, recorder)
+        fn = (
+            scalar
+            if index == 0 or args.resume_references
+            else independent_scalar_executable(lane, "scalar_" + lane.landpoint_id, recorder)
+        )
         scalars.append(fn)
         t = time.perf_counter()
         device_pair = jax.device_put((lane.arguments, s))
         sync(device_pair)
         scalar_device.append(device_pair)
         recorder.result["timing"]["scalar_" + lane.landpoint_id + "_device_transfer_seconds"] = time.perf_counter() - t
-        reference = run_two(fn, *device_pair)
+        reference_path = args.output_dir / ("scalar_" + lane.landpoint_id + "_reference.pkl")
+        if args.resume_references:
+            with reference_path.open("rb") as f:
+                saved_identity, reference = pickle.load(f)
+            if saved_identity != reference_identity(args, lane, s):
+                raise ValueError(f"independent cached reference inputs changed: {lane.landpoint_id}")
+            recorder.gate(
+                "pooled_scalar_vs_cached_independent_" + lane.landpoint_id, run_two(fn, *device_pair), reference
+            )
+            recorder.phase(
+                "independent_scalar_reference_reused", landpoint_id=lane.landpoint_id, path=str(reference_path)
+            )
+        else:
+            reference = run_two(fn, *device_pair)
         references.append(reference)
-        save_reference(
-            args.output_dir / ("scalar_" + lane.landpoint_id + "_reference.pkl"),
-            reference_identity(args, lane, s),
-            reference,
-        )
+        if not args.resume_references:
+            save_reference(reference_path, reference_identity(args, lane, s), reference)
     recorder.phase("independent_scalar_references_complete")
     for size in args.sizes:
         group, other = lanes[:size], second[:size]
@@ -567,7 +602,9 @@ def benchmark(args, recorder, lanes, second):
             perm_inputs = batch.stack_lanes([group[i] for i in order])
             perm_second = stack_second([group[i] for i in order], [other[i] for i in order])
             perm_result = run_two(executable, perm_inputs, perm_second)
-            recorder.gate(f"B{size}_permutation", perm_result, jax.tree_util.tree_map(lambda v: v[order], actual))
+            recorder.gate(
+                f"B{size}_permutation", perm_result, jax.tree_util.tree_map(lambda v: v[np.asarray(order)], actual)
+            )
             # Replace one lane with a different real point's complete input
             # bundle. All other state/forcing/templates/params remain frozen.
             replaced_group = group[:-1] + [group[0]]
@@ -623,6 +660,11 @@ def main():
     parser.add_argument("--input-manifest", type=Path)
     parser.add_argument("--truth-root", type=Path, default=ROOT)
     parser.add_argument("--prepared-input", type=Path)
+    parser.add_argument(
+        "--resume-references",
+        action="store_true",
+        help="Reuse this output directory's completed independent scalar references after an instrumentation-only failure.",
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--sizes", type=int, nargs="+", default=[1, 4], choices=[1, 4])
     parser.add_argument("--warm-repeats", type=int, default=5)
@@ -638,6 +680,11 @@ def main():
     os.environ["ORCHIDEE_OUTPUT_ROOT"] = str(args.output_dir)
     os.environ.setdefault("ORCHJAX_DISABLE_COMPILATION_CACHE", "1")
     configure_jax_compilation_cache(ROOT)
+    if args.resume_references:
+        origin_path = args.output_dir / "reference_origin_report.json"
+        if not origin_path.exists():
+            origin_path.write_bytes((args.output_dir / "report.json").read_bytes())
+        args.reference_origin_report = json.loads(origin_path.read_text(encoding="utf-8-sig"))
     recorder = Recorder(args.output_dir)
     try:
         recorder.result["environment"] = metadata(args)
