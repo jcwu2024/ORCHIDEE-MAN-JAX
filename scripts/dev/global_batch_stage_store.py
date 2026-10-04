@@ -56,6 +56,10 @@ class StageStore:
         # manifest update. Incomplete temporary files are never considered.
         published_record = {**envelope["record"], "checkpoint_io": record.get("checkpoint_io", {
             "available": False, "reason": "not recorded at origin or manifest update interrupted"
+        }), "execution_origin": envelope["record"].get("execution_origin", {
+            "available": False, "reason": "not recorded by originating harness",
+            "external_evidence": [str(self.directory / "report_model1_origin.json"),
+                                  str(self.directory.parent / "windows"), str(self.directory / "windows")],
         })}
         self.manifest["stages"][name] = {
             "status": "complete", "path": path.name, "sha256": digest, **published_record

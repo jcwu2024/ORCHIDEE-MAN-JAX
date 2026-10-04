@@ -197,10 +197,14 @@ def test_legacy_gpu_reference_requires_all_recorded_runtime_and_source_fields():
 
 
 def test_cache_policy_is_explicit_and_disables_old_cache(monkeypatch, tmp_path):
+    from jax.experimental.compilation_cache import compilation_cache
+
     from scripts.dev.probe_global_batch_cache import configure_cache
 
     changes = {}
+    resets = []
     monkeypatch.setattr(jax.config, "update", lambda key, value: changes.update({key: value}))
+    monkeypatch.setattr(compilation_cache, "reset_cache", lambda: resets.append(dict(changes)))
     with pytest.raises(ValueError, match="explicit"):
         configure_cache("persistent", None)
     policy = configure_cache("persistent", tmp_path / "cache")
@@ -208,6 +212,34 @@ def test_cache_policy_is_explicit_and_disables_old_cache(monkeypatch, tmp_path):
     assert changes["jax_persistent_cache_min_compile_time_secs"] == 0
     configure_cache("off", None)
     assert changes["jax_enable_compilation_cache"] is False
+    assert len(resets) == 2 and resets[0]["jax_compilation_cache_dir"] == policy["root"]
+
+
+def test_reused_timing_keeps_actual_origin_policy_and_unknown_origin_explicit():
+    from scripts.dev.benchmark_global_batch import record_timing_origin
+
+    current = {"environment": {"cache_policy": "persistent", "cpu_affinity": [4, 5, 6, 7]}}
+    previous = {"available": True, "environment": {"cache_policy": "disabled", "cpu_affinity": [0, 1, 2, 3]}}
+    record_timing_origin(current, "B4_measurements", {"timing": {"warm": 3.0}, "execution_origin": previous}, reused=True)
+    assert current["timing_origins"]["warm"]["reused_measurement"]
+    assert current["timing_origins"]["warm"]["execution_origin"] == previous
+    record_timing_origin(current, "B4_candidate", {"timing": {"old_compile": 600.0}}, reused=True)
+    assert not current["timing_origins"]["old_compile"]["execution_origin"]["available"]
+
+
+def test_recorder_preserves_exact_report_in_declared_window(monkeypatch, tmp_path):
+    from scripts.dev.benchmark_global_batch import Recorder
+
+    window = tmp_path / "windows" / "window001"
+    monkeypatch.setenv("ORCHJAX_GLOBAL_BATCH_WINDOW_ID", str(window))
+    recorder = Recorder(tmp_path / "model")
+    try:
+        recorder.result["status"] = "completed_stage_selection"
+        recorder.flush()
+        assert recorder.window_report == window / "benchmark-report.json"
+        assert recorder.window_report.read_bytes() == (tmp_path / "model" / "report.json").read_bytes()
+    finally:
+        recorder.stop.set()
 
 
 def test_semantic_reference_identity_ignores_pickle_aliasing_but_rejects_values():
@@ -226,7 +258,8 @@ def test_semantic_reference_identity_ignores_pickle_aliasing_but_rejects_values(
     assert original != semantic_reference_identity(SimpleNamespace(baseline_ref="new"), first, first.arguments)
 
 
-def test_staged_small_execution_preserves_candidate_and_each_independent_reference(monkeypatch, tmp_path):
+@pytest.mark.parametrize("b1_mode", ["vmapped", "scalar"])
+def test_staged_small_execution_preserves_candidate_and_each_independent_reference(monkeypatch, tmp_path, b1_mode):
     from types import SimpleNamespace
 
     from scripts.dev import benchmark_global_batch as harness
@@ -259,7 +292,7 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
     monkeypatch.setattr(harness, "stage_identity", lambda *args: {"small-test-contract": "fixed"})
     original = harness.run_two(jax.jit(scalar(lanes[0])), lanes[0].arguments, second[0])
     monkeypatch.setattr(harness, "import_legacy_reference", lambda *args: (jax.device_get(original), {"original": True}))
-    args = SimpleNamespace(output_dir=tmp_path, baseline_ref="small-test", stage="all", warm_repeats=5)
+    args = SimpleNamespace(output_dir=tmp_path, baseline_ref="small-test", stage="all", warm_repeats=5, b1_mode=b1_mode)
     first = harness.Recorder(tmp_path)
     first.result["environment"] = {}
     try:
@@ -283,4 +316,8 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
     assert compiled.count("scalar_" + harness.POINTS[0]) == 1
     assert set(harness.POINTS).issubset(bound)
     assert len(resumed.result["timing"]["B4_warm_frozen_state_core"]["samples_seconds"]) == 5
-    assert len(resumed.result["timing"]["B1_warm_frozen_state_core"]["samples_seconds"]) == 5
+    b1_label = "B1_scalar_baseline" if b1_mode == "scalar" else "B1"
+    assert len(resumed.result["timing"][b1_label + "_warm_frozen_state_core"]["samples_seconds"]) == 5
+    if b1_mode == "scalar":
+        assert "B1_validation" not in compiled and "B1_validation" not in resumed.result["required_stages"]
+        assert "B1_scalar_baseline" in resumed.result["required_stages"]

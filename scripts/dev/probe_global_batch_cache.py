@@ -66,13 +66,16 @@ def observed_cache_hits(events):
     return [event for event in events if "persistent compilation cache hit" in event["message"].lower()]
 
 
-def configure_cache(mode, root):
+def configure_cache(mode, root, *, reset=True):
     import jax
+    from jax.experimental.compilation_cache import compilation_cache
 
     if mode == "off":
         os.environ["ORCHJAX_DISABLE_COMPILATION_CACHE"] = "1"
         jax.config.update("jax_enable_compilation_cache", False)
-        return {"mode": "off", "root": None}
+        if reset:
+            compilation_cache.reset_cache()
+        return {"mode": "off", "root": None, "public_cache_reset": reset}
     if root is None:
         raise ValueError("persistent mode requires an explicit --cache-root")
     root = Path(root).resolve()
@@ -82,7 +85,13 @@ def configure_cache(mode, root):
     jax.config.update("jax_compilation_cache_dir", str(root))
     jax.config.update("jax_persistent_cache_min_compile_time_secs", 0)
     jax.config.update("jax_persistent_cache_min_entry_size_bytes", 0)
-    return {"mode": "persistent", "root": str(root), "min_compile_time_seconds": 0, "min_entry_bytes": 0}
+    # JAX 0.4.38 marks initialization complete even when no directory was set.
+    # Physics imports may have compiled constants before main(). Public reset
+    # clears that one-time state without deleting disk files or changing IR.
+    if reset:
+        compilation_cache.reset_cache()
+    return {"mode": "persistent", "root": str(root), "min_compile_time_seconds": 0, "min_entry_bytes": 0,
+            "public_cache_reset": reset}
 
 
 def probe_transition(x):
@@ -98,13 +107,27 @@ def main():
     parser.add_argument("--cache-root", type=Path)
     parser.add_argument("--cache-mode", choices=["off", "persistent"], default="persistent")
     parser.add_argument("--cache-phase", choices=["write", "read"], required=True)
+    parser.add_argument("--heavy-import-first", action="store_true",
+                        help="Reproduce unset-cache initialization before physics imports and late explicit configuration.")
+    parser.add_argument("--physics-root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--skip-cache-reset", action="store_true",
+                        help="Diagnostic control only: reproduce the old late-config failure on JAX0.4.38.")
     args = parser.parse_args()
     import jax
     import jaxlib
     import numpy as np
 
     jax.config.update("jax_enable_x64", True)
-    policy = configure_cache(args.cache_mode, args.cache_root)
+    if args.heavy_import_first:
+        # Deliberately unset the early environment configuration for this control
+        # experiment, including when a launcher supplied a cache root.
+        jax.config.update("jax_enable_compilation_cache", True)
+        jax.config.update("jax_compilation_cache_dir", None)
+        sys.path.insert(0, str(args.physics_root.resolve()))
+        from jax_orchidee.driver import orchestration  # noqa: F401
+
+        jax.jit(lambda x: x + 1)(np.asarray(1.0, dtype=np.float64)).block_until_ready()
+    policy = configure_cache(args.cache_mode, args.cache_root, reset=not args.skip_cache_reset)
     observer = CacheEvents()
     result = {
         "status": "running", "cache_phase": args.cache_phase, "cache_policy": policy,
@@ -115,6 +138,7 @@ def main():
         "backend_platform_version": str(jax.devices()[0].client.platform_version),
         "import_setup_seconds": time.perf_counter() - PROCESS_STARTED,
         "pid": os.getpid(), "xla_flags": os.environ.get("XLA_FLAGS"),
+        "heavy_import_first": args.heavy_import_first,
     }
     try:
         x = jax.device_put(np.arange(4096, dtype=np.float64).reshape(64, 64) / 4096)
@@ -133,6 +157,8 @@ def main():
                             "finite": bool(np.isfinite(actual).all()),
                             "sha256": hashlib.sha256(actual.tobytes()).hexdigest()}
         result["actual_disk_hits"] = observed_cache_hits(result["compile_cache_events"])
+        result["actual_disk_writes"] = [event for event in result["compile_cache_events"]
+                                       if "writing jit_probe_transition to persistent compilation cache" in event["message"].lower()]
         if not result["output"]["finite"]:
             raise ValueError("nonfinite cache probe output")
         if args.cache_phase == "read" and args.cache_mode == "persistent" and not result["actual_disk_hits"]:
@@ -144,6 +170,8 @@ def main():
             if args.cache_phase == "write":
                 if result["actual_disk_hits"]:
                     raise ValueError("write probe was not cold; use a new cache root")
+                if not result["actual_disk_writes"]:
+                    raise ValueError("cold write had no observed actual persistent cache write")
                 atomic_json(write_record, {"pid": os.getpid(), "identity": identity})
             else:
                 origin = json.loads(write_record.read_text(encoding="utf-8"))

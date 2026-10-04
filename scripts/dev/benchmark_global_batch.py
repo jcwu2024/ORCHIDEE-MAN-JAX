@@ -169,6 +169,8 @@ def compare(actual, reference, *, sentinel_paths=None):
 class Recorder:
     def __init__(self, output):
         self.output = output
+        window = os.environ.get("ORCHJAX_GLOBAL_BATCH_WINDOW_ID")
+        self.window_report = Path(window) / "benchmark-report.json" if window else None
         output.mkdir(parents=True, exist_ok=True)
         self.result = {"status": "running", "phases": [], "gates": [], "timing": {}}
         self.sentinel_paths = {}
@@ -187,6 +189,8 @@ class Recorder:
         self.result["linux_ru_maxrss_peak_bytes"] = linux_ru_maxrss_bytes()
         self.result["elapsed_seconds"] = time.perf_counter() - self.started
         atomic_json(self.output / "report.json", self.result)
+        if self.window_report is not None:
+            atomic_json(self.window_report, self.result)
 
     def phase(self, name, **kwargs):
         entry = {
@@ -227,6 +231,9 @@ def metadata(args):
         "cpu_affinity": cpu_affinity,
         "cpu_model": platform.processor(),
         "hostname": platform.node(),
+        "physical_gpu": {"uuid": os.environ.get("ORCHJAX_PHYSICAL_GPU_UUID"),
+                         "driver_version": os.environ.get("ORCHJAX_GPU_DRIVER_VERSION"),
+                         "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"},
         "loadavg": os.getloadavg() if hasattr(os, "getloadavg") else None,
         "env": {
             k: os.environ.get(k)
@@ -752,6 +759,14 @@ def import_legacy_reference(args, recorder, lane, second):
     return value, evidence
 
 
+def record_timing_origin(result, name, record, *, reused):
+    for key in record.get("timing", {}):
+        result.setdefault("timing_origins", {})[key] = {
+            "stage": name, "reused_measurement": reused,
+            "execution_origin": record.get("execution_origin", {"available": False, "reason": "origin not recorded"}),
+        }
+
+
 def staged_benchmark(args, recorder, lanes, second):
     """Candidate first, independently bound references next, validation/timing last."""
     if tuple(lane.landpoint_id for lane in lanes) != POINTS:
@@ -762,13 +777,17 @@ def staged_benchmark(args, recorder, lanes, second):
     store = StageStore(args.output_dir, stage_identity(args, lanes, second, recorder.result["environment"]))
     recorder.result["stages"] = store.manifest["stages"]
     required = ["B4_candidate", "legacy_original"] + ["scalar_" + lane.landpoint_id for lane in lanes]
-    required += ["B4_gates", "B4_measurements", "B1_validation"]
+    b1_mode = getattr(args, "b1_mode", "vmapped")
+    b1_stage = "B1_scalar_baseline" if b1_mode == "scalar" else "B1_validation"
+    required += ["B4_gates", "B4_measurements", b1_stage]
+    recorder.result["b1_mode"] = b1_mode
     recorder.result["required_stages"] = required
     for name in required:
         loaded = store.load(name)
         if loaded is not None:
             recorder.result["gates"].extend(loaded[1].get("gates", []))
             recorder.result["timing"].update(loaded[1].get("timing", {}))
+            record_timing_origin(recorder.result, name, loaded[1], reused=True)
     recorder.phase("stage_identity_validated", manifest=str(store.path))
 
     def run_stage(name, operation):
@@ -781,6 +800,14 @@ def staged_benchmark(args, recorder, lanes, second):
             value, provenance = operation()
             return value, {
                 "provenance": provenance,
+                "execution_origin": {
+                    "available": True, "environment": recorder.result["environment"],
+                    "report": str(recorder.window_report) if recorder.window_report is not None else None,
+                    "report_limitation": None if recorder.window_report is not None else "window ID not supplied; shared latest report is mutable",
+                    "pid": os.getpid(),
+                    "process_start_monotonic": PROCESS_STARTED,
+                    "window_identity": os.environ.get("ORCHJAX_GLOBAL_BATCH_WINDOW_ID", "not supplied; use PID/start and supervisor context"),
+                },
                 "stage_seconds": time.perf_counter() - started,
                 "gates": recorder.result["gates"][gate_start:],
                 "phases": recorder.result["phases"][phase_start:],
@@ -789,6 +816,7 @@ def staged_benchmark(args, recorder, lanes, second):
                                  if old_compilations.get(k) != v},
             }
         (value, record), reused = store.run(name, execute)
+        record_timing_origin(recorder.result, name, record, reused=reused)
         recorder.phase(name + ("_stage_reused" if reused else "_stage_complete"))
         return value
 
@@ -880,36 +908,42 @@ def staged_benchmark(args, recorder, lanes, second):
 
         run_stage("B4_gates", gates)
 
-        def measurements(size, executable, inputs, scalar_fn):
+        def measurements(size, executable, inputs, scalar_fn, *, scalar_baseline=False):
+            label = "B1_scalar_baseline" if scalar_baseline else f"B{size}"
             started = time.perf_counter()
             device_pairs = jax.device_put([(lane.arguments, other) for lane, other in zip(lanes[:size], second[:size], strict=True)])
             sync(device_pairs)
-            recorder.result["timing"][f"B{size}_scalar_device_transfer_seconds"] = time.perf_counter() - started
+            recorder.result["timing"][label + "_scalar_device_transfer_seconds"] = time.perf_counter() - started
             # A resumed timing stage also rechecks its actual scalar executable
             # against every previously independent reference before timing it.
             for index, pair in enumerate(device_pairs):
-                recorder.gate(f"B{size}_timing_scalar_lane_{index}", run_two(scalar_fn, *pair), references[index])
+                recorder.gate(f"{label}_timing_scalar_lane_{index}", run_two(scalar_fn, *pair), references[index])
             warm, serial, wrapper = [], [], []
             for _ in range(args.warm_repeats):
                 started = time.perf_counter()
                 run_two(executable, *inputs)
                 warm.append(time.perf_counter() - started)
                 started = time.perf_counter()
-                for pair in device_pairs:
-                    run_two(scalar_fn, *pair)
-                serial.append(time.perf_counter() - started)
+                if not scalar_baseline:
+                    for pair in device_pairs:
+                        run_two(scalar_fn, *pair)
+                    serial.append(time.perf_counter() - started)
                 started = time.perf_counter()
-                wrapped = run_two(executable, batch.stack_lanes(lanes[:size]), stack_second(lanes[:size], second[:size]))
+                wrapped = (run_two(executable, lanes[0].arguments, second[0]) if scalar_baseline else
+                           run_two(executable, batch.stack_lanes(lanes[:size]), stack_second(lanes[:size], second[:size])))
                 jax.device_get(wrapped)
                 wrapper.append(time.perf_counter() - started)
             result = {
-                f"B{size}_warm_frozen_state_core": metrics(warm, size * 14),
-                f"B{size}_scalar_serial": metrics(serial, size * 14),
-                f"B{size}_preprepared_wrapper_stack_transfer_materialize": metrics(wrapper, size * 14),
-                f"B{size}_core_speedup_vs_scalar_serial": statistics.median(serial) / statistics.median(warm),
+                label + "_warm_frozen_state_core": metrics(warm, size * 14),
+                label + ("_preprepared_wrapper_transfer_materialize" if scalar_baseline else
+                         "_preprepared_wrapper_stack_transfer_materialize"): metrics(wrapper, size * 14),
             }
+            if not scalar_baseline:
+                result.update({label + "_scalar_serial": metrics(serial, size * 14),
+                               label + "_core_speedup_vs_scalar_serial": statistics.median(serial) / statistics.median(warm)})
             recorder.result["timing"].update(result)
             return result, {"five_or_more_synchronized_repeats": True, "frozen_start": True,
+                            "path": "single-point scalar program; no standalone vmapped B1 gate" if scalar_baseline else "vmapped batch",
                             "serial_policy": "pooled scalar verified against all independently executed lane references"}
 
         def b4_measurements():
@@ -926,7 +960,16 @@ def staged_benchmark(args, recorder, lanes, second):
             recorder.gate("B1_batch_vs_original_AOT", value, original)
             return measurements(1, executable, inputs, ensure_scalar())
 
-        run_stage("B1_validation", b1)
+        def b1_scalar():
+            executable = ensure_scalar()
+            inputs = jax.device_put((lanes[0].arguments, second[0]))
+            sync(inputs)
+            value = run_two(executable, *inputs)
+            recorder.gate("B1_scalar_baseline_vs_independent_scalar", value, references[0])
+            recorder.gate("B1_scalar_baseline_vs_original_AOT", value, original)
+            return measurements(1, executable, inputs, executable, scalar_baseline=True)
+
+        run_stage(b1_stage, b1_scalar if b1_mode == "scalar" else b1)
     recorder.result["all_required_stages_complete"] = all(
         store.manifest["stages"].get(name, {}).get("status") == "complete" for name in required
     )
@@ -955,6 +998,8 @@ def main():
                         help="Original scalar reference/report directory; all recorded runtime/source/input fields checked.")
     parser.add_argument("--cache-mode", choices=["off", "persistent"], default="off")
     parser.add_argument("--cache-root", type=Path, help="Explicit persistent cache directory; no serialized AOT reuse.")
+    parser.add_argument("--b1-mode", choices=["vmapped", "scalar"], default="vmapped",
+                        help="Staged B1: standalone vmapped gate or explicitly labelled single-point scalar baseline.")
     args = parser.parse_args()
     if args.warm_repeats < 5:
         parser.error("at least five warm repeats required")
