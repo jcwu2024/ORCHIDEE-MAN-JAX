@@ -35,7 +35,7 @@ CODE_DIR=$(realpath "$CODE_DIR")
 OUTPUT_DIR=$(realpath -m "$OUTPUT_DIR")
 ASSET_ROOT=$(realpath "$ASSET_ROOT")
 test -f "$CODE_DIR/scripts/dev/benchmark_global_batch.py"
-test -z "$(git -C "$CODE_DIR" status --porcelain --untracked-files=all)"
+test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)"
 PYTHON="$PROJECT/.venvs/orcjax_${BACKEND}/bin/python"
 test -x "$PYTHON"
 HOST=$(hostname -s)
