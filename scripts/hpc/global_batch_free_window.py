@@ -166,6 +166,7 @@ def main():
                 survivors = group_metrics(process.pid)[0]
         elapsed = time.monotonic() - started
         usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        supervisor_usage = resource.getrusage(resource.RUSAGE_SELF)
         status = (
             "over_budget"
             if over_budget
@@ -179,6 +180,9 @@ def main():
             "cpu_group_seconds_lower_bound": cpu_lower_bound,
             "reaped_children_user_seconds": usage.ru_utime,
             "reaped_children_system_seconds": usage.ru_stime,
+            "supervisor_user_seconds": supervisor_usage.ru_utime,
+            "supervisor_system_seconds": supervisor_usage.ru_stime,
+            "supervisor_CPU_affinity": sorted(os.sched_getaffinity(0)),
             "group_peak_sampled_RSS_bytes": peak_rss,
             "process_peak_RSS_bytes": max(peak_hwm, usage.ru_maxrss * 1024),
             "surviving_group_pids": survivors,
