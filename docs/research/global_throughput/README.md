@@ -1,6 +1,6 @@
 # 全球物理模型吞吐研究
 
-更新：2026-10-04。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-05。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 
@@ -45,7 +45,7 @@ Fortran 本身也支持向量化、MPI/OpenMP 乃至 GPU，比较对象应明确
 | 更晚的完整多日块验收原始记录，2026-07-19 | 本地 Windows CPU；365 日热运行 31.1364 s，冷编译加首轮 158.13 s；冷启动/全年/restart 的有界状态门槛通过 | 缺精确 commit、CPU 型号和 JAX 版本；不是本次 main 实测，也不是同机 Fortran 对比 |
 | 历史物理 Teacher GPU capture，2026-07-21 | V100 / JAX 0.4.38 / FP64；15 日热运行 4.840 s，29 日 7.631 s；冷运行约 903/923 s | 带额外训练数据采集；不是当前 main 纯正向基线，短窗热速率不是 50 年速度 |
 | 历史 Teacher v6 CPU capture，2026-08-06 | 五个单 CPU 常驻 worker；热年约 82 s/点年，首次 capture 约 2058 s；换网格未增加可执行缓存项 | 历史研究提交、额外输出与不同环境；不能与上述 GPU 行直接作公平 A/B |
-| 本次轻量检查 | 新 worktree 导入成功；ORCJAX Python 3.11.15 / JAX 0.10.1，仅显示 CPU；公开 `run --help` 成功 | 没有执行新的完整模型/GPU吞吐测量 |
+| 立项轻量检查 | 新 worktree 导入成功；ORCJAX Python 3.11.15 / JAX 0.10.1，仅显示 CPU；公开 `run --help` 成功 | 仅为立项环境检查；后续本地完整短窗实测见下 |
 
 历史报告可在同仓库提交 `b0080d3215bce7cae349d1bcf76b37450ac94ceb` 中恢复：
 
@@ -72,13 +72,75 @@ GPU 两个原始 JSON 本次已核读：原工作区
 
 ## 当前工作单
 
-1. 固定基线：同一组真实网格、forcing、初态、参数、输出和精度，测当前 main 完整块。
+首个本地实现已加入 `driver/global_batch.py` 与
+`scripts/dev/benchmark_global_batch.py`：在 AOT 前提取原完整 transition，保持内层
+`npts=1`，外层 `vmap` 的八组数值输入逐点堆叠，科学日序只在逐点相等后共享。
+四个真实点 001/069/319/331 的各自 cold Day1、静态科学 closure、schema/dtype/None
+审计已经通过；13 项轻量单元测试和新增文件 Ruff 检查通过。B1 原 AOT 与提取后的
+两块完整状态/输出通过（760 leaves，有限值零差异，严格匹配原 bare-soil roughheight
+NaN sentinel）。四点各自 context 的 scalar reference 在逐点清空内层 cache 后生成；
+B4 逐点、置换和 lane 替换隔离通过，最大逐元素组合容差占比 0.08167。
+物理 core 冻结在 `a33b82d`；独立参考来自 `b8bb285`，最终 harness `80831ea`
+保全并复用这些参考，先验证共享 scalar 对每个独立参考零差异，再做完整 batch gate 和计时。
+
+本地 Windows CPU、i7-13700（16物理/24可见逻辑核）、JAX/jaxlib 0.10.1、FP64，
+每次从同一冻结 Day1 末态重置，连续推进两个7日块；五次热运行同步全部末态/输出和 effects：
+
+| 同工作量 | batch 热 core 中位数 [min,max] | JAX 常驻串行中位数 [min,max] | batch 吞吐 |
+| --- | --- | --- | --- |
+| B1，14 point-days | 1.873 s [1.864,1.970] | 2.007 s [1.830,2.483] | 7.475 point-days/s |
+| B4，56 point-days | 3.442 s [3.216,3.551] | 7.818 s [6.924,8.827] | 16.268 point-days/s |
+
+B4 本次相对同工作量 JAX 串行的 core 比为 **2.271倍**。含已准备输入的 stack/transfer/
+host materialization wrapper 中位数4.015 s；B4 lower23.575 s、compile95.345 s、
+first call4.490 s。完整四份独立 scalar 编译进程峰值 RSS7.72 GiB，复用参考后最终计时
+进程峰值5.30 GiB；GPU数与card-hours均0。初态准备和独立参考编译另计，wrapper不含
+新cold-start、年度聚合或生产checkpoint。Fortran同机对比、GPU吞吐、年度/669/50年和AD
+仍未由此短窗验收。聚合证据为 `outputs/research/global_throughput/local-milestone-summary.json`。
+
+Explore1000免费诊断完成四点独立Day1/static/schema审计（test02，wall267.49 s）；
+随后GPU `b8bb285`复用其准备输入，在gln01实际节点`ibc13b02n04`使用1张
+V100-SXM2 32GB、affinity0–3、1200 s预算。原scalar reference在650.393 s保存，
+extracted scalar compile在659.739 s开始；预算边界结束时尚未完成GPU batch parity或计时。
+wrapper exit1，原report停在`running`，stderr仅有slow-compile alarms，不能解释为数值失败。
+进程已退出；此免费GPU诊断预算1/3 card-hour，四核affinity容量4/3 core-hours，
+快照实耗CPU下界0.375 core-hours、进程峰值RSS下界9.254623 GiB。1200个逐秒GPU样本
+的节点card0峰值987 MiB，属于编译中设备观测，不是完整batch显存需求。
+原证据在 `outputs/research/global_throughput/remote-gpu-b8bb285/`；后续launcher cache路径
+隔离修复发生在运行结束后，不属于该运行条件。
+
+本地与远端合并记录见
+[MILESTONE.md](../../../outputs/research/global_throughput/MILESTONE.md)和
+[milestone-summary.json](../../../outputs/research/global_throughput/milestone-summary.json)。
+
+可复现命令（数据根只读，生成物在本 worktree；默认禁持久 compilation cache）：
+
+```powershell
+$env:ORCHIDEE_DATA_ROOT = 'E:/ORCHIDEE-MAN-JAX/data'
+$env:ORCHIDEE_REFERENCE_ROOT = 'E:/ORCHIDEE-MAN-JAX/reference'
+conda run --no-capture-output -n ORCJAX python scripts/dev/benchmark_global_batch.py --asset-root outputs/research/global_throughput/local-assets --truth-root E:/ORCHIDEE-MAN-JAX --output-dir outputs/research/global_throughput/local-audit --mode audit
+conda run --no-capture-output -n ORCJAX python scripts/dev/benchmark_global_batch.py --prepared-input outputs/research/global_throughput/local-audit/prepared_inputs.pkl --truth-root E:/ORCHIDEE-MAN-JAX --output-dir outputs/research/global_throughput/local-b1-b4-final --sizes 1 4 --warm-repeats 5
+```
+
+`--asset-root` 使用 `landpoints/{id}/runtime_used_run.def` 与逐点 `reference/`，也可用
+`--input-manifest` 指定每点 `landpoint_id/run_def/reference_dir`。未提供两者时使用现有
+raw-server reference resolver。准备输入与 cold Day1 checkpoint 用集合 pickle 保存，
+普通审计错误修复可复用；这不是生产恢复格式。`report.json` 与 `events.jsonl`
+在失败时保留实际阶段、异常和峰值 RSS，不以不完整执行报告加速。
+如完整独立 references 已保存而仅诊断代码失败，可在同输出目录使用
+`--resume-references`；它要求原来每点的 cache-clear 记录、完整输入身份和科学源码一致。
+本次最终成功是此模式修复 JAX 置换索引后得到的实测，原 report 保存为
+`reference_origin_report.json`，没有重做已通过的四份独立 scalar 编译。
+
+1. 固定基线（本地短窗已完成）：同一组真实网格、forcing、初态、参数、输出和精度，测起点完整块。
    分开记录进程启动/数据准备、冷编译、缓存加载、热执行、数据传输、输出与恢复点 IO。
    首轮用小窗口和原有状态资产，避免先跑 669 点或 50 年。
-2. 最小实现：在编译前暴露纯 transition，先做 `B=1` 等价，然后 `B=4` 不同网格的批处理。
+2. 最小实现（本地已通过）：在编译前暴露纯 transition，先做 `B=1` 等价，然后 `B=4` 不同网格的批处理。
    优先考察对单点函数的 `vmap`；不要把已经 `.compile()` 的可执行文件直接套入变换。
    审计所有闭包中的静态配置，连续地点参数必须逐点传入；仅形状相同不足以证明可合批。
-3. 有界吞吐筛选：真实异质点 `B=1,4,16,64`，按内存和编译结果逐级扩展；同时测 CPU/GPU。
+3. 有界吞吐筛选（本地CPU B1/B4完成，其余待验收）：真实异质点 `B=1,4,16,64`，按内存和编译结果逐级扩展；同时测 CPU/GPU。
+   远端GPU尚在scalar参考编译时用完预算；下一步先解决可复用编译/参考和time-to-valid-measurement，
+   再在有界资源合同内完成GPU正确性与同工作量计时，不直接投入年度或更大batch图。
    主测七天块，先过正确性再判断是否值得测 28 天块。保留原精度、全部有效过程和输出。
    重复相同网格只可作设备负载诊断，不能代替异质全球吞吐证据。
 4. 只有批处理确有收益，才扩展代表性一年、跨年恢复和多设备规模曲线；
@@ -119,6 +181,7 @@ GPU 两个原始 JSON 本次已核读：原工作区
 外部数据、Fortran source 和参考资产仍在父工作区，按已声明绝对路径只读复用；
 新生成物放本分支 `outputs/`，不要复制一份大型数据树。
 
-本次完成立项、来源审计和本地入口检查；未提交 HPC 任务、未执行训练。
+本次完成立项、来源审计、最小 batch 实现、本地静态输入及 B1/B4 有界数值/计时门槛。
+远端免费输入审计通过，GPU诊断受编译预算限制。没有执行训练或付费任务。
 后续 Explore1000 操作继续服从项目部署说明和专用技能；付费作业仍需明确资源、
 时限、命令、目录和最坏费用授权。该分支不继承另一个研究线程的特定 GPU 实验额度。

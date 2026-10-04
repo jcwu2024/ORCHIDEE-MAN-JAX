@@ -1,15 +1,123 @@
 # 主分支物理模型执行审计与首轮基准设计
 
-日期：2026-10-04。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
+更新：2026-10-05。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
 工作分支：`research/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
-本轮未改科学过程、未执行模型长编译、未访问服务器、未提交计算任务。
+本轮保持科学过程不变，已实现编译前的外层 batch；本地 B1/B4 有界数值与计时通过。
+服务器诊断由协调主任务独立记录，本实现任务未启动远端或付费任务。
+
+## 首个实现的当前状态
+
+纯工厂 `_paper_later_day_block_transition_factory` 原样提取原 `transition`，旧 scalar
+AOT factory 继续调用它，capture/projector 契约保留。harness 从起点
+`133e35aec7b83b9d79888c46092f64d518e97299` 的 Git source 载入原 AOT factory，
+并检查提取前后 transition AST 完全相等。批处理变换发生在 `.lower().compile()` 前。
+物理 core 冻结于 `a33b82da9a1233f38e00d09435aecde4ba088111`；独立参考 harness
+为 `b8bb28574fdfd4ec335334c7f5ef936233464497`，最终通过的诊断 harness
+为 `80831ea88b1107ba6d8cb1150792024788696b49`。最初本地进程在 core commit 前启动，
+其 metadata HEAD 仍为 `133e35a`；运行中 commit 没有修改执行的源码文件。
+
+`driver/global_batch.py` 独立生成每点九组输入。静态 signature 默认比较全部 context
+科学值，附加 config 内容、run scalars/PFT identities、STOMATE static kwargs/parameters
+扣除四组动态 vector、DIFFUCO 残余 static kwargs、vertical grids、完整 daily dispatch、
+state layout 和矿质 bounds。raw run.def 未知差异拒绝；只排除已动态消费的四参数
+键、选定 mangrove PFT 的 `ARJV` 和 host domain bounds。`ARJV` 并非新动态化：
+`sechiba/diffuco.py:1989` 原已映射至 `trans_co2['arjv']`，九号参数已有该 leaf，
+`driver/paper_binding.py:PAPER_POINT_BINDING_OWNERS` 明确其逐点 owner。
+
+`RIVER_ROUTING=TRUE` 在此论文输入是合法静态值，未被改写。Fortran
+`sechiba.f90::sechiba_main` 1227–1240 的条件是 `river_routing AND nbp_glo>1`；
+内层 `nbp_glo=1` 保留显式 no-routing branch，JAX `stomate/entry.py:792` 同样拒绝
+真正多点 routing。batch adapter 额外要求声明 `independent_single_landpoint`，
+拒绝多点内部维度、TOPMODEL_NEW、未支持 soil-peat hydro 和缺少 compiled admission。
+
+四点 001.0-071.0、069.0-119.0、319.0-057.0、331.0-057.0 使用每点自己
+materialized run.def、restart template 和 cold Day1 state；没有广播首点模板。
+本地只将已归档资产的 `VEGETATION_FILE` 路径正规化至声明 data root，科学参数不改。
+初次审计保守拒绝 routing flag、第二次拒绝已动态 ARJV，事件记录保留，两者修复均来自
+现有源码契约。第二次各点 Day1 及全部准备输入已保存，后续复用而不再初始化。
+
+实测轻量证据：`tests/unit/test_global_batch.py` 13 项通过，新增模块/harness/tests
+Ruff clean；现有 orchestration 存量 lint 未修改。四点 static/schema/dtype/None/day-number
+审计通过：`outputs/research/global_throughput/local-audit-final/report.json`。
+独立 preparation 178.15 s、峰值约 3.54 GB；其中各点 Day1 完成。
+B1 原 AOT 与提取后两块完整状态/日输出已通过：760 leaves，有限值 max absolute=0。
+证据 `outputs/research/global_throughput/local-b1-b4-v2/report.json`。
+该过程在 B1 后主动结束以加强独立 reference，不能将其称 B4 gate 或吞吐通过。
+最终完整结果 **passed_bounded_forward_diagnostic**：
+`outputs/research/global_throughput/local-b1-b4-final/report.json`。其
+`reference_origin_report.json` 保留 `b8bb285` 对四个点分别清空内层 cache、各自
+context 编译/执行两块、每个 B4 lane 数值通过的证据；原过程在随后 JAX list-index
+置换比较的诊断错误处停止。`80831ea` 将索引改为 NumPy index array，强制完整输入/
+closure/baseline身份和科学 tree 无变更后复用独立参考；新实际共享 scalar 再对四个
+独立参考逐点 zero finite delta，随后重新编译 B4、执行置换/替换/五次warm。
+这两份报告的 source/阶段清楚分开，没有将缓存结果称作新独立 reference execution。
+轻量记录存于
+`outputs/research/global_throughput/implementation-checks.json`。
+
+harness 数值参考分别由每点自己的 context/tables/dispatch 构造 scalar transition，
+并在每点 scalar lower 前清空旧内层 `_COMPILED_SECHIBA_SCAN_CACHE`，记录 clear phase，
+以免结构 cache 间接沿用首点 closure。生产 cache 未更改。
+各自执行 Days2–8 与9–15；以完整末态和全部 daily outputs 检查 B1 原工厂/提取后、
+B4 逐点、置换、完整 lane 替换。浮点组合逐元素 `1e-8+1e-10*abs(ref)`，
+离散/schema/dtype 精确。只有两套明确 state component 的 `roughheight_pft`、稳定 bare-soil
+identity 的 index0、预期内层 `[1,nvm]` 形状可使用双方严格同 mask 的 NaN sentinel。
+此原有契约由 `condveg.py` 的 NaN 初始化和从 vegetation index1 开始的循环，以及
+`tests/unit/test_condveg.py:418,486` 的明确 assertions 支持；源 provenance 是
+`condveg.f90::condveg_z0cdrag` 1325–1474 与 `condveg_z0cdrag_dyn` 1578–1718，
+DIFFUCO 4166–4169 在消费前替换 bare-soil 坐标。单侧 NaN、其他坐标 NaN、任意 Inf
+和错误 shape 都失败，允许 sentinel 数目与路径逐项报告，没有全局 equal_nan。
+参考/candidate 在 gate 前保全；routine harness 修复不会丢失已完成 reference。
+计时记录 lower、compile、首次同步双块、至少五次冻结初态 reset 热双块（含 effects barrier）、
+同样预 device 的 scalar serial、stack/transfer/materialize wrapper、host materialization
+和完整集合输出 IO；环境、线程/affinity/cache、RSS 一并记录。短窗不含新 annual
+Fortran 科学认证，不代表全部 PFT 或669点。
+
+本地最终报告包含15项通过的数值 gates；最大 absolute delta 为
+`1.103617250919342e-6`，最大逐元素容差占比为 `0.08166120891987796`。
+Windows i7-13700（16物理/24可见逻辑核）、Python3.11.15、JAX/jaxlib0.10.1、
+NumPy2.4.6、FP64；持久 JAX compilation cache 禁用。五次同步热运行结果如下：
+
+| 同工作量 | batch core 中位数 [min,max] | JAX常驻串行中位数 [min,max] |
+| --- | --- | --- |
+| B1，14 point-days | 1.873 s [1.864,1.970] | 2.007 s [1.830,2.483] |
+| B4，56 point-days | 3.442 s [3.216,3.551] | 7.818 s [6.924,8.827] |
+
+B4 core 吞吐16.268 point-days/s，相对同工作量 JAX serial 为2.271倍；
+已准备输入的 stack/transfer/materialize wrapper 中位数4.015 s。B4 lower23.575 s、
+compile95.345 s、首次同步双块4.490 s；device transfer0.03556 s、host materialization
+0.00470 s、完整集合输出 IO0.01766 s。独立四参考编译进程峰值 RSS7.72 GiB，
+最终参考复用进程峰值5.30 GiB。wrapper不含新Day1准备、年度聚合或生产checkpoint，
+不是公共CLI端到端速度。聚合证据为
+`outputs/research/global_throughput/local-milestone-summary.json`。
+
+协调主任务完成 Explore1000 免费有界诊断，并传回本分支证据：
+`remote-cpu-audit-v2/` 的四点独立Day1、static/schema审计通过；wall267.49 s，
+实耗CPU0.0809944 core-hours，四核affinity容量0.2972111 core-hours，
+进程峰值6,391,112 KiB。它是共享test02输入审计，不是远端CPU吞吐基准。
+
+GPU `b8bb285` 复用上述CPU准备输入，在gln01实际节点`ibc13b02n04`、
+1张V100-SXM2 32GB、affinity0–3运行。原scalar reference在650.393 s保存，
+extracted scalar compile在659.739 s开始；任务在1200 s边界结束，wrapper exit1，
+未证实为GNU timeout124。`report.json`保留最后`running`状态，stderr仅见slow-compile
+alarms，无数值异常；进程已退出，GPU compute processes为空。
+尚无GPU batch parity或吞吐结论。预算为1/3 card-hour、四核affinity容量4/3 core-hours；
+最后进程快照CPU TIME00:22:30给出实耗下界0.375 core-hours，VmHWM9,704,176 KiB
+给出峰值下界9.254623 GiB。证据目录
+`outputs/research/global_throughput/remote-gpu-b8bb285/` 保存report/events、launch context、
+GPU memory samples、process metrics和stderr。后续launcher cache路径隔离修复发生在
+此运行结束后，不属于该运行条件；本轮无付费作业。
+1200个逐秒GPU样本覆盖上海时间00:04:23.237–00:24:22.647，节点card0峰值987 MiB；
+该设备观测不证明完整batch编译或运行的显存需求。合并资源与验收记录见
+[MILESTONE.md](../../../outputs/research/global_throughput/MILESTONE.md)和
+[milestone-summary.json](../../../outputs/research/global_throughput/milestone-summary.json)。
 
 ## 结论及证据边界
 
 现有代码已经提供完整 later-day 多日纯数值扫描的实现基础，最小批处理落点是
 `jax_orchidee/driver/orchestration.py:11231` 的内部 `transition`，而不是公共 CLI。
-应先在 `.lower().compile()` 之前暴露这段函数，保留单点内部维度，以外层 `vmap`
-装入异质网格。该方案尚未实现或测量，GPU/批处理速度提升仍是假设。
+本轮已在 `.lower().compile()` 之前暴露这段函数，保留单点内部维度，以外层 `vmap`
+装入异质网格。本地B1/B4短窗数值门槛和CPU吞吐诊断已通过；GPU在编译预算内未完成
+batch验收。2.271倍只指本地同工作量JAX串行对照，不能外推为Fortran或GPU加速。
 
 论文 mosaic 的合同是 669 个独立单点任务，不是开启河道路由的一个全球耦合域：
 `configs/orchidee_man_250919.yaml:40-51` 明确声明
@@ -86,10 +194,10 @@ state、forcing、逐点 parameters/tables/payload/templates 增加轴 0；相�
 共享的真正静态配置只在组内复用。PyTree 每个 leaf（包括 bool/int、标量、可选 None）
 须指定相应轴，不能简单把第一点 template 广播给全部点。
 
-现行工厂返回 `jax.jit(transition).lower(...).compile()` 的 AOT executable（11324-11349），
-不暴露原 `transition`；应在编译前提取/复用原函数工厂。直接变换 AOT executable
-不是本研究可依赖的路线。先做 `B=1` 输出/完整 state parity，再做不同点 `B=4`，才有理由
-测量更大 B。直接把 `npts` 改成 B 是另一条路线，需要额外审计所有 reduction、grid、static
+起点工厂返回 `jax.jit(transition).lower(...).compile()` 的 AOT executable（11324-11349），
+当时不暴露原 `transition`；本轮已在编译前提取/复用原函数工厂。直接变换 AOT executable
+不是本研究可依赖的路线。本地 `B=1` 输出/完整 state parity与异质 `B=4`已通过，
+更大 B仍需独立门槛。直接把 `npts` 改成 B 是另一条路线，需要额外审计所有 reduction、grid、static
 adapter 和 restart shapes，不能将已有 readers 的多点能力当作完整过程支持证明。
 
 ## Host 成本与不支持路径
@@ -152,7 +260,10 @@ float gate 使用逐元素组合 `abs(delta) <= 1e-8 + 1e-10*abs(reference)`，�
 新的常驻串行/批量任务是探索 Linux/当前运行时的复用路线，需要测RSS、cache增长和稳定性，
 不能仅由“cache一项”推出669点长任务稳定。
 
-## 首轮可复现诊断合同（尚未执行）
+## 首轮可复现诊断合同与完成范围
+
+以下保留立项合同。本轮本地已完成阶段0、1及阶段2的CPU部分；远端阶段0通过，
+阶段2的GPU部分在scalar编译预算边界停止。阶段3、4和Fortran同硬件比较尚未执行。
 
 先冻结 `5910ba9` 基线及候选提交；保存命令、Python/JAX/jaxlib/CUDA版本、设备型号、
 FP64设置、XLA选项、CPU核数/亲和性、OMP/BLAS线程、实际node/load、GPU进程、输入配置与
@@ -190,8 +301,9 @@ conda run -n ORCJAX python -m jax_orchidee.cli.main run --landpoint-id 001.0-071
 ```
 
 此命令测Day1+两个later-day块，**不提供常驻warm测量或batch测量**；公共年度聚合只是
-15日窗的结果，不能拿它与Fortran365日annual truth作科学年度验收。批量诊断代码需后续实现，
-当前没有虚构可用的batch CLI。正式年度gates沿用现有semantic/acceptance harness。
+15日窗的结果，不能拿它与Fortran365日annual truth作科学年度验收。批量诊断现由
+`scripts/dev/benchmark_global_batch.py`提供，复现命令见本目录README；公共生产batch CLI
+尚未提供。正式年度gates沿用现有semantic/acceptance harness。
 
 资源账本同时给出 `valid_point_days / seconds` 和真实完整年的 `point_years / seconds`；
 CPU allocated core-hours=`allocated cores*wall_seconds/3600`，GPU card-hours=
@@ -232,5 +344,7 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 
 已直接阅读上列主代码边界、CLI/runner默认、forcing/parameter/state adapters、static dispatch、
 AD primitives及相关测试实现；核查七日块三份dynamic gate、三点block2复用、多日/组件性能
-原始JSON；检查base HEAD。没有重跑昂贵数值gate、没有产生新速度实测、没有做跨点全源码
-exhaustive audit。后续须补当前环境性能、异质B1/B4等价、batch缓存兼容与长期restart证据。
+原始JSON；检查base HEAD。初始来源审计未重跑历史昂贵gate；后续新增了四点独立输入审计、
+本地B1/B4完整短窗状态/输出与隔离门槛、同工作量CPU实测，证据及复用来源见本文件开头。
+没有做跨点全源码exhaustive audit。GPU编译成本是当前远端诊断限制；更大batch、代表性
+年度、长期restart、669点/50年和AD仍需各自证据。
