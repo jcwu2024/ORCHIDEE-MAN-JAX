@@ -432,6 +432,19 @@ def lower_compile(fn, arguments, name, recorder):
     return executable
 
 
+def independent_scalar_executable(lane, name, recorder):
+    """Prevent old nested structural cache from binding another point's closure."""
+    before = len(driver._COMPILED_SECHIBA_SCAN_CACHE)
+    driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
+    recorder.phase(
+        "independent_scalar_nested_cache_cleared",
+        landpoint_id=lane.landpoint_id,
+        entries_before=before,
+        entries_after=0,
+    )
+    return lower_compile(batch.make_scalar_transition(lane), lane.arguments, name, recorder)
+
+
 def stack_second(lanes, arguments):
     from dataclasses import replace
 
@@ -506,7 +519,7 @@ def benchmark(args, recorder, lanes, second):
         recorder.result["timing"]["legacy_first_two_block_call_seconds"] = time.perf_counter() - t
         save_reference(legacy_path, identity, old_results)
         recorder.phase("legacy_original_reference_saved", path=str(legacy_path))
-    scalar = lower_compile(batch.make_scalar_transition(first), first.arguments, "extracted_scalar", recorder)
+    scalar = independent_scalar_executable(first, "extracted_scalar", recorder)
     extracted_results = run_two(scalar, first.arguments, second[0])
     save_reference(args.output_dir / "extracted_scalar_reference.pkl", identity, extracted_results)
     recorder.gate("B1_original_AOT_vs_extracted_full_state_day_outputs", extracted_results, old_results)
@@ -516,13 +529,7 @@ def benchmark(args, recorder, lanes, second):
     scalar_device = []
     references = []
     for index, (lane, s) in enumerate(zip(lanes, second, strict=True)):
-        fn = (
-            scalar
-            if index == 0
-            else lower_compile(
-                batch.make_scalar_transition(lane), lane.arguments, "scalar_" + lane.landpoint_id, recorder
-            )
-        )
+        fn = scalar if index == 0 else independent_scalar_executable(lane, "scalar_" + lane.landpoint_id, recorder)
         scalars.append(fn)
         t = time.perf_counter()
         device_pair = jax.device_put((lane.arguments, s))
