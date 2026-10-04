@@ -50,6 +50,8 @@ export ORCHIDEE_REPO_ROOT="$CODE_DIR"
 export ORCHIDEE_DATA_ROOT="$PROJECT/runtime/data"
 export ORCHIDEE_REFERENCE_ROOT="$PROJECT/runtime/assets"
 export ORCHIDEE_OUTPUT_ROOT="$OUTPUT_DIR"
+export XDG_CACHE_HOME="$OUTPUT_DIR/xdg-cache"
+export CUDA_CACHE_PATH="$OUTPUT_DIR/cuda-cache"
 export ORCHJAX_DISABLE_COMPILATION_CACHE=1
 export JAX_ENABLE_X64=true
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
@@ -70,6 +72,8 @@ else
   export SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ORCHIDEE_DATA_ROOT"
   export SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ORCHIDEE_REFERENCE_ROOT"
   export SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$OUTPUT_DIR"
+  export SINGULARITYENV_XDG_CACHE_HOME="$XDG_CACHE_HOME"
+  export SINGULARITYENV_CUDA_CACHE_PATH="$CUDA_CACHE_PATH"
   export SINGULARITYENV_ORCHJAX_DISABLE_COMPILATION_CACHE=1
   export SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
   export SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false
@@ -81,12 +85,13 @@ fi
 COMMAND+=(--asset-root "$ASSET_ROOT" --output-dir "$OUTPUT_DIR" "${BENCH_ARGS[@]}")
 if [[ "$DRY_RUN" -eq 1 ]]; then
   printf 'cwd=%q\n' "$CODE_DIR"
+  printf 'xdg_cache_home=%q cuda_cache_path=%q persistent_jax_cache=disabled\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
   printf 'command='
   printf '%q ' timeout "$TIMEOUT_SECONDS" taskset -c "$CPU_LIST" /usr/bin/time -v "${COMMAND[@]}"
   printf '\n'
   exit 0
 fi
-mkdir -p "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR" "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
 cd "$CODE_DIR"
 {
   date -u +%FT%TZ
@@ -95,6 +100,7 @@ cd "$CODE_DIR"
   git rev-parse HEAD
   taskset -pc $$
   printf 'cpu_list=%s backend=%s timeout_seconds=%s\n' "$CPU_LIST" "$BACKEND" "$TIMEOUT_SECONDS"
+  printf 'xdg_cache_home=%s cuda_cache_path=%s persistent_jax_cache=disabled\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH"
   if [[ "$BACKEND" == gpu ]]; then
     nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv
     nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
