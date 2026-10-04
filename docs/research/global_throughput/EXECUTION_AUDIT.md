@@ -3,7 +3,8 @@
 更新：2026-10-05。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
 工作分支：`research/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
 本轮保持科学过程不变，已实现编译前的外层 batch；本地 B1/B4 有界数值与计时通过。
-本轮完成 Explore1000 免费 CPU 输入审计和有界 GPU 编译诊断；未提交付费作业。
+本轮完成 Explore1000 免费 CPU 输入审计及GPU四lane独立reference对齐；完整GPU验收与
+吞吐在B4重新编译预算边界停止，未提交付费作业。
 
 ## 首个实现的当前状态
 
@@ -111,13 +112,95 @@ GPU memory samples、process metrics和stderr。后续launcher cache路径隔离
 [MILESTONE.md](../../../outputs/research/global_throughput/MILESTONE.md)和
 [milestone-summary.json](../../../outputs/research/global_throughput/milestone-summary.json)。
 
+## 有界GPU阶段协议与cache证据
+
+`c8d118f`加入 `--mode staged --stage candidate|references|validate|all`：B4实际双块结果先保存，
+再按四个点各自context/inputs清空内层cache、lower/compile/实际执行并逐点保存独立reference。
+后续分别保存B4逐点/置换/替换gates、五次同步计时和B1基线。阶段checkpoint与manifest采用
+atomic发布；完整stage凭schema/dtype/value/static closure/科学源码/runtime/device/compiler身份
+复用，running/failed/stopped不计作完成。数值输入身份使用canonical tree/path/shape/dtype/value
+hash，避免pickle对象共享关系改变旧hash；原b8 reference另按实际prepare正规化契约精确复核。
+
+GPU首次阶段执行暴露JAX0.4.38晚配置cache失效：物理imports的早期JIT已把未设目录的
+cache初始化记为完成，后设目录仍产生disabled/not initialized与不写入日志。原小组件命中
+不能证明完整模型命中。`bdd5790`采用launcher早期cache环境变量配合显式配置后的公开
+`reset_cache()`；该操作不删除磁盘资产、不改变IR或物理过程。实际test02/0.4.38轻量控制
+在heavy import/首个JIT之后晚配置且无reset时不写cache；修复后实际miss/write，另一新进程
+实际hit，runtime/device/StableHLO/output一致。证据为
+`outputs/research/global_throughput/cache-init-repair-cpu-20261005/`。此CPU组件证据仍不能
+替代修复后完整GPU模型cache write/hit、独立数值门槛或吞吐实测；实际后续证据如下。
+
+`gpu-round2/model/stage_manifest.json`最终保全六个完整stage：B4 candidate、原001 AOT、
+四点各自context且每次清空内层cache后实际执行的scalar reference。model1执行`c8d118f`，
+model2/3执行`bdd5790`，物理core与输入保持上述冻结身份。最终15项已记录gates均通过：
+保存的B4完整两块各lane对四份独立reference，最大absolute差`1.4908146113157272e-6`、
+组合容差最大占比`0.04530223503755103`；共享001 scalar对四份独立reference有限值零差异，
+原001 AOT与独立提取结果也有限值零差异，schema/离散/sentinel保持原政策。
+第三window在重新编译B4时`over_budget`，未完成置换、lane替换隔离、五次warm或
+`B1_scalar_baseline`。raw `B4_gates=running`因checkpoint尚未发布而保留，结合最终window
+判为有效stopped；不改写raw记录，不称完整GPU gate通过，也无GPU throughput/speedup。
+
+cache实际记录区别明确：model1 B4与001虽完成编译，均disabled/not initialized且没有写入；
+修复后069 scalar miss/write，compile561.157389 s；319和331同key实际hit，compile/load
+23.938720/23.909779 s。model3 pooled001使用另一key实际miss/write，compile562.801277 s。
+参考三点raw IR hash为`5b8ab621…`，pooled001为`5e39342b…`；结构差异尚未解析。
+直接核读部署JAX0.4.38的`cache_key.py`确认默认metadata关闭时先strip-debuginfo，key还包含
+jaxlib/flags/options/accelerator等，不能声称callsite/source-line metadata已证明造成该miss。
+最终18 MiB的cache只有组件与两种scalar executable key，没有B4 executable。
+
+B4 validation host stack0.054965 s、同步device transfer0.102866 s、lower41.493809 s；
+compile约645 s后中断，没有compile完成时间或新首轮/热计时。旧B4 candidate lower91.254242 s、
+compile683.750115 s、first call3.233149 s属于model1来源，完整状态已保存，不当作稳态性能。
+新069/319/331 snapshot分别453575/453223/453223 bytes，序列化0.122514/0.090000/0.090293 s，
+atomic write0.055236/0.008612/0.009638 s；不含manifest/report/events。旧三个stage的独立
+checkpoint IO未记录，仍标缺失，不由总wall差值反推。
+
+本轮合同3600 card-seconds、每window≤1800，实际使用1张V100-SXM2 32GB，节点
+`ibc13b02n04`、UUID`GPU-daa2988f-72e7-d5e0-45e5-1bef9c1cc688`、driver525.85.12，
+JAX/jaxlib0.4.38、Python3.11.15、FP64。模型affinity4–7；supervisor可见0–55，不能将
+四核affinity当作整个进程树的专属核数。probes实际wall13.350996/2.632614 s、charge14/3；
+model1 wall1566.882998 s、charge1567，model2 wall694.176905 s、charge695，model3
+wall1295.341835 s、按timeout reservation保守charge1300。总wall3572.385347 s、charge3579
+card-seconds=0.99417 card-hours，余额21；未增加预算或启动付费任务。window计费包括
+启动、复用输入读取/审计、编译、reference/gate执行和IO，原Day1与之前AOT编译另计。
+model3 supervisor曾记录survivor89971；后查上海03:21:25已无该PID及89970 PGID/session，
+GPU0释放，只见另一研究线程GPU1 PID84592，明确是后续cleanup证据，非即时无残留。
+最终report的`elapsed_seconds=650.621450`是进入未完成compile时最后写入值，不能替代
+supervisor完整wall。证据在`gpu-round2/model/`各origin report和manifest、
+`gpu-round2/windows/`各稳定report/launch-status/采样、`gpu-round2-budget.json`与
+`gpu-round2/post-window-cleanup.txt`，均位于本worktree `outputs/research/global_throughput/`。
+
+默认B1为另编译的vmapped路径。有限预算下可明确指定`--b1-mode scalar`，使用已逐点对齐
+独立reference且与原AOT核对的单点程序，单列`B1_scalar_baseline`完整14 point-days的五次
+冻结起态热core/preprepared wrapper；它不认证独立vmapped B1 GPU路径，两种模式采用不同
+完成stage键，不改变共同stage的数值身份。不得用CPUreference替代GPU独立reference。
+
+本地修订`f1df818`提供`--pooled-scalar-point`，默认仍001。选择其他点时，由该点自己的
+已审计context构建实际共享scalar；任何新构建的pooled executable必须重做四份独立
+reference gates，包括只恢复B1的场景。selector改变时仅gate/timing/B1阶段换键，已完成
+candidate及独立reference继续复用；execution origin记录selector，不能误复用另一selector
+的测量。该补丁只通过本地30项轻量测试（4.56 s，1项禁用cacheprovider配置警告）、
+变更harness/test的Ruff与diff检查，尚无GPU验收。本轮远端最终执行代码为`bdd5790`，
+没有中途部署该修订，也不因selector对应已有cache文件就宣称实际命中。
+
+每个新stage保存execution origin（Git/runtime/cache/affinity/launcher物理GPU UUID与driver、
+PID及稳定window report），`timing_origins`明确标识复用测量并保留其原环境。旧stage未记录
+的来源明确缺失，使用原report与supervisor context核对，不能反填当前环境。完整window
+wall包含启动/import、输入读取审计、编译/reference/gates/计时、报告/checkpoint与包装成本；
+复用的先前Day1及原reference成本分列。热core与preprepared wrapper的范围不扩张为
+公共年度CLI或新cold-start端到端性能。独立stack/device transfer和checkpoint序列化/atomic
+write/fsync/replace指标只对新执行的logging版本有效，旧stage未单测IO保持未知。
+30项轻量测试及cache/恢复/身份/origin证据见
+`outputs/research/global_throughput/staged-implementation-checks.json`；未重跑昂贵本地物理gates。
+
 ## 结论及证据边界
 
 现有代码已经提供完整 later-day 多日纯数值扫描的实现基础，最小批处理落点是
 `jax_orchidee/driver/orchestration.py:11231` 的内部 `transition`，而不是公共 CLI。
 本轮已在 `.lower().compile()` 之前暴露这段函数，保留单点内部维度，以外层 `vmap`
-装入异质网格。本地B1/B4短窗数值门槛和CPU吞吐诊断已通过；GPU在编译预算内未完成
-batch验收。2.271倍只指本地同工作量JAX串行对照，不能外推为Fortran或GPU加速。
+装入异质网格。本地B1/B4短窗数值门槛和CPU吞吐诊断已通过；GPU保存的B4四lane与独立
+reference对齐通过，但置换/隔离及热计时未完成。2.271倍只指本地同工作量JAX串行对照，
+不能外推为Fortran或GPU加速。
 
 论文 mosaic 的合同是 669 个独立单点任务，不是开启河道路由的一个全球耦合域：
 `configs/orchidee_man_250919.yaml:40-51` 明确声明
@@ -263,7 +346,9 @@ float gate 使用逐元素组合 `abs(delta) <= 1e-8 + 1e-10*abs(reference)`，�
 ## 首轮可复现诊断合同与完成范围
 
 以下保留立项合同。本轮本地已完成阶段0、1及阶段2的CPU部分；远端阶段0通过，
-阶段2的GPU部分在scalar编译预算边界停止。阶段3、4和Fortran同硬件比较尚未执行。
+首个GPU诊断在scalar编译预算边界停止；后续stage协议保全四份独立reference及B4逐lane
+parity，但B4重新编译预算结束，完整GPU验收及吞吐仍未完成。
+阶段3、4和Fortran同硬件比较尚未执行。
 
 先冻结 `5910ba9` 基线及候选提交；保存命令、Python/JAX/jaxlib/CUDA版本、设备型号、
 FP64设置、XLA选项、CPU核数/亲和性、OMP/BLAS线程、实际node/load、GPU进程、输入配置与
