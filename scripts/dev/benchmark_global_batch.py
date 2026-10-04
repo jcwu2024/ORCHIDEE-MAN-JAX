@@ -14,6 +14,7 @@ import json
 import os
 import pickle
 import platform
+import signal
 import statistics
 import subprocess
 import sys
@@ -23,6 +24,7 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+PROCESS_STARTED = float(os.environ.get("ORCHJAX_GLOBAL_BATCH_PROCESS_START", time.perf_counter()))
 sys.path.insert(0, str(ROOT))
 
 import jax
@@ -43,7 +45,8 @@ from jax_orchidee.driver.run_def_materialization import (
     read_run_def_values,
     write_materialized_run_def,
 )
-from jax_orchidee.runtime import configure_jax_compilation_cache
+from scripts.dev.global_batch_stage_store import StageStore
+from scripts.dev.probe_global_batch_cache import CacheEvents, atomic_bytes, atomic_json, configure_cache
 
 POINTS = ("001.0-071.0", "069.0-119.0", "319.0-057.0", "331.0-057.0")
 BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
@@ -183,7 +186,7 @@ class Recorder:
         self.result["peak_rss_bytes"] = self.peak
         self.result["linux_ru_maxrss_peak_bytes"] = linux_ru_maxrss_bytes()
         self.result["elapsed_seconds"] = time.perf_counter() - self.started
-        (self.output / "report.json").write_text(json.dumps(self.result, indent=2) + "\n", encoding="utf-8")
+        atomic_json(self.output / "report.json", self.result)
 
     def phase(self, name, **kwargs):
         entry = {
@@ -218,6 +221,7 @@ def metadata(args):
         "numpy": np.__version__,
         "devices": [str(d) for d in jax.devices()],
         "device_details": [{"platform": d.platform, "kind": d.device_kind, "id": d.id} for d in jax.devices()],
+        "backend_platform_version": str(jax.devices()[0].client.platform_version),
         "x64_enabled": bool(jax.config.jax_enable_x64),
         "cpu_count": os.cpu_count(),
         "cpu_affinity": cpu_affinity,
@@ -234,6 +238,8 @@ def metadata(args):
                 "JAX_PLATFORMS",
                 "JAX_COMPILATION_CACHE_DIR",
                 "ORCHJAX_DISABLE_COMPILATION_CACHE",
+                "CUDA_VISIBLE_DEVICES",
+                "XLA_PYTHON_CLIENT_PREALLOCATE",
             )
         },
         "cache_policy": "disabled"
@@ -325,6 +331,9 @@ def prepare(args, recorder):
         for lane in lanes:
             if read_run_def_values(lane.context.run_def_path) != lane.context.run_def_values:
                 raise ValueError("prepared run.def changed since preparation")
+            computed = batch.static_signature(lane.context, lane.initial_state, lane.tables, lane.dispatch)
+            if args.mode == "staged" and computed != lane.static_signature:
+                raise ValueError("stored prepared static signature changed; staged admission refuses refresh")
         lanes = [
             replace(
                 lane,
@@ -424,10 +433,16 @@ def lower_compile(fn, arguments, name, recorder):
     t = time.perf_counter()
     lowered = jax.jit(fn).lower(*arguments)
     recorder.result["timing"][name + "_lower_seconds"] = time.perf_counter() - t
+    ir = str(lowered.compiler_ir(dialect="stablehlo"))
+    compilation = {"stablehlo_sha256": hashlib.sha256(ir.encode()).hexdigest()}
+    recorder.result.setdefault("compilations", {})[name] = compilation
     recorder.phase(name + "_compile_start")
     t = time.perf_counter()
+    observer = getattr(recorder, "cache_observer", None)
+    event_start = len(observer.events) if observer is not None else 0
     executable = lowered.compile()
     recorder.result["timing"][name + "_compile_seconds"] = time.perf_counter() - t
+    compilation["cache_events"] = observer.events[event_start:] if observer is not None else []
     recorder.phase(name + "_compiled")
     return executable
 
@@ -473,8 +488,7 @@ def roughheight_sentinel_contract(lane):
 
 def save_reference(path, identity, value):
     sync(value)
-    with path.open("wb") as f:
-        pickle.dump((identity, jax.device_get(value)), f, protocol=pickle.HIGHEST_PROTOCOL)
+    atomic_bytes(path, pickle.dumps((identity, jax.device_get(value)), protocol=pickle.HIGHEST_PROTOCOL))
 
 
 def reference_identity(args, lane, second):
@@ -653,6 +667,264 @@ def benchmark(args, recorder, lanes, second):
         recorder.phase(f"B{size}_warm_measurements_complete")
 
 
+def scientific_source_digest():
+    paths = subprocess.check_output(["git", "ls-files", "jax_orchidee"], cwd=ROOT, text=True).splitlines()
+    digest = hashlib.sha256()
+    for path in paths:
+        digest.update(path.encode() + b"\0" + (ROOT / path).read_bytes() + b"\0")
+    return digest.hexdigest()
+
+
+def semantic_reference_identity(args, lane, second):
+    """Content identity independent of pickle memoization and array placement."""
+    digest = hashlib.sha256()
+    digest.update(json.dumps({"baseline_ref": args.baseline_ref, "landpoint_id": lane.landpoint_id,
+                              "static_signature": lane.static_signature}, sort_keys=True,
+                             separators=(",", ":")).encode())
+    values, structure = jax.tree_util.tree_flatten_with_path((lane.arguments, second))
+    digest.update(str(structure).encode())
+    for path, value in values:
+        array = np.asarray(value)
+        header = (jax.tree_util.keystr(path), array.shape, array.dtype.str)
+        digest.update(json.dumps(header, separators=(",", ":")).encode() + b"\0")
+        digest.update(array.tobytes(order="C") + b"\0")
+    return digest.hexdigest()
+
+
+def stage_identity(args, lanes, second, environment):
+    runtime_keys = ("python", "jax", "jaxlib", "numpy", "device_details", "x64_enabled", "backend_platform_version")
+    compiler_keys = ("XLA_FLAGS", "JAX_PLATFORMS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+    return {
+        "contract": "four-real-points-two-seven-day-blocks-full-FP64-v1",
+        "baseline_ref": args.baseline_ref,
+        "science_sha256": scientific_source_digest(),
+        "lanes": [{"landpoint_id": lane.landpoint_id, "inputs_sha256": semantic_reference_identity(args, lane, other)}
+                  for lane, other in zip(lanes, second, strict=True)],
+        "runtime": {key: environment[key] for key in runtime_keys},
+        "compiler_environment": {key: environment["env"].get(key) for key in compiler_keys},
+        "warm_repeats": args.warm_repeats,
+        "gate": {"atol": 1e-8, "rtol": 1e-10, "discrete_schema_dtype": "exact",
+                 "sentinel": "declared_bare_soil_roughheight_only"},
+    }
+
+
+def validate_legacy_origin(origin, environment, *, scientific_diff):
+    """Check every recorded critical field; do not invent historical metadata."""
+    previous = origin["environment"]
+    for key in ("python", "jax", "jaxlib", "numpy", "device_details", "x64_enabled", "baseline_ref"):
+        if key not in previous or previous[key] != environment[key]:
+            raise ValueError(f"original GPU reference runtime/baseline mismatch: {key}")
+    for key in ("XLA_FLAGS", "JAX_PLATFORMS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+        if key not in previous["env"] or previous["env"][key] != environment["env"].get(key):
+            raise ValueError(f"original GPU reference compiler environment mismatch: {key}")
+    if scientific_diff.strip():
+        raise ValueError("original reference scientific source differs from current checkout")
+    if not any(p["phase"] == "legacy_original_reference_saved" for p in origin["phases"]):
+        raise ValueError("origin does not record a completed original scalar reference")
+    return {
+        "origin_commit": previous["git_head"],
+        "checked": "all recorded Python/JAX/jaxlib/NumPy/FP64/device/compiler fields; full inputs; source Git diff",
+        "missing_origin_metadata": ["backend_platform_version", "CUDA_driver_version", "source_content_hash_at_execution"],
+        "limitation": "recorded origin commit/source correspondence; no claim that missing runtime fields were captured",
+    }
+
+
+def import_legacy_reference(args, recorder, lane, second):
+    if args.legacy_reference_dir is None:
+        raise ValueError("reference stages require --legacy-reference-dir with the completed original GPU reference")
+    directory = args.legacy_reference_dir.resolve()
+    origin = json.loads((directory / "report.json").read_text(encoding="utf-8-sig"))
+    origin_commit = origin["environment"]["git_head"]
+    scientific_diff = subprocess.check_output(
+        ["git", "diff", "--name-only", origin_commit, "--", "jax_orchidee"], cwd=ROOT, text=True
+    )
+    evidence = validate_legacy_origin(origin, recorder.result["environment"], scientific_diff=scientific_diff)
+    path = directory / "legacy_original_reference.pkl"
+    data = path.read_bytes()
+    saved_identity, value = pickle.loads(data)
+    if saved_identity != reference_identity(args, lane, second):
+        raise ValueError("original GPU reference full input identity mismatch")
+    recorder.gate("legacy_original_reference_source_backed_nonfinite_policy", value, value)
+    evidence.update(path=str(path), sha256=hashlib.sha256(data).hexdigest(), landpoint_id=lane.landpoint_id,
+                    legacy_pickle_identity=saved_identity,
+                    canonical_input_identity=semantic_reference_identity(args, lane, second),
+                    role="original AOT lane001 reference only; not four independent extracted references")
+    return value, evidence
+
+
+def staged_benchmark(args, recorder, lanes, second):
+    """Candidate first, independently bound references next, validation/timing last."""
+    if tuple(lane.landpoint_id for lane in lanes) != POINTS:
+        raise ValueError("staged diagnostic requires the declared four real points in declared order")
+    legacy_factory(args.baseline_ref)  # Validate unchanged extracted transition AST before any reuse.
+    recorder.sentinel_paths = roughheight_sentinel_contract(lanes[0])
+    recorder.result["allowed_sentinel_contract"] = recorder.sentinel_paths
+    store = StageStore(args.output_dir, stage_identity(args, lanes, second, recorder.result["environment"]))
+    recorder.result["stages"] = store.manifest["stages"]
+    required = ["B4_candidate", "legacy_original"] + ["scalar_" + lane.landpoint_id for lane in lanes]
+    required += ["B4_gates", "B4_measurements", "B1_validation"]
+    recorder.result["required_stages"] = required
+    for name in required:
+        loaded = store.load(name)
+        if loaded is not None:
+            recorder.result["gates"].extend(loaded[1].get("gates", []))
+            recorder.result["timing"].update(loaded[1].get("timing", {}))
+    recorder.phase("stage_identity_validated", manifest=str(store.path))
+
+    def run_stage(name, operation):
+        def execute():
+            gate_start, phase_start = len(recorder.result["gates"]), len(recorder.result["phases"])
+            old_timing = dict(recorder.result["timing"])
+            old_compilations = dict(recorder.result.get("compilations", {}))
+            started = time.perf_counter()
+            recorder.phase(name + "_stage_start")
+            value, provenance = operation()
+            return value, {
+                "provenance": provenance,
+                "stage_seconds": time.perf_counter() - started,
+                "gates": recorder.result["gates"][gate_start:],
+                "phases": recorder.result["phases"][phase_start:],
+                "timing": {k: v for k, v in recorder.result["timing"].items() if old_timing.get(k) != v},
+                "compilations": {k: v for k, v in recorder.result.get("compilations", {}).items()
+                                 if old_compilations.get(k) != v},
+            }
+        (value, record), reused = store.run(name, execute)
+        recorder.phase(name + ("_stage_reused" if reused else "_stage_complete"))
+        return value
+
+    def batch_executable(size, name):
+        # No preceding scalar closure may bind the batch's nested executable.
+        driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
+        group = lanes[:size]
+        inputs = jax.device_put((batch.stack_lanes(group), stack_second(group, second[:size])))
+        sync(inputs)
+        executable = lower_compile(batch.make_batch_transition(group), inputs[0], name, recorder)
+        return executable, inputs
+
+    def candidate():
+        executable, inputs = batch_executable(4, "B4_candidate")
+        started = time.perf_counter()
+        actual = run_two(executable, *inputs)
+        recorder.result["timing"]["B4_first_call_seconds"] = time.perf_counter() - started
+        recorder.gate("B4_candidate_source_backed_nonfinite_policy", actual, actual)
+        started = time.perf_counter()
+        host = jax.device_get(actual)
+        recorder.result["timing"]["B4_host_materialization_seconds"] = time.perf_counter() - started
+        return host, {"role": "candidate actual compute; independent parity not yet certified", "inner_npts": 1}
+
+    if args.stage in ("candidate", "all"):
+        run_stage("B4_candidate", candidate)
+    if args.stage in ("references", "all"):
+        if store.load("B4_candidate") is None:
+            raise ValueError("references require a complete saved B4 candidate stage")
+        original = run_stage("legacy_original", lambda: import_legacy_reference(args, recorder, lanes[0], second[0]))
+        for index, lane in enumerate(lanes):
+            def reference(index=index, lane=lane):
+                name = "scalar_" + lane.landpoint_id
+                executable = independent_scalar_executable(lane, name, recorder)
+                value = run_two(executable, lane.arguments, second[index])
+                recorder.gate(name + "_source_backed_nonfinite_policy", value, value)
+                if index == 0:
+                    recorder.gate("B1_original_AOT_vs_extracted_full_state_day_outputs", value, original)
+                return jax.device_get(value), {
+                    "landpoint_id": lane.landpoint_id, "own_context_bound": True,
+                    "nested_cache_cleared_before_lower": True,
+                    "policy": "own lowered/compiled function and own inputs actually executed; disk reuse only by JAX key",
+                }
+            run_stage("scalar_" + lane.landpoint_id, reference)
+    if args.stage in ("validate", "all"):
+        missing = [name for name in required[:6] if store.load(name) is None]
+        if missing:
+            raise ValueError(f"validation requires independently complete prerequisites: {missing}")
+        actual = store.load("B4_candidate")[0]
+        original = store.load("legacy_original")[0]
+        references = [store.load("scalar_" + lane.landpoint_id)[0] for lane in lanes]
+        scalar = None
+        batch_fn, batch_inputs = None, None
+
+        def ensure_scalar():
+            nonlocal scalar
+            if scalar is None:
+                scalar = independent_scalar_executable(lanes[0], "pooled_scalar_validation", recorder)
+            return scalar
+
+        def ensure_batch():
+            nonlocal batch_fn, batch_inputs
+            if batch_fn is None:
+                batch_fn, batch_inputs = batch_executable(4, "B4_validation")
+            return batch_fn, batch_inputs
+
+        def gates():
+            for index, (lane, other, ref) in enumerate(zip(lanes, second, references, strict=True)):
+                recorder.gate("pooled_scalar_vs_independent_" + lane.landpoint_id,
+                              run_two(ensure_scalar(), lane.arguments, other), ref)
+                recorder.gate(f"B4_lane_{index}_both_blocks_full_state_day_outputs",
+                              jax.tree_util.tree_map(lambda v: v[index], actual), ref)
+            executable, inputs = ensure_batch()
+            recorder.gate("B4_resumed_executable_vs_saved_candidate", run_two(executable, *inputs), actual)
+            order = list(reversed(range(4)))
+            permuted = run_two(executable, batch.stack_lanes([lanes[i] for i in order]),
+                               stack_second([lanes[i] for i in order], [second[i] for i in order]))
+            recorder.gate("B4_permutation", permuted, jax.tree_util.tree_map(lambda v: v[np.asarray(order)], actual))
+            replaced = lanes[:-1] + [lanes[0]]
+            isolated = run_two(executable, batch.stack_lanes(replaced), stack_second(replaced, second[:-1] + [second[0]]))
+            for index in range(4):
+                recorder.gate(f"B4_replacement_lane_{index}", jax.tree_util.tree_map(lambda v: v[index], isolated),
+                              references[index if index < 3 else 0])
+            return None, {"independent_parity": True, "permutation": True, "replacement_isolation": True}
+
+        run_stage("B4_gates", gates)
+
+        def measurements(size, executable, inputs, scalar_fn):
+            device_pairs = jax.device_put([(lane.arguments, other) for lane, other in zip(lanes[:size], second[:size], strict=True)])
+            sync(device_pairs)
+            # A resumed timing stage also rechecks its actual scalar executable
+            # against every previously independent reference before timing it.
+            for index, pair in enumerate(device_pairs):
+                recorder.gate(f"B{size}_timing_scalar_lane_{index}", run_two(scalar_fn, *pair), references[index])
+            warm, serial, wrapper = [], [], []
+            for _ in range(args.warm_repeats):
+                started = time.perf_counter()
+                run_two(executable, *inputs)
+                warm.append(time.perf_counter() - started)
+                started = time.perf_counter()
+                for pair in device_pairs:
+                    run_two(scalar_fn, *pair)
+                serial.append(time.perf_counter() - started)
+                started = time.perf_counter()
+                wrapped = run_two(executable, batch.stack_lanes(lanes[:size]), stack_second(lanes[:size], second[:size]))
+                jax.device_get(wrapped)
+                wrapper.append(time.perf_counter() - started)
+            result = {
+                f"B{size}_warm_frozen_state_core": metrics(warm, size * 14),
+                f"B{size}_scalar_serial": metrics(serial, size * 14),
+                f"B{size}_preprepared_wrapper_stack_transfer_materialize": metrics(wrapper, size * 14),
+                f"B{size}_core_speedup_vs_scalar_serial": statistics.median(serial) / statistics.median(warm),
+            }
+            recorder.result["timing"].update(result)
+            return result, {"five_or_more_synchronized_repeats": True, "frozen_start": True,
+                            "serial_policy": "pooled scalar verified against all independently executed lane references"}
+
+        def b4_measurements():
+            executable, inputs = ensure_batch()
+            recorder.gate("B4_timing_executable_vs_saved_candidate", run_two(executable, *inputs), actual)
+            return measurements(4, executable, inputs, ensure_scalar())
+
+        run_stage("B4_measurements", b4_measurements)
+
+        def b1():
+            executable, inputs = batch_executable(1, "B1_validation")
+            value = jax.tree_util.tree_map(lambda v: v[0], run_two(executable, *inputs))
+            recorder.gate("B1_batch_vs_independent_scalar", value, references[0])
+            recorder.gate("B1_batch_vs_original_AOT", value, original)
+            return measurements(1, executable, inputs, ensure_scalar())
+
+        run_stage("B1_validation", b1)
+    recorder.result["all_required_stages_complete"] = all(
+        store.manifest["stages"].get(name, {}).get("status") == "complete" for name in required
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=ROOT / "configs/orchidee_man_250919.yaml")
@@ -669,25 +941,48 @@ def main():
     parser.add_argument("--sizes", type=int, nargs="+", default=[1, 4], choices=[1, 4])
     parser.add_argument("--warm-repeats", type=int, default=5)
     parser.add_argument("--baseline-ref", default=BASELINE)
-    parser.add_argument("--mode", choices=["audit", "benchmark"], default="benchmark")
+    parser.add_argument("--mode", choices=["audit", "benchmark", "staged"], default="benchmark")
+    parser.add_argument("--stage", choices=["candidate", "references", "validate", "all"], default="all",
+                        help="Staged mode: save actual B4 first, then each independent scalar, then correctness/timing/B1.")
+    parser.add_argument("--legacy-reference-dir", type=Path,
+                        help="Original scalar reference/report directory; all recorded runtime/source/input fields checked.")
+    parser.add_argument("--cache-mode", choices=["off", "persistent"], default="off")
+    parser.add_argument("--cache-root", type=Path, help="Explicit persistent cache directory; no serialized AOT reuse.")
     args = parser.parse_args()
     if args.warm_repeats < 5:
         parser.error("at least five warm repeats required")
+    if args.mode == "staged" and (args.prepared_input is None or args.resume_references):
+        parser.error("staged mode requires --prepared-input and uses atomic stage recovery instead of --resume-references")
+    if args.cache_mode == "persistent" and args.cache_root is None:
+        parser.error("persistent mode requires --cache-root")
     args.output_dir = args.output_dir.resolve()
     os.environ.setdefault("ORCHIDEE_REPO_ROOT", str(ROOT))
     os.environ.setdefault("ORCHIDEE_DATA_ROOT", str(args.truth_root / "data"))
     os.environ.setdefault("ORCHIDEE_REFERENCE_ROOT", str(args.truth_root / "reference"))
     os.environ["ORCHIDEE_OUTPUT_ROOT"] = str(args.output_dir)
-    os.environ.setdefault("ORCHJAX_DISABLE_COMPILATION_CACHE", "1")
-    configure_jax_compilation_cache(ROOT)
+    cache_policy = configure_cache(args.cache_mode, args.cache_root)
     if args.resume_references:
         origin_path = args.output_dir / "reference_origin_report.json"
         if not origin_path.exists():
             origin_path.write_bytes((args.output_dir / "report.json").read_bytes())
         args.reference_origin_report = json.loads(origin_path.read_text(encoding="utf-8-sig"))
+    if args.mode == "staged" and (args.output_dir / "report.json").exists():
+        atomic_bytes(args.output_dir / "windows" / f"prior_report_{time.time_ns()}.json",
+                     (args.output_dir / "report.json").read_bytes())
     recorder = Recorder(args.output_dir)
+    recorder.cache_observer = CacheEvents()
+    previous_signals = {}
+
+    def stop_requested(number, frame):
+        raise InterruptedError(f"signal {number}; completed atomic stage checkpoints retained")
+
+    if args.mode == "staged":
+        for number in (signal.SIGTERM, signal.SIGINT):
+            previous_signals[number] = signal.signal(number, stop_requested)
     try:
         recorder.result["environment"] = metadata(args)
+        recorder.result["environment"]["explicit_cache_policy"] = cache_policy
+        recorder.result["timing"]["import_setup_seconds"] = time.perf_counter() - PROCESS_STARTED
         if not jax.config.jax_enable_x64:
             raise RuntimeError("FP64 is required")
         recorder.phase("input_preparation_start")
@@ -698,7 +993,17 @@ def main():
         recorder.phase("scientific_static_and_dynamic_schema_audit_passed")
         if args.mode == "benchmark":
             benchmark(args, recorder, lanes, second)
-        recorder.result["status"] = "passed_audit_only" if args.mode == "audit" else "passed_bounded_forward_diagnostic"
+        elif args.mode == "staged":
+            staged_benchmark(args, recorder, lanes, second)
+        recorder.result["status"] = (
+            "passed_audit_only" if args.mode == "audit" else
+            "completed_stage_selection" if args.mode == "staged" and not recorder.result["all_required_stages_complete"] else
+            "passed_bounded_forward_diagnostic"
+        )
+    except (InterruptedError, KeyboardInterrupt) as e:
+        recorder.result.update(status="stopped", exception_type=type(e).__name__, message=str(e))
+        recorder.phase("stopped", message=str(e))
+        return 2
     except Exception as e:
         recorder.result.update(
             status="failed", exception_type=type(e).__name__, message=str(e), traceback=traceback.format_exc()
@@ -707,7 +1012,11 @@ def main():
         return 1
     finally:
         recorder.stop.set()
+        recorder.result["process_elapsed_seconds_including_import_setup"] = time.perf_counter() - PROCESS_STARTED
         recorder.flush()
+        recorder.cache_observer.close()
+        for number, previous in previous_signals.items():
+            signal.signal(number, previous)
     recorder.phase("complete")
     return 0
 
