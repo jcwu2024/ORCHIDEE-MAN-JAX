@@ -11182,51 +11182,34 @@ def paper_1961_driver_later_day_runtime_result(
     )
 
 
-def _paper_compiled_later_day_block_executable(
+def _paper_later_day_block_transition_factory(
     config_path: str | Path,
     *,
     context: Paper1961PreparedDriverContext,
     initial_state: DriverPreviousStepStatePacket,
-    year: int,
-    block_forcing: DriverCompiledHalfHourForcing,
-    block_day_numbers,
     prebound_hydrol_runtime_static_tables: HydrolRuntimeStaticTables,
     daily_carbon_dispatch: Mapping[str, object],
-    stomate_parameter_values: DriverCompiledStomateParameterValues | None = None,
     capture_pre_daily_training_boundaries: bool = False,
     training_output_projector=None,
     training_output_projector_key: str | None = None,
 ):
-    """Compile one reusable block of complete later-day state transitions."""
+    """Expose the existing complete-day scan before JIT/AOT transformation.
 
+    Execution-only refactor of the source-backed process order in
+    ``paper_1961_driver_later_day_runtime_result``. Capture and projection
+    retain the scalar factory contract. No executable cache is consulted.
+    """
     if training_output_projector is not None:
         if not capture_pre_daily_training_boundaries:
             raise ValueError("training projection requires boundary capture")
         if not training_output_projector_key:
             raise ValueError("training projection requires a stable cache key")
-
     initial = fast_state_from_previous_packet(initial_state)
-    if stomate_parameter_values is None:
-        stomate_parameter_values = _compiled_stomate_parameter_values(context)
-    block_size = int(np.asarray(block_day_numbers).shape[0])
     mineral_imin = int(prebound_hydrol_runtime_static_tables.mineral.imin)
     mineral_imax = int(prebound_hydrol_runtime_static_tables.mineral.imax)
     stomate_season_provenance = (
         context.first_step_restart_state.stomate_readstart.season_state.provenance
     )
-    cache_key = (
-        str(context.config_path.resolve()),
-        block_size,
-        mineral_imin,
-        mineral_imax,
-        initial.spec.components,
-        initial.spec.field_names_by_component,
-        bool(capture_pre_daily_training_boundaries),
-        training_output_projector_key,
-    )
-    cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
-    if cached is not None:
-        return cached, initial.spec
 
     def transition(
         values_by_component,
@@ -11320,6 +11303,63 @@ def _paper_compiled_later_day_block_executable(
             values_by_component,
             (forcing_days, science_day_numbers),
         )
+
+    return transition, initial.spec
+
+
+def _paper_compiled_later_day_block_executable(
+    config_path: str | Path,
+    *,
+    context: Paper1961PreparedDriverContext,
+    initial_state: DriverPreviousStepStatePacket,
+    year: int,
+    block_forcing: DriverCompiledHalfHourForcing,
+    block_day_numbers,
+    prebound_hydrol_runtime_static_tables: HydrolRuntimeStaticTables,
+    daily_carbon_dispatch: Mapping[str, object],
+    stomate_parameter_values: DriverCompiledStomateParameterValues | None = None,
+    capture_pre_daily_training_boundaries: bool = False,
+    training_output_projector=None,
+    training_output_projector_key: str | None = None,
+):
+    """Compile one reusable block of complete later-day state transitions."""
+
+    if training_output_projector is not None:
+        if not capture_pre_daily_training_boundaries:
+            raise ValueError("training projection requires boundary capture")
+        if not training_output_projector_key:
+            raise ValueError("training projection requires a stable cache key")
+
+    initial = fast_state_from_previous_packet(initial_state)
+    if stomate_parameter_values is None:
+        stomate_parameter_values = _compiled_stomate_parameter_values(context)
+    block_size = int(np.asarray(block_day_numbers).shape[0])
+    mineral_imin = int(prebound_hydrol_runtime_static_tables.mineral.imin)
+    mineral_imax = int(prebound_hydrol_runtime_static_tables.mineral.imax)
+    cache_key = (
+        str(context.config_path.resolve()),
+        block_size,
+        mineral_imin,
+        mineral_imax,
+        initial.spec.components,
+        initial.spec.field_names_by_component,
+        bool(capture_pre_daily_training_boundaries),
+        training_output_projector_key,
+    )
+    cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
+    if cached is not None:
+        return cached, initial.spec
+
+    transition, _ = _paper_later_day_block_transition_factory(
+        config_path,
+        context=context,
+        initial_state=initial_state,
+        prebound_hydrol_runtime_static_tables=prebound_hydrol_runtime_static_tables,
+        daily_carbon_dispatch=daily_carbon_dispatch,
+        capture_pre_daily_training_boundaries=capture_pre_daily_training_boundaries,
+        training_output_projector=training_output_projector,
+        training_output_projector_key=training_output_projector_key,
+    )
 
     executable = jax.jit(transition).lower(
         initial.values_by_component,
