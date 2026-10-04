@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-本分支 `codex/global-throughput` 从 `main@5910ba9` 出发，研究物理模型的全球运行效率。
+本分支 `research/global-throughput` 从 `main@5910ba9` 出发，研究物理模型的全球运行效率。
 已有性能证据、网格批处理方案和验收标准见[研究入口](docs/research/global_throughput/README.md)。
 
 这是面向 PFT14 红树林配置、以源码为依据的 ORCHIDEE-MAN 论文版本 JAX

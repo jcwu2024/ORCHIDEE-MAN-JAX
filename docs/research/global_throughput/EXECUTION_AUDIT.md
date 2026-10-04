@@ -1,7 +1,7 @@
 # 主分支物理模型执行审计与首轮基准设计
 
 日期：2026-10-04。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
-工作分支：`codex/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
+工作分支：`research/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
 本轮未改科学过程、未执行模型长编译、未访问服务器、未提交计算任务。
 
 ## 结论及证据边界

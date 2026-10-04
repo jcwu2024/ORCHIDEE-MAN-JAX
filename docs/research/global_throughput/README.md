@@ -1,6 +1,6 @@
 # 全球物理模型吞吐研究
 
-更新：2026-10-04。分支：`codex/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-04。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 

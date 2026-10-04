@@ -2,7 +2,7 @@
 
 English | [简体中文](README.zh-CN.md)
 
-This branch, `codex/global-throughput`, starts from `main@5910ba9` and studies
+This branch, `research/global-throughput`, starts from `main@5910ba9` and studies
 global physical-model throughput. See the [research entry](docs/research/global_throughput/README.md)
 for the baseline evidence, grid-batching plan, and validation gates.
 
