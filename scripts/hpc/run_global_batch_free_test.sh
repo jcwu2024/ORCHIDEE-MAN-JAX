@@ -74,6 +74,12 @@ export XDG_CACHE_HOME="$OUTPUT_DIR/xdg-cache"
 export CUDA_CACHE_PATH="$OUTPUT_DIR/cuda-cache"
 export ORCHJAX_DISABLE_COMPILATION_CACHE=1
 [[ "$CACHE_MODE" == off ]] || export ORCHJAX_DISABLE_COMPILATION_CACHE=0
+export JAX_ENABLE_COMPILATION_CACHE=false
+unset JAX_COMPILATION_CACHE_DIR
+if [[ "$CACHE_MODE" == persistent ]]; then
+  export JAX_ENABLE_COMPILATION_CACHE=true
+  export JAX_COMPILATION_CACHE_DIR="$CACHE_ROOT"
+fi
 export JAX_ENABLE_X64=true
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 export MALLOC_ARENA_MAX=2
@@ -90,6 +96,12 @@ else
   BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
   export SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs
   export SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_INDEX"
+  export ORCHJAX_PHYSICAL_GPU_UUID
+  export ORCHJAX_GPU_DRIVER_VERSION
+  ORCHJAX_PHYSICAL_GPU_UUID=$(nvidia-smi -i "$GPU_INDEX" --query-gpu=uuid --format=csv,noheader)
+  ORCHJAX_GPU_DRIVER_VERSION=$(nvidia-smi -i "$GPU_INDEX" --query-gpu=driver_version --format=csv,noheader)
+  export SINGULARITYENV_ORCHJAX_PHYSICAL_GPU_UUID="$ORCHJAX_PHYSICAL_GPU_UUID"
+  export SINGULARITYENV_ORCHJAX_GPU_DRIVER_VERSION="$ORCHJAX_GPU_DRIVER_VERSION"
   export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=benchmark_global_batch.py
   [[ "$ENTRY" == benchmark ]] || export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=probe_global_batch_cache.py
   export SINGULARITYENV_JAX_ENABLE_X64=true
@@ -100,6 +112,9 @@ else
   export SINGULARITYENV_XDG_CACHE_HOME="$XDG_CACHE_HOME"
   export SINGULARITYENV_CUDA_CACHE_PATH="$CUDA_CACHE_PATH"
   export SINGULARITYENV_ORCHJAX_DISABLE_COMPILATION_CACHE="$ORCHJAX_DISABLE_COMPILATION_CACHE"
+  export SINGULARITYENV_JAX_ENABLE_COMPILATION_CACHE="$JAX_ENABLE_COMPILATION_CACHE"
+  unset SINGULARITYENV_JAX_COMPILATION_CACHE_DIR
+  [[ "$CACHE_MODE" == off ]] || export SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$CACHE_ROOT"
   export SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
   export SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false
   export SINGULARITYENV_OMP_NUM_THREADS=1 SINGULARITYENV_OPENBLAS_NUM_THREADS=1
@@ -132,7 +147,7 @@ cd "$CODE_DIR"
   printf 'cpu_list=%s backend=%s timeout_seconds=%s\n' "$CPU_LIST" "$BACKEND" "$TIMEOUT_SECONDS"
   printf 'xdg_cache_home=%s cuda_cache_path=%s jax_cache_mode=%s cache_root=%s\n' "$XDG_CACHE_HOME" "$CUDA_CACHE_PATH" "$CACHE_MODE" "$CACHE_ROOT"
   if [[ "$BACKEND" == gpu ]]; then
-    nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv
+    nvidia-smi --query-gpu=index,uuid,name,driver_version,memory.used,memory.total,utilization.gpu --format=csv
     nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
   fi
 } | tee "$WINDOW_DIR/launch-context.txt"
