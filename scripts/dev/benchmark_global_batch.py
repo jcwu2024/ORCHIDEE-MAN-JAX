@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import os
 import pickle
@@ -27,10 +28,15 @@ sys.path.insert(0, str(ROOT))
 import jax
 import jaxlib
 import numpy as np
-import psutil
+
+try:
+    import psutil
+except ModuleNotFoundError:
+    psutil = None
 
 from jax_orchidee.driver import global_batch as batch
 from jax_orchidee.driver import orchestration as driver
+from jax_orchidee.driver.fast_state import fast_state_from_previous_packet
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference
 from jax_orchidee.driver.run_def_materialization import (
     materialize_case_run_def_values,
@@ -41,6 +47,31 @@ from jax_orchidee.runtime import configure_jax_compilation_cache
 
 POINTS = ("001.0-071.0", "069.0-119.0", "319.0-057.0", "331.0-057.0")
 BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
+
+
+def rss_bytes():
+    if psutil is not None:
+        return psutil.Process().memory_info().rss
+    if sys.platform.startswith("linux"):
+        resident_pages = int(Path("/proc/self/statm").read_text().split()[1])
+        return resident_pages * os.sysconf("SC_PAGE_SIZE")
+    return 0  # The metadata explicitly marks unavailable instrumentation.
+
+
+def affinity():
+    if psutil is not None:
+        return psutil.Process().cpu_affinity()
+    if hasattr(os, "sched_getaffinity"):
+        return sorted(os.sched_getaffinity(0))
+    return None
+
+
+def linux_ru_maxrss_bytes():
+    if sys.platform.startswith("linux"):
+        import resource
+
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
+    return None
 
 
 def sync(value):
@@ -62,15 +93,16 @@ def metrics(samples, point_days):
     }
 
 
-def compare(actual, reference):
+def compare(actual, reference, *, sentinel_paths=None):
     """Fixed elementwise combined gate; schema/dtype/discrete exact.
 
-    Any nonfinite is a failure. No equal_nan shortcut is allowed here. If a
-    pre-existing sentinel appears the failed path is saved for source audit.
+    Only an explicitly identified roughheight_pft bare-soil coordinate may
+    hold matched NaN sentinels. All other nonfinite values are failures.
     """
     ap, at = jax.tree_util.tree_flatten_with_path(actual)
     rp, rt = jax.tree_util.tree_flatten_with_path(reference)
     failures, max_abs, max_ratio = [], 0.0, 0.0
+    allowed_sentinels = []
     if at != rt:
         return {"passed": False, "failures": [{"reason": "schema"}]}
     for (path, av), (_, rv) in zip(ap, rp, strict=True):
@@ -88,16 +120,29 @@ def compare(actual, reference):
         elif a.dtype.kind in "biu":
             if not np.array_equal(a, r):
                 failures.append({"path": name, "reason": "discrete"})
-        elif not np.all(np.isfinite(a)) or not np.all(np.isfinite(r)):
-            failures.append(
-                {
-                    "path": name,
-                    "reason": "nonfinite",
-                    "actual_count": int(np.count_nonzero(~np.isfinite(a))),
-                    "reference_count": int(np.count_nonzero(~np.isfinite(r))),
-                }
-            )
         else:
+            if not np.all(np.isfinite(a)) or not np.all(np.isfinite(r)):
+                contract = (sentinel_paths or {}).get(name)
+                allowed = np.zeros(a.shape, dtype=bool)
+                if contract and a.ndim in (2, 3) and a.shape[-2:] == tuple(contract["inner_shape"]):
+                    allowed[..., contract["bare_soil_index"]] = True
+                matched_nan = np.isnan(a) & np.isnan(r) & allowed
+                unexpected = ((~np.isfinite(a)) | (~np.isfinite(r))) & ~matched_nan
+                if np.any(unexpected):
+                    failures.append(
+                        {
+                            "path": name,
+                            "reason": "nonfinite",
+                            "actual_count": int(np.count_nonzero(~np.isfinite(a))),
+                            "reference_count": int(np.count_nonzero(~np.isfinite(r))),
+                            "unexpected_coordinates": np.argwhere(unexpected).tolist(),
+                        }
+                    )
+                    continue
+                count = int(np.count_nonzero(matched_nan))
+                allowed_sentinels.append({"path": name, "count": count, "contract": contract})
+                a = np.where(matched_nan, 0.0, a)
+                r = np.where(matched_nan, 0.0, r)
             delta = np.abs(a - r)
             bound = 1e-8 + 1e-10 * np.abs(r)
             max_abs = max(max_abs, float(np.max(delta, initial=0)))
@@ -113,7 +158,8 @@ def compare(actual, reference):
         "failures": failures,
         "atol": 1e-8,
         "rtol": 1e-10,
-        "nonfinite_policy": "fail",
+        "nonfinite_policy": "fail_except_exact_source_backed_bare_soil_roughheight_nan_mask",
+        "allowed_sentinels": allowed_sentinels,
     }
 
 
@@ -122,18 +168,20 @@ class Recorder:
         self.output = output
         output.mkdir(parents=True, exist_ok=True)
         self.result = {"status": "running", "phases": [], "gates": [], "timing": {}}
+        self.sentinel_paths = {}
         self.started = time.perf_counter()
         self.stop = threading.Event()
-        self.peak = psutil.Process().memory_info().rss
+        self.peak = rss_bytes()
         self.sampler = threading.Thread(target=self.sample, daemon=True)
         self.sampler.start()
 
     def sample(self):
         while not self.stop.wait(0.1):
-            self.peak = max(self.peak, psutil.Process().memory_info().rss)
+            self.peak = max(self.peak, rss_bytes())
 
     def flush(self):
         self.result["peak_rss_bytes"] = self.peak
+        self.result["linux_ru_maxrss_peak_bytes"] = linux_ru_maxrss_bytes()
         self.result["elapsed_seconds"] = time.perf_counter() - self.started
         (self.output / "report.json").write_text(json.dumps(self.result, indent=2) + "\n", encoding="utf-8")
 
@@ -141,7 +189,7 @@ class Recorder:
         entry = {
             "phase": name,
             "elapsed_seconds": time.perf_counter() - self.started,
-            "rss_bytes": psutil.Process().memory_info().rss,
+            "rss_bytes": rss_bytes(),
             **kwargs,
         }
         self.result["phases"].append(entry)
@@ -151,7 +199,7 @@ class Recorder:
         print(json.dumps(entry), flush=True)
 
     def gate(self, name, actual, reference):
-        entry = {"name": name, **compare(actual, reference)}
+        entry = {"name": name, **compare(actual, reference, sentinel_paths=self.sentinel_paths)}
         self.result["gates"].append(entry)
         self.flush()
         if not entry["passed"]:
@@ -159,7 +207,7 @@ class Recorder:
 
 
 def metadata(args):
-    proc = psutil.Process()
+    cpu_affinity = affinity()
     return {
         "command": sys.argv,
         "cwd": str(ROOT),
@@ -169,9 +217,10 @@ def metadata(args):
         "jaxlib": jaxlib.__version__,
         "numpy": np.__version__,
         "devices": [str(d) for d in jax.devices()],
+        "device_details": [{"platform": d.platform, "kind": d.device_kind, "id": d.id} for d in jax.devices()],
         "x64_enabled": bool(jax.config.jax_enable_x64),
         "cpu_count": os.cpu_count(),
-        "cpu_affinity": proc.cpu_affinity(),
+        "cpu_affinity": cpu_affinity,
         "cpu_model": platform.processor(),
         "hostname": platform.node(),
         "loadavg": os.getloadavg() if hasattr(os, "getloadavg") else None,
@@ -191,7 +240,16 @@ def metadata(args):
         if os.environ.get("ORCHJAX_DISABLE_COMPILATION_CACHE") == "1"
         else "persistent_cache_may_hit",
         "gpu_count": sum(d.platform == "gpu" for d in jax.devices()),
-        "allocated_cpu_cores": len(proc.cpu_affinity()),
+        "visible_affinity_core_count": len(cpu_affinity) if cpu_affinity is not None else None,
+        "assigned_cpu_count": os.environ.get("SLURM_CPUS_PER_TASK"),
+        "rss_instrumentation": "psutil_current_RSS_100ms_sample"
+        if psutil is not None
+        else (
+            "proc_statm_current_RSS_100ms_sample_plus_resource_ru_maxrss_Linux_KiB_converted_to_bytes"
+            if sys.platform.startswith("linux")
+            else "unavailable"
+        ),
+        "warm_reset_policy": "each repeat uses the same frozen Day1 end state; two sequential seven-day blocks",
         "block_days": [[2, 8], [9, 15]],
         "inner_npts": 1,
         "baseline_ref": args.baseline_ref,
@@ -380,39 +438,92 @@ def stack_second(lanes, arguments):
     return batch.stack_lanes([replace(lane, arguments=a) for lane, a in zip(lanes, arguments, strict=True)])
 
 
+def roughheight_sentinel_contract(lane):
+    scalars = lane.context.run_scalars
+    if scalars.pft_ids[0] != "bare_soil" or int(scalars.fortran_pft_ids[0]) != 1:
+        raise ValueError("roughheight sentinel requires stable bare-soil PFT identity at index zero")
+    spec = fast_state_from_previous_packet(lane.initial_state).spec
+    paths = {}
+    for component in ("diffuco_previous_step_state", "sechiba_finalize_state"):
+        ci = spec.components.index(component)
+        fi = spec.field_names_by_component[ci].index("roughheight_pft")
+        for block in (0, 1):
+            paths[f"[{block}][0][{ci}][{fi}]"] = {
+                "component": component,
+                "field": "roughheight_pft",
+                "bare_soil_index": 0,
+                "inner_shape": [1, scalars.nvm],
+                "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic",
+            }
+    return paths
+
+
+def save_reference(path, identity, value):
+    sync(value)
+    with path.open("wb") as f:
+        pickle.dump((identity, jax.device_get(value)), f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def reference_identity(args, lane, second):
+    # Small bounded prepared inputs, not a bulk dataset hash. A changed state,
+    # forcing, parameter, template, closure or pinned factory invalidates reuse.
+    return hashlib.sha256(
+        pickle.dumps(
+            (args.baseline_ref, lane.static_signature, lane.arguments, second), protocol=pickle.HIGHEST_PROTOCOL
+        )
+    ).hexdigest()
+
+
 def benchmark(args, recorder, lanes, second):
     old_factory = legacy_factory(args.baseline_ref)
     first = lanes[0]
-    recorder.phase("legacy_aot_compile_start")
-    t = time.perf_counter()
-    old, _ = old_factory(
-        args.config,
-        context=first.context,
-        initial_state=first.initial_state,
-        year=1961,
-        block_forcing=first.arguments.forcing_days,
-        block_day_numbers=first.arguments.science_day_numbers,
-        prebound_hydrol_runtime_static_tables=first.tables,
-        daily_carbon_dispatch=first.dispatch,
-    )
-    recorder.result["timing"]["legacy_aot_compile_seconds"] = time.perf_counter() - t
-    t = time.perf_counter()
-    old_results = run_two(old, first.arguments, second[0])
-    recorder.result["timing"]["legacy_first_two_block_call_seconds"] = time.perf_counter() - t
+    recorder.sentinel_paths = roughheight_sentinel_contract(first)
+    recorder.result["allowed_sentinel_contract"] = recorder.sentinel_paths
+    legacy_path = args.output_dir / "legacy_original_reference.pkl"
+    identity = reference_identity(args, first, second[0])
+    if legacy_path.exists():
+        with legacy_path.open("rb") as f:
+            saved_identity, old_results = pickle.load(f)
+        if identity != saved_identity:
+            raise ValueError("legacy reference inputs changed; select a new output directory")
+        recorder.phase("legacy_original_reference_reused", path=str(legacy_path))
+    else:
+        recorder.phase("legacy_aot_compile_start")
+        t = time.perf_counter()
+        old, _ = old_factory(
+            args.config,
+            context=first.context,
+            initial_state=first.initial_state,
+            year=1961,
+            block_forcing=first.arguments.forcing_days,
+            block_day_numbers=first.arguments.science_day_numbers,
+            prebound_hydrol_runtime_static_tables=first.tables,
+            daily_carbon_dispatch=first.dispatch,
+        )
+        recorder.result["timing"]["legacy_aot_compile_seconds"] = time.perf_counter() - t
+        t = time.perf_counter()
+        old_results = run_two(old, first.arguments, second[0])
+        recorder.result["timing"]["legacy_first_two_block_call_seconds"] = time.perf_counter() - t
+        save_reference(legacy_path, identity, old_results)
+        recorder.phase("legacy_original_reference_saved", path=str(legacy_path))
     scalar = lower_compile(batch.make_scalar_transition(first), first.arguments, "extracted_scalar", recorder)
-    recorder.gate(
-        "B1_original_AOT_vs_extracted_full_state_day_outputs", run_two(scalar, first.arguments, second[0]), old_results
-    )
+    extracted_results = run_two(scalar, first.arguments, second[0])
+    save_reference(args.output_dir / "extracted_scalar_reference.pkl", identity, extracted_results)
+    recorder.gate("B1_original_AOT_vs_extracted_full_state_day_outputs", extracted_results, old_results)
     # Independent per-point closures are a ground truth for the compatibility
     # audit itself, including any accidentally omitted context numeric value.
-    scalars = [scalar]
-    for lane in lanes[1:]:
-        scalars.append(
-            lower_compile(batch.make_scalar_transition(lane), lane.arguments, "scalar_" + lane.landpoint_id, recorder)
-        )
+    scalars = []
     scalar_device = []
     references = []
-    for fn, lane, s in zip(scalars, lanes, second, strict=True):
+    for index, (lane, s) in enumerate(zip(lanes, second, strict=True)):
+        fn = (
+            scalar
+            if index == 0
+            else lower_compile(
+                batch.make_scalar_transition(lane), lane.arguments, "scalar_" + lane.landpoint_id, recorder
+            )
+        )
+        scalars.append(fn)
         t = time.perf_counter()
         device_pair = jax.device_put((lane.arguments, s))
         sync(device_pair)
@@ -420,8 +531,11 @@ def benchmark(args, recorder, lanes, second):
         recorder.result["timing"]["scalar_" + lane.landpoint_id + "_device_transfer_seconds"] = time.perf_counter() - t
         reference = run_two(fn, *device_pair)
         references.append(reference)
-        with (args.output_dir / ("scalar_" + lane.landpoint_id + "_reference.pkl")).open("wb") as f:
-            pickle.dump(jax.device_get(reference), f, protocol=pickle.HIGHEST_PROTOCOL)
+        save_reference(
+            args.output_dir / ("scalar_" + lane.landpoint_id + "_reference.pkl"),
+            reference_identity(args, lane, s),
+            reference,
+        )
     recorder.phase("independent_scalar_references_complete")
     for size in args.sizes:
         group, other = lanes[:size], second[:size]
@@ -434,6 +548,7 @@ def benchmark(args, recorder, lanes, second):
         t = time.perf_counter()
         actual = run_two(executable, device_inputs, device_second)
         recorder.result["timing"][f"B{size}_first_call_seconds"] = time.perf_counter() - t
+        save_reference(args.output_dir / f"B{size}_candidate_before_gate.pkl", identity, actual)
         for i, ref in enumerate(references[:size]):
             recorder.gate(
                 f"B{size}_lane_{i}_both_blocks_full_state_day_outputs",

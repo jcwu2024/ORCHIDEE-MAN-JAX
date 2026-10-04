@@ -71,3 +71,26 @@ def test_factory_retains_capture_validation():
         driver._paper_later_day_block_transition_factory(
             "dummy", training_output_projector=lambda x: x, capture_pre_daily_training_boundaries=True, **common
         )
+
+
+@pytest.mark.parametrize("case", ["matched", "unexpected", "one_sided", "inf", "wrong_shape"])
+def test_numerical_gate_preserves_only_declared_sentinel(case):
+    from scripts.dev.benchmark_global_batch import compare
+
+    expected = {"rough": np.asarray([[np.nan, 2.0]], dtype=np.float64)}
+    actual = {"rough": expected["rough"].copy()}
+    contract = {"['rough']": {"inner_shape": [1, 2], "bare_soil_index": 0}}
+    if case == "unexpected":
+        actual["rough"][0, 1] = np.nan
+    elif case == "one_sided":
+        actual["rough"][0, 0] = 0
+    elif case == "inf":
+        actual["rough"][0, 0] = np.inf
+    elif case == "wrong_shape":
+        expected["rough"] = np.asarray([[np.nan], [2.0]])
+        actual["rough"] = expected["rough"].copy()
+    result = compare(actual, expected, sentinel_paths=contract)
+    assert result["passed"] is (case == "matched")
+    if case == "matched":
+        assert result["allowed_sentinels"][0]["count"] == 1
+        assert result["max_bound_ratio"] == 0
