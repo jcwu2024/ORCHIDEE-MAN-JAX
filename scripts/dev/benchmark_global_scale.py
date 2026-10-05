@@ -491,7 +491,10 @@ def scale_benchmark(args, recorder, lanes, second):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepared-input", type=Path, required=True)
-    parser.add_argument("--reference-dir", type=Path, required=True)
+    parser.add_argument("--reference-dir", type=Path)
+    parser.add_argument("--execution-order", choices=["baseline-first", "candidate-first"], default="baseline-first")
+    parser.add_argument("--full-reference-dir", type=Path, help="Sealed FULL64 B4 group numerical reference for candidate-first.")
+    parser.add_argument("--measure-b4-baseline", action="store_true", help="Compile a new actual B4 baseline only after candidate checkpoints.")
     parser.add_argument("--reference-format", choices=["staged", "local-cpu"], default="staged")
     parser.add_argument("--anchor-prepared-input", type=Path,
                         help="Original declared local CPU four-anchor pickle for pre-stage evidence migration.")
@@ -505,10 +508,17 @@ def main():
     parser.add_argument("--config", type=Path, default=ROOT / "configs/orchidee_man_250919.yaml")
     parser.add_argument("--truth-root", type=Path, default=ROOT)
     args = parser.parse_args()
-    if args.warm_repeats < 5 or args.sizes != sorted(set(args.sizes)):
-        parser.error("at least five repeats and ascending unique sizes required")
+    if args.warm_repeats < 5 or len(args.sizes) != len(set(args.sizes)):
+        parser.error("at least five repeats and unique sizes required")
+    if args.execution_order == "baseline-first" and (args.reference_dir is None or args.sizes != sorted(args.sizes)):
+        parser.error("baseline-first requires --reference-dir and ascending sizes")
+    if args.execution_order == "candidate-first" and args.full_reference_dir is None:
+        parser.error("candidate-first requires --full-reference-dir")
     args.output_dir = args.output_dir.resolve()
-    StageStore.validate_source_destination(args.reference_dir, args.output_dir)
+    if args.reference_dir is not None:
+        StageStore.validate_source_destination(args.reference_dir, args.output_dir)
+    if args.full_reference_dir is not None:
+        StageStore.validate_source_destination(args.full_reference_dir, args.output_dir)
     StageStore.validate_source_destination(args.prepared_input.resolve().parent, args.output_dir)
     if args.anchor_prepared_input is not None:
         StageStore.validate_source_destination(args.anchor_prepared_input.resolve().parent, args.output_dir)
@@ -531,6 +541,10 @@ def main():
         previous[number] = signal.signal(number, stopped)
     try:
         recorder.result["environment"] = base.metadata(args)
+        if args.execution_order == "candidate-first":
+            if not os.environ.get("ORCHJAX_SERVER_RESOURCE_PLAN"):
+                raise RuntimeError("candidate-first GPU benchmark requires the allocated GPU entry resource admission")
+            recorder.result["server_resources"] = json.loads(os.environ["ORCHJAX_SERVER_RESOURCE_PLAN"])
         recorder.result["environment"]["explicit_cache_policy"] = policy
         recorder.result["timing"]["import_setup_seconds"] = time.perf_counter() - base.PROCESS_STARTED
         if not jax.config.jax_enable_x64:
@@ -541,7 +555,12 @@ def main():
         recorder.phase("prepared_input_reused", path=str(args.prepared_input),
                        policy="portable metadata paths; numeric trees unchanged; on-disk config/run.def verified; static signatures rederived")
         recorder.result["timing"]["prepared_input_read_audit_seconds"] = time.perf_counter() - started
-        scale_benchmark(args, recorder, lanes, second)
+        if args.execution_order == "candidate-first":
+            from scripts.dev.global_scale_candidate_first import candidate_first_benchmark
+
+            candidate_first_benchmark(args, recorder, lanes, second)
+        else:
+            scale_benchmark(args, recorder, lanes, second)
         recorder.result["status"] = "passed_bounded_scale_forward_diagnostic"
     except (InterruptedError, KeyboardInterrupt) as exc:
         recorder.result.update(status="stopped", message=str(exc), exception_type=type(exc).__name__)

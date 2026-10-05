@@ -6,6 +6,22 @@
 本轮完成 Explore1000 免费 CPU 输入审计及GPU B4两块完整parity/置换/隔离和五次同步计时；
 第三轮同设备同工作量JAX scalar比较与单点scalar基线通过，GPU B4 core收益3.572820倍；
 没有Fortran/年度/生产端到端认证，未提交付费作业。
+第四轮已完成Linux完整64点入场和两次免费GPU窗口；B16完成，B64不完整；不发布B64吞吐，最新结果见文末。
+
+当前操作为[服务器CPU/GPU时间与成本基准准备](SERVER_BENCHMARK.md)，不是第五轮免费window。
+主验收比较同16/64真实点、相同冻结输入和完整双7日块下的单物理核常驻scalar、
+四个各占一核的持久worker、1/4核JAX batch及单GPU candidate。CPU affinity、物理核/SMT、
+JAX初始化后的所有线程affinity和Slurm AllocTRES须记录；`vmap`不保证每lane一线程。
+GPU先原子保全B64 candidate门槛与core/wrapper计时，再测B16，默认不编译新B4基线。
+旧GPU FULL64参考是数值证据，CPU单核输出才是本次CPU执行对照。
+保持科学core、原生dtype、容差、全部输出和224/896点日；无AD/训练或128/256点扩展。
+
+费用主口径采用用户GPU卡/CPU核小时比44（GPU2.20元推算CPU0.05元），
+部署文档CPU0.07元作保守上限，CPU/GPU相加是明确预算假设。
+按allocated Slurm CPU和GPU时数计费；同工作量热费用与完整多阶段job费用分别记录。
+三个一小时pilot保守总额2.83元；尚未提交，具体资源/目录/命令/费用仍须用户批准。
+有界当前平台资产盘点未找到匹配Fortran binary及build配置，不作全账户不存在的结论。
+历史2分钟/点年与本地i7计时均不能替代服务器CPU/Fortran实测。
 
 第四轮精度补充：旧local4、remote4及新local16/local64两块输入均有相同四个group5
 `float32`字段（`contfrac/lalo/lat/lon`）；其余已检查浮点输入leaf为`float64`。
@@ -497,7 +513,7 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 第四轮scale执行边界：`benchmark_global_scale.py`对所有16/64个唯一点复核两块完整输入，
 共享B4的前提是所有lane的科学static signature与schema/dtype/None严格兼容。
 本地完整64输入及新60点冷状态已保存；B16独立输入文件保留。首次Linux入场及单点
-诊断已执行，冻结参数修复后的完整入场待验收。实际B16生产reader曾在旧anchor
+诊断已执行，冻结参数修复后的完整64点生产reader入场已完成。实际B16生产reader曾在旧anchor
 `001.0-071.0/group5/contfrac`的原有float32 leaf触发原逐leaf全FP64输入拒绝；没有把
 错误归因于新点。gate现严格要求四条已知原生float32路径的确切schema，其余既有
 浮点、离散、static、身份及非有限值检查不变。
@@ -536,5 +552,88 @@ housekeeping，最多1798s，仍受原1800s/4-affinity免费CPU总额度约束�
 AD primitives及相关测试实现；核查七日块三份dynamic gate、三点block2复用、多日/组件性能
 原始JSON；检查base HEAD。初始来源审计未重跑历史昂贵gate；后续新增了四点独立输入审计、
 本地B1/B4完整短窗状态/输出与隔离门槛、同工作量CPU实测，证据及复用来源见本文件开头。
-没有做跨点全源码exhaustive audit。GPU编译成本是当前远端诊断限制；更大batch、代表性
+没有做跨点全源码exhaustive audit。第四轮较大batch的有界实测见下；代表性
 年度、长期restart、669点/50年和AD仍需各自证据。
+
+## 第四轮最终测量核查
+
+第四轮最终状态：B16完成，B64不完整；不发布B64吞吐。64个唯一真实点，嵌套16点前缀；每点连续两个7日块，
+每天48个半小时时步，内层`npts=1`。同设备baseline实际运行每组各自forcing、参数和
+冻结Day1状态，分别比较4/16组常驻B4，不外推旧四点scalar速度。每个已接受测量
+保留至少五次同步raw samples，并完成完整两块逐lane parity、跨组置换、替换隔离及实际
+计时B4组检查；汇总保留完整checkpoint SHA、原始执行origin及gate。
+
+| 同工作量，两块各7日 | 同步热core中位 | 已准备wrapper中位 | 实际常驻B4组串行中位 | core点日/s | core相对B4组 |
+| --- | --- | --- | --- | --- | --- |
+| 本地CPU B16，224点日 | 9.068345 s | 9.012244 s | 12.447431 s | 24.701309 | 1.372624× |
+| GPU B16，4组B4，224点日 | 4.095351 s | 4.278145 s | 12.208924 s | 54.696163 | 2.981166× |
+| GPU B64，16组B4 | 未完成，吞吐不发布 | — | — | — | — |
+
+GPU最终report为`over_budget`，129项已记录gate通过、0项失败；B64 manifest原stage
+仍为`running`，没有complete SHA-verified snapshot或warm samples，原始状态保留。
+window2监督记录`over_budget`、exit -15，解释为有界停止，不能当作数值失败。
+
+本地B64未完成，没有warm吞吐；129项已记录gate通过，原runner的`running`状态不改写，
+另以`bounded_stop_incomplete_curve`解释外部停止。累计reported supervisor wall为
+1190.948/1200s，但最后一次超过所要求safe deadline **20s**，两项事实同时披露。
+
+GPU使用`ibc13b02n04`上的1张V100-SXM2 32GB（GPU0），模型CPU affinity4–7，
+JAX/jaxlib0.4.38，冻结科学core`a33b82d`、部署`ac34b83`。两次免费window总wall
+3525.762176s，charge **3527/3600 card-seconds（0.979722 card-hours）**，余额73；最多两次、每次1800s的原账本没有重置，无付费任务，余额不授权第三个window。
+B16来自window1，window2只读复用已保存测量，保留原PID/window与timing origin。
+
+| GPU window | 状态 | 完整supervisor wall | charge卡秒 | sampled group RSS峰值 |
+| --- | --- | --- | --- | --- |
+| 1 | completed | 1730.367190 s | 1731 | 13965389824 bytes |
+| 2 | over_budget | 1795.394986 s | 1796 | 15331934208 bytes |
+
+两个GPU window的 sampled process-group CPU下界4187.180000s（1.163106 core-hours）；
+reaped children user+system合计2023.383607s，监督进程另计460.079307s。
+reaped计数范围不完整：强制停止的window2只记录0.003820s，不代表该窗口的总model CPU。
+这些是CPU实耗观测，不是Slurm allocated core-hours；sampled group值只作观测下界。
+
+| 编译阶段（与热计时分开） | lower | compile/load | 首次同步双块 |
+| --- | --- | --- | --- |
+| GPU常驻B4，window1 | 85.769640 s | 624.033640 s | 17.264705 s |
+| GPU B16，window1 | 42.538340 s | 702.747832 s | 4.170296 s |
+| GPU常驻B4，window2 | 60.211150 s | 623.854428 s | 7.130623 s |
+| GPU B64，window2 | 39.568088 s | 780.176860 s | 5.682454 s |
+
+window1 B4：MISS/write，key前缀`abee48fabcc6bc04`（完整key见原始compilations）。
+window1 B16（window2复用数值checkpoint）：MISS/write，key前缀`29ad2fdee95b8546`（完整key见原始compilations）。
+window2 B4：MISS/write，key前缀`8275826b83ecd379`（完整key见原始compilations）。
+window2 B64：MISS/write，key前缀`8f4bc5f35be96c78`（完整key见原始compilations）。
+window1/window2常驻B4的StableHLO SHA前缀分别为`812f440a8ce6c1a2`与`d7f98a20caef6587`，
+实际key与IR不同，原因未解析；不归因于callsite metadata或科学过程变化。
+
+B16_scale checkpoint 6928259 bytes，serialization 0.013086s，
+atomic write 0.016157s；排除manifest/report/event写入。
+
+物理GPU0逐秒采样：window1共1731样本、峰值1503MiB；window2共1795样本、峰值2077MiB。
+这是sampled peak，不是瞬时VRAM上界，也不与host RSS混用。
+
+window1 B4/B16为MISS/write，不把624.033640s与702.747832s编译称作cache load。
+数值checkpoint复用不等于executable cache命中；actual memory analysis与checkpoint IO
+见专用汇总。模型affinity4–7与监督进程
+affinity0–55分别记录；共享免费节点没有Slurm独占资源分配。
+
+Linux完整64点生产reader入场通过：report elapsed858.259652s，完整监督window
+865.465266s；含此前112.716639/30.850098/118.289638s窗口，实测累计1127.321642s。
+100s housekeeping是保守预留，不冒充实测；263+100+1435=1798s预算包络仍在原1800s内。
+新60点冻结120块原始digest保留；93字段按具名映射到未改动remote4布局，42120条记录
+核对dtype/shape/bytes与冷状态关联，其余八组参数原样保留。最终prepared SHA为
+`be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7`。
+
+开启JAX x64，保留基线原生dtype；已知地理payload和solar子计算含FP32。
+core不含host stack/transfer/materialization；wrapper包含这些已准备输入操作，
+均不含新Day1、年度聚合或生产checkpoint。lower、compile/cache、首调用、checkpoint
+IO与完整window分别记录，完整window不当作热吞吐。RSS不是VRAM；内存preflight是
+保守入场筛查，不能作为无OOM保证。证据见
+[第四轮专用汇总](../../../outputs/research/global_throughput/round4-measurement-summary.json)，
+完整资源账本与原始samples保留在该汇总及链接的window/report中。
+运行后[旧资产保全检查](../../../outputs/research/global_throughput/gpu-round4/post-window-preservation-check.txt)
+21项hash均OK；[checkout/进程/GPU检查](../../../outputs/research/global_throughput/gpu-round4/post-window-checks.txt)
+确认remote HEAD为`ac34b83`且干净、两次窗口自身PID/PGID均不在、GPU0已释放。
+首次manifest检查因Windows CRLF文件名未规范化而在读取前失败，规范化后上述检查通过；
+这不是hash不匹配或模型数值失败，原尝试日志保留。
+本轮不认证Fortran加速、年度/669点/50年、AD、训练、10×目标或跨CPU/GPU因果加速。

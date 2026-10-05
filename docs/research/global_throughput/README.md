@@ -10,10 +10,10 @@
 表达式均为FP64的证明。主管已澄清：本轮开启JAX x64、保留基线原生dtype，
 已知地理payload和solar子计算含FP32；先前逐表达式全FP64措辞不属于用户要求，
 此次没有精度变更。确切原生dtype输入gate已通过35项轻量测试及local16/local64生产reader；
-Linux首次再生成出现16个FP64低位差异，现直接运输冻结参数。运输后的首点原始数值digest
-通过，但旧remote4与NEW60的`sechiba_finalize_state`字段排列不同，合批入场严格拒绝。
+Linux首次再生成出现16个FP64低位差异，现直接运输冻结参数。首次运输后的首点原始数值digest
+通过，但旧remote4与NEW60的`sechiba_finalize_state`字段排列不同，该次合批入场严格拒绝。
 后续只按字段名一一映射NEW60的state输入到未改动remote4布局，保存原始及绑定digest，
-逐字段核对dtype/shape/bytes；其余参数组保持原冻结输入，再按原预算完成入场和GPU诊断。
+逐字段核对dtype/shape/bytes；其余参数组保持原冻结输入，现已按原预算完成Linux入场及两次GPU诊断。
 证据与执行合同见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
 
 ## 目标与范围
@@ -83,6 +83,36 @@ GPU 两个原始 JSON 本次已核读：原工作区
 基线测量中由启动、IO、年份差异等实际记录解释。
 
 ## 当前工作单
+
+当前操作是准备 Explore1000 **同工作量 CPU/GPU 时间与费用基准**，合同见
+[SERVER_BENCHMARK.md](SERVER_BENCHMARK.md)。先比较固定 Slurm CPU 预算下的实际常驻执行：
+单个物理核顺序循环所有点；四个持久 worker 各占一个物理核、各自编译一次；
+以及分别分配1/4核的 JAX batch。`vmap` 的 lane 数不代表线程数或分配核数。
+复用已入场的16/64个唯一真实点和冻结输入，连续两个7日块；不扩展128/256点，
+不修改科学核心、原生dtype、容差和完整输出，不执行AD或训练。
+
+GPU作业先验证并保存B64 candidate和至少五次同步core/wrapper计时，再做B16；
+默认不重新编译B4计时基线。旧完整FULL64 B4快照只作为数值参考，不能充作新CPU实测。
+CPU结果同时核对该参考；四worker和batch还须核对本次单核scalar完整输出。
+只发布原子保存且通过门槛的阶段；一小时上限内未完成的阶段保持未完成。
+
+主指标为同点日工作量的wall time、点日/秒、allocated CPU core-hours、GPU card-hours、
+费用/工作量及点日/元。用户当前GPU卡/CPU核小时单价比为44；按GPU2.20元/小时推得
+CPU0.05元/核小时，这是比例推算，未重新核实账单。部署文档的CPU0.07元另作保守预算。
+CPU/GPU费用相加时，GPU加M个辅助CPU的小时费用等于44+M个CPU单位；与实际N核CPU
+吞吐相比，GPU更便宜要求`Q_GPU/Q_CPU(N) > (44+M)/N`。不把单核吞吐乘44称为实测44核。
+热core、已准备wrapper、包含编译/输入审计/IO的完整诊断作业分别列费用；
+完整作业包含多个阶段，不能把整作业费用除以其中一个阶段的224/896点日。
+
+当前准备三个付费pilot：CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；
+按上述比例合计最多2.65元，按CPU0.07元和GPU2.20元的相加假设保守为2.83元。
+这是可审批资源包，尚未提交；须在代码、目标shell参数展开和输入路径验收后批准。
+当前平台有界资产检查尚未找到匹配Fortran可执行文件与build/input契约，Fortran对照待补。
+第四轮免费账本和原始结果保持原样，73秒余额不授权新增免费window。
+准备验收已通过14项新增协议测试、35项受影响的既有scale测试及Ruff/diff检查；
+FULL64数值参考读取兼容性核对64点和760个array leaves。四worker本地spawn检查只用合成输入。
+这些本地检查使用Windows/JAX0.10.1，不替代部署0.4.38的组件检查或真实服务器物理计时。
+验证记录在`outputs/research/global_throughput/server-cost-implementation/verification.json`。
 
 首个本地实现已加入 `driver/global_batch.py` 与
 `scripts/dev/benchmark_global_batch.py`：在 AOT 前提取原完整 transition，保持内层
@@ -163,25 +193,37 @@ prepared input后查均未改变；本任务session为空，GPU0零MiB，其他�
 [MILESTONE.md](../../../outputs/research/global_throughput/MILESTONE.md)和
 [milestone-summary.json](../../../outputs/research/global_throughput/milestone-summary.json)。
 
-第四轮已完成本地嵌套16/64个唯一真实点输入准备，尚未产生新的GPU吞吐结论。
-四个旧anchor数值保留；新增60点各自生成并保全Day1结束状态，原module/class身份和
-数值digest保留。B16与B64独立文件分别为72,809,764及291,093,199 bytes；
-最终准备审计在`outputs/research/global_throughput/round4-inputs/preparation-audit.json`。
-冷状态、身份、选点和审计已转移到Explore1000并核对传输hash；Linux完整输入重建及
-生产reader入场按已澄清的基线原生dtype合同执行，不把本地准备成功当作GPU数值验收。
-新入口`scripts/dev/benchmark_global_scale.py`复用原四点数值reference，只编译一个常驻B4，
-以每组各自的真实forcing/参数/冻结Day1状态运行全部相同点，再与B16/B64比较。
-标签为`vs_B4_groups`，分母分别224/896 point-days，不外推旧四点scalar速度。
-每个规模先过全部lane双块parity、跨B4组置换及lane替换隔离，再测至少五次同步core、
-preprepared wrapper及实际B4组串行；B16的完整输出、raw samples和gate先atomic保存，
-才构造B64。第一免费window只请求16，下一window可请求16/64；两者都用同一FULL64输入，
-身份不因requested subset变化而失效。GPU合同总计3600 card-seconds、最多两次window、
-每次最多1800s；本地CPU实测另列，免费CPU准备/入场也另记完整wall。
+第四轮最终状态：B16完成，B64不完整；不发布B64吞吐。64个唯一真实点、嵌套16点前缀，连续两个7日块，
+每天48步、内层`npts=1`；已接受阶段各保留五次同步样本，并通过逐lane parity、置换及替换隔离。
+baseline为同点、各自forcing/参数/冻结Day1状态的实际常驻B4组，未外推旧scalar速度。
 
-本地CPU第四轮B16完整阶段已保存：五次同步core中位9.068345s/224点日，实际四组B4
-串行中位12.447431s，相对收益1.372624倍；wrapper中位9.012244s。B64只完成编译及
-已记录的部分门槛，没有完整warm samples。累计记录的本地监督window为1190.948/1200s，
-不再追加本地执行；证据是`local-round4/localCPU-curve-summary.json`及`attempt_accounting.json`。
+| 同工作量，两块各7日 | 同步热core中位 | 已准备wrapper中位 | 实际常驻B4组串行中位 | core点日/s | core相对B4组 |
+| --- | --- | --- | --- | --- | --- |
+| 本地CPU B16，224点日 | 9.068345 s | 9.012244 s | 12.447431 s | 24.701309 | 1.372624× |
+| GPU B16，4组B4，224点日 | 4.095351 s | 4.278145 s | 12.208924 s | 54.696163 | 2.981166× |
+| GPU B64，16组B4 | 未完成，吞吐不发布 | — | — | — | — |
+
+GPU最终129项已记录gate通过、0失败；B64原stage仍`running`，没有complete checkpoint或warm samples。
+window2监督状态`over_budget`、exit -15，是预算边界停止，不作为数值失败。
+B16保留window1的原执行和测量origin；window2只复用其数值checkpoint。
+
+单张V100-SXM2 32GB，节点`ibc13b02n04`，模型affinity4–7，JAX/jaxlib0.4.38。
+两次免费window总wall 3525.762176s，charge **3527/3600卡秒（0.979722 card-hours）**；
+余额73，最多两次/每次1800s的账本未重置，也不授权第三个window，无付费任务。
+编译仍是边界：window1 B4/B16 compile624.034/702.748s；window2 B4/B64为623.854/780.177s。
+四次实际cache均MISS/write；window2 B4 key/IR与window1不同，原因未解析，数值checkpoint复用不等于cache命中。
+
+本地B16通过，B64未完成；累计reported wall1190.948/1200s，最后一次safe deadline超出**20s**。
+Linux FULL64生产reader入场通过，最终window865.465266s，含此前失败/诊断的实测累计1127.321642s；
+100s housekeeping仅为保守预留。原remote4与NEW60具名state/120块原始digest保留。
+JAX x64开启并保留基线原生dtype；地理payload及solar子计算含FP32，无物理/精度/容差变更。
+
+core与已准备wrapper分别计时，lower/compile/首调用/IO及完整window另列；均不认证生产端到端。
+详见[专用汇总与raw samples](../../../outputs/research/global_throughput/round4-measurement-summary.json)及
+[执行审计](../../../docs/research/global_throughput/EXECUTION_AUDIT.md)。
+[旧资产保全](../../../outputs/research/global_throughput/gpu-round4/post-window-preservation-check.txt)21项hash均OK，
+[运行后检查](../../../outputs/research/global_throughput/gpu-round4/post-window-checks.txt)确认checkout干净、自身PID/PGID退出及GPU0释放。
+第三轮记录保留；本轮不认证Fortran加速、年度/669点/50年、AD、训练、10×或跨CPU/GPU因果加速。
 
 输入准备由`prepare_global_scale_inputs.py`维护实际LIMIT中心和动态参数的确定性选点、
 各点v2 source checksum、Day1及完整两块输入记录；
