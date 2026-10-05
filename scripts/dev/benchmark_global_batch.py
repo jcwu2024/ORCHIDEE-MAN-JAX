@@ -777,13 +777,18 @@ def staged_benchmark(args, recorder, lanes, second):
     store = StageStore(args.output_dir, stage_identity(args, lanes, second, recorder.result["environment"]))
     recorder.result["stages"] = store.manifest["stages"]
     required = ["B4_candidate", "legacy_original"] + ["scalar_" + lane.landpoint_id for lane in lanes]
+    source = getattr(args, "stage_source_dir", None)
+    if source is not None:
+        store.import_completed(source, required)
+        recorder.phase("complete_numerical_prerequisites_imported", source=str(source), names=list(required),
+                       policy="read-only source; original execution origins retained; no old measurement stages imported")
     b1_mode = getattr(args, "b1_mode", "vmapped")
     b1_stage = "B1_scalar_baseline" if b1_mode == "scalar" else "B1_validation"
     selected_point = getattr(args, "pooled_scalar_point", POINTS[0])
     selected_lane = next(lane for lane in lanes if lane.landpoint_id == selected_point)
     suffix = "" if selected_point == POINTS[0] else "_pool_" + selected_point
-    gate_stage, measurement_stage, b1_stage = "B4_gates" + suffix, "B4_measurements" + suffix, b1_stage + suffix
-    required += [gate_stage, measurement_stage, b1_stage]
+    batch_stage, serial_stage, b1_stage = "B4_batch_only_v1", "B4_scalar_comparison_v1" + suffix, b1_stage + suffix
+    required += [batch_stage, serial_stage, b1_stage]
     recorder.result["b1_mode"] = b1_mode
     recorder.result["pooled_scalar"] = {
         "landpoint_id": selected_point, "context": "selected point's own independently audited context",
@@ -815,7 +820,7 @@ def staged_benchmark(args, recorder, lanes, second):
                     "report_limitation": None if recorder.window_report is not None else "window ID not supplied; shared latest report is mutable",
                     "pid": os.getpid(),
                     "process_start_monotonic": PROCESS_STARTED,
-                    "pooled_scalar_point": selected_point if name in (gate_stage, measurement_stage, b1_stage) else None,
+                    "pooled_scalar_point": selected_point if name in (serial_stage, b1_stage) else None,
                     "window_identity": os.environ.get("ORCHJAX_GLOBAL_BATCH_WINDOW_ID", "not supplied; use PID/start and supervisor context"),
                 },
                 "stage_seconds": time.perf_counter() - started,
@@ -902,12 +907,14 @@ def staged_benchmark(args, recorder, lanes, second):
             return batch_fn, batch_inputs
 
         def gates():
-            ensure_scalar()
+            executable, inputs = ensure_batch()
+            started = time.perf_counter()
+            current = run_two(executable, *inputs)
+            recorder.result["timing"]["B4_validation_first_call_seconds"] = time.perf_counter() - started
+            recorder.gate("B4_resumed_executable_vs_saved_candidate", current, actual)
             for index, (lane, other, ref) in enumerate(zip(lanes, second, references, strict=True)):
                 recorder.gate(f"B4_lane_{index}_both_blocks_full_state_day_outputs",
-                              jax.tree_util.tree_map(lambda v: v[index], actual), ref)
-            executable, inputs = ensure_batch()
-            recorder.gate("B4_resumed_executable_vs_saved_candidate", run_two(executable, *inputs), actual)
+                              jax.tree_util.tree_map(lambda v: v[index], current), ref)
             order = list(reversed(range(4)))
             permuted = run_two(executable, batch.stack_lanes([lanes[i] for i in order]),
                                stack_second([lanes[i] for i in order], [second[i] for i in order]))
@@ -917,9 +924,34 @@ def staged_benchmark(args, recorder, lanes, second):
             for index in range(4):
                 recorder.gate(f"B4_replacement_lane_{index}", jax.tree_util.tree_map(lambda v: v[index], isolated),
                               references[index if index < 3 else 0])
-            return None, {"independent_parity": True, "permutation": True, "replacement_isolation": True}
+            return current
 
-        run_stage(gate_stage, gates)
+        def batch_only():
+            # This complete snapshot must be published before any scalar compile/load.
+            current = gates()
+            executable, inputs = ensure_batch()
+            warm, wrapper = [], []
+            for _ in range(args.warm_repeats):
+                started = time.perf_counter()
+                run_two(executable, *inputs)
+                warm.append(time.perf_counter() - started)
+                started = time.perf_counter()
+                wrapped = run_two(executable, batch.stack_lanes(lanes), stack_second(lanes, second))
+                jax.device_get(wrapped)
+                wrapper.append(time.perf_counter() - started)
+            measured = {
+                "B4_warm_frozen_state_core": metrics(warm, 56),
+                "B4_preprepared_wrapper_stack_transfer_materialize": metrics(wrapper, 56),
+            }
+            recorder.result["timing"].update(measured)
+            return {"outputs": jax.device_get(current), "measurements": measured}, {
+                "path": "vmapped batch; no scalar constructed before checkpoint publication",
+                "independent_parity": True, "permutation": True, "replacement_isolation": True,
+                "five_or_more_synchronized_repeats": True, "frozen_start": True,
+                "accepted_scope": "B4 only; scalar comparison and B1 remain separate",
+            }
+
+        batch_saved = run_stage(batch_stage, batch_only)
 
         def measurements(size, executable, inputs, scalar_fn, *, scalar_baseline=False):
             label = "B1_scalar_baseline" if scalar_baseline else f"B{size}"
@@ -959,12 +991,31 @@ def staged_benchmark(args, recorder, lanes, second):
                             "path": "single-point scalar program; no standalone vmapped B1 gate" if scalar_baseline else "vmapped batch",
                             "serial_policy": "pooled scalar verified against all independently executed lane references"}
 
-        def b4_measurements():
-            executable, inputs = ensure_batch()
-            recorder.gate("B4_timing_executable_vs_saved_candidate", run_two(executable, *inputs), actual)
-            return measurements(4, executable, inputs, ensure_scalar())
+        def scalar_comparison():
+            executable = ensure_scalar()
+            started = time.perf_counter()
+            pairs = jax.device_put([(lane.arguments, other) for lane, other in zip(lanes, second, strict=True)])
+            sync(pairs)
+            recorder.result["timing"]["B4_scalar_device_transfer_seconds"] = time.perf_counter() - started
+            samples = []
+            for _ in range(args.warm_repeats):
+                started = time.perf_counter()
+                for pair in pairs:
+                    run_two(executable, *pair)
+                samples.append(time.perf_counter() - started)
+            measured = {
+                "B4_scalar_serial": metrics(samples, 56),
+                "B4_core_speedup_vs_scalar_serial": statistics.median(samples) / statistics.median(
+                    batch_saved["measurements"]["B4_warm_frozen_state_core"]["samples_seconds"]),
+            }
+            recorder.result["timing"].update(measured)
+            return measured, {
+                "serial_policy": "actual pooled scalar gated against all four independent references before timing",
+                "comparison_batch_stage": batch_stage,
+                "five_or_more_synchronized_repeats": True, "frozen_start": True,
+            }
 
-        run_stage(measurement_stage, b4_measurements)
+        run_stage(serial_stage, scalar_comparison)
 
         def b1():
             executable, inputs = batch_executable(1, "B1_validation")
@@ -1009,6 +1060,8 @@ def main():
                         help="Staged mode: save actual B4 first, then each independent scalar, then correctness/timing/B1.")
     parser.add_argument("--legacy-reference-dir", type=Path,
                         help="Original scalar reference/report directory; all recorded runtime/source/input fields checked.")
+    parser.add_argument("--stage-source-dir", type=Path,
+                        help="Read-only staged source of six complete numerical prerequisites; fresh measurements remain separate.")
     parser.add_argument("--cache-mode", choices=["off", "persistent"], default="off")
     parser.add_argument("--cache-root", type=Path, help="Explicit persistent cache directory; no serialized AOT reuse.")
     parser.add_argument("--b1-mode", choices=["vmapped", "scalar"], default="vmapped",
@@ -1020,6 +1073,8 @@ def main():
         parser.error("at least five warm repeats required")
     if args.mode == "staged" and (args.prepared_input is None or args.resume_references):
         parser.error("staged mode requires --prepared-input and uses atomic stage recovery instead of --resume-references")
+    if args.stage_source_dir is not None and (args.mode != "staged" or args.stage != "validate"):
+        parser.error("--stage-source-dir requires --mode staged --stage validate")
     if args.cache_mode == "persistent" and args.cache_root is None:
         parser.error("persistent mode requires --cache-root")
     args.output_dir = args.output_dir.resolve()

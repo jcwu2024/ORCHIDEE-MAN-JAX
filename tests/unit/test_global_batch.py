@@ -322,8 +322,8 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
         assert "B1_validation" not in compiled and "B1_validation" not in resumed.result["required_stages"]
         assert "B1_scalar_baseline" in resumed.result["required_stages"]
     assert resumed.result["pooled_scalar"]["all_four_current_executable_gates_passed"]
-    # A different pooled context must execute new gates/timings while retaining
-    # all candidate and independently executed reference checkpoints.
+    # A different pooled context repeats scalar gates/timing while retaining
+    # selector-independent B4 measurements and all independent prerequisites.
     selected = harness.POINTS[1]
     args.pooled_scalar_point = selected
     changed = harness.Recorder(tmp_path)
@@ -336,7 +336,52 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
     assert changed.result["all_required_stages_complete"]
     assert changed.result["pooled_scalar"]["landpoint_id"] == selected
     assert changed.result["pooled_scalar"]["all_four_current_executable_gates_passed"]
-    assert "B4_gates_pool_" + selected in changed.result["required_stages"]
+    assert "B4_scalar_comparison_v1_pool_" + selected in changed.result["required_stages"]
     assert compiled.count("B4_candidate") == before.count("B4_candidate")
     assert compiled.count("scalar_" + selected) == before.count("scalar_" + selected)
-    assert not changed.result["timing_origins"]["B4_warm_frozen_state_core"]["reused_measurement"]
+    assert changed.result["timing_origins"]["B4_warm_frozen_state_core"]["reused_measurement"]
+
+    # A fresh round imports only numerical snapshots. B4 compiles exactly once,
+    # gates and checkpoints raw timing/output before a later scalar failure.
+    source_bytes = {path.name: path.read_bytes() for path in tmp_path.iterdir() if path.is_file()}
+    target = tmp_path / "new-round"
+    args.output_dir = target
+    args.stage_source_dir = tmp_path
+    args.stage = "validate"
+    round_compiles = []
+
+    def fail_later_scalar(fn, arguments, name, recorder):
+        round_compiles.append(name)
+        if name == "pooled_scalar_validation":
+            saved = json.loads((target / "stage_manifest.json").read_text())
+            assert saved["stages"]["B4_batch_only_v1"]["status"] == "complete"
+            raise RuntimeError("scalar compilation failed after B4 checkpoint")
+        return jax.jit(fn)
+
+    monkeypatch.setattr(harness, "lower_compile", fail_later_scalar)
+    new_round = harness.Recorder(target)
+    new_round.result["environment"] = {}
+    try:
+        with pytest.raises(RuntimeError, match="after B4 checkpoint"):
+            harness.staged_benchmark(args, new_round, lanes, second)
+    finally:
+        new_round.stop.set()
+    assert round_compiles == ["B4_validation", "pooled_scalar_validation"]
+    from scripts.dev.global_batch_stage_store import StageStore
+
+    recovered = StageStore(target, {"small-test-contract": "fixed"})
+    saved_value, saved_record = recovered.load("B4_batch_only_v1")
+    assert len(saved_value["measurements"]["B4_warm_frozen_state_core"]["samples_seconds"]) == 5
+    assert len(saved_value["measurements"]["B4_preprepared_wrapper_stack_transfer_materialize"]["samples_seconds"]) == 5
+    assert harness.compare(saved_value["outputs"], recovered.load("B4_candidate")[0])["passed"]
+    names = {gate["name"] for gate in saved_record["gates"]}
+    assert "B4_permutation" in names and "B4_replacement_lane_3" in names
+    assert all(gate["passed"] for gate in saved_record["gates"])
+    assert all("pooled_scalar" not in name for name in names)
+    assert not new_round.result["timing_origins"]["B4_warm_frozen_state_core"]["reused_measurement"]
+    imported = recovered.manifest["stages"]["B4_candidate"]
+    assert imported["execution_origin"] == manifest["stages"]["B4_candidate"]["execution_origin"]
+    assert imported["imported_from"]["path"] == str(tmp_path / "stage_B4_candidate.pkl")
+    assert recovered.manifest["stages"]["B4_scalar_comparison_v1_pool_" + selected]["status"] == "failed"
+    assert "B1_scalar_baseline_pool_" + selected not in recovered.manifest["stages"]
+    assert {path.name: path.read_bytes() for path in tmp_path.iterdir() if path.is_file()} == source_bytes
