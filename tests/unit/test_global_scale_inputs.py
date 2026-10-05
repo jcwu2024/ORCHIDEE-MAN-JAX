@@ -23,7 +23,6 @@ from scripts.dev.prepare_global_scale_inputs import (  # noqa: E402
     _prepare_new_point,
     _restore_state_layout_order,
     _save_progress,
-    _state_digest,
     _verify_selected_assets,
     select_points,
 )
@@ -201,10 +200,21 @@ def test_legacy_cold_state_layout_repair_is_value_preserving():
     )
     legacy = driver.DriverPreviousStepStatePacket(
         tstep=47,
-        fields_by_component={
-            "second": {"q": np.array(3, dtype=np.int32)},
-            "first": {"daily": {"first": np.array(1.0), "second": np.array(2.0)}, "a": None, "z": np.array([1.0, 2.0])},
-        },
+        fields_by_component=OrderedDict(
+            (
+                ("second", {"q": np.array(3, dtype=np.int32)}),
+                (
+                    "first",
+                    OrderedDict(
+                        (
+                            ("daily", OrderedDict((("first", np.array(1.0)), ("second", np.array(2.0))))),
+                            ("a", None),
+                            ("z", np.array([1.0, 2.0])),
+                        )
+                    ),
+                ),
+            )
+        ),
         provenance_by_component={"second": (), "first": (), "extra": ("preserve",)},
     )
 
@@ -215,7 +225,7 @@ def test_legacy_cold_state_layout_repair_is_value_preserving():
     assert tuple(restored.fields_by_component["first"]["daily"]) == ("second", "first")
     assert restored.provenance_by_component == legacy.provenance_by_component
     assert migration is not None and migration["numeric_state_unchanged"] is True
-    assert _state_digest(restored) == _state_digest(legacy)
+    assert migration["state_values_by_path_unchanged"] is True
 
 
 def test_progress_cache_keeps_records_atomic_and_public_tuple_shape(tmp_path):
@@ -279,6 +289,8 @@ def test_fresh_cold_state_is_persisted_before_lane_admission(tmp_path, monkeypat
         assert cache["states"].keys() == cached_states.keys()
         assert cache["identity_hashes"] == cached_ids
         assert tuple(cached_states[point].fields_by_component) == ("z_component",)
+        assert tuple(cached_states[point].fields_by_component["z_component"]) == ("a_field", "z_field")
+        assert cache["layout_migrations"][point]["state_values_by_path_unchanged"] is True
         raise RuntimeError("stop after cache persistence")
 
     monkeypatch.setattr(batch, "prepare_lane", fail_at_lane_admission)
@@ -290,4 +302,12 @@ def test_fresh_cold_state_is_persisted_before_lane_admission(tmp_path, monkeypat
             reference_dir=tmp_path / "reference",
             cold_states={},
             cold_identity_hashes={},
+            cold_state_layout_migrations={},
+            layout_template=driver.DriverPreviousStepStatePacket(
+                tstep=47,
+                fields_by_component=OrderedDict(
+                    (("z_component", OrderedDict((("a_field", None), ("z_field", np.array([3.0]))))),)
+                ),
+                provenance_by_component=packet.provenance_by_component,
+            ),
         )
