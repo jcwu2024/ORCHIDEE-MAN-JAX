@@ -108,6 +108,11 @@ def rehydrate(args):
     args.output_dir.mkdir(parents=True, exist_ok=True)
     report_path = args.output_dir / "remote-preparation-audit.json"
     report = {"status": "rehydrating", "selected_points": ids,
+              "environment": {"python": sys.version, "jax": scale.jax.__version__,
+                              "numpy": producer.np.__version__,
+                              "jax_enable_x64": bool(scale.jax.config.jax_enable_x64),
+                              "backends": sorted({device.platform for device in scale.jax.devices()}),
+                              "cpu_affinity": sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else None},
               "cold_Day1_generated": False, "physical_transition_compiled": False,
               "source_audit_sha256": producer._sha256_file(args.preparation_audit),
               "cold_states_sha256": hashlib.sha256(cold_data).hexdigest(),

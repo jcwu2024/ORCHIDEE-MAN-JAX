@@ -11,8 +11,9 @@
 `float32`字段（`contfrac/lalo/lat/lon`）；其余已检查浮点输入leaf为`float64`。
 冻结源中`lalo[:,0]`进入`season_midwinter_solad`，实际shape tracing结果为`float32`，
 虽然后续`gdd_init_date`状态为`float64`。因此本文历史FP64运行标签不证明逐表达式
-全FP64。精度合同待用户选择；未改变核心或dtype，第四轮GPU启动次数仍为0。
-确切调用链、来源和两条可审阅路线见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
+全FP64。主管已澄清本轮保持基线原生dtype、开启JAX x64；已知地理payload和solar子计算
+含FP32。这是纠正先前主管措辞，未改变核心或dtype。当前修正窄范围gate后继续第四轮。
+确切调用链、来源和执行合同见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
 
 ## 首个实现的当前状态
 
@@ -496,7 +497,8 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 共享B4的前提是所有lane的科学static signature与schema/dtype/None严格兼容。
 本地完整64输入及新60点冷状态已保存；B16独立输入文件保留，完整Linux重建尚未
 执行。实际B16生产reader在旧anchor`001.0-071.0/group5/contfrac`的原有float32 leaf
-触发全FP64输入拒绝；没有把错误归因于新点，未绕过此门槛。
+触发原逐leaf全FP64输入拒绝；没有把错误归因于新点。gate正在改为四条已知原生
+float32路径的确切schema，其余既有浮点、离散、static、身份及非有限值检查不变。
 原四点numerical reference只读导入；当前常驻B4对其完整输出和各点独立reference重验，
 其余每组运行自身输入，不新增逐点scalar编译。B16/B64输出逐lane对齐本轮实际B4组输出，
 计时baseline也对齐同一组冻结输入，不使用历史四点scalar的比例外推。

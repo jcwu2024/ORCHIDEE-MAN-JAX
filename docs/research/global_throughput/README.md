@@ -7,9 +7,10 @@
 精度核查补充：冻结核心及旧四点输入原有`float32`地理payload；其中纬度进入的
 `season_midwinter_solad`日照子计算保持`float32`，随后写入的`gdd_init_date`状态为
 `float64`。本文历史“FP64”标签表示开启JAX x64及原运行dtype，不能作为所有物理
-表达式均为FP64的证明。第四轮严格全FP64与保持冻结核心/原dtype存在冲突，待用户
-选择合同后才能入场；未做cast、未修改物理核心、未启动第四轮GPU。
-证据与两个可选执行方案见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
+表达式均为FP64的证明。主管已澄清：本轮开启JAX x64、保留基线原生dtype，
+已知地理payload和solar子计算含FP32；先前逐表达式全FP64措辞不属于用户要求，
+此次没有精度变更。正在窄范围修正输入gate，随后按原预算完成Linux入场和第四轮GPU诊断。
+证据与执行合同见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
 
 ## 目标与范围
 
@@ -163,7 +164,7 @@ prepared input后查均未改变；本任务session为空，GPU0零MiB，其他�
 数值digest保留。B16与B64独立文件分别为72,809,764及291,093,199 bytes；
 最终准备审计在`outputs/research/global_throughput/round4-inputs/preparation-audit.json`。
 冷状态、身份、选点和审计已转移到Explore1000并核对传输hash；Linux完整输入重建及
-生产reader入场待精度合同选择后执行，不把本地准备成功当作GPU数值验收。
+生产reader入场按已澄清的基线原生dtype合同执行，不把本地准备成功当作GPU数值验收。
 新入口`scripts/dev/benchmark_global_scale.py`复用原四点数值reference，只编译一个常驻B4，
 以每组各自的真实forcing/参数/冻结Day1状态运行全部相同点，再与B16/B64比较。
 标签为`vs_B4_groups`，分母分别224/896 point-days，不外推旧四点scalar速度。
@@ -178,8 +179,9 @@ preprepared wrapper及实际B4组串行；B16的完整输出、raw samples和gat
 `prepare_global_scale_remote.py`在Linux用已保存的新60点Day1状态重建context/forcing，
 保留原remote四anchor，不重新生成Day1或编译transition。只允许已声明VEGETATION_FILE
 路径映射，并核对实际local/remote文件内容、各点完整输入digest和static closure/schema。
-当前scale的逐浮点leaf全FP64门槛已拒绝旧anchor原有`float32`payload；此失败是合同
-冲突，不是新增点发生精度降级。尚未放宽门槛，也未启动完整Linux入场window。
+此前scale的逐浮点leaf全FP64门槛拒绝旧anchor原有`float32`payload；正在按冻结基线的
+四条确切路径/dtype/shape修正。其他浮点、离散、static、身份和非有限值门槛保留，
+reader/gate不做cast；后续入场及同工作量实测按此合同执行。
 内存入场以真实input/output字节、compiler buffer analysis和所选物理GPU free/total memory
 保守投影，要求至少2GiB余量；RSS不是VRAM，入场估计也不是无OOM保证。
 这些检查及新规模结果仍只认证有界完整forward，不能替代Fortran/年度/669点/50年或AD验收。

@@ -1,7 +1,10 @@
 # 第四轮输入精度边界
 
-2026-10-05。当前结论是**精度边界已确认，两个后续路线均未采用，GPU仍暂停**。
-本记录不改变harness、物理core、任何保存的数值输入或历史数值记录。
+2026-10-05。**主管已澄清本轮按原模型精度合同继续执行路线A**：开启JAX x64，
+保留基线原生dtype；已知地理payload和solar子计算含FP32。
+此前“逐表达式全FP64”是主管对“保持原模型精度、禁止新降精度”的不准确扩写，
+不属于用户要求将已有模型提升为统一FP64，也不记录为用户批准精度变更。
+物理core、任何保存的数值输入和历史数值记录保持不变；本轮窄范围修正harness输入检查。
 已有“FP64”标签记录了`jax_enable_x64=True`及主要state/forcing/parameter的双精度设置，
 不能由该标签推断所有中间物理算术都为FP64。
 
@@ -74,7 +77,7 @@ solar JAXPR primitive outputs计数为float32 105、float64 2、int32 2、bool 1
 本checkout及已检查的本地truth路径没有这两份Fortran文件；本次未独立重读Fortran原文件，
 也未从JAX注释推断Fortran自身实际浮点kind。
 
-## 两个可审阅路线，均未开始
+## 本轮执行合同
 
 **路线A：精确原生schema入场。** 保持冻结core和所有原始数值对象、dtype、shape及值。
 仅在group5允许上表四条精确float32路径/shape，其他state/forcing/parameter浮点leaf仍要求
@@ -85,15 +88,9 @@ dtype变化、非有限值均拒绝；验证reader/gate前后原输入字节未�
 通过后再按原parity/permutation/isolation政策验证same-workload比较。
 这一路线只修正harness对既有输入schema的描述与检查，不修正物理计算。
 
-**路线B：严格全FP64修复。** 先明确uniform FP64的计算边界，审计该solar路径及可能受影响
-的cold Day1/recurrent state，提出有Fortran来源的精度修正并形成新的science/input身份。
-不能只在reader中cast旧输入，或把现有独立references当新精度计算的等价证据。
-需要独立own-context参考、受影响prepared states及完整两块输出重新验证，保留现有numerical/
-sentinel/schema门槛，并核对solar结果与最终state的dtype；通过之后才测B16/B64。
-这是科学数值执行条件的改变，其工作量和资源与路线A分开评估。
-
-当前未选任何路线，harness的严格浮点gate维持原样，GPU未开始。
-本记录只准备用户精度决策所需的具体证据，不把scope或精度选择自动定为已批准。
+当前正在完成上述窄范围gate修正及真实输入reader验证，随后在部署JAX0.4.38完成Linux
+入场和原预算内B16/B64诊断。新增精度改变、容差放宽或科学缺口需要另行处理；
+本轮不修改solar计算，不把此原生dtype合同当作完整Fortran或全模型精度审计。
 
 ## 复现
 
