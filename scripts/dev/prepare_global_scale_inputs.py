@@ -19,7 +19,7 @@ import sys
 import tarfile
 import tempfile
 import time
-from dataclasses import replace
+from dataclasses import fields, is_dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -265,11 +265,130 @@ def _state_digest(state: Any) -> str:
 
 
 def _host_numeric_state(state: Any) -> Any:
+    def host_tree(value: Any) -> Any:
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            return type(value)((key, host_tree(item)) for key, item in value.items())
+        if isinstance(value, list):
+            return [host_tree(item) for item in value]
+        if isinstance(value, tuple):
+            items = tuple(host_tree(item) for item in value)
+            return type(value)(*items) if hasattr(value, "_fields") else items
+        if is_dataclass(value) and not isinstance(value, type):
+            return replace(value, **{field.name: host_tree(getattr(value, field.name)) for field in fields(value)})
+        return np.asarray(value)
+
     return driver.DriverPreviousStepStatePacket(
         tstep=state.tstep,
-        fields_by_component=jax.tree_util.tree_map(np.asarray, state.fields_by_component),
+        fields_by_component=host_tree(state.fields_by_component),
         provenance_by_component=state.provenance_by_component,
     )
+
+
+def _value_shape_dtype(value: Any) -> Any:
+    if value is None:
+        return ("none",)
+    if isinstance(value, dict):
+        return ("dict", tuple((key, _value_shape_dtype(item)) for key, item in sorted(value.items())))
+    if isinstance(value, (tuple, list)):
+        return (type(value).__name__, tuple(_value_shape_dtype(item) for item in value))
+    array = np.asarray(value)
+    return ("array", array.shape, array.dtype.str)
+
+
+def _restore_nested_layout(value: Any, template: Any, path: str, changes: list[str]) -> Any:
+    if isinstance(value, dict) and isinstance(template, dict):
+        if set(value) != set(template):
+            raise ValueError(f"cannot restore state layout with different nested keys: {path}")
+        if tuple(value) != tuple(template):
+            changes.append(path)
+        return type(value)(
+            (key, _restore_nested_layout(value[key], template[key], f"{path}.{key}", changes))
+            for key in template
+        )
+    if isinstance(value, list) and isinstance(template, list):
+        if len(value) != len(template):
+            raise ValueError(f"cannot restore state layout with different list lengths: {path}")
+        return [
+            _restore_nested_layout(item, expected, f"{path}[{index}]", changes)
+            for index, (item, expected) in enumerate(zip(value, template, strict=True))
+        ]
+    if isinstance(value, tuple) and isinstance(template, tuple):
+        if len(value) != len(template) or type(value) is not type(template):
+            raise ValueError(f"cannot restore state layout with different tuple structure: {path}")
+        items = tuple(
+            _restore_nested_layout(item, expected, f"{path}[{index}]", changes)
+            for index, (item, expected) in enumerate(zip(value, template, strict=True))
+        )
+        return type(value)(*items) if hasattr(value, "_fields") else items
+    if _value_shape_dtype(value) != _value_shape_dtype(template):
+        raise ValueError(f"cannot restore state layout with incompatible shape/dtype: {path}")
+    return value
+
+
+def _restore_state_layout_order(state: Any, template: Any) -> tuple[Any, dict[str, Any] | None]:
+    template_fields = template.fields_by_component
+    state_fields = state.fields_by_component
+    if set(state_fields) != set(template_fields):
+        return state, None
+    if any(set(state_fields[name]) != set(template_fields[name]) for name in template_fields):
+        return state, None
+    if any(
+        _value_shape_dtype(state_fields[component][name]) != _value_shape_dtype(template_fields[component][name])
+        for component in template_fields
+        for name in template_fields[component]
+    ):
+        return state, None
+    before_digest = _state_digest(state)
+    component_order = tuple(state_fields) != tuple(template_fields)
+    nested_order_changes: list[str] = []
+    field_order = {
+        component: {"before": tuple(state_fields[component]), "after": tuple(template_fields[component])}
+        for component in template_fields
+        if tuple(state_fields[component]) != tuple(template_fields[component])
+    }
+    if not component_order and not field_order:
+        for component in template_fields:
+            for name in template_fields[component]:
+                _restore_nested_layout(
+                    state_fields[component][name],
+                    template_fields[component][name],
+                    f"{component}.{name}",
+                    nested_order_changes,
+                )
+    if not component_order and not field_order and not nested_order_changes:
+        return state, None
+    nested_order_changes.clear()
+    ordered_fields = {
+        component: type(state_fields[component])(
+            (
+                name,
+                _restore_nested_layout(
+                    state_fields[component][name],
+                    template_fields[component][name],
+                    f"{component}.{name}",
+                    nested_order_changes,
+                ),
+            )
+            for name in template_fields[component]
+        )
+        for component in template_fields
+    }
+    restored = driver.DriverPreviousStepStatePacket(
+        tstep=state.tstep,
+        fields_by_component=type(state_fields)(ordered_fields.items()),
+        provenance_by_component=state.provenance_by_component,
+    )
+    after_digest = _state_digest(restored)
+    return restored, {
+        "components_reordered": component_order,
+        "field_order_changes": field_order,
+        "nested_mapping_order_changes": nested_order_changes,
+        "numeric_state_sha256_before": before_digest,
+        "numeric_state_sha256_after": after_digest,
+        "numeric_state_unchanged": before_digest == after_digest,
+    }
 
 
 def _atomic_json(path: Path, value: Any) -> None:
@@ -345,7 +464,21 @@ def _verify_selected_assets(
     return result
 
 
-def _save_progress(output_dir: Path, lanes: list[Any], second: list[Any]) -> None:
+def _save_progress(
+    output_dir: Path,
+    lanes: list[Any],
+    second: list[Any],
+    new_records: dict[str, dict[str, Any]],
+) -> None:
+    _atomic_pickle(
+        output_dir / "prepared_inputs.progress.cache.pkl",
+        {
+            "schema_version": 1,
+            "lanes": lanes,
+            "second": second,
+            "new_point_records": list(new_records.values()),
+        },
+    )
     _atomic_pickle(output_dir / "prepared_inputs.progress.pkl", (lanes, second))
 
 
@@ -358,7 +491,63 @@ def _cold_identity_hash(identity: tuple[Any, ...]) -> str:
     return digest.hexdigest()
 
 
+def _validate_resumed_lane(
+    point: str,
+    lane: Any,
+    second: Any,
+    record: dict[str, Any],
+    *,
+    args: argparse.Namespace,
+    source_values: dict[str, str],
+    source_run_def_sha256: str,
+    cold_identity_sha256: str,
+) -> None:
+    run_values = dict(source_values)
+    vegetation_path = (args.data_root / "INPUTDIR_ZZ" / "PFT1860_mangr_025deg.nc").resolve()
+    source_vegetation = run_values.get("VEGETATION_FILE")
+    expected_source_vegetation = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/data/INPUTDIR_ZZ/PFT1860_mangr_025deg.nc"
+    if source_vegetation is None or source_vegetation.replace("\\", "/") != expected_source_vegetation:
+        raise ValueError(f"unapproved VEGETATION_FILE path mapping for resumed lane {point}")
+    run_values["VEGETATION_FILE"] = str(vegetation_path).replace("\\", "/")
+    reference_dir = (args.asset_root / "landpoints" / point / "reference").resolve()
+    expected_identity = _cold_identity_hash((run_values, args.config.read_bytes(), str(reference_dir)))
+    normalized_run_def = lane.context.run_def_path
+    if (
+        record.get("cold_identity_sha256") != expected_identity
+        or record.get("cold_identity_sha256") != cold_identity_sha256
+        or lane.context.run_def_values != run_values
+        or read_run_def_values(normalized_run_def) != run_values
+        or normalized_run_def.resolve() != Path(record["normalized_local_run_def_path"]).resolve()
+        or lane.context.config_path.read_bytes() != args.config.read_bytes()
+        or lane.context.config_path.resolve() != args.config.resolve()
+        or Path(lane.context.reference_run_dir).resolve() != reference_dir
+        or record.get("config_sha256") != hashlib.sha256(args.config.read_bytes()).hexdigest()
+        or record.get("runtime_used_run_def_sha256") != source_run_def_sha256
+        or record.get("normalized_local_run_def_sha256") != _sha256_file(normalized_run_def)
+        or record.get("cold_state_numeric_sha256") != _state_digest(lane.initial_state)
+        or record.get("first_block_arguments_sha256") != _tree_digest(lane.arguments)
+        or record.get("second_block_arguments_sha256") != _tree_digest(second)
+    ):
+        raise ValueError(f"resumed lane source identity or numeric digests changed: {point}")
+    computed_signature = batch.static_signature(lane.context, lane.initial_state, lane.tables, lane.dispatch)
+    signature_sha256 = hashlib.sha256(repr(computed_signature).encode("utf-8")).hexdigest()
+    if computed_signature != lane.static_signature or record.get("static_signature_sha256") != signature_sha256:
+        raise ValueError(f"resumed lane static signature changed: {point}")
+    vegetation_audit = record.get("vegetation_file_path_only_mapping", {})
+    if (
+        not vegetation_path.is_file()
+        or vegetation_audit.get("local_file_sha256") != _sha256_file(vegetation_path)
+        or record.get("run_def_values_sha256")
+        != hashlib.sha256(json.dumps(run_values, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    ):
+        raise ValueError(f"resumed lane vegetation or run.def identity changed: {point}")
+
+
 def _save_cold_cache(output_dir: Path, states: dict[str, Any], identity_hashes: dict[str, str]) -> None:
+    _atomic_pickle(
+        output_dir / "cold_day1_new60.cache.pkl",
+        {"schema_version": 1, "states": states, "identity_hashes": identity_hashes},
+    )
     _atomic_pickle(output_dir / "cold_day1_new60.pkl", states)
     _atomic_json(output_dir / "cold_day1_new60_identity.json", identity_hashes)
 
@@ -418,6 +607,7 @@ def _prepare_new_point(
         origin = "fresh_local_cold_Day1_from_selected_source_assets"
         cold_states[point] = cold_state
         cold_identity_hashes[point] = identity_sha256
+        # Preserve completed Day1 work before lane preparation or static admission can fail.
         _save_cold_cache(args.output_dir, cold_states, cold_identity_hashes)
 
     start = time.perf_counter()
@@ -505,12 +695,43 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
     for lane, item in zip(lanes, second, strict=True):
         if batch._schema(item) != anchor_second_schema:
             raise ValueError(f"existing anchor second-block schema mismatch: {lane.landpoint_id}")
+    fresh_anchor_lanes = list(lanes)
+    fresh_anchor_second = list(second)
 
     progress_path = args.output_dir / "prepared_inputs.progress.pkl"
+    progress_cache_path = args.output_dir / "prepared_inputs.progress.cache.pkl"
     cold_path = args.output_dir / "cold_day1_new60.pkl"
+    cold_cache_path = args.output_dir / "cold_day1_new60.cache.pkl"
     report_path = args.output_dir / "preparation-audit.json"
+    cold_states: dict[str, Any] = {}
+    cold_identity_hashes: dict[str, str] = {}
+    cold_state_layout_migrations: list[dict[str, Any]] = []
+    if cold_cache_path.exists():
+        with cold_cache_path.open("rb") as stream:
+            cold_cache = pickle.load(stream)
+        if cold_cache.get("schema_version") != 1:
+            raise ValueError("unsupported cold Day1 cache schema")
+        cold_states = cold_cache["states"]
+        cold_identity_hashes = cold_cache["identity_hashes"]
+    elif cold_path.exists():
+        identity_path = args.output_dir / "cold_day1_new60_identity.json"
+        if not identity_path.is_file():
+            raise ValueError("cold Day1 state exists without identity metadata; refusing an unverifiable cache")
+        with cold_path.open("rb") as stream:
+            cold_states = pickle.load(stream)
+        cold_identity_hashes = json.loads(identity_path.read_text(encoding="utf-8"))
+        _save_cold_cache(args.output_dir, cold_states, cold_identity_hashes)
+
     new_records: dict[str, dict[str, Any]] = {}
-    if progress_path.exists():
+    if progress_cache_path.exists():
+        with progress_cache_path.open("rb") as stream:
+            progress_cache = pickle.load(stream)
+        if progress_cache.get("schema_version") != 1:
+            raise ValueError("unsupported prepared progress cache schema")
+        lanes = progress_cache["lanes"]
+        second = progress_cache["second"]
+        new_records = {item["landpoint_id"]: item for item in progress_cache["new_point_records"]}
+    elif progress_path.exists():
         with progress_path.open("rb") as stream:
             lanes, second = pickle.load(stream)
         if [lane.landpoint_id for lane in lanes] != ids[: len(lanes)]:
@@ -529,13 +750,88 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
                 raise ValueError(f"existing local anchor first block is not days 2-8: {lane.landpoint_id}")
             if not np.array_equal(np.asarray(second_args.science_day_numbers), np.arange(9, 16, dtype=np.int32)):
                 raise ValueError(f"existing local anchor second block is not days 9-15: {lane.landpoint_id}")
-    cold_states: dict[str, Any] = {}
-    cold_identity_hashes: dict[str, str] = {}
-    if cold_path.exists():
-        with cold_path.open("rb") as stream:
-            cold_states = pickle.load(stream)
-        identity_path = args.output_dir / "cold_day1_new60_identity.json"
-        cold_identity_hashes = json.loads(identity_path.read_text(encoding="utf-8"))
+    if [lane.landpoint_id for lane in lanes] != ids[: len(lanes)]:
+        raise ValueError("incremental prepared checkpoint is not an exact selection prefix")
+    if len(second) != len(lanes) or len(lanes) < len(ANCHORS):
+        raise ValueError("incremental prepared checkpoint has invalid lane/block counts")
+    for saved_lane, fresh_lane, saved_second, fresh_second in zip(
+        lanes[: len(ANCHORS)],
+        fresh_anchor_lanes,
+        second[: len(ANCHORS)],
+        fresh_anchor_second,
+        strict=True,
+    ):
+        anchor_checks = (
+            _state_digest(saved_lane.initial_state) == _state_digest(fresh_lane.initial_state),
+            _tree_digest(saved_lane.arguments) == _tree_digest(fresh_lane.arguments),
+            _tree_digest(saved_second) == _tree_digest(fresh_second),
+            hashlib.sha256(repr(saved_lane.static_signature).encode("utf-8")).hexdigest()
+            == hashlib.sha256(repr(fresh_lane.static_signature).encode("utf-8")).hexdigest(),
+            saved_lane.context.config_path.read_bytes() == args.config.read_bytes(),
+            saved_lane.context.run_def_values == fresh_lane.context.run_def_values,
+            read_run_def_values(saved_lane.context.run_def_path) == saved_lane.context.run_def_values,
+        )
+        if not all(anchor_checks):
+            raise ValueError(f"resumed anchor differs from freshly verified source anchor: {saved_lane.landpoint_id}")
+    if not progress_cache_path.exists() and cold_states:
+        anchor_state = lanes[0].initial_state
+        restored_states = {}
+        for point, state in cold_states.items():
+            restored, migration = _restore_state_layout_order(state, anchor_state)
+            restored_states[point] = restored
+            if migration is not None:
+                if not migration["numeric_state_unchanged"]:
+                    raise ValueError(f"cold-state layout restoration changed numeric values: {point}")
+                cold_state_layout_migrations.append({"landpoint_id": point, **migration})
+        cold_states = restored_states
+        if cold_state_layout_migrations:
+            _save_cold_cache(args.output_dir, cold_states, cold_identity_hashes)
+    required_record_ids = [lane.landpoint_id for lane in lanes[len(ANCHORS) :]]
+    missing_records = [point for point in required_record_ids if point not in new_records]
+    for point in missing_records:
+        if point not in cold_states or point not in cold_identity_hashes:
+            raise ValueError(f"prepared progress lacks its audit record and reusable cold state for {point}")
+        reference_dir = (args.asset_root / "landpoints" / point / "reference").resolve()
+        rebuilt_lane, rebuilt_second, _, rebuilt_record = _prepare_new_point(
+            point,
+            args=args,
+            source_values=run_defs[point],
+            reference_dir=reference_dir,
+            cold_states=cold_states,
+            cold_identity_hashes=cold_identity_hashes,
+        )
+        saved_lane = lanes[ids.index(point)]
+        saved_second = second[ids.index(point)]
+        checks = {
+            "prepared state": (_state_digest(saved_lane.initial_state), _state_digest(rebuilt_lane.initial_state)),
+            "first-block arguments": (_tree_digest(saved_lane.arguments), _tree_digest(rebuilt_lane.arguments)),
+            "second-block arguments": (_tree_digest(saved_second), _tree_digest(rebuilt_second)),
+            "static signature": (
+                hashlib.sha256(repr(saved_lane.static_signature).encode("utf-8")).hexdigest(),
+                hashlib.sha256(repr(rebuilt_lane.static_signature).encode("utf-8")).hexdigest(),
+            ),
+        }
+        changed = [label for label, (saved, rebuilt) in checks.items() if saved != rebuilt]
+        if changed:
+            raise ValueError(f"cannot recover interrupted audit record for {point}; changed {changed}")
+        new_records[point] = rebuilt_record
+    extra_records = set(new_records) - set(required_record_ids)
+    if extra_records:
+        raise ValueError(f"prepared progress contains audit records without matching lanes: {sorted(extra_records)}")
+    if missing_records or not progress_cache_path.exists() or not progress_path.exists():
+        _save_progress(args.output_dir, lanes, second, new_records)
+    for index, lane in enumerate(lanes[len(ANCHORS) :], len(ANCHORS)):
+        point = lane.landpoint_id
+        _validate_resumed_lane(
+            point,
+            lane,
+            second[index],
+            new_records[point],
+            args=args,
+            source_values=run_defs[point],
+            source_run_def_sha256=run_def_shas[point],
+            cold_identity_sha256=cold_identity_hashes.get(point, ""),
+        )
 
     report = {
         "status": "preparing",
@@ -556,11 +852,12 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
             "strict_static_compatibility": anchor_static_audit,
         },
         "new_point_records": list(new_records.values()),
+        "cold_state_layout_migrations": cold_state_layout_migrations,
         "input_interface": "(list[PreparedLane], list[BlockArguments])",
         "static_schema_audit": None,
     }
-    if not progress_path.exists():
-        _save_progress(args.output_dir, lanes, second)
+    if not progress_path.exists() or not progress_cache_path.exists():
+        _save_progress(args.output_dir, lanes, second, new_records)
     for point in ids[len(lanes) :]:
         reference_dir = (args.asset_root / "landpoints" / point / "reference").resolve()
         lane, second_args, cold_state, record = _prepare_new_point(
@@ -585,7 +882,7 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
                 raise ValueError(f"second-block days are not 9-15 at {candidate_lanes[index].landpoint_id}")
         lanes, second = candidate_lanes, candidate_second
         new_records[point] = record
-        _save_progress(args.output_dir, lanes, second)
+        _save_progress(args.output_dir, lanes, second, new_records)
         _save_cold_cache(args.output_dir, cold_states, cold_identity_hashes)
         report["static_schema_audit"] = static_audit
         report["checkpoint_count"] = len(lanes)
