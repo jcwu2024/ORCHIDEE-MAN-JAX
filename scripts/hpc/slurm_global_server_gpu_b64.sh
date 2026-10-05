@@ -111,9 +111,19 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 mkdir -p "$RUN_ROOT" "$PROJECT/runtime/logs"
-ALLOC_TRES=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | sed -n 's/.*AllocTRES=\([^ ]*\).*/\1/p')
-[[ -n $ALLOC_TRES ]] || { echo "Slurm did not report AllocTRES" >&2; exit 2; }
+ALLOC_TRES_RECORD=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | awk '{
+  for (i = 1; i <= NF; i++) {
+    if ($i ~ /^AllocTRES=/) allocated = substr($i, 11)
+    else if ($i ~ /^TRES=/) observed = substr($i, 6)
+  }
+} END {
+  if (allocated != "") printf "AllocTRES\t%s\n", allocated
+  else if (observed != "") printf "TRES\t%s\n", observed
+}')
+[[ -n $ALLOC_TRES_RECORD ]] || { echo "Slurm did not report allocated TRES" >&2; exit 2; }
+IFS=$'\t' read -r ALLOC_TRES_SOURCE ALLOC_TRES <<< "$ALLOC_TRES_RECORD"
 export ORCHJAX_SLURM_ALLOC_TRES=$ALLOC_TRES
+export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ALLOC_TRES_SOURCE
 GPU_INFO=$(nvidia-smi -i "$GPU_SELECTOR" --query-gpu=uuid,name,driver_version --format=csv,noheader)
 GPU_UUID=${GPU_INFO%%,*}
 GPU_REMAINDER=${GPU_INFO#*, }
@@ -140,6 +150,7 @@ export SINGULARITYENV_ORCHJAX_PHYSICAL_GPU_UUID=$ORCHJAX_PHYSICAL_GPU_UUID
 export SINGULARITYENV_ORCHJAX_GPU_DRIVER_VERSION=$ORCHJAX_GPU_DRIVER_VERSION
 export SINGULARITYENV_ORCHJAX_SLURM_GLOBAL_GPU_ID=$ORCHJAX_SLURM_GLOBAL_GPU_ID
 export SINGULARITYENV_ORCHJAX_SLURM_ALLOC_TRES=$ORCHJAX_SLURM_ALLOC_TRES
+export SINGULARITYENV_ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ORCHJAX_SLURM_ALLOC_TRES_SOURCE
 export SINGULARITYENV_SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 export SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID
 export SINGULARITYENV_SLURM_JOB_PARTITION=$SLURM_JOB_PARTITION
@@ -159,8 +170,9 @@ export SINGULARITYENV_NUMEXPR_NUM_THREADS=1
   taskset -pc $$
   lscpu -e=CPU,CORE,SOCKET,ONLINE
   (cd "$CODE_DIR" && git rev-parse HEAD)
-  printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s slurm_job_gpus=%s alloc_tres=%s\n' \
-    "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}" "$SLURM_JOB_GPUS" "$ORCHJAX_SLURM_ALLOC_TRES"
+  printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s slurm_job_gpus=%s alloc_tres=%s alloc_tres_source=%s\n' \
+    "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}" "$SLURM_JOB_GPUS" \
+    "$ORCHJAX_SLURM_ALLOC_TRES" "$ORCHJAX_SLURM_ALLOC_TRES_SOURCE"
   printf 'allocated_gpu_global_id=%s uuid=%s name=%s driver=%s cuda_visible_devices=%s\n' \
     "$ORCHJAX_SLURM_GLOBAL_GPU_ID" "$ORCHJAX_PHYSICAL_GPU_UUID" "$GPU_NAME" "$ORCHJAX_GPU_DRIVER_VERSION" "$CUDA_VISIBLE_DEVICES"
   nvidia-smi --query-gpu=index,uuid,name,driver_version,memory.used,memory.total,utilization.gpu --format=csv

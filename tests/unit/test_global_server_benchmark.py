@@ -224,8 +224,9 @@ def test_cost_rejects_incomplete_or_wrong_workload_metrics(invalid):
 
 def test_cost_allocation_uses_CPU_TRES_instead_of_assuming_physical_equals_billable():
     count, proof = cost.allocated_cpu_count({"allocated_CPU_request_count": 4,
-        "Slurm": {"ORCHJAX_SLURM_ALLOC_TRES": "cpu=8,gres/gpu=1"}})
+        "Slurm": {"ORCHJAX_SLURM_ALLOC_TRES": "cpu=8,gres/gpu=1", "ORCHJAX_SLURM_ALLOC_TRES_SOURCE": "TRES"}})
     assert count == 8 and proof["requested_CPU_count"] == 4
+    assert proof["count_origin"] == "TRES.cpu" and proof["TRES_source"] == "TRES"
 
 
 def test_pool_core_barrier_contains_all_workers_without_full_output_IPC():
@@ -279,7 +280,7 @@ def test_pool_wrapper_transfers_fresh_host_pairs_and_materializes_full_outputs(m
         def close(self):
             pass
     channel = Channel()
-    args = SimpleNamespace(synthetic_smoke=False, cache_mode="disabled", cache_root=None,
+    args = SimpleNamespace(synthetic_smoke=False, cache_mode="off", cache_root=None,
         output_dir=tmp_path, prepared_input=tmp_path / "toy", config=tmp_path / "toy.yaml")
     cpu.pool_worker(channel, 0, args, [0, 4, 8, 12])
     assert not any("error" in item for item in channel.sent)
@@ -287,6 +288,24 @@ def test_pool_wrapper_transfers_fresh_host_pairs_and_materializes_full_outputs(m
     assert puts[1][4][0] is lanes[4].arguments
     assert channel.sent[1] == {"completed_point_indices": [0, 4, 8, 12]}
     assert len(gets) == 1 and set(channel.sent[2]["outputs"]) == {0, 4, 8, 12}
+
+
+def test_CPU_parsed_default_uses_real_cache_off_interface(monkeypatch, tmp_path):
+    from scripts.dev.probe_global_batch_cache import configure_cache
+
+    args = cpu.parser().parse_args(["--mode", "scalar", "--cpu-budget", "1", "--output-dir", str(tmp_path)])
+    assert args.cache_mode == "off" and args.cache_root is None
+    original = jax.config.jax_enable_compilation_cache
+    monkeypatch.setenv("ORCHJAX_DISABLE_COMPILATION_CACHE", "0")
+    try:
+        policy = configure_cache(args.cache_mode, args.cache_root)
+        assert policy == {"mode": "off", "root": None, "public_cache_reset": True}
+        assert jax.config.jax_enable_compilation_cache is False
+        import os
+
+        assert os.environ["ORCHJAX_DISABLE_COMPILATION_CACHE"] == "1"
+    finally:
+        jax.config.update("jax_enable_compilation_cache", original)
 
 
 def cost_fixture(tmp_path, backend="cpu"):

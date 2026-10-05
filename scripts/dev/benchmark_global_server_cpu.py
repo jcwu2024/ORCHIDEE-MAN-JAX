@@ -37,7 +37,7 @@ def parser():
     result.add_argument("--truth-root", type=Path, default=ROOT)
     result.add_argument("--baseline-ref", default="133e35aec7b83b9d79888c46092f64d518e97299")
     result.add_argument("--warm-repeats", type=int, default=5)
-    result.add_argument("--cache-mode", choices=["disabled", "persistent"], default="disabled")
+    result.add_argument("--cache-mode", choices=["off", "persistent"], default="off")
     result.add_argument("--cache-root", type=Path)
     result.add_argument("--memory-guard-gib", type=float, help="Conservative host MemAvailable guard; pool default60GiB.")
     result.add_argument("--dry-run", action="store_true")

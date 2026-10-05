@@ -53,7 +53,8 @@ def admit(mode, budget, *, environ=None, allowed=None, sysfs=Path("/sys/devices/
             "original_affinity": list(allowed), "topology": topology, "hostname": hostname,
             "Slurm": {name: env.get(name) for name in (
                 "SLURM_JOB_ID", "SLURM_JOB_PARTITION", "SLURM_CPUS_PER_TASK", "SLURM_NTASKS",
-                "SLURM_JOB_NODELIST", "SLURM_MEM_PER_NODE", "SLURM_MEM_PER_CPU", "ORCHJAX_SLURM_ALLOC_TRES")},
+                "SLURM_JOB_NODELIST", "SLURM_MEM_PER_NODE", "SLURM_MEM_PER_CPU", "ORCHJAX_SLURM_ALLOC_TRES",
+                "ORCHJAX_SLURM_ALLOC_TRES_SOURCE")},
             "pool_controller_policy": "shares worker0 allocated core; no fifth CPU" if mode == "pool" else None,
             "thread_count_claim": "affinity is a resource bound; vmap is not a thread-count claim"}
 
@@ -83,7 +84,8 @@ def admit_gpu(*, environ=None, allowed=None, sysfs=Path("/sys/devices/system/cpu
             "selected_logical_cpus": allowed, "topology": topology, "hostname": hostname,
             "CUDA_VISIBLE_DEVICES_preserved": visible,
             "Slurm": {name: env.get(name) for name in ("SLURM_JOB_ID", "SLURM_JOB_PARTITION", "SLURM_CPUS_PER_TASK",
-                "SLURM_NTASKS", "SLURM_JOB_NODELIST", "SLURM_JOB_GPUS", "SLURM_STEP_GPUS", "ORCHJAX_SLURM_ALLOC_TRES")},
+                "SLURM_NTASKS", "SLURM_JOB_NODELIST", "SLURM_JOB_GPUS", "SLURM_STEP_GPUS", "ORCHJAX_SLURM_ALLOC_TRES",
+                "ORCHJAX_SLURM_ALLOC_TRES_SOURCE")},
             "thread_count_claim": "inherited auxiliary mask preserved; allocated CPU count is not a physical-core equivalence claim"}
 
 

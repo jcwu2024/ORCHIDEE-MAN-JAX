@@ -34,10 +34,11 @@ def allocated_cpu_count(resources):
     if not isinstance(request, int) or request <= 0:
         raise ValueError("actual declared Slurm CPU allocation required")
     tres = resources.get("Slurm", {}).get("ORCHJAX_SLURM_ALLOC_TRES") or ""
+    source = resources.get("Slurm", {}).get("ORCHJAX_SLURM_ALLOC_TRES_SOURCE") or "TRES source unrecorded"
     counts = [part.split("=", 1)[1] for part in tres.split(",") if part.strip().startswith("cpu=")]
     actual = int(counts[0]) if counts else request
-    return actual, {"requested_CPU_count": request, "AllocTRES": tres or None,
-                    "cost_CPU_count": actual, "count_origin": "AllocTRES.cpu" if counts else "Slurm requested count; AllocTRES absent",
+    return actual, {"requested_CPU_count": request, "recorded_TRES": tres or None, "TRES_source": source if tres else None,
+                    "cost_CPU_count": actual, "count_origin": f"{source}.cpu" if counts else "Slurm requested count; TRES absent",
                     "billing_verified": False, "physical_topology": resources.get("topology"),
                     "selected_logical_cpus": resources.get("selected_logical_cpus")}
 
@@ -109,7 +110,7 @@ def accept_stage(directory, name, manifest, report):
                       if part.strip().startswith("gres/gpu=")]
     if allocated_gpus and allocated_gpus != [1 if is_gpu else 0]:
         raise ValueError("actual AllocTRES GPU allocation differs from single-card/CPU contract")
-    allocation["GPU_count_origin"] = "AllocTRES.gres/gpu" if allocated_gpus else "declared contract; AllocTRES.gres/gpu absent"
+    allocation["GPU_count_origin"] = f"{allocation['TRES_source']}.gres/gpu" if allocated_gpus else "declared contract; TRES.gres/gpu absent"
     values = record["timing"]
     point_days = size * 14
     core = metrics(values[f"B{size}_warm_frozen_state_core"], point_days)

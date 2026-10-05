@@ -79,6 +79,12 @@ the visible ordinal or force physical GPU 0. Select a GPU node only from a
 fresh occupancy check within the approved allocation. A node observed free
 earlier is not a reservation.
 
+The launchers preserve `ORCHJAX_SLURM_ALLOC_TRES` for benchmark provenance.
+They prefer the exact `AllocTRES=` field from `scontrol show job -o`; when
+that field is absent they use the exact allocated `TRES=` field. They never
+substitute `ReqTRES=`. `launch-context.txt` records the selected field source
+as `slurm_alloc_tres_source`.
+
 The present bounded project inventory found no current-platform-matched
 `orchidee_ol`, `orchidee.e`, or `xios_server.exe` plus build configuration.
 Therefore this matrix can establish CPU/GPU throughput and cost against the

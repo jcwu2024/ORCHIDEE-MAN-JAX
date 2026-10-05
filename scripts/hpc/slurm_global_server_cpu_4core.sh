@@ -84,9 +84,19 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 mkdir -p "$RUN_ROOT" "$PROJECT/runtime/logs"
-ALLOC_TRES=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | sed -n 's/.*AllocTRES=\([^ ]*\).*/\1/p')
-[[ -n $ALLOC_TRES ]] || { echo "Slurm did not report AllocTRES" >&2; exit 2; }
+ALLOC_TRES_RECORD=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | awk '{
+  for (i = 1; i <= NF; i++) {
+    if ($i ~ /^AllocTRES=/) allocated = substr($i, 11)
+    else if ($i ~ /^TRES=/) observed = substr($i, 6)
+  }
+} END {
+  if (allocated != "") printf "AllocTRES\t%s\n", allocated
+  else if (observed != "") printf "TRES\t%s\n", observed
+}')
+[[ -n $ALLOC_TRES_RECORD ]] || { echo "Slurm did not report allocated TRES" >&2; exit 2; }
+IFS=$'\t' read -r ALLOC_TRES_SOURCE ALLOC_TRES <<< "$ALLOC_TRES_RECORD"
 export ORCHJAX_SLURM_ALLOC_TRES=$ALLOC_TRES
+export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ALLOC_TRES_SOURCE
 {
   date -u +%FT%TZ
   hostname
@@ -96,7 +106,8 @@ export ORCHJAX_SLURM_ALLOC_TRES=$ALLOC_TRES
   lscpu -e=CPU,CORE,SOCKET,ONLINE
   (cd "$CODE_DIR" && git rev-parse HEAD)
   printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s\n' "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}"
-  printf 'slurm_alloc_tres=%s\n' "$ORCHJAX_SLURM_ALLOC_TRES"
+  printf 'slurm_alloc_tres=%s slurm_alloc_tres_source=%s\n' \
+    "$ORCHJAX_SLURM_ALLOC_TRES" "$ORCHJAX_SLURM_ALLOC_TRES_SOURCE"
 } | tee "$RUN_ROOT/launch-context.txt"
 
 run_case() {
