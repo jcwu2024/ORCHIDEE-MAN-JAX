@@ -494,7 +494,7 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 
 第四轮scale执行边界：`benchmark_global_scale.py`对所有16/64个唯一点复核两块完整输入，
 共享B4的前提是所有lane的科学static signature与schema/dtype/None严格兼容。
-本地完整64输入及新60点冷状态已保存；B16独立结果输入文件保留，完整Linux重建尚未
+本地完整64输入及新60点冷状态已保存；B16独立输入文件保留，完整Linux重建尚未
 执行。实际B16生产reader在旧anchor`001.0-071.0/group5/contfrac`的原有float32 leaf
 触发全FP64输入拒绝；没有把错误归因于新点，未绕过此门槛。
 原四点numerical reference只读导入；当前常驻B4对其完整输出和各点独立reference重验，
