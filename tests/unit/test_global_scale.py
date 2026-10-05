@@ -454,10 +454,10 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     original_signature = static_signature(SimpleNamespace(run_def_values={"VEGETATION_FILE": "E:/local/source.nc"}))
     anchor_run_def = tmp_path / "anchor_used_run.def"
     scale.base.write_materialized_run_def({"VEGETATION_FILE": vegetation.as_posix()}, anchor_run_def)
-    state_layout = SimpleNamespace(tstep=47, fields_by_component={"toy": {"x": np.asarray([1.0])}},
-                                   provenance_by_component={"toy": {"x": "own source"}})
     restart = SimpleNamespace(stomate_readstart=SimpleNamespace(season_state=SimpleNamespace(provenance="own source")))
-    anchors = [replace(item, initial_state=state_layout, context=SimpleNamespace(config_path=config,
+    anchors = [replace(item, initial_state=SimpleNamespace(tstep=47,
+        fields_by_component={"toy": item.arguments.values_by_component[0]},
+        provenance_by_component={"toy": ("own source",)}), context=SimpleNamespace(config_path=config,
         run_def_path=anchor_run_def, run_def_values={"VEGETATION_FILE": vegetation.as_posix()},
         first_step_restart_state=restart)) for item in anchors]
     anchors = [replace(item, arguments=item.arguments._replace(

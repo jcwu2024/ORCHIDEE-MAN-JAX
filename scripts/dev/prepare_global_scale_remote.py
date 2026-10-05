@@ -146,10 +146,10 @@ def rehydrate(args):
             provenance_by_component=state.provenance_by_component)
         other = batch.prepare_lane(point, context, shifted, day_numbers=range(9, 16)).arguments
         lane, other = frozen_io.bind_frozen(lane, other, frozen_points[point], records[point], vegetation.as_posix())
-        for key, value in (("first_block_arguments_sha256", lane.arguments),
-                           ("second_block_arguments_sha256", other)):
-            if producer._tree_digest(value) != records[point][key]:
-                raise ValueError(f"remote numerical prepared inputs differ from local audit: {point}/{key}")
+        lane, other, migration_proof = frozen_io.canonicalize_state_arguments(lane, other, lanes[0])
+        for key, proof in zip(frozen_io.BLOCK_KEYS, migration_proof["blocks"], strict=True):
+            if proof["original_arguments_sha256"] != records[point][key]:
+                raise ValueError(f"original frozen numerical prepared inputs differ from local audit: {point}/{key}")
         batch.audit_compatible_lanes([*lanes, lane])
         batch.audit_compatible_lanes([replace(item, arguments=value)
             for item, value in zip([*lanes, lane], [*second, other], strict=True)])
@@ -157,8 +157,10 @@ def rehydrate(args):
         second.append(other)
         report["new_point_records"].append({"landpoint_id": point,
             "prepare_seconds": time.perf_counter() - point_started,
-            "numeric_inputs_match_local": True, "cold_Day1_reused": True,
+            "numeric_named_inputs_match_local": True, "original_frozen_block_digests_verified": True,
+            "cold_Day1_reused": True,
             "frozen_arguments_bound": True, "cold_argument_boundary_verified": True,
+            "positional_state_representation_migration": migration_proof,
             "VEGETATION_FILE_mapping": {"source": run_defs[point]["VEGETATION_FILE"], "remote": vegetation.as_posix()},
             "static_signature_sha256": hashlib.sha256(repr(lane.static_signature).encode()).hexdigest()})
         report["checkpoint_count"] = len(lanes)

@@ -64,3 +64,48 @@ layout/value/time boundary and forcing/day boundary tampering, and verify
 original class/container/native dtype identity. No physical model executes in
 these IO tests. Linux admission and GPU/scientific scale validation remain
 separate, pending root execution.
+
+## Explicit named-state representation migration
+
+The first frozen Linux admission verified the original NEW60 input digest and
+its own Linux static closure, then stopped before numerical GPU validation at
+cross-anchor `state_layout` compatibility. Exact saved-state inspection shows
+that all four original remote anchors use one ordering of the 93 fields in
+`sechiba_finalize_state`, while NEW60 uses a different ordering. Component
+order is unchanged. Every original anchor's positional state arguments match
+its original packet; changing its field labels alone would misassociate
+numeric values, and a tuple permutation changes both schema and digest.
+The evidence is `scale-implementation-checks/round4-state-layout-comparison.json`.
+
+Keep the original remote4 packets, arguments and reference identities
+untouched. Each NEW60 lane first passes the original frozen argument digests,
+static signature, cold values/layout and audited VEG mapping. Only then apply
+the existing `prepare_global_scale_inputs.py::_restore_state_layout_order`
+to that packet using the original remote anchor as the canonical template.
+The adapter maps argument group0 (`values_by_component`) explicitly by
+component, field and recursive nested path. It proves that classes,
+dtype/shape/raw bytes and the cold packet association stay identical by name;
+the other eight argument groups remain identical objects with unchanged
+schema and numerical digest. Packet time remains 47. The lane packet,
+argument slots and recomputed scientific static signature all use the same
+canonical layout before cross-lane admission.
+
+Original positional digests remain required IO provenance. Bound positional
+digests describe the documented permutation and can differ; they are not
+substituted for original hashes. Each remote point record retains original
+and bound block digests, the complete field-index bijection, named nested
+class/dtype/shape/byte inventories and source-backed packet migration proof
+for both blocks. Duplicate, missing or extra names, wrong axes and changed
+named values are rejected. No process formula, dtype, tolerance or value
+changes are admitted.
+
+All 75 targeted IO/scale tests passed, including nonzero equal-shape state
+values: the correct named permutation preserves alpha=3 and beta=7; a
+schema-identical value swap and a corrupted migration are rejected.
+The actual saved NEW60 collection passed the full 60-point/two-block offline
+proof in `scale-implementation-checks/round4-canonical-state-io-proof.json`.
+All 120 original hashes were verified, all named-state/non-state proofs
+passed, and all eight original remote4 argument hashes stayed unchanged.
+This check uses local valid context metadata and the actual original remote4
+state layout/schema; it does not prepare Linux contexts or execute a model.
+Linux acceptance still requires the bounded root-run admission.

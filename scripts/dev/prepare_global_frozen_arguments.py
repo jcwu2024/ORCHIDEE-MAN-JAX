@@ -128,6 +128,120 @@ def bind_frozen(lane, second, frozen, record, remote_vegetation):
     return replace(lane, arguments=arguments[0]), arguments[1]
 
 
+def _named_state(values, layout):
+    components, fields_by_component = layout
+    if len(set(components)) != len(components) or len(fields_by_component) != len(components):
+        raise ValueError("state layout contains duplicate components or wrong component axis")
+    if not isinstance(values, tuple) or len(values) != len(components):
+        raise ValueError("state values have wrong component axis")
+    named = {}
+    for component, names, component_values in zip(components, fields_by_component, values, strict=True):
+        if len(set(names)) != len(names):
+            raise ValueError(f"state layout contains duplicate fields: {component}")
+        if not isinstance(component_values, tuple) or len(component_values) != len(names):
+            raise ValueError(f"state values have wrong field axis: {component}")
+        named[component] = dict(zip(names, component_values, strict=True))
+    return named
+
+
+def _named_records(named):
+    """Full named path inventory, including nested class and array byte identity."""
+    records = {}
+
+    def visit(value, path):
+        kind = f"{type(value).__module__}.{type(value).__qualname__}"
+        key = tuple(path)
+        if key in records:
+            raise ValueError("duplicate named state path")
+        if value is None:
+            records[key] = {"kind": "none"}
+        elif isinstance(value, dict):
+            records[key] = {"kind": kind, "keys": sorted(value)}
+            for name in sorted(value):
+                visit(value[name], (*path, name))
+        elif isinstance(value, (tuple, list)):
+            records[key] = {"kind": kind, "length": len(value)}
+            for index, item in enumerate(value):
+                visit(item, (*path, index))
+        elif is_dataclass(value) and not isinstance(value, type):
+            records[key] = {"kind": kind, "fields": [field.name for field in fields(value)]}
+            for field in fields(value):
+                visit(getattr(value, field.name), (*path, field.name))
+        else:
+            array = np.asarray(value)
+            records[key] = {"kind": kind, "shape": list(array.shape), "dtype": array.dtype.str,
+                            "bytes_sha256": hashlib.sha256(array.tobytes(order="C")).hexdigest()}
+
+    for component, component_fields in named.items():
+        for name, value in component_fields.items():
+            visit(value, (component, name))
+    return records
+
+
+def canonicalize_state_arguments(lane, second, template):
+    """Explicit named-state bijection into untouched remote anchor layout.
+
+    Called only after bind_frozen has validated ORIGINAL source digests,
+    static signatures and cold packet association. Positional digests change
+    when field slots change; named bytes and every non-state group cannot.
+    """
+    source_layout, target_layout = state_layout(lane.initial_state), state_layout(template.initial_state)
+    source_values = batch.fast_state_from_previous_packet(lane.initial_state).values_by_component
+    target_values = batch.fast_state_from_previous_packet(template.initial_state).values_by_component
+    source_named, target_named = _named_state(source_values, source_layout), _named_state(target_values, target_layout)
+    if set(source_named) != set(target_named) or any(
+            set(source_named[name]) != set(target_named[name]) for name in source_named):
+        raise ValueError("canonical state layout has missing or extra component/field names")
+    restored, migration = producer._restore_state_layout_order(lane.initial_state, template.initial_state)
+    if restored.tstep != 47 or type(restored) is not type(lane.initial_state):
+        raise ValueError("canonical state migration changed packet class or cold Day1 time boundary")
+    bound_layout = state_layout(restored)
+    if bound_layout != target_layout:
+        raise ValueError("canonical state migration did not produce exact anchor layout")
+    bound_values = batch.fast_state_from_previous_packet(restored).values_by_component
+    packet_before, packet_after = _named_records(source_named), _named_records(_named_state(bound_values, bound_layout))
+    if packet_before != packet_after:
+        raise ValueError("canonical state migration changed a named class/shape/dtype/value")
+    mapping = []
+    for target_component, (component, names) in enumerate(zip(*target_layout, strict=True)):
+        source_component = source_layout[0].index(component)
+        source_names = source_layout[1][source_component]
+        mapping.append({"component": component, "source_component_index": source_component,
+            "bound_component_index": target_component, "fields": [
+                {"field": name, "source_field_index": source_names.index(name), "bound_field_index": index}
+                for index, name in enumerate(names)]})
+    bound, proofs = [], []
+    for block, arguments in enumerate((lane.arguments, second)):
+        original_named = _named_records(_named_state(arguments.values_by_component, source_layout))
+        if original_named != packet_before:
+            raise ValueError("original frozen state has wrong named cold packet association")
+        result = arguments._replace(values_by_component=bound_values)
+        bound_named = _named_records(_named_state(result.values_by_component, bound_layout))
+        if original_named != bound_named:
+            raise ValueError("canonical argument bijection changed a named class/shape/dtype/value")
+        if type(result) is not type(arguments) or any(result[index] is not arguments[index] for index in range(1, 9)):
+            raise ValueError("canonicalization changed original class or a non-state argument group")
+        if (batch._schema(tuple(result[1:])) != batch._schema(tuple(arguments[1:]))
+                or producer._tree_digest(tuple(result[1:])) != producer._tree_digest(tuple(arguments[1:]))):
+            raise ValueError("canonicalization changed non-state argument schema or numerical bytes")
+        proofs.append({"block": block, "original_arguments_sha256": producer._tree_digest(arguments),
+            "bound_arguments_sha256": producer._tree_digest(result),
+            "named_state_unchanged": True, "cold_packet_named_association_verified": True,
+            "non_state_groups_identical_objects": True,
+            "non_state_groups_sha256": producer._tree_digest(tuple(arguments[1:])),
+            "named_path_records": [{"path": list(path), **value} for path, value in original_named.items()]})
+        bound.append(result)
+    signature = batch.static_signature(lane.context, restored, lane.tables, lane.dispatch)
+    if signature != template.static_signature:
+        raise ValueError("canonical scientific closure differs from untouched remote anchor")
+    result = replace(lane, initial_state=restored, arguments=bound[0], static_signature=signature)
+    batch.audit_compatible_lanes([template, result])
+    proof = {"policy": "original digests verified before explicit named-field representation migration",
+             "source_layout": source_layout, "bound_layout": bound_layout, "named_field_bijection": mapping,
+             "source_backed_packet_migration": migration, "tstep": restored.tstep, "blocks": proofs}
+    return result, bound[1], proof
+
+
 def export(args):
     started = time.perf_counter()
     if args.output.exists() or args.report.exists():

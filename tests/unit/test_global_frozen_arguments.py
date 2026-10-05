@@ -160,3 +160,93 @@ def test_load_preserves_original_classes_and_all_ordered_points(tmp_path, case):
     assert type(arguments[0]) is frozen.batch.BlockArguments
     assert frozen.producer._tree_digest(arguments[0]) == case[3][frozen.BLOCK_KEYS[0]]
     assert arguments[0].landpoint_payload["lat"].dtype == np.dtype("float32")
+
+
+@pytest.fixture
+def ordered_state_case(monkeypatch):
+    source = frozen.producer.driver.DriverPreviousStepStatePacket(tstep=47,
+        fields_by_component={"component": {"beta": np.array([7.0]), "alpha": np.array([3.0])}},
+        provenance_by_component={"component": ("audited source",)})
+    target = frozen.producer.driver.DriverPreviousStepStatePacket(tstep=47,
+        fields_by_component={"component": {"alpha": np.array([11.0]), "beta": np.array([13.0])}},
+        provenance_by_component=source.provenance_by_component)
+    def signature(context, state, tables, dispatch):
+        return frozen.state_layout(state)
+    monkeypatch.setattr(frozen.batch, "static_signature", signature)
+    monkeypatch.setattr(frozen.batch, "audit_compatible_lanes", lambda lanes: None)
+    initial = frozen.batch.fast_state_from_previous_packet(source).values_by_component
+    args = frozen.batch.BlockArguments(initial, {"forcing": np.ones((7, 48, 1))},
+        np.arange(2, 9, dtype=np.int32), *({"parameter": np.array([5.0])} for _ in range(6)))
+    lane = frozen.batch.PreparedLane("source", None, source, None, None, args, frozen.state_layout(source))
+    template = frozen.replace(lane, landpoint_id="anchor", initial_state=target,
+                              static_signature=frozen.state_layout(target))
+    second = args._replace(science_day_numbers=np.arange(9, 16, dtype=np.int32))
+    return lane, second, template
+
+
+def test_explicit_bijection_preserves_equal_shape_nonzero_fields_by_name(ordered_state_case):
+    lane, second, template = ordered_state_case
+    result, other, proof = frozen.canonicalize_state_arguments(lane, second, template)
+    assert np.array_equal(result.arguments.values_by_component[0][0], [3.0])
+    assert np.array_equal(result.arguments.values_by_component[0][1], [7.0])
+    assert result.arguments.values_by_component[0][0] is lane.arguments.values_by_component[0][1]
+    assert result.arguments.values_by_component[0][1] is lane.arguments.values_by_component[0][0]
+    assert tuple(result.initial_state.fields_by_component["component"]) == ("alpha", "beta")
+    assert result.static_signature == template.static_signature
+    assert frozen.state_layout(result.initial_state) == template.static_signature
+    for original, bound, block_proof in zip((lane.arguments, second), (result.arguments, other), proof["blocks"], strict=True):
+        assert all(original[index] is bound[index] for index in range(1, 9))
+        assert block_proof["original_arguments_sha256"] != block_proof["bound_arguments_sha256"]
+        assert block_proof["named_state_unchanged"] and block_proof["cold_packet_named_association_verified"]
+    assert proof["named_field_bijection"][0]["fields"][0] == {
+        "field": "alpha", "source_field_index": 1, "bound_field_index": 0}
+
+
+def test_schema_only_equal_shape_swap_is_rejected(ordered_state_case):
+    lane, second, template = ordered_state_case
+    wrong = lane.arguments._replace(values_by_component=(tuple(reversed(lane.arguments.values_by_component[0])),))
+    assert frozen.batch._schema(wrong) == frozen.batch._schema(lane.arguments)
+    with pytest.raises(ValueError, match="wrong named cold packet association"):
+        frozen.canonicalize_state_arguments(frozen.replace(lane, arguments=wrong), second, template)
+
+
+def test_migration_that_swaps_equal_shape_named_values_is_rejected(ordered_state_case, monkeypatch):
+    lane, second, template = ordered_state_case
+    real_restore = frozen.producer._restore_state_layout_order
+    def wrong_restore(*args):
+        state, record = real_restore(*args)
+        state.fields_by_component["component"]["alpha"] = np.array([7.0])
+        state.fields_by_component["component"]["beta"] = np.array([3.0])
+        return state, record
+    monkeypatch.setattr(frozen.producer, "_restore_state_layout_order", wrong_restore)
+    with pytest.raises(ValueError, match="changed a named class/shape/dtype/value"):
+        frozen.canonicalize_state_arguments(lane, second, template)
+
+
+@pytest.mark.parametrize("change", ["missing", "extra"])
+def test_canonical_layout_requires_exact_field_name_set(ordered_state_case, change):
+    lane, second, template = ordered_state_case
+    if change == "missing":
+        del template.initial_state.fields_by_component["component"]["beta"]
+    else:
+        template.initial_state.fields_by_component["component"]["extra"] = np.array([17.0])
+    with pytest.raises(ValueError, match="missing or extra"):
+        frozen.canonicalize_state_arguments(lane, second, template)
+
+
+@pytest.mark.parametrize("change", ["duplicate", "missing", "extra", "component_axis", "field_axis"])
+def test_named_state_bijection_rejects_nonunique_or_wrong_axes(ordered_state_case, change):
+    lane, _, template = ordered_state_case
+    values, layout = lane.arguments.values_by_component, frozen.state_layout(lane.initial_state)
+    if change == "duplicate":
+        layout = (("component",), (("alpha", "alpha"),))
+    elif change == "missing":
+        layout = (("component",), (("alpha",),))
+    elif change == "extra":
+        layout = (("component",), (("alpha", "beta", "extra"),))
+    elif change == "component_axis":
+        values = values + values
+    elif change == "field_axis":
+        values = (values[0] + (np.array([9.0]),),)
+    with pytest.raises(ValueError, match="duplicate|wrong.*axis"):
+        frozen._named_state(values, layout)
