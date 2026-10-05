@@ -38,11 +38,16 @@ class StageStore:
             raise ValueError("invalid stage name")
         return self.directory / ("stage_" + name + ".pkl")
 
+    @staticmethod
+    def validate_source_destination(source, destination):
+        source, destination = Path(source).resolve(), Path(destination).resolve()
+        if source.is_relative_to(destination) or destination.is_relative_to(source):
+            raise ValueError("stage source and destination must be separate non-overlapping directories")
+
     def import_completed(self, directory, names):
         """Read only sealed numerical prerequisites; never open a writable source store."""
         source = Path(directory).resolve()
-        if source == self.directory.resolve():
-            raise ValueError("stage source must differ from destination")
+        self.validate_source_destination(source, self.directory)
         source_manifest_path = source / "stage_manifest.json"
         manifest_data = source_manifest_path.read_bytes()
         manifest = json.loads(manifest_data)

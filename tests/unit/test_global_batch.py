@@ -264,6 +264,8 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
 
     from scripts.dev import benchmark_global_batch as harness
 
+    tmp_path = tmp_path / "source"
+    tmp_path.mkdir()
     lanes = [lane(point, float(i + 1)) for i, point in enumerate(harness.POINTS)]
     second = [item.arguments._replace(science_day_numbers=np.arange(9, 16, dtype=np.int32)) for item in lanes]
     compiled, bound = [], []
@@ -344,7 +346,7 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
     # A fresh round imports only numerical snapshots. B4 compiles exactly once,
     # gates and checkpoints raw timing/output before a later scalar failure.
     source_bytes = {path.name: path.read_bytes() for path in tmp_path.iterdir() if path.is_file()}
-    target = tmp_path / "new-round"
+    target = tmp_path.parent / "new-round"
     args.output_dir = target
     args.stage_source_dir = tmp_path
     args.stage = "validate"
@@ -385,3 +387,43 @@ def test_staged_small_execution_preserves_candidate_and_each_independent_referen
     assert recovered.manifest["stages"]["B4_scalar_comparison_v1_pool_" + selected]["status"] == "failed"
     assert "B1_scalar_baseline_pool_" + selected not in recovered.manifest["stages"]
     assert {path.name: path.read_bytes() for path in tmp_path.iterdir() if path.is_file()} == source_bytes
+
+
+@pytest.mark.parametrize("relation", ["same", "destination_nested", "source_nested"])
+def test_stage_import_rejects_overlapping_paths_before_manifest_mutation(monkeypatch, tmp_path, relation):
+    from types import SimpleNamespace
+
+    from scripts.dev import benchmark_global_batch as harness
+
+    source = tmp_path / "source"
+    source.mkdir()
+    marker = source / "stage_manifest.json"
+    marker.write_text('{"stages": {"unfinished": {"status": "running"}}}')
+    report = source / "report.json"
+    report.write_text('{"status": "preserved source report"}')
+    before = marker.read_bytes()
+    if relation == "same":
+        destination = source / ".." / "source"
+    elif relation == "destination_nested":
+        destination = source / "new-output"
+    else:
+        destination = tmp_path
+    args = SimpleNamespace(stage_source_dir=source, output_dir=destination)
+    lanes = [lane(point) for point in harness.POINTS]
+    with pytest.raises(ValueError, match="non-overlapping"):
+        harness.staged_benchmark(args, SimpleNamespace(), lanes, [])
+    monkeypatch.setattr("sys.argv", ["benchmark_global_batch.py", "--mode", "staged", "--stage", "validate",
+                                    "--prepared-input", str(source / "unused.pkl"), "--output-dir", str(destination),
+                                    "--stage-source-dir", str(source)])
+
+    def no_setup(*args, **kwargs):
+        pytest.fail("invalid overlapping source reached output/cache setup")
+
+    monkeypatch.setattr(harness, "Recorder", no_setup)
+    monkeypatch.setattr(harness, "configure_cache", no_setup)
+    with pytest.raises(ValueError, match="non-overlapping"):
+        harness.main()
+    assert marker.read_bytes() == before
+    assert report.read_text() == '{"status": "preserved source report"}'
+    assert set(source.iterdir()) == {marker, report}
+    assert not (tmp_path / "stage_manifest.json").exists()

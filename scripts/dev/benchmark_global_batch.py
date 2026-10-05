@@ -771,13 +771,15 @@ def staged_benchmark(args, recorder, lanes, second):
     """Candidate first, independently bound references next, validation/timing last."""
     if tuple(lane.landpoint_id for lane in lanes) != POINTS:
         raise ValueError("staged diagnostic requires the declared four real points in declared order")
+    source = getattr(args, "stage_source_dir", None)
+    if source is not None:
+        StageStore.validate_source_destination(source, args.output_dir)
     legacy_factory(args.baseline_ref)  # Validate unchanged extracted transition AST before any reuse.
     recorder.sentinel_paths = roughheight_sentinel_contract(lanes[0])
     recorder.result["allowed_sentinel_contract"] = recorder.sentinel_paths
     store = StageStore(args.output_dir, stage_identity(args, lanes, second, recorder.result["environment"]))
     recorder.result["stages"] = store.manifest["stages"]
     required = ["B4_candidate", "legacy_original"] + ["scalar_" + lane.landpoint_id for lane in lanes]
-    source = getattr(args, "stage_source_dir", None)
     if source is not None:
         store.import_completed(source, required)
         recorder.phase("complete_numerical_prerequisites_imported", source=str(source), names=list(required),
@@ -945,7 +947,7 @@ def staged_benchmark(args, recorder, lanes, second):
             }
             recorder.result["timing"].update(measured)
             return {"outputs": jax.device_get(current), "measurements": measured}, {
-                "path": "vmapped batch; no scalar constructed before checkpoint publication",
+                "path": "vmapped batch; no standalone scalar executable compiled before checkpoint publication",
                 "independent_parity": True, "permutation": True, "replacement_isolation": True,
                 "five_or_more_synchronized_repeats": True, "frozen_start": True,
                 "accepted_scope": "B4 only; scalar comparison and B1 remain separate",
@@ -1078,6 +1080,8 @@ def main():
     if args.cache_mode == "persistent" and args.cache_root is None:
         parser.error("persistent mode requires --cache-root")
     args.output_dir = args.output_dir.resolve()
+    if args.stage_source_dir is not None:
+        StageStore.validate_source_destination(args.stage_source_dir, args.output_dir)
     os.environ.setdefault("ORCHIDEE_REPO_ROOT", str(ROOT))
     os.environ.setdefault("ORCHIDEE_DATA_ROOT", str(args.truth_root / "data"))
     os.environ.setdefault("ORCHIDEE_REFERENCE_ROOT", str(args.truth_root / "reference"))
