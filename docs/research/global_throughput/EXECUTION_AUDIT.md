@@ -523,8 +523,13 @@ state和两块完整数值argument digest，允许已声明VEGETATION_FILE路径
 这仍不是GPU数值gate。首次112.716639s入场和30.850098s单点诊断已保全；215的两块
 536-leaf输入逐路径比较有16个真实FP64低位差异，cold state/layout相同。完整数值输入
 直接运输并逐字节检查，避免跨运行环境重新生成forcing/查找表，未修改任何过程或容差。
-后续入场内部上限1500s，外部window至多1550s；加上上述两次及100s预留housekeeping，
-最多1794s，仍受原1800s/4-affinity免费CPU总额度约束。physical GPU window由原独立
+首个运输后入场窗口118.289638s在NEW60与旧remote4的state字段排列兼容性处失败；
+此前首点原始frozen argument digest与自身Linux context检查均通过。仅93字段的
+`sechiba_finalize_state`排列不同，不能只换字段标签而保留错误的位置关联。后续使用已有
+值保持布局迁移及具名字段一一映射，只排列NEW60的state argument组；先核对源digest，
+再记录绑定digest及每个字段dtype/shape/bytes等价证据。其余八组输入及原remote4保持原样。
+后续入场内部上限1385s，外部window至多1435s；加上三次已用向上取整263s和100s预留
+housekeeping，最多1798s，仍受原1800s/4-affinity免费CPU总额度约束。physical GPU window由原独立
 3600card-seconds/最多两次账本管理，准备成本单列。
 
 已直接阅读上列主代码边界、CLI/runner默认、forcing/parameter/state adapters、static dispatch、

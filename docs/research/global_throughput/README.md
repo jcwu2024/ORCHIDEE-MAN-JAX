@@ -10,7 +10,10 @@
 表达式均为FP64的证明。主管已澄清：本轮开启JAX x64、保留基线原生dtype，
 已知地理payload和solar子计算含FP32；先前逐表达式全FP64措辞不属于用户要求，
 此次没有精度变更。确切原生dtype输入gate已通过35项轻量测试及local16/local64生产reader；
-Linux首次再生成出现16个FP64低位差异，现按原预算直接运输冻结参数，再完成入场和GPU诊断。
+Linux首次再生成出现16个FP64低位差异，现直接运输冻结参数。运输后的首点原始数值digest
+通过，但旧remote4与NEW60的`sechiba_finalize_state`字段排列不同，合批入场严格拒绝。
+后续只按字段名一一映射NEW60的state输入到未改动remote4布局，保存原始及绑定digest，
+逐字段核对dtype/shape/bytes；其余参数组保持原冻结输入，再按原预算完成入场和GPU诊断。
 证据与执行合同见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
 
 ## 目标与范围
@@ -175,16 +178,23 @@ preprepared wrapper及实际B4组串行；B16的完整输出、raw samples和gat
 身份不因requested subset变化而失效。GPU合同总计3600 card-seconds、最多两次window、
 每次最多1800s；本地CPU实测另列，免费CPU准备/入场也另记完整wall。
 
+本地CPU第四轮B16完整阶段已保存：五次同步core中位9.068345s/224点日，实际四组B4
+串行中位12.447431s，相对收益1.372624倍；wrapper中位9.012244s。B64只完成编译及
+已记录的部分门槛，没有完整warm samples。累计记录的本地监督window为1190.948/1200s，
+不再追加本地执行；证据是`local-round4/localCPU-curve-summary.json`及`attempt_accounting.json`。
+
 输入准备由`prepare_global_scale_inputs.py`维护实际LIMIT中心和动态参数的确定性选点、
 各点v2 source checksum、Day1及完整两块输入记录；
 `prepare_global_scale_remote.py`在Linux重建必要context/path元数据，并消费已保存的新60点
 Day1状态和完整冻结BlockArguments；保留原remote四anchor，不重新生成Day1或编译transition。
 首次重算输入在215处失败；独立两块快照比较确认16个FP64叶子低位不同（forcing/查找表），
-不是treedef字符串差异。采用运输完整原数值输入的IO路径，严格保留原digest，
-不把相近的重算值视为相同输入，也不改变公式/精度/容差。只允许已声明VEGETATION_FILE
-路径映射，并核对实际local/remote文件内容、各点完整输入digest和static closure/schema。
-此前scale的逐浮点leaf全FP64门槛拒绝旧anchor原有`float32`payload；正在按冻结基线的
-四条确切路径/dtype/shape修正。其他浮点、离散、static、身份和非有限值门槛保留，
+不是treedef字符串差异。运输完整原数值输入时先严格核对原digest，不把相近的重算值
+视为相同输入，也不改变公式/精度/容差。Linux与本地的state字段顺序不同：原remote4
+保持未变，NEW60仅按具名state字段映射到其布局，核对每个字段dtype/shape/bytes并记录
+原始及绑定位置digest。其余八组参数保留原始数值；VEGETATION_FILE仍只允许已声明的
+路径映射，实际local/remote文件内容及canonical static closure/schema均须通过。
+此前scale的逐浮点leaf全FP64门槛拒绝旧anchor原有`float32`payload；现严格要求冻结基线的
+四条确切路径/dtype/shape。其他浮点、离散、static、身份和非有限值门槛保留，
 reader/gate不做cast；后续入场及同工作量实测按此合同执行。
 内存入场以真实input/output字节、compiler buffer analysis和所选物理GPU free/total memory
 保守投影，要求至少2GiB余量；RSS不是VRAM，入场估计也不是无OOM保证。
