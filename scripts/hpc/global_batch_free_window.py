@@ -101,6 +101,12 @@ def main():
             raise ValueError("supported declared GPU allowances are 1800 or 3600 card-seconds")
         if limit == 1800 and ledger["windows"]:
             raise ValueError("the 1800 card-second allowance permits exactly one GPU window; no retries")
+        max_windows = ledger.get("max_windows")
+        if max_windows is not None:
+            if type(max_windows) is not int or max_windows < 1:
+                raise ValueError("max_windows must be a positive integer")
+            if len(ledger["windows"]) >= max_windows:
+                raise ValueError(f"declared GPU allowance permits at most {max_windows} windows")
         committed = sum(w["charged_card_seconds"] for w in ledger["windows"])
         if committed + args.timeout_seconds > limit:
             raise ValueError(f"insufficient remaining GPU budget: {limit - committed}s")
