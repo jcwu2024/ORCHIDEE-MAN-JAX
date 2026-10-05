@@ -5,10 +5,10 @@
 本轮保持科学过程不变，已实现编译前的外层 batch；本地 B1/B4 有界数值与计时通过。
 本轮完成 Explore1000 免费 CPU 输入审计及GPU B4两块完整parity/置换/隔离和五次同步计时；
 第三轮同设备同工作量JAX scalar比较与单点scalar基线通过，GPU B4 core收益3.572820倍；
-没有Fortran/年度/生产端到端认证，未提交付费作业。
+没有Fortran/年度/生产端到端认证；已批准的付费服务器基准状态见下。
 第四轮已完成Linux完整64点入场和两次免费GPU窗口；B16完成，B64不完整；不发布B64吞吐，最新结果见文末。
 
-当前操作为[服务器CPU/GPU时间与成本基准准备](SERVER_BENCHMARK.md)，不是第五轮免费window。
+当前操作为已批准的[服务器CPU/GPU时间与成本基准执行](SERVER_BENCHMARK.md)，不是第五轮免费window。
 主验收比较同16/64真实点、相同冻结输入和完整双7日块下的单物理核常驻scalar、
 四个各占一核的持久worker、1/4核JAX batch及单GPU candidate。CPU affinity、物理核/SMT、
 JAX初始化后的所有线程affinity和Slurm AllocTRES须记录；`vmap`不保证每lane一线程。
@@ -19,7 +19,12 @@ GPU先原子保全B64 candidate门槛与core/wrapper计时，再测B16，默认�
 费用主口径采用用户GPU卡/CPU核小时比44（GPU2.20元推算CPU0.05元），
 部署文档CPU0.07元作保守上限，CPU/GPU相加是明确预算假设。
 按allocated Slurm CPU和GPU时数计费；同工作量热费用与完整多阶段job费用分别记录。
-三个一小时pilot保守总额2.83元；尚未提交，具体资源/目录/命令/费用仍须用户批准。
+用户已批准三个各最多一小时的pilot，原保守总额度2.83元。CPU1作业15579758以59分钟
+限制运行，CPU4等待完整scalar B16/B64及CPU1终态。初始CPU/GPU启动均在Python前
+因Slurm AllocTRES/TRES字段差异失败，GPU替换15579759在2秒内退出6、日志为空。
+后者未进入模型，具体身份查询原因尚未证实；后续启动替换限58分钟，全部失败费用计入
+原额度。运行中的checkout不得修改；修复另行部署。权威记录为
+[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
 有界当前平台资产盘点未找到匹配Fortran binary及build配置，不作全账户不存在的结论。
 历史2分钟/点年与本地i7计时均不能替代服务器CPU/Fortran实测。
 

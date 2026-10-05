@@ -1,8 +1,13 @@
 # Explore1000 Server Benchmark Contract
 
-Status: preparation only. No paid Slurm job has been submitted. This document
-defines the smallest server matrix needed to compare resident scalar,
-persistent CPU workers, JAX CPU batching, and the first complete GPU batch.
+Status: user-approved bounded execution. CPU1 job 15579758 is running with a
+59-minute limit; CPU4 awaits both verified scalar references and CPU1 terminal
+state. Startup failures are counted against the original resource envelope;
+the next GPU startup replacement is limited to 58 minutes. The authoritative
+attempt and cost record is
+`outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json`.
+This document defines the server matrix for resident scalar, persistent CPU
+workers, JAX CPU batching, and the first complete GPU batch.
 
 ## Fixed Workload
 
@@ -245,6 +250,32 @@ the CPU jobs sequentially so `CPU_REFERENCE_DIR` names a completed, immutable
 result. Each size and mode writes to a separate child of `RUN_ROOT`.
 
 ## Recorded Measurements
+
+The GPU launcher records pre-query job, host, affinity, global GPU ID and
+unchanged `CUDA_VISIBLE_DEVICES` before resolving physical identity. The
+read-only `global_gpu_identity.py` helper matches a numeric Slurm global ID
+to the exact NVIDIA `/proc` device minor, then verifies UUID, device minor
+and PCI address against accessible `nvidia-smi -q -x` metadata. A UUID Slurm
+ID requires the same driver/NVML agreement. It rejects unknown or ambiguous
+mappings and never substitutes the first visible GPU or uses visible index 0
+as a physical identity. Numeric ID-to-device-minor agreement is an explicit
+admission constraint; a differently ordered scheduler mapping needs separate
+evidence before acceptance. The launcher saves `gpu-identity.json`, names
+each startup step and reports failing commands with exit codes. It queries
+inventory and visible processes only for the verified UUID and retains query
+stdout, stderr and exit codes; these optional diagnostic failures do not
+invalidate the mandatory physical-identity check or stop startup. The helper
+does not independently resolve a CUDA visible selector to a UUID when NVML
+exposes multiple devices. A single allocated Slurm GPU cgroup and unchanged
+CUDA mask remain execution conditions checked by the allocated GPU entry.
+
+Job 15579759 exited 6 before Python in 2 seconds with an empty scheduler log and
+no launch context. Existing evidence localizes this to identity/driver setup
+before context logging; its actual global GPU ID and failing command were not
+retained, so a cgroup index mismatch remains a hypothesis. gln01 metadata
+checks confirm XML UUID/minor/PCI agreement on that free node, without proving
+the cause or paid-node runtime acceptance. Repairs deploy to a new immutable
+checkout while the CPU1 checkout is active.
 
 For every mode and size, retain the complete report, point identities,
 numerical gates, cold compilation/lowering time, hot core time, wrapper time,

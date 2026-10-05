@@ -13,7 +13,26 @@
 #SBATCH -e runtime/logs/global_server_gpu_b64_%j.txt
 #SBATCH --no-requeue
 
-set -euo pipefail
+set -Eeuo pipefail
+STARTUP_STEP=argument_and_path_admission
+trap 'exit_code=$?; printf "GPU launcher failed: step=%s line=%s exit=%s command=%q\n" "$STARTUP_STEP" "$LINENO" "$exit_code" "$BASH_COMMAND" >&2' ERR
+
+selected_gpu_diagnostic() {
+  local label=$1 query_exit=0
+  shift
+  if nvidia-smi -i "$GPU_UUID" "$@" > "$RUN_ROOT/$label.stdout.txt" 2> "$RUN_ROOT/$label.stderr.txt"; then
+    query_exit=0
+  else
+    query_exit=$?
+  fi
+  printf '%s\t%s\n' "$label" "$query_exit" >> "$RUN_ROOT/gpu-diagnostic-exits.tsv"
+  printf 'selected_GPU_diagnostic=%s uuid=%s exit=%s\n' "$label" "$GPU_UUID" "$query_exit"
+  cat "$RUN_ROOT/$label.stdout.txt"
+  cat "$RUN_ROOT/$label.stderr.txt" >&2
+  if [[ $query_exit -ne 0 ]]; then
+    printf 'optional selected-card diagnostic unavailable; mandatory UUID/minor/PCI identity already passed: %s\n' "$label" >&2
+  fi
+}
 
 PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
@@ -37,6 +56,8 @@ case "$RUN_ROOT" in
 esac
 OUTPUT_DIR=$RUN_ROOT/candidate-first
 ENTRY=$CODE_DIR/scripts/hpc/global_batch_gpu_entry.py
+IDENTITY_HELPER=$CODE_DIR/scripts/hpc/global_gpu_identity.py
+METADATA_PYTHON=$PROJECT/.venvs/orcjax_cpu/bin/python
 MEASURE_B4_BASELINE=${MEASURE_B4_BASELINE:-0}
 GPU_SELECTOR=${SLURM_JOB_GPUS:-}
 GPU_SELECTOR=${GPU_SELECTOR//[[:space:]]/}
@@ -69,7 +90,7 @@ if [[ $DRY_RUN -eq 0 ]]; then
     echo "requires exactly one global GPU ID in SLURM_JOB_GPUS" >&2; exit 2;
   }
   [[ $CUDA_VISIBLE_DEVICES != *,* ]] || { echo "requires exactly one visible allocated GPU" >&2; exit 2; }
-  for path in "$PYTHON" "$ENTRY" "$PREPARED_INPUT" "$FULL_REFERENCE_DIR" "$CONFIG" "$ASSET_ROOT" "$IMAGE"; do
+  for path in "$PYTHON" "$METADATA_PYTHON" "$IDENTITY_HELPER" "$ENTRY" "$PREPARED_INPUT" "$FULL_REFERENCE_DIR" "$CONFIG" "$ASSET_ROOT" "$IMAGE"; do
     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
   done
   test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)" || {
@@ -102,6 +123,7 @@ if [[ $DRY_RUN -eq 1 ]]; then
     "$OUTPUT_DIR" "$FULL_REFERENCE_DIR" "$MEASURE_B4_BASELINE"
   printf 'host_gpu_identity_source=SLURM_JOB_GPUS global_gpu_selector=%q preserved_cuda_visible_devices=%q alloc_tres=%q\n' \
     "${GPU_SELECTOR:-<from-slurm>}" "$CUDA_VISIBLE_DEVICES" "${ORCHJAX_SLURM_ALLOC_TRES:-<from-scontrol>}"
+  printf 'metadata_command='; printf '%q ' "$METADATA_PYTHON" "$IDENTITY_HELPER" --slurm-global-id "${GPU_SELECTOR:-<from-slurm>}" --cuda-visible-devices "$CUDA_VISIBLE_DEVICES" --output "$RUN_ROOT/gpu-identity.json"; printf '\n'
   CUDA_DRIVER=$(readlink -m /usr/lib64/libcuda.so.1)
   NVML_DRIVER=$(readlink -m /usr/lib64/libnvidia-ml.so.1)
   BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
@@ -111,6 +133,15 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 mkdir -p "$RUN_ROOT" "$PROJECT/runtime/logs"
+exec > >(tee -a "$RUN_ROOT/launch-context.txt") 2>&1
+STARTUP_STEP=pre_identity_context
+date -u +%FT%TZ
+hostname
+uptime
+taskset -pc $$
+printf 'pre_query_slurm_job=%s global_gpu_id=%s preserved_cuda_visible_devices=%s cpus=%s\n' \
+  "$SLURM_JOB_ID" "$GPU_SELECTOR" "$CUDA_VISIBLE_DEVICES" "$SLURM_CPUS_PER_TASK"
+STARTUP_STEP=slurm_allocation_metadata
 ALLOC_TRES_RECORD=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | awk '{
   for (i = 1; i <= NF; i++) {
     if ($i ~ /^AllocTRES=/) allocated = substr($i, 11)
@@ -124,16 +155,16 @@ ALLOC_TRES_RECORD=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | awk '{
 IFS=$'\t' read -r ALLOC_TRES_SOURCE ALLOC_TRES <<< "$ALLOC_TRES_RECORD"
 export ORCHJAX_SLURM_ALLOC_TRES=$ALLOC_TRES
 export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ALLOC_TRES_SOURCE
-GPU_INFO=$(nvidia-smi -i "$GPU_SELECTOR" --query-gpu=uuid,name,driver_version --format=csv,noheader)
-GPU_UUID=${GPU_INFO%%,*}
-GPU_REMAINDER=${GPU_INFO#*, }
-GPU_NAME=${GPU_REMAINDER%%,*}
-GPU_DRIVER=${GPU_REMAINDER##*, }
+STARTUP_STEP=verified_GPU_identity_metadata
+GPU_INFO=$("$METADATA_PYTHON" "$IDENTITY_HELPER" --slurm-global-id "$GPU_SELECTOR" \
+  --cuda-visible-devices "$CUDA_VISIBLE_DEVICES" --output "$RUN_ROOT/gpu-identity.json")
+IFS=$'\t' read -r GPU_UUID GPU_NAME GPU_DRIVER <<< "$GPU_INFO"
 [[ -n $GPU_UUID && -n $GPU_NAME && -n $GPU_DRIVER ]] || { echo "cannot resolve allocated GPU identity" >&2; exit 2; }
 export ORCHJAX_PHYSICAL_GPU_UUID=$GPU_UUID
 export ORCHJAX_GPU_DRIVER_VERSION=$GPU_DRIVER
 export ORCHJAX_SLURM_GLOBAL_GPU_ID=$GPU_SELECTOR
 
+STARTUP_STEP=driver_bind_paths
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 test -f "$CUDA_DRIVER"
@@ -175,12 +206,14 @@ export SINGULARITYENV_NUMEXPR_NUM_THREADS=1
     "$ORCHJAX_SLURM_ALLOC_TRES" "$ORCHJAX_SLURM_ALLOC_TRES_SOURCE"
   printf 'allocated_gpu_global_id=%s uuid=%s name=%s driver=%s cuda_visible_devices=%s\n' \
     "$ORCHJAX_SLURM_GLOBAL_GPU_ID" "$ORCHJAX_PHYSICAL_GPU_UUID" "$GPU_NAME" "$ORCHJAX_GPU_DRIVER_VERSION" "$CUDA_VISIBLE_DEVICES"
-  nvidia-smi --query-gpu=index,uuid,name,driver_version,memory.used,memory.total,utilization.gpu --format=csv
-  nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
-} | tee "$RUN_ROOT/launch-context.txt"
+  STARTUP_STEP=selected_card_optional_diagnostics
+  selected_gpu_diagnostic selected-gpu-inventory --query-gpu=index,uuid,name,driver_version,memory.used,memory.total,utilization.gpu --format=csv
+  selected_gpu_diagnostic selected-gpu-processes --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv
+}
 
 mkdir -p "$OUTPUT_DIR"
 cd "$CODE_DIR"
+STARTUP_STEP=allocated_candidate_execution
 "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
   /usr/bin/time -v singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR" \
   "$IMAGE" "$PYTHON" "$ENTRY" "${args[@]}"
