@@ -106,16 +106,21 @@ CPU/GPU费用相加时，GPU加M个辅助CPU的小时费用等于44+M个CPU单�
 
 用户已批准三个付费pilot：CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；
 原批准额度按上述比例最多2.65元，按CPU0.07元和GPU2.20元相加保守为2.83元。
-CPU1作业15579758已按59分钟启动；CPU4等待CPU1完整scalar B16/B64参考及终态。
-两次初始启动因Slurm字段差异失败，GPU替换15579759又在Python前退出6；所有失败费用
-纳入原额度，后续GPU启动替换缩至58分钟。运行中的远端checkout保持不可变。
+CPU1作业15579758运行852秒后因数值门槛失败：B16第7点299.0-115.0的叶子
+`[0][0][0][7]`组合误差界限占比1.228488，未保存完整scalar参考，B64未运行。
+CPU4前提不满足，本轮不提交；CPU1不自动重跑，容差保持原样。
+两次初始启动因Slurm字段差异失败，GPU替换15579759在Python前退出6；所有失败费用
+纳入原额度。GPU启动修复部署到独立checkout，58分钟作业15579869已提交、正在等待
+调度；没有预计启动时间。原CPU checkout及已排队GPU checkout保持不可变。
+当前对话已设置每5分钟的静默后续检查，仅在有效阶段、异常或终态时更新，完成结果报告后停止。
 执行记录与剩余额度见[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
 当前平台有界资产检查尚未找到匹配Fortran可执行文件与build/input契约，Fortran对照待补。
 第四轮免费账本和原始结果保持原样，73秒余额不授权新增免费window。
 准备验收已通过14项新增协议测试、35项受影响的既有scale测试及Ruff/diff检查；
 FULL64数值参考读取兼容性核对64点和760个array leaves。四worker本地spawn检查只用合成输入。
 这些本地检查使用Windows/JAX0.10.1，不替代部署0.4.38的组件检查或真实服务器物理计时。
-验证记录在`outputs/research/global_throughput/server-cost-implementation/verification.json`。
+验证记录在`outputs/research/global_throughput/server-cost-implementation/verification.json`；
+后续Slurm/cache接口及GPU身份启动修复分别保存在其`startup-repair/`和`gpu-startup-repair/`。
 
 首个本地实现已加入 `driver/global_batch.py` 与
 `scripts/dev/benchmark_global_batch.py`：在 AOT 前提取原完整 transition，保持内层

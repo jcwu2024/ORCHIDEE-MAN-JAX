@@ -1,9 +1,10 @@
 # Explore1000 Server Benchmark Contract
 
-Status: user-approved bounded execution. CPU1 job 15579758 is running with a
-59-minute limit; CPU4 awaits both verified scalar references and CPU1 terminal
-state. Startup failures are counted against the original resource envelope;
-the next GPU startup replacement is limited to 58 minutes. The authoritative
+Status: user-approved bounded execution. CPU1 job 15579758 failed its fixed
+numerical parity gate after852 seconds, before a complete scalar B16/B64
+reference was sealed. CPU4 is withheld and CPU1 is not automatically replayed.
+GPU startup replacement15579869 is pending with a58-minute limit. All startup
+failures are counted against the original resource envelope. The authoritative
 attempt and cost record is
 `outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json`.
 This document defines the server matrix for resident scalar, persistent CPU

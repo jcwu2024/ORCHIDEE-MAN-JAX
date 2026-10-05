@@ -19,12 +19,19 @@ GPU先原子保全B64 candidate门槛与core/wrapper计时，再测B16，默认�
 费用主口径采用用户GPU卡/CPU核小时比44（GPU2.20元推算CPU0.05元），
 部署文档CPU0.07元作保守上限，CPU/GPU相加是明确预算假设。
 按allocated Slurm CPU和GPU时数计费；同工作量热费用与完整多阶段job费用分别记录。
-用户已批准三个各最多一小时的pilot，原保守总额度2.83元。CPU1作业15579758以59分钟
-限制运行，CPU4等待完整scalar B16/B64及CPU1终态。初始CPU/GPU启动均在Python前
-因Slurm AllocTRES/TRES字段差异失败，GPU替换15579759在2秒内退出6、日志为空。
-后者未进入模型，具体身份查询原因尚未证实；后续启动替换限58分钟，全部失败费用计入
-原额度。运行中的checkout不得修改；修复另行部署。权威记录为
+用户已批准三个各最多一小时的pilot，原保守总额度2.83元。CPU1作业15579758运行852秒
+后在B16 scalar第7点299.0-115.0的GPU参考门槛失败；叶子`[0][0][0][7]`界限占比
+1.228488222708634。这是数值parity失败，没有OOM/guard证据；没有complete参考，B64
+未运行，CPU4因此不提交，CPU1不自动重跑。/usr/bin/time子进程wall848.66秒、
+user756.48秒、system39.82秒、peak RSS20,882,480 KiB；计费使用父作业wall852秒。
+初始CPU/GPU启动均在Python前因Slurm AllocTRES/TRES字段差异失败，GPU替换15579759
+在2秒内退出6、日志为空。具体身份查询原因尚未证实；修复部署到独立checkout，
+后续58分钟作业15579869已排队。全部失败费用计入原额度，旧科学核心、容差及免费账本
+保持原样；已有checkout不修改。权威记录为
 [付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
+已结束作业合计876 allocated CPU-count-seconds及5 GPU-card-seconds，保守费用0.020088889元。
+GPU跑满58分钟后全轮保守上限2.417422222元；排队不作为已消耗时长。当前对话每5分钟
+静默检查已提交GPU的状态，终态后验证完整stage、更新报告并停止跟进；这不授权新增作业。
 有界当前平台资产盘点未找到匹配Fortran binary及build配置，不作全账户不存在的结论。
 历史2分钟/点年与本地i7计时均不能替代服务器CPU/Fortran实测。
 
