@@ -12,7 +12,8 @@
 冻结源中`lalo[:,0]`进入`season_midwinter_solad`，实际shape tracing结果为`float32`，
 虽然后续`gdd_init_date`状态为`float64`。因此本文历史FP64运行标签不证明逐表达式
 全FP64。主管已澄清本轮保持基线原生dtype、开启JAX x64；已知地理payload和solar子计算
-含FP32。这是纠正先前主管措辞，未改变核心或dtype。当前修正窄范围gate后继续第四轮。
+含FP32。这是纠正先前主管措辞，未改变核心或dtype。确切原生dtype输入gate已通过35项
+轻量测试及local16/local64生产reader；第四轮Linux入场改为运输原始冻结数值参数。
 确切调用链、来源和执行合同见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
 
 ## 首个实现的当前状态
@@ -495,10 +496,11 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 
 第四轮scale执行边界：`benchmark_global_scale.py`对所有16/64个唯一点复核两块完整输入，
 共享B4的前提是所有lane的科学static signature与schema/dtype/None严格兼容。
-本地完整64输入及新60点冷状态已保存；B16独立输入文件保留，完整Linux重建尚未
-执行。实际B16生产reader在旧anchor`001.0-071.0/group5/contfrac`的原有float32 leaf
-触发原逐leaf全FP64输入拒绝；没有把错误归因于新点。gate正在改为四条已知原生
-float32路径的确切schema，其余既有浮点、离散、static、身份及非有限值检查不变。
+本地完整64输入及新60点冷状态已保存；B16独立输入文件保留。首次Linux入场及单点
+诊断已执行，冻结参数修复后的完整入场待验收。实际B16生产reader曾在旧anchor
+`001.0-071.0/group5/contfrac`的原有float32 leaf触发原逐leaf全FP64输入拒绝；没有把
+错误归因于新点。gate现严格要求四条已知原生float32路径的确切schema，其余既有
+浮点、离散、static、身份及非有限值检查不变。
 原四点numerical reference只读导入；当前常驻B4对其完整输出和各点独立reference重验，
 其余每组运行自身输入，不新增逐点scalar编译。B16/B64输出逐lane对齐本轮实际B4组输出，
 计时baseline也对齐同一组冻结输入，不使用历史四点scalar的比例外推。
@@ -513,12 +515,17 @@ legacy reference hash，不重新编译scalar；旧记录缺少backend version�
 portable reader只恢复pathlib metadata到当前host，不随意改路径或数值；声明config与context
 config bytes、磁盘run.def与context values必须匹配，再重新计算当前static signature。
 
-Linux准备脚本只消费local audit和已存Day1的host NumPy数值状态，核对v2资产、config、
+Linux准备脚本消费local audit、已存Day1的host NumPy数值状态及完整冻结BlockArguments，
+核对v2资产、config、
 state和两块完整数值argument digest，允许已声明VEGETATION_FILE路径映射；历史路径若已
 不存在，只作为归档provenance，实际local文件hash必须等于canonical remote目标文件hash，
 且目标字符串必须与remote四anchor run.def相同。remote完整64输入实际经生产reader再审计，
-这仍不是GPU数值gate。脚本内部整段wall上限1500s，由外部supervisor限制整个window≤1700s，
-共同约束test02总额度；physical GPU window由独立预算账本管理，准备成本单列。
+这仍不是GPU数值gate。首次112.716639s入场和30.850098s单点诊断已保全；215的两块
+536-leaf输入逐路径比较有16个真实FP64低位差异，cold state/layout相同。完整数值输入
+直接运输并逐字节检查，避免跨运行环境重新生成forcing/查找表，未修改任何过程或容差。
+后续入场内部上限1500s，外部window至多1550s；加上上述两次及100s预留housekeeping，
+最多1794s，仍受原1800s/4-affinity免费CPU总额度约束。physical GPU window由原独立
+3600card-seconds/最多两次账本管理，准备成本单列。
 
 已直接阅读上列主代码边界、CLI/runner默认、forcing/parameter/state adapters、static dispatch、
 AD primitives及相关测试实现；核查七日块三份dynamic gate、三点block2复用、多日/组件性能

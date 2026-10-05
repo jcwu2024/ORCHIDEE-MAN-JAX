@@ -9,7 +9,8 @@
 `float64`。本文历史“FP64”标签表示开启JAX x64及原运行dtype，不能作为所有物理
 表达式均为FP64的证明。主管已澄清：本轮开启JAX x64、保留基线原生dtype，
 已知地理payload和solar子计算含FP32；先前逐表达式全FP64措辞不属于用户要求，
-此次没有精度变更。正在窄范围修正输入gate，随后按原预算完成Linux入场和第四轮GPU诊断。
+此次没有精度变更。确切原生dtype输入gate已通过35项轻量测试及local16/local64生产reader；
+Linux首次再生成出现16个FP64低位差异，现按原预算直接运输冻结参数，再完成入场和GPU诊断。
 证据与执行合同见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
 
 ## 目标与范围
@@ -176,8 +177,11 @@ preprepared wrapper及实际B4组串行；B16的完整输出、raw samples和gat
 
 输入准备由`prepare_global_scale_inputs.py`维护实际LIMIT中心和动态参数的确定性选点、
 各点v2 source checksum、Day1及完整两块输入记录；
-`prepare_global_scale_remote.py`在Linux用已保存的新60点Day1状态重建context/forcing，
-保留原remote四anchor，不重新生成Day1或编译transition。只允许已声明VEGETATION_FILE
+`prepare_global_scale_remote.py`在Linux重建必要context/path元数据，并消费已保存的新60点
+Day1状态和完整冻结BlockArguments；保留原remote四anchor，不重新生成Day1或编译transition。
+首次重算输入在215处失败；独立两块快照比较确认16个FP64叶子低位不同（forcing/查找表），
+不是treedef字符串差异。采用运输完整原数值输入的IO路径，严格保留原digest，
+不把相近的重算值视为相同输入，也不改变公式/精度/容差。只允许已声明VEGETATION_FILE
 路径映射，并核对实际local/remote文件内容、各点完整输入digest和static closure/schema。
 此前scale的逐浮点leaf全FP64门槛拒绝旧anchor原有`float32`payload；正在按冻结基线的
 四条确切路径/dtype/shape修正。其他浮点、离散、static、身份和非有限值门槛保留，
