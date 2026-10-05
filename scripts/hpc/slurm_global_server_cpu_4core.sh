@@ -94,7 +94,7 @@ export ORCHJAX_SLURM_ALLOC_TRES=$ALLOC_TRES
   "$SLURM_BIN/scontrol" show job --details "$SLURM_JOB_ID"
   taskset -pc $$
   lscpu -e=CPU,CORE,SOCKET,ONLINE
-  git -C "$CODE_DIR" rev-parse HEAD
+  (cd "$CODE_DIR" && git rev-parse HEAD)
   printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s\n' "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}"
   printf 'slurm_alloc_tres=%s\n' "$ORCHJAX_SLURM_ALLOC_TRES"
 } | tee "$RUN_ROOT/launch-context.txt"

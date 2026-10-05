@@ -158,7 +158,7 @@ export SINGULARITYENV_NUMEXPR_NUM_THREADS=1
   "$SLURM_BIN/scontrol" show job --details "$SLURM_JOB_ID"
   taskset -pc $$
   lscpu -e=CPU,CORE,SOCKET,ONLINE
-  git -C "$CODE_DIR" rev-parse HEAD
+  (cd "$CODE_DIR" && git rev-parse HEAD)
   printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s slurm_job_gpus=%s alloc_tres=%s\n' \
     "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}" "$SLURM_JOB_GPUS" "$ORCHJAX_SLURM_ALLOC_TRES"
   printf 'allocated_gpu_global_id=%s uuid=%s name=%s driver=%s cuda_visible_devices=%s\n' \
