@@ -3,8 +3,9 @@
 更新：2026-10-05。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
 工作分支：`research/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
 本轮保持科学过程不变，已实现编译前的外层 batch；本地 B1/B4 有界数值与计时通过。
-本轮完成 Explore1000 免费 CPU 输入审计及GPU四lane独立reference对齐；完整GPU验收与
-吞吐在B4重新编译预算边界停止，未提交付费作业。
+本轮完成 Explore1000 免费 CPU 输入审计及GPU B4两块完整parity/置换/隔离和五次同步计时；
+第三轮同设备同工作量JAX scalar比较与单点scalar基线通过，GPU B4 core收益3.572820倍；
+没有Fortran/年度/生产端到端认证，未提交付费作业。
 
 ## 首个实现的当前状态
 
@@ -146,7 +147,7 @@ cache实际记录区别明确：model1 B4与001虽完成编译，均disabled/not
 参考三点raw IR hash为`5b8ab621…`，pooled001为`5e39342b…`；结构差异尚未解析。
 直接核读部署JAX0.4.38的`cache_key.py`确认默认metadata关闭时先strip-debuginfo，key还包含
 jaxlib/flags/options/accelerator等，不能声称callsite/source-line metadata已证明造成该miss。
-最终18 MiB的cache只有组件与两种scalar executable key，没有B4 executable。
+第二轮结束时18 MiB的cache只有组件与两种scalar executable key，没有B4 executable。
 
 B4 validation host stack0.054965 s、同步device transfer0.102866 s、lower41.493809 s；
 compile约645 s后中断，没有compile完成时间或新首轮/热计时。旧B4 candidate lower91.254242 s、
@@ -155,7 +156,7 @@ compile683.750115 s、first call3.233149 s属于model1来源，完整状态已�
 atomic write0.055236/0.008612/0.009638 s；不含manifest/report/events。旧三个stage的独立
 checkpoint IO未记录，仍标缺失，不由总wall差值反推。
 
-本轮合同3600 card-seconds、每window≤1800，实际使用1张V100-SXM2 32GB，节点
+此前第二轮合同3600 card-seconds、每window≤1800，实际使用1张V100-SXM2 32GB，节点
 `ibc13b02n04`、UUID`GPU-daa2988f-72e7-d5e0-45e5-1bef9c1cc688`、driver525.85.12，
 JAX/jaxlib0.4.38、Python3.11.15、FP64。模型affinity4–7；supervisor可见0–55，不能将
 四核affinity当作整个进程树的专属核数。probes实际wall13.350996/2.632614 s、charge14/3；
@@ -180,8 +181,65 @@ supervisor完整wall。证据在`gpu-round2/model/`各origin report和manifest�
 reference gates，包括只恢复B1的场景。selector改变时仅gate/timing/B1阶段换键，已完成
 candidate及独立reference继续复用；execution origin记录selector，不能误复用另一selector
 的测量。该补丁只通过本地30项轻量测试（4.56 s，1项禁用cacheprovider配置警告）、
-变更harness/test的Ruff与diff检查，尚无GPU验收。本轮远端最终执行代码为`bdd5790`，
-没有中途部署该修订，也不因selector对应已有cache文件就宣称实际命中。
+变更harness/test的Ruff与diff检查；第二轮结束时尚无该补丁的GPU验收，第二轮最终代码
+`bdd5790`没有中途部署该修订。不因selector对应已有cache文件就宣称实际命中。
+
+第三轮修订`72fc47d`纠正validate执行序：新`B4_batch_only_v1`先且仅构建一个B4
+executable，首次同步完整输出对保存candidate及四份独立reference，再通过置换和lane替换。
+全部B4 gates通过后才记录至少五个56 point-days core及preprepared wrapper原始samples，
+将samples、完整两块输出和gates共同atomic checkpoint；此前不编译独立scalar executable。之后
+`B4_scalar_comparison_v1[_pool_<point>]`构建实际scalar、重验四份reference、测同56 point-days
+串行，最后14 point-days scalar B1基线（显式scalar模式），分别保存，任何后续scalar失败或
+预算结束不抹除B4已完成资产。B4 first-call/lower/compile与wrapper/transfer成本仍分别列。
+这套新stage不能由旧`B4_gates`/`B4_measurements`记录满足；B4 stage不依赖scalar selector。
+
+`--stage-source-dir`只供staged validate向新目录导入上述六份完整数值snapshot，不创建
+可写source StageStore。先核对整个bounded import的identity/checksum/status，再atomic复制
+原字节和完整来源；旧源manifest、report、ledger及execution origins不改。轻量真实JAX
+测试覆盖新目录只编译一次B4、立即存好完整gates/output/五个core+wrapper samples后注入
+scalar失败，确认B4完成record仍可恢复、B1未启动且source逐字节未变。30项测试5.21 s通过，
+1项禁用cacheprovider警告，Ruff/diff检查及CLI help通过；没有重跑昂贵物理CPU gates。
+`cea0edf`进一步在main输出/cache setup及StageStore创建前拒绝同路径或任一嵌套路径，
+使无效CLI也不改源manifest/report。5项定向guard/实际小JAX recovery测试4.68 s通过、
+28项未重跑、1项禁用cacheprovider警告，Ruff/diff检查通过；原30项证据复用。
+
+第三轮实际`cea0edf`在相同V100/0.4.38/FP64和模型affinity4–7中，只读导入六份数值snapshot，
+原始执行origin保留。新B4对保存candidate有限值零差异，对四份独立reference、置换及lane
+替换的10项新gates均通过，组合容差最大占比0.04530223503755103、max absolute
+1.4908146113157272e-6。core五次samples为3.061469/3.079388/3.056491/3.093887/3.060239 s，
+中位3.061469 [3.056491,3.093887] s/56 point-days，即18.291873 point-days/s；preprepared
+wrapper中位3.198821 [3.180061,3.206820] s，即17.506448 point-days/s。全部重复从冻结Day1
+末态推进两个7日块并同步完整输出/effects；wrapper含stack/transfer/materialize，均不含新Day1
+准备、年度聚合、生产checkpoint或独立reference编译，不能称公共CLI端到端速度。
+
+新lower显式timer93.711854 s（phase跨度95.020494 s还含报告开销）、compile670.043815 s、
+first call19.111908 s；host stack0.052592 s、同步device transfer0.177286 s。实际cache
+miss/write为`jit_transition-643afa8f…`，不称命中。`B4_batch_only_v1`的原始samples/gates与完整
+两块输出在elapsed835.6367 s atomic保全，snapshot1,749,591 bytes、序列化0.111594 s、
+atomic write0.011164 s，不含manifest/report/events；这是新测量，非旧candidate的3.233 s首轮。
+随后显式选择069 scalar，lower14.299802 s、compile623.917697 s；实际miss/write key
+`jit_transition-5d6b4815…`、raw IR`c36fbc403…`，未复用旧069 reference的`6f26ea90…`key。
+此前相同context选择不足以证明IR/key相同；结构根因未解析，保留旧IR/key与默认metadata
+strip-debuginfo事实，不把miss解释为已证实的callsite原因。实际scalar对四份独立reference
+有限值零差异；同56 point-days串行五次samples为10.940952/10.936632/10.924755/10.938078/
+10.942314 s，中位10.938078 [10.924755,10.942314] s，即5.119729 point-days/s。B4相对
+该同GPU、同输入、完整物理过程FP64串行core为3.572820173243233倍。单点scalar B1的
+14 point-days中位2.735689 [2.730862,2.737894] s、wrapper2.821319 [2.798625,2.834932] s，
+对独立001/原AOT有限值零差异；这不是独立vmapped B1路径验收。
+
+最终`passed_bounded_forward_diagnostic`，全部9个required stage complete，24项记录gate
+passed（包含7项复用来源gate）；三份新stage与完整outputs/raw samples保全。唯一免费window
+完成wall1608.972354 s、charge1609/1800 card-seconds=0.446944 card-hours，无重试/付费。
+余额191不开放第二window；report elapsed1581.245527 s不替代supervisor包含启动/包装的wall。
+进程peak RSS10,573,844,480 bytes，group采样peak10,793,304,064 bytes；四核模型affinity
+不是整个supervisor进程树的独占CPU资源。GPU0逐秒采样峰值809 MiB，非瞬时峰值保证。
+`post-window-checks.json`全部通过：旧manifest、
+六source checksums、prepared input及round2 budget不变，本session无进程，supervisor无survivor。
+后查GPU0零MiB、GPU1其他线程PID11889保留，remote checkout仍`cea0edf`且clean。
+实际证据为`gpu-round3/model/`report/manifest/三份新stage，`gpu-round3/windows/model-1/`
+稳定report/launch-status/采样，后查在
+`outputs/research/global_throughput/gpu-round3/post-window-checks.json`，ledger在
+`outputs/research/global_throughput/gpu-round3-budget.json`。
 
 每个新stage保存execution origin（Git/runtime/cache/affinity/launcher物理GPU UUID与driver、
 PID及稳定window report），`timing_origins`明确标识复用测量并保留其原环境。旧stage未记录
@@ -198,9 +256,9 @@ write/fsync/replace指标只对新执行的logging版本有效，旧stage未单�
 现有代码已经提供完整 later-day 多日纯数值扫描的实现基础，最小批处理落点是
 `jax_orchidee/driver/orchestration.py:11231` 的内部 `transition`，而不是公共 CLI。
 本轮已在 `.lower().compile()` 之前暴露这段函数，保留单点内部维度，以外层 `vmap`
-装入异质网格。本地B1/B4短窗数值门槛和CPU吞吐诊断已通过；GPU保存的B4四lane与独立
-reference对齐通过，但置换/隔离及热计时未完成。2.271倍只指本地同工作量JAX串行对照，
-不能外推为Fortran或GPU加速。
+装入异质网格。本地B1/B4短窗数值门槛和CPU吞吐诊断已通过；第三轮GPU B4两块完整
+parity/置换/隔离及五次热core/wrapper和scalar对照完成。本地CPU收益2.271190倍，
+GPU同设备同工作量收益3.572820倍，分别对JAX串行；不能外推为Fortran或全年生产加速。
 
 论文 mosaic 的合同是 669 个独立单点任务，不是开启河道路由的一个全球耦合域：
 `configs/orchidee_man_250919.yaml:40-51` 明确声明
@@ -346,8 +404,8 @@ float gate 使用逐元素组合 `abs(delta) <= 1e-8 + 1e-10*abs(reference)`，�
 ## 首轮可复现诊断合同与完成范围
 
 以下保留立项合同。本轮本地已完成阶段0、1及阶段2的CPU部分；远端阶段0通过，
-首个GPU诊断在scalar编译预算边界停止；后续stage协议保全四份独立reference及B4逐lane
-parity，但B4重新编译预算结束，完整GPU验收及吞吐仍未完成。
+首个GPU诊断在scalar编译预算边界停止；第二轮stage协议保全四份独立reference及B4逐lane
+parity；第三轮新B4完整parity/置换/隔离、热计时、scalar比较和scalar B1基线全部通过。
 阶段3、4和Fortran同硬件比较尚未执行。
 
 先冻结 `5910ba9` 基线及候选提交；保存命令、Python/JAX/jaxlib/CUDA版本、设备型号、

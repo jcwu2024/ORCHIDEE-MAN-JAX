@@ -109,28 +109,43 @@ wrapper exit1，原report停在`running`，stderr仅有slow-compile alarms，不
 原证据在 `outputs/research/global_throughput/remote-gpu-b8bb285/`；后续launcher cache路径
 隔离修复发生在运行结束后，不属于该运行条件。
 
-后续免费`gpu-round2`已结束：1张同节点V100、FP64、JAX/jaxlib0.4.38、模型affinity4–7。
-六个完整stage保全了B4实际candidate、原001 AOT reference和四份各自context独立执行的
-scalar reference。最终远端代码`bdd5790`共记录15项通过gate；保存的B4四lane完整末态/日输出
-对独立reference通过，最大absolute差`1.4908146113157272e-6`、最大逐元素组合容差占比
-`0.04530223503755103`；共享001 scalar对四份reference有限值零差异，独立001 reference
-对原001 AOT也有限值零差异。
-最终window在B4重新编译中达到预算：置换、lane替换隔离、五次热测量和B1基线stage未完成，
-**没有GPU吞吐或加速比结论**。raw manifest的`B4_gates=running`保留，结合最终supervisor
-确认有效状态为stopped，不能当作完整GPU验收。
+此前`gpu-round2`（最终`bdd5790`）保全六份数值snapshot：B4 candidate、原001 AOT和四份
+各自context独立GPU reference，15项记录gate通过；最终在B4重新编译预算边界停止，没有热
+吞吐结论。cache修复后069 miss/write、319/331同key实际hit（compile/load23.939/23.910 s），
+pooled001仍miss/write；根因未解析，不归因于callsite metadata。原记录保持不变，第三轮只读复用。
+该轮3600 card-seconds合同按probes14+3、model1 1567、model2 695、model3保守1300计费，
+合计3579（0.99417 card-hours），余额21；完整window实际wall3572.385 s，包含启动、输入读取、
+编译、references/gates和IO，原Day1及旧AOT另计。最终GPU0释放；supervisor先记录survivor89971，
+上海03:21:25后查无该PID/PGID，不能称即时无残留。证据`gpu-round2/`及`gpu-round2-budget.json`
+均在本worktree `outputs/research/global_throughput/`，详细来源见执行审计及合并记录。
 
-cache修复后的069 scalar实际miss/write，compile561.157 s；319/331实际命中同key，
-compile/load23.939/23.910 s。下一进程共享001 scalar仍实际miss/write，compile562.801 s；
-B4 validation lower41.494 s完成，compile在中断前约645 s仍未结束。旧candidate compile683.750 s、
-first call3.233 s属于model1来源，不能当作新热运行。cache最终只保留组件及两种scalar key，
-没有B4缓存executable；pooled miss的结构根因尚未解析，不归因于callsite metadata。
+第三轮`cea0edf`采用batch-first协议，1张同节点V100-SXM2 32GB、affinity4–7、FP64、
+JAX/jaxlib0.4.38；只读导入六份旧数值snapshot，新B4先编译并重新通过candidate/四reference
+完整两块parity、置换及lane替换的10项gate，再完成五次同步计时：
 
-本轮3600 card-seconds合同按probes14+3、model1 1567、model2 695、model3保守1300计费，
-合计3579 card-seconds（0.99417 card-hours），余额21；完整window实际wall合计3572.385 s。
-上述wall包括导入、准备输入读取/审计、lower/compile、reference/gate执行、IO及包装；
-原Day1准备和已保存原AOT编译另列，未冒充本轮新执行。GPU0最终释放；supervisor末次曾记录
-survivor89971，上海03:21:25后查无该PID/PGID进程，只见另一研究线程GPU1进程，不能称即时无残留。
-证据见`outputs/research/global_throughput/gpu-round2/`、同级`gpu-round2-budget.json`及合并记录。
+| 56 point-days，同一GPU/输入/精度 | 中位数 [min,max] | 吞吐point-days/s |
+| --- | --- | --- |
+| B4热core | 3.061469 s [3.056491,3.093887] | 18.291873 |
+| preprepared stack/transfer/materialize wrapper | 3.198821 s [3.180061,3.206820] | 17.506448 |
+| JAX常驻scalar串行 | 10.938078 s [10.924755,10.942314] | 5.119729 |
+
+新B4 lower93.711854 s、compile670.043815 s、首次同步双块19.111908 s，实际cache miss/write
+key`643afa8f…`；完整输出、gates和原始samples于elapsed835.6367 s保存在独立
+`B4_batch_only_v1`，随后才开始069 scalar编译。B4逐元素组合容差最大占比0.0453022350、
+max absolute1.4908146113e-6，原精度/sentinel/schema政策不变。最终9个required stage全部
+complete、24项记录gate通过，状态`passed_bounded_forward_diagnostic`。GPU B4相对同设备
+同工作量JAX串行core为**3.572820倍**；本地CPU的**2.271190倍**是另一个硬件/runtime的独立
+结果。单点scalar B1为2.735689 s/14 point-days、wrapper2.821319 s；不是独立vmapped B1验收。
+069 pooled scalar也实际miss/write（key`5d6b4815…`），lower14.299802 s、compile623.917697 s，
+没有复用旧069 disk key。根因尚未解析；两次新编译成本均不隐藏为cache load或热运行。
+
+第三轮唯一免费window实际wall1608.972354 s，charge1609/1800 card-seconds（0.446944
+card-hours），未重试或付费；余额191不授权新window。旧六份source/manifest、旧budget及
+prepared input后查均未改变；本任务session为空，GPU0零MiB，其他线程GPU1 PID11889不动。
+短窗warm/wrapper不含新Day1、独立references、年度聚合或生产checkpoint；完整window含
+启动/编译/IO。这不是Fortran、年度/669点/50年、AD或生产端到端验收。证据目录
+`outputs/research/global_throughput/gpu-round3/`，ledger是
+`outputs/research/global_throughput/gpu-round3-budget.json`；保持各旧stage原origin与未记录来源限制。
 
 本地与远端合并记录见
 [MILESTONE.md](../../../outputs/research/global_throughput/MILESTONE.md)和
@@ -157,17 +172,29 @@ raw-server reference resolver。准备输入与 cold Day1 checkpoint 用集合 p
 
 本轮有界GPU诊断使用 `--mode staged`，按 `--stage candidate|references|validate|all`
 执行并恢复：先保存实际B4双块完整结果，再逐点清空内层cache、绑定自身context、lower/compile/
-执行并保存四份独立scalar reference；最后逐点对齐、置换、lane替换、五次同步B4计时和
-B1基线。默认`--b1-mode vmapped`另编译B1 batch；有界GPU筛选可显式选择`--b1-mode scalar`，
+执行并保存四份独立scalar reference。第三轮`72fc47d`及路径加固`cea0edf`改变validate顺序：新进程首先
+只编译B4，立即对保存candidate及四份独立reference核对实际完整两块输出，再过置换和lane
+替换；随后至少五次同步56 point-days热core和preprepared wrapper，原始samples、完整输出、
+gates共同atomic保存为`B4_batch_only_v1`。之后才构建/加载共享scalar、重验四份reference、
+测同56 point-days串行及14 point-days单点scalar基线；后续scalar失败不破坏已完成B4资产。
+本地30项及后续5项定向测试通过，第三轮B4/实际scalar及单点scalar基线全部完成GPU有界验证。
+默认`--b1-mode vmapped`另编译B1 batch；
+有界GPU筛选可显式选择`--b1-mode scalar`，
 使用已对独立reference/原AOT验证的单点程序，单列`B1_scalar_baseline`的14 point-days与五次
 同步热core/preprepared wrapper，不能称为独立vmapped B1 GPU验收。两模式使用不同完成阶段键。
 本地`f1df818`新增`--pooled-scalar-point`，默认001不变；其他选择使用该点自身已审计context，
 并对每个新建的实际pooled executable重新通过四份独立reference后才计时。不同selector的
-gate/timing/B1阶段分别存储，共用candidate及独立reference；不能因选择已缓存context便推定命中。
-该修订只通过本地轻量测试，尚无GPU验收；本轮远端最终执行代码为`bdd5790`。
+scalar comparison/B1阶段分别存储，共用candidate、独立reference和已完成的selector无关B4
+batch-only checkpoint；不能因选择已缓存context便推定命中。
+本轮GPU实际代码`cea0edf`显式选择069；实际scalar对四reference有限值零差异，但新disk key
+miss/write，不能将selector选择称作cache命中。
 每个完成阶段写atomic checkpoint与`stage_manifest.json`，未完成阶段
 标为running/failed/stopped；恢复只跳过完整且身份匹配的阶段。B4计时与B1阶段分别保全，
 避免后续编译预算结束丢失已经完成的测量。
+新输出目录可用`--mode staged --stage validate --stage-source-dir <旧model目录>`只读导入
+六个完整数值prerequisites：identity及checksum严格复核、原execution origin保留，旧manifest、
+reports及ledger不改写；旧B4 gate/measurement不导入，不充作第三轮新测量。
+相同或任一嵌套source/destination路径在CLI输出/cache setup及StageStore创建前拒绝。
 
 阶段身份核对完整输入的tree/path/shape/dtype/value、static closure、科学源码内容、固定baseline、
 FP64、Python/JAX/jaxlib/NumPy、设备/backend及compiler环境；采用内容hash，不依赖pickle
@@ -208,9 +235,9 @@ original reference的编译成本分开列，不计作本轮新执行。热core�
    优先考察对单点函数的 `vmap`；不要把已经 `.compile()` 的可执行文件直接套入变换。
    审计所有闭包中的静态配置，连续地点参数必须逐点传入；仅形状相同不足以证明可合批。
 3. 有界吞吐筛选（本地CPU B1/B4完成，其余待验收）：真实异质点 `B=1,4,16,64`，按内存和编译结果逐级扩展；同时测 CPU/GPU。
-   远端已保全四份独立reference及B4逐lane parity，最终受B4重新编译预算限制；下一步先解决
-   executable复用和time-to-valid-measurement，再在新授权资源合同内补齐置换/隔离及同工作量计时，
-   不直接投入年度或更大batch图。现有余额不构成另一次模型编译授权。
+   第三轮B4完整parity/置换/隔离、热core/wrapper、同工作量scalar对照和单点scalar基线通过，
+   GPU同工作量core收益3.572820倍；编译/time-to-valid-measurement仍占主导。后续资源与
+   更大规模须另定合同，不将短窗收益直接外推年度或更大batch图。
    主测七天块，先过正确性再判断是否值得测 28 天块。保留原精度、全部有效过程和输出。
    重复相同网格只可作设备负载诊断，不能代替异质全球吞吐证据。
 4. 只有批处理确有收益，才扩展代表性一年、跨年恢复和多设备规模曲线；
@@ -252,7 +279,7 @@ original reference的编译成本分开列，不计作本轮新执行。热core�
 新生成物放本分支 `outputs/`，不要复制一份大型数据树。
 
 本次完成立项、来源审计、最小 batch 实现、本地静态输入及 B1/B4 有界数值/计时门槛。
-远端免费输入审计及GPU四lane独立reference对齐通过；GPU完整验收与吞吐受编译预算限制。
+远端免费输入审计及GPU B4完整两块parity/置换/隔离、热计时和同工作量scalar对照通过。
 没有执行训练或付费任务。
 后续 Explore1000 操作继续服从项目部署说明和专用技能；付费作业仍需明确资源、
 时限、命令、目录和最坏费用授权。该分支不继承另一个研究线程的特定 GPU 实验额度。
