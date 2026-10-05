@@ -1,7 +1,9 @@
 """B16/B64 full-physics forward screening against the same real-point B4 groups.
 
-Two seven-day blocks, FP64, exact schema/discrete masks and the existing fixed
-source-backed numerical/sentinel gates. This is neither annual nor AD acceptance.
+Two seven-day blocks with JAX x64 enabled and baseline native dtypes retained.
+The geographical payload and solar subcalculation contain FP32. Exact schema,
+discrete masks and existing numerical/sentinel gates apply; annual/AD acceptance
+requires separate evidence.
 """
 
 # ruff: noqa: E402
@@ -34,6 +36,14 @@ from scripts.dev.probe_global_batch_cache import CacheEvents, atomic_bytes, conf
 
 SIZES = (16, 64)
 GPU_SLACK_BYTES = 2 * 1024**3
+PRECISION_POLICY = "JAX x64 enabled; baseline native dtypes retained; geographical payload and solar subcalculation contain FP32"
+# Exact inherited NetCDF payload schema, not a general low-precision allowance.
+# domain.py:786-795 -> sechiba_boundary.py:178-181 -> orchestration.py:10208-10209.
+# lalo also feeds orchestration.py:11110-11115 -> season.py:227-287: the solar
+# subcalculation contains FP32 before its final recurrent-state FP64 promotion.
+NATIVE_GROUP5_FLOAT32 = {
+    "['contfrac']": (1,), "['lalo']": (1, 2), "['lat']": (1, 1), "['lon']": (1, 1),
+}
 
 
 def restore_path(*parts):
@@ -157,6 +167,8 @@ def tree_bytes(value):
 
 def screen_inputs(lanes, second):
     """Re-audit all closures, complete shapes and source-supported input sentinels."""
+    if not jax.config.jax_enable_x64:
+        raise ValueError("JAX x64 must be enabled for baseline native dtype admission")
     ids = [lane.landpoint_id for lane in lanes]
     if len(lanes) not in SIZES or len(second) != len(lanes):
         raise ValueError("prepared input requires 16 or 64 aligned real lanes")
@@ -168,6 +180,7 @@ def screen_inputs(lanes, second):
     # Output paths [block][0] prefix the identical values_by_component input tree.
     state_contract = {path[len("[0][0]"):]: contract for path, contract in sentinels.items()
                       if path.startswith("[0][0]")}
+    native_leaf_count = 0
     for lane, other in zip(lanes, second, strict=True):
         if base.roughheight_sentinel_contract(lane) != sentinels:
             raise ValueError(f"sentinel layout differs: {lane.landpoint_id}")
@@ -182,8 +195,13 @@ def screen_inputs(lanes, second):
             for index, group in enumerate(arguments):
                 for path, value in jax.tree_util.tree_flatten_with_path(group)[0]:
                     array = np.asarray(value)
-                    if array.dtype.kind in "fc" and array.dtype != np.dtype("float64"):
-                        raise ValueError(f"FP64 dynamic input required: {lane.landpoint_id}/{index}/{path}")
+                    native_shape = NATIVE_GROUP5_FLOAT32.get(jax.tree_util.keystr(path)) if index == 5 else None
+                    if native_shape is not None:
+                        if array.dtype != np.dtype("float32") or array.shape != native_shape:
+                            raise ValueError(f"exact baseline native float32 payload schema required: {lane.landpoint_id}/{index}/{path}")
+                        native_leaf_count += 1
+                    elif array.dtype.kind in "fc" and array.dtype != np.dtype("float64"):
+                        raise ValueError(f"float64 dynamic input required outside exact native payload: {lane.landpoint_id}/{index}/{path}")
                     if index != 0 and array.dtype.kind in "fc" and not np.all(np.isfinite(array)):
                         raise ValueError(f"nonfinite non-state input: {lane.landpoint_id}/{index}/{path}")
             for forcing in jax.tree_util.tree_leaves(arguments.forcing_days):
@@ -191,6 +209,10 @@ def screen_inputs(lanes, second):
                     raise ValueError(f"forcing must retain seven days by 48 steps: {lane.landpoint_id}")
     return {**audit, "unique_real_points": len(ids), "blocks": [[2, 8], [9, 15]],
             "input_bytes": tree_bytes(([lane.arguments for lane in lanes], second)),
+            "precision_policy": PRECISION_POLICY,
+            "native_float32_leaf_count": native_leaf_count,
+            "native_float32_schema": [{"group": 5, "path": path, "shape": list(shape), "dtype": "float32"}
+                                      for path, shape in NATIVE_GROUP5_FLOAT32.items()],
             "nonfinite_policy": "only audited initial-state bare-soil roughheight sentinels"}
 
 
@@ -312,7 +334,7 @@ def scale_benchmark(args, recorder, lanes, second):
     recorder.result["anchor_numerical_origins"] = origins
     identity = base.stage_identity(args, lanes, second, recorder.result["environment"])
     identity.update(contract="unique-real-points-two-seven-day-blocks-B16-B64-v1",
-                    reference_manifest_sha256=origins["manifest_sha256"])
+                    reference_manifest_sha256=origins["manifest_sha256"], precision_policy=PRECISION_POLICY)
     store = StageStore(args.output_dir, identity)
     sizes = sorted(set(args.sizes) | ({16} if 64 in args.sizes else set()))
     required = ["B4_group_references"] + [f"B{size}_scale" for size in sizes]
@@ -459,7 +481,8 @@ def scale_benchmark(args, recorder, lanes, second):
                 "baseline": f"{size // 4} actual resident B4 groups over identical {point_days} point-days",
                 "five_or_more_synchronized_repeats": True, "memory_preflight": preflight,
                 "executable_memory_analysis": memory_records[size],
-                "accepted_scope": "bounded FP64 complete forward only; not scalar/Fortran/annual/AD acceptance"}
+                "precision_policy": PRECISION_POLICY,
+                "accepted_scope": "bounded complete forward with baseline native dtypes; not scalar/Fortran/annual/AD acceptance"}
         run_stage(f"B{size}_scale", operation)
     recorder.result["all_required_stages_complete"] = all(
         store.manifest["stages"].get(name, {}).get("status") == "complete" for name in required)
@@ -511,7 +534,8 @@ def main():
         recorder.result["environment"]["explicit_cache_policy"] = policy
         recorder.result["timing"]["import_setup_seconds"] = time.perf_counter() - base.PROCESS_STARTED
         if not jax.config.jax_enable_x64:
-            raise RuntimeError("FP64 required")
+            raise RuntimeError("JAX x64 must be enabled; exact baseline native input dtypes are retained")
+        recorder.result["precision_policy"] = PRECISION_POLICY
         started = time.perf_counter()
         lanes, second = read_prepared(args.prepared_input, args.config)
         recorder.phase("prepared_input_reused", path=str(args.prepared_input),

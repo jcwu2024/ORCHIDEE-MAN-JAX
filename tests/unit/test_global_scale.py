@@ -104,7 +104,7 @@ def test_scale_all_unique_lanes_and_same_workload_baseline_with_B64_failure(monk
     finally:
         second_run.stop.set()
     identity = {"science": "same", "contract": "unique-real-points-two-seven-day-blocks-B16-B64-v1",
-                "reference_manifest_sha256": "sealed"}
+                "reference_manifest_sha256": "sealed", "precision_policy": scale.PRECISION_POLICY}
     store = StageStore(tmp_path, identity)
     assert second_run.result["all_required_stages_complete"]
     assert (tmp_path / "stage_B16_scale.pkl").read_bytes() == first_bytes
@@ -177,6 +177,54 @@ def test_scale_initial_state_allows_only_declared_bare_soil_sentinel(monkeypatch
     assert scale.screen_inputs(lanes, second)["unique_real_points"] == 16
     lanes[-1].arguments.values_by_component[0]["rough"][0, 1] = np.nan
     with pytest.raises(ValueError, match="initial-state nonfinite"):
+        scale.screen_inputs(lanes, second)
+
+
+def native_payload(lanes):
+    for item in lanes:
+        item.arguments.landpoint_payload.update({
+            "contfrac": np.asarray([0.0625], dtype=np.float32),
+            "lalo": np.asarray([[-19.0, -179.0]], dtype=np.float32),
+            "lat": np.asarray([[-19.0]], dtype=np.float32),
+            "lon": np.asarray([[-179.0]], dtype=np.float32),
+        })
+
+
+def test_exact_native_payload_admission_preserves_original_dtype_bytes_and_objects(monkeypatch):
+    mock_science(monkeypatch)
+    lanes, second = prepared(16)
+    native_payload(lanes)
+    snapshots = [(value, value.dtype.str, value.shape, value.tobytes()) for item in lanes
+                 for value in item.arguments.landpoint_payload.values()]
+    result = scale.screen_inputs(lanes, second)
+    assert result["precision_policy"] == scale.PRECISION_POLICY
+    assert "solar subcalculation contain FP32" in result["precision_policy"]
+    assert len(result["native_float32_schema"]) == 4
+    assert result["native_float32_leaf_count"] == 16 * 2 * 4
+    after = [value for item in lanes for value in item.arguments.landpoint_payload.values()]
+    assert all(actual is original and actual.dtype.str == dtype and actual.shape == shape and actual.tobytes() == data
+               for actual, (original, dtype, shape, data) in zip(after, snapshots, strict=True))
+
+
+@pytest.mark.parametrize("invalid", ["float64", "float16", "integer", "shape", "unknown", "moved", "nonfinite"])
+def test_native_payload_contract_rejects_consistent_all_lane_changes(monkeypatch, invalid):
+    mock_science(monkeypatch)
+    lanes, second = prepared(16)
+    native_payload(lanes)
+    for item in lanes:
+        payload = item.arguments.landpoint_payload
+        if invalid in {"float64", "float16", "integer"}:
+            dtype = {"float64": np.float64, "float16": np.float16, "integer": np.int32}[invalid]
+            payload["contfrac"] = payload["contfrac"].astype(dtype)
+        elif invalid == "shape":
+            payload["contfrac"] = payload["contfrac"].reshape((1, 1))
+        elif invalid == "unknown":
+            payload["unknown"] = np.asarray([1.0], dtype=np.float32)
+        elif invalid == "moved":
+            item.arguments.hydrol_table_arrays["contfrac"] = payload["contfrac"].copy()
+        else:
+            payload["contfrac"][0] = np.nan
+    with pytest.raises(ValueError, match="native float32 payload schema|outside exact native payload|nonfinite non-state"):
         scale.screen_inputs(lanes, second)
 
 

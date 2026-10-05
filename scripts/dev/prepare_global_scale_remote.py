@@ -164,7 +164,8 @@ def rehydrate(args):
     report.update(status="prepared", prepared_point_count=64, prepared_pickle=str(destination),
                   prepared_pickle_sha256=producer._sha256_file(destination),
                   elapsed_seconds=time.perf_counter() - started,
-                  scope="Linux unpickle/path/static/schema/FP64 input admission; no forward or GPU science acceptance")
+                  precision_policy=scale.PRECISION_POLICY,
+                  scope="Linux unpickle/path/static/schema/baseline native dtype admission; no forward or GPU science acceptance")
     producer._atomic_json(report_path, report)
     print(json.dumps({"status": report["status"], "prepared_pickle": str(destination),
                       "elapsed_seconds": report["elapsed_seconds"]}, indent=2))
