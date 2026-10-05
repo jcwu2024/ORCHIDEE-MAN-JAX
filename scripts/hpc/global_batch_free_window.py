@@ -96,11 +96,14 @@ def main():
         ledger = (
             json.loads(budget_path.read_text()) if budget_path.exists() else {"limit_card_seconds": 3600, "windows": []}
         )
-        if ledger["limit_card_seconds"] != 3600:
-            raise ValueError("this round's total GPU budget is exactly 3600 card-seconds")
+        limit = ledger["limit_card_seconds"]
+        if limit not in (1800, 3600):
+            raise ValueError("supported declared GPU allowances are 1800 or 3600 card-seconds")
+        if limit == 1800 and ledger["windows"]:
+            raise ValueError("the 1800 card-second allowance permits exactly one GPU window; no retries")
         committed = sum(w["charged_card_seconds"] for w in ledger["windows"])
-        if committed + args.timeout_seconds > 3600:
-            raise ValueError(f"insufficient remaining GPU budget: {3600 - committed}s")
+        if committed + args.timeout_seconds > limit:
+            raise ValueError(f"insufficient remaining GPU budget: {limit - committed}s")
         entry = {
             "output_dir": str(output),
             "start_utc": datetime.now(timezone.utc).isoformat(),
@@ -193,7 +196,7 @@ def main():
             entry.update(result)
             entry["charged_card_seconds"] = math.ceil(elapsed) if not survivors else args.timeout_seconds
             atomic_json(budget_path, ledger)
-            result["remaining_card_seconds"] = 3600 - sum(w["charged_card_seconds"] for w in ledger["windows"])
+            result["remaining_card_seconds"] = limit - sum(w["charged_card_seconds"] for w in ledger["windows"])
         atomic_json(output / "launch-status.json", result)
         if status in {"over_budget", "stopped", "failed"}:
             finalize_interrupted_report(report_output, status)
