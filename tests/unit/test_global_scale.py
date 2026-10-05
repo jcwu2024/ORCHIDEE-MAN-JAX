@@ -432,6 +432,13 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     anchors, anchor_second = anchors[:4], anchor_second[:4]
     path.write_bytes(pickle.dumps((anchors, anchor_second)))
     lanes, second = prepared(64)
+    lanes = [replace(item, initial_state=SimpleNamespace(tstep=47,
+        fields_by_component={"toy": item.arguments.values_by_component[0]},
+        provenance_by_component={"toy": ("own source",)})) for item in lanes]
+    lanes = [replace(item, arguments=item.arguments._replace(
+        values_by_component=batch.fast_state_from_previous_packet(item.initial_state).values_by_component))
+        for item in lanes]
+    second = [item.arguments._replace(science_day_numbers=np.arange(9, 16, dtype=np.int32)) for item in lanes]
     ids = [item.landpoint_id for item in lanes]
     source_vegetation = tmp_path / "source_vegetation.nc"
     source_vegetation.write_bytes(b"exact vegetation content")
@@ -440,6 +447,11 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     vegetation = data_root / "INPUTDIR_ZZ/PFT1860_mangr_025deg.nc"
     vegetation.parent.mkdir(parents=True)
     vegetation.write_bytes(b"exact vegetation content")
+    def static_signature(context, *unused):
+        return (("science", "rechecked"), ("run_def", (("VEGETATION_FILE", ("str", context.run_def_values["VEGETATION_FILE"])),)))
+
+    monkeypatch.setattr(batch, "static_signature", static_signature)
+    original_signature = static_signature(SimpleNamespace(run_def_values={"VEGETATION_FILE": "E:/local/source.nc"}))
     anchor_run_def = tmp_path / "anchor_used_run.def"
     scale.base.write_materialized_run_def({"VEGETATION_FILE": vegetation.as_posix()}, anchor_run_def)
     state_layout = SimpleNamespace(tstep=47, fields_by_component={"toy": {"x": np.asarray([1.0])}},
@@ -448,6 +460,10 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     anchors = [replace(item, initial_state=state_layout, context=SimpleNamespace(config_path=config,
         run_def_path=anchor_run_def, run_def_values={"VEGETATION_FILE": vegetation.as_posix()},
         first_step_restart_state=restart)) for item in anchors]
+    anchors = [replace(item, arguments=item.arguments._replace(
+        values_by_component=(tuple(item.arguments.values_by_component[0].values()),))) for item in anchors]
+    anchor_second = [item._replace(values_by_component=(tuple(item.values_by_component[0].values()),))
+                     for item in anchor_second]
     path.write_bytes(pickle.dumps((anchors, anchor_second)))
     asset_root = tmp_path / "assets"
     asset_root.mkdir()
@@ -455,8 +471,7 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
               for point in ids}
     cold, cold_identities, records = {}, {}, []
     for item, other in zip(lanes[4:], second[4:], strict=True):
-        state = SimpleNamespace(tstep=47, fields_by_component={"toy": {"x": np.asarray([1.0])}},
-                                provenance_by_component={"toy": {"x": "own source"}})
+        state = item.initial_state
         values = {**source_values[item.landpoint_id], "VEGETATION_FILE": "E:/local/source.nc"}
         reference = "E:/local/reference/" + item.landpoint_id
         cold[item.landpoint_id] = state
@@ -469,6 +484,7 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
                 "local_file_sha256": remote.producer._sha256_file(vegetation)},
             "run_def_values_sha256": remote.values_digest(values),
             "cold_state_numeric_sha256": remote.producer._state_digest(state),
+            "static_signature_sha256": hashlib.sha256(repr(original_signature).encode()).hexdigest(),
             "first_block_arguments_sha256": remote.producer._tree_digest(item.arguments),
             "second_block_arguments_sha256": remote.producer._tree_digest(other)})
     selection = tmp_path / "selection.json"
@@ -480,9 +496,17 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     audit = tmp_path / "audit.json"
     audit.write_text(json.dumps({"status": "prepared", "selected_points": ids, "prepared_point_count": 64,
         "inventory_manifest_sha256": "inventory", "config_sha256": remote.producer._sha256_file(config),
-        "asset_inputs": assets, "new_point_records": records,
+        "asset_inputs": assets, "new_point_records": records, "prepared_pickle_sha256": "original-local",
         "cold_states_sha256": remote.producer._sha256_file(cold_path),
         "cold_identities_sha256": remote.producer._sha256_file(cold_identity_path)}))
+    frozen_path = tmp_path / "frozen_arguments.pkl"
+    frozen_path.write_bytes(pickle.dumps({"schema_version": 1, "selected_points": ids,
+        "source_audit_sha256": remote.producer._sha256_file(audit),
+        "config_sha256": remote.producer._sha256_file(config), "source_prepared_sha256": "original-local",
+        "points": [{"landpoint_id": item.landpoint_id, "arguments": (item.arguments, other),
+                    "static_signature": original_signature,
+                    "state_layout": remote.frozen_io.state_layout(item.initial_state)}
+                   for item, other in zip(lanes[4:], second[4:], strict=True)]}))
     monkeypatch.setattr(remote.producer, "_read_inventory", lambda path: ({"_sha256": "inventory"}, source_values, {}))
     monkeypatch.setattr(remote.producer, "_verify_selected_assets", lambda *args: assets)
     monkeypatch.setattr(scale.base, "roughheight_sentinel_contract", lambda item: {})
@@ -496,7 +520,7 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
         index = ids.index(point)
         arguments = lanes[index].arguments if list(day_numbers)[0] == 2 else second[index]
         return replace(lanes[index], context=context, initial_state=state, arguments=arguments,
-                       static_signature=(("science", "rechecked"),))
+                       static_signature=static_signature(context))
 
     monkeypatch.setattr(remote.driver, "prepare_paper_1961_driver_context", context)
     monkeypatch.setattr(remote.batch, "prepare_lane", prepare_own)
@@ -508,6 +532,7 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     monkeypatch.setattr(remote.base, "lower_compile", forbidden)
     args = SimpleNamespace(inventory_tar=tmp_path / "inventory.tar.gz", selection=selection,
         preparation_audit=audit, cold_states=cold_path, cold_identities=cold_identity_path,
+        frozen_arguments=frozen_path, frozen_arguments_sha256=remote.producer._sha256_file(frozen_path),
         anchor_prepared=path, asset_root=asset_root,
         data_root=data_root, config=config, output_dir=tmp_path / "rehydrated", max_seconds=30,
         baseline_ref="pinned")
@@ -516,6 +541,8 @@ def test_remote_rehydration_retains_anchors_and_admits_actual_full64_file(monkey
     actual, others = scale.read_prepared(args.output_dir / "prepared_inputs_remote_64.pkl", config)
     assert report["status"] == "prepared" and len(actual) == 64
     assert len(report["new_point_records"]) == 60
+    assert all(item["frozen_arguments_bound"] and item["cold_argument_boundary_verified"]
+               for item in report["new_point_records"])
     assert not report["cold_Day1_generated"] and not report["physical_transition_compiled"]
     assert report["actual_full64_reader_screen"]["unique_real_points"] == 64
     assert report["anchor_canonical_inputs"] == [scale.base.semantic_reference_identity(args, item, other)

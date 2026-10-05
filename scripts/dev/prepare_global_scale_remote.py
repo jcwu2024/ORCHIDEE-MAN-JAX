@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from scripts.dev import benchmark_global_scale as scale
+from scripts.dev import prepare_global_frozen_arguments as frozen_io
 from scripts.dev import prepare_global_scale_inputs as producer
 
 base, batch, driver = scale.base, scale.base.batch, scale.base.driver
@@ -81,6 +82,9 @@ def rehydrate(args):
     records = {item["landpoint_id"]: item for item in source_report["new_point_records"]}
     if set(records) != set(ids[4:]):
         raise ValueError("local audit does not cover every new60 point exactly")
+    frozen_points, frozen_sha256 = frozen_io.load_frozen(
+        args.frozen_arguments, args.frozen_arguments_sha256, source_report,
+        producer._sha256_file(args.preparation_audit))
     vegetation = (args.data_root / "INPUTDIR_ZZ/PFT1860_mangr_025deg.nc").resolve()
     vegetation_sha = producer._sha256_file(vegetation)
     source_vegetation_proofs = {}
@@ -117,6 +121,8 @@ def rehydrate(args):
               "source_audit_sha256": producer._sha256_file(args.preparation_audit),
               "cold_states_sha256": hashlib.sha256(cold_data).hexdigest(),
               "cold_identities_sha256": producer._sha256_file(args.cold_identities),
+              "frozen_arguments_sha256": frozen_sha256,
+              "new60_numerical_input_origin": "exact original local prepared host NumPy arguments; Linux source contexts independently rebuilt",
               "anchor_prepared_sha256": producer._sha256_file(args.anchor_prepared),
               "anchor_canonical_inputs": anchor_ids, "asset_inputs": assets,
               "vegetation_mapping_byte_equivalence": source_vegetation_proofs,
@@ -139,6 +145,7 @@ def rehydrate(args):
             tstep=8 * 48 - 1, fields_by_component=state.fields_by_component,
             provenance_by_component=state.provenance_by_component)
         other = batch.prepare_lane(point, context, shifted, day_numbers=range(9, 16)).arguments
+        lane, other = frozen_io.bind_frozen(lane, other, frozen_points[point], records[point], vegetation.as_posix())
         for key, value in (("first_block_arguments_sha256", lane.arguments),
                            ("second_block_arguments_sha256", other)):
             if producer._tree_digest(value) != records[point][key]:
@@ -151,6 +158,7 @@ def rehydrate(args):
         report["new_point_records"].append({"landpoint_id": point,
             "prepare_seconds": time.perf_counter() - point_started,
             "numeric_inputs_match_local": True, "cold_Day1_reused": True,
+            "frozen_arguments_bound": True, "cold_argument_boundary_verified": True,
             "VEGETATION_FILE_mapping": {"source": run_defs[point]["VEGETATION_FILE"], "remote": vegetation.as_posix()},
             "static_signature_sha256": hashlib.sha256(repr(lane.static_signature).encode()).hexdigest()})
         report["checkpoint_count"] = len(lanes)
@@ -178,16 +186,18 @@ def rehydrate(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("inventory-tar", "selection", "preparation-audit", "cold-states", "cold-identities", "anchor-prepared",
+    for name in ("inventory-tar", "selection", "preparation-audit", "cold-states", "cold-identities", "anchor-prepared", "frozen-arguments",
                  "asset-root", "data-root", "config", "output-dir"):
         parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--frozen-arguments-sha256", required=True)
     parser.add_argument("--max-seconds", type=float, default=1500)
     parser.add_argument("--baseline-ref", default=base.BASELINE)
     args = parser.parse_args()
     if not sys.platform.startswith("linux") or not 0 < args.max_seconds <= 1500:
         parser.error("remote rehydration requires Linux and a duration in (0, 1500] seconds")
     for path in (args.inventory_tar.parent, args.selection.parent, args.preparation_audit.parent,
-                 args.cold_states.parent, args.cold_identities.parent, args.anchor_prepared.parent, args.asset_root, args.data_root):
+                 args.cold_states.parent, args.cold_identities.parent, args.anchor_prepared.parent,
+                 args.frozen_arguments.parent, args.asset_root, args.data_root):
         scale.StageStore.validate_source_destination(path, args.output_dir)
     os.environ.setdefault("ORCHIDEE_REPO_ROOT", str(ROOT))
     os.environ["ORCHIDEE_DATA_ROOT"] = str(args.data_root.resolve())
