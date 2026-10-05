@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 [[ "$BACKEND" == cpu || "$BACKEND" == gpu ]]
-[[ "$ENTRY" == benchmark || "$ENTRY" == cache-probe ]]
+[[ "$ENTRY" == benchmark || "$ENTRY" == cache-probe || "$ENTRY" == scale ]]
 [[ "$CACHE_MODE" == off || "$CACHE_MODE" == persistent ]]
 [[ "$GPU_INDEX" == 0 || "$GPU_INDEX" == 1 ]]
 [[ "$TIMEOUT_SECONDS" =~ ^[0-9]+$ && "$TIMEOUT_SECONDS" -ge 10 && "$TIMEOUT_SECONDS" -le 1800 ]]
@@ -54,7 +54,29 @@ ASSET_ROOT=$(realpath "$ASSET_ROOT")
 WINDOW_DIR=$(realpath -m "$WINDOW_DIR")
 CACHE_ROOT=$(realpath -m "$CACHE_ROOT")
 BUDGET_FILE=$(realpath -m "$BUDGET_FILE")
+if [[ "$ENTRY" == scale ]]; then
+  SCALE_REFERENCE=
+  SCALE_PREPARED=
+  for ((SCALE_ARG=0; SCALE_ARG<${#BENCH_ARGS[@]}; SCALE_ARG++)); do
+    case "${BENCH_ARGS[$SCALE_ARG]}" in
+      --reference-dir) SCALE_REFERENCE=${BENCH_ARGS[$((SCALE_ARG+1))]:-} ;;
+      --prepared-input) SCALE_PREPARED=${BENCH_ARGS[$((SCALE_ARG+1))]:-} ;;
+      --output-dir|--output-dir=*|--cache-root|--cache-root=*|--cache-mode|--cache-mode=*) echo 'scale output/cache paths must be launcher arguments' >&2; exit 2 ;;
+    esac
+  done
+  [[ -n "$SCALE_REFERENCE" && -n "$SCALE_PREPARED" ]]
+  SCALE_REFERENCE=$(realpath "$SCALE_REFERENCE")
+  SCALE_PREPARED=$(dirname "$(realpath "$SCALE_PREPARED")")
+  for SCALE_SOURCE in "$SCALE_REFERENCE" "$SCALE_PREPARED"; do
+    for SCALE_TARGET in "$OUTPUT_DIR" "$WINDOW_DIR" "$CACHE_ROOT"; do
+      if [[ "$SCALE_TARGET" == "$SCALE_SOURCE" || "$SCALE_TARGET" == "$SCALE_SOURCE/"* || "$SCALE_SOURCE" == "$SCALE_TARGET/"* ]]; then
+        echo "scale source/output paths overlap: $SCALE_SOURCE $SCALE_TARGET" >&2; exit 2
+      fi
+    done
+  done
+fi
 test -f "$CODE_DIR/scripts/dev/benchmark_global_batch.py"
+[[ "$ENTRY" != scale ]] || test -f "$CODE_DIR/scripts/dev/benchmark_global_scale.py"
 test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)"
 PYTHON="$PROJECT/.venvs/orcjax_${BACKEND}/bin/python"
 test -x "$PYTHON"
@@ -87,7 +109,10 @@ export MALLOC_ARENA_MAX=2
 if [[ "$BACKEND" == cpu ]]; then
   export JAX_PLATFORMS=cpu
   SCRIPT=benchmark_global_batch.py
-  [[ "$ENTRY" == benchmark ]] || SCRIPT=probe_global_batch_cache.py
+  case "$ENTRY" in
+    scale) SCRIPT=benchmark_global_scale.py ;;
+    cache-probe) SCRIPT=probe_global_batch_cache.py ;;
+  esac
   COMMAND=("$PYTHON" "$CODE_DIR/scripts/dev/$SCRIPT")
 else
   CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -104,7 +129,10 @@ else
   export SINGULARITYENV_ORCHJAX_PHYSICAL_GPU_UUID="$ORCHJAX_PHYSICAL_GPU_UUID"
   export SINGULARITYENV_ORCHJAX_GPU_DRIVER_VERSION="$ORCHJAX_GPU_DRIVER_VERSION"
   export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=benchmark_global_batch.py
-  [[ "$ENTRY" == benchmark ]] || export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=probe_global_batch_cache.py
+  case "$ENTRY" in
+    scale) export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=benchmark_global_scale.py ;;
+    cache-probe) export SINGULARITYENV_ORCHJAX_GLOBAL_BATCH_ENTRY=probe_global_batch_cache.py ;;
+  esac
   export SINGULARITYENV_JAX_ENABLE_X64=true
   export SINGULARITYENV_ORCHIDEE_REPO_ROOT="$CODE_DIR"
   export SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ORCHIDEE_DATA_ROOT"
@@ -124,7 +152,7 @@ else
   COMMAND=(singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR"
     /apps/soft/sif/foundationpose "$PYTHON" "$CODE_DIR/scripts/hpc/global_batch_gpu_entry.py")
 fi
-[[ "$ENTRY" != benchmark ]] || COMMAND+=(--asset-root "$ASSET_ROOT")
+[[ "$ENTRY" == cache-probe ]] || COMMAND+=(--asset-root "$ASSET_ROOT")
 COMMAND+=(--output-dir "$OUTPUT_DIR" --cache-mode "$CACHE_MODE" --cache-root "$CACHE_ROOT" "${BENCH_ARGS[@]}")
 SUPERVISOR=("$PROJECT/.venvs/orcjax_cpu/bin/python" "$CODE_DIR/scripts/hpc/global_batch_free_window.py"
   --timeout-seconds "$TIMEOUT_SECONDS" --output-dir "$WINDOW_DIR" --report-dir "$OUTPUT_DIR")

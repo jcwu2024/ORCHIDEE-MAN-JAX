@@ -485,6 +485,29 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 
 ## 本轮核查记录
 
+第四轮scale执行边界：`benchmark_global_scale.py`对所有16/64个唯一点复核两块完整输入，
+共享B4的前提是所有lane的科学static signature与schema/dtype/None严格兼容。
+原四点numerical reference只读导入；当前常驻B4对其完整输出和各点独立reference重验，
+其余每组运行自身输入，不新增逐点scalar编译。B16/B64输出逐lane对齐本轮实际B4组输出，
+计时baseline也对齐同一组冻结输入，不使用历史四点scalar的比例外推。
+完成checkpoint包含完整输出、原始samples、gates、执行及测量origin；恢复保留完成B16，
+未完成B64明确标为stopped/failed。full-input/science/runtime身份包含batch stage名，
+不包含requested-size子集，因此先16后16/64可以复用已完成B16。
+
+本地旧CPU reference导入显式选择`--reference-format local-cpu --anchor-prepared-input`，
+核对记录runtime/compiler环境、原source Git科学差异、全部原输入canonical identity及每份
+legacy reference hash，不重新编译scalar；旧记录缺少backend version及执行时科学hash时
+明确披露，不把当前环境反填为历史证据。GPU默认staged格式要求原manifest完整身份/checksum。
+portable reader只恢复pathlib metadata到当前host，不随意改路径或数值；声明config与context
+config bytes、磁盘run.def与context values必须匹配，再重新计算当前static signature。
+
+Linux准备脚本只消费local audit和已存Day1的host NumPy数值状态，核对v2资产、config、
+state和两块完整数值argument digest，允许已声明VEGETATION_FILE路径映射；历史路径若已
+不存在，只作为归档provenance，实际local文件hash必须等于canonical remote目标文件hash，
+且目标字符串必须与remote四anchor run.def相同。remote完整64输入实际经生产reader再审计，
+这仍不是GPU数值gate。脚本内部整段wall上限1500s，由外部supervisor限制整个window≤1700s，
+共同约束test02总额度；physical GPU window由独立预算账本管理，准备成本单列。
+
 已直接阅读上列主代码边界、CLI/runner默认、forcing/parameter/state adapters、static dispatch、
 AD primitives及相关测试实现；核查七日块三份dynamic gate、三点block2复用、多日/组件性能
 原始JSON；检查base HEAD。初始来源审计未重跑历史昂贵gate；后续新增了四点独立输入审计、

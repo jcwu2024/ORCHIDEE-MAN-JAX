@@ -32,7 +32,7 @@ def main() -> None:
         raise RuntimeError(f"free-node diagnostic requires exactly one GPU: {devices}")
     jax.config.update("jax_enable_x64", True)
     entry = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY", "benchmark_global_batch.py")
-    if entry not in {"benchmark_global_batch.py", "probe_global_batch_cache.py"}:
+    if entry not in {"benchmark_global_batch.py", "benchmark_global_scale.py", "probe_global_batch_cache.py"}:
         raise ValueError(f"unsupported diagnostic entry: {entry}")
     runpy.run_path(
         str(Path(__file__).resolve().parents[1] / "dev" / entry),

@@ -151,6 +151,25 @@ prepared input后查均未改变；本任务session为空，GPU0零MiB，其他�
 [MILESTONE.md](../../../outputs/research/global_throughput/MILESTONE.md)和
 [milestone-summary.json](../../../outputs/research/global_throughput/milestone-summary.json)。
 
+第四轮当前是已授权的16/64个唯一真实点筛选，尚未产生新的GPU吞吐结论。
+新入口`scripts/dev/benchmark_global_scale.py`复用原四点数值reference，只编译一个常驻B4，
+以每组各自的真实forcing/参数/冻结Day1状态运行全部相同点，再与B16/B64比较。
+标签为`vs_B4_groups`，分母分别224/896 point-days，不外推旧四点scalar速度。
+每个规模先过全部lane双块parity、跨B4组置换及lane替换隔离，再测至少五次同步core、
+preprepared wrapper及实际B4组串行；B16的完整输出、raw samples和gate先atomic保存，
+才构造B64。第一免费window只请求16，下一window可请求16/64；两者都用同一FULL64输入，
+身份不因requested subset变化而失效。GPU合同总计3600 card-seconds、最多两次window、
+每次最多1800s；本地CPU实测另列，免费CPU准备/入场也另记完整wall。
+
+输入准备由`prepare_global_scale_inputs.py`维护实际LIMIT中心和动态参数的确定性选点、
+各点v2 source checksum、Day1及完整两块输入记录；
+`prepare_global_scale_remote.py`在Linux用已保存的新60点Day1状态重建context/forcing，
+保留原remote四anchor，不重新生成Day1或编译transition。只允许已声明VEGETATION_FILE
+路径映射，并核对实际local/remote文件内容、各点完整输入digest、static closure/schema及FP64。
+内存入场以真实input/output字节、compiler buffer analysis和所选物理GPU free/total memory
+保守投影，要求至少2GiB余量；RSS不是VRAM，入场估计也不是无OOM保证。
+这些检查及新规模结果仍只认证有界完整forward，不能替代Fortran/年度/669点/50年或AD验收。
+
 可复现命令（数据根只读，生成物在本 worktree；默认禁持久 compilation cache）：
 
 ```powershell
