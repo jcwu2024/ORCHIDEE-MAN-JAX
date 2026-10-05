@@ -618,6 +618,14 @@ def _save_cold_cache(
     _atomic_json(output_dir / "cold_day1_new60_identity.json", identity_hashes)
 
 
+def _refresh_layout_migration_audit(
+    report: dict[str, Any], layout_migrations: dict[str, dict[str, Any]]
+) -> None:
+    report["cold_state_layout_migrations"] = [
+        {"landpoint_id": point, **migration} for point, migration in layout_migrations.items()
+    ]
+
+
 def _prepare_new_point(
     point: str,
     *,
@@ -932,9 +940,7 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
             "strict_static_compatibility": anchor_static_audit,
         },
         "new_point_records": list(new_records.values()),
-        "cold_state_layout_migrations": [
-            {"landpoint_id": point, **migration} for point, migration in cold_state_layout_migrations.items()
-        ],
+        "cold_state_layout_migrations": [],
         "input_interface": "(list[PreparedLane], list[BlockArguments])",
         "static_schema_audit": None,
     }
@@ -971,6 +977,7 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
         report["static_schema_audit"] = static_audit
         report["checkpoint_count"] = len(lanes)
         report["checkpoint_prepared_pickle_sha256"] = _sha256_file(progress_path)
+        _refresh_layout_migration_audit(report, cold_state_layout_migrations)
         _atomic_json(report_path, report)
 
     # Persist an atomic, stable pickle after the requested prefix is complete.
@@ -991,6 +998,7 @@ def _prepare_count(args: argparse.Namespace, manifest: dict[str, Any], run_defs:
         "values": "point_id -> DriverPreviousStepStatePacket with NumPy numeric leaves",
         "point_ids": sorted(cold_states),
     }
+    _refresh_layout_migration_audit(report, cold_state_layout_migrations)
     _atomic_json(report_path, report)
     print(json.dumps({"status": report["status"], "count": len(lanes), "prepared_pickle": str(stable_path), "sha256": report["prepared_pickle_sha256"]}, indent=2))
 
