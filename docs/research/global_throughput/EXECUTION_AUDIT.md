@@ -7,6 +7,13 @@
 第三轮同设备同工作量JAX scalar比较与单点scalar基线通过，GPU B4 core收益3.572820倍；
 没有Fortran/年度/生产端到端认证，未提交付费作业。
 
+第四轮精度补充：旧local4、remote4及新local16/local64两块输入均有相同四个group5
+`float32`字段（`contfrac/lalo/lat/lon`）；其余已检查浮点输入leaf为`float64`。
+冻结源中`lalo[:,0]`进入`season_midwinter_solad`，实际shape tracing结果为`float32`，
+虽然后续`gdd_init_date`状态为`float64`。因此本文历史FP64运行标签不证明逐表达式
+全FP64。精度合同待用户选择；未改变核心或dtype，第四轮GPU启动次数仍为0。
+确切调用链、来源和两条可审阅路线见[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md)。
+
 ## 首个实现的当前状态
 
 纯工厂 `_paper_later_day_block_transition_factory` 原样提取原 `transition`，旧 scalar
@@ -487,6 +494,9 @@ main已经有自定义精确primal AD primitives：`ad_primitives.py:14-49` rati
 
 第四轮scale执行边界：`benchmark_global_scale.py`对所有16/64个唯一点复核两块完整输入，
 共享B4的前提是所有lane的科学static signature与schema/dtype/None严格兼容。
+本地完整64输入及新60点冷状态已保存；B16独立结果输入文件保留，完整Linux重建尚未
+执行。实际B16生产reader在旧anchor`001.0-071.0/group5/contfrac`的原有float32 leaf
+触发全FP64输入拒绝；没有把错误归因于新点，未绕过此门槛。
 原四点numerical reference只读导入；当前常驻B4对其完整输出和各点独立reference重验，
 其余每组运行自身输入，不新增逐点scalar编译。B16/B64输出逐lane对齐本轮实际B4组输出，
 计时baseline也对齐同一组冻结输入，不使用历史四点scalar的比例外推。
