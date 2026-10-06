@@ -86,20 +86,26 @@ GPU 两个原始 JSON 本次已核读：原工作区
 
 CPU1 B16 resident-scalar终态已经完成，状态为**性能已测；跨后端科学一致性未接受**。作业15591356在Explore1000节点n04以1 CPU、0 GPU运行1176秒，完成16个固定真实点、两块连续7日、每天48步的224 point-days，并保存五次同步core和wrapper样本。完整终态证据见[CPU结果](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md)、[原始测量](../../../outputs/research/global_throughput/cpu-performance-results-15591356/terminal-measurements.json)、[费用情景](../../../outputs/research/global_throughput/cpu-performance-results-15591356/server-cost-results.json)及[CPU-internal reader admission](../../../outputs/research/global_throughput/cpu-performance-results-15591356/cpu-internal-reader-admission.json)。
 
-| 同工作量 B16，224 point-days | Core中位数 [范围] | Wrapper中位数 [范围] | GPU/CPU吞吐比 |
-| --- | ---: | ---: | ---: |
-| CPU1 resident scalar | 31.458503002 s [30.855936289, 31.737742664] | 31.760353759 s [30.915467992, 32.648889609] | — |
-| 已接受GPU B16 | 4.149942968 s [4.142994318, 4.152027067] | 4.364678632 s [4.359835308, 4.370462861] | core 7.580466345×；wrapper 7.276676345× |
+| 同工作量 B16，224 point-days | 分配CPU/GPU | Core中位数 [范围] | Wrapper中位数 [范围] | 热费用主情景 core / wrapper | GPU/CPU吞吐比 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| CPU1 resident scalar | 1 CPU / 0 GPU | 31.458503002 s [30.855936289, 31.737742664] | 31.760353759 s [30.915467992, 32.648889609] | CNY 0.000436924 / 0.000441116 | — |
+| 已接受GPU B16 | 4 CPU / 1 GPU | 4.149942968 s [4.142994318, 4.152027067] | 4.364678632 s [4.359835308, 4.370462861] | CNY 0.002766629 / 0.002909786 | core 7.580466345×；wrapper 7.276676345× |
 
-CPU记录17项固定gate中15项通过、2项有限tolerance差异失败：299.0-115.0的bound ratio为1.2284882227，285.0-087.0为1.7088155265。原生dtype与`atol=1e-8`、`rtol=1e-10`未变；冻结输入重复运行零差。collector通过checkpoint SHA/contract/五样本检查，完整探索性计时可发表，但accepted CPU stage count为0。比值只说明性能，不代表科学一致性或最终费用胜负。
+CPU记录17项固定gate中15项通过、2项有限tolerance差异失败：299.0-115.0的bound ratio为1.2284882227，285.0-087.0为1.7088155265。原生dtype与`atol=1e-8`、`rtol=1e-10`未变；冻结输入重复运行零差。collector通过checkpoint SHA/contract/五样本检查，完整探索性计时可发表，但accepted CPU stage count为0。费率情景为CPU CNY0.05/allocated-core-hour（保守0.07）、GPU CNY2.20/card-hour，GPU的4个辅助CPU按核时另加，因此主情景每小时GPU作业为CNY2.40（相当48个主情景CPU核时），保守情景CNY2.48。按主情景，当前B16热CPU费用低于GPU：GPU/CPU热费用比为core 6.332064、wrapper 6.596418；GPU仍分别快7.580466和7.276676倍。这里可说B16热样本的CPU1较省钱、GPU较快；不能外推年度/669点/50年或宣布全规模最终赢家，也不代表科学一致性。
 
 作业全窗口1176秒的主/保守费用情景为CNY 0.016333333/0.022866667，父作业只计一次，含启动、编译、gate、重复和IO；不是按224 point-days拆分，也不是核实账单。lower 56.317166498秒、compile 688.378443662秒、首次调用32.158282455秒、checkpoint序列化0.005034860秒及原子写入0.025802774秒分别记录。无完整stage startup/validation accounting，不估算K复用收益。
 
-CPU-internal reader实际unpickle快照后，在record字段一致性层以“checkpoint/manifest evidence changed”拒绝；具体差异字段未定位，后续schema/nonfinite/timing admission没有通过证据。没有启动pool runner，也没有lower、compile或模型执行。因此CPU4前提未通过，不提交审批、不称命令ready，也不自动重跑CPU1。collector计时资格与reader资格是独立层次。vmap lane数不等于CPU核数。
+CPU-internal reader的首次真实检查曾在record字段一致性层拒绝：checkpoint的`record.execution_origin.environment.loadavg`为tuple `(0.14, 0.06, 0.06)`，manifest JSON为相同值的list。修复只允许该字段tuple/list等价，要求长度3、finite nonnegative且每个元素type/value严格相等；其他证据字段与科学/输入/gate/output校验不放宽。使用分开的patched reader namespace对未改动CPU1 B16 snapshot重新实测，`load_reference`及全部`_validate_cpu_internal`后续检查通过：760 leaves、16 lanes、两块完整边界、5+5样本；CPU checkpoint/manifest/report SHA均未变。该角色仍是`cpu_internal_comparison`，不升级为accepted CPU或科学parity通过，也没有运行CPU4。两项原GPU有限tolerance失败仍失败。见[精确record差异](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/record-differences.json)、[实际reader验证](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/actual-reader-validation.json)和[修复报告](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/REPAIR_REPORT.md)。vmap lane数不等于CPU核数。
 
-GPU方面，先用已接受的B64/B16单卡结果作参考；后续可评估B128/B256，固定同一真实网格集合与时窗、只改分批，并同时报告显存、point-days/s、点日/元、host-device搬运与compile摊销。当前不实现、不提交或运行新的GPU候选。单卡有数据后再看1卡到2卡strong scaling；是否研究4卡由结果决定。固定总网格与时窗报告`T1/TG`和`T1/(G*TG)`，另算G卡时与实际辅助CPU核时成本；weak scaling另表。CPU成本不得假设按核线性缩放。短窗性能证据与全年669点/50年科学验收分开。
+### 当前优先：单卡GPU批大小预筛
 
-费用决策保留GPU卡/CPU核小时44倍比率及CPU辅助核费；GPU 2.20元/卡时推算CPU0.05元/核时，账单未核实，部署文档0.07元作为保守情景。报告热core、准备后wrapper和完整窗口费用，比较时间/预算上限内达到的工作量；不把GPU速度乘44声称CPU 44核实测。本次CPU1父作业主/保守费用情景为0.016333333/0.022866667元；此前review中的0.025/0.035元是30分钟计划上限而非实际作业成本。CPU4此前review过的条件命令已被实际reader admission拒绝所阻断，且未获批。原资源和命令见[CPU run review](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)，但不表示reader admission已通过。
+以单卡B128/B256并视资源情况条件加入B512为当前主线。优先使用已有真实Day1资产；如不足以构成代表性容量筛查，则固定FULL64源64点各重复8 lanes，共512 lanes，比较B128/B256/条件B512对同一512-lane集合与时窗分块的效果，每种5次同步core和wrapper样本。计量使用lane-days（512 lanes×14日=7168 lane-days/样本），不可称作512个不同真实点或有效point-days。历史GPU B64是64点工作量，不直接作为同一512-lane作业基线；完整B64基线仅在预算允许时后置补测。
+
+GPU批量容量预筛的独立干净checkout已部署到commit `a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`；test02目标Shell/Python dry-run及CPU-only实际FULL64/B4输入准入通过。准入核对源科学SHA、FULL64 B4快照SHA，并对B128/B256/B512各自的1070个dynamic leaves验证每条重复lane的shape/dtype/C-order字节身份；未执行模型、lower、compile或GPU运行。GPU实际显存可用量和新形状峰值尚未验证，因此内存数字仅为计划估计。证据见[付费运行审阅](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/PAID_RUN_REVIEW.md)、[部署验证](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/deployment-verification.json)、[目标验证](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-verification.json)及[实际输入准入](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json)。
+
+当前审阅的精确命令指定`ibc13b03n04`，快照为2026-10-06T11:12:21Z（CPUAlloc16/112、load1.52、AllocTRES cpu16/gpu2）；这是短时资源快照，不是预留，提交前必须重新检查。上限90分钟、1张V100加4个Slurm辅助CPU，不独占节点，费用情景上限CNY3.60主/3.72保守；必测B128/B256，B512仅按预设条件，optional B64关闭。完整命令和记录见[审批命令](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/APPROVAL_COMMAND.sh)、[当前准备账本](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json)和[节点快照](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/final-node-snapshot.txt)。账本状态为`prepared_verified_awaiting_explicit_paid_approval`；命令尚未执行，未提交作业或测量吞吐。1→2卡扩展后置。CPU reader commit `7d20a17`已接受且修复后的CPU-internal reader实际准入通过，但不改变两项CPU/GPU有限tolerance差异，也未运行CPU4。CPU补测独立于GPU主线且不是前置，目前暂停额外CPU准备或申请。短窗容量预筛与年度669点/50年科学验收分开。
+
+费用决策保留GPU卡/CPU核小时44倍比率及CPU辅助核费；GPU 2.20元/卡时推算CPU0.05元/核时，账单未核实，部署文档0.07元作为保守情景。报告热core、准备后wrapper和完整窗口费用，比较时间/预算上限内达到的工作量；不把GPU速度乘44声称CPU 44核实测。本次CPU1父作业主/保守费用情景为0.016333333/0.022866667元；此前review中的0.025/0.035元是30分钟计划上限而非实际作业成本。CPU B64/CPU4扩展当前暂停，不是GPU预筛的前置，也没有新CPU作业授权。
 
 CPU准备阶段及CPU1作业均已终结。旧付费/free执行账本仍为关闭状态，旧GPU自动跟进已结束；本次CPU1的[独立执行账本](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_EXECUTION_LEDGER.json)已关闭，不表示创建或续跑了新的heartbeat。
 

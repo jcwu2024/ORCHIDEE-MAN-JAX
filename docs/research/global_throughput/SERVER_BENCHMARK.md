@@ -3,13 +3,18 @@
 Status: CPU1 exploratory B16 job15591356 completed in1176s using1 CPU and0 GPUs.
 Its full timing record is publishable as exploratory performance evidence;
 cross-backend scientific consistency is not accepted and accepted CPU stage count
-is0. The CPU4 reference reader rejected checkpoint/manifest evidence at its record
-consistency layer, so the CPU4 prerequisite failed and no CPU4 run is authorized.
-The earlier bounded paid matrix and GPU job15579869 remain historical evidence.
+is0. Initial reader rejection was repaired and the actual saved-snapshot internal
+reader validation passed; this does not make the CPU stage scientifically accepted
+or authorize CPU4. Current priority is the single-GPU batch-size pre-screen below;
+the completed CPU assets remain available. The earlier bounded paid matrix and
+GPU job15579869 remain historical evidence.
 See the [CPU1 terminal result](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md),
 [terminal measurements](../../../outputs/research/global_throughput/cpu-performance-results-15591356/terminal-measurements.json),
 [cost scenarios](../../../outputs/research/global_throughput/cpu-performance-results-15591356/server-cost-results.json),
-[reader admission](../../../outputs/research/global_throughput/cpu-performance-results-15591356/cpu-internal-reader-admission.json),
+[initial reader attempt](../../../outputs/research/global_throughput/cpu-performance-results-15591356/cpu-internal-reader-admission.json),
+[reader repair report](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/REPAIR_REPORT.md),
+[exact reader record diff](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/record-differences.json),
+[actual repaired-reader validation](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/actual-reader-validation.json),
 [historical stage evidence](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md),
 [consolidated verification](../../../outputs/research/global_throughput/server-cost-results/verification.json),
 and the [historical paid-round attempt and cost ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json).
@@ -29,15 +34,35 @@ wrapper was31.760353759s/[30.915467992,32.648889609]. Accepted GPU B16 measured
 7.276676345 wrapper. These ratios describe exploratory performance only, not
 scientific consistency or final cost superiority.
 
+| Same-workload B16,224 point-days | Allocation | Core median [range] | Wrapper median [range] | Warm cost, primary core / wrapper |
+| --- | --- | ---: | ---: | ---: |
+| CPU1 resident scalar | 1 CPU,0 GPU | 31.458503002s [30.855936289,31.737742664] | 31.760353759s [30.915467992,32.648889609] | CNY0.00043692365281 / 0.00044111602443 |
+| Accepted GPU B16 | 4 auxiliary CPUs,1 GPU | 4.149942968s [4.142994318,4.152027067] | 4.364678632s [4.359835308,4.370462861] | CNY0.00276662864536 / 0.00290978575498 |
+
+The main price scenario is CNY0.05 per allocated CPU-hour and CNY2.20 per GPU-hour;
+the conservative CPU rate is CNY0.07. Adding four auxiliary CPU charges makes one GPU
+allocation CNY2.40/hour at the main rate (48 CPU units) or CNY2.48/hour at the
+conservative rate. For this B16 warm workload, GPU/CPU warm cost ratios are6.332064
+core and6.596418 wrapper: CPU1 is cheaper for the measured sample while GPU is faster
+by7.580466345 core and7.276676345 wrapper throughput. This is a B16 warm-workload
+price scenario, not a full-run, annual, or 669-point/50-year winner; ratio44 is not a
+measured 44-CPU result.
+
 There were17 fixed gates:15 passed,2 finite tolerance-only gates failed at
 299.0-115.0 (bound ratio1.2284882227) and285.0-087.0 (1.7088155265). Native
 dtypes and `atol=1e-8`, `rtol=1e-10` were unchanged; frozen repeat was identical.
 Collector SHA/contract/sample checks admit the complete exploratory measurement,
-while accepted CPU stage count remains0. The actual CPU-internal reader unpickled
-the snapshot then rejected record-level checkpoint/manifest evidence consistency;
-the differing field was not identified, and later schema/nonfinite/timing admission
-did not pass. No pool runner, lower, compile, or model execution occurred, so CPU4
-is ineligible.
+while accepted CPU stage count remains0. The initial reader rejection came only from
+type mismatch at `record.execution_origin.environment.loadavg`: checkpoint tuple
+`(0.14,0.06,0.06)` versus JSON list with equal values. The patched reader permits
+tuple/list equivalence only at that telemetry field, with length/finite/nonnegative
+and exact per-element type/value checks; other record and science admission remains
+strict. Actual validation against the unchanged CPU1 B16 snapshot passed
+`_validate_cpu_internal`, including schema/nonfinite/repeat/timing checks, 760 leaves,
+16 lanes, two complete blocks, and five core plus five wrapper samples. This grants
+`cpu_internal_comparison` reader admission only; it does not clear either original
+finite GPU parity failure or make CPU accepted. No model lower, compile, CPU4 runner,
+or scientific execution occurred. See the reader-repair links above.
 
 Whole-parent-job cost scenarios are CNY0.016333333 primary and0.022866667
 conservative, counting job15591356 once over1176s. They include startup, compile,
@@ -53,11 +78,14 @@ CPU1 run selected `exploratory`, `cpu-internal`, size `16`, and `scalar` only. E
 timing may retain and time complete outputs with finite tolerance-only CPU/GPU
 differences, while reporting the numerical gate as failed. Point/state identity,
 schema, shape/dtype, discrete values, nonfinite policy, and complete-output presence
-remain hard stops. CPU internal snapshots are comparison references only. Actual
-reader admission for the saved CPU1 output failed at record-level checkpoint/manifest
-evidence consistency; the differing field is unresolved. Do not treat the earlier
-conditional45-minute/4-CPU scenario or command as ready for submission. CPU4 requires
-a resolved and verified reader admission plus a new resource, command, and cost review.
+remain hard stops. CPU internal snapshots are comparison references only. The initial
+reader rejection was caused solely by `record.execution_origin.environment.loadavg`
+being a tuple in pickle and an equal-valued list in JSON. The staged reader allows that
+single metadata representation difference only, with strict value/type checks; actual
+reader admission and all subsequent CPU-internal checks passed on the unchanged B16
+snapshot. It remains `cpu_internal_comparison`, not accepted science. The earlier
+conditional45-minute/4-CPU scenario or command is not ready for submission; CPU4 was
+not run or approved. See the reader-repair artifacts linked at the top.
 
 The CPU scripts request `ibc11b02n04`. A 2026-10-06 06:09:54Z snapshot recorded
 that node IDLE, CPUAlloc 0/56, load 0.49, and FreeMem 171657 MiB; this is not a
@@ -75,14 +103,45 @@ planning scenarios. Its CPU1 CNY0.025/0.035 figures were based on a30-minute cei
 not actual parent-job cost; actual terminal scenarios are CNY0.016333333/0.022866667.
 The conditional CPU4 CNY0.15/0.21 scenario is not executable approval.
 
-After the current CPU table, single-GPU B128/B256 are possible batching studies from
-the accepted B64/B16 points: keep the same real point set and time window and vary
-only partitioning. A larger 128/256-point real set needs its own admitted inputs and
-initial states before comparing B64 chunks and larger batches over that fixed set;
-the old 64-point result cannot alone provide that larger-set A/B. No new GPU
-implementation or run is part of this plan. Multi-GPU
-work is later still: compare 1 to 2 cards first and consider 4 only if measured cost
-and scaling justify it. These are plans, not measurements or submissions.
+## Current Priority: Single-GPU Batch-Size Pre-Screen
+
+Pre-screen single-GPU B128/B256 and conditional B512. Prefer existing real Day1
+assets. If these do not fill the representative capacity screen, repeat each of the
+64 fixed FULL64 source points across eight lanes (512 lanes total) and compare
+B128/B256/conditional B512 chunks on the same 512 lanes and time window, with five
+synchronized core and wrapper samples per setting. Report lane-days (7168 lane-days
+per 14-day sample), not effective unique point-days; repeated lanes do not represent
+512 distinct real grids. The accepted historical B64 measurement is not a same-job
+512-lane baseline. Add a complete B64 baseline only if the bounded budget permits.
+
+The capacity runner is deployed in a clean independent checkout at commit
+`a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`; deployment and test02 target checks passed.
+CPU-only admission verified the source science SHA and complete FULL64 B4 snapshot
+SHA, then checked all 1,070 dynamic leaves for every repeated lane at B128/B256/B512
+(shape, dtype and C-order bytes). It did not execute the model, lower/compile, or
+initialize a GPU backend. Compiler buffers, actual GPU free memory and host memory
+admission remain runtime checks; current memory values are planning estimates only.
+See the [paid-run review](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/PAID_RUN_REVIEW.md),
+[deployment verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/deployment-verification.json),
+[target verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-verification.json),
+[input admission](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json),
+[local protocol tests](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/local-verification.json),
+and [node snapshot](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/final-node-snapshot.txt).
+
+The reviewed command selects `ibc13b03n04` based on the 2026-10-06T11:12:21Z
+snapshot (CPUAlloc16/112, load1.52, AllocTRES cpu16/gpu2; six GPUs unallocated).
+This is not a reservation and occupancy must be rechecked before any authorized
+submission. The declared envelope is one V100 plus four auxiliary Slurm CPUs for at
+most90 minutes, without node exclusivity; estimated whole-job caps are CNY3.60
+primary/CNY3.72 conservative. B128 and B256 are mandatory, B512 is conditional,
+and optional B64 is disabled. The exact [approval command](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/APPROVAL_COMMAND.sh)
+and [preparation ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json)
+match this contract. Ledger status is `prepared_verified_awaiting_explicit_paid_approval`:
+no paid approval, submission, model compilation, or new performance measurement exists.
+Existing GPU B16/B64 evidence is reused; the 1-to-2-card study comes later. CPU
+reader commit `7d20a17` is accepted, and the patched reader's actual CPU-internal
+admission passed; this does not clear the two CPU/GPU tolerance failures or run CPU4.
+CPU expansion is independent and paused, not a prerequisite for the GPU screen.
 
 ## Completed Paid Matrix: Fixed Workload
 
