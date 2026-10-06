@@ -136,8 +136,7 @@ most90 minutes, without node exclusivity; estimated whole-job caps are CNY3.60
 primary/CNY3.72 conservative. B128 and B256 are mandatory, B512 is conditional,
 and optional B64 is disabled. The exact [approval command](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/APPROVAL_COMMAND.sh)
 and [preparation ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json)
-match this contract. Ledger status is `prepared_verified_awaiting_explicit_paid_approval`:
-no paid approval, submission, model compilation, or new performance measurement exists.
+match this contract. The user approved this envelope and job`15600405` is running with exactly4 allocated CPUs and1 V100. Ledger status is `GPU_15600405_RUNNING_B128_compilation`; no complete capacity-stage timing is published. The independent heartbeat`gpu-15600405` follows only this job every5 minutes and pauses after terminal evidence validation.
 Existing GPU B16/B64 evidence is reused; the 1-to-2-card study comes later. CPU
 reader commit `7d20a17` is accepted, and the patched reader's actual CPU-internal
 admission passed; this does not clear the two CPU/GPU tolerance failures or run CPU4.
