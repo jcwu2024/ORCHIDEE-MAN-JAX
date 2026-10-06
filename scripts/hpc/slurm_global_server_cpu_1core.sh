@@ -52,9 +52,14 @@ for size in "${sizes[@]}"; do
   seen_sizes[$size]=1
   previous_size=$size
 done
-[[ $CPU1_METHODS == scalar || $CPU1_METHODS == 'scalar batch' ]] || {
-  echo "CPU1_METHODS must be scalar or 'scalar batch'" >&2; exit 2;
+[[ $CPU1_METHODS == scalar || $CPU1_METHODS == batch || $CPU1_METHODS == 'scalar batch' ]] || {
+  echo "CPU1_METHODS must be scalar, batch or 'scalar batch'" >&2; exit 2;
 }
+if [[ $CPU1_METHODS == batch ]]; then
+  CPU_REFERENCE_DIR=${CPU_REFERENCE_DIR:?batch-only requires an external complete CPU scalar snapshot}
+else
+  CPU_REFERENCE_DIR=$RUN_ROOT/scalar
+fi
 DRY_RUN=0
 
 if [[ ${1:-} == --dry-run ]]; then
@@ -73,6 +78,9 @@ if [[ $DRY_RUN -eq 0 ]]; then
   for path in "$PYTHON" "$ENTRY" "$PREPARED_INPUT" "$GPU_REFERENCE_DIR" "$CONFIG"; do
     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
   done
+  if [[ $CPU1_METHODS == batch ]]; then
+    [[ -d $CPU_REFERENCE_DIR ]] || { echo "CPU scalar reference directory missing: $CPU_REFERENCE_DIR" >&2; exit 2; }
+  fi
   test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)" || {
     echo "benchmark checkout must be clean and immutable" >&2; exit 2;
   }
@@ -95,14 +103,16 @@ common=(--cpu-budget 1 --sizes "${sizes[@]}" --prepared-input "$PREPARED_INPUT"
   --memory-guard-gib 24 --validation-mode "$VALIDATION_MODE"
   --cpu-reference-role "$CPU_REFERENCE_ROLE")
 scalar=(--mode scalar "${common[@]}" --output-dir "$RUN_ROOT/scalar")
-batch=(--mode batch "${common[@]}" --cpu-reference-dir "$RUN_ROOT/scalar"
+batch=(--mode batch "${common[@]}" --cpu-reference-dir "$CPU_REFERENCE_DIR"
   --output-dir "$RUN_ROOT/batch1")
 
 if [[ $DRY_RUN -eq 1 ]]; then
   printf 'script_defaults: partition=cnall node=ibc11b02n04 cpus=1 wall=00:30:00 memory_reservation=none admission_guard_gib=24 output=%q\n' "$RUN_ROOT"
   printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU1_METHODS"
-  printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=1 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${scalar[@]}"; printf '\n'
-  if [[ $CPU1_METHODS == 'scalar batch' ]]; then
+  if [[ $CPU1_METHODS == scalar || $CPU1_METHODS == 'scalar batch' ]]; then
+    printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=1 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${scalar[@]}"; printf '\n'
+  fi
+  if [[ $CPU1_METHODS == batch || $CPU1_METHODS == 'scalar batch' ]]; then
     printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=1 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${batch[@]}"; printf '\n'
   fi
   exit 0
@@ -144,7 +154,9 @@ run_case() {
     /usr/bin/time -v "$PYTHON" "$ENTRY" "$@"
 }
 
-run_case scalar "${scalar[@]}"
-if [[ $CPU1_METHODS == 'scalar batch' ]]; then
+if [[ $CPU1_METHODS == scalar || $CPU1_METHODS == 'scalar batch' ]]; then
+  run_case scalar "${scalar[@]}"
+fi
+if [[ $CPU1_METHODS == batch || $CPU1_METHODS == 'scalar batch' ]]; then
   run_case batch "${batch[@]}"
 fi
