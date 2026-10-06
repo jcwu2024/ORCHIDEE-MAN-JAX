@@ -1,38 +1,63 @@
 # Explore1000 Server Benchmark Contract
 
-Status: new exploratory CPU baseline preparation is complete and awaiting specific
-CPU1 paid approval; no new measurement or submission. The old bounded execution
-completed. CPU1 job 15579758 failed its fixed
-numerical parity gate after 852 seconds, before a complete scalar B16/B64
-reference was sealed. CPU4 is withheld and CPU1 was not replayed. GPU job
-15579869 completed with accepted B64 and B16 stages; CPU/GPU comparison remains
-unavailable. All startup failures are counted against the original resource
-envelope. See the [stage evidence](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md),
+Status: CPU1 exploratory B16 job15591356 completed in1176s using1 CPU and0 GPUs.
+Its full timing record is publishable as exploratory performance evidence;
+cross-backend scientific consistency is not accepted and accepted CPU stage count
+is0. The CPU4 reference reader rejected checkpoint/manifest evidence at its record
+consistency layer, so the CPU4 prerequisite failed and no CPU4 run is authorized.
+The earlier bounded paid matrix and GPU job15579869 remain historical evidence.
+See the [CPU1 terminal result](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md),
+[terminal measurements](../../../outputs/research/global_throughput/cpu-performance-results-15591356/terminal-measurements.json),
+[cost scenarios](../../../outputs/research/global_throughput/cpu-performance-results-15591356/server-cost-results.json),
+[reader admission](../../../outputs/research/global_throughput/cpu-performance-results-15591356/cpu-internal-reader-admission.json),
+[historical stage evidence](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md),
 [consolidated verification](../../../outputs/research/global_throughput/server-cost-results/verification.json),
-and [authoritative attempt and cost ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json).
+and the [historical paid-round attempt and cost ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json).
+The independent CPU1 terminal attempt is recorded in the [new CPU1 ledger](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_EXECUTION_LEDGER.json).
 This document defines the server matrix for resident scalar, persistent CPU
 workers, JAX CPU batching, and the first complete GPU batch.
 
-## Current CPU Baseline Plan
+## CPU1 Terminal Measurement
 
-The one-hour paid matrix below is completed historical scope. The next same-workload
-table starts with the **reviewed, not-yet-submitted** CPU B16 resident-scalar run:
-16 fixed real points, two consecutive seven-day blocks, 48 half-hour steps/day
-(224 point-days), at most 30 minutes, 1 CPU, and 0 GPUs. Save complete candidate
-outputs before comparison and collect at least five synchronized core and
-prepared-wrapper samples. The scalar snapshot is an internal CPU comparison
-reference, not scientific truth or accepted model validation.
+Job15591356 completed B16 resident scalar:16 fixed real points, two consecutive
+seven-day blocks,48 half-hour steps/day (224 point-days),1 CPU,0 GPUs, whole-job
+elapsed1176s. It saved complete outputs and five synchronized core and prepared-
+wrapper samples. Core median/range was31.458503002s/[30.855936289,31.737742664];
+wrapper was31.760353759s/[30.915467992,32.648889609]. Accepted GPU B16 measured
+4.149942968s/[4.142994318,4.152027067] core and4.364678632s/[4.359835308,
+4.370462861] wrapper. GPU/CPU throughput ratios are7.580466345 core and
+7.276676345 wrapper. These ratios describe exploratory performance only, not
+scientific consistency or final cost superiority.
+
+There were17 fixed gates:15 passed,2 finite tolerance-only gates failed at
+299.0-115.0 (bound ratio1.2284882227) and285.0-087.0 (1.7088155265). Native
+dtypes and `atol=1e-8`, `rtol=1e-10` were unchanged; frozen repeat was identical.
+Collector SHA/contract/sample checks admit the complete exploratory measurement,
+while accepted CPU stage count remains0. The actual CPU-internal reader unpickled
+the snapshot then rejected record-level checkpoint/manifest evidence consistency;
+the differing field was not identified, and later schema/nonfinite/timing admission
+did not pass. No pool runner, lower, compile, or model execution occurred, so CPU4
+is ineligible.
+
+Whole-parent-job cost scenarios are CNY0.016333333 primary and0.022866667
+conservative, counting job15591356 once over1176s. They include startup, compile,
+gates, repeats, and I/O; they are not billed costs or per-point-day charges.
+Keep warm work and setup separate: lower56.317166498s, compile688.378443662s,
+first call32.158282455s, checkpoint serialization0.005034860s and atomic write
+0.025802774s. No complete stage startup/validation accounting exists for a K-reuse
+estimate. Full values and provenance are in the linked terminal artifacts above.
 
 Launcher defaults remain `VALIDATION_MODE=strict`, `CPU_REFERENCE_ROLE=accepted`,
-sizes `16 64`, CPU1 methods `scalar batch`, and CPU4 methods `pool batch`. This first
-review selects `exploratory`, `cpu-internal`, size `16`, and `scalar` only. Exploratory
+sizes `16 64`, CPU1 methods `scalar batch`, and CPU4 methods `pool batch`. The completed
+CPU1 run selected `exploratory`, `cpu-internal`, size `16`, and `scalar` only. Exploratory
 timing may retain and time complete outputs with finite tolerance-only CPU/GPU
 differences, while reporting the numerical gate as failed. Point/state identity,
 schema, shape/dtype, discrete values, nonfinite policy, and complete-output presence
-remain hard stops. CPU internal snapshots are comparison references only. A later
-same-input CPU4 pool/batch review is planned for at most 45 minutes and 4 CPUs; the
-specific exploratory/internal-role selection and modes belong to its separate
-resource, command, and cost review. It is not covered by the current CPU1 request.
+remain hard stops. CPU internal snapshots are comparison references only. Actual
+reader admission for the saved CPU1 output failed at record-level checkpoint/manifest
+evidence consistency; the differing field is unresolved. Do not treat the earlier
+conditional45-minute/4-CPU scenario or command as ready for submission. CPU4 requires
+a resolved and verified reader admission plus a new resource, command, and cost review.
 
 The CPU scripts request `ibc11b02n04`. A 2026-10-06 06:09:54Z snapshot recorded
 that node IDLE, CPUAlloc 0/56, load 0.49, and FreeMem 171657 MiB; this is not a
@@ -42,12 +67,13 @@ the GPU launcher retains its separate `global-throughput-v1` default. CPU code c
 `4bc82a0747c2fd156430956e41ba426271a88b20` was deployed by verified bundle/fast-forward
 and is clean. Local toy/protocol tests passed 49 cases; actual target Bash expansion
 passed six normal and nine rejection cases. Canonical test02 CLI and four-worker
-stdlib checks passed without model/JAX execution. The new summary also SHA-verified
-the two existing GPU stages without unpickling; it adds no CPU measurement. See the
+stdlib checks passed without model/JAX execution. The preparation review predates the
+completed CPU1 measurement above. See the
 [CPU run review](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)
-for the selected command, output/log roots, scheduler snapshot, and unverified
-additive cost scenarios: CPU1 CNY 0.025/0.035 primary/conservative; conditional
-CPU4 CNY 0.15/0.21. These figures do not assert billed charges.
+for the original command, output/log roots, scheduler snapshot, and unverified
+planning scenarios. Its CPU1 CNY0.025/0.035 figures were based on a30-minute ceiling,
+not actual parent-job cost; actual terminal scenarios are CNY0.016333333/0.022866667.
+The conditional CPU4 CNY0.15/0.21 scenario is not executable approval.
 
 After the current CPU table, single-GPU B128/B256 are possible batching studies from
 the accepted B64/B16 points: keep the same real point set and time window and vary

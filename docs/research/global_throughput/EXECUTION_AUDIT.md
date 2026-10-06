@@ -16,19 +16,25 @@ GPU先原子保全B64 candidate门槛与core/wrapper计时，再测B16，默认�
 旧GPU FULL64参考是数值证据，CPU单核输出才是本次CPU执行对照。
 保持科学core、原生dtype、容差、全部输出和224/896点日；无AD/训练或128/256点扩展。
 
-## 当前基准顺序（CPU准备完成，等待付费批准）
+## CPU1终态基准结果
 
-付费一小时pilot已结束；下一张同工作量时间/成本表先测CPU B16 resident scalar：16个固定真实点、两块7日、每天48步（224 point-days），规划30分钟、1 CPU、0 GPU，至少五次同步core/wrapper。CPU scalar快照仅作CPU内部比较基准。允许保全并计时仅有有限值tolerance差异的完整输出，但仍记为gate失败，原容差不变；身份、schema/shape/dtype、离散值、非有限值和完整输出缺失均硬停止。之后CPU4 worker pool/batch计划45分钟、4 CPU，需单独具体资源、命令、费用批准并严格对CPU scalar快照。后续GPU B128/B256只考虑同点同窗改变partition；不在本轮实现或提交。详见[当前工作单](README.md)及[基准计划](SERVER_BENCHMARK.md)。
+CPU1作业15591356已完成：Explore1000 n04，1 CPU、0 GPU，父作业wall1176秒；B16固定16点、两块连续7日、每日48步，共224 point-days，五次同步样本。core中位31.458503002秒（30.855936289–31.737742664），wrapper中位31.760353759秒（30.915467992–32.648889609）。同输入GPU B16为4.149942968秒和4.364678632秒；GPU/CPU吞吐比7.580466345与7.276676345仅表示探索性性能，不接受科学一致性或最终费用胜负。
 
-准备代码`4bc82a0747c2fd156430956e41ba426271a88b20`已部署到独立干净checkout；CPU原始完整输出先原子保存，再记录全部逐点GPU门槛，strict默认保留，探索计时和accepted结果隔离。CPU内部scalar参考在任何pool/batch编译前验证SHA、science/input身份、两块完整输出、五次样本与原失败门槛；内部重复/跨模式/隔离仍须严格通过。49项本地toy/protocol、实际Bash六个正常/九个拒绝分支及canonical test02无模型CLI/四worker检查通过。复核旧GPU两个完整阶段没有新增模型执行。证据与具体CPU1资源/费用批准项在[准备审阅](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)。这些准备检查没有产生CPU吞吐或科学等价验收。
+17项固定gate中15通过、2项有限tolerance差异失败：299.0-115.0 ratio1.2284882227，285.0-087.0 ratio1.7088155265。原dtype与容差`atol=1e-8`/`rtol=1e-10`不变，frozen repeat零差。Collector通过SHA/contract/五样本检查，可发布完整探索性计时，但accepted CPU count为0。CPU-internal `load_reference`在unpickle快照后，于record字段一致性层拒绝checkpoint/manifest evidence changed；具体字段未定位，后续schema/nonfinite/timing admission没有通过证据。CPU4 runner、lower、compile和模型均未运行；CPU4前提未通过，不提交审批、不称命令ready。完整结果、费用、阶段时间及reader记录见[终态结果](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md)、[terminal measurements](../../../outputs/research/global_throughput/cpu-performance-results-15591356/terminal-measurements.json)、[费用情景](../../../outputs/research/global_throughput/cpu-performance-results-15591356/server-cost-results.json)和[reader admission](../../../outputs/research/global_throughput/cpu-performance-results-15591356/cpu-internal-reader-admission.json)。
+
+父作业主/保守费用情景为0.016333333/0.022866667元，按1176秒完整job计一次，不按224点日分摊。lower56.317166498秒、compile688.378443662秒、first call32.158282455秒、checkpoint序列化0.005034860秒和原子写入0.025802774秒独立记录。没有完整stage startup/validation accounting，不估K复用。详见[当前工作单](README.md)及[基准合同](SERVER_BENCHMARK.md)。
+
+准备代码`4bc82a0747c2fd156430956e41ba426271a88b20`已部署到独立干净checkout；CPU原始完整输出先原子保存，再记录逐点GPU gate，strict默认保留，探索计时和accepted结果隔离。49项本地toy/protocol、实际Bash六个正常/九个拒绝分支及canonical test02无模型CLI/四worker检查通过。作业15591356现已终态完成；reader对CPU snapshot只在record字段一致性层拒绝，具体字段未定位，后续schema/nonfinite/timing admission未通过验证。旧付费/free账本保持关闭，旧GPU自动跟进已结束，没有创建或续跑新的heartbeat。批准资源和原提交命令见[准备审阅](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)，终态见顶部terminal artifacts。
 
 费用主口径采用用户GPU卡/CPU核小时比44（GPU2.20元推算CPU0.05元），
 部署文档CPU0.07元作保守上限，CPU/GPU相加是明确预算假设。
 按allocated Slurm CPU和GPU时数计费；同工作量热费用与完整多阶段job费用分别记录。
-用户已批准三个各最多一小时的pilot，原保守总额度2.83元。CPU1作业15579758运行852秒
+### 历史付费Pilot与单点诊断
+
+以下CPU1/CPU4/GPU额度、CPU1 job15579758失败以及单点CPU诊断均为已结束的旧轮记录；不要将其“无完整B16/B64参考”状态套用于顶部的15591356。用户当时批准三个各最多一小时的pilot，原保守总额度2.83元。CPU1作业15579758运行852秒
 后在B16 scalar第7点299.0-115.0的GPU reference门槛失败。之后获批的独立免费单点诊断已闭合：test02/ibtest02、Xeon Gold6258R，一物理核、零GPU、冻结CPU checkout `7879d8e`，目标299.0-115.0的Days2–8完整首块一次调用，固定`atol=1e-8`/`rtol=1e-10`，全380叶均比较。唯一失败为`[0][0][7]`，即`diffuco_previous_step_state.rveget[0,13]`（整个冠层气孔阻力，s/m；shape `(1,14)`、`float64`）：CPU 592.8152487724788，GPU B4 reference 592.8152488575903，signed delta -8.511153737345012e-8，absolute delta 8.511153737345012e-8，bound 6.928152488575903e-8，ratio 1.228488222708634。165叶有非零差异，其余379叶通过固定比较；gate-wide `max_abs=8.940696716308594e-8`不是目标叶误差。结果和逐叶数据见[当前结果](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/CURRENT_RESULT.md)、[comparison](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/rveget_comparison.json)及[采集核验](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/COLLECTION_VERIFICATION.json)。
 
-全诊断窗口wall合计1636.648 s（保守计1653 s），两次全量scalar编译已用完，仅一次完整首块调用，没有热重复；不构成CPU吞吐、CPU/GPU速度或成本比较。原作业StableHLO只留hash，当前IR hash不同，exact old graph identity未达成。两个保全IR的内部顺序可经置换对齐，源码set派生字段顺序提供一种可能机制，但不证明原图或本次差异的根因；compiler/FPU及NumPy差异仍是未证实假设。因2/2编译额度已用尽，target-owned closure未编译，闭合绑定与CPU scalar/GPU B4/backend/compiler贡献仍未隔离。新诊断详情见[当前结果](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/CURRENT_RESULT.md)、[目标叶对比](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/rveget_comparison.json)及[IR分析](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/IR_ANALYSIS.md)。旧付费CPU1 candidate未保存；reported CPU值属于新单点运行。付费CPU1没有OOM/guard失败证据；此次free诊断第一轮全量编译后曾被重复artifact-entry post-HLO guard中止、没有模型调用，修正后的一次完整首块调用正常结束。单点诊断已结束；付费执行账本及其heartbeat仍关闭/暂停，这不表示整体吞吐研究暂停。付费CPU1阶段无完整B16/B64参考，B64未运行，CPU4仍withheld。
+全诊断窗口wall合计1636.648 s（保守计1653 s），两次全量scalar编译已用完，仅一次完整首块调用，没有热重复；不构成CPU吞吐、CPU/GPU速度或成本比较。原作业StableHLO只留hash，当前IR hash不同，exact old graph identity未达成。两个保全IR的内部顺序可经置换对齐，源码set派生字段顺序提供一种可能机制，但不证明原图或本次差异的根因；compiler/FPU及NumPy差异仍是未证实假设。因2/2编译额度已用尽，target-owned closure未编译，闭合绑定与CPU scalar/GPU B4/backend/compiler贡献仍未隔离。新诊断详情见[当前结果](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/CURRENT_RESULT.md)、[目标叶对比](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/rveget_comparison.json)及[IR分析](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/IR_ANALYSIS.md)。旧付费CPU1 candidate未保存；reported CPU值属于新单点运行。付费CPU1没有OOM/guard失败证据；此次free诊断第一轮全量编译后曾被重复artifact-entry post-HLO guard中止、没有模型调用，修正后的一次完整首块调用正常结束。单点诊断已结束；旧付费/free账本保持关闭，旧GPU自动跟进已结束并删除；这不表示整体吞吐研究暂停，也不表示新heartbeat已创建。付费CPU1阶段无完整B16/B64参考，B64未运行，CPU4仍withheld。
 CPU4未提交，付费CPU1未自动重跑。/usr/bin/time子进程wall848.66秒、
 user756.48秒、system39.82秒、peak RSS20,882,480 KiB；计费使用父作业wall852秒。
 初始CPU/GPU启动均在Python前因Slurm AllocTRES/TRES字段差异失败，GPU替换15579759
@@ -38,8 +44,8 @@ GPU作业15579869于2026-10-06T00:21:41Z至00:56:51Z完成，节点`ibc13b03n03`
 159.079 point-days/s；wrapper中位数6.222333 s。B16 224点日：core中位数4.149943 s、吞吐
 53.976645 point-days/s；wrapper中位数4.364679 s。每个指标均为五次同步样本；固定门槛、原生dtype
 及完整checkpoint校验通过。lower、compile、first-call、stack/transfer及checkpoint写入时间分列，
-不并入热core。CPU1的数值失败、CPU4 withheld、无CPU B64或完整CPU参考，故没有同工作量CPU/GPU
-速度或成本比较。全部终态尝试合计9316 allocated CPU-count-seconds和2115 GPU-card-seconds，
+不并入热core。**该旧GPU报告生成时**CPU1数值失败、CPU4 withheld，且无CPU B64或完整CPU参考，
+所以当时没有同工作量CPU/GPU速度或成本比较；当前CPU1探索计时见顶部，仍不接受科学一致性。全部终态尝试合计9316 allocated CPU-count-seconds和2115 GPU-card-seconds，
 按未核实账单费率作CPU 0.05/0.07元每核小时、GPU 2.20元每卡小时的加和情景估算，主/保守口径为1.421888889/1.473644444元；不是已核实的实际收费。无step重复计费，仍低于原保守额度2.83元。
 完整阶段与费用见[阶段与费用报告](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md)
 和[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
