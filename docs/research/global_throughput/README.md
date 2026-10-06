@@ -84,27 +84,23 @@ GPU 两个原始 JSON 本次已核读：原工作区
 
 ## 当前工作单
 
-本轮已批准的 Explore1000 **同工作量 CPU/GPU 时间与费用基准**已结束，合同见
-[SERVER_BENCHMARK.md](SERVER_BENCHMARK.md)。原计划比较固定 Slurm CPU 预算下的常驻执行：
-单个物理核顺序循环所有点；四个持久 worker 各占一个物理核、各自编译一次；
-以及分别分配1/4核的 JAX batch。`vmap` 的 lane 数不代表线程数或分配核数。
-复用已入场的16/64个唯一真实点和冻结输入，连续两个7日块；不扩展128/256点，
-不修改科学核心、原生dtype、容差和完整输出，不执行AD或训练。
+已完成的付费服务器基准及其合同见[SERVER_BENCHMARK.md](SERVER_BENCHMARK.md)。当前主线先取得同工作量CPU/GPU时间与成本表：计划测CPU B16 scalar，使用16个固定真实点、两块连续7日、每天48步，共224 point-days；规划上限30分钟、1个CPU、0 GPU，至少五次同步core/wrapper样本。该点数的CPU scalar snapshot只作CPU内部比较基准，不作科学真值或模型验收。
 
-GPU作业先验证并保存B64 candidate和至少五次同步core/wrapper计时，再做B16；
-默认不重新编译B4计时基线。旧完整FULL64 B4快照只作为数值参考，不能充作新CPU实测。
-CPU结果同时核对该参考；四worker和batch还须核对本次单核scalar完整输出。
-只发布原子保存且通过门槛的阶段；一小时上限内未完成的阶段保持未完成。
+探索计时可保留并标明仅有有限值tolerance gate未通过的完整输出；这不把该结果记为数值pass，也不新增或放宽容差。landpoint/state身份、输出schema/shape/dtype、离散值、非有限值策略和完整输出缺失仍为硬停止条件；candidate和reference应先原子保存，再做比较。core、wrapper、冷启动/编译、输入准备与IO分列，不把完整多阶段作业wall摊作224点日热时间。
 
-主指标为同点日工作量的wall time、点日/秒、allocated CPU core-hours、GPU card-hours、
-费用/工作量及点日/元。用户当前GPU卡/CPU核小时单价比为44；按GPU2.20元/小时推得
-CPU0.05元/核小时，这是比例推算，未重新核实账单。部署文档的CPU0.07元另作保守预算。
-CPU/GPU费用相加时，GPU加M个辅助CPU的小时费用等于44+M个CPU单位；与实际N核CPU
-吞吐相比，GPU更便宜要求`Q_GPU/Q_CPU(N) > (44+M)/N`。不把单核吞吐乘44称为实测44核。
-热core、已准备wrapper、包含编译/输入审计/IO的完整诊断作业分别列费用；
-完整作业包含多个阶段，不能把整作业费用除以其中一个阶段的224/896点日。
+B16单核记录完成后，下一候选是同点、同初态、同时间窗下4核持久worker pool和JAX batch，规划45分钟、4 CPU；这是后续单独的资源/命令/费用审批项，不由本文件授权执行。pool和batch须严格对已保存CPU scalar完整输出比对，明确该snapshot仅为内部comparison role。vmap lane数不等于CPU核数。
 
-用户已批准三个付费pilot：CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；
+GPU方面，先用已接受的B64/B16单卡结果作参考；后续可评估B128/B256，固定同一真实网格集合与时窗、只改分批，并同时报告显存、point-days/s、点日/元、host-device搬运与compile摊销。当前不实现、不提交或运行新的GPU候选。单卡有数据后再看1卡到2卡strong scaling；是否研究4卡由结果决定。固定总网格与时窗报告`T1/TG`和`T1/(G*TG)`，另算G卡时与实际辅助CPU核时成本；weak scaling另表。CPU成本不得假设按核线性缩放。短窗性能证据与全年669点/50年科学验收分开。
+
+费用决策保留GPU卡/CPU核小时44倍比率及CPU辅助核费；GPU 2.20元/卡时推算CPU0.05元/核时，账单未核实，部署文档0.07元作为保守情景。报告热core、准备后wrapper和完整窗口费用，比较时间/预算上限内达到的工作量；不把GPU速度乘44声称CPU 44核实测。CPU1主/保守费用情景为0.025/0.035元；后续CPU4情景为0.15/0.21元。具体资源、目录和命令见[CPU run review](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)。
+
+CPU准备已完成：代码`4bc82a0`已部署到干净独立checkout `.../runtime/worktrees/global-throughput-cpu-performance-v1`，49项toy/protocol测试通过，目标Bash六个正常和九个拒绝分支通过；canonical test02 CLI及四worker纯协议检查通过。新汇总器只读复核已有GPU两阶段SHA，未执行物理模型，也没有新的CPU实测或作业提交。CPU1现在只等待上述具体付费批准，旧账本与旧heartbeat保持关闭。
+
+扩至128/256真实点时先入场各自输入/初态，再在固定扩后网格集合上比较B64分批与更大batch；原64点结果继续复用为原工作量证据，选点集合改变不能称纯batch收益。后续时间/费用表将支持最低费用、给定完成时限和继续加卡是否值得三类选择。
+
+### 已完成付费轮与单点诊断
+
+历史付费pilot曾获批CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；
 原批准额度按上述比例最多2.65元，按CPU0.07元和GPU2.20元相加保守为2.83元。
 CPU1付费作业15579758运行852秒后在B16第7点299.0-115.0的GPU reference门槛失败；之后获批的独立免费单点诊断已闭合，完整计算了目标点Days2–8首块380个输出叶。唯一失败为`[0][0][7]`，即末态`diffuco_previous_step_state.rveget[0,13]`（整个冠层气孔阻力，s/m）：CPU 592.8152487724788，对GPU B4 reference 592.8152488575903，signed delta -8.511153737345012e-8，absolute delta 8.511153737345012e-8，bound 6.928152488575903e-8，ratio 1.228488222708634。该叶native dtype/shape为`float64`/`(1,14)`；gate-wide `max_abs=8.940696716308594e-8`是聚合值，不是此叶的误差。165/380叶存在非零差异，另外379叶均通过固定比较（含离散值与哨兵规则）。旧付费CPU1 candidate未保存；上述candidate值只属于新单点诊断。完整首块输出已保存，见[当前结果](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/CURRENT_RESULT.md)、[目标叶对比](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/rveget_comparison.json)、[全叶汇总](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/all_leaf_comparisons.json)及[采集完整性核验](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/COLLECTION_VERIFICATION.json)。
 

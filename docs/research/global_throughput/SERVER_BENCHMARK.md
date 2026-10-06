@@ -1,6 +1,8 @@
 # Explore1000 Server Benchmark Contract
 
-Status: bounded execution completed. CPU1 job 15579758 failed its fixed
+Status: new exploratory CPU baseline preparation is complete and awaiting specific
+CPU1 paid approval; no new measurement or submission. The old bounded execution
+completed. CPU1 job 15579758 failed its fixed
 numerical parity gate after 852 seconds, before a complete scalar B16/B64
 reference was sealed. CPU4 is withheld and CPU1 was not replayed. GPU job
 15579869 completed with accepted B64 and B16 stages; CPU/GPU comparison remains
@@ -11,7 +13,52 @@ and [authoritative attempt and cost ledger](../../../outputs/research/global_thr
 This document defines the server matrix for resident scalar, persistent CPU
 workers, JAX CPU batching, and the first complete GPU batch.
 
-## Fixed Workload
+## Current CPU Baseline Plan
+
+The one-hour paid matrix below is completed historical scope. The next same-workload
+table starts with the **reviewed, not-yet-submitted** CPU B16 resident-scalar run:
+16 fixed real points, two consecutive seven-day blocks, 48 half-hour steps/day
+(224 point-days), at most 30 minutes, 1 CPU, and 0 GPUs. Save complete candidate
+outputs before comparison and collect at least five synchronized core and
+prepared-wrapper samples. The scalar snapshot is an internal CPU comparison
+reference, not scientific truth or accepted model validation.
+
+Launcher defaults remain `VALIDATION_MODE=strict`, `CPU_REFERENCE_ROLE=accepted`,
+sizes `16 64`, CPU1 methods `scalar batch`, and CPU4 methods `pool batch`. This first
+review selects `exploratory`, `cpu-internal`, size `16`, and `scalar` only. Exploratory
+timing may retain and time complete outputs with finite tolerance-only CPU/GPU
+differences, while reporting the numerical gate as failed. Point/state identity,
+schema, shape/dtype, discrete values, nonfinite policy, and complete-output presence
+remain hard stops. CPU internal snapshots are comparison references only. A later
+same-input CPU4 pool/batch review is planned for at most 45 minutes and 4 CPUs; the
+specific exploratory/internal-role selection and modes belong to its separate
+resource, command, and cost review. It is not covered by the current CPU1 request.
+
+The CPU scripts request `ibc11b02n04`. A 2026-10-06 06:09:54Z snapshot recorded
+that node IDLE, CPUAlloc 0/56, load 0.49, and FreeMem 171657 MiB; this is not a
+reservation and occupancy must be checked again. The launcher default `CODE_DIR` is
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-performance-v1`;
+the GPU launcher retains its separate `global-throughput-v1` default. CPU code commit
+`4bc82a0747c2fd156430956e41ba426271a88b20` was deployed by verified bundle/fast-forward
+and is clean. Local toy/protocol tests passed 49 cases; actual target Bash expansion
+passed six normal and nine rejection cases. Canonical test02 CLI and four-worker
+stdlib checks passed without model/JAX execution. The new summary also SHA-verified
+the two existing GPU stages without unpickling; it adds no CPU measurement. See the
+[CPU run review](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)
+for the selected command, output/log roots, scheduler snapshot, and unverified
+additive cost scenarios: CPU1 CNY 0.025/0.035 primary/conservative; conditional
+CPU4 CNY 0.15/0.21. These figures do not assert billed charges.
+
+After the current CPU table, single-GPU B128/B256 are possible batching studies from
+the accepted B64/B16 points: keep the same real point set and time window and vary
+only partitioning. A larger 128/256-point real set needs its own admitted inputs and
+initial states before comparing B64 chunks and larger batches over that fixed set;
+the old 64-point result cannot alone provide that larger-set A/B. No new GPU
+implementation or run is part of this plan. Multi-GPU
+work is later still: compare 1 to 2 cards first and consider 4 only if measured cost
+and scaling justify it. These are plans, not measurements or submissions.
+
+## Completed Paid Matrix: Fixed Workload
 
 Reuse the admitted Linux FULL64 inputs at
 `runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl`.
@@ -49,11 +96,14 @@ the requested four Slurm CPUs, then record `AllocTRES`, logical affinity,
 physical-core mapping, and SMT siblings. The pool controller shares worker
 zero's assigned core; there is no fifth CPU or nested full-node process pool.
 
-The CPU compiler peak estimate is about 10 GiB for the one-core run and
-40-60 GiB for four persistent workers plus the controller. These are planning
-estimates, not measured server peaks. Do not request `--mem`: CPU-node
-`RealMemory=1` is a broken scheduler value. Record measured peak RSS and
-available host memory instead.
+The old 10 GiB (CPU1) and 40-60 GiB (CPU4) compiler figures were planning estimates,
+not measured peaks. A later single-point CPU diagnostic reached 20.181 GiB RSS on a
+different workload, so do not present the 10 GiB estimate as current evidence. CPU1
+scalar and batch stages require 24 GiB host `MemAvailable`; CPU4 pool requires 96 GiB
+and CPU4 batch requires 24 GiB. These are launcher admission guards, not reservations
+or measured peak RSS. Do not
+request `--mem`: CPU-node `RealMemory=1` is a broken scheduler value. Record actual
+RSS and host memory at runtime.
 
 The CPU matrix loads the complete B4 numeric reference bundle for parity; it
 does not compile another B4 executable. CPU1 still requires one resident
@@ -63,16 +113,13 @@ bounded ceiling with unknown completion probability, not a completion-time
 estimate. If stages remain incomplete, keep their atomic outputs and report
 the missing stages without requesting extra time.
 
-Both CPU launchers currently constrain the request to `ibc11b02n25`. The GPU
-launcher currently constrains it to `ibc13b03n03`, the lowest-load observed
-node with an available card in the bounded scheduler screen. That GPU node was
-mixed-use, not idle. These are reviewable node choices from a point-in-time
-snapshot, not reservations or claims of current availability; recheck before
-submission and update the node constraint if occupancy changes. Each one-hour
-wall time is a hard diagnostic ceiling, not a prediction that every compile,
-gate, and timing stage will finish. Preserve completed atomic stages and report
-missing stages as incomplete; do not extend the wall time without a new
-resource approval.
+The current CPU1/CPU4 scripts request `ibc11b02n04`; the 2026-10-06 06:09:54Z
+snapshot recorded it IDLE, CPUAlloc 0/56, load 0.49, FreeMem 171657 MiB. Recheck
+occupancy before any submission; that snapshot is not a reservation. The old paid GPU
+launcher requested `ibc13b03n03`, which was mixed-use in its bounded scheduler
+snapshot, not idle. Node choices are point-in-time observations, not reservations.
+The CPU1/CPU4 hard limits are now 30/45 minutes. Preserve complete atomic stages;
+report missing stages without extending the limits or retrying without new review.
 
 Use the accepted project environments at
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu` and
@@ -99,20 +146,28 @@ same-workload JAX modes, but it cannot report a current Fortran speedup. The
 historical estimate of two minutes per point-year remains context only until a
 matching Fortran executable, configuration, and frozen workload are measured.
 
-## Launcher Inputs
+## Current CPU Launcher Inputs
 
 Set these variables before submission when the default paths do not match the
 immutable Explore1000 checkout:
 
-- `CODE_DIR`: clean, transferred code checkout containing this branch's
-  benchmark entry points. The default in all three launchers is
-  `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1`.
+- `CODE_DIR`: clean, transferred code checkout containing the CPU benchmark entry
+  points. The CPU1/CPU4 default is
+  `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-performance-v1`.
+  The paid GPU launcher keeps its separate historical
+  `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1` default.
 - `PREPARED_INPUT`: the frozen FULL64 pickle above.
 - `GPU_REFERENCE_DIR`: the accepted complete FULL64 B4 numerical-reference
   tree used by the CPU gates. The current default is
   `runtime/outputs/research/global_throughput/gpu-round4/model`.
 - `CPU_REFERENCE_DIR`: for the four-core CPU launcher, the `scalar` output
-  directory produced by the one-core job.
+  directory produced by the one-core job, explicitly marked with its `accepted` or
+  `cpu-internal` role. `cpu-internal` requires `exploratory` mode and is not accepted
+  scientific truth.
+- `VALIDATION_MODE`, `CPU_REFERENCE_ROLE`, `BENCHMARK_SIZES`, and `CPU1_METHODS` /
+  `CPU4_METHODS`: defaults are strict/accepted, sizes `16 64`, methods `scalar batch`
+  for CPU1 and `pool batch` for CPU4. The reviewed CPU1 command overrides these with
+  exploratory/cpu-internal, size16, scalar only.
 - `RUN_ROOT`: a new per-job directory under
   `runtime/outputs/research/global_throughput/server-benchmark/`.
 - `CONFIG`: the declared `configs/orchidee_man_250919.yaml` file in `CODE_DIR`.
@@ -202,7 +257,7 @@ report includes measured serialization and atomic-write times. Without both,
 K-reuse remains unavailable; job wall time alone is not an estimate of
 per-stage amortization overhead.
 
-## Approval-Time Output Paths
+## Historical Paid Approval-Time Output Paths
 
 Use a new named parent under the permitted server-benchmark output root when
 preparing fixed approval commands. The short commit component prevents reuse
@@ -357,7 +412,7 @@ five warm samples; keep cold start/compile and wrapper costs separate. Any
 projection beyond the measured 16- and 64-point windows must be labeled as an
 estimate, with its assumed reuse count and compilation amortization shown.
 
-## Cost Bound
+## Historical Paid Cost Bound
 
 The primary comparison follows the user's current GPU-to-CPU rate ratio of 44
 CPU core-hours per GPU-hour. At CNY 2.20/GPU-hour, that implies CNY 0.05 per

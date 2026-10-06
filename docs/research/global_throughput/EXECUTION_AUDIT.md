@@ -16,6 +16,12 @@ GPU先原子保全B64 candidate门槛与core/wrapper计时，再测B16，默认�
 旧GPU FULL64参考是数值证据，CPU单核输出才是本次CPU执行对照。
 保持科学core、原生dtype、容差、全部输出和224/896点日；无AD/训练或128/256点扩展。
 
+## 当前基准顺序（CPU准备完成，等待付费批准）
+
+付费一小时pilot已结束；下一张同工作量时间/成本表先测CPU B16 resident scalar：16个固定真实点、两块7日、每天48步（224 point-days），规划30分钟、1 CPU、0 GPU，至少五次同步core/wrapper。CPU scalar快照仅作CPU内部比较基准。允许保全并计时仅有有限值tolerance差异的完整输出，但仍记为gate失败，原容差不变；身份、schema/shape/dtype、离散值、非有限值和完整输出缺失均硬停止。之后CPU4 worker pool/batch计划45分钟、4 CPU，需单独具体资源、命令、费用批准并严格对CPU scalar快照。后续GPU B128/B256只考虑同点同窗改变partition；不在本轮实现或提交。详见[当前工作单](README.md)及[基准计划](SERVER_BENCHMARK.md)。
+
+准备代码`4bc82a0747c2fd156430956e41ba426271a88b20`已部署到独立干净checkout；CPU原始完整输出先原子保存，再记录全部逐点GPU门槛，strict默认保留，探索计时和accepted结果隔离。CPU内部scalar参考在任何pool/batch编译前验证SHA、science/input身份、两块完整输出、五次样本与原失败门槛；内部重复/跨模式/隔离仍须严格通过。49项本地toy/protocol、实际Bash六个正常/九个拒绝分支及canonical test02无模型CLI/四worker检查通过。复核旧GPU两个完整阶段没有新增模型执行。证据与具体CPU1资源/费用批准项在[准备审阅](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_RUN_REVIEW.md)。这些准备检查没有产生CPU吞吐或科学等价验收。
+
 费用主口径采用用户GPU卡/CPU核小时比44（GPU2.20元推算CPU0.05元），
 部署文档CPU0.07元作保守上限，CPU/GPU相加是明确预算假设。
 按allocated Slurm CPU和GPU时数计费；同工作量热费用与完整多阶段job费用分别记录。
