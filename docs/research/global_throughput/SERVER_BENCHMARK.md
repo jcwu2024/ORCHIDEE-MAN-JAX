@@ -1,12 +1,13 @@
 # Explore1000 Server Benchmark Contract
 
-Status: user-approved bounded execution. CPU1 job 15579758 failed its fixed
-numerical parity gate after852 seconds, before a complete scalar B16/B64
-reference was sealed. CPU4 is withheld and CPU1 is not automatically replayed.
-GPU startup replacement15579869 is pending with a58-minute limit. All startup
-failures are counted against the original resource envelope. The authoritative
-attempt and cost record is
-`outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json`.
+Status: bounded execution completed. CPU1 job 15579758 failed its fixed
+numerical parity gate after 852 seconds, before a complete scalar B16/B64
+reference was sealed. CPU4 is withheld and CPU1 was not replayed. GPU job
+15579869 completed with accepted B64 and B16 stages; CPU/GPU comparison remains
+unavailable. All startup failures are counted against the original resource
+envelope. See the [stage evidence](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md),
+[consolidated verification](../../../outputs/research/global_throughput/server-cost-results/verification.json),
+and [authoritative attempt and cost ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json).
 This document defines the server matrix for resident scalar, persistent CPU
 workers, JAX CPU batching, and the first complete GPU batch.
 
@@ -251,6 +252,50 @@ the CPU jobs sequentially so `CPU_REFERENCE_DIR` names a completed, immutable
 result. Each size and mode writes to a separate child of `RUN_ROOT`.
 
 ## Recorded Measurements
+
+### Completed GPU Job 15579869
+
+The job completed on `ibc13b03n03` from 2026-10-06 00:21:41 UTC to 00:56:51 UTC,
+using one V100 and four allocated Slurm CPUs. The recorded affinity was logical
+CPUs 28, 29, 84, and 85, mapping to two physical cores. Both accepted stages
+passed the fixed `atol=1e-8`, `rtol=1e-10` gates with native dtypes and verified
+complete checkpoints. Each timing metric has five fully synchronized samples.
+
+| Stage | Point-days | Core median [range] | Core throughput | Wrapper median [range] |
+| --- | ---: | ---: | ---: | ---: |
+| B64 | 896 | 5.632416 s [5.627946, 5.635270] | 159.079 point-days/s | 6.222333 s [6.189429, 6.311674] |
+| B16 | 224 | 4.149943 s [4.142994, 4.152027] | 53.976645 point-days/s | 4.364679 s [4.359835, 4.370463] |
+
+Lowering, compilation, first call, stack/transfer, and checkpoint serialization/write
+measurements are retained separately in [terminal-measurements.json](../../../outputs/research/global_throughput/server-cost-results/terminal-measurements.json);
+they are not included in hot-core throughput. No `K`-reuse estimate is available because observed
+stage setup/validation accounting is absent. CPU1 still failed the fixed B16 gate at
+point 7 (299.0-115.0), and the failure record confirms
+`max_bound_ratio=1.228488222708634` for leaf `[0][0][0][7]`; no complete scalar
+B16/B64 reference exists. It is the Days 2-8 final-state
+`diffuco_previous_step_state.rveget` (whole-canopy stomatal resistance, s/m). The
+saved reference has shape `(1, 14)`, dtype `float64`, and value 592.8152488575903 at
+PFT14 coordinate `[0, 13]`. The CPU candidate was not saved, so its value, signed or
+exact absolute delta, and final cause remain unknown; the failure coordinate was not
+directly saved. The [diagnosis report](../../../outputs/research/global_throughput/cpu-leaf-diagnostic-15579758/DIAGNOSIS.md)
+algebraically infers `[0, 13]` from the first 13 reference `1e20` bounds and the
+gate-wide `max_abs=8.940696716308594e-08`; this aggregate absolute difference cannot
+be attributed to that leaf. The original full scalar graph's smallest first-block
+capture/reproduction diagnostic is prepared but has not run; no physics, compilation,
+or new job was run. CPU4 was withheld, so these GPU measurements establish neither
+CPU/GPU speedup nor a cost winner. No Fortran, annual, 669-point, 50-year, or 10x
+result is established.
+
+Using unverified billing rates of CNY 0.05/0.07 per allocated CPU core-hour and
+CNY 2.20 per GPU card-hour as additive scenarios, the GPU whole-job estimate is
+CNY 1.406666667 primary and CNY 1.453555556 conservative. Across all terminal
+attempts, allocated totals are 9,316 CPU-count-seconds and 2,115 GPU-card-seconds,
+giving CNY 1.421888889 primary or CNY 1.473644444 conservative under those scenarios;
+these are not verified actual charges. Each job is counted once; no step costs are
+added again. The round remains within the original CNY 2.83 conservative approved
+ceiling. The [evidence report](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md)
+and [paid execution ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)
+are the current records.
 
 The GPU launcher records pre-query job, host, affinity, global GPU ID and
 unchanged `CUDA_VISIBLE_DEVICES` before resolving physical identity. The

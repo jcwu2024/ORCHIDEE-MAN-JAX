@@ -1,6 +1,6 @@
 # 全球物理模型吞吐研究
 
-更新：2026-10-05。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-06。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 
@@ -84,8 +84,8 @@ GPU 两个原始 JSON 本次已核读：原工作区
 
 ## 当前工作单
 
-当前操作是执行已批准的 Explore1000 **同工作量 CPU/GPU 时间与费用基准**，合同见
-[SERVER_BENCHMARK.md](SERVER_BENCHMARK.md)。先比较固定 Slurm CPU 预算下的实际常驻执行：
+本轮已批准的 Explore1000 **同工作量 CPU/GPU 时间与费用基准**已结束，合同见
+[SERVER_BENCHMARK.md](SERVER_BENCHMARK.md)。原计划比较固定 Slurm CPU 预算下的常驻执行：
 单个物理核顺序循环所有点；四个持久 worker 各占一个物理核、各自编译一次；
 以及分别分配1/4核的 JAX batch。`vmap` 的 lane 数不代表线程数或分配核数。
 复用已入场的16/64个唯一真实点和冻结输入，连续两个7日块；不扩展128/256点，
@@ -106,16 +106,21 @@ CPU/GPU费用相加时，GPU加M个辅助CPU的小时费用等于44+M个CPU单�
 
 用户已批准三个付费pilot：CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；
 原批准额度按上述比例最多2.65元，按CPU0.07元和GPU2.20元相加保守为2.83元。
-CPU1作业15579758运行852秒后因数值门槛失败：B16第7点299.0-115.0的叶子
-`[0][0][0][7]`组合误差界限占比1.228488，未保存完整scalar参考，B64未运行。
+CPU1作业15579758运行852秒后在B16第7点299.0-115.0的GPU reference门槛失败；失败记录确认reference叶子`[0][0][0][7]`的`max_bound_ratio`为1.228488222708634。该叶是首块Days2–8末态`diffuco_previous_step_state.rveget`（整个冠层气孔阻力，s/m）；reference shape `(1,14)`、`float64`，PFT14坐标`[0,13]`值592.8152488575903。candidate未保存，故候选值、带符号/精确绝对差值及最终根因未知；失败坐标未直接保存，[诊断报告](../../../outputs/research/global_throughput/cpu-leaf-diagnostic-15579758/DIAGNOSIS.md)从reference前13个`1e20`界限和gate-wide `max_abs=8.940696716308594e-08`代数推得`[0,13]`，该aggregate差值不能归于该leaf。已准备保全完整首块CPU候选并重现原scalar graph的最小诊断，但尚未运行；无物理重跑、编译或新作业。完整scalar参考未完成，B64未运行。
 CPU4前提不满足，本轮不提交；CPU1不自动重跑，容差保持原样。
 两次初始启动因Slurm字段差异失败，GPU替换15579759在Python前退出6；所有失败费用
-纳入原额度。GPU启动修复部署到独立checkout，58分钟作业15579869已提交、正在等待
-调度；没有预计启动时间。原CPU checkout及已排队GPU checkout保持不可变。
-当前对话已设置每5分钟的静默后续检查，仅在有效阶段、异常或终态时更新，完成结果报告后停止。
-执行记录与剩余额度见[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
+纳入原额度。GPU启动修复部署到独立checkout；作业15579869已于2026-10-06完成，B64和B16
+各有五次同步计时并通过数值门槛，CPU B16仍因同一第7点门槛失败而不完整。GPU core吞吐分别为
+159.079（B64）和53.977（B16）point-days/s；没有CPU/GPU同工作量比值或赢家结论。
+按未核实账单费率作CPU 0.05/0.07元每核小时、GPU 2.20元每卡小时的加和情景估算，
+GPU whole-job主/保守口径为1.406667/1.453556元；本轮全部终态作业合计为
+1.421889/1.473644元，不代表已核实的实际收费，仍在原保守批准额度2.83元内。证据见
+[阶段与费用报告](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md)、
+[汇总验证记录](../../../outputs/research/global_throughput/server-cost-results/verification.json)
+及[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
 当前平台有界资产检查尚未找到匹配Fortran可执行文件与build/input契约，Fortran对照待补。
-第四轮免费账本和原始结果保持原样，73秒余额不授权新增免费window。
+第四轮免费账本和原始结果保持原样，73秒余额不授权新增免费window；本轮结果报告完成后按既定安排
+结束后续跟进，不构成新增作业授权。
 准备验收已通过14项新增协议测试、35项受影响的既有scale测试及Ruff/diff检查；
 FULL64数值参考读取兼容性核对64点和760个array leaves。四worker本地spawn检查只用合成输入。
 这些本地检查使用Windows/JAX0.10.1，不替代部署0.4.38的组件检查或真实服务器物理计时。

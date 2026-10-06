@@ -1,14 +1,14 @@
 # 主分支物理模型执行审计与首轮基准设计
 
-更新：2026-10-05。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
+更新：2026-10-06。审计起点：`main@5910ba9af857a91e565d13a25e3de2e3019080d1`，
 工作分支：`research/global-throughput`。本文件只审计 source-backed 正向模型；不依赖日尺度神经替代。
 本轮保持科学过程不变，已实现编译前的外层 batch；本地 B1/B4 有界数值与计时通过。
 本轮完成 Explore1000 免费 CPU 输入审计及GPU B4两块完整parity/置换/隔离和五次同步计时；
 第三轮同设备同工作量JAX scalar比较与单点scalar基线通过，GPU B4 core收益3.572820倍；
 没有Fortran/年度/生产端到端认证；已批准的付费服务器基准状态见下。
-第四轮已完成Linux完整64点入场和两次免费GPU窗口；B16完成，B64不完整；不发布B64吞吐，最新结果见文末。
+此前第四轮免费window已完成Linux完整64点入场和两次GPU窗口；该轮B16完成、B64不完整，故不发布该轮B64吞吐。本轮已批准的付费GPU作业另通过B64与B16阶段，结果见文末。
 
-当前操作为已批准的[服务器CPU/GPU时间与成本基准执行](SERVER_BENCHMARK.md)，不是第五轮免费window。
+已批准的[服务器CPU/GPU时间与成本基准执行](SERVER_BENCHMARK.md)现已终结，不是第五轮免费window。
 主验收比较同16/64真实点、相同冻结输入和完整双7日块下的单物理核常驻scalar、
 四个各占一核的持久worker、1/4核JAX batch及单GPU candidate。CPU affinity、物理核/SMT、
 JAX初始化后的所有线程affinity和Slurm AllocTRES须记录；`vmap`不保证每lane一线程。
@@ -20,18 +20,22 @@ GPU先原子保全B64 candidate门槛与core/wrapper计时，再测B16，默认�
 部署文档CPU0.07元作保守上限，CPU/GPU相加是明确预算假设。
 按allocated Slurm CPU和GPU时数计费；同工作量热费用与完整多阶段job费用分别记录。
 用户已批准三个各最多一小时的pilot，原保守总额度2.83元。CPU1作业15579758运行852秒
-后在B16 scalar第7点299.0-115.0的GPU参考门槛失败；叶子`[0][0][0][7]`界限占比
-1.228488222708634。这是数值parity失败，没有OOM/guard证据；没有complete参考，B64
+后在B16 scalar第7点299.0-115.0的GPU reference门槛失败；失败记录确认叶子`[0][0][0][7]`的`max_bound_ratio`为1.228488222708634。该叶是首块Days2–8末态`diffuco_previous_step_state.rveget`（整个冠层气孔阻力，s/m）。reference shape `(1,14)`、`float64`，PFT14坐标`[0,13]`值592.8152488575903。candidate未保存，候选值、带符号/精确绝对差值及最终根因未知；失败坐标未直接保存，[诊断报告](../../../outputs/research/global_throughput/cpu-leaf-diagnostic-15579758/DIAGNOSIS.md)根据前13个reference `1e20`界限与gate-wide `max_abs=8.940696716308594e-08`代数推得`[0,13]`，但aggregate差值不能归于该leaf。已准备保全完整首块候选并重现原scalar graph的最小诊断，尚未运行；没有物理重跑、编译或新作业。保存reference核查见[证据JSON](../../../outputs/research/global_throughput/cpu-leaf-diagnostic-15579758/saved-reference-evidence.json)。这是数值parity失败，没有OOM/guard证据；没有complete参考，B64
 未运行，CPU4因此不提交，CPU1不自动重跑。/usr/bin/time子进程wall848.66秒、
 user756.48秒、system39.82秒、peak RSS20,882,480 KiB；计费使用父作业wall852秒。
 初始CPU/GPU启动均在Python前因Slurm AllocTRES/TRES字段差异失败，GPU替换15579759
 在2秒内退出6、日志为空。具体身份查询原因尚未证实；修复部署到独立checkout，
-后续58分钟作业15579869已排队。全部失败费用计入原额度，旧科学核心、容差及免费账本
-保持原样；已有checkout不修改。权威记录为
-[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
-已结束作业合计876 allocated CPU-count-seconds及5 GPU-card-seconds，保守费用0.020088889元。
-GPU跑满58分钟后全轮保守上限2.417422222元；排队不作为已消耗时长。当前对话每5分钟
-静默检查已提交GPU的状态，终态后验证完整stage、更新报告并停止跟进；这不授权新增作业。
+GPU作业15579869于2026-10-06T00:21:41Z至00:56:51Z完成，节点`ibc13b03n03`，1张V100及
+4个Slurm CPU（affinity映射2个物理核）。B64 896点日：core中位数5.632416 s、吞吐
+159.079 point-days/s；wrapper中位数6.222333 s。B16 224点日：core中位数4.149943 s、吞吐
+53.976645 point-days/s；wrapper中位数4.364679 s。每个指标均为五次同步样本；固定门槛、原生dtype
+及完整checkpoint校验通过。lower、compile、first-call、stack/transfer及checkpoint写入时间分列，
+不并入热core。CPU1的数值失败、CPU4 withheld、无CPU B64或完整CPU参考，故没有同工作量CPU/GPU
+速度或成本比较。全部终态尝试合计9316 allocated CPU-count-seconds和2115 GPU-card-seconds，
+按未核实账单费率作CPU 0.05/0.07元每核小时、GPU 2.20元每卡小时的加和情景估算，主/保守口径为1.421888889/1.473644444元；不是已核实的实际收费。无step重复计费，仍低于原保守额度2.83元。
+完整阶段与费用见[阶段与费用报告](../../../outputs/research/global_throughput/server-cost-results/EVIDENCE_REPORT.md)
+和[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
+结果报告完成后按既定安排结束后续跟进；这不授权新增作业。
 有界当前平台资产盘点未找到匹配Fortran binary及build配置，不作全账户不存在的结论。
 历史2分钟/点年与本地i7计时均不能替代服务器CPU/Fortran实测。
 
