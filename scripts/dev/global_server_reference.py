@@ -27,6 +27,41 @@ def finite_tolerance_failure(gate):
                 for failure in failures))
 
 
+def _evidence_mismatch(checkpoint, manifest, path):
+    """Keep record evidence exact, allowing only loadavg's JSON tuple/list form."""
+    if path == "record.execution_origin.environment.loadavg":
+        if type(checkpoint) in (tuple, list) and type(manifest) in (tuple, list):
+            # os.getloadavg() returns a tuple; atomic_json writes that same
+            # non-scientific telemetry as a list. Preserve all three values.
+            if len(checkpoint) != 3 or len(manifest) != 3:
+                return path
+            if any(type(value) not in (int, float) or not math.isfinite(value) or value < 0
+                   for value in (*checkpoint, *manifest)):
+                return path
+            checkpoint = list(checkpoint)
+            manifest = list(manifest)
+    if type(checkpoint) is not type(manifest):
+        return path
+    if isinstance(checkpoint, dict):
+        for key in sorted(set(checkpoint) | set(manifest)):
+            child = f"{path}.{key}"
+            if key not in checkpoint or key not in manifest:
+                return child
+            mismatch = _evidence_mismatch(checkpoint[key], manifest[key], child)
+            if mismatch is not None:
+                return mismatch
+    elif isinstance(checkpoint, (tuple, list)):
+        if len(checkpoint) != len(manifest):
+            return path
+        for index, (left, right) in enumerate(zip(checkpoint, manifest, strict=True)):
+            mismatch = _evidence_mismatch(left, right, f"{path}[{index}]")
+            if mismatch is not None:
+                return mismatch
+    elif checkpoint != manifest:
+        return path
+    return None
+
+
 def load_reference(directory, identity, *, name="B4_group_references", points=None, cpu_reference_role="accepted"):
     if cpu_reference_role not in {"accepted", "cpu-internal"}:
         raise ValueError("unknown CPU reference role")
@@ -84,8 +119,9 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
     output = value["outputs"] if isinstance(value, dict) and "outputs" in value else value
     if internal:
         for key in ("gates", "provenance", "timing", "measurement_status", "evidence_class", "strict_numerical_passed", "execution_origin"):
-            if envelope.get("record", {}).get(key) != record.get(key):
-                raise ValueError("CPU internal reference checkpoint/manifest evidence changed")
+            mismatch = _evidence_mismatch(envelope.get("record", {}).get(key), record.get(key), f"record.{key}")
+            if mismatch is not None:
+                raise ValueError(f"CPU internal reference checkpoint/manifest evidence changed at {mismatch}")
         _validate_cpu_internal(name, origin, identity, record, value, output, ids)
     return output, {"path": str(path), "sha256": digest, "manifest_sha256": hashlib.sha256(raw_manifest).hexdigest(),
                     "source_identity": origin, "execution_origin": record.get("execution_origin"),
