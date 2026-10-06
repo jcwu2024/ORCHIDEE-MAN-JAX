@@ -3,11 +3,11 @@
 # No model execution occurs outside this Slurm allocation.
 #SBATCH -J orchjax-srv-cpu4
 #SBATCH -p cnall
-#SBATCH --nodelist=ibc11b02n25
+#SBATCH --nodelist=ibc11b02n04
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=01:00:00
+#SBATCH --time=00:45:00
 #SBATCH -o runtime/logs/global_server_cpu4_%j.txt
 #SBATCH -e runtime/logs/global_server_cpu4_%j.txt
 #SBATCH --no-requeue
@@ -16,7 +16,7 @@ set -euo pipefail
 
 PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
-CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-v1}
+CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu-performance-v1}
 CODE_DIR=$(realpath -m "$CODE_DIR")
 case "$CODE_DIR" in
   "$PROJECT"/runtime/worktrees/*) ;;
@@ -25,7 +25,7 @@ esac
 PYTHON=$PROJECT/.venvs/orcjax_cpu/bin/python
 PREPARED_INPUT=${PREPARED_INPUT:-$PROJECT/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl}
 GPU_REFERENCE_DIR=${GPU_REFERENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/gpu-round4/model}
-CPU_REFERENCE_DIR=${CPU_REFERENCE_DIR:?set CPU_REFERENCE_DIR to the passed cpu1 scalar reference output}
+CPU_REFERENCE_DIR=${CPU_REFERENCE_DIR:?set CPU_REFERENCE_DIR to a complete CPU scalar snapshot with the explicitly selected role}
 CONFIG=${CONFIG:-$CODE_DIR/configs/orchidee_man_250919.yaml}
 RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/cpu4-${SLURM_JOB_ID:-dry-run}}
 RUN_ROOT=$(realpath -m "$RUN_ROOT")
@@ -34,6 +34,28 @@ case "$RUN_ROOT" in
   *) echo "RUN_ROOT must stay under the project server-benchmark output directory" >&2; exit 2 ;;
 esac
 ENTRY=$CODE_DIR/scripts/dev/benchmark_global_server_cpu.py
+VALIDATION_MODE=${VALIDATION_MODE:-strict}
+CPU_REFERENCE_ROLE=${CPU_REFERENCE_ROLE:-accepted}
+BENCHMARK_SIZES=${BENCHMARK_SIZES:-16 64}
+CPU4_METHODS=${CPU4_METHODS:-pool batch}
+read -r -a sizes <<< "$BENCHMARK_SIZES"
+case "$VALIDATION_MODE:$CPU_REFERENCE_ROLE" in
+  strict:accepted|exploratory:accepted|exploratory:cpu-internal) ;;
+  *) echo "invalid validation mode/reference role" >&2; exit 2 ;;
+esac
+[[ ${#sizes[@]} -gt 0 ]] || { echo "BENCHMARK_SIZES must contain 16 and/or 64" >&2; exit 2; }
+declare -A seen_sizes=()
+previous_size=0
+for size in "${sizes[@]}"; do
+  [[ $size == 16 || $size == 64 ]] && [[ -z ${seen_sizes[$size]:-} ]] && [[ $size -gt $previous_size ]] || {
+    echo "sizes must be unique ascending 16/64 values" >&2; exit 2;
+  }
+  seen_sizes[$size]=1
+  previous_size=$size
+done
+[[ $CPU4_METHODS == pool || $CPU4_METHODS == batch || $CPU4_METHODS == 'pool batch' ]] || {
+  echo "CPU4_METHODS must be pool, batch or 'pool batch'" >&2; exit 2;
+}
 DRY_RUN=0
 
 if [[ ${1:-} == --dry-run ]]; then
@@ -69,17 +91,23 @@ export MALLOC_ARENA_MAX=2
 export ORCHIDEE_REPO_ROOT=$CODE_DIR
 export ORCHIDEE_DATA_ROOT=$PROJECT/runtime/data
 
-common=(--cpu-budget 4 --sizes 16 64 --prepared-input "$PREPARED_INPUT"
+common=(--cpu-budget 4 --sizes "${sizes[@]}" --prepared-input "$PREPARED_INPUT"
   --gpu-reference-dir "$GPU_REFERENCE_DIR" --cpu-reference-dir "$CPU_REFERENCE_DIR"
-  --config "$CONFIG" --warm-repeats 5)
+  --config "$CONFIG" --warm-repeats 5 --validation-mode "$VALIDATION_MODE"
+  --cpu-reference-role "$CPU_REFERENCE_ROLE")
 pool=(--mode pool "${common[@]}" --output-dir "$RUN_ROOT/pool4")
-pool+=(--memory-guard-gib 60)
-batch=(--mode batch "${common[@]}" --memory-guard-gib 20 --output-dir "$RUN_ROOT/batch4")
+pool+=(--memory-guard-gib 96)
+batch=(--mode batch "${common[@]}" --memory-guard-gib 24 --output-dir "$RUN_ROOT/batch4")
 
 if [[ $DRY_RUN -eq 1 ]]; then
-  printf 'partition=cnall node=ibc11b02n25 cpus=4 wall=01:00:00 output=%q cpu_reference=%q\n' "$RUN_ROOT" "$CPU_REFERENCE_DIR"
-  printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${pool[@]}"; printf '\n'
-  printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${batch[@]}"; printf '\n'
+  printf 'script_defaults: partition=cnall node=ibc11b02n04 cpus=4 wall=00:45:00 memory_reservation=none pool_admission_guard_gib=96 batch_admission_guard_gib=24 output=%q cpu_reference=%q\n' "$RUN_ROOT" "$CPU_REFERENCE_DIR"
+  printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU4_METHODS"
+  if [[ $CPU4_METHODS == pool || $CPU4_METHODS == 'pool batch' ]]; then
+    printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${pool[@]}"; printf '\n'
+  fi
+  if [[ $CPU4_METHODS == batch || $CPU4_METHODS == 'pool batch' ]]; then
+    printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${batch[@]}"; printf '\n'
+  fi
   exit 0
 fi
 
@@ -108,6 +136,7 @@ export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ALLOC_TRES_SOURCE
   printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s\n' "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}"
   printf 'slurm_alloc_tres=%s slurm_alloc_tres_source=%s\n' \
     "$ORCHJAX_SLURM_ALLOC_TRES" "$ORCHJAX_SLURM_ALLOC_TRES_SOURCE"
+  printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q memory_reservation=none pool_admission_guard_gib=96 batch_admission_guard_gib=24\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU4_METHODS"
 } | tee "$RUN_ROOT/launch-context.txt"
 
 run_case() {
@@ -118,5 +147,9 @@ run_case() {
     /usr/bin/time -v "$PYTHON" "$ENTRY" "$@"
 }
 
-run_case pool "${pool[@]}"
-run_case batch "${batch[@]}"
+if [[ $CPU4_METHODS == pool || $CPU4_METHODS == 'pool batch' ]]; then
+  run_case pool "${pool[@]}"
+fi
+if [[ $CPU4_METHODS == batch || $CPU4_METHODS == 'pool batch' ]]; then
+  run_case batch "${batch[@]}"
+fi

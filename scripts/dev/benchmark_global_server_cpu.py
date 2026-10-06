@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import multiprocessing
 import os
+import pickle
 import signal
 import sys
 import time
@@ -32,6 +34,8 @@ def parser():
     result.add_argument("--prepared-input", type=Path)
     result.add_argument("--gpu-reference-dir", type=Path)
     result.add_argument("--cpu-reference-dir", type=Path)
+    result.add_argument("--validation-mode", choices=["strict", "exploratory"], default="strict")
+    result.add_argument("--cpu-reference-role", choices=["accepted", "cpu-internal"], default="accepted")
     result.add_argument("--output-dir", type=Path, required=True)
     result.add_argument("--config", type=Path, default=ROOT / "configs/orchidee_man_250919.yaml")
     result.add_argument("--truth-root", type=Path, default=ROOT)
@@ -39,7 +43,7 @@ def parser():
     result.add_argument("--warm-repeats", type=int, default=5)
     result.add_argument("--cache-mode", choices=["off", "persistent"], default="off")
     result.add_argument("--cache-root", type=Path)
-    result.add_argument("--memory-guard-gib", type=float, help="Conservative host MemAvailable guard; pool default60GiB.")
+    result.add_argument("--memory-guard-gib", type=float, help="Host MemAvailable guard; scalar/batch24GiB, pool96GiB.")
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--synthetic-smoke", action="store_true")
     result.add_argument("--synthetic-stdlib-only", action="store_true", help="Pool protocol smoke without even a toy JAX compile.")
@@ -47,6 +51,8 @@ def parser():
 
 
 def validate(args):
+    if args.validation_mode == "strict" and args.cpu_reference_role == "cpu-internal":
+        raise ValueError("cpu-internal reference role requires exploratory validation")
     if args.mode == "scalar" and args.cpu_budget != 1 or args.mode == "pool" and args.cpu_budget != 4:
         raise ValueError("scalar requires budget1; pool requires budget4")
     if args.warm_repeats < 5 or args.sizes != sorted(set(args.sizes)):
@@ -55,7 +61,7 @@ def validate(args):
         raise ValueError("physical execution requires frozen prepared input and sealed GPU numerical reference")
     if not args.synthetic_smoke and args.mode != "scalar" and args.cpu_reference_dir is None:
         raise ValueError("pool/batch acceptance requires --cpu-reference-dir with complete server scalar stages")
-    if args.memory_guard_gib is not None and args.memory_guard_gib <= 0:
+    if args.memory_guard_gib is not None and (not math.isfinite(args.memory_guard_gib) or args.memory_guard_gib <= 0):
         raise ValueError("positive host memory guard required")
 
 
@@ -257,22 +263,44 @@ class PoolRunner:
 
 def benchmark(args, recorder, lanes, second, scale, resources):
     from scripts.dev.global_batch_stage_store import StageStore
-    from scripts.dev.global_server_reference import load_reference
+    from scripts.dev.global_server_reference import finite_tolerance_failure, load_reference
+    from scripts.dev.probe_global_batch_cache import atomic_bytes
 
     base, jax, np = scale.base, scale.jax, scale.np
     screen = scale.screen_inputs(lanes, second)
     base.legacy_factory(args.baseline_ref)
     recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
     identity = base.stage_identity(args, lanes, second, recorder.result["environment"])
+    validation_mode = getattr(args, "validation_mode", "strict")
+    cpu_reference_role = getattr(args, "cpu_reference_role", "accepted")
+    if validation_mode == "strict" and cpu_reference_role == "cpu-internal":
+        raise ValueError("cpu-internal reference role requires exploratory validation")
     identity.update(contract="server-CPU-same-workload-v1", precision_policy=scale.PRECISION_POLICY,
-                    mode=args.mode, CPU_budget=args.cpu_budget)
+                    mode=args.mode, CPU_budget=args.cpu_budget, validation_mode=validation_mode,
+                    cpu_reference_role=cpu_reference_role)
     reference, origin = load_reference(args.gpu_reference_dir, identity)
     identity["numerical_reference_sha256"] = origin["sha256"]
+    cpu_references = {}
+    if args.cpu_reference_dir is not None:
+        for size in args.sizes:
+            cpu_references[size] = load_reference(args.cpu_reference_dir, identity,
+                name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role)
     store = StageStore(args.output_dir, identity)
     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen,
+        validation_mode=validation_mode, cpu_reference_role=cpu_reference_role,
         GPU_numerical_reference_origin=origin, server_resources=resources,
         required_stages=[f"B{size}_server_{args.mode}_v1" for size in args.sizes])
     runner = PoolRunner(args, recorder, lanes, second, scale, resources["selected_logical_cpus"]) if args.mode == "pool" else SingleRunner(args, recorder, lanes, second, scale)
+    def gpu_gate(name, actual, expected):
+        if validation_mode == "strict":
+            recorder.gate(name, actual, expected)
+            return recorder.result["gates"][-1]
+        entry = {"name": name, **base.compare(actual, expected, sentinel_paths=recorder.sentinel_paths),
+                 "gate_role": "GPU_cross_backend_parity"}
+        recorder.result["gates"].append(entry)
+        recorder.flush()
+        return entry
+    completed_records = []
     try:
         for size in args.sizes:
             def operation(size=size):
@@ -283,26 +311,41 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                 runner.run(size)
                 recorder.result["timing"][f"B{size}_first_call_seconds"] = time.perf_counter() - first_started
                 output = runner.collect(size)
+                if validation_mode == "exploratory":
+                    raw_path = args.output_dir / f"raw_B{size}_{args.mode}_before_parity.pkl"
+                    atomic_bytes(raw_path, pickle.dumps({"identity": identity,
+                        "status": "raw_before_validation", "evidence_class": "raw_output_only",
+                        "outputs": output, "measurement_status": "not_measured"}, protocol=pickle.HIGHEST_PROTOCOL))
+                    recorder.phase(f"B{size}_{args.mode}_raw_output_saved_before_parity", path=str(raw_path))
                 expected = jax.tree_util.tree_map(lambda value: value[:size], reference)
+                gpu_gates = []
                 for index, lane in enumerate(lanes[:size]):
-                    recorder.gate(f"B{size}_{args.mode}_lane_{index}_{lane.landpoint_id}_GPU_reference",
+                    gpu_gates.append(gpu_gate(f"B{size}_{args.mode}_lane_{index}_{lane.landpoint_id}_GPU_reference",
                         jax.tree_util.tree_map(lambda value: value[index], output),
-                        jax.tree_util.tree_map(lambda value: value[index], expected))
+                        jax.tree_util.tree_map(lambda value: value[index], expected)))
+                if validation_mode == "exploratory":
+                    hard = [gate for gate in gpu_gates if not gate["passed"] and not finite_tolerance_failure(gate)]
+                    if hard:
+                        raise AssertionError(f"hard gate failed: {hard[0]['name']}; all per-point GPU gates recorded; see report.json")
+                    for gate in gpu_gates:
+                        if not gate["passed"]:
+                            gate["exploratory_continuation"] = True
+                    recorder.flush()
                 if args.mode == "batch":
+                    isolation_reference = expected if validation_mode == "strict" else output
                     order = list(reversed(range(size)))
                     shuffled = [lanes[index] for index in order]
                     permuted = base.run_two(runner.programs[size], base.batch.stack_lanes(shuffled),
                         base.stack_second(shuffled, [second[index] for index in order]))
                     recorder.gate(f"B{size}_server_batch_cross_group_permutation", permuted,
-                        jax.tree_util.tree_map(lambda value: value[np.asarray(order)], expected))
+                        jax.tree_util.tree_map(lambda value: value[np.asarray(order)], isolation_reference))
                     changed = lanes[:size - 1] + [lanes[0]]
                     replaced = base.run_two(runner.programs[size], base.batch.stack_lanes(changed),
                         base.stack_second(changed, second[:size - 1] + [second[0]]))
                     recorder.gate(f"B{size}_server_batch_replacement_isolation", replaced,
-                        jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], expected))
+                        jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], isolation_reference))
                 if args.cpu_reference_dir is not None:
-                    scalar, cpu_origin = load_reference(args.cpu_reference_dir, identity,
-                        name=f"B{size}_server_scalar_v1", points=size)
+                    scalar, cpu_origin = cpu_references[size]
                     recorder.gate(f"B{size}_{args.mode}_cross_mode_server_scalar", output, scalar)
                 else:
                     cpu_origin = None
@@ -320,15 +363,21 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                 recorder.result["timing"].update(metrics)
                 workers = runner.records()
                 controller_threads = thread_affinity(base.affinity())
+                stage_gates = recorder.result["gates"][gate_start:]
                 return {"outputs": output, "measurements": metrics}, {
+                    "measurement_status": "complete",
+                    "evidence_class": "exploratory_performance" if validation_mode == "exploratory" else "accepted",
+                    "strict_numerical_passed": all(gate["passed"] is True for gate in stage_gates),
                     "provenance": {"point_ids": [lane.landpoint_id for lane in lanes[:size]],
-                        "unique_real_points": size, "full_two_block_parity": True, "full_outputs": True,
-                        "frozen_reset_repeat": True, "cross_mode_scalar_parity": args.mode == "scalar" or cpu_origin is not None,
+                        "unique_real_points": size, "full_two_block_workload": True,
+                        "full_two_block_parity": all(gate["passed"] is True for gate in gpu_gates), "full_outputs": True,
+                        "frozen_reset_repeat": True, "cross_mode_scalar_parity": cpu_origin is not None,
                         "batch_permutation_and_replacement": args.mode == "batch",
                         "five_or_more_synchronized_repeats": True, "precision_policy": scale.PRECISION_POLICY,
                         "blocks": [[2, 8], [9, 15]], "half_hours_per_day": 48,
                         "server_resources": resources, "GPU_numerical_reference": origin,
                         "CPU_scalar_reference": cpu_origin, "worker_records": workers,
+                        "CPU_scalar_reference_role": "cpu_internal_comparison" if cpu_origin is not None and cpu_reference_role == "cpu-internal" else "accepted" if cpu_origin is not None else None,
                         "controller_thread_affinity_after_warm": controller_threads,
                         "core_boundary": "actual group wall includes dispatch/barrier; all workers synchronize and retain every output; excludes materialization/serialization/IPC of full outputs",
                         "wrapper_boundary": "fresh preprepared host inputs/device transfer plus complete computation, full host output materialization and pool serialization/IPC",
@@ -338,9 +387,13 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                         "pid": os.getpid(), "process_start_monotonic": base.PROCESS_STARTED,
                         "report": str(args.output_dir / "report.json")}}
             (value, record), reused = store.run(f"B{size}_server_{args.mode}_v1", operation)
+            completed_records.append(record)
             base.record_timing_origin(recorder.result, f"B{size}_server_{args.mode}_v1", record, reused=reused)
             recorder.phase(f"B{size}_{args.mode}_checkpoint_complete", reused=reused)
         recorder.result["all_required_stages_complete"] = True
+        recorder.result["measurement_status"] = "complete"
+        recorder.result["evidence_class"] = "exploratory_performance" if validation_mode == "exploratory" else "accepted"
+        recorder.result["strict_numerical_passed"] = all(record["strict_numerical_passed"] for record in completed_records)
         recorder.result["worker_resources"] = runner.records()
     finally:
         runner.close()
@@ -440,10 +493,11 @@ def main():
             "status": "dry_run", "mode": args.mode, "CPU_budget": args.cpu_budget, "sizes": args.sizes,
             "warm_repeats": args.warm_repeats, "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
             "model_execution": False, "JAX_imported": "jax" in sys.modules}
+        result.update(validation_mode=args.validation_mode, cpu_reference_role=args.cpu_reference_role)
         print(json.dumps(result, indent=2))
         return 0
     resources = admit(args.mode, args.cpu_budget)
-    resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or (60 if args.mode == "pool" else 20))
+    resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or (96 if args.mode == "pool" else 24))
     cpus = resources["selected_logical_cpus"]
     bind(cpus[:1] if args.mode in {"scalar", "pool"} else cpus, one_thread=args.mode != "batch")
     os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START"] = str(PROCESS_STARTED)
@@ -477,7 +531,8 @@ def main():
             raise RuntimeError("physical server CPU benchmark requires accepted CPU-only JAX/jaxlib0.4.38")
         lanes, second = scale.read_prepared(args.prepared_input, args.config)
         benchmark(args, recorder, lanes, second, scale, resources)
-        recorder.result["status"] = "passed_server_CPU_bounded_forward"
+        recorder.result["status"] = ("completed_exploratory_server_CPU_bounded_forward"
+            if args.validation_mode == "exploratory" else "passed_server_CPU_bounded_forward")
     except (InterruptedError, KeyboardInterrupt) as exc:
         code = 2
         recorder.result.update(status="stopped", message=str(exc))

@@ -11,11 +11,19 @@ import hashlib
 import json
 import math
 import statistics
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+# Import after the path bootstrap so an explicit checkout takes precedence.
+from scripts.dev.global_server_reference import finite_tolerance_failure  # noqa: E402, I001
 
 PRECISION = "JAX x64 enabled; baseline native dtypes retained; geographical payload and solar subcalculation contain FP32"
 FIXED_GATE = {"atol": 1e-8, "rtol": 1e-10, "discrete_schema_dtype": "exact",
               "sentinel": "declared_bare_soil_roughheight_only"}
+EXPLORATORY_LABEL = "performance measured; cross-backend scientific consistency not accepted"
 
 
 def metrics(value, point_days):
@@ -26,6 +34,7 @@ def metrics(value, point_days):
     if value.get("valid_point_days") != point_days or not math.isclose(value.get("median_seconds", -1), median, rel_tol=1e-12):
         raise ValueError("exact common-workload denominator and preserved median required")
     return {"samples_seconds": samples, "median_seconds": median,
+            "range_seconds": [min(samples), max(samples)],
             "point_days": point_days, "point_days_per_second": point_days / median}
 
 
@@ -45,9 +54,34 @@ def allocated_cpu_count(resources):
 
 def accept_stage(directory, name, manifest, report):
     record = manifest["stages"][name]
+    if (manifest["identity"].get("validation_mode", "strict") == "exploratory"
+            or record.get("evidence_class") == "exploratory_performance"):
+        raise ValueError("exploratory performance cannot be promoted to accepted evidence")
+    if record.get("strict_numerical_passed") is False:
+        raise ValueError("failed strict numerical status cannot be accepted")
+    if (manifest["identity"].get("cpu_reference_role") == "cpu-internal"
+            or record.get("provenance", {}).get("CPU_scalar_reference_role") == "cpu_internal_comparison"):
+        raise ValueError("CPU internal comparison cannot be promoted to accepted evidence")
+    return _checked_stage(directory, name, manifest, report)
+
+
+def exploratory_stage(directory, name, manifest, report):
+    return _checked_stage(directory, name, manifest, report, exploratory=True)
+
+
+def _checked_stage(directory, name, manifest, report, *, exploratory=False):
+    record = manifest["stages"][name]
     if record.get("status") != "complete":
         raise ValueError("stage incomplete; throughput/cost withheld")
     identity = manifest["identity"]
+    if identity.get("validation_mode", "strict") not in {"strict", "exploratory"}:
+        raise ValueError("unknown validation mode")
+    if exploratory and (identity.get("validation_mode") != "exploratory"
+            or identity.get("mode") not in {"scalar", "pool", "batch"}
+            or record.get("evidence_class") != "exploratory_performance"
+            or record.get("measurement_status") != "complete"
+            or identity.get("contract") != "server-CPU-same-workload-v1"):
+        raise ValueError("complete explicitly exploratory CPU measurement required")
     if identity.get("gate") != FIXED_GATE:
         raise ValueError("unchanged fixed tolerance/schema/discrete/sentinel policy required")
     if identity.get("contract") not in {"server-CPU-same-workload-v1", "server-candidate-first-full-physics-v1"}:
@@ -71,9 +105,11 @@ def accept_stage(directory, name, manifest, report):
         raise ValueError("exact selected point order required")
     if (proof.get("precision_policy") != PRECISION or identity.get("precision_policy") != PRECISION
             or proof.get("blocks") != [[2, 8], [9, 15]] or proof.get("half_hours_per_day") != 48
-            or any(proof.get(key) is not True for key in ("full_outputs", "full_two_block_parity", "five_or_more_synchronized_repeats"))):
+            or any(proof.get(key) is not True for key in ("full_outputs", "five_or_more_synchronized_repeats"))
+            or (not exploratory and proof.get("full_two_block_parity") is not True)
+            or (exploratory and proof.get("full_two_block_workload") is not True)):
         raise ValueError("unchanged native input/full state/full output/two7day/48step proof required")
-    if not record.get("gates") or any(gate.get("passed") is not True for gate in record["gates"]):
+    if not record.get("gates") or (not exploratory and any(gate.get("passed") is not True for gate in record["gates"])):
         raise ValueError("complete numerical gates required")
     names = {gate.get("name") for gate in record["gates"]}
     is_gpu = identity["contract"] == "server-candidate-first-full-physics-v1"
@@ -90,14 +126,46 @@ def accept_stage(directory, name, manifest, report):
             required += [f"B{size}_server_batch_cross_group_permutation", f"B{size}_server_batch_replacement_isolation"]
     if len(names) != len(record["gates"]) or any(name not in names for name in required):
         raise ValueError("exact complete per-lane/self/cross-mode/isolation gate set required")
+    failed = [gate for gate in record["gates"] if gate.get("passed") is not True]
+    if exploratory:
+        gpu_names = set(required[:size])
+        if any(gate.get("passed") is True and gate.get("failures") for gate in record["gates"]):
+            raise ValueError("gate passed status contradicts recorded failures")
+        for gate in failed:
+            if (gate.get("name") not in gpu_names or not finite_tolerance_failure(gate)
+                    or gate.get("atol") != FIXED_GATE["atol"] or gate.get("rtol") != FIXED_GATE["rtol"]):
+                raise ValueError("only finite GPU cross-backend tolerance failures admit exploratory timing")
+        if (record.get("strict_numerical_passed") is not (not failed)
+                or proof.get("full_two_block_parity") is not (not failed)):
+            raise ValueError("actual strict numerical/parity status required")
     runtime = record.get("execution_origin", {}).get("environment", {})
     if runtime.get("jax") != "0.4.38" or runtime.get("jaxlib") != "0.4.38" or runtime.get("x64_enabled") is not True:
         raise ValueError("accepted server JAX/jaxlib0.4.38 x64 origin required")
     platform = "gpu" if is_gpu else "cpu"
     if {item.get("platform") for item in runtime.get("device_details", [])} != {platform}:
         raise ValueError("stage actual device origin mismatch")
-    if not is_gpu and any(proof.get(flag) is not True for flag in ("frozen_reset_repeat", "cross_mode_scalar_parity")):
+    cpu_flags = ("frozen_reset_repeat",) if identity.get("mode") == "scalar" else ("frozen_reset_repeat", "cross_mode_scalar_parity")
+    if not is_gpu and any(proof.get(flag) is not True for flag in cpu_flags):
         raise ValueError("CPU repeat/cross-mode scalar parity required")
+    if exploratory and identity["mode"] != "scalar":
+        role = identity.get("cpu_reference_role")
+        reference = proof.get("CPU_scalar_reference") or {}
+        source = reference.get("source_identity") or {}
+        expected_role = "cpu_internal_comparison" if role == "cpu-internal" else "accepted"
+        if (role not in {"accepted", "cpu-internal"}
+                or proof.get("CPU_scalar_reference_role") != expected_role
+                or (role == "cpu-internal" and reference.get("role") != expected_role)
+                or (role == "accepted" and (reference.get("role") == "cpu_internal_comparison"
+                    or source.get("validation_mode", "strict") != "strict"))
+                or source.get("mode") != "scalar" or source.get("contract") != "server-CPU-same-workload-v1"
+                or {item.get("platform") for item in source.get("runtime", {}).get("device_details", [])} != {"cpu"}
+                or reference.get("native_input_identity_verified") is not True
+                or reference.get("fixed_gate") != FIXED_GATE
+                or reference.get("point_ids") != points
+                or source.get("lanes", [])[:size] != identity["lanes"][:size]
+                or any(source.get(key) != identity.get(key) for key in
+                    ("science_sha256", "baseline_ref", "precision_policy", "numerical_reference_sha256"))):
+            raise ValueError("explicit matching CPU scalar reference role and input/source proof required")
     if is_gpu and any(proof.get(flag) is not True for flag in ("cross_group_permutation", "replacement_isolation")):
         raise ValueError("GPU permutation/replacement isolation required")
     resources = proof.get("server_resources", report.get("server_resources", {}))
@@ -115,7 +183,7 @@ def accept_stage(directory, name, manifest, report):
     point_days = size * 14
     core = metrics(values[f"B{size}_warm_frozen_state_core"], point_days)
     wrapper = metrics(values[f"B{size}_preprepared_wrapper_stack_transfer_materialize"], point_days)
-    return {"directory": str(directory), "stage": name, "backend": platform, "CPU_count": count,
+    result = {"directory": str(directory), "stage": name, "backend": platform, "CPU_count": count,
             "GPU_count": 1 if is_gpu else 0, "allocation": allocation, "core": core, "wrapper": wrapper,
             "point_ids": points, "native_input_lanes": identity["lanes"][:size],
             "scientific_source_sha256": identity["science_sha256"], "baseline_ref": identity["baseline_ref"],
@@ -123,6 +191,20 @@ def accept_stage(directory, name, manifest, report):
             "NumPy_version": runtime.get("numpy"), "complete_gate_count": len(record["gates"]),
             "saved_output_checkpoint_IO": record.get("checkpoint_io"),
             "Fortran_baseline": "pending; no executable/source/build inventory accepted"}
+    if exploratory:
+        result.update(evidence_class="exploratory_performance", scientific_acceptance=False,
+            performance_label=EXPLORATORY_LABEL, strict_numerical_passed=record["strict_numerical_passed"],
+            failed_gates=failed, full_two_block_parity=proof["full_two_block_parity"],
+            workload={"days": 14, "half_hours_per_day": 48, "full_outputs": True},
+            worker_records=proof.get("worker_records"),
+            CPU_mode=identity["mode"], controller_process_id=record["execution_origin"].get("pid"),
+            CPU_scalar_reference_role=proof.get("CPU_scalar_reference_role"),
+            thread_affinity_after_compile=report.get("thread_affinity_after_compile"),
+            controller_thread_affinity_after_warm=proof.get("controller_thread_affinity_after_warm"),
+            startup_and_compile_timing={key: value for key, value in report.get("timing", {}).items()
+                if (key.startswith(f"B{size}_") or key.startswith("server_scalar_once_")
+                    or key.startswith(f"server_batch_B{size}_")) and key not in values})
+    return result
 
 
 def cost_for_seconds(seconds, cpu_count, gpu_count, cpu_price, gpu_price):
@@ -181,7 +263,7 @@ def scenarios(stage, cpu_price, gpu_price, reuse_counts, job=None):
 
 
 def summarize(directories, jobs, *, gpu_price=2.20, ratio=44.0, reported_cpu_price=0.07, reuse_counts=(1, 10, 100)):
-    stages, withheld = [], []
+    stages, exploratory, withheld = [], [], []
     for directory in directories:
         directory = Path(directory).resolve()
         manifest = json.loads((directory / "stage_manifest.json").read_text(encoding="utf-8-sig"))
@@ -190,7 +272,10 @@ def summarize(directories, jobs, *, gpu_price=2.20, ratio=44.0, reported_cpu_pri
             if "server_" not in name and "candidate_first_v1" not in name:
                 continue
             try:
-                stages.append(accept_stage(directory, name, manifest, report))
+                if manifest["identity"].get("validation_mode", "strict") == "exploratory" or manifest["stages"][name].get("evidence_class") == "exploratory_performance":
+                    exploratory.append(exploratory_stage(directory, name, manifest, report))
+                else:
+                    stages.append(accept_stage(directory, name, manifest, report))
             except (KeyError, TypeError, ValueError) as exc:
                 withheld.append({"directory": str(directory), "stage": name, "reason": str(exc)})
     inferred = gpu_price / ratio
@@ -200,7 +285,7 @@ def summarize(directories, jobs, *, gpu_price=2.20, ratio=44.0, reported_cpu_pri
                     "CPU_price_origin": "deployment report0.07; conflicts with44 ratio; not a new verified bill"},
                "ratio_conflict": {"latest_human_ratio": ratio, "deployment_price_implied_ratio": gpu_price / reported_cpu_price,
                     "resolved": False}, "GPU_auxiliary_CPU_cost_included": True}
-    for stage in stages:
+    for stage in stages + exploratory:
         job = next((item for item in jobs if stage["directory"] in item.get("directories", [item.get("directory")])), None)
         stage["cost_scenarios"] = {}
         for name, price in pricing.items():
@@ -226,8 +311,24 @@ def summarize(directories, jobs, *, gpu_price=2.20, ratio=44.0, reported_cpu_pri
                 "GPU_cheaper_per_warm_workload_primary": qratio > threshold,
                 "formula": "Q_GPU/Q_CPU(N) > (44+M)/N; N actual allocated CPU count, M actual GPU auxiliary CPU count",
                 "not_measured_44core_CPU": True, "runtime_conditions": {"CPU": cpu["execution_origin"], "GPU": gpu["execution_origin"]}})
-    return {"schema_version": 1, "status": "bounded_cost_scenarios" if stages else "no_accepted_server_measurements",
+    exploratory_comparisons = []
+    for gpu in (stage for stage in stages if stage["GPU_count"]):
+        for cpu in exploratory:
+            keys = ("point_ids", "native_input_lanes", "scientific_source_sha256", "baseline_ref", "precision_policy")
+            if any(gpu[key] != cpu[key] for key in keys) or gpu["core"]["point_days"] != cpu["core"]["point_days"]:
+                continue
+            exploratory_comparisons.append({"GPU_stage": gpu["stage"], "CPU_stage": cpu["stage"],
+                "GPU_directory": gpu["directory"], "CPU_directory": cpu["directory"],
+                "scientific_acceptance": False, "performance_label": EXPLORATORY_LABEL,
+                "same_workload_point_days": gpu["core"]["point_days"],
+                "measured_throughput_ratio": gpu["core"]["point_days_per_second"] / cpu["core"]["point_days_per_second"],
+                "wrapper_throughput_ratio": gpu["wrapper"]["point_days_per_second"] / cpu["wrapper"]["point_days_per_second"],
+                "primary_cost_efficiency_threshold": (ratio + gpu["CPU_count"]) / cpu["CPU_count"],
+                "runtime_conditions": {"CPU": cpu["execution_origin"], "GPU": gpu["execution_origin"]}})
+    status = "bounded_cost_scenarios" if stages else "exploratory_performance_measured" if exploratory else "no_accepted_server_measurements"
+    return {"schema_version": 1, "status": status,
             "pricing": pricing, "accepted_stages": stages, "withheld_stages": withheld, "same_workload_comparisons": comparisons,
+            "exploratory_stages": exploratory, "exploratory_same_workload_comparisons": exploratory_comparisons,
             "excluded_claims": ["annual/50year", "Fortran speedup", "10x achieved", "CPU1 times44 measured CPU44", "uncompleted B64 first-call throughput"],
             "full_job_accounting_schema": {"directories": ["all resolved benchmark outputs in the observed job"], "status": "completed", "wall_seconds": "observed whole job",
                 "allocated_CPU_count": "actual CPU TRES/request count", "GPU_count": "actual cards", "provenance": "accounting artifact",
@@ -256,7 +357,8 @@ def main():
     with args.output.open("x", encoding="utf-8") as stream:
         json.dump(result, stream, indent=2, allow_nan=False)
         stream.write("\n")
-    print(json.dumps({"output": str(args.output), "accepted": len(result["accepted_stages"]), "withheld": len(result["withheld_stages"])}))
+    print(json.dumps({"output": str(args.output), "accepted": len(result["accepted_stages"]),
+        "exploratory": len(result["exploratory_stages"]), "withheld": len(result["withheld_stages"])}))
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import pickle
 from types import SimpleNamespace
 
 import jax
@@ -131,6 +132,192 @@ def test_CPU_scalar_reuses_one_compile_across_all_unique16_and64(monkeypatch, tm
         value, record = StageStore(args.output_dir, manifest["identity"]).load(f"B{size}_server_scalar_v1")
         assert value["outputs"][0][0][0]["x"].shape == (size, 1)
         assert len(record["timing"][f"B{size}_warm_frozen_state_core"]["samples_seconds"]) == 5
+
+
+def toy_cpu_case(monkeypatch, tmp_path, *, validation="exploratory", mode="scalar", gpu_change=None,
+                 cpu_directory=None, cpu_role="accepted"):
+    lanes, second = toy_prepared(16)
+    reference = mock_toy(monkeypatch, lanes, second)
+    if gpu_change is not None:
+        reference = gpu_change(copy.deepcopy(reference))
+    import scripts.dev.global_server_reference as refs
+    original_load = refs.load_reference
+    def load(directory, identity, **kwargs):
+        if kwargs.get("name", "B4_group_references") == "B4_group_references":
+            return reference, {"sha256": "sealed"}
+        return original_load(directory, identity, **kwargs)
+    monkeypatch.setattr(refs, "load_reference", load)
+    monkeypatch.setattr(scale.base, "lower_compile", lambda fn, arguments, name, recorder: jax.jit(fn))
+    args = SimpleNamespace(mode=mode, sizes=[16], cpu_budget=1 if mode == "scalar" else 4,
+        warm_repeats=5, validation_mode=validation, cpu_reference_role=cpu_role,
+        baseline_ref="source", gpu_reference_dir=tmp_path / "GPU", cpu_reference_dir=cpu_directory,
+        output_dir=tmp_path / "target")
+    recorder = scale.base.Recorder(args.output_dir)
+    recorder.result["environment"] = toy_environment()
+    return args, recorder, lanes, second
+
+
+def change_gpu_x(reference):
+    reference[0][0][0]["x"][6, 0] += 1e-5
+    return reference
+
+
+def run_toy_case(args, recorder, lanes, second):
+    try:
+        cpu.benchmark(args, recorder, lanes, second, scale, {"selected_logical_cpus": [0]})
+    finally:
+        recorder.stop.set()
+        recorder.sampler.join(timeout=1)
+
+
+def test_strict_CPU_parity_still_aborts_before_warm_samples(monkeypatch, tmp_path):
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path, validation="strict", gpu_change=change_gpu_x)
+    with pytest.raises(AssertionError, match="gate failed"):
+        run_toy_case(args, recorder, lanes, second)
+    assert recorder.result["gates"][-1]["passed"] is False
+    assert "B16_warm_frozen_state_core" not in recorder.result["timing"]
+    assert not list(args.output_dir.glob("raw_*.pkl"))
+    assert json.loads((args.output_dir / "stage_manifest.json").read_text())["stages"]["B16_server_scalar_v1"]["status"] == "failed"
+
+
+def test_exploratory_CPU_saves_before_gate_and_preserves_failure_with_five_samples(monkeypatch, tmp_path):
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path, gpu_change=change_gpu_x)
+    original = scale.base.compare
+    def check_saved(actual, expected, **kwargs):
+        path = args.output_dir / "raw_B16_scalar_before_parity.pkl"
+        assert path.exists()
+        raw = pickle.loads(path.read_bytes())
+        assert raw["measurement_status"] == "not_measured" and raw["status"] == "raw_before_validation"
+        assert len(raw["outputs"]) == 2 and raw["outputs"][0][0][0]["x"].shape == (16, 1)
+        return original(actual, expected, **kwargs)
+    monkeypatch.setattr(scale.base, "compare", check_saved)
+    run_toy_case(args, recorder, lanes, second)
+    manifest = json.loads((args.output_dir / "stage_manifest.json").read_text())
+    value, record = StageStore(args.output_dir, manifest["identity"]).load("B16_server_scalar_v1")
+    assert record["measurement_status"] == "complete" and record["evidence_class"] == "exploratory_performance"
+    assert record["strict_numerical_passed"] is False and record["provenance"]["full_two_block_parity"] is False
+    assert record["provenance"]["full_two_block_workload"] is True and record["provenance"]["frozen_reset_repeat"] is True
+    failed = [gate for gate in record["gates"] if gate["passed"] is False]
+    assert len(failed) == 1 and failed[0]["exploratory_continuation"] is True
+    assert failed[0]["atol"] == 1e-8 and failed[0]["rtol"] == 1e-10
+    assert all(len(metric["samples_seconds"]) == 5 and metric["valid_point_days"] == 224 for metric in value["measurements"].values())
+    # Default reader cannot promote an exploratory snapshot to accepted evidence.
+    monkeypatch.setattr(scale.base, "compare", original)
+    with pytest.raises(ValueError, match="accepted reference"):
+        original_load_reference(args.output_dir, manifest["identity"], name="B16_server_scalar_v1", points=16)
+
+
+original_load_reference = load_reference
+
+
+@pytest.mark.parametrize("fault", ["nan", "dtype", "shape", "discrete", "schema"])
+def test_exploratory_CPU_hard_failures_stop_before_timing(monkeypatch, tmp_path, fault):
+    def changed(reference):
+        block = reference[0][0][0]
+        if fault == "nan":
+            block["x"][6,0] = np.nan
+        elif fault == "dtype":
+            block["x"] = block["x"].astype(np.float32)
+        elif fault == "shape":
+            block["x"] = np.repeat(block["x"], 2, axis=1)
+        elif fault == "discrete":
+            block["mask"][6,0] = False
+        else:
+            block["extra"] = np.ones(16)
+        return reference
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path, gpu_change=changed)
+    with pytest.raises(AssertionError, match="hard gate"):
+        run_toy_case(args, recorder, lanes, second)
+    assert (args.output_dir / "raw_B16_scalar_before_parity.pkl").exists()
+    assert "B16_warm_frozen_state_core" not in recorder.result["timing"]
+    assert len([gate for gate in recorder.result["gates"] if gate["name"].endswith("GPU_reference")]) == 16
+
+
+def test_CPU_internal_reference_is_explicit_and_batch_isolation_uses_CPU(monkeypatch, tmp_path):
+    with monkeypatch.context() as patch:
+        args, recorder, lanes, second = toy_cpu_case(patch, tmp_path / "scalar", gpu_change=change_gpu_x)
+        run_toy_case(args, recorder, lanes, second)
+    source = args.output_dir
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path / "batch", mode="batch",
+        gpu_change=change_gpu_x, cpu_directory=source, cpu_role="cpu-internal")
+    run_toy_case(args, recorder, lanes, second)
+    stage = recorder.result["stages"]["B16_server_batch_v1"]
+    assert stage["provenance"]["CPU_scalar_reference_role"] == "cpu_internal_comparison"
+    assert stage["provenance"]["cross_mode_scalar_parity"] is True
+    internal_gates = [gate for gate in stage["gates"] if not gate["name"].endswith("GPU_reference")]
+    assert all(gate["passed"] for gate in internal_gates)
+    assert any("cross_group_permutation" in gate["name"] for gate in internal_gates)
+    assert any("replacement_isolation" in gate["name"] for gate in internal_gates)
+
+
+def test_exploratory_all_passed_is_still_exploratory_and_strict_role_rejected(monkeypatch, tmp_path):
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path)
+    run_toy_case(args, recorder, lanes, second)
+    stage = recorder.result["stages"]["B16_server_scalar_v1"]
+    assert stage["evidence_class"] == "exploratory_performance" and stage["strict_numerical_passed"] is True
+    assert stage["provenance"]["cross_mode_scalar_parity"] is False
+    parsed = cpu.parser().parse_args(["--mode", "batch", "--cpu-budget", "4", "--output-dir", str(tmp_path),
+        "--cpu-reference-role", "cpu-internal", "--synthetic-smoke"])
+    with pytest.raises(ValueError, match="requires exploratory"):
+        cpu.validate(parsed)
+
+
+@pytest.mark.parametrize("fault", ["accepted_role", "hard_gate", "repeat", "samples", "output", "identity", "nan_output"])
+def test_CPU_internal_bad_prerequisite_rejected_before_compilation(monkeypatch, tmp_path, fault):
+    with monkeypatch.context() as patch:
+        scalar_args, recorder, lanes, second = toy_cpu_case(patch, tmp_path / "scalar", gpu_change=change_gpu_x)
+        run_toy_case(scalar_args, recorder, lanes, second)
+    source = scalar_args.output_dir
+    manifest = json.loads((source / "stage_manifest.json").read_text())
+    store = StageStore(source, manifest["identity"])
+    value, record = store.load("B16_server_scalar_v1")
+    if fault == "hard_gate":
+        failed = next(gate for gate in record["gates"] if gate["passed"] is False)
+        failed["failures"][0]["reason"] = "nonfinite"
+    elif fault == "repeat":
+        repeat = next(gate for gate in record["gates"] if "frozen_reset_repeat" in gate["name"])
+        repeat["passed"] = False
+    elif fault == "samples":
+        key = "B16_warm_frozen_state_core"
+        record["timing"][key]["samples_seconds"] = [1.0] * 4
+        value["measurements"][key] = record["timing"][key]
+    elif fault == "output":
+        value["outputs"] = value["outputs"][:1]
+    elif fault == "nan_output":
+        value["outputs"][0][0][0]["x"][0, 0] = np.nan
+    elif fault == "identity":
+        store.identity["lanes"][6]["inputs_sha256"] = "different-native-bytes"
+        store.manifest["identity"] = store.identity
+    store.save("B16_server_scalar_v1", value, record)
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path / "batch", mode="batch",
+        cpu_directory=source, cpu_role="accepted" if fault == "accepted_role" else "cpu-internal")
+    compilations = []
+    def compile_unexpected(*args):
+        compilations.append(True)
+        raise AssertionError("bad CPU reference reached compilation")
+    monkeypatch.setattr(scale.base, "lower_compile", compile_unexpected)
+    with pytest.raises(ValueError):
+        run_toy_case(args, recorder, lanes, second)
+    assert compilations == []
+    assert "B16_warm_frozen_state_core" not in recorder.result["timing"]
+
+
+def test_CPU_internal_cross_mode_difference_remains_hard_failure(monkeypatch, tmp_path):
+    with monkeypatch.context() as patch:
+        scalar_args, recorder, lanes, second = toy_cpu_case(patch, tmp_path / "scalar", gpu_change=change_gpu_x)
+        run_toy_case(scalar_args, recorder, lanes, second)
+    source = scalar_args.output_dir
+    manifest = json.loads((source / "stage_manifest.json").read_text())
+    store = StageStore(source, manifest["identity"])
+    value, record = store.load("B16_server_scalar_v1")
+    value["outputs"][0][0][0]["x"][0, 0] += 1e-5
+    store.save("B16_server_scalar_v1", value, record)
+    args, recorder, lanes, second = toy_cpu_case(monkeypatch, tmp_path / "batch", mode="batch",
+        cpu_directory=source, cpu_role="cpu-internal")
+    with pytest.raises(AssertionError, match="cross_mode_server_scalar"):
+        run_toy_case(args, recorder, lanes, second)
+    assert recorder.result["gates"][-1]["passed"] is False
+    assert "B16_warm_frozen_state_core" not in recorder.result["timing"]
 
 
 def test_GPU_candidate_checkpoint_precedes_optional_B4_compile_and_survives_failure(monkeypatch, tmp_path):
