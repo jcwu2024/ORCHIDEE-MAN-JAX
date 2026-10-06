@@ -105,42 +105,78 @@ The conditional CPU4 CNY0.15/0.21 scenario is not executable approval.
 
 ## Current Priority: Single-GPU Batch-Size Pre-Screen
 
-Pre-screen single-GPU B128/B256 and conditional B512. Prefer existing real Day1
-assets. If these do not fill the representative capacity screen, repeat each of the
-64 fixed FULL64 source points across eight lanes (512 lanes total) and compare
-B128/B256/conditional B512 chunks on the same 512 lanes and time window, with five
-synchronized core and wrapper samples per setting. Report lane-days (7168 lane-days
-per 14-day sample), not effective unique point-days; repeated lanes do not represent
-512 distinct real grids. The accepted historical B64 measurement is not a same-job
-512-lane baseline. Add a complete B64 baseline only if the bounded budget permits.
+Job15600405 is terminal FAILED on `ibc13b03n04` after2,135 parent seconds, with one
+Tesla V100 and four allocated Slurm CPUs; observed affinity used two physical cores
+through SMT. B128 fixed512 is complete and independently validated. B256 reached
+compile-complete at stage elapsed2,058.173263s (lower63.179012s,
+compile752.614130s), but its first `run_collection` call failed at
+`executable(*first)` with `TypeError: Computation compiled for 673 inputs but called
+with 536`. B256 has no completed first call, checkpoint or five-plus-five warm
+samples, so no throughput is published. This is an AOT invocation-signature error,
+not a numerical gate failure, OOM or timeout; no deeper cause is inferred, no fix or
+rerun was attempted, and B512 did not run. The latest canonical parent row records
+`FAILED`, elapsed2135s, exit`1:0`. Earlier RUNNING snapshots remain historical.
 
-The capacity runner is deployed in a clean independent checkout at commit
-`a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`; deployment and test02 target checks passed.
-CPU-only admission verified the source science SHA and complete FULL64 B4 snapshot
-SHA, then checked all 1,070 dynamic leaves for every repeated lane at B128/B256/B512
-(shape, dtype and C-order bytes). It did not execute the model, lower/compile, or
-initialize a GPU backend. Compiler buffers, actual GPU free memory and host memory
-admission remain runtime checks; current memory values are planning estimates only.
-See the [paid-run review](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/PAID_RUN_REVIEW.md),
-[deployment verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/deployment-verification.json),
-[target verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-verification.json),
-[input admission](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json),
-[local protocol tests](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/local-verification.json),
-and [node snapshot](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/final-node-snapshot.txt).
+The workload contains 512 lanes from 64 unique FULL64 points repeated eight times,
+covering two consecutive seven-day blocks. It measures 7,168 lane-days; 896
+unique-point-days are listed separately and are not the effective throughput
+denominator.
 
-The reviewed command selects `ibc13b03n04` based on the 2026-10-06T11:12:21Z
-snapshot (CPUAlloc16/112, load1.52, AllocTRES cpu16/gpu2; six GPUs unallocated).
-This is not a reservation and occupancy must be rechecked before any authorized
-submission. The declared envelope is one V100 plus four auxiliary Slurm CPUs for at
-most90 minutes, without node exclusivity; estimated whole-job caps are CNY3.60
-primary/CNY3.72 conservative. B128 and B256 are mandatory, B512 is conditional,
-and optional B64 is disabled. The exact [approval command](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/APPROVAL_COMMAND.sh)
-and [preparation ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json)
-match this contract. The user approved this envelope and job`15600405` is running with exactly4 allocated CPUs and1 V100. Ledger status is `GPU_15600405_RUNNING_B128_compilation`; no complete capacity-stage timing is published. The independent heartbeat`gpu-15600405` follows only this job every5 minutes and pauses after terminal evidence validation.
-Existing GPU B16/B64 evidence is reused; the 1-to-2-card study comes later. CPU
-reader commit `7d20a17` is accepted, and the patched reader's actual CPU-internal
-admission passed; this does not clear the two CPU/GPU tolerance failures or run CPU4.
-CPU expansion is independent and paused, not a prerequisite for the GPU screen.
+| B128 fixed512 capacity stage | Median [range] | Throughput / warm cost scenario |
+| --- | ---: | ---: |
+| Synchronized core, five collections | 29.617320834s [29.605399007,29.623860434] | 242.020541 lane-days/s; CNY0.019744881 primary /0.020403043 conservative |
+| Prepared wrapper, five collections | 33.838030240s [33.780365391,33.889177628] | 211.832661 lane-days/s; CNY0.022558687 primary /0.023310643 conservative |
+
+The complete stage passed 515 gates and 512 independent saved-output/source-B4
+comparisons across 760 native output leaves per lane and both blocks. All 512 output
+lanes were retained. Strict numerical and saved-reference checks passed; checkpoint
+SHA256 is `e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5`.
+This is `exploratory_capacity_performance` with `scientific_acceptance=false`;
+repeated lanes do not represent 512 distinct real grids, and B128 alone neither
+establishes a sweet spot nor demonstrates global scientific benefit.
+
+Separate B128 timing: lower92.979298s, compile744.949671s, first complete call
+29.778435s, host stack3.176700s, device transfer1.047304s, checkpoint serialization
+0.321704s and atomic write0.251202s. Actual compiler analysis recorded argument,
+output and temporary buffers of 31,118,364/27,529,184/582,289,872 bytes. The selected
+V100 snapshot immediately before compilation had 33,721,155,584 of 34,359,738,368
+bytes free; job-start Host MemAvailable was 352,786,501,632 bytes; cumulative process
+peak RSS through B128 was 14,736,539,648 bytes. GPU memory is a boundary snapshot,
+not a measured VRAM peak; compiler analysis is not actual peak allocation. B256 and
+B512 require their own memory evidence. Warm costs above cover only one synchronized
+512-lane collection using one GPU and four allocated CPUs; they exclude setup,
+compilation and checkpoint IO. Whole-job cost will use one terminal parent `sacct`
+row and count job15600405 once.
+
+The parent allocation used 0.59305556 GPU card-hours and 2.37222222 allocated CPU
+count-hours. At the declared GPU CNY2.20/card-hour and CPU CNY0.05/core-hour rates,
+the estimated whole-job primary cost is CNY1.423333333; using CPU CNY0.07 gives
+CNY1.470777778. Terminal collector cross-check accepted these as allocation
+estimates, not a verified bill. Queue time and child steps are not added; the parent
+is counted once.
+The report's `observed_window_wall_seconds=2121.916518688202` is a separate window
+measurement. `elapsed_seconds=2060.684793` is stale and is not terminal billing.
+
+Evidence: [current result](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/CURRENT_RESULT.md),
+[terminal validation](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-validation.json),
+[terminal transfer verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-transfer-verification.json),
+[B256 failure diagnostics](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-failure-diagnostics.json),
+[collector verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/collector-verification.json),
+[terminal raw nine-field `sacct`](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-sacct-raw9.txt),
+[terminal collector seven-field `sacct`](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-sacct-collector7.txt),
+[terminal evidence capture](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-evidence/capture.json),
+[preserved B128 checkpoint](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-evidence/capacity__stage_capacity_B128_fixed512_v1.pkl),
+and [current ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json).
+
+Deployed code remains immutable at `a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`.
+Heartbeat `gpu-15600405` was confirmed `PAUSED`; its terminal follow-up is complete.
+This does not pause the broader throughput research. The deleted old Explore1000
+heartbeat will not be restored. No new job or model rerun is part of this
+documentation update. Existing GPU B16/B64 results are
+separate evidence; 1-to-2-card work comes later. CPU reader commit `7d20a17` is
+accepted and CPU-internal reader admission passed, but the two CPU/GPU tolerance
+failures remain and CPU4 was not run. CPU expansion remains paused and is not a
+prerequisite for the GPU screen.
 
 ## Completed Paid Matrix: Fixed Workload
 
