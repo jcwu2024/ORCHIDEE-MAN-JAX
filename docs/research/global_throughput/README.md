@@ -106,7 +106,9 @@ CPU/GPU费用相加时，GPU加M个辅助CPU的小时费用等于44+M个CPU单�
 
 用户已批准三个付费pilot：CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；
 原批准额度按上述比例最多2.65元，按CPU0.07元和GPU2.20元相加保守为2.83元。
-CPU1作业15579758运行852秒后在B16第7点299.0-115.0的GPU reference门槛失败；失败记录确认reference叶子`[0][0][0][7]`的`max_bound_ratio`为1.228488222708634。该叶是首块Days2–8末态`diffuco_previous_step_state.rveget`（整个冠层气孔阻力，s/m）；reference shape `(1,14)`、`float64`，PFT14坐标`[0,13]`值592.8152488575903。candidate未保存，故候选值、带符号/精确绝对差值及最终根因未知；失败坐标未直接保存，[诊断报告](../../../outputs/research/global_throughput/cpu-leaf-diagnostic-15579758/DIAGNOSIS.md)从reference前13个`1e20`界限和gate-wide `max_abs=8.940696716308594e-08`代数推得`[0,13]`，该aggregate差值不能归于该leaf。已准备保全完整首块CPU候选并重现原scalar graph的最小诊断，但尚未运行；无物理重跑、编译或新作业。完整scalar参考未完成，B64未运行。
+CPU1付费作业15579758运行852秒后在B16第7点299.0-115.0的GPU reference门槛失败；之后获批的独立免费单点诊断已闭合，完整计算了目标点Days2–8首块380个输出叶。唯一失败为`[0][0][7]`，即末态`diffuco_previous_step_state.rveget[0,13]`（整个冠层气孔阻力，s/m）：CPU 592.8152487724788，对GPU B4 reference 592.8152488575903，signed delta -8.511153737345012e-8，absolute delta 8.511153737345012e-8，bound 6.928152488575903e-8，ratio 1.228488222708634。该叶native dtype/shape为`float64`/`(1,14)`；gate-wide `max_abs=8.940696716308594e-8`是聚合值，不是此叶的误差。165/380叶存在非零差异，另外379叶均通过固定比较（含离散值与哨兵规则）。旧付费CPU1 candidate未保存；上述candidate值只属于新单点诊断。完整首块输出已保存，见[当前结果](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/CURRENT_RESULT.md)、[目标叶对比](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/rveget_comparison.json)、[全叶汇总](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/all_leaf_comparisons.json)及[采集完整性核验](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/COLLECTION_VERIFICATION.json)。
+
+该单点一次性诊断不产生可接受的CPU热吞吐或CPU/GPU速度/成本结论。完整窗口实际wall合计1636.648 s，保守计1653 s；最多两次的全量scalar编译额度已用完，只有一次完整首块调用。原CPU1 StableHLO原始内容未保存，当前图hash不匹配旧hash；两个保存IR的内部顺序置换及set派生字段顺序是线索，不足以证明旧图等价或根因。因2/2编译额度已用尽，未编译target-owned closure，无法区分闭合绑定、CPU scalar/GPU B4算术、backend或compiler决策的因果贡献；这些仍未隔离。详见[IR与根因边界分析](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/IR_ANALYSIS.md)。付费执行账本与其后续heartbeat仍关闭/暂停；这不把整体吞吐研究标记为暂停。
 CPU4前提不满足，本轮不提交；CPU1不自动重跑，容差保持原样。
 两次初始启动因Slurm字段差异失败，GPU替换15579759在Python前退出6；所有失败费用
 纳入原额度。GPU启动修复部署到独立checkout；作业15579869已于2026-10-06完成，B64和B16
@@ -119,8 +121,7 @@ GPU whole-job主/保守口径为1.406667/1.453556元；本轮全部终态作业�
 [汇总验证记录](../../../outputs/research/global_throughput/server-cost-results/verification.json)
 及[付费执行账本](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)。
 当前平台有界资产检查尚未找到匹配Fortran可执行文件与build/input契约，Fortran对照待补。
-第四轮免费账本和原始结果保持原样，73秒余额不授权新增免费window；本轮结果报告完成后按既定安排
-结束后续跟进，不构成新增作业授权。
+第四轮免费账本和原始结果保持原样；付费基准账本及heartbeat按既定状态关闭/暂停。上述获批单点诊断现已完成，不代表重复执行付费或批量吞吐测试。
 准备验收已通过14项新增协议测试、35项受影响的既有scale测试及Ruff/diff检查；
 FULL64数值参考读取兼容性核对64点和760个array leaves。四worker本地spawn检查只用合成输入。
 这些本地检查使用Windows/JAX0.10.1，不替代部署0.4.38的组件检查或真实服务器物理计时。

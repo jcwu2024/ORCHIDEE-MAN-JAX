@@ -270,21 +270,38 @@ Lowering, compilation, first call, stack/transfer, and checkpoint serialization/
 measurements are retained separately in [terminal-measurements.json](../../../outputs/research/global_throughput/server-cost-results/terminal-measurements.json);
 they are not included in hot-core throughput. No `K`-reuse estimate is available because observed
 stage setup/validation accounting is absent. CPU1 still failed the fixed B16 gate at
-point 7 (299.0-115.0), and the failure record confirms
-`max_bound_ratio=1.228488222708634` for leaf `[0][0][0][7]`; no complete scalar
-B16/B64 reference exists. It is the Days 2-8 final-state
-`diffuco_previous_step_state.rveget` (whole-canopy stomatal resistance, s/m). The
-saved reference has shape `(1, 14)`, dtype `float64`, and value 592.8152488575903 at
-PFT14 coordinate `[0, 13]`. The CPU candidate was not saved, so its value, signed or
-exact absolute delta, and final cause remain unknown; the failure coordinate was not
-directly saved. The [diagnosis report](../../../outputs/research/global_throughput/cpu-leaf-diagnostic-15579758/DIAGNOSIS.md)
-algebraically infers `[0, 13]` from the first 13 reference `1e20` bounds and the
-gate-wide `max_abs=8.940696716308594e-08`; this aggregate absolute difference cannot
-be attributed to that leaf. The original full scalar graph's smallest first-block
-capture/reproduction diagnostic is prepared but has not run; no physics, compilation,
-or new job was run. CPU4 was withheld, so these GPU measurements establish neither
-CPU/GPU speedup nor a cost winner. No Fortran, annual, 669-point, 50-year, or 10x
-result is established.
+point 7 (299.0-115.0). That paid B16/B64 scalar reference remains incomplete. A
+separately authorized free correctness diagnostic has now completed one full scalar
+Days 2-8 block for only this point on one CPU core and zero GPUs. The 380-leaf fixed
+comparison has one failure: `[0][0][7]`, the final-state
+`diffuco_previous_step_state.rveget[0,13]` value (whole-canopy stomatal resistance,
+s/m; `float64`, shape `(1,14)`). CPU was 592.8152487724788 versus GPU B4 reference
+592.8152488575903: signed delta `-8.511153737345012e-8`, absolute delta
+`8.511153737345012e-8`, bound `6.928152488575903e-8`, ratio `1.228488222708634`.
+The gate-wide max absolute difference `8.940696716308594e-8` is aggregate, not the
+target leaf error. There are nonzero differences in 165 leaves; the other 379 pass,
+including discrete and sentinel checks. The old paid CPU1 candidate was not saved;
+the value above belongs only to this diagnostic. See [current result](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/CURRENT_RESULT.md),
+[target-leaf comparison](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/rveget_comparison.json),
+[all-leaf summary](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/remote-evidence/shared-final/all_leaf_comparisons.json),
+[collection verification](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/COLLECTION_VERIFICATION.json),
+and [IR analysis](../../../outputs/research/global_throughput/cpu-leaf-reproduction-20261006/IR_ANALYSIS.md).
+
+The CPU run is a one-point, one-block correctness result without warm repeats; it is
+not a CPU throughput or CPU/GPU speed/cost comparison. Total window wall was
+1636.648 s (1653 s conservative accounting), using both allowed full compilations
+and one complete block call. The first compilation was lost to a duplicate
+post-compile artifact-entry guard before any model call; the corrected final call
+completed without time or RSS termination. The target-owned closure was not compiled
+because the 2/2 budget was exhausted, so closure binding cannot be distinguished
+from CPU scalar/GPU B4 arithmetic, backend, or compiler contributions. The exact old
+StableHLO identity remains unmet: its raw
+IR was not saved. Two preserved IRs are textually isomorphic after internal-order
+permutations; set-derived field ordering is a plausible mechanism, not an established
+cause. Compiler arithmetic/fusion and NumPy mismatch remain hypotheses. The paid
+execution ledger and heartbeat stay closed/paused; this diagnostic's completion does
+not mark the broader throughput research paused. CPU4 remains withheld. No Fortran,
+annual, 669-point, 50-year, or 10x result is established.
 
 Using unverified billing rates of CNY 0.05/0.07 per allocated CPU core-hour and
 CNY 2.20 per GPU card-hour as additive scenarios, the GPU whole-job estimate is
