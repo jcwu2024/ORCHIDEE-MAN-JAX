@@ -1,0 +1,428 @@
+"""Fixed-512-lane GPU capacity screen; repeated real inputs are not new points.
+
+No process logic: execution uses the audited global_batch transition factory
+and benchmark_global_batch.run_two unchanged (complete Days2-8 and9-15).
+The unique FULL64 preparation/reference remains immutable numerical evidence.
+"""
+# ruff: noqa: E402
+from __future__ import annotations
+
+import argparse
+import gc
+import json
+import math
+import os
+import signal
+import statistics
+import sys
+import time
+import traceback
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from scripts.dev.global_server_reference import finite_tolerance_failure
+
+TOTAL_LANES = 512
+UNIQUE_POINTS = 64
+CONTRACT = "GPU-fixed512-repeated-FULL64-capacity-v1"
+LABEL = "capacity performance measured; global scientific consistency not accepted"
+
+
+def parser():
+    result = argparse.ArgumentParser(description=__doc__)
+    result.add_argument("--prepared-input", type=Path, required=True)
+    result.add_argument("--full-reference-dir", type=Path, required=True)
+    result.add_argument("--memory-baseline-dir", type=Path, required=True)
+    result.add_argument("--output-dir", type=Path, required=True)
+    result.add_argument("--config", type=Path, default=ROOT / "configs/orchidee_man_250919.yaml")
+    result.add_argument("--asset-root", type=Path)
+    result.add_argument("--baseline-ref", default="133e35aec7b83b9d79888c46092f64d518e97299")
+    result.add_argument("--warm-repeats", type=int, default=5)
+    result.add_argument("--budget-seconds", type=int, default=5400)
+    result.add_argument("--conditional-512", action="store_true")
+    result.add_argument("--optional-b64-baseline", action="store_true")
+    result.add_argument("--dry-run", action="store_true")
+    result.add_argument("--admit-inputs", action="store_true", help="Read/audit FULL64 and repeated identities only; no process factory or compilation.")
+    return result
+
+
+def capacity_layout(lanes, second):
+    ids = [lane.landpoint_id for lane in lanes]
+    if len(lanes) != UNIQUE_POINTS or len(second) != UNIQUE_POINTS or len(set(ids)) != UNIQUE_POINTS:
+        raise ValueError("exact unique FULL64 source lanes and aligned second blocks required")
+    origins = [{"lane_index": index, "source_index": index % UNIQUE_POINTS,
+                "landpoint_id": ids[index % UNIQUE_POINTS], "repeat_index": index // UNIQUE_POINTS}
+               for index in range(TOTAL_LANES)]
+    return ([lanes[item["source_index"]] for item in origins],
+            [second[item["source_index"]] for item in origins], origins)
+
+
+def lane_metrics(samples):
+    if len(samples) != 5 or any(not math.isfinite(value) or value <= 0 for value in samples):
+        raise ValueError("five positive fully synchronized samples required")
+    median = statistics.median(samples)
+    return {"samples_seconds": samples, "median_seconds": median, "range_seconds": [min(samples), max(samples)],
+        "lane_days": TOTAL_LANES * 14, "lane_days_per_second": TOTAL_LANES * 14 / median,
+        "unique_real_points": UNIQUE_POINTS, "unique_point_days": UNIQUE_POINTS * 14,
+        "unique_point_days_is_throughput_denominator": False}
+
+
+def gate(recorder, name, actual, expected, compare, *, cross_backend=False):
+    record = {"name": name, **compare(actual, expected, sentinel_paths=recorder.sentinel_paths),
+              "gate_role": "GPU_reference" if cross_backend else "strict_GPU_internal"}
+    recorder.result["gates"].append(record)
+    if record["passed"] is not True:
+        if cross_backend and finite_tolerance_failure(record):
+            record["exploratory_continuation"] = True
+        else:
+            raise AssertionError(f"hard capacity gate failed: {name}: {record}")
+    return record
+
+
+def conditional_512_decision(records, remaining_seconds, estimated_bytes, free_bytes):
+    reasons = []
+    if set(records) != {128, 256}:
+        reasons.append("both completed candidate records required")
+    else:
+        for boundary in ("core", "wrapper"):
+            if records[256][boundary]["median_seconds"] > .95 * records[128][boundary]["median_seconds"]:
+                reasons.append(f"B256 {boundary} must improve same-512-workload median by at least5%")
+    if remaining_seconds < 1800:
+        reasons.append("at least30min remaining required")
+    if estimated_bytes is None or free_bytes < estimated_bytes + 2 * 1024**3:
+        reasons.append("estimated B512 buffers plus2GiB physical slack required")
+    return {"permitted": not reasons, "reasons": reasons, "remaining_seconds": remaining_seconds,
+            "estimated_device_bytes": estimated_bytes, "free_device_bytes": free_bytes,
+            "scope": "preset capacity-screen condition, not OOM or completion guarantee"}
+
+
+def baseline_memory(directory):
+    manifest = json.loads((directory / "stage_manifest.json").read_text())
+    record = manifest["stages"].get("B64_candidate_first_v1", {})
+    proof = record.get("provenance", {})
+    analysis = proof.get("executable_memory_analysis", {})
+    if record.get("status") != "complete" or analysis.get("available") is not True:
+        raise ValueError("completed old B64 actual compiler memory analysis required; no new B64 compile")
+    report = json.loads((directory / "report.json").read_text())
+    peak = report.get("linux_ru_maxrss_peak_bytes") or report.get("peak_rss_bytes")
+    if not isinstance(peak, int) or peak <= 0:
+        raise ValueError("actual old benchmark host peak RSS required for bounded host admission estimate")
+    analysis = {**analysis, "old_benchmark_peak_RSS_bytes": peak}
+    return manifest, record, analysis
+
+
+def admit_numerical_sources(args, lanes, second, scale, environment):
+    """Read exact source identity and sealed numerical/memory prerequisites only."""
+    from scripts.dev.global_server_reference import load_reference
+
+    identity = scale.base.stage_identity(args, lanes, second, environment)
+    identity.update(contract=CONTRACT, precision_policy=scale.PRECISION_POLICY)
+    reference, reference_origin = load_reference(args.full_reference_dir, identity)
+    old_manifest, old_record, analysis = baseline_memory(args.memory_baseline_dir)
+    for key in ("lanes", "science_sha256", "baseline_ref", "precision_policy", "gate"):
+        if old_manifest["identity"].get(key) != identity.get(key):
+            raise ValueError(f"old B64 memory evidence input/science mismatch: {key}")
+    return identity, reference, reference_origin, old_record, analysis
+
+
+def memory_estimate(size, resident_input_bytes, full_output_bytes, memory_records):
+    temp = max((value["temp_size_in_bytes"] * size // previous for previous, value in memory_records.items()
+                if value.get("available") is True), default=None)
+    return None if temp is None else 2 * resident_input_bytes + 3 * full_output_bytes + temp
+
+
+def device_screen(size, resident_bytes, output_bytes, memory_records, scale):
+    physical = scale.visible_gpu_memory()
+    estimated = memory_estimate(size, resident_bytes, output_bytes, memory_records)
+    result = {"shape": size, "resident_512_input_bytes": resident_bytes, "full_512_output_bytes": output_bytes,
+        "estimated_device_bytes": estimated, "physical_gpu": physical,
+        "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee"}
+    if (not physical.get("applicable") or physical["total_bytes"] < 30 * 1024**3
+            or estimated is None or physical["free_bytes"] < estimated + 2 * 1024**3):
+        raise MemoryError(f"capacity shape memory preflight failed: {result}")
+    return result
+
+
+def host_screen(size, old_peak):
+    available = next(int(line.split()[1]) * 1024 for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemAvailable:"))
+    required = old_peak * size // 64 + 8 * 1024**3
+    result = {"MemAvailable_bytes": available, "old_B64_job_peak_RSS_bytes": old_peak,
+        "lane_scaled_required_bytes": required,
+        "limitation": "old whole-benchmark RSS scaled by batch lanes plus8GiB; planning screen, not measured stage RSS or reservation"}
+    if available < required:
+        raise MemoryError(f"host memory admission failed: {result}")
+    return result
+
+
+def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_records):
+    """Compile once, measure all512 lanes immediately, then return atomic-stage payload."""
+    base, jax, np = scale.base, scale.jax, scale.np
+    label = f"capacity_B{size}"
+    gate_start, started = len(recorder.result["gates"]), time.perf_counter()
+    rss_before = base.rss_bytes()
+    chunks = [(lanes[start:start + size], second[start:start + size]) for start in range(0, TOTAL_LANES, size)]
+    host = [(base.batch.stack_lanes(first), base.stack_second(first, other)) for first, other in chunks]
+    host_stack_seconds = time.perf_counter() - started
+    resident_bytes, output_bytes = scale.tree_bytes(host), scale.tree_bytes(reference) * 8
+    host_preflight = host_screen(size, memory_records[64]["old_benchmark_peak_RSS_bytes"])
+    preflight = device_screen(size, resident_bytes, output_bytes, memory_records, scale)
+    started = time.perf_counter()
+    pairs = jax.device_put(host)
+    base.sync(pairs)
+    transfer_seconds = time.perf_counter() - started
+    # Pure source-backed factory; no process logic copied or approximated here.
+    base.driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
+    executable = base.lower_compile(base.batch.make_batch_transition(chunks[0][0]), pairs[0][0], label, recorder)
+    memory = scale.executable_memory(executable)
+    memory_records[size] = memory
+    device_screen(size, resident_bytes, output_bytes, memory_records, scale)
+
+    def run_collection(wrapper=False):
+        outputs = []
+        for index, (first, other) in enumerate(chunks):
+            pair = jax.device_put((base.batch.stack_lanes(first), base.stack_second(first, other))) if wrapper else pairs[index]
+            value = base.run_two(executable, *pair)
+            outputs.append(jax.device_get(value) if wrapper else value)
+        base.sync(outputs)
+        return outputs
+
+    def collect(outputs):
+        return jax.tree_util.tree_map(lambda *parts: np.concatenate(parts, axis=0), *outputs)
+
+    started = time.perf_counter()
+    initial_chunks = run_collection()
+    first_seconds = time.perf_counter() - started
+    output = collect(jax.device_get(initial_chunks))
+    # Release device copies before the ten warm collections; complete host outputs remain.
+    del initial_chunks
+    hard = []
+    for index in range(TOTAL_LANES):
+        try:
+            gate(recorder, f"{label}_lane_{index}_source_{index % UNIQUE_POINTS}_GPU_reference",
+                jax.tree_util.tree_map(lambda value: value[index], output),
+                jax.tree_util.tree_map(lambda value: value[index % UNIQUE_POINTS], reference), base.compare, cross_backend=True)
+        except AssertionError as exc:
+            hard.append(str(exc))
+    if hard:
+        raise AssertionError("hard per-lane reference failures; no timings admitted: " + "; ".join(hard))
+    core, wrapper = [], []
+    for _ in range(args.warm_repeats):
+        started = time.perf_counter()
+        core_outputs = run_collection()
+        core.append(time.perf_counter() - started)
+        del core_outputs
+        started = time.perf_counter()
+        wrapped_chunks = run_collection(wrapper=True)
+        wrapper.append(time.perf_counter() - started)
+    final_output = collect(wrapped_chunks)
+    gate(recorder, label + "_frozen_reset_repeat", final_output, output, base.compare)
+    # Strict same-backend permutation and replacement preserve every potentially active lane.
+    first, other = chunks[0]
+    order = list(reversed(range(size)))
+    permuted = base.run_two(executable, base.batch.stack_lanes([first[i] for i in order]),
+        base.stack_second([first[i] for i in order], [other[i] for i in order]))
+    gate(recorder, label + "_permutation", jax.device_get(permuted),
+        jax.tree_util.tree_map(lambda value: value[np.asarray(order)], output), base.compare)
+    changed = first[:-1] + [first[0]]
+    replaced = base.run_two(executable, base.batch.stack_lanes(changed), base.stack_second(changed, other[:-1] + [other[0]]))
+    gate(recorder, label + "_replacement_isolation", jax.device_get(replaced),
+        jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], output), base.compare)
+    measurements = {"core": lane_metrics(core), "wrapper": lane_metrics(wrapper)}
+    for metric in measurements.values():
+        metric["warm_cost_scenarios"] = {name: {
+            "GPU_card_hours": metric["median_seconds"] / 3600,
+            "auxiliary_CPU_count_hours": 4 * metric["median_seconds"] / 3600,
+            "CNY": (2.2 + 4 * cpu_price) * metric["median_seconds"] / 3600,
+            "scope": "measured warm same512-lane collection; excludes startup/compile/checkpointIO; scenario pricing not billing"}
+            for name, cpu_price in (("primary", .05), ("conservative", .07))}
+    gates = recorder.result["gates"][gate_start:]
+    return {"outputs": final_output, "measurements": measurements}, {
+        "measurement_status": "complete", "evidence_class": "exploratory_capacity_performance",
+        "scientific_acceptance": False, "performance_label": LABEL,
+        "strict_numerical_passed": all(item["passed"] is True for item in gates), "gates": gates,
+        "timing": measurements, "startup": {"host_stack_seconds": host_stack_seconds,
+            "device_transfer_seconds": transfer_seconds, "first_full512_call_seconds": first_seconds,
+            "lower_seconds": recorder.result["timing"][label + "_lower_seconds"],
+            "compile_seconds": recorder.result["timing"][label + "_compile_seconds"]},
+        "provenance": {"workload_kind": "capacity_screen_repeated_FULL64", "total_lanes": TOTAL_LANES,
+            "unique_real_points": UNIQUE_POINTS, "lane_days": TOTAL_LANES * 14, "unique_point_days": UNIQUE_POINTS * 14,
+            "chunk_size": size, "chunks_per_collection": len(chunks), "blocks": [[2, 8], [9, 15]],
+            "half_hours_per_day": 48, "full_outputs": True, "full_two_block_workload": True,
+            "executable_memory_analysis": memory, "memory_preflight": preflight,
+            "host_memory_preflight": host_preflight,
+            "post_measurement_GPU_memory": scale.visible_gpu_memory(), "host_peak_RSS_bytes": base.linux_ru_maxrss_bytes(),
+            "host_RSS_bytes_before": rss_before, "host_RSS_bytes_after": base.rss_bytes(),
+            "RSS_peak_scope": "process cumulative peak through this stage; before/after are actual stage boundary snapshots",
+            "VRAM_scope": "actual selected-card preflight/post-measurement snapshots; not a measured peak",
+            "server_resources": recorder.result["server_resources"]},
+        "execution_origin": {"available": True, "environment": recorder.result["environment"], "pid": os.getpid()}}
+
+
+def benchmark(args, recorder, lanes, second, scale):
+    from scripts.dev.global_batch_stage_store import StageStore
+
+    base = scale.base
+    start_epoch = float(os.environ.get("ORCHJAX_GPU_WINDOW_START_EPOCH", time.time()))
+    screen = scale.screen_inputs(lanes, second)
+    expanded, others, origins = capacity_layout(lanes, second)
+    identity, reference, reference_origin, old_record, analysis = admit_numerical_sources(
+        args, lanes, second, scale, recorder.result["environment"])
+    identity.update(contract=CONTRACT, precision_policy=scale.PRECISION_POLICY, validation_mode="exploratory",
+        workload_kind="capacity_screen_repeated_FULL64", total_lanes=TOTAL_LANES, lane_origins=origins,
+        unique_real_points=UNIQUE_POINTS, candidate_shapes=[128, 256], conditional_512=args.conditional_512,
+        optional_B64_baseline=args.optional_b64_baseline, conditional_policy="core_and_wrapper_5percent_30min_2GiBslack")
+    for source in (args.full_reference_dir, args.memory_baseline_dir, args.prepared_input.parent):
+        StageStore.validate_source_destination(source, args.output_dir)
+    identity["numerical_reference_sha256"] = reference_origin["sha256"]
+    store = StageStore(args.output_dir, identity)
+    recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
+    recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen, lane_origins=origins,
+        reference_origin=reference_origin, memory_baseline_origin={"directory": str(args.memory_baseline_dir),
+            "checkpoint_sha256": old_record["sha256"], "analysis": analysis}, scientific_acceptance=False)
+    base.legacy_factory(args.baseline_ref)
+    memory_records, records = {64: analysis}, {}
+
+    def run(size):
+        (value, record), reused = store.run(f"capacity_B{size}_fixed512_v1",
+            lambda: measure_shape(size, args, recorder, expanded, others, reference, scale, memory_records))
+        records[size] = value["measurements"]
+        recorder.phase(f"capacity_B{size}_sealed", reused=reused)
+        recorder.flush()
+        # The sealed host snapshot survives cleanup; no executable is a prerequisite.
+        base.driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
+        scale.jax.clear_caches()
+        gc.collect()
+        return record
+
+    for size in (128, 256):
+        run(size)
+    if args.conditional_512:
+        snapshot = scale.visible_gpu_memory()
+        resident = scale.tree_bytes(([lane.arguments for lane in expanded], others))
+        decision = conditional_512_decision(records, args.budget_seconds - (time.time() - start_epoch),
+            memory_estimate(512, resident, scale.tree_bytes(reference) * 8, memory_records), snapshot["free_bytes"])
+        if memory_records.get(256, {}).get("available") is not True:
+            decision["permitted"] = False
+            decision["reasons"].append("actual B256 compiler memory analysis required")
+        try:
+            decision["host_memory"] = host_screen(512, analysis["old_benchmark_peak_RSS_bytes"])
+        except MemoryError as exc:
+            decision["permitted"] = False
+            decision["reasons"].append(str(exc))
+        recorder.result["conditional_512_decision"] = decision
+        recorder.flush()
+        if decision["permitted"]:
+            run(512)
+    if args.optional_b64_baseline:
+        remaining = args.budget_seconds - (time.time() - start_epoch)
+        if remaining >= 1200:
+            run(64)
+        else:
+            recorder.result["optional_B64_skipped"] = "less than20min remaining; candidates retained"
+    recorder.result["completed_shapes"] = list(records)
+
+
+def main():
+    args = parser().parse_args()
+    if args.warm_repeats != 5 or args.budget_seconds != 5400:
+        raise ValueError("fixed five repeats and approved-proposal90min window contract required")
+    if args.dry_run:
+        print(json.dumps({"status": "dry_run", "model_execution": False, "JAX_imported": "jax" in sys.modules,
+            "contract": CONTRACT, "candidates": [128, 256], "conditional_512": args.conditional_512,
+            "total_lanes": TOTAL_LANES, "unique_real_points": UNIQUE_POINTS, "lane_days": 7168,
+            "unique_point_days": 896, "scientific_acceptance": False, "optional_B64": args.optional_b64_baseline}))
+        return 0
+    if args.admit_inputs:
+        os.environ["JAX_PLATFORMS"] = "cpu"
+        os.environ["JAX_ENABLE_X64"] = "true"
+    from scripts.dev import benchmark_global_scale as scale
+    scale.jax.config.update("jax_enable_x64", True)
+    if args.admit_inputs:
+        lanes, second = scale.read_prepared(args.prepared_input, args.config)
+        screen = scale.screen_inputs(lanes, second)
+        expanded, others, origins = capacity_layout(lanes, second)
+        source_identity, reference, reference_origin, old_record, analysis = admit_numerical_sources(
+            args, lanes, second, scale, scale.base.metadata(args))
+        # Stack every repeated coordinate using the same pure schema helper, no transition.
+        shape_checks = []
+        for size in (128, 256, 512):
+            first = scale.base.batch.stack_lanes(expanded[:size])
+            other = scale.base.stack_second(expanded[:size], others[:size])
+            count = 0
+            for arguments, source_arguments in ((first, [lane.arguments for lane in expanded[:size]]), (other, others[:size])):
+                for group_index, group in enumerate(arguments):
+                    if group_index == 2:
+                        continue  # Declared shared static group remains unbatched.
+                    leaves = scale.jax.tree_util.tree_leaves(group)
+                    sources = [scale.jax.tree_util.tree_leaves(source[group_index]) for source in source_arguments]
+                    for leaf_index, leaf in enumerate(leaves):
+                        if scale.np.asarray(leaf).shape[0] != size:
+                            raise ValueError(f"capacity dynamic leaf leading shape mismatch: B{size}")
+                        for index in range(size):
+                            original = scale.np.asarray(sources[index][leaf_index])
+                            stacked = scale.np.asarray(leaf)[index]
+                            if (stacked.shape != original.shape or stacked.dtype != original.dtype
+                                    or stacked.tobytes(order="C") != original.tobytes(order="C")):
+                                raise ValueError(f"capacity native input byte identity changed: B{size}/lane{index}")
+                        count += 1
+            shape_checks.append({"batch_shape": size, "chunks_for_fixed512": 512 // size,
+                "dynamic_leaves_checked": count, "every_stacked_lane_native_byte_identity_verified": True,
+                "resident_512_input_bytes": scale.tree_bytes((first, other)) * (512 // size),
+                "full_512_output_bytes": scale.tree_bytes(reference) * 8,
+                "estimated_device_bytes": memory_estimate(size, scale.tree_bytes((first, other)) * (512 // size),
+                    scale.tree_bytes(reference) * 8, {64: analysis}),
+                "required_GPU_slack_bytes": 2 * 1024**3,
+                "estimated_host_required_bytes": analysis["old_benchmark_peak_RSS_bytes"] * size // 64 + 8 * 1024**3,
+                "memory_projection_scope": "scaled old actual compiler/RSS planning only; no selected GPU memory queried"})
+        print(json.dumps({"status": "input_identity_shape_admitted", "model_execution": False, "compiled": False,
+            "source_audit": screen, "total_lanes": len(expanded), "second_blocks": len(others), "lane_origins": origins,
+            "capacity_shape_checks": shape_checks,
+            "source_identity": source_identity, "FULL64_reference_origin": reference_origin,
+            "B64_memory_origin": {"directory": str(args.memory_baseline_dir),
+                "declared_checkpoint_sha256": old_record["sha256"], "actual_old_analysis": analysis},
+            "unique_real_points": UNIQUE_POINTS, "lane_days": 7168, "unique_point_days": 896}))
+        return 0
+    resources = json.loads(os.environ["ORCHJAX_SERVER_RESOURCE_PLAN"])
+    if resources["allocated_CPU_request_count"] != 4:
+        raise ValueError("exact four auxiliary Slurm CPUs required")
+    if (scale.jax.__version__ != "0.4.38" or len(scale.jax.devices()) != 1 or scale.jax.devices()[0].platform != "gpu"
+            or "V100" not in scale.jax.devices()[0].device_kind):
+        raise ValueError("accepted canonical JAX0.4.38 single-GPU runtime required")
+    from scripts.dev.probe_global_batch_cache import configure_cache
+    configure_cache("off", None)
+    recorder = scale.base.Recorder(args.output_dir)
+    recorder.result.update(environment=scale.base.metadata(args), server_resources=resources)
+    previous = {}
+    def stopped(number, frame):
+        raise InterruptedError(f"signal{number}; completed capacity snapshots retained")
+    for number in (signal.SIGINT, signal.SIGTERM):
+        previous[number] = signal.signal(number, stopped)
+    code = 0
+    try:
+        available = next(int(line.split()[1]) * 1024 for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemAvailable:"))
+        if available < 24 * 1024**3:
+            raise MemoryError("at least24GiB host MemAvailable required")
+        recorder.result["host_MemAvailable_bytes_at_start"] = available
+        lanes, second = scale.read_prepared(args.prepared_input, args.config)
+        benchmark(args, recorder, lanes, second, scale)
+        recorder.result["status"] = "completed_exploratory_capacity_screen"
+    except (InterruptedError, KeyboardInterrupt) as exc:
+        code = 2
+        recorder.result.update(status="stopped", message=str(exc))
+    except Exception as exc:
+        code = 1
+        recorder.result.update(status="failed", message=str(exc), traceback=traceback.format_exc())
+    finally:
+        recorder.stop.set()
+        start_epoch = float(os.environ.get("ORCHJAX_GPU_WINDOW_START_EPOCH", time.time()))
+        recorder.result["observed_window_wall_seconds"] = time.time() - start_epoch
+        recorder.result["whole_job_accounting"] = "external scheduler terminal accounting required; never divide whole job by one lane-day denominator"
+        recorder.flush()
+        for number, handler in previous.items():
+            signal.signal(number, handler)
+    return code
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

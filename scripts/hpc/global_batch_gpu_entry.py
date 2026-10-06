@@ -17,7 +17,8 @@ def main() -> None:
     os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START"] = str(time.perf_counter())
     candidate_first = "--execution-order=candidate-first" in sys.argv or any(
         left == "--execution-order" and right == "candidate-first" for left, right in zip(sys.argv, sys.argv[1:]))
-    if candidate_first:
+    capacity = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY") == "benchmark_global_gpu_capacity.py"
+    if candidate_first or capacity:
         import json
 
         sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -44,13 +45,13 @@ def main() -> None:
     if len(devices) != 1 or any(device.platform != "gpu" for device in devices):
         raise RuntimeError(f"diagnostic requires exactly one GPU: {devices}")
     jax.config.update("jax_enable_x64", True)
-    if candidate_first:
+    if candidate_first or capacity:
         from scripts.dev.global_server_resources import thread_affinity
 
         resources["thread_affinity_after_backend"] = thread_affinity(resources["original_affinity"])
         os.environ["ORCHJAX_SERVER_RESOURCE_PLAN"] = json.dumps(resources)
     entry = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY", "benchmark_global_batch.py")
-    if entry not in {"benchmark_global_batch.py", "benchmark_global_scale.py", "probe_global_batch_cache.py"}:
+    if entry not in {"benchmark_global_batch.py", "benchmark_global_scale.py", "benchmark_global_gpu_capacity.py", "probe_global_batch_cache.py"}:
         raise ValueError(f"unsupported diagnostic entry: {entry}")
     runpy.run_path(
         str(Path(__file__).resolve().parents[1] / "dev" / entry),
