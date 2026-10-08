@@ -1,0 +1,31 @@
+{
+  "status": "collector_prepared_before_paid_approval",
+  "tests": {
+    "command": "conda run -n ORCJAX python -m pytest outputs/research/global_throughput/gpu-metadata-repair-20261008/test_collect_b512_result.py -q -p no:cacheprovider",
+    "passed": 41,
+    "failed": 0
+  },
+  "ruff": "passed for collect_b512_result.py and test_collect_b512_result.py",
+  "actual_historical_origin_verification": "b512-collector-origin-verification.json: both sealed B128/B256 revalidated with current production science API and new collector",
+  "independent_read_only_review": "passed; no blocking finding",
+  "execution_checkout_sha": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+  "pinned_deployed_actual_source_sha": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+  "approved_job_id": null,
+  "new_B512_measurement": false,
+  "code_checkout_admission": "exact executed HEAD plus mandatory clean git status before importing execution modules",
+  "collector_cache_policy": "sys.dont_write_bytecode enabled before loading prior read-only helper modules; no cleanup performed",
+  "submitted_jobs": 0,
+  "limitation": "The full collector cannot be executed against a new B512 result before an approved terminal job and actual checkpoint exist.",
+  "local_worker_remote_compute": false,
+  "canonical_stdlib_interface": {
+    "status": "passed",
+    "receipt": "collector-interface-receipt.json",
+    "failed_first_attempt": "collector-interface-first-attempt.json",
+    "outer_wall_seconds": 2.9559588,
+    "total_conservative_canonical_wall_seconds": 367.0582004,
+    "raw_collector_sha256": "36e8971fd94f9883c579d1fedb4c155f27298db595742b5aae2bcb347b6a6926",
+    "JAX_imported": false,
+    "model_execution": false,
+    "saved_origin_arrays_reread": false
+  }
+}

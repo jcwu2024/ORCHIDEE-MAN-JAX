@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "expected_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+  "CPU_affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "exit_code": 0,
+  "command": [
+    "bash",
+    "-s",
+    "--",
+    "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfers/gpu-metadata-ad6c0e1/global-throughput-gpu-metadata-v1.bundle",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3"
+  ],
+  "stdout": "Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1'...\ndone.\nThe bundle contains this ref:\nad6c0e1faa7e22b590627844e9cb0ad492e9deb3 HEAD\nThe bundle requires this ref:\n12b495b9425de3ad1dc16efa3a5a0e69d7e89222 \ndeployed_new_immutable_checkout=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1 code_sha=ad6c0e1faa7e22b590627844e9cb0ad492e9deb3\n",
+  "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfers/gpu-metadata-ad6c0e1/global-throughput-gpu-metadata-v1.bundle is okay\nFrom /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfers/gpu-metadata-ad6c0e1/global-throughput-gpu-metadata-v1.bundle\n * branch            HEAD       -> FETCH_HEAD\nNote: checking out 'ad6c0e1faa7e22b590627844e9cb0ad492e9deb3'.\n\nYou are in 'detached HEAD' state. You can look around, make experimental\nchanges and commit them, and you can discard any commits you make in this\nstate without impacting any branches by performing another checkout.\n\nIf you want to create a new branch to retain commits you create, you may\ndo so (now or later) by using -b with the checkout command again. Example:\n\n  git checkout -b new_branch_name\n\nHEAD is now at ad6c0e1... Fix cached PFT tracer across batch stages and prepare B512-only run\n",
+  "outer_wall_seconds": 2.9344607908278704,
+  "new_paid_jobs": 0
+}

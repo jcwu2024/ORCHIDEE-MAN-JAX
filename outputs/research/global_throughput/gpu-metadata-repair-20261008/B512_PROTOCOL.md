@@ -38,6 +38,20 @@ presented through two unchanged hard links in `sealed-b128-origin-view`; no
 second checkpoint data copy was created. The current GPU runtime and revised
 B512 executable still require their separately planned bounded validation.
 
+The immutable metadata-v1 checkout is now deployed at accepted SHA
+`ad6c0e1faa7e22b590627844e9cb0ad492e9deb3`, clean before/after all 9 declared
+checkout interface checks. Actual CLI help/B512 dry-run, both Bash syntax checks
+and direct/copied-spool wrapper expansion pass; direct and spool commands agree.
+JAX was not imported and no model preparation, lowering, compilation, invocation
+or GPU initialization occurred. See [deployment](deployment-receipt.json) and
+[interface receipt](deployment-interface-receipt.json). Its actual Linux source
+SHA is `b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8`,
+with active exact certificate and canonical baseline `11b6db89...`.
+Total conservative canonical wall is 367.0582004s within the 600s cap. These
+interfaces supersede the earlier streamed old-ROOT preparation; real CPU
+before/after lowering, local 103 tests, and unresolved GPU execution retain
+their separate evidence scopes. Paid approval/submission remains pending.
+
 The exact source compatibility certificate distinguishes the full actual source
 hash from the normalized baseline science identity. It admits only the approved
 byte-pinned immutable PFT-mask execution helper repair; every other scientific
@@ -62,6 +76,6 @@ cost envelopes are 1.80 CNY primary and 1.86 CNY conservative. These are proposa
 estimates, not scheduler billing. The node must be selected explicitly using a
 fresh node occupancy and CPU-load snapshot before submission. A bounded login/
 test-node metadata or launcher dry-run does not reserve the paid GPU node.
-Root's 2026-10-08 10:24 UTC snapshot nominates `ibc13b02n02`: MIXED,
-CPUAlloc 8/112, CPULoad 1.81 and 6/8 GPUs free. This is a candidate snapshot,
+Root's 2026-10-08 11:21:20 UTC snapshot nominates `ibc13b03n02`: MIXED,
+CPUAlloc 34/112, CPULoad 3.07 and 7/8 GPUs free. This is a candidate snapshot,
 not a reservation or permission to submit; refresh it before paid approval.

@@ -1,0 +1,59 @@
+{
+  "status": "actual_historical_origins_revalidated",
+  "model_execution": false,
+  "compiled": false,
+  "current_reader_source_identity": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "99ea5f7522b498d0e637802994d44f449f1b26f935c6e137cdac67e27349fc45",
+    "execution_source_compatibility": {
+      "active": true,
+      "contract": "exact-DIFFUCO-host-mask-cache-repair-v1",
+      "source_path": "jax_orchidee/sechiba/diffuco.py",
+      "original_file_sha256": "04fc1193e85d2deca0f97cc06008989053ccaf956db3dc9552dd6b9cc2549d22",
+      "actual_file_sha256": "42073dd14f427db8ed78803c90cd5a64b677bf822d1edf6b6fbed7aa97166a14",
+      "baseline_full_source_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "baseline_checkout_bytes_sha256": "4151db252c62cf24899300c7cb2eac783405888fce1384030332d4622aa2c196",
+      "baseline_checkout_representation": "exact audited Windows checkout source bytes",
+      "actual_full_source_sha256": "99ea5f7522b498d0e637802994d44f449f1b26f935c6e137cdac67e27349fc45",
+      "compatibility_scope": "exact helper-only immutable host Boolean mask; all other source bytes unchanged",
+      "claim": "audited execution-only equivalence; source bytes differ"
+    }
+  },
+  "declared_future_execution_identity_pin": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "execution_source_compatibility": {
+      "active": true,
+      "contract": "exact-DIFFUCO-host-mask-cache-repair-v1",
+      "source_path": "jax_orchidee/sechiba/diffuco.py",
+      "original_file_sha256": "04fc1193e85d2deca0f97cc06008989053ccaf956db3dc9552dd6b9cc2549d22",
+      "actual_file_sha256": "42073dd14f427db8ed78803c90cd5a64b677bf822d1edf6b6fbed7aa97166a14",
+      "baseline_full_source_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "baseline_checkout_bytes_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "baseline_checkout_representation": "canonical Linux LF source bytes",
+      "actual_full_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+      "compatibility_scope": "exact helper-only immutable host Boolean mask; all other source bytes unchanged",
+      "claim": "audited execution-only equivalence; source bytes differ"
+    }
+  },
+  "historical_origins": {
+    "128": {
+      "sha256": "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5",
+      "bytes": 220429366,
+      "source_stage": "capacity_B128_fixed512_v1",
+      "role": "imported historical baseline; no new B128 measurement, executable, or destination stage",
+      "original_code": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+      "original_job": "15600405"
+    },
+    "256": {
+      "sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+      "bytes": 220429675,
+      "source_stage": "capacity_B256_fixed512_v1",
+      "role": "imported historical baseline; no new B256 measurement, executable, or destination stage",
+      "original_code": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+      "original_job": "15643868"
+    }
+  },
+  "new_B512_measurement": false,
+  "limitation": "producer Linux SHA remains a declared exact pin; local Windows reader SHA is separately preserved. No B512 result exists."
+}

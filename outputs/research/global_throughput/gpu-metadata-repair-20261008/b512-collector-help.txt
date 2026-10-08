@@ -1,0 +1,35 @@
+usage: collect_b512_result.py [-h] --code-dir CODE_DIR --stage-dir STAGE_DIR
+                              --admission ADMISSION --sacct-file SACCT_FILE
+                              --b128-baseline-dir B128_BASELINE_DIR
+                              --b256-baseline-dir B256_BASELINE_DIR --output
+                              OUTPUT --job-id JOB_ID --job-name JOB_NAME
+                              --node NODE --gpu-uuid GPU_UUID
+                              --slurm-global-gpu-id SLURM_GLOBAL_GPU_ID
+                              --driver-version DRIVER_VERSION --approved-cpus
+                              {4} --approved-gpus {1} --approved-wall-seconds
+                              {2700} --approved-nodes {1} --approved-tasks {1}
+
+Read-only B512 saved-result collector; approved job/allocation are mandatory
+inputs.
+
+options:
+  -h, --help            show this help message and exit
+  --code-dir CODE_DIR
+  --stage-dir STAGE_DIR
+  --admission ADMISSION
+  --sacct-file SACCT_FILE
+  --b128-baseline-dir B128_BASELINE_DIR
+  --b256-baseline-dir B256_BASELINE_DIR
+  --output OUTPUT
+  --job-id JOB_ID
+  --job-name JOB_NAME
+  --node NODE
+  --gpu-uuid GPU_UUID
+  --slurm-global-gpu-id SLURM_GLOBAL_GPU_ID
+  --driver-version DRIVER_VERSION
+  --approved-cpus {4}
+  --approved-gpus {1}
+  --approved-wall-seconds {2700}
+  --approved-nodes {1}
+  --approved-tasks {1}
+

@@ -1,5 +1,5 @@
 {
-  "status": "implementation_accepted_immutable_deployment_and_B512_proposal_pending",
+  "status": "ordinary_repair_preparation_complete; separate_B512_paid_approval_pending; not_submitted",
   "date": "2026-10-08",
   "worktree": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
   "starting_commit": "8b7732a",
@@ -23,17 +23,45 @@
     "causal_windows_outer_wall_conservative_seconds": 351.1660958,
     "canonical_interface_probe_outer_wall_seconds": 2.362419,
     "total_outer_wall_conservative_seconds_before_deployment": 353.5285148,
+    "immutable_deployment_SSH_inclusive_wall_seconds": 7.7522311,
+    "deployed_interface_SSH_inclusive_wall_seconds": 2.8214957,
+    "final_total_outer_wall_conservative_seconds": 367.0582004,
+    "final_remaining_wall_seconds": 232.9417996,
+    "final_wall_accounting": "prior diagnostics plus both deployment/interface SSH windows and both collector SSH windows; do not add nested remote process walls",
     "remaining_wall_seconds_before_final_small_checks": 246.4714852,
-    "evidence": "causal-evidence-summary.json"
+    "evidence": "causal-evidence-summary.json",
+    "collector_first_probe_SSH_inclusive_wall_seconds": 1.2979129,
+    "collector_final_probe_SSH_inclusive_wall_seconds": 1.6580459
   },
   "causal_repair_acceptance": {
     "root_actual_artifacts_reviewed": true,
     "independent_mask_and_causal_evidence_review_passed": true,
     "root_cause": "Python lru_cache retained a JAX DynamicJaxprTracer bool[14] mask from the first trace; subsequent tracing lifted 137 constants",
     "patch": "cache the same integer-equality mask as a read-only NumPy Boolean array",
-    "before_public_internal": [[536, 536], [536, 673]],
-    "after_public_internal": [[536, 536], [536, 536]],
-    "stage_order": [256, 512],
+    "before_public_internal": [
+      [
+        536,
+        536
+      ],
+      [
+        536,
+        673
+      ]
+    ],
+    "after_public_internal": [
+      [
+        536,
+        536
+      ],
+      [
+        536,
+        536
+      ]
+    ],
+    "stage_order": [
+      256,
+      512
+    ],
     "earlier_stage_metadata_unchanged_after_next": true,
     "canonical_tiny_five_outputs_exact_numpy_equality": true,
     "real_model_compilation": false,
@@ -44,7 +72,11 @@
   },
   "implementation_acceptance": {
     "local_tests_passed": 103,
-    "test_scope": {"mask_cache": 14, "capacity": 56, "batch": 33},
+    "test_scope": {
+      "mask_cache": 14,
+      "capacity": 56,
+      "batch": 33
+    },
     "changed_benchmark_helper_and_tests_Ruff": "passed",
     "diff_check": "passed",
     "unrelated_existing_diffuco_Ruff_import_errors": 9,
@@ -58,20 +90,95 @@
     "original_files_audited": 104,
     "exact_Git_blobs": 103,
     "exact_LF_to_CRLF_representation": 1,
-    "evidence": ["checkout-byte-audit.json", "b512-baseline-admission.json", "b512-protocol-checks.json"]
+    "evidence": [
+      "checkout-byte-audit.json",
+      "b512-baseline-admission.json",
+      "b512-protocol-checks.json"
+    ],
+    "additional_collector_tests_passed": 41
   },
   "paid_proposal": {
-    "status": "preparing_concrete_proposal; not_submitted",
-    "resources": {"partition": "gnall", "nodes": 1, "tasks": 1, "allocated_Slurm_CPUs": 4, "V100_GPUs": 1},
+    "status": "execution_and_result_collection_preparation_validated; separate_paid_approval_pending; not_submitted",
+    "resources": {
+      "partition": "gnall",
+      "nodes": 1,
+      "tasks": 1,
+      "allocated_Slurm_CPUs": 4,
+      "V100_GPUs": 1
+    },
     "hard_wall_minutes": 45,
     "primary_additive_CNY": 1.8,
     "conservative_additive_CNY": 1.86,
     "billing_verified": false,
     "old_budget_reuse": false,
-    "stages_to_measure": [512],
-    "imported_only_no_compile_or_measure": [128, 256],
+    "stages_to_measure": [
+      512
+    ],
+    "imported_only_no_compile_or_measure": [
+      128,
+      256
+    ],
     "new_automation": false,
-    "new_paid_jobs_submitted": 0
+    "new_paid_jobs_submitted": 0,
+    "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+    "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
+    "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "run_root_template": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-${SLURM_JOB_ID}",
+    "exact_command_document": "B512_PAID_PROPOSAL.md",
+    "submission_endpoint": "gln01 via the working login endpoint and existing SSH identity",
+    "refresh_node_occupancy_before_approved_submission": true,
+    "selected_node": "ibc13b03n02"
+  },
+  "immutable_deployment": {
+    "status": "passed",
+    "method": "independent clone --no-hardlinks --no-checkout of immutable v3; bundle verify/fetch and detached checkout only in the new repository",
+    "remote_git_version": "1.8.3.1",
+    "expected_and_actual_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "actual_Linux_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "canonical_science_baseline_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "source_compatibility_certificate_active": true,
+    "clean_before_and_after_checks": true,
+    "actual_declared_checkout_interface_checks_passed": 9,
+    "direct_and_copied_Slurm_spool_expansion_equal": true,
+    "JAX_imported": false,
+    "model_preparation_lower_compile_execution": false,
+    "GPU_initialization": false,
+    "unchanged_CUDA_entry_actual_runtime": "pending separately approved GPU job",
+    "evidence": [
+      "deployment-receipt.json",
+      "deployment-interface-receipt.json",
+      "verify_deployed_interface.py"
+    ]
+  },
+  "result_collection_preparation": {
+    "status": "accepted_before_separate_paid_approval",
+    "previous_collector_limitation": "old job15643868/code12b495/continuation contract collector preserved as hash-pinned read-only validation dependency",
+    "execution_checkout_changes_required": false,
+    "new_collector_path": "collect_b512_result.py",
+    "remote_external_collector_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-metadata-repair-20261008/collect_b512_result.py",
+    "deployed_collector_raw_sha256": "36e8971fd94f9883c579d1fedb4c155f27298db595742b5aae2bcb347b6a6926",
+    "lightweight_tests_passed": 41,
+    "changed_collector_Ruff": "passed",
+    "independent_review": "accepted including raw9/empty-stage handling and final code-cleanliness/bytecode integrity fixes",
+    "actual_local_sealed_B128_B256_origins_revalidated": true,
+    "exact_deployed_commit_clean_checkout_and_source_certificate_required": true,
+    "eventual_approved_job_id_node_gpu_identity_and_actual_parent_raw9_sacct_required": true,
+    "parent_cost_counted_once": true,
+    "only_new_B512_stage_can_be_accepted": true,
+    "denied_incomplete_or_tolerance_failed_stage_throughput_withheld": true,
+    "full_native_schema_fixed_tolerances_full_reference_and_five_core_plus_five_wrapper_samples_required": true,
+    "terminal_job_collection_exercised": false,
+    "canonical_interface_source_dependency_probe": "passed; no JAX import or model work; no saved-origin arrays reread",
+    "missing_remote_dependency_resolved": "exact existing helper copied only to confirmed-absent path; other existing helper verified unchanged",
+    "new_B512_measured_evidence_available": false,
+    "scientific_model_rerun_for_collector_preparation": false,
+    "evidence": [
+      "b512-collector-checks.json",
+      "b512-collector-origin-verification.json",
+      "collector-interface-first-attempt.json",
+      "collector-interface-receipt.json",
+      "build_collector_interface_probe.py"
+    ]
   },
   "accepted_results_preserved": {
     "B128_job": "15600405",
@@ -95,24 +202,27 @@
     "evidence": "proposal-node-snapshot.txt"
   },
   "current_occupancy": {
-    "observed_UTC": "2026-10-08T10:24:07Z",
-    "candidate": "ibc13b02n02",
+    "observed_UTC": "2026-10-08T11:21:20Z",
+    "candidate": "ibc13b03n02",
     "state": "MIXED",
-    "CPUAlloc": 8,
+    "CPUAlloc": 34,
     "CPUTot": 112,
-    "load": 1.81,
-    "FreeMem_MiB": 356462,
-    "allocated_GPUs": 2,
+    "load": 3.07,
+    "FreeMem_MiB": 323680,
+    "allocated_GPUs": 1,
     "configured_GPUs": 8,
     "idle_eligible_nodes": 0,
     "reserved": false,
-    "evidence": "proposal-node-snapshot-final.txt"
+    "evidence": "proposal-node-snapshot-approval.txt",
+    "changed_from_prior_candidate": "ibc13b02n02",
+    "selection_reason": "lowest CPU allocation and load among currently eligible non-draining nodes with spare GPU capacity"
   },
   "connection": {
     "VPN_confirmed_by_user": true,
     "initial_both_endpoints_timeout": true,
     "fresh_both_normal_SSH_authentication_passed": true,
     "preferred_current_endpoint": "192.168.11.2",
-    "hostkey_checks_retained": true
+    "hostkey_checks_retained": true,
+    "final_endpoint_probe": ".1 hostname and .2 scheduler reads passed with existing identity and normal host-key verification"
   }
 }

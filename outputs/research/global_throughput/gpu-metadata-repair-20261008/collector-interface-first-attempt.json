@@ -1,0 +1,12 @@
+{
+  "status": "missing_dependency_before_execution_imports",
+  "outer_ssh_inclusive_wall_seconds": 1.2979129,
+  "missing_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/collect_continuation_result.py",
+  "exception": "FileNotFoundError while reading the SHA-pinned prior collector",
+  "new_external_collector_written": true,
+  "historical_tools_overwritten": false,
+  "JAX_imported": false,
+  "model_execution": false,
+  "runner_checkout_modified": false,
+  "repair_authorization": "Root explicitly permits exact existing helper bytes to confirmed-absent documented dependency paths; existing historical files must never be overwritten."
+}
