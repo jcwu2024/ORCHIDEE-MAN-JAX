@@ -1,12 +1,12 @@
 {
-  "status": "ordinary_repair_preparation_complete; separate_B512_paid_approval_pending; not_submitted",
+  "status": "separate_B512_paid_approved_and_submitted; job15657822_pending_priority",
   "date": "2026-10-08",
   "worktree": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
   "starting_commit": "8b7732a",
   "authorization": {
     "ordinary_repair_and_preparation": true,
     "user_instruction": "Locate and fix B512 lower public536/internal673 mismatch; bounded lightweight verification and B512-only proposal; no new paid approval",
-    "paid_job_submission": false,
+    "paid_job_submission": true,
     "paid_budget_reuse": false,
     "new_automation": false
   },
@@ -98,7 +98,7 @@
     "additional_collector_tests_passed": 41
   },
   "paid_proposal": {
-    "status": "execution_and_result_collection_preparation_validated; separate_paid_approval_pending; not_submitted",
+    "status": "approved_and_submitted; PENDING Priority",
     "resources": {
       "partition": "gnall",
       "nodes": 1,
@@ -119,7 +119,7 @@
       256
     ],
     "new_automation": false,
-    "new_paid_jobs_submitted": 0,
+    "new_paid_jobs_submitted": 1,
     "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
     "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
     "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
@@ -127,7 +127,59 @@
     "exact_command_document": "B512_PAID_PROPOSAL.md",
     "submission_endpoint": "gln01 via the working login endpoint and existing SSH identity",
     "refresh_node_occupancy_before_approved_submission": true,
-    "selected_node": "ibc13b03n02"
+    "selected_node": "ibc13b03n02",
+    "approval": {
+      "user_text": "批准。",
+      "scope": "one B512-only attempt per presented exact proposal; gnall node1/task1 CPU4/V1001 2700s, main1.80/conservative1.86 CNY; no retry or old-budget reuse",
+      "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+      "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "node": "ibc13b03n02"
+    },
+    "submission_snapshot": {
+      "observed_cluster_UTC": "2026-10-08T12:48:06Z",
+      "node": "ibc13b03n02",
+      "state": "ALLOCATED",
+      "CPUAlloc": 112,
+      "CPUTot": 112,
+      "CPULoad": 22.74,
+      "allocated_GPUs": 1,
+      "configured_GPUs": 8,
+      "scheduling": "wait for allocated CPU capacity on the approved node; queue time is not consumed allocation wall",
+      "evidence": "submission-node-snapshot.txt"
+    },
+    "actual_job_id": "15657822",
+    "actual_submission": {
+      "job_id": "15657822",
+      "state": "PENDING",
+      "reason": "Priority",
+      "submit_host": "gln01",
+      "login_endpoint": "192.168.11.2",
+      "observed_cluster_UTC": "2026-10-08T12:51:09Z",
+      "scheduler_submit_time": "2026-10-08T20:50:33",
+      "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "code_clean_before_submission": true,
+      "nodes": 1,
+      "tasks": 1,
+      "requested_Slurm_CPUs": 4,
+      "requested_GPUs": 1,
+      "requested_node": "ibc13b03n02",
+      "hard_wall_seconds": 2700,
+      "requeue": false,
+      "automatic_retry_authorized": false,
+      "consumed_running_wall_seconds": 0,
+      "current_charge_estimate_CNY": 0,
+      "charge_basis": "pending queue is not consumed allocation wall; actual terminal parent accounting required",
+      "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+      "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822",
+      "stage_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity",
+      "log": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt",
+      "idempotent_remote_receipt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-metadata-repair-20261008/b512-approved-submission.txt",
+      "evidence": [
+        "submission-receipt.txt",
+        "job-15657822-initial-status.txt",
+        "submission-node-snapshot.txt"
+      ]
+    }
   },
   "immutable_deployment": {
     "status": "passed",

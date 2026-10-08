@@ -21,8 +21,8 @@ memory. A denied B512-only run reports failure, with no successful B512 claim.
 
 `scripts/hpc/slurm_global_gpu_capacity_512.sh` declares one GPU, four auxiliary
 CPUs and 45 minutes. It resolves the shared launcher through declared `CODE_DIR`
-even after Slurm copies the wrapper to its spool. No job was submitted by this
-protocol task. Actual allocated GPU identity admission and selected-card
+even after Slurm copies the wrapper to its spool. After separate explicit approval,
+job15657822 was submitted exactly once from gln01 through192.168.11.2. Actual allocated GPU identity admission and selected-card
 diagnostics remain shared with the existing launcher.
 
 Local ORCJAX validation: 56 capacity tests passed. Tests exercise sealed-B256
@@ -50,7 +50,9 @@ with active exact certificate and canonical baseline `11b6db89...`.
 Total conservative canonical wall is 367.0582004s within the 600s cap. These
 interfaces supersede the earlier streamed old-ROOT preparation; real CPU
 before/after lowering, local 103 tests, and unresolved GPU execution retain
-their separate evidence scopes. Paid approval/submission remains pending.
+their separate evidence scopes. Paid approval and submission are recorded in
+[submission receipt](submission-receipt.txt); the [initial status](job-15657822-initial-status.txt)
+at2026-10-08 12:51:09UTC is PENDING (Priority), with no B512 timing. Queue time is unbilled.
 
 The exact source compatibility certificate distinguishes the full actual source
 hash from the normalized baseline science identity. It admits only the approved
@@ -68,14 +70,19 @@ altered aggregate from any other source file fail admission. Reverification with
 the current production `scientific_source_digest()` API admits both sealed
 origins and confirms its canonical science SHA matches their original identity.
 
-The concrete proposed allocation is one V100, four auxiliary CPUs and 45 minutes
+The separately approved and submitted allocation is one node, one task, one V100, four auxiliary CPUs and 45 minutes
 in `gnall`, with the immutable declared checkout and a new output directory.
 Worst-case GPU card-hours are 0.75 and auxiliary CPU-hours are 3.0. At the current
 planning prices of 2.2 CNY/GPU-hour and 0.05/0.07 CNY/CPU-hour, the full-window
-cost envelopes are 1.80 CNY primary and 1.86 CNY conservative. These are proposal
-estimates, not scheduler billing. The node must be selected explicitly using a
-fresh node occupancy and CPU-load snapshot before submission. A bounded login/
-test-node metadata or launcher dry-run does not reserve the paid GPU node.
-Root's 2026-10-08 11:21:20 UTC snapshot nominates `ibc13b03n02`: MIXED,
-CPUAlloc 34/112, CPULoad 3.07 and 7/8 GPUs free. This is a candidate snapshot,
-not a reservation or permission to submit; refresh it before paid approval.
+cost envelopes are 1.80 CNY primary and 1.86 CNY conservative. These are full-window
+estimates, not scheduler billing or consumed wall time. Job15657822 has no requeue;
+no automatic retry is authorized. ReqNodeList is `ibc13b03n02`. The actual
+2026-10-08 12:48:06UTC [submission snapshot](submission-node-snapshot.txt) records
+CPUAlloc112/112, CPULoad22.74 and1/8 GPUs allocated; no idle eligible gnall node
+was observed. The earlier11:21 proposal snapshot is historical. Neither snapshot
+reserves the node or implies whole-node exclusivity. Actual node/CPU affinity/load
+and visible GPU processes remain startup evidence to collect.
+
+Actual capacity destination is
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity`;
+actual log is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt`.

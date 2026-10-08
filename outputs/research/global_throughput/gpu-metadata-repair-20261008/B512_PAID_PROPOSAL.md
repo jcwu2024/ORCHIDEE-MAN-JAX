@@ -1,6 +1,6 @@
-# Separate paid proposal: B512 only, approval pending
+# Separate paid allocation: B512 only, approved and submitted
 
-Status: concrete immutable deployment and interface checks passed; **not approved or submitted**. Accepted deployed code SHA is `ad6c0e1faa7e22b590627844e9cb0ad492e9deb3`; the checkout is clean before/after all 9 actual declared-checkout checks. See [deployment receipt](deployment-receipt.json) and [CLI/Bash/spool receipt](deployment-interface-receipt.json). Direct and spool expansion agree, JAX was not imported, and no model preparation/lowering/compilation/invocation or GPU initialization occurred. This is a new allocation and additive cost envelope; previous paid approvals are consumed.
+Status: **explicitly approved and submitted exactly once**, job15657822, from gln01 through login endpoint192.168.11.2. The [submission receipt](submission-receipt.txt) and [initial status](job-15657822-initial-status.txt) record PENDING (Priority) at2026-10-08 12:51:09UTC, with ReqNodeList=ibc13b03n02. Queue time is unbilled; no B512 timing or GPU execution acceptance exists yet. Accepted deployed code SHA is `ad6c0e1faa7e22b590627844e9cb0ad492e9deb3`; the checkout is clean before/after all 9 actual declared-checkout checks. See [deployment receipt](deployment-receipt.json) and [CLI/Bash/spool receipt](deployment-interface-receipt.json). Direct and spool expansion agree, JAX was not imported, and no model preparation/lowering/compilation/invocation or GPU initialization occurred in those interface checks. This is a new allocation and additive cost envelope; previous paid approvals are consumed.
 
 Deployed Linux actual full-source SHA is `b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8`, with active exact execution-only cache certificate and admitted baseline science SHA `11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5`. Native-output equivalence and canonical real lowering evidence remain the bounded checks described in [current result](CURRENT_RESULT.md); the unchanged CUDA entry and revised real GPU executable are still runtime-pending.
 
@@ -8,16 +8,18 @@ Resources: Explore1000 `gnall`,1 node,1 task,4 auxiliary CPUs,1 V100,45-minute h
 
 Exact scheduler working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
 New immutable `CODE_DIR`: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1`.
-New run-root template: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-${SLURM_JOB_ID}`. It must not already exist at launch.
+Actual run root: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822`. The launcher rejects an existing run root at launch.
+Actual capacity destination: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity`.
+Actual scheduler log: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt`.
 
-Proposed submission command, **for approval only**:
+Recorded approved submission command, **already executed once; no automatic retry**:
 
 ```bash
 cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 /rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n02 --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX --export=ALL,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1/scripts/hpc/slurm_global_gpu_capacity_512.sh
 ```
 
-`ibc13b03n02` is only the provisional 2026-10-08 11:21:20UTC [snapshot candidate](proposal-node-snapshot-approval.txt): MIXED, CPUAlloc34/112, CPULoad3.07, FreeMem323680MiB, 7/8 GPUs unallocated. The prior10:24 candidate `ibc13b02n02` now has CPU108/112 and load12.75. No node was idle, and this is not a reservation or whole-node exclusive request. Refresh eligible occupancy/load at separately approved submission; if the selected node changes, state it explicitly. The launcher records actual node, CPU allocation/affinity/load and visible GPU processes at startup.
+The actual 2026-10-08 12:48:06UTC [submission snapshot](submission-node-snapshot.txt) records selected `ibc13b03n02`: ALLOCATED, CPUAlloc112/112, CPULoad22.74, FreeMem321383MiB, 1/8 GPUs allocated. No idle eligible gnall node was observed. The earlier11:21:20UTC [proposal snapshot](proposal-node-snapshot-approval.txt) was provisional and does not describe submission-time occupancy. Neither snapshot reserves the node or requests whole-node exclusivity. The launcher records actual node, CPU allocation/affinity/load and visible GPU processes at startup; this later snapshot does not establish the cause of any past slowdown.
 
 The wrapper resolves the shared helper from `CODE_DIR` even in Slurm spool and expands the actual command through `srun --ntasks=1 --cpus-per-task=4 --cpu-bind=cores`, Singularity CUDA runtime, and the canonical GPU environment. It invokes `global_batch_gpu_entry.py` with `ORCHJAX_GLOBAL_BATCH_ENTRY=benchmark_global_gpu_capacity.py`, `--continue-512`, `--budget-seconds 2700`, five repeats, and these sources:
 
@@ -37,13 +39,13 @@ The read-only [B512 saved-result collector](collect_b512_result.py) is prepared 
 
 The [canonical collector interface receipt](collector-interface-receipt.json) verifies the deployed tool, actual checkout/source certificate, exact legacy dependencies and real CLI help without JAX, model work, GPU initialization or repeated saved-array reads. The [first attempt](collector-interface-first-attempt.json) found an absent prior helper; its exact source bytes were copied only after confirming absence. The existing legacy helper was hash-verified and left unchanged. Both SSH-inclusive attempts total 2.9559588s; cumulative conservative canonical wall is 367.0582004s of 600s. This verifies collection readiness, not a terminal B512 result or paid approval.
 
-After approval and terminal completion, obtain exactly this raw9 parent/step schema (untruncated fields):
+After terminal completion of approved job15657822, obtain exactly this raw9 parent/step schema (untruncated fields):
 
 ```bash
 /rmprog/slurm/v22.05.7/bin/sacct -n -P -j "$APPROVED_JOB_ID" --format=JobIDRaw,JobName%64,Partition%64,State%64,ElapsedRaw,AllocCPUS,AllocTRES%512,NodeList%128,ExitCode > "$SACCT_RAW9"
 ```
 
-The approved JobID/node, observed allocated GPU identity, admission file and terminal accounting file must be supplied; none exists by implication of this proposal. Collection command template, after filling those verified variables:
+Approved JobID is15657822 and requested node is ibc13b03n02. Set `APPROVED_JOB_ID=15657822`, `APPROVED_NODE=ibc13b03n02` and `NEW_B512_STAGE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity` for the template below. Actual allocated node/GPU identity, admission file and terminal accounting still require observed evidence; pending status supplies none of those by implication. Collection command template, after filling the remaining verified variables:
 
 ```bash
 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python \

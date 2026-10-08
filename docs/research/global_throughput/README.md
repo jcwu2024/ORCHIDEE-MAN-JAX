@@ -97,7 +97,7 @@ CPU记录17项固定gate中15项通过、2项有限tolerance差异失败：299.0
 
 CPU-internal reader的首次真实检查曾在record字段一致性层拒绝：checkpoint的`record.execution_origin.environment.loadavg`为tuple `(0.14, 0.06, 0.06)`，manifest JSON为相同值的list。修复只允许该字段tuple/list等价，要求长度3、finite nonnegative且每个元素type/value严格相等；其他证据字段与科学/输入/gate/output校验不放宽。使用分开的patched reader namespace对未改动CPU1 B16 snapshot重新实测，`load_reference`及全部`_validate_cpu_internal`后续检查通过：760 leaves、16 lanes、两块完整边界、5+5样本；CPU checkpoint/manifest/report SHA均未变。该角色仍是`cpu_internal_comparison`，不升级为accepted CPU或科学parity通过，也没有运行CPU4。两项原GPU有限tolerance失败仍失败。见[精确record差异](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/record-differences.json)、[实际reader验证](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/actual-reader-validation.json)和[修复报告](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/REPAIR_REPORT.md)。vmap lane数不等于CPU核数。
 
-### 当前结果：因果修复已验证；仅B512付费方案待审批
+### 当前结果：因果修复已验证；B512作业15657822已获批提交，初态PENDING
 
 v3作业15643868已终态FAILED，B256完整阶段通过并密封，B512在lower后的AOT审计536/673不匹配前停止compile/run。新canonical JAX0.4.38顺序lower诊断自然复现了根因：DIFFUCO的Python缓存保留了前一trace的PFT布尔mask，后续137个常量被整体提升为额外输入。缓存改为只读NumPy布尔mask后，B256与B512均为536/536、保留417输入，先前stage metadata未变；原生五项输出与独立NumPy插入结果完全相同。物理公式、dtype、mask、输出和容差未改；GPU真实编译/调用及计时仍待验证。
 
@@ -105,7 +105,7 @@ v3作业15643868已终态FAILED，B256完整阶段通过并密封，B512在lower
 
 相同7168 lane-days，B256 core中位27.024156772s、prepared-wrapper中位30.468557430s（235.258923 lane-days/s），主/保守wrapper费用CNY2.833757201/2.928215775每百万lane-days；B128 wrapper33.838030240s。旧B128 lazy dispatch与B256 Python-bound路径不同，不能全部归因batch size。当前目标仍为未来点位×成员的单卡wrapper费用/吞吐曲线；669点需要尾批/填充、初始化及IO证据，不是容量上限；年度、Fortran、50年、10×和全局科学一致性未验收。
 
-下一步只提新B512-only窗口：gnall、1node/1task、4CPU+1V100、45分钟，上限CNY1.80主口径/CNY1.86保守口径，旧预算不复用。只导入旧B128/B256 origin并用B256实际compiler memory，不重编译/计时两项基线。新immutable checkout与runroot、命令和最新节点候选见[付费方案](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PAID_PROPOSAL.md)，**部署与接口已通过，待明确付费审批，尚未提交**。当前节点快照只是候选、非预留，提交前刷新。详见[当前结果](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md)、[因果证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CAUSAL_REPAIR.md)及[协议](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md)。不自动重试、requeue、训练、AD或automation；CPU4不是GPU前置。
+用户已明确批准新B512-only窗口，并从gln01经192.168.11.2只提交一次：**作业15657822，初态PENDING，原因Priority（12:51:09UTC）**。资源为gnall、1node/1task、4CPU+1V100、45分钟硬上限、no-requeue，上限CNY1.80主口径/CNY1.86保守口径，旧预算不复用；排队时间不计费，当前没有B512计时。只导入旧B128/B256 origin并用B256实际compiler memory，不重编译/计时两项基线。实际capacity目录为`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity`，日志为`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt`。新immutable checkout、已执行命令与收据见[付费方案](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PAID_PROPOSAL.md)。12:48:06UTC提交快照记录ReqNodeList指定的ibc13b03n02为CPU112/112、load22.74、1/8GPU已分配；没有空闲eligible gnall节点，快照不构成预留或整节点独占。实际启动节点/affinity/load/GPU进程仍需启动证据。详见[当前结果](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md)、[因果证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CAUSAL_REPAIR.md)及[协议](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md)。不自动重试、requeue、训练、AD或automation；CPU4不是GPU前置。
 
 ### 已完成付费轮与单点诊断
 
