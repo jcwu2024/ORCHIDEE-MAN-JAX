@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "code_commit": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+  "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
+  "checkout_clean_after_final_checks": true,
+  "independent_no_hardlinks_clone": true,
+  "shared_object_alternates": false,
+  "old_paid_checkout_commit_unchanged": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+  "bundle_SHA256_local_and_test02": "d2d5edd701765ef7efcc8d4eb3b8cc5579795922e717c54fb3d275d5546288d2",
+  "canonical_actual_module_validation": {
+    "status": "passed", "node": "ibtest02", "jax": "0.4.38", "timeout_seconds": 90,
+    "artifact": "final-module-canonical-diagnostic.jsonl",
+    "imported_repaired_checkout_modules": true,
+    "surrogate_shapes": [128, 256, 512],
+    "sealed_B128_read_and_identity_rejection": "passed",
+    "real_model_compilation_or_execution": false
+  },
+  "target_actual_Bash_expansion_to_Python_dryrun": "passed",
+  "target_dryrun_artifact": "final-launcher-verification.txt",
+  "new_run_root_unused": true,
+  "paid_submission": false,
+  "automation_created_or_resumed": false
+}

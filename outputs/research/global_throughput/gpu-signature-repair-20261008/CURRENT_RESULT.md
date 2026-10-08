@@ -1,0 +1,17 @@
+# B256 signature repair and B256/B512 continuation
+
+Status: interface repair, integration, bounded verification and immutable deployment completed on2026-10-08. The B256/B512 paid continuation awaits new explicit approval. No paid job or monitoring automation was started.
+
+Job15600405's sealed B128 fixed512 measurement remains valid: core median29.617320834s, range29.605399007–29.623860434s,242.020541 lane-days/s; wrapper median33.838030240s, range33.780365391–33.889177628s,211.832661 lane-days/s. Both retain five synchronized complete collections. The original full checkpoint SHA is `e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5`; source evidence remains read-only. See the [terminal result](../gpu-sweetspot-preparation-20261006/CURRENT_RESULT.md).
+
+The old B256 first call failed with `Computation compiled for 673 inputs but called with 536`. Its confirmed failure boundary is JAX's internal AOT input metadata, after the public argument-tree check. A fresh real B256 lowering on canonical CPU JAX0.4.38 completed in123.377s under a180s cap: caller/public/internal signatures all contain536 leaves, with417 retained after pruning. The historical trigger that supplied673 metadata remains unresolved. B256 has no completed GPU output/gates/samples, and B512 was not run.
+
+The defensive repair binds calls to each compiled stage's own parameters and checks public/internal input signatures before and after compilation. It preserves JAX's normal tree, shape/dtype, sharding and tracer checks. No physical source, native dtype, outputs or tolerances changed. Fault injection reproduced the exact673/536 error and the bound call returned identical outputs; this demonstrates the defensive interface, not the historical trigger.
+
+The related local suite passed130 tests, and the final capacity suite passed20. The deployed actual modules at `9d19f0760b93e1186eaf796db4903ddfd16a806f` passed canonical JAX0.4.38 tiny sequential128/256/512 AOT checks, mismatch fault regression, the complete sealed B128 read and rejection of changed science/input identities. Target Bash expansion through Python dry-run passed and selected only256/512 without importing JAX. See [final-module evidence](final-module-canonical-diagnostic.jsonl), [launcher verification](final-launcher-verification.txt), [checks](checks.json), [deployment](deployment-verification.json) and the [repair report](REPAIR_REPORT.md).
+
+The continuation will run only B256/B512 against the unchanged ordered512 lanes (64 real FULL64 points repeated8 times), two complete7-day blocks and five core plus five wrapper collections per admitted shape. B128 is reused with its original timing/provenance; its long compilation is not repeated. Scientific physics, native dtype, full outputs and tolerances remain fixed.
+
+Historical B128 used lazy C++ dispatch; new B256/B512 use bound Python dispatch, whose overhead is included in their measurements. Their complete-collection timings and costs can be compared, but batch size alone cannot explain all differences. The private JAX API is validated for the pinned0.4.38 runtime. Real GPU B256/B512 compilation, execution, full gates and throughput remain unverified; no speedup is claimed from this repair.
+
+The [paid-run review](PAID_RUN_REVIEW.md), [exact command](APPROVAL_COMMAND.sh) and [preparation ledger](preparation-ledger.json) specify one V100 plus4 auxiliary Slurm CPUs for90min, capped atCNY3.60 primary/CNY3.72 conservative. The old budget remains closed. Submission requires new approval.

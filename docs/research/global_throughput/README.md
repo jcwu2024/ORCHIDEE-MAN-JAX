@@ -1,6 +1,6 @@
 # 全球物理模型吞吐研究
 
-更新：2026-10-06。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-08。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 
@@ -97,13 +97,19 @@ CPU记录17项固定gate中15项通过、2项有限tolerance差异失败：299.0
 
 CPU-internal reader的首次真实检查曾在record字段一致性层拒绝：checkpoint的`record.execution_origin.environment.loadavg`为tuple `(0.14, 0.06, 0.06)`，manifest JSON为相同值的list。修复只允许该字段tuple/list等价，要求长度3、finite nonnegative且每个元素type/value严格相等；其他证据字段与科学/输入/gate/output校验不放宽。使用分开的patched reader namespace对未改动CPU1 B16 snapshot重新实测，`load_reference`及全部`_validate_cpu_internal`后续检查通过：760 leaves、16 lanes、两块完整边界、5+5样本；CPU checkpoint/manifest/report SHA均未变。该角色仍是`cpu_internal_comparison`，不升级为accepted CPU或科学parity通过，也没有运行CPU4。两项原GPU有限tolerance失败仍失败。见[精确record差异](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/record-differences.json)、[实际reader验证](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/actual-reader-validation.json)和[修复报告](../../../outputs/research/global_throughput/cpu-reader-repair-20261006/REPAIR_REPORT.md)。vmap lane数不等于CPU核数。
 
-### 当前优先：单卡GPU批大小预筛
+### 当前工作单：修复B256签名错误并准备延续
 
-以单卡B128/B256并视资源情况条件加入B512为当前主线。优先使用已有真实Day1资产；如不足以构成代表性容量筛查，则固定FULL64源64点各重复8 lanes，共512 lanes，比较B128/B256/条件B512对同一512-lane集合与时窗分块的效果，每种5次同步core和wrapper样本。计量使用lane-days（512 lanes×14日=7168 lane-days/样本），不可称作512个不同真实点或有效point-days。历史GPU B64是64点工作量，不直接作为同一512-lane作业基线；完整B64基线仅在预算允许时后置补测。
+当前工作单是准备B256 AOT调用签名的防御性绑定修订，完成免费有界的规范JAX 0.4.38诊断，并准备仅含B256后接B512的延续方案。实测lower-only为123.377秒（180秒上限内）：caller、public tree和内部AllArgsInfo均为536个参数，其中保留417个；未执行完整模型compile或run。小型顺序B128/B256/B512的536-input/417-kept检查通过；独立注入、无关的673-input lazy-binding mismatch复现旧异常，而`Compiled.call`绕过路径输出一致。自然出现的旧触发条件没有复现；调用adapter属于防御性接口绑定修订，不能据此断言历史根因已找到或修好。物理、dtype及容差不变。
+
+旧B128的lazy-call与新B256/B512的Python-bound dispatch不同，故实际collection时间和成本可比较，但速率比不能单独归因于batch size。B128 checkpoint的只读重验核对了原始SHA及bytes、760×512叶、515 gates、5+5样本和provenance；仅对`loadavg`的JSON tuple/list表示作等价处理，科学输入与schema不匹配仍拒绝。最终模块级JAX0.4.38诊断已直接导入不可变部署checkout并通过；GPU B256/B512 collection尚未验证，旧自然触发条件仍未解释。见[修复报告](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/REPAIR_REPORT.md)、[最终模块诊断](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/final-module-canonical-diagnostic.jsonl)、[最终launcher验证](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/final-launcher-verification.txt)及[当前结果](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/CURRENT_RESULT.md)。
+
+修订已部署到独立不可变checkout：`9d19f0760b93e1186eaf796db4903ddfd16a806f`，工作树干净，且与旧`a51efcd` checkout为无hardlink clone、无alternates；旧checkout未变。最终模块诊断记录了实际模块路径、hash和commit。launcher语法及目标Bash参数展开通过，结果为candidate `[256,512]`；dry-run未导入JAX或初始化模型/GPU。复用已密封B128结果作基线，不重编译B128。延续仍使用FULL64源64点各重复8 lanes、两块连续7日、每天48步及每阶段5次同步core/wrapper样本；计量为512 lanes×14日=7168 lane-days/样本，同时单列896 unique-point-days。重复lane只是容量/设备负载证据，不代表512个独立点或科学接受。CPU阶段不是GPU延续的前置。付费延续仍未获批或提交。
 
 GPU批量容量作业15600405在`ibc13b03n04`运行，分配1张V100和4个Slurm CPU（实际affinity为2个物理核的SMT线程）。B128/512-lane阶段已密封且严格验证通过；checkpoint SHA256为`e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5`。760个native output leaves×512、两块7日输出、515项gates和512份独立saved-output/B4 reference比较全部通过，保留5+5次同步完整collection样本。core中位29.617320834秒（29.605399007–29.623860434），242.020541 lane-days/s；wrapper中位33.838030240秒（33.780365391–33.889177628），211.832661 lane-days/s。该阶段是64个唯一点各重复8次的设备容量筛查：7168 lane-days，另报896 unique-point-days，不代表512个独立点或科学接受，也不能单独判定sweet spot。详见[GPU阶段当前结果](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/CURRENT_RESULT.md)、[stage validation](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-stage-validation.json)、[collector verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/collector-verification.json)和[current ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json)。
 
-作业15600405已终态FAILED，parent elapsed2135秒，4 CPU/1 V100、节点`ibc13b03n04`、exit1:0。B128已通过且保留；B256 lower63.179012秒、compile752.614130秒，在stage elapsed2058.173263秒达到compile-complete后，首次`run_collection`于`executable(*first)`报`TypeError: Computation compiled for 673 inputs but called with 536`。B256没有完整首次调用、checkpoint或5+5计时，因此不发布吞吐；这是AOT调用输入签名错误，不是数值gate失败、OOM或超时，根因不再推断，也不修复或重跑；B512未运行。终态验证与artifact保全已通过；heartbeat `gpu-15600405`已确认`PAUSED`，终态跟进已完成，不代表整体吞吐研究暂停。
+历史作业15600405已终态FAILED，parent elapsed2135秒，4 CPU/1 V100、节点`ibc13b03n04`、exit1:0。B128已通过且保留；B256 lower63.179012秒、compile752.614130秒，在stage elapsed2058.173263秒达到compile-complete后，首次`run_collection`于`executable(*first)`报`TypeError: Computation compiled for 673 inputs but called with 536`。B256没有完整首次调用、checkpoint或5+5计时，因此不发布吞吐；这是AOT调用输入签名错误，不是数值gate失败、OOM或超时。后续bounded diagnostic未重现自然触发条件，详见上方修复结果；B512在旧作业未运行。
+
+延续作业尚未获批或提交。准备目标代码checkout为`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2`，run root为`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v2-continue256512`，目前均未使用。预算情景为1 V100、4 Slurm CPUs、90分钟：主情景CNY3.60，CPU按0.07元/核时的保守情景CNY3.72；它们只是方案估算，不是账单或授权。提交前须取得对资源、时限、工作目录、命令和最坏费用的明确新授权；不创建自动化。B256/B512仍须分别满足原完整输出、科学门槛和内存/时间准入，性能筛查本身不构成科学接受。
 
 B128分别记录lower92.979298秒、compile744.949671秒、first call29.778435秒、host stack3.176700秒、transfer1.047304秒、checkpoint序列化0.321704秒及原子写入0.251202秒。B128 compiler analysis的argument/output/temp buffers为31,118,364/27,529,184/582,289,872字节（不等于VRAM峰值）；所选GPU编译前空闲33,721,155,584/34,359,738,368字节，job-start Host MemAvailable为352,786,501,632字节，B128过程累计peak RSS为14,736,539,648字节。B256/B512以内存各自阶段为准。B128 warm价格只计一次同步512-lane collection、1 GPU加4 allocated CPUs：core主/保守CNY0.019744881/0.020403043，wrapper CNY0.022558687/0.023310643，不含setup、compile、IO或整作业费用。
 

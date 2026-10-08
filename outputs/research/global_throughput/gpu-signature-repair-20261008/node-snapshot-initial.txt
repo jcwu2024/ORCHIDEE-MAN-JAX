@@ -1,0 +1,11 @@
+2026-10-07T23:45:34Z
+ibc13b02n01|CPUAlloc=46/112|Load=16.71|FreeMemMiB=196096|MIXED|AllocTRES=cpu=46,gres/gpu=7
+ibc13b02n02|CPUAlloc=0/112|Load=1.01|FreeMemMiB=312143|DOWN+NOT_RESPONDING|AllocTRES=
+ibc13b02n03|CPUAlloc=64/112|Load=45.44|FreeMemMiB=86841|MIXED|AllocTRES=cpu=64,gres/gpu=8
+ibc13b03n01|CPUAlloc=64/112|Load=27.57|FreeMemMiB=144301|MIXED|AllocTRES=cpu=64,gres/gpu=6
+ibc13b03n02|CPUAlloc=44/112|Load=8.81|FreeMemMiB=321737|MIXED|AllocTRES=cpu=44,gres/gpu=1
+ibc13b03n03|CPUAlloc=32/112|Load=5.68|FreeMemMiB=330570|MIXED|AllocTRES=cpu=32
+ibc13b03n04|CPUAlloc=68/112|Load=41.11|FreeMemMiB=114103|MIXED|AllocTRES=cpu=68,gres/gpu=2
+ibc13b03n05|CPUAlloc=112/112|Load=3.83|FreeMemMiB=293607|ALLOCATED|AllocTRES=cpu=112,gres/gpu=8
+ibc13b03n06|CPUAlloc=0/112|Load=0.01|FreeMemMiB=350348|DOWN+NOT_RESPONDING|AllocTRES=
+ibc13b03n07|CPUAlloc=52/112|Load=52.05|FreeMemMiB=337881|MIXED|AllocTRES=cpu=52,gres/gpu=8

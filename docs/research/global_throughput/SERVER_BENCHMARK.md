@@ -5,7 +5,8 @@ Its full timing record is publishable as exploratory performance evidence;
 cross-backend scientific consistency is not accepted and accepted CPU stage count
 is0. Initial reader rejection was repaired and the actual saved-snapshot internal
 reader validation passed; this does not make the CPU stage scientifically accepted
-or authorize CPU4. Current priority is the single-GPU batch-size pre-screen below;
+or authorize CPU4. Current work is the bounded B256 signature diagnostic and
+preparation for the single-GPU B256/B512 continuation below;
 the completed CPU assets remain available. The earlier bounded paid matrix and
 GPU job15579869 remain historical evidence.
 See the [CPU1 terminal result](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md),
@@ -19,8 +20,11 @@ See the [CPU1 terminal result](../../../outputs/research/global_throughput/cpu-p
 [consolidated verification](../../../outputs/research/global_throughput/server-cost-results/verification.json),
 and the [historical paid-round attempt and cost ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json).
 The independent CPU1 terminal attempt is recorded in the [new CPU1 ledger](../../../outputs/research/global_throughput/cpu-performance-preparation-20261006/PAID_EXECUTION_LEDGER.json).
-This document defines the server matrix for resident scalar, persistent CPU
-workers, JAX CPU batching, and the first complete GPU batch.
+This document records the prior server matrix and the bounded B256 interface
+diagnostic. Its lower-only check completed in123.377s under a180s cap: caller,
+public tree and internal AllArgsInfo each reported536 inputs, of which417 were
+kept. No complete model compile or run occurred. CPU1 assets remain available;
+CPU work is not a GPU prerequisite.
 
 ## CPU1 Terminal Measurement
 
@@ -103,7 +107,7 @@ planning scenarios. Its CPU1 CNY0.025/0.035 figures were based on a30-minute cei
 not actual parent-job cost; actual terminal scenarios are CNY0.016333333/0.022866667.
 The conditional CPU4 CNY0.15/0.21 scenario is not executable approval.
 
-## Current Priority: Single-GPU Batch-Size Pre-Screen
+## Current Work Order: Repair and B256/B512 Preparation
 
 Job15600405 is terminal FAILED on `ibc13b03n04` after2,135 parent seconds, with one
 Tesla V100 and four allocated Slurm CPUs; observed affinity used two physical cores
@@ -113,14 +117,41 @@ compile752.614130s), but its first `run_collection` call failed at
 `executable(*first)` with `TypeError: Computation compiled for 673 inputs but called
 with 536`. B256 has no completed first call, checkpoint or five-plus-five warm
 samples, so no throughput is published. This is an AOT invocation-signature error,
-not a numerical gate failure, OOM or timeout; no deeper cause is inferred, no fix or
-rerun was attempted, and B512 did not run. The latest canonical parent row records
+not a numerical gate failure, OOM or timeout. The historical job did not diagnose
+the cause, and B512 did not run. The bounded canonical JAX0.4.38 lower-only check
+did not reproduce the natural failure: the caller, public tree and internal
+AllArgsInfo agreed at536 inputs with417 kept. No full model compile or run occurred.
+Sequential synthetic B128/B256/B512 signature checks passed; unrelated fault
+injection of a673-input lazy-binding mismatch recreated the old exception, while
+the `Compiled.call` bypass produced identical outputs. The defensive call-adapter
+repair is not evidence that the historical cause was reproduced or fixed.
+Frozen physics, dtype and tolerances are unchanged. See the
+[repair report](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/REPAIR_REPORT.md),
+[current result](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/CURRENT_RESULT.md)
+and [paid-run preparation](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/PAID_RUN_REVIEW.md).
+The latest canonical parent row records
 `FAILED`, elapsed2135s, exit`1:0`. Earlier RUNNING snapshots remain historical.
 
 The workload contains 512 lanes from 64 unique FULL64 points repeated eight times,
 covering two consecutive seven-day blocks. It measures 7,168 lane-days; 896
 unique-point-days are listed separately and are not the effective throughput
 denominator.
+
+The B128 reader was rechecked against original SHA/bytes, 760×512 leaves, 515
+gates, 5+5 samples and provenance. JSON tuple/list equivalence applies only to
+`loadavg`; science-input and schema mismatches remain rejected. The old B128
+lazy-call and new B256/B512 Python-bound dispatch differ, so actual collection
+times and costs can be compared but rate ratios cannot be attributed to batch size
+alone. The natural old failure remains unexplained. Final module-level canonical
+JAX0.4.38 validation passed against the actual immutable checkout at
+`9d19f0760b93e1186eaf796db4903ddfd16a806f`; the diagnostic records module paths,
+hashes and commit. Final Bash syntax and target-shell argument expansion also
+passed, producing candidate `[256,512]`; dry-run imported no JAX and initialized no
+model/GPU. See [final module diagnostic](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/final-module-canonical-diagnostic.jsonl),
+[launcher verification](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/final-launcher-verification.txt)
+and [deployment verification](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/deployment-verification.json).
+The checkout is a clean independent clone with no hardlinks or alternates; old
+checkout `a51efcd` is unchanged. No GPU B256/B512 collection has been validated.
 
 | B128 fixed512 capacity stage | Median [range] | Throughput / warm cost scenario |
 | --- | ---: | ---: |
@@ -169,10 +200,25 @@ Evidence: [current result](../../../outputs/research/global_throughput/gpu-sweet
 and [current ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json).
 
 Deployed code remains immutable at `a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`.
-Heartbeat `gpu-15600405` was confirmed `PAUSED`; its terminal follow-up is complete.
-This does not pause the broader throughput research. The deleted old Explore1000
-heartbeat will not be restored. No new job or model rerun is part of this
-documentation update. Existing GPU B16/B64 results are
+Heartbeat `gpu-15600405` was confirmed `PAUSED`; its old-job terminal follow-up is
+complete. The deleted old Explore1000 heartbeat is not restored, and no new
+automation is planned. The repair diagnostics are free and bounded. Immutable
+deployment and private-API validation passed. The prepared
+paid continuation is not approved or submitted: 1 V100, 4 Slurm CPUs, 90 minutes,
+with scenario estimates CNY3.60 primary and CNY3.72 conservative. Planned checkout
+is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2`;
+planned run root is
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v2-continue256512`.
+These paths are currently unused. The final scheduler snapshot at
+2026-10-08T00:15:23Z found `ibc13b03n03` mixed (32/112 CPUs allocated, load4.85,
+330551MiB free, no allocated GPU), the lowest-load eligible candidate at that
+snapshot, not a reservation. Refresh scheduler state before review and before any
+approved submission. Obtain explicit approval for resources, wall time,
+working directory, command and worst-case cost before submission. Reuse the sealed
+B128 evidence; run B256 then B512 only, retaining the 48-step/two-block native-output
+and 5+5 synchronized-sample contracts. The 1,800-second B512 runtime floor plus
+buffer/slack is an admission guard, not a throughput acceptance criterion. Existing
+GPU B16/B64 results are
 separate evidence; 1-to-2-card work comes later. CPU reader commit `7d20a17` is
 accepted and CPU-internal reader admission passed, but the two CPU/GPU tolerance
 failures remain and CPU4 was not run. CPU expansion remains paused and is not a

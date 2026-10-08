@@ -1,0 +1,21 @@
+d2d5edd701765ef7efcc8d4eb3b8cc5579795922e717c54fb3d275d5546288d2  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/continuation-9d19f07.bundle
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2'...
+done.
+The bundle contains this ref:
+9d19f0760b93e1186eaf796db4903ddfd16a806f refs/heads/research/global-throughput
+The bundle requires this ref:
+a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e 
+Updating a51efcd..9d19f07
+Fast-forward
+ docs/research/global_throughput/EXECUTION_AUDIT.md |  18 ++-
+ docs/research/global_throughput/README.md          |  28 +++--
+ .../research/global_throughput/SERVER_BENCHMARK.md | 138 +++++++++++++++++----
+ scripts/dev/benchmark_global_batch.py              |  62 ++++++++-
+ scripts/dev/benchmark_global_gpu_capacity.py       | 105 ++++++++++++++--
+ scripts/hpc/slurm_global_gpu_capacity.sh           |  15 ++-
+ scripts/hpc/slurm_global_gpu_capacity_continue.sh  |  21 ++++
+ tests/unit/test_global_gpu_capacity.py             | 125 +++++++++++++++++++
+ 8 files changed, 465 insertions(+), 47 deletions(-)
+ create mode 100644 scripts/hpc/slurm_global_gpu_capacity_continue.sh
+9d19f0760b93e1186eaf796db4903ddfd16a806f
+checkout_clean=true shared_object_alternates=false source_commit=a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e

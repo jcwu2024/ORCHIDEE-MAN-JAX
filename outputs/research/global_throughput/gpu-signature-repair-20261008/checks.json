@@ -1,0 +1,75 @@
+{
+  "local_environment": "conda ORCJAX, JAX0.10.1",
+  "focused_suite": {
+    "command": "conda run --no-capture-output -n ORCJAX python -m pytest tests/unit/test_global_gpu_capacity.py tests/unit/test_global_server_reference_metadata.py tests/unit/test_global_batch.py tests/unit/test_global_scale.py tests/unit/test_global_server_benchmark.py -q -p no:cacheprovider",
+    "passed": 130,
+    "seconds": 15.06,
+    "warning": "existing Unknown config option: cache_dir"
+  },
+  "final_capacity_suite": {
+    "passed": 20,
+    "seconds": 4.05,
+    "includes": "actual536-leaf AOT/two-block calls, explicit binding fault regression, early internal mismatch rejection, scalar native dtype and standard rejection, continuation ordering/sealing/memory/time/Bash expansion"
+  },
+  "canonical_lower_only": {
+    "node": "ibtest02",
+    "jax": "0.4.38",
+    "wall_cap_seconds": 180,
+    "lower_seconds": 123.37698850780725,
+    "model_compile": false,
+    "model_execution": false,
+    "caller_leaves": 536,
+    "lowered_all_args_leaves": 536,
+    "kept_leaves": 417,
+    "host_MemAvailable_bytes": 151518670848,
+    "exit_code": 0
+  },
+  "canonical_tiny_diagnostic": {
+    "node": "ibtest02",
+    "jax": "0.4.38",
+    "wall_cap_seconds": 90,
+    "exit_code": 0,
+    "natural_failure_reproduced": false,
+    "fault_injection_error": "Computation compiled for 673 inputs but called with 536",
+    "bound_call_exact_shapes": [
+      128,
+      256,
+      512
+    ],
+    "real_model_compile": false,
+    "real_model_execution": false
+  },
+  "canonical_baseline_read": {
+    "sha256": "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5",
+    "bytes": 220429366,
+    "passed": true,
+    "science_and_lane_identity_mismatches_rejected": true,
+    "source_mutated": false
+  },
+  "target_Bash_dry_run": {
+    "node": "ibtest02",
+    "exit_code": 0,
+    "actual_argument_expansion": true,
+    "candidate_mode": "--continue-256-512",
+    "submitted": false
+  },
+  "science_diff_from_a33b82d": [],
+  "canonical_final_actual_modules": {
+    "status": "passed",
+    "code_commit": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+    "node": "ibtest02", "jax": "0.4.38", "timeout_seconds": 90,
+    "artifact": "final-module-canonical-diagnostic.jsonl",
+    "actual_module_imports": true,
+    "tiny_sequential_and_fault_checks": [128, 256, 512],
+    "sealed_baseline_and_changed_identity_rejection": "passed",
+    "model_compilation_or_execution": false,
+    "checkout_clean_afterwards": true
+  },
+  "final_checkout_actual_Bash_to_Python_dryrun": "passed; final-launcher-verification.txt",
+  "git_diff_check_exit_code": 0,
+  "limitations": [
+    "initial canonical diagnostic used copied definitions; final --code-dir execution separately passed against actual immutable modules and recorded commit/files/SHA",
+    "no real GPU B256/B512 acceptance or throughput measurement",
+    "historical trigger unresolved; defensive call-boundary repair only"
+  ]
+}
