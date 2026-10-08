@@ -1,0 +1,57 @@
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3'...
+done.
+The bundle contains this ref:
+12b495b9425de3ad1dc16efa3a5a0e69d7e89222 refs/heads/research/global-throughput
+The bundle requires this ref:
+9d19f0760b93e1186eaf796db4903ddfd16a806f 
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/continuation-spool-12b495b.bundle is okay
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/continuation-spool-12b495b.bundle
+ * branch            research/global-throughput -> FETCH_HEAD
+Updating 9d19f07..12b495b
+Fast-forward
+ .gitattributes                                     |   4 +
+ docs/research/global_throughput/EXECUTION_AUDIT.md |  12 +-
+ docs/research/global_throughput/README.md          |  14 +-
+ .../research/global_throughput/SERVER_BENCHMARK.md |  66 ++++++--
+ outputs/research/global_throughput/MILESTONE.md    | 137 +++++++++++++++
+ .../APPROVAL_COMMAND.sh                            |  10 ++
+ .../CURRENT_RESULT.md                              |  17 ++
+ .../PAID_RUN_REVIEW.md                             |  38 +++++
+ .../gpu-signature-repair-20261008/REPAIR_REPORT.md |  43 +++++
+ .../canonical-diagnostic.jsonl                     |   7 +
+ .../canonical-launcher-dry-run.txt                 |   4 +
+ .../canonical-lower-only.jsonl                     |   4 +
+ .../canonical_diagnostic.py                        | 187 +++++++++++++++++++++
+ .../gpu-signature-repair-20261008/checks.json      |  75 +++++++++
+ .../deployment-log.txt                             |  21 +++
+ .../deployment-verification.json                   |  23 +++
+ .../final-launcher-verification.txt                |   6 +
+ .../final-module-canonical-diagnostic.jsonl        |   8 +
+ .../lower_only_diagnostic.py                       |  30 ++++
+ .../node-snapshot-final.txt                        |  11 ++
+ .../node-snapshot-initial.txt                      |  11 ++
+ .../preparation-ledger.json                        |  33 ++++
+ scripts/hpc/slurm_global_gpu_capacity_continue.sh  |   7 +-
+ tests/unit/test_global_gpu_capacity.py             |  25 ++-
+ 24 files changed, 770 insertions(+), 23 deletions(-)
+ create mode 100644 outputs/research/global_throughput/MILESTONE.md
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/APPROVAL_COMMAND.sh
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/CURRENT_RESULT.md
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/PAID_RUN_REVIEW.md
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/REPAIR_REPORT.md
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/canonical-diagnostic.jsonl
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/canonical-launcher-dry-run.txt
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/canonical-lower-only.jsonl
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/canonical_diagnostic.py
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/checks.json
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/deployment-log.txt
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/deployment-verification.json
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/final-launcher-verification.txt
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/final-module-canonical-diagnostic.jsonl
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/lower_only_diagnostic.py
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/node-snapshot-final.txt
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/node-snapshot-initial.txt
+ create mode 100644 outputs/research/global_throughput/gpu-signature-repair-20261008/preparation-ledger.json
+12b495b9425de3ad1dc16efa3a5a0e69d7e89222
+new_checkout_clean=true shared_object_alternates=false physics_unchanged=true
+failed_v2_checkout_unchanged=true

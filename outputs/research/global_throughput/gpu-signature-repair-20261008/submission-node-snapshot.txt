@@ -1,0 +1,11 @@
+2026-10-08T06:28:47Z
+ibc13b02n01|CPUAlloc=88/112|Load=9.30|FreeMemMiB=114309|MIXED|AllocTRES=cpu=88,gres/gpu=7
+ibc13b02n02|CPUAlloc=112/112|Load=7.89|FreeMemMiB=352932|ALLOCATED|AllocTRES=cpu=112,gres/gpu=8
+ibc13b02n03|CPUAlloc=64/112|Load=26.69|FreeMemMiB=61447|MIXED|AllocTRES=cpu=64,gres/gpu=8
+ibc13b03n01|CPUAlloc=64/112|Load=23.74|FreeMemMiB=174235|MIXED|AllocTRES=cpu=64,gres/gpu=6
+ibc13b03n02|CPUAlloc=12/112|Load=3.19|FreeMemMiB=323835|MIXED|AllocTRES=cpu=12,gres/gpu=1
+ibc13b03n03|CPUAlloc=64/112|Load=5.15|FreeMemMiB=116129|MIXED|AllocTRES=cpu=64,gres/gpu=8
+ibc13b03n04|CPUAlloc=72/112|Load=43.89|FreeMemMiB=93338|MIXED|AllocTRES=cpu=72,gres/gpu=3
+ibc13b03n05|CPUAlloc=112/112|Load=3.70|FreeMemMiB=292302|ALLOCATED|AllocTRES=cpu=112,gres/gpu=8
+ibc13b03n06|CPUAlloc=0/112|Load=0.01|FreeMemMiB=350348|DOWN+NOT_RESPONDING|AllocTRES=
+ibc13b03n07|CPUAlloc=52/112|Load=52.08|FreeMemMiB=337870|MIXED|AllocTRES=cpu=52,gres/gpu=8

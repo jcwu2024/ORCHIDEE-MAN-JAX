@@ -57,10 +57,16 @@
   "canonical_final_actual_modules": {
     "status": "passed",
     "code_commit": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
-    "node": "ibtest02", "jax": "0.4.38", "timeout_seconds": 90,
+    "node": "ibtest02",
+    "jax": "0.4.38",
+    "timeout_seconds": 90,
     "artifact": "final-module-canonical-diagnostic.jsonl",
     "actual_module_imports": true,
-    "tiny_sequential_and_fault_checks": [128, 256, 512],
+    "tiny_sequential_and_fault_checks": [
+      128,
+      256,
+      512
+    ],
     "sealed_baseline_and_changed_identity_rejection": "passed",
     "model_compilation_or_execution": false,
     "checkout_clean_afterwards": true
@@ -71,5 +77,30 @@
     "initial canonical diagnostic used copied definitions; final --code-dir execution separately passed against actual immutable modules and recorded commit/files/SHA",
     "no real GPU B256/B512 acceptance or throughput measurement",
     "historical trigger unresolved; defensive call-boundary repair only"
-  ]
+  ],
+  "Slurm_spool_startup_repair": {
+    "code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+    "prior_spool_case": "failed exit127 child not found; source-location case passed",
+    "local_capacity_suite": {
+      "passed": 21,
+      "seconds": 4.55,
+      "artifact": "spool-regression-tests.txt"
+    },
+    "target_actual_copied_wrapper": {
+      "no_sibling_child": true,
+      "actual_Bash_to_Python_dry_run": true,
+      "JAX_model_GPU_initialized": false,
+      "artifact": "spool-target-verification.txt",
+      "explicit_and_default_CODE_DIR": true,
+      "argument_forwarding_rejection": true,
+      "passed": true
+    },
+    "previously_verified_model_AOT_entry_modules_unchanged": true,
+    "deployment": "spool-fix-deployment-verification.json",
+    "limitations": [
+      "no allocated Slurm/container startup verification",
+      "no real GPU B256/B512 output or throughput",
+      "historical AOT trigger unresolved"
+    ]
+  }
 }

@@ -1,0 +1,29 @@
+{
+  "status": "passed_preparation_only_awaiting_new_paid_approval",
+  "code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+  "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
+  "checkout_clean": true,
+  "independent_no_hardlinks_clone": true,
+  "shared_object_alternates": false,
+  "failed_v2_checkout_unchanged": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+  "physics_diff_from_a33b82d": [],
+  "model_and_AOT_module_changes_from_verified_v2": [],
+  "old_source_and_spool_invocations_before_repair": {"source": "passed", "spool": "failed_exit127_child_not_found"},
+  "local_capacity_suite": {"passed": 21, "artifact": "spool-regression-tests.txt"},
+  "target_test02_Bash_to_Python_dryrun": {
+    "status": "passed",
+    "copied_wrapper_alone_without_sibling": true,
+    "CODE_DIR_cases": ["explicit_v3", "default_v3"],
+    "argument_forwarding_rejection": "passed",
+    "candidates": [256, 512],
+    "JAX_imported": false,
+    "model_execution": false,
+    "GPU_initialization": false,
+    "artifact": "spool-target-verification.txt"
+  },
+  "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512",
+  "run_root_unused": true,
+  "paid_v3_submission": false,
+  "automation_created_or_resumed": false,
+  "independent_review": "no blocking launcher issue found; allocated Slurm/container startup and real GPU B256/B512 remain unverified"
+}

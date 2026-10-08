@@ -132,6 +132,10 @@ and [paid-run preparation](../../../outputs/research/global_throughput/gpu-signa
 The latest canonical parent row records
 `FAILED`, elapsed2135s, exit`1:0`. Earlier RUNNING snapshots remain historical.
 
+The user approved one v2 submission, job15643327, submitted from `gln01` at2026-10-08 14:26:10 Asia/Shanghai. The requested n03 had all eight GPUs allocated, so after notifying the user the still-pending job was retargeted to n02 with `scontrol`, without requeue or restart. The retarget snapshot at2026-10-08T06:28:47Z recorded CPUAlloc12/112, load3.19, freeMem323835MiB and AllocTRES `cpu=12,gres/gpu=1`. The job started14:30:20 and ended14:30:21 Asia/Shanghai, `FAILED` exit127:0: its copied wrapper incorrectly looked for the child launcher under `/ram/var/spool/slurm/d/job15643327/`. It failed before GPU/model initialization; no stage, output, gate or sample exists. Parent accounting is one row: 1 wall second, 4 CPU-seconds and 1 GPU card-second. Estimated one-second allocation cost is CNY0.000666667 primary / CNY0.000688889 conservative; billing/rounding are unverified. See [submission receipt](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/submission-receipt.txt), [initial pending snapshot](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/submission-status.txt), [retarget-time node snapshot](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/submission-node-snapshot.txt), [retarget receipt](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/node-retarget-receipt.txt), [terminal parent accounting](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643327-parent-final.txt), and [startup failure](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643327-startup-failure.txt).
+
+The v2 approval covered only that one attempt and is consumed. No automatic retry was issued or scheduled. Corrected v3 wrapper/deployment is verified at commit `12b495b9425de3ad1dc16efa3a5a0e69d7e89222` in the independent checkout `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3`; its run root `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512` is unused. The exact v3 command is [APPROVAL_COMMAND_V3.sh](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/APPROVAL_COMMAND_V3.sh). The v2 run root was not populated with benchmark outputs.
+
 The workload contains 512 lanes from 64 unique FULL64 points repeated eight times,
 covering two consecutive seven-day blocks. It measures 7,168 lane-days; 896
 unique-point-days are listed separately and are not the effective throughput
@@ -203,18 +207,20 @@ Deployed code remains immutable at `a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`.
 Heartbeat `gpu-15600405` was confirmed `PAUSED`; its old-job terminal follow-up is
 complete. The deleted old Explore1000 heartbeat is not restored, and no new
 automation is planned. The repair diagnostics are free and bounded. Immutable
-deployment and private-API validation passed. The prepared
-paid continuation is not approved or submitted: 1 V100, 4 Slurm CPUs, 90 minutes,
-with scenario estimates CNY3.60 primary and CNY3.72 conservative. Planned checkout
-is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2`;
-planned run root is
-`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v2-continue256512`.
-These paths are currently unused. The final scheduler snapshot at
-2026-10-08T00:15:23Z found `ibc13b03n03` mixed (32/112 CPUs allocated, load4.85,
-330551MiB free, no allocated GPU), the lowest-load eligible candidate at that
-snapshot, not a reservation. Refresh scheduler state before review and before any
-approved submission. Obtain explicit approval for resources, wall time,
-working directory, command and worst-case cost before submission. Reuse the sealed
+deployment and private-API validation passed. The v2 paid continuation was approved
+and attempted once; job15643327 failed during wrapper startup before model/GPU
+initialization, as detailed above. The corrected v3 continuation is not approved
+or submitted: proposed resources are `gnall`, 1 node, 1 task, 4 Slurm CPUs,
+1 Tesla V100 32GiB and 90 minutes, with scenario estimates CNY3.60 primary and
+CNY3.72 conservative. The immutable checkout is
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3`
+at commit `12b495b9425de3ad1dc16efa3a5a0e69d7e89222`; its run root is
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512`
+and remains unused. The 2026-10-08T06:50:43Z snapshot found no idle eligible node;
+candidate `ibc13b03n02` was mixed (12/112 CPUs allocated, load2.85, 323601MiB free,
+one GPU allocated), not a reservation. Refresh scheduler state before any approved
+submission. Obtain fresh explicit approval for resources, wall time, working
+directory, exact command and worst-case cost before submission. Reuse the sealed
 B128 evidence; run B256 then B512 only, retaining the 48-step/two-block native-output
 and 5+5 synchronized-sample contracts. The 1,800-second B512 runtime floor plus
 buffer/slack is an admission guard, not a throughput acceptance criterion. Existing
