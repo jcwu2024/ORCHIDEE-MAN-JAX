@@ -190,3 +190,128 @@ def test_benchmark_seals_each_candidate_before_next_then_conditional_and_baselin
         capacity.benchmark(args, recorder, lanes, second, scale)
         assert order == [128, 256, 512, 64]
         assert recorder.result["conditional_512_decision"]["permitted"]
+
+
+def test_continuation512_ignores_speedup_but_keeps_resource_guards():
+    records = {128: {"core": {"median_seconds": 10}, "wrapper": {"median_seconds": 10}},
+               256: {"core": {"median_seconds": 15}, "wrapper": {"median_seconds": 15}}}
+    assert not capacity.conditional_512_decision(records, 1800, 100, 3*1024**3)["permitted"]
+    assert capacity.conditional_512_decision(records, 1800, 100, 3*1024**3, continuation=True)["permitted"]
+    for seconds, estimate, free in [(1799, 100, 3*1024**3), (1800, None, 3*1024**3), (1800, 100, 2*1024**3)]:
+        assert not capacity.conditional_512_decision(records, seconds, estimate, free, continuation=True)["permitted"]
+
+
+def test_continuation_measures_only256_then512_and_seals_first(monkeypatch, tmp_path):
+    _, _, reference, _, recorder, scale, _ = toy_case(monkeypatch)
+    lanes = [SimpleNamespace(landpoint_id=f"point{i}", arguments=np.array([[i]], dtype=np.float64)) for i in range(64)]
+    second = [lane.arguments+1 for lane in lanes]
+    args = SimpleNamespace(output_dir=tmp_path/'new', full_reference_dir=tmp_path/'reference',
+        memory_baseline_dir=tmp_path/'memory', prepared_input=tmp_path/'input'/'prepared.pkl',
+        b128_baseline_dir=tmp_path/'old128', continue_256_512=True, conditional_512=False,
+        optional_b64_baseline=False, budget_seconds=5400, baseline_ref='source')
+    analysis = {"available":True,"temp_size_in_bytes":100,"old_benchmark_peak_RSS_bytes":100}
+    monkeypatch.setattr(capacity, 'admit_numerical_sources', lambda *a: ({},reference,{"sha256":"sealed"},{"sha256":"old"},analysis))
+    baseline = {k:capacity.lane_metrics([1]*5) for k in ('core','wrapper')}
+    monkeypatch.setattr(capacity,'import_b128_baseline',lambda *a: (baseline,{"role":"historical"}))
+    scale.PRECISION_POLICY='native'
+    scale.screen_inputs=lambda *a: {}
+    scale.base.legacy_factory=lambda *a: None
+    scale.base.roughheight_sentinel_contract=lambda *a: {}
+    scale.jax.clear_caches=lambda: None
+    recorder.phase=lambda *a,**k: None
+    recorder.flush=lambda: None
+    order=[]
+    def measure(size,args,recorder,*other):
+        if size==512:
+            assert (args.output_dir/'stage_capacity_B256_fixed512_v1.pkl').is_file()
+        order.append(size)
+        other[-1][size]=analysis
+        measurements={k:capacity.lane_metrics([2]*5) for k in ('core','wrapper')}
+        return {"measurements":measurements},{"measurement_status":"complete"}
+    monkeypatch.setattr(capacity,'measure_shape',measure)
+    capacity.benchmark(args,recorder,lanes,second,scale)
+    assert order==[256,512] and recorder.result['completed_shapes']==[256,512]
+    manifest=json.loads((args.output_dir/'stage_manifest.json').read_text())
+    assert manifest['identity']['contract']==capacity.CONTINUATION_CONTRACT
+    assert 'capacity_B128_fixed512_v1' not in manifest['stages']
+    assert recorder.result['comparison_shapes_including_imported_baseline']==[128,256,512]
+
+
+def test_continuation_launcher_actual_Bash_expansion(tmp_path):
+    root=Path(capacity.__file__).resolve().parents[2]
+    env=os.environ.copy()
+    for key in ('SLURM_CPUS_PER_TASK','SLURM_JOB_GPUS','CUDA_VISIBLE_DEVICES','CONTINUE_256_512','OPTIONAL_B64_BASELINE'):
+        env.pop(key,None)
+    result=subprocess.run([shutil.which('bash'),str(root/'scripts/hpc/slurm_global_gpu_capacity_continue.sh').replace('\\','/'),'--dry-run'],env=env,text=True,capture_output=True)
+    assert result.returncode==0,result.stderr
+    tokens=shlex.split(next(line for line in result.stdout.splitlines() if line.startswith('command=')).removeprefix('command='))
+    entry=next(i for i,t in enumerate(tokens) if t.endswith('global_batch_gpu_entry.py'))
+    dry=subprocess.run([sys.executable,str(Path(capacity.__file__).resolve()),*tokens[entry+1:],'--dry-run'],cwd=tmp_path,text=True,capture_output=True)
+    assert dry.returncode==0,dry.stderr
+    report=json.loads(dry.stdout)
+    assert report['candidates']==[256,512] and report['B512_requires_speedup'] is False
+    assert report['optional_B64'] is False and report['JAX_imported'] is False
+
+
+@pytest.mark.parametrize("size", [2, 3])
+def test_actual_JAX_two_block_bound_AOT_and_early_signature_audit(size):
+    from jax_orchidee.driver.global_batch import BlockArguments
+    counts=(350,14,1,4,10,20,60,38,39)
+    groups=tuple(tuple(np.full((size,1),i+j*.01,dtype=np.float64) for j in range(c)) for i,c in enumerate(counts))
+    first=BlockArguments(*groups)
+    second=first._replace(forcing_days=tuple(v+1 for v in first.forcing_days))
+    def transition(*arguments):
+        forcing=arguments[1][0]
+        return tuple(v+forcing for v in arguments[0]), {"all_state":arguments[0]}
+    phases=[]
+    recorder=SimpleNamespace(result={"timing":{}},phase=lambda name:phases.append(name))
+    executable=actual_base.lower_compile(transition,first,'tiny',recorder)
+    a,b=actual_base.run_two(executable,first,second)
+    expected_a=tuple(v+first.forcing_days[0] for v in first.values_by_component)
+    expected_b=tuple(v+second.forcing_days[0] for v in expected_a)
+    for got,want in zip(a[0],expected_a,strict=True): np.testing.assert_array_equal(got,want)
+    for got,want in zip(b[0],expected_b,strict=True): np.testing.assert_array_equal(got,want)
+    metadata=recorder.result['compilations']['tiny']
+    assert metadata['lowered_input_signature']['caller_leaves']==536
+    assert metadata['compiled_input_signature']['internal_signature_equal'] is not False
+    # Protect ownstage binding against an unrelated lazylayer call. This is a
+    # fault-injection regression, not a natural reproduction of job15600405.
+    def wrong(*args): raise TypeError('Computation compiled for 673 inputs but called with 536')
+    executable.compiled._call=wrong
+    repeated=actual_base.run_two(executable,first,second)
+    for actual,expected in zip(jax.tree_util.tree_leaves(repeated),jax.tree_util.tree_leaves((a,b)),strict=True):
+        np.testing.assert_array_equal(actual,expected)
+    lowered=jax.jit(transition).lower(*first)
+    with pytest.raises(TypeError,match='public input'):
+        actual_base.audit_aot_signature(lowered,first._replace(science_day_numbers=(np.ones((size+1,1)),)),lowered=True)
+    assert callable(executable.memory_analysis)
+
+
+def test_internal_signature_mismatch_stops_before_expensive_compile(monkeypatch):
+    arguments=(np.ones((2,1),dtype=np.float64),)
+    tree,_=actual_base._argument_signature(arguments)
+    aval=jax.ShapeDtypeStruct((2,1),np.float64)
+    compile_called=[]
+    lowered=SimpleNamespace(in_tree=tree,in_avals=((aval,),{}),
+        _lowering=SimpleNamespace(compile_args={"all_args_info":SimpleNamespace(in_avals=[aval,aval]),"kept_var_idx":{0}}),
+        compile=lambda:compile_called.append(True))
+    monkeypatch.setattr(actual_base.jax,'jit',lambda fn:SimpleNamespace(lower=lambda *a:lowered))
+    recorder=SimpleNamespace(result={"timing":{}},phase=lambda name:None)
+    with pytest.raises(TypeError,match='internal input signature'):
+        actual_base.lower_compile(lambda x:x,arguments,'mismatch',recorder)
+    assert compile_called==[]
+
+
+def test_actual_scalar_AOT_adapter_preserves_native_dtype_and_standard_rejection():
+    from jax_orchidee.driver.global_batch import BlockArguments
+    first=BlockArguments((np.ones((1,),dtype=np.float32),),np.array([2],dtype=np.float32),
+        np.array([2],dtype=np.int32),(),(),(),(),(),())
+    second=first._replace(forcing_days=np.array([3],dtype=np.float32))
+    def scalar(values,forcing,*other): return tuple(v+forcing for v in values), {"forcing":forcing}
+    recorder=SimpleNamespace(result={"timing":{}},phase=lambda name:None)
+    executable=actual_base.lower_compile(scalar,first,'scalar',recorder)
+    a,b=actual_base.run_two(executable,first,second)
+    assert a[0][0].dtype==np.float32 and b[0][0].dtype==np.float32
+    np.testing.assert_array_equal(b[0][0],np.array([6],dtype=np.float32))
+    with pytest.raises(TypeError):
+        executable(*first._replace(forcing_days=np.ones((2,),dtype=np.float32)))

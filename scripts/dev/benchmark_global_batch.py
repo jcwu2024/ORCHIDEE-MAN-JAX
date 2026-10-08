@@ -428,6 +428,60 @@ def prepare(args, recorder):
     return lanes, second
 
 
+def _argument_signature(arguments):
+    leaves, tree = jax.tree_util.tree_flatten((tuple(arguments), {}))
+    return tree, tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in leaves)
+
+
+def _aval_signature(avals):
+    return tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in avals)
+
+
+def audit_aot_signature(stage, arguments, *, lowered=False):
+    """Fail before compile when public/internal AOT argument metadata diverges.
+
+    The JAX0.4.38 private metadata is inspected diagnostically only; it is never
+    rewritten. Public tree and dtype/shape admission remain mandatory.
+    """
+    tree, expected = _argument_signature(arguments)
+    if stage.in_tree != tree or _aval_signature(jax.tree_util.tree_leaves(stage.in_avals)) != expected:
+        raise TypeError("AOT public input tree/shape/dtype/weak-type signature differs from construction")
+    mesh = stage._lowering if lowered else stage._executable
+    info = mesh.compile_args.get("all_args_info") if lowered else getattr(mesh, "_all_args_info", None)
+    kept = mesh.compile_args.get("kept_var_idx") if lowered else getattr(mesh, "_kept_var_idx", None)
+    internal = None if info is None else _aval_signature(info.in_avals)
+    if internal is not None and internal != expected:
+        raise TypeError(f"AOT internal input signature differs: expected{len(expected)}, internal{len(internal)}")
+    return {"caller_leaves": len(expected), "public_input_leaves": len(expected),
+            "internal_all_args_leaves": None if internal is None else len(internal),
+            "kept_input_leaves": None if kept is None else len(kept),
+            "public_tree_shape_dtype_weak_type_equal": True,
+            "internal_signature_equal": None if internal is None else True}
+
+
+class BoundAOTExecutable:
+    """Bind Python AOT dispatch to this stage's own immutable call parameters.
+
+    JAX0.4.38 Compiled.__call__ lazily builds a C++ pjit callable. Calling the
+    same stage's Compiled.call directly retains the standard tree, aval,
+    sharding/layout and tracer checks without relying on that lazy callable.
+    Physics, pruning, buffers and outputs are unchanged. This extra host
+    dispatch overhead is included in all measured collection timings.
+    """
+    def __init__(self, compiled):
+        self.compiled = compiled
+        self.params = compiled._params
+
+    def __call__(self, *arguments):
+        from jax._src.stages import Compiled
+
+        outputs, _, _ = Compiled.call(self.params, *arguments)
+        return outputs
+
+    def __getattr__(self, name):
+        return getattr(self.compiled, name)
+
+
 def run_two(executable, first, second):
     a = executable(*first)
     b = executable(*second._replace(values_by_component=a[0]))
@@ -440,8 +494,10 @@ def lower_compile(fn, arguments, name, recorder):
     t = time.perf_counter()
     lowered = jax.jit(fn).lower(*arguments)
     recorder.result["timing"][name + "_lower_seconds"] = time.perf_counter() - t
+    lowered_signature = audit_aot_signature(lowered, arguments, lowered=True)
     ir = str(lowered.compiler_ir(dialect="stablehlo"))
-    compilation = {"stablehlo_sha256": hashlib.sha256(ir.encode()).hexdigest()}
+    compilation = {"stablehlo_sha256": hashlib.sha256(ir.encode()).hexdigest(),
+                   "lowered_input_signature": lowered_signature}
     recorder.result.setdefault("compilations", {})[name] = compilation
     recorder.phase(name + "_compile_start")
     t = time.perf_counter()
@@ -449,9 +505,11 @@ def lower_compile(fn, arguments, name, recorder):
     event_start = len(observer.events) if observer is not None else 0
     executable = lowered.compile()
     recorder.result["timing"][name + "_compile_seconds"] = time.perf_counter() - t
+    compilation["compiled_input_signature"] = audit_aot_signature(executable, arguments)
+    compilation["call_binding"] = "explicit stage Compiled.call parameters; standard JAX checks retained"
     compilation["cache_events"] = observer.events[event_start:] if observer is not None else []
     recorder.phase(name + "_compiled")
-    return executable
+    return BoundAOTExecutable(executable)
 
 
 def independent_scalar_executable(lane, name, recorder):

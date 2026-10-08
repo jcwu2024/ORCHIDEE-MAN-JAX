@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
+import pickle
 import json
 import math
 import os
@@ -21,11 +23,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from scripts.dev.global_server_reference import finite_tolerance_failure
+from scripts.dev.global_server_reference import finite_tolerance_failure, _evidence_mismatch
 
 TOTAL_LANES = 512
 UNIQUE_POINTS = 64
 CONTRACT = "GPU-fixed512-repeated-FULL64-capacity-v1"
+B128_SHA256 = "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5"
+CONTINUATION_CONTRACT = "GPU-fixed512-repeated-FULL64-B256-B512-continuation-v1"
 LABEL = "capacity performance measured; global scientific consistency not accepted"
 
 
@@ -41,6 +45,8 @@ def parser():
     result.add_argument("--warm-repeats", type=int, default=5)
     result.add_argument("--budget-seconds", type=int, default=5400)
     result.add_argument("--conditional-512", action="store_true")
+    result.add_argument("--continue-256-512", action="store_true", help="Import sealed B128 timing origin; measure only B256 then resource-admitted B512, regardless of speedup.")
+    result.add_argument("--b128-baseline-dir", type=Path)
     result.add_argument("--optional-b64-baseline", action="store_true")
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--admit-inputs", action="store_true", help="Read/audit FULL64 and repeated identities only; no process factory or compilation.")
@@ -80,12 +86,12 @@ def gate(recorder, name, actual, expected, compare, *, cross_backend=False):
     return record
 
 
-def conditional_512_decision(records, remaining_seconds, estimated_bytes, free_bytes):
+def conditional_512_decision(records, remaining_seconds, estimated_bytes, free_bytes, *, continuation=False):
     reasons = []
     if set(records) != {128, 256}:
         reasons.append("both completed candidate records required")
     else:
-        for boundary in ("core", "wrapper"):
+        for boundary in (() if continuation else ("core", "wrapper")):
             if records[256][boundary]["median_seconds"] > .95 * records[128][boundary]["median_seconds"]:
                 reasons.append(f"B256 {boundary} must improve same-512-workload median by at least5%")
     if remaining_seconds < 1800:
@@ -94,7 +100,8 @@ def conditional_512_decision(records, remaining_seconds, estimated_bytes, free_b
         reasons.append("estimated B512 buffers plus2GiB physical slack required")
     return {"permitted": not reasons, "reasons": reasons, "remaining_seconds": remaining_seconds,
             "estimated_device_bytes": estimated_bytes, "free_device_bytes": free_bytes,
-            "scope": "preset capacity-screen condition, not OOM or completion guarantee"}
+            "scope": "preset capacity-screen condition, not OOM or completion guarantee",
+            "policy": "resource_admitted_scale_curve" if continuation else "both_boundaries_5percent_improvement"}
 
 
 def baseline_memory(directory):
@@ -124,6 +131,63 @@ def admit_numerical_sources(args, lanes, second, scale, environment):
         if old_manifest["identity"].get(key) != identity.get(key):
             raise ValueError(f"old B64 memory evidence input/science mismatch: {key}")
     return identity, reference, reference_origin, old_record, analysis
+
+
+def import_b128_baseline(directory, expected_identity, destination, jax):
+    """Validate sealed historical evidence without modifying or relabeling its stage."""
+    from scripts.dev.global_batch_stage_store import StageStore
+
+    StageStore.validate_source_destination(directory, destination)
+    directory = Path(directory)
+    manifest_path = directory / "stage_manifest.json"
+    manifest_data = manifest_path.read_bytes()
+    manifest = json.loads(manifest_data)
+    source_identity = manifest.get("identity", {})
+    admission_keys = ("contract", "baseline_ref", "science_sha256", "lanes", "runtime", "compiler_environment",
+        "warm_repeats", "gate", "precision_policy", "validation_mode", "workload_kind", "total_lanes",
+        "lane_origins", "unique_real_points", "candidate_shapes", "conditional_512", "optional_B64_baseline",
+        "conditional_policy", "numerical_reference_sha256")
+    for key in admission_keys:
+        if key not in source_identity or source_identity[key] != expected_identity.get(key):
+            raise ValueError(f"B128 baseline identity mismatch: {key}")
+    name = "capacity_B128_fixed512_v1"
+    record = manifest["stages"].get(name, {})
+    if record.get("status") != "complete" or record.get("sha256") != B128_SHA256:
+        raise ValueError("B128 baseline must be the sealed job15600405 stage")
+    path = directory / ("stage_" + name + ".pkl")
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != B128_SHA256 or len(data) != 220429366:
+        raise ValueError("B128 baseline full checksum/bytes changed")
+    envelope = pickle.loads(data)
+    if (envelope.get("identity") != source_identity or envelope.get("name") != name
+            or envelope.get("status") != "complete"):
+        raise ValueError("B128 baseline envelope identity/status mismatch")
+    proof, value = envelope["record"], envelope["value"]
+    if (proof.get("measurement_status") != "complete" or proof.get("strict_numerical_passed") is not True
+            or len(proof.get("gates", [])) != 515 or any(g.get("passed") is not True for g in proof["gates"])
+            or proof.get("timing") != value.get("measurements") or proof.get("timing") != record.get("timing")
+            or proof.get("provenance") != record.get("provenance")
+            or _evidence_mismatch(proof.get("execution_origin"), record.get("execution_origin"),
+                                  "record.execution_origin") is not None):
+        raise ValueError("B128 baseline complete strict measurement/provenance mismatch")
+    provenance = proof["provenance"]
+    if any(provenance.get(key) != expected for key, expected in {
+            "total_lanes": 512, "unique_real_points": 64, "chunk_size": 128,
+            "blocks": [[2, 8], [9, 15]], "half_hours_per_day": 48,
+            "full_outputs": True, "full_two_block_workload": True}.items()):
+        raise ValueError("B128 baseline workload provenance mismatch")
+    leaves = jax.tree_util.tree_leaves(value["outputs"])
+    if len(leaves) != 760 or any(leaf.shape[0] != TOTAL_LANES for leaf in leaves):
+        raise ValueError("B128 baseline full output schema mismatch")
+    for metric in value["measurements"].values():
+        if metric != {**metric, **lane_metrics(metric["samples_seconds"])}:
+            raise ValueError("B128 baseline synchronized timing summary mismatch")
+    origin = {"path": str(path), "sha256": B128_SHA256, "bytes": len(data),
+        "manifest": str(manifest_path), "manifest_sha256": hashlib.sha256(manifest_data).hexdigest(),
+        "source_stage": name, "source_identity": source_identity, "execution_origin": proof["execution_origin"],
+        "timing": value["measurements"], "provenance": provenance,
+        "role": "imported historical baseline; no new B128 measurement, executable, or destination stage"}
+    return value["measurements"], origin
 
 
 def memory_estimate(size, resident_input_bytes, full_output_bytes, memory_records):
@@ -268,6 +332,7 @@ def benchmark(args, recorder, lanes, second, scale):
     expanded, others, origins = capacity_layout(lanes, second)
     identity, reference, reference_origin, old_record, analysis = admit_numerical_sources(
         args, lanes, second, scale, recorder.result["environment"])
+    continuation = getattr(args, "continue_256_512", False)
     identity.update(contract=CONTRACT, precision_policy=scale.PRECISION_POLICY, validation_mode="exploratory",
         workload_kind="capacity_screen_repeated_FULL64", total_lanes=TOTAL_LANES, lane_origins=origins,
         unique_real_points=UNIQUE_POINTS, candidate_shapes=[128, 256], conditional_512=args.conditional_512,
@@ -275,6 +340,15 @@ def benchmark(args, recorder, lanes, second, scale):
     for source in (args.full_reference_dir, args.memory_baseline_dir, args.prepared_input.parent):
         StageStore.validate_source_destination(source, args.output_dir)
     identity["numerical_reference_sha256"] = reference_origin["sha256"]
+    baseline_timing, baseline_origin = None, None
+    if continuation:
+        baseline_identity = {**identity, "candidate_shapes": [128, 256], "conditional_512": True,
+                             "optional_B64_baseline": False}
+        baseline_timing, baseline_origin = import_b128_baseline(
+            args.b128_baseline_dir, baseline_identity, args.output_dir, scale.jax)
+        identity.update(contract=CONTINUATION_CONTRACT, candidate_shapes=[256, 512],
+            continuation_B128_sha256=B128_SHA256, conditional_512=True, optional_B64_baseline=False,
+            conditional_policy="scale_curve_30min_B256compiler_memory_2GiB_GPU_8GiB_host_slack")
     store = StageStore(args.output_dir, identity)
     recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen, lane_origins=origins,
@@ -282,11 +356,15 @@ def benchmark(args, recorder, lanes, second, scale):
             "checkpoint_sha256": old_record["sha256"], "analysis": analysis}, scientific_acceptance=False)
     base.legacy_factory(args.baseline_ref)
     memory_records, records = {64: analysis}, {}
+    if continuation:
+        records[128] = baseline_timing
+        recorder.result["imported_B128_baseline"] = baseline_origin
 
     def run(size):
         (value, record), reused = store.run(f"capacity_B{size}_fixed512_v1",
             lambda: measure_shape(size, args, recorder, expanded, others, reference, scale, memory_records))
         records[size] = value["measurements"]
+        memory_records[size] = record.get("provenance", {}).get("executable_memory_analysis", memory_records.get(size, {}))
         recorder.phase(f"capacity_B{size}_sealed", reused=reused)
         recorder.flush()
         # The sealed host snapshot survives cleanup; no executable is a prerequisite.
@@ -295,13 +373,13 @@ def benchmark(args, recorder, lanes, second, scale):
         gc.collect()
         return record
 
-    for size in (128, 256):
+    for size in ((256,) if continuation else (128, 256)):
         run(size)
-    if args.conditional_512:
+    if args.conditional_512 or continuation:
         snapshot = scale.visible_gpu_memory()
         resident = scale.tree_bytes(([lane.arguments for lane in expanded], others))
         decision = conditional_512_decision(records, args.budget_seconds - (time.time() - start_epoch),
-            memory_estimate(512, resident, scale.tree_bytes(reference) * 8, memory_records), snapshot["free_bytes"])
+            memory_estimate(512, resident, scale.tree_bytes(reference) * 8, memory_records), snapshot["free_bytes"], continuation=continuation)
         if memory_records.get(256, {}).get("available") is not True:
             decision["permitted"] = False
             decision["reasons"].append("actual B256 compiler memory analysis required")
@@ -320,16 +398,25 @@ def benchmark(args, recorder, lanes, second, scale):
             run(64)
         else:
             recorder.result["optional_B64_skipped"] = "less than20min remaining; candidates retained"
-    recorder.result["completed_shapes"] = list(records)
+    recorder.result["completed_shapes"] = [size for size in records if not (continuation and size == 128)]
+    if continuation:
+        recorder.result["comparison_shapes_including_imported_baseline"] = list(records)
 
 
 def main():
     args = parser().parse_args()
+    if args.continue_256_512 and (args.b128_baseline_dir is None or args.optional_b64_baseline):
+        raise ValueError("B256/B512 continuation requires explicit sealed B128 baseline and forbids optional B64")
+    if args.b128_baseline_dir is not None and not args.continue_256_512:
+        raise ValueError("B128 baseline directory requires continuation mode")
     if args.warm_repeats != 5 or args.budget_seconds != 5400:
         raise ValueError("fixed five repeats and approved-proposal90min window contract required")
     if args.dry_run:
         print(json.dumps({"status": "dry_run", "model_execution": False, "JAX_imported": "jax" in sys.modules,
-            "contract": CONTRACT, "candidates": [128, 256], "conditional_512": args.conditional_512,
+            "contract": CONTINUATION_CONTRACT if args.continue_256_512 else CONTRACT,
+            "candidates": [256, 512] if args.continue_256_512 else [128, 256],
+            "conditional_512": args.conditional_512 or args.continue_256_512,
+            "B512_requires_speedup": not args.continue_256_512, "B128_baseline_dir": str(args.b128_baseline_dir),
             "total_lanes": TOTAL_LANES, "unique_real_points": UNIQUE_POINTS, "lane_days": 7168,
             "unique_point_days": 896, "scientific_acceptance": False, "optional_B64": args.optional_b64_baseline}))
         return 0
