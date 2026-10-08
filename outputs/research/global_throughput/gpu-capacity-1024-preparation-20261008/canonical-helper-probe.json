@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "jax": "0.4.38",
+  "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "stages": [
+    {
+      "shape": 512,
+      "public_inputs": 10,
+      "internal_inputs": 10,
+      "five_native_outputs_equal_independent_numpy": true,
+      "host_mask_is_immutable_numpy_bool": true
+    },
+    {
+      "shape": 1024,
+      "public_inputs": 10,
+      "internal_inputs": 10,
+      "five_native_outputs_equal_independent_numpy": true,
+      "host_mask_is_immutable_numpy_bool": true
+    }
+  ],
+  "earlier_signature_unchanged": true,
+  "wall_seconds": 6.905893839895725,
+  "scope": "actual insertion helper only; no real model preparation/lowering/compile/invocation or GPU initialization",
+  "fixed1024_model_runtime_acceptance": false
+}

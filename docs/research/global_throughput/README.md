@@ -111,6 +111,12 @@ v3作业15643868已终态FAILED，B256完整阶段通过并密封。新canonical
 
 host stack/transfer为2.581256084/1.334585367s，lower98.739008831s，compile892.739054900s，首次完整B512调用22.867870517s，checkpoint序列化0.380422166s、atomic write0.213936657s。完整phase setup/validation未记录，因此没有K amortization估算。父作业1416s对应估算CNY0.944主口径/CNY0.975466667保守口径，在批准的CNY1.80/CNY1.86上限内；账单未核实，child rows未重复计费。compiler临时内存2288514256 bytes不是VRAM峰值；host process峰值19496943616 bytes，GPU前后快照不能作为峰值证据。详见[当前结果](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md)、[付费方案与收据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PAID_PROPOSAL.md)、[因果证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CAUSAL_REPAIR.md)及[协议和终态证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md)。这不是CPU比值、Fortran、年度/50年、669点、10×、训练/AD或一般科学验收；未发生retry、cancel、requeue或automation。
 
+### 下一工作：fixed1024容量准备，尚无付费提交
+
+新增显式fixed1024合同：同一新进程/作业中先实测B512×2 chunks，再资源准入B1024×1 chunk；两者均为64真实FULL64点×16、连续Days2–8/9–15、48步/日、14336 lane-days，各stage完整atomic seal后才推进。旧fixed512默认身份不变，旧B512作业15657822仅作为数值/schema/真实compiler-memory与RSS来源，不能把旧512计时乘二当新结果。B512目前实测最好，但未证明最优，也未证明B1024容量或性能。
+
+90分钟方案仍须单独付费批准；两个阶段启动都需至少2700s剩余，45分钟是预算guard而非完成保证。B1024还需新B512的1027项gate全部通过，资源准入只看时间/内存，不看speedup。设备内存使用真实compiler临时buffer加resident/full-output重叠与2GiB slack；host RSS单独加8GiB，不当作VRAM。canonical test02仅运行actual DIFFUCO helper的512/1024小探针，10/10签名与五项native输出通过；没有新real-model lower/compile/run或GPU初始化。实现、collector readiness与轻量验证见[当前准备结果](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md)及[协议](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/PROTOCOL.md)；资源/node/费用与最终SHA以[新付费提案](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/B1024_PAID_PROPOSAL.md)为准。尚未部署新paid checkout、提交作业或创建automation；旧预算已关闭。
+
 ### 已完成付费轮与单点诊断
 
 历史付费pilot曾获批CPU1、CPU4、1卡加4辅助CPU，各一小时硬上限；

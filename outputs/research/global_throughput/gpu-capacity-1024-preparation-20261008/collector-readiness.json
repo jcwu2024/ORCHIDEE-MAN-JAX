@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "status": "local_collector_readiness_only",
+  "contract": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1",
+  "actual_result_or_scientific_acceptance": false,
+  "collector": "collect_fixed1024_result.py",
+  "test_file": "test_collect_fixed1024_result.py",
+  "expected_execution_code_sha": "not assigned; required explicitly through --expected-code-sha after immutable checkout deployment",
+  "source_identity": {
+    "baseline_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_linux_science_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "source_compatibility_certificate_required": "exact-DIFFUCO-host-mask-cache-repair-v1"
+  },
+  "historical_B512_origin_only": {
+    "source_job_id": "15657822",
+    "source_code_sha": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
+    "checkpoint_bytes": 220430830,
+    "historical_timing_imported": false
+  },
+  "local_checks": {
+    "pytest": "15 passed; synthetic metadata and control-flow fixtures only",
+    "ruff": "passed for collector and tests",
+    "cli_help": "passed; explicit expected code SHA and required allocation/accounting inputs shown",
+    "model_execution": false,
+    "compilation_or_GPU_initialization": false,
+    "remote_access_or_job_submission": false
+  },
+  "covered_contracts": [
+    "1024 cyclic lane origins and 64 unique admitted FULL64 inputs",
+    "512 two-chunk then 1024 one-chunk workload, 14336 lane-day denominator, native 760-leaf schema",
+    "1024 independent actual saved-reference comparisons and 1027 strict gates per accepted stage",
+    "stage checkpoint, manifest, report, allocation, environment, PID, gate and checkpoint-IO consistency",
+    "resource-only 2700-second and memory guards; B1024 has no performance prerequisite",
+    "one terminal raw9 parent cost, including actual cost when the approved wall limit is exceeded",
+    "strict B512 retention after parent TIMEOUT and B1024 withholding on shared-origin mismatch",
+    "no historical timing promotion, K amortization, CPU/GPU ratio, 10x result or general scientific claim"
+  ],
+  "remaining_external_evidence": [
+    "completed immutable execution checkout SHA and clean HEAD admission",
+    "deployed runner/collector identity and external job approval",
+    "terminal raw9 sacct row and actual observed node/GPU/driver identity pins",
+    "actual complete stage checkpoints or explicit denied/incomplete stage records"
+  ]
+}

@@ -63,8 +63,10 @@ CONDITIONAL_512=${CONDITIONAL_512:-1}
 OPTIONAL_B64_BASELINE=${OPTIONAL_B64_BASELINE:-0}
 CONTINUE_256_512=${CONTINUE_256_512:-0}
 CONTINUE_512=${CONTINUE_512:-0}
+FIXED_1024=${FIXED_1024:-0}
 B128_BASELINE_DIR=${B128_BASELINE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v1-load512/capacity}
 B256_BASELINE_DIR=${B256_BASELINE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity}
+B512_EVIDENCE_DIR=${B512_EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity}
 BUDGET_SECONDS=5400
 WALL_TIME=01:30:00
 GPU_SELECTOR=${SLURM_JOB_GPUS:-}
@@ -92,6 +94,12 @@ fi
 [[ $CONTINUE_512 == 0 || $CONTINUE_512 == 1 ]] || {
   echo "CONTINUE_512 must be 0 or 1" >&2; exit 2;
 }
+[[ $FIXED_1024 == 0 || $FIXED_1024 == 1 ]] || {
+  echo "FIXED_1024 must be 0 or 1" >&2; exit 2;
+}
+if [[ $FIXED_1024 == 1 && ( $CONTINUE_512 == 1 || $CONTINUE_256_512 == 1 || $OPTIONAL_B64_BASELINE != 0 || $CONDITIONAL_512 != 0 ) ]]; then
+  echo "fixed1024 forbids fixed512 continuation, conditional512 and optional B64 modes" >&2; exit 2
+fi
 if [[ $CONTINUE_512 == 1 && $CONTINUE_256_512 == 1 ]]; then
   echo "B512-only and B256/B512 continuation modes are mutually exclusive" >&2; exit 2
 fi
@@ -117,9 +125,14 @@ if [[ $DRY_RUN -eq 0 ]]; then
     echo "requires exactly one global GPU ID in SLURM_JOB_GPUS" >&2; exit 2;
   }
   [[ $CUDA_VISIBLE_DEVICES != *,* ]] || { echo "requires exactly one visible allocated GPU" >&2; exit 2; }
-  for path in "$PYTHON" "$METADATA_PYTHON" "$IDENTITY_HELPER" "$ENTRY" "$PREPARED_INPUT" "$FULL_REFERENCE_DIR" "$MEMORY_BASELINE_DIR" "$CONFIG" "$ASSET_ROOT" "$IMAGE"; do
+  for path in "$PYTHON" "$METADATA_PYTHON" "$IDENTITY_HELPER" "$ENTRY" "$PREPARED_INPUT" "$FULL_REFERENCE_DIR" "$CONFIG" "$ASSET_ROOT" "$IMAGE"; do
     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
   done
+  if [[ $FIXED_1024 == 1 ]]; then
+    [[ -d $B512_EVIDENCE_DIR ]] || { echo "sealed B512 numerical/memory evidence missing" >&2; exit 2; }
+  else
+    [[ -e $MEMORY_BASELINE_DIR ]] || { echo "old B64 memory evidence missing" >&2; exit 2; }
+  fi
   if [[ $CONTINUE_256_512 == 1 || $CONTINUE_512 == 1 ]]; then
     [[ -d $B128_BASELINE_DIR ]] || { echo "sealed B128 baseline missing" >&2; exit 2; }
   fi
@@ -147,7 +160,9 @@ export ORCHIDEE_OUTPUT_ROOT=$OUTPUT_DIR
 args=(--prepared-input "$PREPARED_INPUT" --full-reference-dir "$FULL_REFERENCE_DIR"
   --output-dir "$OUTPUT_DIR" --config "$CONFIG" --asset-root "$ASSET_ROOT"
   --warm-repeats 5 --budget-seconds "$BUDGET_SECONDS" --memory-baseline-dir "$MEMORY_BASELINE_DIR")
-if [[ $CONTINUE_512 == 1 ]]; then
+if [[ $FIXED_1024 == 1 ]]; then
+  args+=(--fixed-1024 --b512-evidence-dir "$B512_EVIDENCE_DIR")
+elif [[ $CONTINUE_512 == 1 ]]; then
   args+=(--continue-512 --b128-baseline-dir "$B128_BASELINE_DIR" --b256-baseline-dir "$B256_BASELINE_DIR")
 elif [[ $CONTINUE_256_512 == 1 ]]; then
   args+=(--continue-256-512 --b128-baseline-dir "$B128_BASELINE_DIR")

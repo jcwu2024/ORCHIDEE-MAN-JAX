@@ -130,6 +130,33 @@ Only B512 compiled/measured; sealed B128/B256 remained imported comparison origi
 
 The actual12:48UTC [submission snapshot](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/submission-node-snapshot.txt) records requested `ibc13b03n02` as CPU112/112,load22.74,1/8 GPUs allocated; no idle eligible gnall node was observed then. Startup evidence records actual node `ibc13b03n02`, affinity54,55,110,111 (two physical cores for4 charged Slurm CPUs), load26.25,27.24,23.0 and an empty selected-GPU process list. This later startup snapshot must not be used to infer earlier contention. GPU identity was global ID4, UUID `GPU-949cb714-8c53-353c-1f6a-1832c629230e`, Tesla V100-SXM2-32GB, driver525.85.12. Neither occupancy snapshot reserves a node or implies whole-node exclusivity. The scientific goal remains the one-card wrapper cost/trajectory-day curve for future points×members;669-point projection needs separate initialization, tail/padding and IO evidence. [Current result](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md) and [protocol](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md) are the compact current authorities.
 
+## Next Work Order: Explicit Fixed1024 Preparation Only
+
+The new `--fixed-1024` contract measures fresh B512×2 chunks, then conditional
+B1024×1 chunk, in the same new process/job. Both perform14336 lane-days from
+ordered64 FULL64 points×16, full continuous Days2–8/9–15,48 steps/day, native
+dtypes, full outputs and fixed gates. Historical fixed512 behavior is retained.
+Old job15657822 B512 supplies numerical/schema/actual compiler-memory/RSS
+provenance only; its timing is excluded and never multiplied into this curve.
+B512 is the best measured shape to date, with optimality and B1024 still unproven.
+
+Each stage seals independently before proceeding. Both shapes require2700s
+remaining in a proposed5400s window; B1024 also needs all1027 new B512 gates
+passed. The45-minute threshold is a planning guard, not a completion guarantee;
+resource admission has no speedup condition. Device estimates distinguish outer
+raw-lane byte upper bounds from inner actual-stack bytes and add2GiB slack.
+Host RSS projections add8GiB and are distinct from VRAM. The new strict collector
+requires eventual reviewed code SHA, explicit approved allocation and observed startup GPU identity;
+complete B512 survives later B1024/parent failure, with parent cost counted once.
+
+The new wrapper is `slurm_global_gpu_capacity_1024.sh`,1node/1task,4CPU/1V100,
+90min, no requeue, planned checkout `global-throughput-gpu-fixed1024-v1` and
+single-use root `server-benchmark/gpu-fixed1024-v1`. No paid checkout or job has
+been deployed/submitted by preparation. The canonical512/1024 probe compiles
+only the actual insertion helper, not a physical-model graph. See [preparation](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md),
+[protocol](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/PROTOCOL.md)
+and the separately owned [resource/cost proposal](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/B1024_PAID_PROPOSAL.md).
+
 ## Completed Paid Matrix: Fixed Workload
 
 Reuse the admitted Linux FULL64 inputs at

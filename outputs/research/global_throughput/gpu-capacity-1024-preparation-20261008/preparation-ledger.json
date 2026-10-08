@@ -1,0 +1,263 @@
+{
+  "status": "preparation_ready; no_paid_submission_no_new_paid_checkout_no_real_fixed1024_measurement",
+  "date": "2026-10-08",
+  "worktree": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "starting_commit": "e0376d1",
+  "authorization": {
+    "preparation_only": true,
+    "paid_submission": false,
+    "new_paid_checkout_deployment": false,
+    "new_automation": false,
+    "old_budget_reuse": false,
+    "new_training_AD_or_science_rerun": false
+  },
+  "contract": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1",
+  "workload": {
+    "unique_real_points": 64,
+    "ordered_lanes": 1024,
+    "repeats_per_real_point": 16,
+    "lane_days": 14336,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "half_hour_steps_per_day": 48,
+    "new_shapes": [
+      512,
+      1024
+    ],
+    "chunks_per_collection": [
+      2,
+      1
+    ],
+    "warm_core_repeats": 5,
+    "warm_wrapper_repeats": 5,
+    "native_leaves": 760,
+    "strict_gates_per_stage": 1027,
+    "independent_ensemble_member_inputs": false,
+    "full_outputs_masks_native_dtype_tolerances_unchanged": true
+  },
+  "guards": {
+    "proposed_wall_seconds": 5400,
+    "minimum_remaining_seconds_both_shapes": 2700,
+    "minimum_is_completion_guarantee": false,
+    "B1024_requires_new_sealed_strict_B512": true,
+    "resource_guard_requires_speedup": false,
+    "device_slack_bytes": 2147483648,
+    "host_slack_bytes": 8589934592,
+    "device_origin": "max historical/current actual compiler temporary analysis, scaled by candidate shape; full collection resident/output overlap",
+    "outer_input_scope": "raw repeated lane-list conservative upper bound including repeated shared-static leaves",
+    "inner_input_scope": "actual pure-helper full-collection host-stack bytes",
+    "RSS_scope": "host cumulative process peak only; never VRAM",
+    "initial_host_required_bytes": 47583821824
+  },
+  "historical_B512": {
+    "job_id": "15657822",
+    "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
+    "bytes": 220430830,
+    "role": "numeric/native schema/compiler/RSS evidence only; no timing imported or doubled",
+    "actual_temp_bytes": 2288514256,
+    "actual_process_peak_RSS_bytes": 19496943616,
+    "local_new_importer_passed": true,
+    "local_importer_wall_seconds": 1.8222183999969275,
+    "reference_admission_reused": "gpu-sweetspot-preparation-20261006/target-input-admission.json"
+  },
+  "source": {
+    "physics_changed": false,
+    "exact_cache_certificate_retained": true,
+    "canonical_Linux_actual_full_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "canonical_science_SHA256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "new_immutable_execution_commit": "pending parent finalization; collector explicit expected-code-sha required"
+  },
+  "checks": {
+    "capacity_mask_and_actual_launcher_tests": 111,
+    "capacity_test_seconds": 12.18,
+    "Ruff": "passed changed implementation/tests/helpers",
+    "diff": "passed",
+    "canonical_helper": {
+      "status": "passed",
+      "jax": "0.4.38",
+      "code_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "affinity": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "stages": [
+        {
+          "shape": 512,
+          "public_inputs": 10,
+          "internal_inputs": 10,
+          "five_native_outputs_equal_independent_numpy": true,
+          "host_mask_is_immutable_numpy_bool": true
+        },
+        {
+          "shape": 1024,
+          "public_inputs": 10,
+          "internal_inputs": 10,
+          "five_native_outputs_equal_independent_numpy": true,
+          "host_mask_is_immutable_numpy_bool": true
+        }
+      ],
+      "earlier_signature_unchanged": true,
+      "wall_seconds": 6.905893839895725,
+      "scope": "actual insertion helper only; no real model preparation/lowering/compile/invocation or GPU initialization",
+      "fixed1024_model_runtime_acceptance": false
+    },
+    "canonical_Bash_interfaces": {
+      "status": "passed",
+      "source_sha256": {
+        "slurm_global_gpu_capacity.sh": "f371cc441932aa7166cdc0ed384ffd9b4b926d550f89e8b45366861c823ff38f",
+        "slurm_global_gpu_capacity_1024.sh": "6f30b3e47e1e803fb525b23594f03c07111ba8d759498d96f3be23ccbaa54b2a"
+      },
+      "checks": [
+        {
+          "case": "declared",
+          "exit": 0,
+          "stdout": "partition=gnall node=explicit_sbatch_selection nodes=1 tasks=1 cpus=4 gpus=1 wall=01:30:00 output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity full_reference=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/gpu-round4/model conditional512=0\nhost_gpu_identity_source=SLURM_JOB_GPUS global_gpu_selector=\\<from-slurm\\> preserved_cuda_visible_devices=\\<slurm-assigned-device\\> alloc_tres=\\<from-scontrol\\>\nmetadata_command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/scripts/hpc/global_gpu_identity.py --slurm-global-id \\<from-slurm\\> --cuda-visible-devices \\<slurm-assigned-device\\> --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/gpu-identity.json \ncommand=/rmprog/slurm/v22.05.7/bin/srun --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v singularity exec --nv --bind /WORK:/WORK\\,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1\\,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 --pwd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code /apps/soft/sif/foundationpose /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/.venvs/orcjax_gpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/scripts/hpc/global_batch_gpu_entry.py --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --full-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/gpu-round4/model --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/configs/orchidee_man_250919.yaml --asset-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2 --warm-repeats 5 --budget-seconds 5400 --memory-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first --fixed-1024 --b512-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity \n",
+          "stderr": "",
+          "command": [
+            "/rmprog/slurm/v22.05.7/bin/srun",
+            "--ntasks=1",
+            "--cpus-per-task=4",
+            "--cpu-bind=cores",
+            "/usr/bin/time",
+            "-v",
+            "singularity",
+            "exec",
+            "--nv",
+            "--bind",
+            "/WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1",
+            "--pwd",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code",
+            "/apps/soft/sif/foundationpose",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/.venvs/orcjax_gpu/bin/python",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/scripts/hpc/global_batch_gpu_entry.py",
+            "--prepared-input",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+            "--full-reference-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/gpu-round4/model",
+            "--output-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity",
+            "--config",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/configs/orchidee_man_250919.yaml",
+            "--asset-root",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2",
+            "--warm-repeats",
+            "5",
+            "--budget-seconds",
+            "5400",
+            "--memory-baseline-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first",
+            "--fixed-1024",
+            "--b512-evidence-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity"
+          ]
+        },
+        {
+          "case": "spooled",
+          "exit": 0,
+          "stdout": "partition=gnall node=explicit_sbatch_selection nodes=1 tasks=1 cpus=4 gpus=1 wall=01:30:00 output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity full_reference=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/gpu-round4/model conditional512=0\nhost_gpu_identity_source=SLURM_JOB_GPUS global_gpu_selector=\\<from-slurm\\> preserved_cuda_visible_devices=\\<slurm-assigned-device\\> alloc_tres=\\<from-scontrol\\>\nmetadata_command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/scripts/hpc/global_gpu_identity.py --slurm-global-id \\<from-slurm\\> --cuda-visible-devices \\<slurm-assigned-device\\> --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/gpu-identity.json \ncommand=/rmprog/slurm/v22.05.7/bin/srun --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v singularity exec --nv --bind /WORK:/WORK\\,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1\\,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 --pwd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code /apps/soft/sif/foundationpose /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/.venvs/orcjax_gpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/scripts/hpc/global_batch_gpu_entry.py --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --full-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/gpu-round4/model --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/configs/orchidee_man_250919.yaml --asset-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2 --warm-repeats 5 --budget-seconds 5400 --memory-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first --fixed-1024 --b512-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity \n",
+          "stderr": "",
+          "command": [
+            "/rmprog/slurm/v22.05.7/bin/srun",
+            "--ntasks=1",
+            "--cpus-per-task=4",
+            "--cpu-bind=cores",
+            "/usr/bin/time",
+            "-v",
+            "singularity",
+            "exec",
+            "--nv",
+            "--bind",
+            "/WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1",
+            "--pwd",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code",
+            "/apps/soft/sif/foundationpose",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/.venvs/orcjax_gpu/bin/python",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/scripts/hpc/global_batch_gpu_entry.py",
+            "--prepared-input",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+            "--full-reference-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/gpu-round4/model",
+            "--output-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity",
+            "--config",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/worktrees/declared-code/configs/orchidee_man_250919.yaml",
+            "--asset-root",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2",
+            "--warm-repeats",
+            "5",
+            "--budget-seconds",
+            "5400",
+            "--memory-baseline-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first",
+            "--fixed-1024",
+            "--b512-evidence-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/interface-project/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity"
+          ]
+        }
+      ],
+      "direct_spooled_commands_equal": true,
+      "wall_seconds": 0.46709712035954,
+      "scope": "target Bash syntax/runtime expansion; only PROJECT literal relocated into preparation fixture; no paid checkout deployment",
+      "model_preparation_lower_compile_run": false,
+      "JAX_imported": false,
+      "GPU_initialization": false,
+      "eventual_immutable_declared_checkout_interface_check": "pending final code SHA/deployment"
+    },
+    "scope": "no physical-model large lower/compile/run, no new FULL64 audit, no GPU initialization",
+    "pytest_warning": "pre-existing cache_dir option warning when cacheprovider disabled",
+    "existing_batch_regression_tests": 33,
+    "existing_batch_regression_seconds": 5.45,
+    "total_capacity_mask_launcher_and_batch_tests": 144,
+    "eventual_immutable_checkout_real_target_interfaces": "not executed; final parent SHA/deployment pending, fixture is not deployment admission",
+    "collector_tests": 15,
+    "collector_test_seconds": 0.06,
+    "collector_test_scope": "synthetic contract/control-flow fixtures; no real fixed1024 saved model evidence",
+    "collector_Ruff": "passed",
+    "collector_CLI_help": "passed",
+    "total_lightweight_tests": 159
+  },
+  "paid_proposal": {
+    "owner": "parent",
+    "resource_envelope": "proposed gnall1node1task4CPU1V10090min no-requeue",
+    "primary_CNY_ceiling": 3.6,
+    "conservative_CNY_ceiling": 3.72,
+    "approval": false,
+    "submitted_jobs": 0,
+    "paths": "B1024_PAID_PROPOSAL.md",
+    "old_paid_budgets": "closed"
+  },
+  "evidence": [
+    "local-capacity-checks.txt",
+    "canonical-helper-probe.json",
+    "canonical-launcher-interfaces.json",
+    "historical-b512-admission.json",
+    "PROTOCOL.md",
+    "CURRENT_RESULT.md",
+    "local-batch-regression.txt",
+    "collector-readiness.json",
+    "verification.json"
+  ],
+  "collector_readiness": "collector-readiness.json; expected-code-sha explicit and pending parent finalization",
+  "cleanup": {
+    "status": "automatic_approval_review_rejected",
+    "action": "PowerShell Remove-Item -LiteralPath against bounded generated cache directory/files",
+    "reason": "blocked by policy; no further reason supplied",
+    "remaining_ignored_files": [
+      "__pycache__/collect_fixed1024_result.cpython-311.pyc",
+      "__pycache__/test_collect_fixed1024_result.cpython-311-pytest-9.0.3.pyc"
+    ],
+    "alternate_deletion_attempted": false,
+    "future_commands": "PYTHONDONTWRITEBYTECODE=1 and python-B"
+  }
+}

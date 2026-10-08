@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "scope": "new origin-only importer on original saved B512; no model execution, compilation or prepared-input audit",
+  "historical_source_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
+  "bytes": 220430830,
+  "historical_timing_returned": false,
+  "native_reference_schema_checked": true,
+  "compiler_temporary_bytes": 2288514256,
+  "historical_process_peak_RSS_bytes": 19496943616,
+  "code_origin": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+  "wall_seconds": 1.8222183999969275,
+  "fixed1024_runtime_accepted": false
+}
