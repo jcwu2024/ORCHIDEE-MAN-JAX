@@ -19,3 +19,6 @@ outputs/research/global_throughput/gpu-signature-repair-20261008/spool-fix-deplo
 outputs/research/global_throughput/gpu-signature-repair-20261008/spool-regression-tests.txt whitespace=-blank-at-eol
 outputs/research/global_throughput/gpu-signature-repair-20261008/spool-target-verification.txt whitespace=-blank-at-eol
 outputs/research/global_throughput/gpu-signature-repair-20261008/v3-job-15643868-initial-status.txt whitespace=-blank-at-eol
+# Keep captured terminal artifacts byte-exact for the recorded sizes and SHA256.
+outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence/** -text whitespace=-blank-at-eol
+outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-terminal-status-log.txt text eol=lf whitespace=-blank-at-eol

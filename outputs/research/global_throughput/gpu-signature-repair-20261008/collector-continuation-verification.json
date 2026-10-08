@@ -1,0 +1,279 @@
+{
+  "job_id": "15643868",
+  "approved_code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+  "contract": "GPU-fixed512-repeated-FULL64-B256-B512-continuation-v1",
+  "collector_source_sha256": "e3b8383ba3b2f34bc95dd831738449ab78a3b9e811d0f1a7a3907d793cdb268e",
+  "test_source_sha256": "06e9771a1ffbda31063294879007d5dd31e6d333ebacf45f790c6f6ea4244921",
+  "unchanged_legacy_collector_sha256": "56ac32805e39005a4bc9401036e2fb2d45f888acd9eb3a7d317af8eb9ccef2f9",
+  "local_tests": {
+    "command": "conda run --no-capture-output -n ORCJAX python -m pytest outputs/research/global_throughput/gpu-signature-repair-20261008/test_collect_continuation_result.py outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/test_collect_capacity_result.py -q -p no:cacheprovider",
+    "exit_code": 0,
+    "passed": 56,
+    "seconds": 4.95,
+    "continuation_or_adapted": 42,
+    "unchanged_legacy": 14,
+    "warning": "existing pytest Unknown config option: cache_dir"
+  },
+  "static_check": {
+    "command": "conda run --no-capture-output -n ORCJAX python -m ruff check outputs/research/global_throughput/gpu-signature-repair-20261008/collect_continuation_result.py outputs/research/global_throughput/gpu-signature-repair-20261008/test_collect_continuation_result.py",
+    "exit_code": 0,
+    "outcome": "All checks passed"
+  },
+  "target_probe": {
+    "host": "ibtest02",
+    "python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "help_exit_code": 0,
+    "ast_tiny_identity_parent_accounting_exit_code": 0,
+    "JAX_imported": false,
+    "stage_collection": false,
+    "artifacts": [
+      "collector-continuation-target-help.txt",
+      "collector-continuation-target-probe.jsonl"
+    ]
+  },
+  "real_stage_validation": {
+    "host": "ibtest02",
+    "canonical_CPU_environment": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "command_argv": [
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/transfer/gpu-signature-repair-20261008-collector/collect_continuation_result.py",
+      "--code-dir",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
+      "--stage-dir",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence/capacity",
+      "--admission",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json",
+      "--sacct-file",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence/sacct-collector7.txt",
+      "--output",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-terminal-validation.json"
+    ],
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "JAX_PLATFORMS": "cpu",
+      "JAX_ENABLE_X64": "true",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "exit_code": 0,
+    "output": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-terminal-validation.json",
+    "valid_exploratory_stages": 1,
+    "withheld_stages": 0,
+    "incomplete_stages": 1,
+    "new_stage": "capacity_B256_fixed512_v1",
+    "checkpoint_sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+    "bytes": 220429675,
+    "saved_gates": 515,
+    "checked_output_leaves": 760,
+    "actual_output_lanes": 512,
+    "actual_saved_output_reference_comparisons": 512,
+    "strict_numerical_passed": true,
+    "actual_saved_output_reference_passed": true,
+    "numerical_validation_class": "strict_saved_numerical_pass",
+    "source_and_immutable_checkout_mutated": false,
+    "model_execution": false,
+    "model_compilation": false,
+    "baseline_recompiled": false
+  },
+  "imported_B128_baseline": {
+    "old_job_id": "15600405",
+    "old_code_commit": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+    "sha256": "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5",
+    "bytes": 220429366,
+    "source_full_hash_identity_provenance_verified": true,
+    "new_B128_stage": false,
+    "core_median_seconds": 29.617320833727717,
+    "wrapper_median_seconds": 33.83803023956716
+  },
+  "measured_B256": {
+    "core": {
+      "samples_seconds": [
+        27.044812379404902,
+        27.024156771600246,
+        27.026018783450127,
+        27.0232412815094,
+        27.022209791466594
+      ],
+      "median_seconds": 27.024156771600246,
+      "range_seconds": [
+        27.022209791466594,
+        27.044812379404902
+      ],
+      "lane_days_per_second": 265.2441687850505,
+      "lane_days": 7168,
+      "warm_cost_scenarios": {
+        "primary": {
+          "CNY": 0.018016104514400166,
+          "GPU_card_hours": 0.0075067102143334015,
+          "auxiliary_CPU_count_hours": 0.030026840857333606,
+          "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+        },
+        "conservative": {
+          "CNY": 0.01861664133154684,
+          "GPU_card_hours": 0.0075067102143334015,
+          "auxiliary_CPU_count_hours": 0.030026840857333606,
+          "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+        }
+      }
+    },
+    "wrapper": {
+      "samples_seconds": [
+        30.371350621804595,
+        30.48497061803937,
+        30.538280688226223,
+        30.3190147690475,
+        30.468557430431247
+      ],
+      "median_seconds": 30.468557430431247,
+      "range_seconds": [
+        30.3190147690475,
+        30.538280688226223
+      ],
+      "lane_days_per_second": 235.25892278840803,
+      "lane_days": 7168,
+      "warm_cost_scenarios": {
+        "primary": {
+          "CNY": 0.0203123716202875,
+          "GPU_card_hours": 0.00846348817511979,
+          "auxiliary_CPU_count_hours": 0.03385395270047916,
+          "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+        },
+        "conservative": {
+          "CNY": 0.020989450674297083,
+          "GPU_card_hours": 0.00846348817511979,
+          "auxiliary_CPU_count_hours": 0.03385395270047916,
+          "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+        }
+      }
+    },
+    "startup": {
+      "host_stack_seconds": 2.7732230462133884,
+      "device_transfer_seconds": 0.8839878458529711,
+      "first_full512_call_seconds": 27.168201223015785,
+      "lower_seconds": 93.37303904443979,
+      "compile_seconds": 686.8420931939036
+    },
+    "checkpoint_IO": {
+      "available": true,
+      "bytes": 220429675,
+      "serialization_seconds": 0.2949339598417282,
+      "atomic_write_seconds": 0.2710233200341463,
+      "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+    }
+  },
+  "B512": {
+    "measurement_status": "failed_unsealed",
+    "reason": "AOT internal input signature differs: expected536, internal673",
+    "failure_boundary": "lowered signature audit before compile",
+    "compile_performed": false,
+    "complete_samples": false,
+    "checkpoint": false
+  },
+  "accounting": {
+    "terminal": true,
+    "state": "FAILED",
+    "parent_row": [
+      "15643868",
+      "FAILED",
+      "1296",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "1:0",
+      "ibc13b03n02"
+    ],
+    "observed_wall_seconds": 1296,
+    "exit_code": "1:0",
+    "node": "ibc13b03n02",
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 0.8640000000000001,
+        "GPU_card_hours": 0.36,
+        "auxiliary_CPU_count_hours": 1.44,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      },
+      "conservative": {
+        "CNY": 0.8928000000000001,
+        "GPU_card_hours": 0.36,
+        "auxiliary_CPU_count_hours": 1.44,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      }
+    }
+  },
+  "limits": [
+    "No scientific global acceptance inferred from capacity window.",
+    "Only sealed five-core/five-wrapper complete collections published; warmup/setup/compilation/IO kept separate.",
+    "B512 has no valid measurement.",
+    "Historical old B256 trigger remains unresolved; new B512 internal signature mismatch observed naturally and rejected before compile.",
+    "Historical B128 used lazy C++ dispatch while new B256 includes explicit Python AOT host dispatch overhead; curve is not an isolated batch-size effect.",
+    "K amortization omitted without separately observed full setup model; whole-job scenarios are unverified billing and use one parent sacct row only."
+  ],
+  "artifacts": [
+    "collect_continuation_result.py",
+    "test_collect_continuation_result.py",
+    "collector-continuation-actual-stdout.txt",
+    "collector-continuation-actual-summary.json"
+  ],
+  "cost_per_million_lane_days": {
+    "core": {
+      "primary": {
+        "CNY_per_million_lane_days": 2.5134074378348448,
+        "rate_CNY_per_card_plus4CPU_hour": 2.4000000000000004,
+        "GPU_card_hours_per_million_lane_days": 1.0472530990978517
+      },
+      "conservative": {
+        "CNY_per_million_lane_days": 2.597187685762673,
+        "rate_CNY_per_card_plus4CPU_hour": 2.4800000000000004,
+        "GPU_card_hours_per_million_lane_days": 1.0472530990978517
+      }
+    },
+    "wrapper": {
+      "primary": {
+        "CNY_per_million_lane_days": 2.8337572014910015,
+        "rate_CNY_per_card_plus4CPU_hour": 2.4000000000000004,
+        "GPU_card_hours_per_million_lane_days": 1.1807321672879172
+      },
+      "conservative": {
+        "CNY_per_million_lane_days": 2.928215774874035,
+        "rate_CNY_per_card_plus4CPU_hour": 2.4800000000000004,
+        "GPU_card_hours_per_million_lane_days": 1.1807321672879172
+      }
+    }
+  },
+  "true669_single_scenario_projection": {
+    "scope": "arithmetic warm-only projection, not measured global669/scientific acceptance or memory admission",
+    "unique_points": 669,
+    "members": 1,
+    "days_per_point": 14,
+    "batch_shape": 256,
+    "full_batches": 2,
+    "tail_real_points": 157,
+    "tail_padded_points": 99,
+    "padded_batches": 3,
+    "padded_lanes": 768,
+    "actual_trajectory_days": 9366,
+    "padded_lane_days": 10752,
+    "assumption": "three B256 chunks cost1.5x observed two chunks on repeated FULL64; no extra startup, no demonstrated distinct669 performance",
+    "padded_wrapper_seconds_estimate": 45.70283614564687,
+    "warm_CNY_scenarios": {
+      "primary": {
+        "CNY": 0.030468557430431253,
+        "CNY_per_million_actual_trajectory_days": 3.253102437586083
+      },
+      "conservative": {
+        "CNY": 0.031484176011445625,
+        "CNY_per_million_actual_trajectory_days": 3.3615391855056185
+      }
+    },
+    "unpadded_tail": "B157 tail runtime/compile/cost unmeasured; two full batches plus unknown157-tail cost"
+  },
+  "source_sha256_policy": {
+    "collector_source_sha256": "raw uploaded/tested bytes (CRLF)",
+    "test_source_sha256": "raw locally tested bytes (CRLF)",
+    "git_source_normalization": "tracked Python sources use LF; code text unchanged",
+    "collector_normalized_LF_sha256": "02168b06352f0909c9d9a9a666c6d56edbff0330befcacfc2e8a214ef8159d3f",
+    "test_normalized_LF_sha256": "3bdb5961d10927d889c23ceab2a5097c577bf5f495bf886297b164e4c1bb4f92"
+  }
+}

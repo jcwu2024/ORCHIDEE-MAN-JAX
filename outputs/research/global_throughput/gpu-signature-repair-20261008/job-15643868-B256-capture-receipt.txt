@@ -1,0 +1,1 @@
+{"job_id": "15643868", "label": "B256", "files": 12, "checkpoint_count": 1, "destination": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence", "parent_collector7": "15643868|FAILED|1296|4|billing=4,cpu=4,gres/gpu=1,node=1|1:0|ibc13b03n02"}

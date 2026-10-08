@@ -1,5 +1,5 @@
 {
-  "status": "v3_submitted_running",
+  "status": "v3_terminal_failed_B256_strict_saved_verified_B512_signature_rejected_followup_complete",
   "date": "2026-10-08",
   "code_commit_v2": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
   "code_checkout_v2": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
@@ -103,12 +103,16 @@
     "REPAIR_REPORT.md",
     "final-module-canonical-diagnostic.jsonl",
     "final-launcher-verification.txt",
-    "deployment-verification.json"
+    "deployment-verification.json",
+    "collector-continuation-verification.json",
+    "collector-continuation-actual-summary.json",
+    "job-15643868-terminal-validation.json",
+    "local-transfer-verification.json"
   ],
   "historical_command_file": "APPROVAL_COMMAND.sh",
   "historical_command_must_not_authorize_v3": true,
   "corrected_v3_proposal": {
-    "status": "submitted_running",
+    "status": "terminal_failed_B256_validated_B512_failed_followup_complete",
     "code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
     "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
     "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
@@ -153,7 +157,7 @@
       "spool-fix-deployment-log.txt",
       "spool-fix-deployment-verification.json"
     ],
-    "independent_review": "no blocking launcher issue found; allocated Slurm/container startup and real GPU B256/B512 remain unverified",
+    "independent_review": "Pre-submission launcher review found no blocking issue; actual allocated startup and B256 saved-result validation passed; B512 lowering signature audit failed before compile/run",
     "submission_node_snapshot": "v3-submission-node-snapshot.json",
     "job_id": "15643868",
     "submission_endpoint": "gln01",
@@ -165,8 +169,8 @@
     "actual_node": "ibc13b03n02",
     "actual_allocated_CPUs": 4,
     "actual_allocated_GPUs": 1,
-    "observed_state": "RUNNING",
-    "observed_utc": "2026-10-08T07:32:08Z",
+    "observed_state": "FAILED",
+    "observed_utc": "2026-10-08T07:55:35Z",
     "actual_GPU_identity": {
       "uuid": "GPU-949cb714-8c53-353c-1f6a-1832c629230e",
       "name": "Tesla V100-SXM2-32GB",
@@ -175,10 +179,206 @@
       "driver": "525.85.12",
       "global_id": 4
     },
-    "completed_shapes": [],
-    "final_parent_accounting": null,
-    "monitoring_mode": "foreground read-only follow-up; no automation created"
+    "completed_shapes": [
+      256
+    ],
+    "final_parent_accounting": {
+      "wall_seconds": 1296,
+      "child_rows_excluded": true,
+      "allocated_GPUs": 1,
+      "state": "FAILED",
+      "GPU_card_seconds": 1296,
+      "GPU_card_hours": 0.36,
+      "job_id": "15643868",
+      "billing_or_rounding_verified": false,
+      "exit_code": "1:0",
+      "primary_CNY_estimate": 0.864,
+      "count_parent_once": true,
+      "node": "ibc13b03n02",
+      "allocated_CPUs": 4,
+      "allocated_CPU_count_hours": 1.44,
+      "allocated_CPU_seconds": 5184,
+      "conservative_CNY_estimate": 0.8928,
+      "start_time_local": "2026-10-08T15:31:39+08:00",
+      "end_time_local": "2026-10-08T15:53:15+08:00",
+      "evidence": "job-15643868-terminal-parent-final.txt"
+    },
+    "monitoring_mode": "foreground read-only follow-up; no automation created",
+    "B256_saved_validation": {
+      "status": "strict_saved_numerical_pass",
+      "checkpoint_SHA256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+      "checkpoint_bytes": 220429675,
+      "checked_output_leaves": 760,
+      "output_lanes": 512,
+      "saved_gates": 515,
+      "saved_gates_failed": 0,
+      "independent_saved_reference_comparisons": 512,
+      "five_core_and_five_wrapper": true,
+      "core": {
+        "samples_seconds": [
+          27.044812379404902,
+          27.024156771600246,
+          27.026018783450127,
+          27.0232412815094,
+          27.022209791466594
+        ],
+        "median_seconds": 27.024156771600246,
+        "range_seconds": [
+          27.022209791466594,
+          27.044812379404902
+        ],
+        "lane_days_per_second": 265.2441687850505,
+        "lane_days": 7168,
+        "warm_cost_scenarios": {
+          "primary": {
+            "CNY": 0.018016104514400166,
+            "GPU_card_hours": 0.0075067102143334015,
+            "auxiliary_CPU_count_hours": 0.030026840857333606,
+            "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+          },
+          "conservative": {
+            "CNY": 0.01861664133154684,
+            "GPU_card_hours": 0.0075067102143334015,
+            "auxiliary_CPU_count_hours": 0.030026840857333606,
+            "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+          }
+        }
+      },
+      "wrapper": {
+        "samples_seconds": [
+          30.371350621804595,
+          30.48497061803937,
+          30.538280688226223,
+          30.3190147690475,
+          30.468557430431247
+        ],
+        "median_seconds": 30.468557430431247,
+        "range_seconds": [
+          30.3190147690475,
+          30.538280688226223
+        ],
+        "lane_days_per_second": 235.25892278840803,
+        "lane_days": 7168,
+        "warm_cost_scenarios": {
+          "primary": {
+            "CNY": 0.0203123716202875,
+            "GPU_card_hours": 0.00846348817511979,
+            "auxiliary_CPU_count_hours": 0.03385395270047916,
+            "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+          },
+          "conservative": {
+            "CNY": 0.020989450674297083,
+            "GPU_card_hours": 0.00846348817511979,
+            "auxiliary_CPU_count_hours": 0.03385395270047916,
+            "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+          }
+        }
+      },
+      "startup": {
+        "host_stack_seconds": 2.7732230462133884,
+        "device_transfer_seconds": 0.8839878458529711,
+        "first_full512_call_seconds": 27.168201223015785,
+        "lower_seconds": 93.37303904443979,
+        "compile_seconds": 686.8420931939036
+      },
+      "checkpoint_IO": {
+        "available": true,
+        "bytes": 220429675,
+        "serialization_seconds": 0.2949339598417282,
+        "atomic_write_seconds": 0.2710233200341463,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      },
+      "scientific_acceptance": false,
+      "full_validation": "job-15643868-terminal-validation.json",
+      "compact_summary": "collector-continuation-actual-summary.json",
+      "collector_verification": "collector-continuation-verification.json",
+      "local_transfer_verification": "local-transfer-verification.json",
+      "remote_validation_host": "ibtest02",
+      "model_compilation_or_execution_in_collection": false
+    },
+    "B512_failure": {
+      "internal_input_leaves": 673,
+      "expected_input_leaves": 536,
+      "evidence": "job-15643868-failure-diagnostics.json",
+      "class": "lowered AOT internal input signature mismatch caught before compile",
+      "checkpoint": false,
+      "compile_or_model_execution": false,
+      "full_samples": false,
+      "lower_seconds": 63.63964840397239
+    },
+    "terminal_status_evidence": "job-15643868-terminal-status-log.txt",
+    "saved_evidence": "job-15643868-B256-evidence/capture.json",
+    "followup_complete": true,
+    "automatic_retry": false,
+    "followup_monitoring_status": "complete; no new automation; old explore1000 configuration absent, gpu-15600405 remains PAUSED",
+    "retained_local_artifacts": {
+      "full_checkpoint": "job-15643868-B256-evidence/capacity/stage_capacity_B256_fixed512_v1.pkl",
+      "report": "job-15643868-B256-evidence/capacity/report.json",
+      "manifest": "job-15643868-B256-evidence/capacity/stage_manifest.json",
+      "stored_in_git": false,
+      "remote_terminal_capture": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence",
+      "all_snapshot_files_verified_locally": true
+    }
   },
   "automatic_resubmission": false,
-  "automation_created_or_resumed": false
+  "automation_created_or_resumed": false,
+  "real_GPU_verified_shapes": [
+    256
+  ],
+  "current_research_objective": {
+    "goal": "single-card batch unit trajectory-day cost/throughput curve for future point x parameter/scenario member trajectories",
+    "primary_metric": "warm prepared-input wrapper: organize inputs, transfer, execute both blocks, return full outputs; CNY per trajectory-day",
+    "core_role": "explanatory throughput",
+    "real669_single_scenario": "separate total task cost/time including tail/padding, initialization, setup, aggregation and IO; not measured or accepted",
+    "batch669_hard_cap": false,
+    "current_evidence": "fixed512 lanes, 64 unique FULL64 points repeated8, two contiguous7day blocks; not512 unique scientific trajectories",
+    "B128_wrapper_CNY_per_million_lane_days_primary": 3.14713822912641,
+    "B256_wrapper_CNY_per_million_lane_days_primary": 2.8337572014910015,
+    "B256_wrapper_CNY_per_million_lane_days_conservative": 2.928215774874035,
+    "B256_vs_B128_wrapper_unit_cost_reduction_percent": 9.957650564411269,
+    "optimal_batch_found": false,
+    "reason": "last valid B256 wrapper improves11.06percent versus B128, but B512 is unmeasured and dispatch changed",
+    "comparison_limit": "old B128 lazy C++ dispatch versus new B256 bound Python dispatch; observed configuration comparison is not isolated batch-size causality",
+    "long_vs_short": "warm capacity unit cost applies to measured14day collection only; startup/compile/checkpoint IO and whole job separately; no annual/50year or K extrapolation",
+    "future_plan": "free bounded B512 metadata diagnosis first; any retry paid job needs its own approved proposal. If curve still rising, compare1024 on common workload of at least1024 lanes; local refinement near plateau, prefer lower memory/compile burden near maximum throughput",
+    "future_science_gate": "different genuine points and actual differing member inputs; repeats capacity-only; never split50years into independent years",
+    "extra_paid_work_authorized": false,
+    "future_comparison_design": {
+      "first_missing_measurement": "B512 on unchanged fixed512 after separately scoped metadata diagnosis and separately approved paid submission; reuse sealed B256/B128 references without recompiling them",
+      "if_next_valid_largest_shape_still_rising": {
+        "common_workload_lanes": 1024,
+        "genuine_source_points": 64,
+        "source_repeats_per_point": 16,
+        "candidate_shapes": [
+          256,
+          512,
+          1024
+        ],
+        "full_chunks_per_collection": [
+          4,
+          2,
+          1
+        ],
+        "days_per_trajectory": 14,
+        "blocks": [
+          [
+            2,
+            8
+          ],
+          [
+            9,
+            15
+          ]
+        ],
+        "half_hours_per_day": 48,
+        "warmup": "one full synchronized collection per shape",
+        "core_samples": 5,
+        "wrapper_samples": 5,
+        "numerical_and_output_contract": "unchanged physics/native dtype/full outputs/original tolerances; all lanes saved and checked",
+        "caveat": "proposed capacity screen, not measured; memory/time admission and new paid approval required"
+      },
+      "plateau_refinement_example": "only if evidence places plateau between256and512: B256/B384/B512 on common1536 orderedlanes with6/4/3 fullchunks; same contract and explicit memory/time approval; prefer near-best lower-burden range rather than noisy optimum",
+      "real669_validation": "separate genuine669point same-scenario task; B256 has2full+157real tail, optional99padding; measure tail strategy and full initialization/setup/aggregation/IO instead of replacing it with capacity extrapolation"
+    }
+  }
 }

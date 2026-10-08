@@ -1,0 +1,1 @@
+{"job_id": "15643868", "valid_stages": 1, "withheld_stages": 0, "incomplete_stages": 1, "imported_B128_is_new_stage": false, "output": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-terminal-validation.json"}

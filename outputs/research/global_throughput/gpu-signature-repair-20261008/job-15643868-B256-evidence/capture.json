@@ -1,0 +1,108 @@
+{
+  "job_id": "15643868",
+  "code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+  "capture_utc": "2026-10-08T07:53:28.789098+00:00",
+  "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512",
+  "destination": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence",
+  "label": "B256",
+  "scope": "saved-only evidence copy/hash; no model execution or compilation",
+  "files": [
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/launch-context.txt",
+      "path": "launch-context.txt",
+      "bytes": 8939,
+      "sha256": "03c43f9d8d17ba93f8d924783b3072f4773c6b79e79bc526d1b8063837c2f119",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/gpu-identity.json",
+      "path": "gpu-identity.json",
+      "bytes": 1362,
+      "sha256": "594d26f65aa9800002bc589395f7bab73722410b5363360cf586c05036e011a7",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/gpu-diagnostic-exits.tsv",
+      "path": "gpu-diagnostic-exits.tsv",
+      "bytes": 50,
+      "sha256": "38e41d075ca5505cbc26831532a63076bdf3f276a6be8c6cea55d33e072d3de0",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/selected-gpu-inventory.stdout.txt",
+      "path": "selected-gpu-inventory.stdout.txt",
+      "bytes": 194,
+      "sha256": "ad611a86ff337a40fc90a8491cdafb3a81b9907797c99b9172d16357a1282239",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/selected-gpu-inventory.stderr.txt",
+      "path": "selected-gpu-inventory.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/selected-gpu-processes.stdout.txt",
+      "path": "selected-gpu-processes.stdout.txt",
+      "bytes": 51,
+      "sha256": "185facacd43b2b47152f1040bb6d81a57e8f284965fbf5ff6e6fbf0276871185",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/selected-gpu-processes.stderr.txt",
+      "path": "selected-gpu-processes.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity/report.json",
+      "path": "capacity/report.json",
+      "bytes": 3559419,
+      "sha256": "cbb8db33a6283889f8132bd203d6caaa728adaf3e104d230bf633b4f2af4e9be",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity/events.jsonl",
+      "path": "capacity/events.jsonl",
+      "bytes": 526,
+      "sha256": "80666364ab3cb36c54f4c14e398c6ef5927a0a69ac62542570c2e6c276d1866e",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity/stage_manifest.json",
+      "path": "capacity/stage_manifest.json",
+      "bytes": 1714645,
+      "sha256": "84ca672303e7290bfd9b6b3975ba55615796bf7ade83ae29dc9fa1848dcaf4f9",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity/stage_capacity_B256_fixed512_v1.pkl",
+      "path": "capacity/stage_capacity_B256_fixed512_v1.pkl",
+      "bytes": 220429675,
+      "sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+      "sealed_checkpoint": true,
+      "telemetry_may_continue_after_snapshot": false
+    },
+    {
+      "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_continue_15643868.txt",
+      "path": "global_gpu_capacity_continue_15643868.txt",
+      "bytes": 8939,
+      "sha256": "03c43f9d8d17ba93f8d924783b3072f4773c6b79e79bc526d1b8063837c2f119",
+      "sealed_checkpoint": false,
+      "telemetry_may_continue_after_snapshot": true
+    }
+  ],
+  "parent_collector7": "15643868|FAILED|1296|4|billing=4,cpu=4,gres/gpu=1,node=1|1:0|ibc13b03n02"
+}

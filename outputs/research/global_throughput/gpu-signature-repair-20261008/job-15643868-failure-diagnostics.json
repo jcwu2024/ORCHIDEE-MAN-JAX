@@ -1,0 +1,75 @@
+{
+  "report": {
+    "status": "failed",
+    "conditional_512_decision": {
+      "permitted": true,
+      "reasons": [],
+      "remaining_seconds": 4183.283544063568,
+      "estimated_device_bytes": 6926300800,
+      "free_device_bytes": 24648876032,
+      "scope": "preset capacity-screen condition, not OOM or completion guarantee",
+      "policy": "resource_admitted_scale_curve",
+      "host_memory": {
+        "MemAvailable_bytes": 331497627648,
+        "old_B64_job_peak_RSS_bytes": 12869337088,
+        "lane_scaled_required_bytes": 111544631296,
+        "limitation": "old whole-benchmark RSS scaled by batch lanes plus8GiB; planning screen, not measured stage RSS or reservation"
+      }
+    },
+    "traceback": "Traceback (most recent call last):\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_gpu_capacity.py\", line 495, in main\n    benchmark(args, recorder, lanes, second, scale)\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_gpu_capacity.py\", line 394, in benchmark\n    run(512)\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_gpu_capacity.py\", line 364, in run\n    (value, record), reused = store.run(f\"capacity_B{size}_fixed512_v1\",\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/global_batch_stage_store.py\", line 148, in run\n    value, record = operation()\n                    ^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_gpu_capacity.py\", line 365, in <lambda>\n    lambda: measure_shape(size, args, recorder, expanded, others, reference, scale, memory_records))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_gpu_capacity.py\", line 240, in measure_shape\n    executable = base.lower_compile(base.batch.make_batch_transition(chunks[0][0]), pairs[0][0], label, recorder)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_batch.py\", line 497, in lower_compile\n    lowered_signature = audit_aot_signature(lowered, arguments, lowered=True)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/dev/benchmark_global_batch.py\", line 454, in audit_aot_signature\n    raise TypeError(f\"AOT internal input signature differs: expected{len(expected)}, internal{len(internal)}\")\nTypeError: AOT internal input signature differs: expected536, internal673\n"
+  },
+  "timing": {
+    "capacity_B256_lower_seconds": 93.37303904443979,
+    "capacity_B256_compile_seconds": 686.8420931939036,
+    "capacity_B512_lower_seconds": 63.63964840397239
+  },
+  "compilations": {
+    "capacity_B256": {
+      "stablehlo_sha256": "8572796f057d60acc3450594f70d3521d75f423a69fc02ee9b2a4f1d870965d3",
+      "lowered_input_signature": {
+        "caller_leaves": 536,
+        "public_input_leaves": 536,
+        "internal_all_args_leaves": 536,
+        "kept_input_leaves": 417,
+        "public_tree_shape_dtype_weak_type_equal": true,
+        "internal_signature_equal": true
+      },
+      "compiled_input_signature": {
+        "caller_leaves": 536,
+        "public_input_leaves": 536,
+        "internal_all_args_leaves": 536,
+        "kept_input_leaves": 417,
+        "public_tree_shape_dtype_weak_type_equal": true,
+        "internal_signature_equal": true
+      },
+      "call_binding": "explicit stage Compiled.call parameters; standard JAX checks retained",
+      "cache_events": []
+    }
+  },
+  "stages": {
+    "capacity_B256_fixed512_v1": {
+      "status": "complete",
+      "sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+      "measurement_status": "complete",
+      "strict_numerical_passed": true,
+      "startup": {
+        "host_stack_seconds": 2.7732230462133884,
+        "device_transfer_seconds": 0.8839878458529711,
+        "first_full512_call_seconds": 27.168201223015785,
+        "lower_seconds": 93.37303904443979,
+        "compile_seconds": 686.8420931939036
+      },
+      "checkpoint_io": {
+        "available": true,
+        "bytes": 220429675,
+        "serialization_seconds": 0.2949339598417282,
+        "atomic_write_seconds": 0.2710233200341463,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      }
+    },
+    "capacity_B512_fixed512_v1": {
+      "status": "failed",
+      "reason": "AOT internal input signature differs: expected536, internal673"
+    }
+  }
+}

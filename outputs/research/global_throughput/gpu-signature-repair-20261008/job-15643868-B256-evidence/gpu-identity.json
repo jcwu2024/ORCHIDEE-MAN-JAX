@@ -1,0 +1,40 @@
+{
+  "status": "verified_metadata_only",
+  "slurm_global_gpu_id": "4",
+  "CUDA_VISIBLE_DEVICES_preserved": "0",
+  "uuid": "GPU-949cb714-8c53-353c-1f6a-1832c629230e",
+  "name": "Tesla V100-SXM2-32GB",
+  "driver": "525.85.12",
+  "device_minor": 4,
+  "pci_bus_id": "00000000:88:00.0",
+  "origin": "SLURM_JOB_GPUS numeric ID -> exact /proc Device Minor -> NVML UUID/minor/PCI cross-check",
+  "proc_record": {
+    "uuid": "GPU-949cb714-8c53-353c-1f6a-1832c629230e",
+    "minor": 4,
+    "pci": "0000:88:00.0",
+    "path": "/proc/driver/nvidia/gpus/0000:88:00.0/information"
+  },
+  "accessible_NVML_devices": [
+    {
+      "uuid": "GPU-949cb714-8c53-353c-1f6a-1832c629230e",
+      "minor": 4,
+      "pci": "00000000:88:00.0",
+      "name": "Tesla V100-SXM2-32GB"
+    }
+  ],
+  "model_execution": false,
+  "CUDA_selector_UUID_resolution_verified": false,
+  "CUDA_execution_condition": "single allocated Slurm GPU cgroup and preserved CUDA_VISIBLE_DEVICES; helper verifies NVML physical metadata, not CUDA selector resolution",
+  "mapping_constraint": "numeric Slurm ID must equal recorded NVIDIA device minor; arbitrary first-visible GPU is never accepted",
+  "NVML_query": {
+    "command": [
+      "nvidia-smi",
+      "-q",
+      "-x"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_bytes": 21011,
+    "scope": "read-only metadata; no GPU context/compute"
+  }
+}

@@ -1,0 +1,5 @@
+{"phase": "capacity_B256_lower_start", "elapsed_seconds": 14.825187928974628, "rss_bytes": 4321103872}
+{"phase": "capacity_B256_compile_start", "elapsed_seconds": 109.54835805296898, "rss_bytes": 5208268800}
+{"phase": "capacity_B256_compiled", "elapsed_seconds": 796.4620063379407, "rss_bytes": 15006236672}
+{"phase": "capacity_B256_sealed", "elapsed_seconds": 1162.262652400881, "rss_bytes": 13437730816, "reused": false}
+{"phase": "capacity_B512_lower_start", "elapsed_seconds": 1168.985800454393, "rss_bytes": 17986985984}

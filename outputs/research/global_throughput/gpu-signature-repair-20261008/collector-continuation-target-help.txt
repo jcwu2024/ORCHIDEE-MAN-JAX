@@ -1,0 +1,16 @@
+usage: collect_continuation_result.py [-h] --code-dir CODE_DIR --stage-dir
+                                      STAGE_DIR --admission ADMISSION
+                                      [--sacct-file SACCT_FILE] --output
+                                      OUTPUT
+
+Read-only saved-result validation for approved continuationjob15643868. Reuse
+the SHA-pinned old collector's scientific gates without modifying it. Run real
+saved-array collection on canonicaltest02; never execute model code.
+
+options:
+  -h, --help            show this help message and exit
+  --code-dir CODE_DIR
+  --stage-dir STAGE_DIR
+  --admission ADMISSION
+  --sacct-file SACCT_FILE
+  --output OUTPUT

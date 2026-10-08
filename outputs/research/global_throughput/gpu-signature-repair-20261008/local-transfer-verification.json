@@ -1,0 +1,105 @@
+{
+  "job_id": "15643868",
+  "scope": "local scp receipt verification against terminal snapshot capture.json; complete bytes only; no pickle execution",
+  "snapshot_label": "B256",
+  "snapshot_was_terminal": true,
+  "all_files_match": true,
+  "files": [
+    {
+      "path": "launch-context.txt",
+      "bytes": 8939,
+      "expected_bytes": 8939,
+      "sha256": "03c43f9d8d17ba93f8d924783b3072f4773c6b79e79bc526d1b8063837c2f119",
+      "expected_sha256": "03c43f9d8d17ba93f8d924783b3072f4773c6b79e79bc526d1b8063837c2f119",
+      "passed": true
+    },
+    {
+      "path": "gpu-identity.json",
+      "bytes": 1362,
+      "expected_bytes": 1362,
+      "sha256": "594d26f65aa9800002bc589395f7bab73722410b5363360cf586c05036e011a7",
+      "expected_sha256": "594d26f65aa9800002bc589395f7bab73722410b5363360cf586c05036e011a7",
+      "passed": true
+    },
+    {
+      "path": "gpu-diagnostic-exits.tsv",
+      "bytes": 50,
+      "expected_bytes": 50,
+      "sha256": "38e41d075ca5505cbc26831532a63076bdf3f276a6be8c6cea55d33e072d3de0",
+      "expected_sha256": "38e41d075ca5505cbc26831532a63076bdf3f276a6be8c6cea55d33e072d3de0",
+      "passed": true
+    },
+    {
+      "path": "selected-gpu-inventory.stdout.txt",
+      "bytes": 194,
+      "expected_bytes": 194,
+      "sha256": "ad611a86ff337a40fc90a8491cdafb3a81b9907797c99b9172d16357a1282239",
+      "expected_sha256": "ad611a86ff337a40fc90a8491cdafb3a81b9907797c99b9172d16357a1282239",
+      "passed": true
+    },
+    {
+      "path": "selected-gpu-inventory.stderr.txt",
+      "bytes": 0,
+      "expected_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "path": "selected-gpu-processes.stdout.txt",
+      "bytes": 51,
+      "expected_bytes": 51,
+      "sha256": "185facacd43b2b47152f1040bb6d81a57e8f284965fbf5ff6e6fbf0276871185",
+      "expected_sha256": "185facacd43b2b47152f1040bb6d81a57e8f284965fbf5ff6e6fbf0276871185",
+      "passed": true
+    },
+    {
+      "path": "selected-gpu-processes.stderr.txt",
+      "bytes": 0,
+      "expected_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "path": "capacity/report.json",
+      "bytes": 3559419,
+      "expected_bytes": 3559419,
+      "sha256": "cbb8db33a6283889f8132bd203d6caaa728adaf3e104d230bf633b4f2af4e9be",
+      "expected_sha256": "cbb8db33a6283889f8132bd203d6caaa728adaf3e104d230bf633b4f2af4e9be",
+      "passed": true
+    },
+    {
+      "path": "capacity/events.jsonl",
+      "bytes": 526,
+      "expected_bytes": 526,
+      "sha256": "80666364ab3cb36c54f4c14e398c6ef5927a0a69ac62542570c2e6c276d1866e",
+      "expected_sha256": "80666364ab3cb36c54f4c14e398c6ef5927a0a69ac62542570c2e6c276d1866e",
+      "passed": true
+    },
+    {
+      "path": "capacity/stage_manifest.json",
+      "bytes": 1714645,
+      "expected_bytes": 1714645,
+      "sha256": "84ca672303e7290bfd9b6b3975ba55615796bf7ade83ae29dc9fa1848dcaf4f9",
+      "expected_sha256": "84ca672303e7290bfd9b6b3975ba55615796bf7ade83ae29dc9fa1848dcaf4f9",
+      "passed": true
+    },
+    {
+      "path": "capacity/stage_capacity_B256_fixed512_v1.pkl",
+      "bytes": 220429675,
+      "expected_bytes": 220429675,
+      "sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+      "expected_sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+      "passed": true
+    },
+    {
+      "path": "global_gpu_capacity_continue_15643868.txt",
+      "bytes": 8939,
+      "expected_bytes": 8939,
+      "sha256": "03c43f9d8d17ba93f8d924783b3072f4773c6b79e79bc526d1b8063837c2f119",
+      "expected_sha256": "03c43f9d8d17ba93f8d924783b3072f4773c6b79e79bc526d1b8063837c2f119",
+      "passed": true
+    }
+  ]
+}

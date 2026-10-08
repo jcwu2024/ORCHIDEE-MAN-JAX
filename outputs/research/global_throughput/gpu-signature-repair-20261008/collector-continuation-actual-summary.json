@@ -1,0 +1,131 @@
+{
+  "job": "15643868",
+  "code": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+  "contract": "GPU-fixed512-repeated-FULL64-B256-B512-continuation-v1",
+  "checkpoint_sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+  "validation": "actualSHA/identity/native760leaves/full512/two7days/reference/gates/samples verified",
+  "strict_numerical_passed": true,
+  "actual_saved_output_reference_passed": true,
+  "numerical_validation_class": "strict_saved_numerical_pass",
+  "reference_comparisons": 512,
+  "compared_leaves": [
+    760
+  ],
+  "failed_saved_gates": 0,
+  "core": {
+    "samples_seconds": [
+      27.044812379404902,
+      27.024156771600246,
+      27.026018783450127,
+      27.0232412815094,
+      27.022209791466594
+    ],
+    "median_seconds": 27.024156771600246,
+    "range_seconds": [
+      27.022209791466594,
+      27.044812379404902
+    ],
+    "lane_days_per_second": 265.2441687850505,
+    "lane_days": 7168,
+    "warm_cost_scenarios": {
+      "primary": {
+        "CNY": 0.018016104514400166,
+        "GPU_card_hours": 0.0075067102143334015,
+        "auxiliary_CPU_count_hours": 0.030026840857333606,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      },
+      "conservative": {
+        "CNY": 0.01861664133154684,
+        "GPU_card_hours": 0.0075067102143334015,
+        "auxiliary_CPU_count_hours": 0.030026840857333606,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      }
+    }
+  },
+  "wrapper": {
+    "samples_seconds": [
+      30.371350621804595,
+      30.48497061803937,
+      30.538280688226223,
+      30.3190147690475,
+      30.468557430431247
+    ],
+    "median_seconds": 30.468557430431247,
+    "range_seconds": [
+      30.3190147690475,
+      30.538280688226223
+    ],
+    "lane_days_per_second": 235.25892278840803,
+    "lane_days": 7168,
+    "warm_cost_scenarios": {
+      "primary": {
+        "CNY": 0.0203123716202875,
+        "GPU_card_hours": 0.00846348817511979,
+        "auxiliary_CPU_count_hours": 0.03385395270047916,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      },
+      "conservative": {
+        "CNY": 0.020989450674297083,
+        "GPU_card_hours": 0.00846348817511979,
+        "auxiliary_CPU_count_hours": 0.03385395270047916,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      }
+    }
+  },
+  "startup": {
+    "host_stack_seconds": 2.7732230462133884,
+    "device_transfer_seconds": 0.8839878458529711,
+    "first_full512_call_seconds": 27.168201223015785,
+    "lower_seconds": 93.37303904443979,
+    "compile_seconds": 686.8420931939036
+  },
+  "checkpoint_IO": {
+    "available": true,
+    "bytes": 220429675,
+    "serialization_seconds": 0.2949339598417282,
+    "atomic_write_seconds": 0.2710233200341463,
+    "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+  },
+  "incomplete": [
+    {
+      "stage": "capacity_B512_fixed512_v1",
+      "status": "failed",
+      "reason": "AOT internal input signature differs: expected536, internal673"
+    }
+  ],
+  "accounting": {
+    "terminal": true,
+    "state": "FAILED",
+    "parent_row": [
+      "15643868",
+      "FAILED",
+      "1296",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "1:0",
+      "ibc13b03n02"
+    ],
+    "observed_wall_seconds": 1296,
+    "exit_code": "1:0",
+    "node": "ibc13b03n02",
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 0.8640000000000001,
+        "GPU_card_hours": 0.36,
+        "auxiliary_CPU_count_hours": 1.44,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      },
+      "conservative": {
+        "CNY": 0.8928000000000001,
+        "GPU_card_hours": 0.36,
+        "auxiliary_CPU_count_hours": 1.44,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      }
+    }
+  },
+  "B128_core": 29.617320833727717,
+  "B128_wrapper": 33.83803023956716,
+  "dispatch_comparison_scope": "old B128 lazy C++ dispatch; new B256/B512 explicit Python AOT binding overhead included; not isolated batch-size effect"
+}

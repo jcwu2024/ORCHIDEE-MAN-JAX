@@ -1,0 +1,60 @@
+2026-10-08T07:55:35Z
+15643868|orchjax-gpu-cont|gnall|FAILED|1296|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n02|1:0
+15643868.batch|batch||FAILED|1296|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n02|1:0
+15643868.extern|extern||COMPLETED|1297|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n02|0:0
+15643868.0|time||FAILED|1292|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n02|1:0
+105 49   1      yes
+106 50   1      yes
+107 51   1      yes
+108 52   1      yes
+109 53   1      yes
+110 54   1      yes
+111 55   1      yes
+12b495b9425de3ad1dc16efa3a5a0e69d7e89222
+slurm_cpus_per_task=4 slurm_job_cpus_per_node=4 slurm_job_gpus=4 alloc_tres=cpu=4,node=1,billing=4,gres/gpu=1 alloc_tres_source=TRES
+allocated_gpu_global_id=4 uuid=GPU-949cb714-8c53-353c-1f6a-1832c629230e name=Tesla V100-SXM2-32GB driver=525.85.12 cuda_visible_devices=0
+selected_GPU_diagnostic=selected-gpu-inventory uuid=GPU-949cb714-8c53-353c-1f6a-1832c629230e exit=0
+index, uuid, name, driver_version, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+0, GPU-949cb714-8c53-353c-1f6a-1832c629230e, Tesla V100-SXM2-32GB, 525.85.12, 0 MiB, 32768 MiB, 0 %
+selected_GPU_diagnostic=selected-gpu-processes uuid=GPU-949cb714-8c53-353c-1f6a-1832c629230e exit=0
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+{"phase": "capacity_B256_lower_start", "elapsed_seconds": 14.825187928974628, "rss_bytes": 4321103872}
+{"phase": "capacity_B256_compile_start", "elapsed_seconds": 109.54835805296898, "rss_bytes": 5208268800}
+2026-10-08 15:42:50.158767: E external/xla/xla/service/slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+2026-10-08 15:45:20.143769: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 4m29.985331012s
+
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+{"phase": "capacity_B256_compiled", "elapsed_seconds": 796.4620063379407, "rss_bytes": 15006236672}
+{"phase": "capacity_B256_sealed", "elapsed_seconds": 1162.262652400881, "rss_bytes": 13437730816, "reused": false}
+{"phase": "capacity_B512_lower_start", "elapsed_seconds": 1168.985800454393, "rss_bytes": 17986985984}
+Command exited with non-zero status 1
+	Command being timed: "singularity exec --nv --bind /WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 --pwd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3 /apps/soft/sif/foundationpose /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/hpc/global_batch_gpu_entry.py --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --full-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/configs/orchidee_man_250919.yaml --asset-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2 --warm-repeats 5 --budget-seconds 5400 --memory-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first --continue-256-512 --b128-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v1-load512/capacity"
+	User time (seconds): 1260.51
+	System time (seconds): 211.44
+	Percent of CPU this job got: 113%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 21:31.74
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 17842092
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 16787
+	Minor (reclaiming a frame) page faults: 17365977
+	Voluntary context switches: 1132200
+	Involuntary context switches: 40219
+	Swaps: 0
+	File system inputs: 4280064
+	File system outputs: 336960
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+srun: error: ibc13b03n02: task 0: Exited with exit code 1
+GPU launcher failed: step=allocated_candidate_execution line=240 exit=1 command=\"\$SLURM_BIN/srun\"\ --ntasks=1\ --cpus-per-task=4\ --cpu-bind=cores\ /usr/bin/time\ -v\ singularity\ exec\ --nv\ --bind\ \"\$BINDS\"\ --pwd\ \"\$CODE_DIR\"\ \"\$IMAGE\"\ \"\$PYTHON\"\ \"\$ENTRY\"\ \"\$\{args\[@\]\}\"

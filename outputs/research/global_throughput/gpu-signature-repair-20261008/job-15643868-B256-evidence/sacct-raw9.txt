@@ -1,0 +1,4 @@
+15643868|orchjax-gpu-cont|gnall|FAILED|1296|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n02|1:0
+15643868.batch|batch||FAILED|1296|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n02|1:0
+15643868.extern|extern||COMPLETED|1297|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n02|0:0
+15643868.0|time||FAILED|1292|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n02|1:0
