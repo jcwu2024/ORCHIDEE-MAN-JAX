@@ -86,19 +86,20 @@
     "old_budgets_closed": true
   },
   "node_basis": {
-    "snapshot_UTC": "2026-10-08T14:04:49Z",
+    "snapshot_UTC": "2026-10-08T15:40:15Z",
     "source": "node-snapshot.txt",
     "selected_provisional": "ibc13b03n05",
     "partition": "gnall",
     "state": "MIXED",
     "allocated_CPUs": 96,
     "total_Slurm_CPUs": 112,
-    "CPU_load": 20.19,
+    "CPU_load": 19.37,
     "allocated_GPUs": 0,
     "configured_GPUs": 8,
-    "reported_FreeMem_MB": 338186,
+    "reported_FreeMem_MB": 337213,
     "eligible_idle_node_observed": false,
-    "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other GPU-available eligible nodes",
+    "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other eligible nodes with available GPUs and at least4 free CPUs; lower-load n03/n07 had all8 GPUs allocated",
     "limitation": "scheduler snapshot, no reservation and no selected-card process evidence; inspect again before submission and record startup identity/load/affinity/inventory"
-  }
+  },
+  "deployment_receipt": "deployment-receipt.json"
 }

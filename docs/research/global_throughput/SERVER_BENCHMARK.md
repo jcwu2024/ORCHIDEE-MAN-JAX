@@ -150,9 +150,8 @@ requires eventual reviewed code SHA, explicit approved allocation and observed s
 complete B512 survives later B1024/parent failure, with parent cost counted once.
 
 The new wrapper is `slurm_global_gpu_capacity_1024.sh`,1node/1task,4CPU/1V100,
-90min, no requeue, planned checkout `global-throughput-gpu-fixed1024-v1` and
-single-use root `server-benchmark/gpu-fixed1024-v1`. No paid checkout or job has
-been deployed/submitted by preparation. The canonical512/1024 probe compiles
+90min, no requeue, deployed clean checkout `global-throughput-gpu-fixed1024-v1` at bd9e4c04af68d77e79b984bfc8aa064977f893d3 and
+single-use root `server-benchmark/gpu-fixed1024-v1` (still absent). Independent Git objects/no alternates and preserved clean ad6 source are recorded in the deployment receipt. Actual test02 target interfaces pass10 subprocess checks plus collector admission in3.206605205s, with direct/spooled equality, source certificate/hash admission and no PROJECT relocation/JAX/model/GPU work. The15:40:15UTC snapshot keeps n05 provisional (CPU96/112,load19.37,GPU0/8 allocated); no idle eligible node or reservation is claimed. No paid job has been submitted. The canonical512/1024 probe compiles
 only the actual insertion helper, not a physical-model graph. See [preparation](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md),
 [protocol](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/PROTOCOL.md)
 and the separately owned [resource/cost proposal](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/B1024_PAID_PROPOSAL.md).

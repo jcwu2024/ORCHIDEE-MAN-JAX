@@ -1,5 +1,5 @@
 {
-  "status": "code_and_local_bundle_pinned; preparation_only",
+  "status": "exact_execution_pin_deployed_clean_actual_interfaces_passed; preparation_only",
   "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
   "branch": "research/global-throughput",
   "expected_code_sha_collector_argument": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
@@ -34,13 +34,13 @@
     "inherited_accepted_Linux_actual_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
     "certificate": "exact-DIFFUCO-host-mask-cache-repair-v1",
     "new_full_source_audit": false,
-    "scope": "reuse exact accepted source bytes; final target checkout must verify source certificate before paid execution"
+    "scope": "actual target source identity/certificate verified through existing source_identity; exact accepted source bytes reused"
   },
   "validation": {
     "lightweight_tests": 159,
     "canonical_tiny_helper_successive_512_1024_passed": true,
     "real_fixed1024_model_measurement": false,
-    "actual_new_immutable_checkout_interfaces": false,
+    "actual_new_immutable_checkout_interfaces": true,
     "new_paid_submission": false,
     "new_monitoring": false
   },
@@ -55,15 +55,19 @@
   },
   "remaining_before_execution": [
     "separate explicit resource/command/working-directory/node-basis/wall/code/cost approval",
-    "deploy this exact commit to a new clean immutable checkout and verify actual target entry/collector interfaces on allowed test02 without model work",
-    "fresh node occupancy/load review; proposed node is historical snapshot, not reservation"
+    "reinspect occupancy/load before authorized submission; snapshot is not a reservation"
   ],
   "evidence": [
     "verification.json",
     "canonical-helper-probe.json",
     "canonical-launcher-interfaces.json",
     "historical-b512-admission.json",
-    "collector-readiness.json"
+    "collector-readiness.json",
+    "deployment-receipt.json",
+    "deployment-interface-receipt.json",
+    "node-snapshot.txt"
   ],
-  "documentation_followup": "Subsequent documentation-only commit is not the execution-code revision."
+  "documentation_followup": "Subsequent documentation-only commit is not the execution-code revision.",
+  "deployment_receipt": "deployment-receipt.json",
+  "interface_receipt": "deployment-interface-receipt.json"
 }

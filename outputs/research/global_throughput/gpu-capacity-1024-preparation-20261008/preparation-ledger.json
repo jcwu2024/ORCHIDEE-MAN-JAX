@@ -1,12 +1,12 @@
 {
-  "status": "preparation_ready_code_pinned; no_paid_submission",
+  "status": "deployed_actual_interfaces_passed; no_paid_submission",
   "date": "2026-10-08",
   "worktree": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
   "starting_commit": "e0376d1",
   "authorization": {
     "preparation_only": true,
     "paid_submission": false,
-    "new_paid_checkout_deployment": false,
+    "new_paid_checkout_deployment": true,
     "new_automation": false,
     "old_budget_reuse": false,
     "new_training_AD_or_science_rerun": false
@@ -212,20 +212,28 @@
       "model_preparation_lower_compile_run": false,
       "JAX_imported": false,
       "GPU_initialization": false,
-      "eventual_immutable_declared_checkout_interface_check": "pending final code SHA/deployment"
+      "eventual_immutable_declared_checkout_interface_check": "passed; deployment-interface-receipt.json; fixture retained as historical evidence"
     },
     "scope": "no physical-model large lower/compile/run, no new FULL64 audit, no GPU initialization",
     "pytest_warning": "pre-existing cache_dir option warning when cacheprovider disabled",
     "existing_batch_regression_tests": 33,
     "existing_batch_regression_seconds": 5.45,
     "total_capacity_mask_launcher_and_batch_tests": 144,
-    "eventual_immutable_checkout_real_target_interfaces": "not executed; execution SHA pinned, deployment pending; fixture is not deployment admission",
+    "eventual_immutable_checkout_real_target_interfaces": "passed on actual exact-pin clean test02 target; deployment-interface-receipt.json",
     "collector_tests": 15,
     "collector_test_seconds": 0.06,
     "collector_test_scope": "synthetic contract/control-flow fixtures; no real fixed1024 saved model evidence",
     "collector_Ruff": "passed",
     "collector_CLI_help": "passed",
-    "total_lightweight_tests": 159
+    "total_lightweight_tests": 159,
+    "actual_deployed_interfaces": {
+      "status": "passed",
+      "receipt": "deployment-interface-receipt.json",
+      "subprocess_checks": 10,
+      "collector_code_pin_admission": true,
+      "wall_seconds": 3.2066052053123713,
+      "real_model_acceptance": false
+    }
   },
   "paid_proposal": {
     "owner": "parent",
@@ -246,9 +254,12 @@
     "CURRENT_RESULT.md",
     "local-batch-regression.txt",
     "collector-readiness.json",
-    "verification.json"
+    "verification.json",
+    "deployment-receipt.json",
+    "deployment-interface-receipt.json",
+    "node-snapshot.txt"
   ],
-  "collector_readiness": "collector-readiness.json; expected-code-sha explicit and pending parent finalization",
+  "collector_readiness": "collector-readiness.json; exact expected-code-sha finalized and actual deployed admission passed",
   "cleanup": {
     "status": "automatic_approval_review_rejected",
     "action": "PowerShell Remove-Item -LiteralPath against bounded generated cache directory/files",
@@ -260,5 +271,22 @@
     "alternate_deletion_attempted": false,
     "future_commands": "PYTHONDONTWRITEBYTECODE=1 and python-B"
   },
-  "final_source_pin": "final-code-pin.json"
+  "final_source_pin": "final-code-pin.json",
+  "deployment_receipt": "deployment-receipt.json",
+  "node_basis": {
+    "snapshot_UTC": "2026-10-08T15:40:15Z",
+    "source": "node-snapshot.txt",
+    "selected_provisional": "ibc13b03n05",
+    "partition": "gnall",
+    "state": "MIXED",
+    "allocated_CPUs": 96,
+    "total_Slurm_CPUs": 112,
+    "CPU_load": 19.37,
+    "allocated_GPUs": 0,
+    "configured_GPUs": 8,
+    "reported_FreeMem_MB": 337213,
+    "eligible_idle_node_observed": false,
+    "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other eligible nodes with available GPUs and at least4 free CPUs; lower-load n03/n07 had all8 GPUs allocated",
+    "limitation": "scheduler snapshot, no reservation and no selected-card process evidence; inspect again before submission and record startup identity/load/affinity/inventory"
+  }
 }

@@ -1,0 +1,19 @@
+The bundle contains this ref:
+bd9e4c04af68d77e79b984bfc8aa064977f893d3 refs/heads/research/global-throughput
+The bundle requires this ref:
+ad6c0e1faa7e22b590627844e9cb0ad492e9deb3 
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/fixed1024-bd9e4c0.bundle is okay
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1'...
+done.
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/fixed1024-bd9e4c0.bundle
+ * branch            research/global-throughput -> FETCH_HEAD
+Previous HEAD position was ad6c0e1... Fix cached PFT tracer across batch stages and prepare B512-only run
+HEAD is now at bd9e4c0... Prepare fixed1024 B512 and B1024 single-card capacity comparison
+target_commit=bd9e4c04af68d77e79b984bfc8aa064977f893d3
+target_git_dir=.git
+target_clean=true
+independent_objects=true
+no_alternates=true
+source_commit=ad6c0e1faa7e22b590627844e9cb0ad492e9deb3
+source_clean_after=true
+2026-10-08T15:35:20Z

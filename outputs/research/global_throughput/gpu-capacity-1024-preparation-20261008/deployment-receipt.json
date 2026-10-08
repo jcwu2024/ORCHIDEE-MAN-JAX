@@ -1,0 +1,59 @@
+{
+  "status": "deployed_clean_interfaces_passed; no_paid_submission",
+  "deployment_UTC": "2026-10-08T15:35:20Z",
+  "login_endpoint": "192.168.11.2 (cln01 alias HostName override)",
+  "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+  "source_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
+  "source_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+  "source_clean_before_after": true,
+  "target_clean_after_deployment_and_interfaces": true,
+  "clone": "git clone --no-hardlinks --no-checkout, bundle verify/fetch, detached exact checkout",
+  "independent_Git_objects": true,
+  "alternates_absent": true,
+  "source_mutated": false,
+  "bundle": {
+    "file": "fixed1024-bd9e4c0.bundle",
+    "bytes": 273676,
+    "sha256": "a84da4a91faab7ca2925e7aaabe6815654f1eca9feb4467dc6898bf94b36113d",
+    "verified": true,
+    "ref": "refs/heads/research/global-throughput",
+    "commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+    "required_existing_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "scope": "incremental bundle against the preserved accepted immutable B512 checkout; not a standalone full-history clone"
+  },
+  "deployment_script": "deploy_fixed1024.sh",
+  "raw_log": "deployment-log.txt",
+  "actual_target_interfaces": {
+    "receipt": "deployment-interface-receipt.json",
+    "status": "passed",
+    "execution_node": "test02",
+    "subprocess_checks": 10,
+    "collector_explicit_code_pin_admission": true,
+    "wall_seconds": 3.2066052053123713,
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "fixture_PROJECT_relocation": false
+  },
+  "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1",
+  "output_root_absent_after_interfaces": true,
+  "documentation_HEAD_at_deployment": "bd48e0a902b367614c8e84ce16c2a5a40737146c",
+  "documentation_HEAD_is_execution_pin": false,
+  "JAX_imported": false,
+  "model_preparation_lower_compile_run": false,
+  "GPU_initialization": false,
+  "paid_submission": false,
+  "new_monitoring": false,
+  "followup_required_path_check": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first",
+    "role": "MEMORY_BASELINE_DIR",
+    "method": "read-only test -d via192.168.11.2 login endpoint",
+    "observed_stdout": "MEMORY_BASELINE_DIR_exists=true",
+    "exists": true,
+    "scope": "directory presence only; no contents read or model execution"
+  }
+}

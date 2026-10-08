@@ -10,7 +10,7 @@ its optimality and B1024 capacity/performance are unproven.
 Implementation, launcher integration and local strict collector readiness
 are complete under [the protocol](PROTOCOL.md). The new paid proposal
 is separate, requires explicit approval and has not been submitted. No new
-paid checkout, job, retry or automation is created by this preparation.
+paid job, retry or automation is created by this preparation. The independently owned immutable checkout is now deployed and verified; no paid allocation was submitted.
 
 The [canonical helper probe](canonical-helper-probe.json) passes successive
 512/1024 public/internal10/10, exact five native outputs against independent
@@ -32,13 +32,12 @@ See [collector readiness](collector-readiness.json),
 
 The [canonical Bash receipt](canonical-launcher-interfaces.json) proves actual
 argument expansion and direct/spooled equality in a PROJECT-only relocated
-diagnostic fixture. It is not deployment admission: the eventual immutable
-final-SHA checkout's real-target interface has not been executed. Execution code
+diagnostic fixture, retained as historical evidence. [Actual deployed interfaces](deployment-interface-receipt.json) now pass on the exact clean target on test02:10 subprocess checks plus deployed collector admission,3.206605205s, affinity0–3/BLAS1. No PROJECT relocation, JAX import, input read, model work or GPU initialization occurs. The [deployment receipt](deployment-receipt.json) records independent Git objects/no alternates and the preserved clean ad6 source. Execution code
 is pinned to `bd9e4c04af68d77e79b984bfc8aa064977f893d3`; the verified local source
 bundle and captured shell-source correspondence are recorded in
 [final code pin](final-code-pin.json). The [separate paid proposal](B1024_PAID_PROPOSAL.md)
 sets the CPU4/GPU1/90min ceilings at CNY3.60 primary/CNY3.72 conservative.
-Paid approval, deployment/actual target interfaces and execution remain pending.
+The refreshed15:40:15UTC node snapshot keeps n05 provisional (CPU96/112,load19.37,GPU0/8 allocated); no idle eligible node or reservation is claimed. Paid approval and real fixed1024 execution remain pending.
 
 Automatic approval review blocked removal of two generated ignored `.pyc`
 files under this preparation's `__pycache__`, with reason `blocked by policy`.

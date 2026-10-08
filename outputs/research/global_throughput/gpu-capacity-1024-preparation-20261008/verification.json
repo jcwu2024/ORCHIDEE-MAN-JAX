@@ -1,5 +1,5 @@
 {
-  "status": "preparation_ready_only",
+  "status": "deployed_actual_interfaces_passed; no_paid_submission",
   "contract": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1",
   "workload": {
     "unique_real_points": 64,
@@ -35,7 +35,7 @@
   "authorization": {
     "preparation_only": true,
     "paid_submission": false,
-    "new_paid_checkout_deployment": false,
+    "new_paid_checkout_deployment": true,
     "new_automation": false,
     "old_budget_reuse": false,
     "new_training_AD_or_science_rerun": false
@@ -176,20 +176,28 @@
       "model_preparation_lower_compile_run": false,
       "JAX_imported": false,
       "GPU_initialization": false,
-      "eventual_immutable_declared_checkout_interface_check": "pending final code SHA/deployment"
+      "eventual_immutable_declared_checkout_interface_check": "passed; deployment-interface-receipt.json; fixture retained as historical evidence"
     },
     "scope": "no physical-model large lower/compile/run, no new FULL64 audit, no GPU initialization",
     "pytest_warning": "pre-existing cache_dir option warning when cacheprovider disabled",
     "existing_batch_regression_tests": 33,
     "existing_batch_regression_seconds": 5.45,
     "total_capacity_mask_launcher_and_batch_tests": 144,
-    "eventual_immutable_checkout_real_target_interfaces": "not executed; execution SHA pinned, deployment pending; fixture is not deployment admission",
+    "eventual_immutable_checkout_real_target_interfaces": "passed on actual exact-pin clean test02 target; deployment-interface-receipt.json",
     "collector_tests": 15,
     "collector_test_seconds": 0.06,
     "collector_test_scope": "synthetic contract/control-flow fixtures; no real fixed1024 saved model evidence",
     "collector_Ruff": "passed",
     "collector_CLI_help": "passed",
-    "total_lightweight_tests": 159
+    "total_lightweight_tests": 159,
+    "actual_deployed_interfaces": {
+      "status": "passed",
+      "receipt": "deployment-interface-receipt.json",
+      "subprocess_checks": 10,
+      "collector_code_pin_admission": true,
+      "wall_seconds": 3.2066052053123713,
+      "real_model_acceptance": false
+    }
   },
   "collector_readiness": "collector-readiness.json",
   "historical_admission": "historical-b512-admission.json",
@@ -212,10 +220,26 @@
   },
   "remaining": [
     "separate resource/code/command/node/wall/cost approval",
-    "immutable checkout deployment and actual real-target interfaces not performed",
     "real fixed1024 GPU stage execution/gates/timings/cost not measured"
   ],
   "scientific_acceptance": false,
   "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
-  "final_source_pin": "final-code-pin.json"
+  "final_source_pin": "final-code-pin.json",
+  "deployment_receipt": "deployment-receipt.json",
+  "node_basis": {
+    "snapshot_UTC": "2026-10-08T15:40:15Z",
+    "source": "node-snapshot.txt",
+    "selected_provisional": "ibc13b03n05",
+    "partition": "gnall",
+    "state": "MIXED",
+    "allocated_CPUs": 96,
+    "total_Slurm_CPUs": 112,
+    "CPU_load": 19.37,
+    "allocated_GPUs": 0,
+    "configured_GPUs": 8,
+    "reported_FreeMem_MB": 337213,
+    "eligible_idle_node_observed": false,
+    "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other eligible nodes with available GPUs and at least4 free CPUs; lower-load n03/n07 had all8 GPUs allocated",
+    "limitation": "scheduler snapshot, no reservation and no selected-card process evidence; inspect again before submission and record startup identity/load/affinity/inventory"
+  }
 }

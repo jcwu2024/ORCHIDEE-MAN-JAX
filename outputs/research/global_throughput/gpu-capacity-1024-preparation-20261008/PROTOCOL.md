@@ -55,7 +55,7 @@ are projections, not measurements or reservations.
 The proposed wrapper is `scripts/hpc/slurm_global_gpu_capacity_1024.sh`:
 gnall,1 node,1 task,4 auxiliary Slurm CPUs,1 V100,90-minute hard wall, no requeue.
 It resolves the shared launcher from declared `CODE_DIR`, including a Slurm
-spooled copy. Planned immutable checkout is
+spooled copy. Deployed clean immutable checkout is
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1`;
 single-use planned run root is
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1`.
@@ -63,14 +63,13 @@ Capacity evidence is its `/capacity` child; scheduler log is
 `runtime/logs/global_gpu_capacity_1024_%j.txt`. The exact invocation, working
 directory, node basis, resource/cost decision and pinned execution SHA
 belong to [the separate paid proposal](B1024_PAID_PROPOSAL.md). Preparation
-does not deploy this paid checkout or submit a job; old budgets remain closed.
+has deployed and verified the pinned checkout; it submits no job and old budgets remain closed.
 
 [Target Bash interface evidence](canonical-launcher-interfaces.json) validates
 actual runtime argument expansion and identical direct/spooled commands in a
 diagnostic fixture with only the PROJECT literal relocated under preparation.
 Local Python dry-run also verifies the new contract without JAX or input reads.
-This is not a deployed immutable-checkout interface receipt: the eventual
-final-SHA checkout's real-target interface has not been executed in this task.
+[Actual deployed interface evidence](deployment-interface-receipt.json) now verifies the exact clean target on test02:10 subprocess checks plus collector code-pin admission, with direct/spooled commands equal and no PROJECT relocation. Existing source identity/certificate and four committed interface hashes pass; no JAX import, model work or GPU initialization. The fixture remains historical evidence.
 
 The new `collect_fixed1024_result.py` requires an explicit reviewed
 `--expected-code-sha`, exact Linux full-source identity and certificate,
@@ -97,8 +96,7 @@ requires the preserved accepted `ad6c0e1` Git history. Subsequent documentation
 commits are not the execution revision. Captured shell raw SHA values bind to
 the committed LF shell blobs through the fixture's explicit CRLF-to-LF step;
 the only semantic fixture edit is PROJECT relocation. This shell handling does
-not alter the exact scientific-source certificate. Deployment and actual target
-entry/collector interfaces remain unperformed.
+not alter the exact scientific-source certificate. [Deployment](deployment-receipt.json) and actual target entry/collector interfaces pass; paid approval and real fixed1024 results remain pending.
 
 After separately approved execution, collect the raw9 sacct record on a login
 endpoint and validate saved arrays on `test02`. The future numeric JOB_ID,
