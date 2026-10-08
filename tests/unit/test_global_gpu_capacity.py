@@ -237,20 +237,41 @@ def test_continuation_measures_only256_then512_and_seals_first(monkeypatch, tmp_
     assert recorder.result['comparison_shapes_including_imported_baseline']==[128,256,512]
 
 
-def test_continuation_launcher_actual_Bash_expansion(tmp_path):
+@pytest.mark.parametrize("copied_to_slurm_spool", [False, True])
+def test_continuation_launcher_actual_Bash_expansion(tmp_path, copied_to_slurm_spool):
     root=Path(capacity.__file__).resolve().parents[2]
+    bash=shutil.which('bash')
+    resolved=subprocess.run([bash,'-c','cd "$1" && pwd','path',str(tmp_path).replace('\\','/')],
+        text=True,capture_output=True,check=True).stdout.strip()
+    declared=tmp_path/'runtime/worktrees/declared-code/scripts/hpc'
+    declared.mkdir(parents=True)
+    project='/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX'
+    for name in ('slurm_global_gpu_capacity.sh','slurm_global_gpu_capacity_continue.sh'):
+        source=(root/'scripts/hpc'/name).read_text().replace(f'PROJECT={project}',f'PROJECT={shlex.quote(resolved)}')
+        (declared/name).write_text(source)
+    launcher=declared/'slurm_global_gpu_capacity_continue.sh'
+    if copied_to_slurm_spool:
+        spool=tmp_path/'slurm-spool/job15643327'
+        spool.mkdir(parents=True)
+        launcher=spool/'slurm_script'
+        shutil.copyfile(declared/'slurm_global_gpu_capacity_continue.sh',launcher)
+        assert not (spool/'slurm_global_gpu_capacity.sh').exists()
     env=os.environ.copy()
     for key in ('SLURM_CPUS_PER_TASK','SLURM_JOB_GPUS','CUDA_VISIBLE_DEVICES','CONTINUE_256_512','OPTIONAL_B64_BASELINE'):
         env.pop(key,None)
-    result=subprocess.run([shutil.which('bash'),str(root/'scripts/hpc/slurm_global_gpu_capacity_continue.sh').replace('\\','/'),'--dry-run'],env=env,text=True,capture_output=True)
+    env['CODE_DIR']=resolved+'/runtime/worktrees/declared-code'
+    env['RUN_ROOT']=resolved+'/runtime/outputs/research/global_throughput/server-benchmark/new-only'
+    result=subprocess.run([bash,str(launcher).replace('\\','/'),'--dry-run'],env=env,text=True,capture_output=True)
     assert result.returncode==0,result.stderr
     tokens=shlex.split(next(line for line in result.stdout.splitlines() if line.startswith('command=')).removeprefix('command='))
     entry=next(i for i,t in enumerate(tokens) if t.endswith('global_batch_gpu_entry.py'))
+    assert tokens[entry]==env['CODE_DIR']+'/scripts/hpc/global_batch_gpu_entry.py'
     dry=subprocess.run([sys.executable,str(Path(capacity.__file__).resolve()),*tokens[entry+1:],'--dry-run'],cwd=tmp_path,text=True,capture_output=True)
     assert dry.returncode==0,dry.stderr
     report=json.loads(dry.stdout)
     assert report['candidates']==[256,512] and report['B512_requires_speedup'] is False
     assert report['optional_B64'] is False and report['JAX_imported'] is False
+    assert not (tmp_path/'runtime/outputs').exists()
 
 
 @pytest.mark.parametrize("size", [2, 3])
