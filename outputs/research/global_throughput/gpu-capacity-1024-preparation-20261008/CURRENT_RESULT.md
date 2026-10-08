@@ -1,43 +1,68 @@
-# Fixed1024 job15662711 running; no validated new measurement
+# Fixed1024 job15662711: two strict stages accepted, budget closed
 
-The next explicit workload is14336 lane-days (ordered64 genuine FULL64 points×16):
-new B512×2 chunks then B1024×1 chunk in one process/job, independently sealed.
-Old fixed512 behavior and the accepted B512 job15657822 evidence remain intact.
-Old B512 timings are historical512-workload results and are not doubled into
-the new1024-workload curve. B512 is the best currently measured chunk size;
-its optimality and B1024 capacity/performance are unproven.
+Updated2026-10-09 Asia/Shanghai. The single approved job completed `0:0` on
+ibc13b03n05 in3371 parent seconds. Exact execution code remains clean at
+`bd9e4c04af68d77e79b984bfc8aa064977f893d3`; allocation was1node/1task,
+4 Slurm CPUs and1 V10032GB,90min/no-requeue/no-exclusive. Submission/start/end
+were01:01:36/01:02:02/01:58:13 Asia/Shanghai (UTC17:01:36/17:02:02/17:58:13).
 
-Implementation, launcher integration and local strict collector readiness
-are complete under [the protocol](PROTOCOL.md). The new paid proposal
-was explicitly approved and submitted once as job15662711 from gln01 via192.168.11.2. [Submission receipt](submission-receipt.json) records RUNNING at17:02:31UTC on approved n05, CPU4/GPU1/node1/task1,90min/no-requeue/no-exclusive. Submit/start were17:01:36/17:02:02UTC (01:01:36/01:02:02 Asia/Shanghai2026-10-09). The independent immutable exact-bd9 checkout is unchanged. No retry or automation is authorized.
+The deployed strict collector passed on test02, canonical CPU env, affinity0–3,
+OMP/BLAS1 and Python `-B`, in149.98s,exit0:2 valid stages,0 withheld,0 incomplete.
+Each has1027 passing gates,760 native output leaves and1024 saved-array
+FULL64 comparisons. Both use the same14336 lane-days:64 genuine FULL64 points
+repeated16 times, continuous Days2–8 then9–15,48 steps/day, native dtypes/full
+outputs/masks/fixed tolerances. Historical job15657822 supplies numeric/schema/
+compiler/RSS provenance only; none of its timing is doubled into this comparison.
 
-The [canonical helper probe](canonical-helper-probe.json) passes successive
-512/1024 public/internal10/10, exact five native outputs against independent
-NumPy and unchanged first-stage signature, in6.905893840 seconds on test02 with
-CPU affinity0–3 and OMP/BLAS1. This is tiny-helper evidence only. The
-[new historical-origin importer](historical-b512-admission.json) accepts the
-actual220430830-byte B512 checkpoint, exact SHA256/source/code/native schema
-and compiler-temp/RSS evidence, returns no timing and performs no model work.
-Neither check accepts real fixed1024 GPU execution or science.
+| New same-process stage | Core median [full range],s | Wrapper median [full range],s | Wrapper lane-days/s | Warm wrapper CNY/lane-day, primary |
+| --- | --- | --- | --- | --- |
+| B512×2 chunks |45.543218 [45.537509–45.564560]|52.195214 [52.032337–52.241993]|274.661200|2.427233e-6|
+| B1024×1 chunk |40.864703 [40.859622–40.882893]|47.405972 [47.297268–47.626702]|302.409157|2.204519e-6|
 
-Validation passed159 lightweight tests:111 capacity/mask/actual Bash-Python
-interface cases,33 existing batch regressions, and15 collector synthetic
-contract/control-flow fixtures. Changed implementation/tests/tools pass Ruff
-and diff checks. Collector tests cover failed-after-seal B512 retention,
-shared-origin failure withholding B1024, exact checkpoint IO bytes, and
-uncapped terminal-parent accounting even when the approved wall is exceeded.
-See [collector readiness](collector-readiness.json),
-[preparation verification](verification.json), and [ledger](preparation-ledger.json).
+Each statistic comes from five synchronized samples. B1024 wrapper is1.101026×
+as fast and has9.175634% lower median time/warm unit cost in this comparison.
+It is the lower measured warm unit cost of these two shapes, not a proven
+optimum for independent inputs or production IO. Warm figures exclude startup,
+checkpoint IO and full parent allocation; they are not total experiment cost.
 
-The [canonical Bash receipt](canonical-launcher-interfaces.json) proves actual
-argument expansion and direct/spooled equality in a PROJECT-only relocated
-diagnostic fixture, retained as historical evidence. [Actual deployed interfaces](deployment-interface-receipt.json) now pass on the exact clean target on test02:10 subprocess checks plus deployed collector admission,3.206605205s, affinity0–3/BLAS1. No PROJECT relocation, JAX import, input read, model work or GPU initialization occurs. The [deployment receipt](deployment-receipt.json) records independent Git objects/no alternates and the preserved clean ad6 source. Execution code
-is pinned to `bd9e4c04af68d77e79b984bfc8aa064977f893d3`; the verified local source
-bundle and captured shell-source correspondence are recorded in
-[final code pin](final-code-pin.json). The [separate paid proposal](B1024_PAID_PROPOSAL.md)
-sets the CPU4/GPU1/90min ceilings at CNY3.60 primary/CNY3.72 conservative.
-The refreshed15:40:15UTC node snapshot keeps n05 provisional (CPU96/112,load19.37,GPU0/8 allocated); no idle eligible node or reservation is claimed. The fresh17:01:13UTC preflight retained n05 (CPU96/112,load19.69,GPU0/8 allocated); exact checkout clean, run root absent, no duplicate job observed. Startup [log](job-15662711-startup-log.txt) records affinity24,25,80,81 (2 physical cores for4 allocated Slurm CPUs),load18.67,19.75,20.12 and an empty selected-card process list. [Physical GPU identity](job-15662711-gpu-identity.json) is global0,UUID GPU-51897aa5-dac4-9d20-523e-830c362cf7a6,V100-SXM2-32GB,driver525.85.12. These are startup metadata, not model acceptance. Latest17:06:45UTC [observation](job-15662711-observation.txt) remains RUNNING,283s; last saved event is B512 compile start (process113.800671s,RSS10609459200 bytes). These are phase evidence, not completed compiler/stage timing. No strict complete stage, new throughput or final cost is published; independent budget appears in the existing [paid execution ledger](../server-cost-preparation/PAID_EXECUTION_LEDGER.json), with old budgets untouched.
+| Stage | Lower,s | Compile,s | First full1024 call,s | Host stack,s | Transfer,s | Checkpoint serialization / atomic write,s |
+| --- | --- | --- | --- | --- | --- | --- |
+| B512×2 |92.842230|889.883491|45.714354|5.398977|2.561924|0.480900 /1.395775|
+| B1024×1 |64.840254|990.697544|41.100882|5.584297|0.816445|0.562827 /0.342320|
 
-Automatic approval review blocked removal of two generated ignored `.pyc`
-files under this preparation's `__pycache__`, with reason `blocked by policy`.
-They remain; no alternate deletion method was used.
+Parent-only accounting is0.936388889 GPU card-hours and3.745555556 allocated
+CPU-hours: primary CNY2.247333 / conservative additive CNY2.322244, below
+approved CNY3.60 /3.72 ceilings. Billing remains unverified; queue time is
+unbilled and .batch/.extern/step rows are retained without summing them.
+The GPU model child wall was3362.76s; saved-array collection is separate.
+No K-amortization estimate is reported because complete setup attribution is
+unavailable. No new CPU/GPU ratio, Fortran, annual/669-point/50-year,10×,
+training/AD or general scientific acceptance follows.
+
+Both full checkpoints are preserved remotely and locally, with local SHA
+matching the terminal manifest: B512 440821931 bytes,
+`678a116038c5c8ad404dfb1d4eb691e1e4a43b2680871fd7353ef557243b07e6`;
+B1024 440822967 bytes,
+`6bea479fcf3fa3d81d334c132106641572ca92a58886b26e764bcd7dee6069d5`.
+[Terminal summary](terminal-summary.json), [raw collector result](collected-fixed1024.json),
+[collector log](job-15662711-collector-log.txt), [raw9 accounting](job-15662711-saved-result/sacct-raw9.txt),
+[terminal log](job-15662711-terminal-log.txt) and [artifact index](terminal-artifact-index.json)
+are the actual evidence. The verified compact [evidence ZIP](job-15662711-terminal-evidence.zip)
+retains exact collector JSON/report/manifest/events/diagnostics; checkpoint binaries
+remain in `job-15662711-saved-result/capacity` and the immutable remote run root.
+No original results were deleted.
+
+Startup identity is GPU global0,UUID GPU-51897aa5-dac4-9d20-523e-830c362cf7a6,
+V100-SXM2-32GB,driver525.85.12; selected-card process list was empty.
+Affinity24,25,80,81 maps2 physical cores for4 allocated Slurm CPUs; startup
+load18.67,19.75,20.12. The approved n05 was MIXED at submission, not idle or
+reserved. Compiler buffer estimates and GPU snapshots are not VRAM peak
+measurements. Stage cumulative host peak RSS was24653754368/27865956352 bytes;
+these are host memory. Original planning arithmetic remains separately labeled.
+
+[Paid ledger](../server-cost-preparation/PAID_EXECUTION_LEDGER.json) closes this
+independent budget; older budgets stay closed and are not reused. No retry,
+new job, cancellation, extension or automation was performed. Prior159 tests
+and helper/interface evidence are reused, not rerun. The two ignored `.pyc`
+files remain after the earlier automatic approval review rejected cleanup;
+no alternate deletion was attempted.

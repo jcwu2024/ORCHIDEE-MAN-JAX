@@ -217,7 +217,7 @@
   "independent_followup_budgets": [
     {
       "budget_id": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1-job15662711",
-      "status": "submitted_running; final_stage_and_cost_unverified",
+      "status": "closed_completed_strict_two_stage_exploratory_capacity_passed",
       "approval": {
         "source": "human approval relayed by parent task /root",
         "date_Asia_Shanghai": "2026-10-09",
@@ -252,7 +252,7 @@
         "conservative_additive_CNY": 3.72,
         "billing_verified": false,
         "queue_time_billed": false,
-        "terminal_cost_available": false,
+        "terminal_cost_available": true,
         "parent_counted_once": true,
         "child_rows_not_summed": true
       },
@@ -273,16 +273,14 @@
         "reservation_or_exclusivity_claim": false
       },
       "observed": {
-        "receipt": "job-15662711-initial-state.txt",
-        "UTC": "2026-10-08T17:02:31Z",
-        "state": "RUNNING",
-        "elapsed_seconds": 29,
+        "receipt": "job-15662711-terminal-state.txt",
+        "UTC": "2026-10-08T18:02:24Z",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed_seconds": 3371,
         "node": "ibc13b03n05",
-        "AllocTRES": "billing=4,cpu=4,gres/gpu=1,node=1",
-        "submit_UTC": "2026-10-08T17:01:36Z",
-        "start_UTC": "2026-10-08T17:02:02Z",
-        "scheduled_limit_end_UTC": "2026-10-08T18:32:02Z",
-        "terminal": false
+        "last_saved_phase": "capacity_B1024_fixed1024_sealed",
+        "scope": "terminal raw9 parent/children plus test02 strict saved-array validation passed"
       },
       "startup": {
         "log": "job-15662711-startup-log.txt",
@@ -307,8 +305,11 @@
         "selected_card_process_inventory_empty": true,
         "metadata_verification_is_CUDA_execution_acceptance": false
       },
-      "strict_complete_stages_published": [],
-      "new_throughput_published": false,
+      "strict_complete_stages_published": [
+        "capacity_B512_fixed1024_v1",
+        "capacity_B1024_fixed1024_v1"
+      ],
+      "new_throughput_published": true,
       "scientific_acceptance": false,
       "new_automation": false,
       "old_budgets_reused": false,
@@ -325,18 +326,86 @@
         "warm_core_samples": 5,
         "warm_wrapper_samples": 5
       },
-      "receipt": "../gpu-capacity-1024-preparation-20261008/submission-receipt.json",
       "latest_observation": {
-        "receipt": "job-15662711-observation.txt",
-        "UTC": "2026-10-08T17:06:45Z",
-        "state": "RUNNING",
-        "elapsed_seconds": 283,
+        "receipt": "job-15662711-terminal-state.txt",
+        "UTC": "2026-10-08T18:02:24Z",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed_seconds": 3371,
         "node": "ibc13b03n05",
-        "last_saved_phase": "capacity_B512_compile_start",
-        "phase_elapsed_seconds": 113.8006706815213,
-        "phase_rss_bytes": 10609459200,
-        "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
-      }
+        "last_saved_phase": "capacity_B1024_fixed1024_sealed",
+        "scope": "terminal raw9 parent/children plus test02 strict saved-array validation passed"
+      },
+      "terminal_result": "../gpu-capacity-1024-preparation-20261008/terminal-summary.json",
+      "terminal_artifact_index": "terminal-artifact-index.json",
+      "budget_closed": true,
+      "terminal_accounting": {
+        "terminal": true,
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "observed_wall_seconds": 3371,
+        "approved_wall_seconds": 5400,
+        "approved_wall_exceeded": false,
+        "node": "ibc13b03n05",
+        "cpus": 4,
+        "tres": {
+          "billing": "4",
+          "cpu": "4",
+          "gres/gpu": "1",
+          "node": "1"
+        },
+        "raw_parent_row": [
+          "15662711",
+          "orchjax-gpu-cap1024",
+          "gnall",
+          "COMPLETED",
+          "3371",
+          "4",
+          "billing=4,cpu=4,gres/gpu=1,node=1",
+          "ibc13b03n05",
+          "0:0"
+        ],
+        "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+        "parent_counted_once": true,
+        "whole_job_cost": {
+          "primary": {
+            "CNY": 2.2473333333333336,
+            "GPU_card_hours": 0.9363888888888889,
+            "allocated_CPU_count_hours": 3.7455555555555557,
+            "billing_verified": false,
+            "scope": "one raw9 terminal parent row; no child rows summed"
+          },
+          "conservative": {
+            "CNY": 2.3222444444444448,
+            "GPU_card_hours": 0.9363888888888889,
+            "allocated_CPU_count_hours": 3.7455555555555557,
+            "billing_verified": false,
+            "scope": "one raw9 terminal parent row; no child rows summed"
+          }
+        }
+      },
+      "collector": {
+        "result": "collected-fixed1024.json",
+        "log": "job-15662711-collector-log.txt",
+        "script": "collect_job15662711.sh",
+        "node": "test02",
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "OMP_OPENBLAS_MKL_threads": 1,
+        "canonical_CPU_env": true,
+        "python_B": true,
+        "exit_code": 0,
+        "wall_seconds": 149.98,
+        "valid_stages": 2,
+        "withheld_stages": 0,
+        "incomplete_stages": 0,
+        "model_invocation_compile_GPU_initialization": false
+      },
+      "receipt": "../gpu-capacity-1024-preparation-20261008/submission-receipt.json"
     }
   ]
 }

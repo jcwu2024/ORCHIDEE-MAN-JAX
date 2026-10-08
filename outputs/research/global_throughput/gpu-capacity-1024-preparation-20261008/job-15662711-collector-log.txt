@@ -1,0 +1,28 @@
+pid 70841's current affinity list: 0-55
+2026-10-08T18:03:52Z
+ibtest02
+pid 70845's current affinity list: 0-55
+{"job_id": "15662711", "valid_stages": 2, "withheld_stages": 0, "incomplete_stages": 0, "output": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/collected-fixed1024.json"}
+	Command being timed: "taskset -c 0-3 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python -B /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/collect_fixed1024_result.py --code-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1 --expected-code-sha bd9e4c04af68d77e79b984bfc8aa064977f893d3 --stage-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --sacct-file /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/sacct-raw9.txt --admission /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json --b512-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity --job-id 15662711 --job-name orchjax-gpu-cap1024 --node ibc13b03n05 --gpu-uuid GPU-51897aa5-dac4-9d20-523e-830c362cf7a6 --slurm-global-gpu-id 0 --driver-version 525.85.12 --approved-nodes 1 --approved-tasks 1 --approved-cpus 4 --approved-gpus 1 --approved-wall-seconds 5400 --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/collected-fixed1024.json"
+	User time (seconds): 53.08
+	System time (seconds): 4.42
+	Percent of CPU this job got: 38%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:29.98
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 750872
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 10035
+	Minor (reclaiming a frame) page faults: 570334
+	Voluntary context switches: 22222
+	Involuntary context switches: 4134
+	Swaps: 0
+	File system inputs: 2610504
+	File system outputs: 12672
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

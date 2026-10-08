@@ -87,8 +87,7 @@ annual/669-point/50-year, general science,10×, training or AD acceptance follow
 the actual DIFFUCO insertion helper on CPU JAX0.4.38:512/1024 each public/internal
 10/10, five native outputs exactly equal independent NumPy, immutable host mask
 and unchanged first signature. It performs no physical-model preparation,
-lowering, compilation, invocation or GPU initialization. Real fixed1024 GPU
-capacity, timing and memory acceptance remain unmeasured.
+lowering, compilation, invocation or GPU initialization. Real fixed1024 GPU execution subsequently completed as job15662711; both stages passed the deployed strict saved-array collector. Actual timing/resource evidence is in [CURRENT_RESULT.md](CURRENT_RESULT.md), separate from this helper receipt.
 
 Execution code is pinned to `bd9e4c04af68d77e79b984bfc8aa064977f893d3` in
 [final-code-pin.json](final-code-pin.json). The verified incremental bundle
@@ -96,7 +95,7 @@ requires the preserved accepted `ad6c0e1` Git history. Subsequent documentation
 commits are not the execution revision. Captured shell raw SHA values bind to
 the committed LF shell blobs through the fixture's explicit CRLF-to-LF step;
 the only semantic fixture edit is PROJECT relocation. This shell handling does
-not alter the exact scientific-source certificate. [Deployment](deployment-receipt.json) and actual target entry/collector interfaces pass; the user subsequently approved the exact proposal and job15662711 was submitted once. Real fixed1024 complete-stage verification and terminal cost remain pending; see [submission receipt](submission-receipt.json).
+not alter the exact scientific-source certificate. [Deployment](deployment-receipt.json) and actual target entry/collector interfaces pass; the user subsequently approved the exact proposal and job15662711 was submitted once. Both complete stages now pass strict saved-array verification; terminal parent-only accounting and observed cost are in [terminal-summary.json](terminal-summary.json). See [submission receipt](submission-receipt.json) for the single invocation.
 
 After the recorded approved execution reaches terminal state, collect the raw9 sacct record on a login
 endpoint and validate saved arrays on `test02`. The future numeric JOB_ID,

@@ -1,5 +1,5 @@
 {
-  "status": "submitted_running; final_stage_and_cost_unverified",
+  "status": "closed_completed_strict_two_stage_exploratory_capacity_passed",
   "contract": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1",
   "workload": {
     "unique_real_points": 64,
@@ -197,7 +197,29 @@
       "collector_code_pin_admission": true,
       "wall_seconds": 3.2066052053123713,
       "real_model_acceptance": false
-    }
+    },
+    "strict_saved_array_collector": {
+      "result": "collected-fixed1024.json",
+      "log": "job-15662711-collector-log.txt",
+      "script": "collect_job15662711.sh",
+      "node": "test02",
+      "affinity": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "OMP_OPENBLAS_MKL_threads": 1,
+      "canonical_CPU_env": true,
+      "python_B": true,
+      "exit_code": 0,
+      "wall_seconds": 149.98,
+      "valid_stages": 2,
+      "withheld_stages": 0,
+      "incomplete_stages": 0,
+      "model_invocation_compile_GPU_initialization": false
+    },
+    "full_local_checkpoint_SHA_matches_manifest": true
   },
   "collector_readiness": "collector-readiness.json",
   "historical_admission": "historical-b512-admission.json",
@@ -218,9 +240,7 @@
     "alternate_deletion_attempted": false,
     "future_commands": "PYTHONDONTWRITEBYTECODE=1 and python-B"
   },
-  "remaining": [
-    "terminal accounting and strict complete-stage collector verification; no new paid submission"
-  ],
+  "remaining": [],
   "scientific_acceptance": false,
   "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
   "final_source_pin": "final-code-pin.json",
@@ -244,9 +264,13 @@
   "paid_execution": {
     "receipt": "submission-receipt.json",
     "job_id": "15662711",
-    "state_observed": "RUNNING",
-    "strict_complete_stages_published": [],
-    "terminal_cost_available": false
+    "state_observed": "COMPLETED",
+    "strict_complete_stages_published": [
+      "capacity_B512_fixed1024_v1",
+      "capacity_B1024_fixed1024_v1"
+    ],
+    "terminal_cost_available": true,
+    "collector": "collected-fixed1024.json"
   },
   "submission_preflight": {
     "receipt": "submission-preflight.txt",
@@ -265,14 +289,16 @@
     "reservation_or_exclusivity_claim": false
   },
   "latest_observation": {
-    "receipt": "job-15662711-observation.txt",
-    "UTC": "2026-10-08T17:06:45Z",
-    "state": "RUNNING",
-    "elapsed_seconds": 283,
+    "receipt": "job-15662711-terminal-state.txt",
+    "UTC": "2026-10-08T18:02:24Z",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 3371,
     "node": "ibc13b03n05",
-    "last_saved_phase": "capacity_B512_compile_start",
-    "phase_elapsed_seconds": 113.8006706815213,
-    "phase_rss_bytes": 10609459200,
-    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
-  }
+    "last_saved_phase": "capacity_B1024_fixed1024_sealed",
+    "scope": "terminal raw9 parent/children plus test02 strict saved-array validation passed"
+  },
+  "terminal_result": "terminal-summary.json",
+  "terminal_artifact_index": "terminal-artifact-index.json",
+  "budget_closed": true
 }

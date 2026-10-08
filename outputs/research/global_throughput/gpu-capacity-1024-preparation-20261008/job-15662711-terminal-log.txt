@@ -1,0 +1,202 @@
+2026-10-08T17:02:05Z
+ibc13b03n05
+ 01:02:05 up 127 days, 14:19,  0 users,  load average: 18.67, 19.75, 20.12
+pid 113323's current affinity list: 24,25,80,81
+pre_query_slurm_job=15662711 global_gpu_id=0 preserved_cuda_visible_devices=0 cpus=4
+2026-10-08T17:02:09Z
+ibc13b03n05
+ 01:02:09 up 127 days, 14:19,  0 users,  load average: 17.82, 19.56, 20.05
+JobId=15662711 JobName=orchjax-gpu-cap1024
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:07 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-09T01:01:36 EligibleTime=2026-10-09T01:01:36
+   AccrueTime=2026-10-09T01:01:36
+   StartTime=2026-10-09T01:02:02 EndTime=2026-10-09T02:32:02 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-09T01:02:02 Scheduler=Backfill
+   Partition=gnall AllocNode:Sid=ibc13b02n04:92006
+   ReqNodeList=ibc13b03n05 ExcNodeList=(null)
+   NodeList=ibc13b03n05
+   BatchHost=ibc13b03n05
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=gpu:v100:1
+     Nodes=ibc13b03n05 CPU_IDs=48-51 Mem=0 GRES=gpu:v100:1(IDX:0)
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/scripts/hpc/slurm_global_gpu_capacity_1024.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_1024_15662711.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_1024_15662711.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+pid 113323's current affinity list: 24,25,80,81
+CPU CORE SOCKET ONLINE
+0   0    0      yes
+1   1    0      yes
+2   2    0      yes
+3   3    0      yes
+4   4    0      yes
+5   5    0      yes
+6   6    0      yes
+7   7    0      yes
+8   8    0      yes
+9   9    0      yes
+10  10   0      yes
+11  11   0      yes
+12  12   0      yes
+13  13   0      yes
+14  14   0      yes
+15  15   0      yes
+16  16   0      yes
+17  17   0      yes
+18  18   0      yes
+19  19   0      yes
+20  20   0      yes
+21  21   0      yes
+22  22   0      yes
+23  23   0      yes
+24  24   0      yes
+25  25   0      yes
+26  26   0      yes
+27  27   0      yes
+28  28   1      yes
+29  29   1      yes
+30  30   1      yes
+31  31   1      yes
+32  32   1      yes
+33  33   1      yes
+34  34   1      yes
+35  35   1      yes
+36  36   1      yes
+37  37   1      yes
+38  38   1      yes
+39  39   1      yes
+40  40   1      yes
+41  41   1      yes
+42  42   1      yes
+43  43   1      yes
+44  44   1      yes
+45  45   1      yes
+46  46   1      yes
+47  47   1      yes
+48  48   1      yes
+49  49   1      yes
+50  50   1      yes
+51  51   1      yes
+52  52   1      yes
+53  53   1      yes
+54  54   1      yes
+55  55   1      yes
+56  0    0      yes
+57  1    0      yes
+58  2    0      yes
+59  3    0      yes
+60  4    0      yes
+61  5    0      yes
+62  6    0      yes
+63  7    0      yes
+64  8    0      yes
+65  9    0      yes
+66  10   0      yes
+67  11   0      yes
+68  12   0      yes
+69  13   0      yes
+70  14   0      yes
+71  15   0      yes
+72  16   0      yes
+73  17   0      yes
+74  18   0      yes
+75  19   0      yes
+76  20   0      yes
+77  21   0      yes
+78  22   0      yes
+79  23   0      yes
+80  24   0      yes
+81  25   0      yes
+82  26   0      yes
+83  27   0      yes
+84  28   1      yes
+85  29   1      yes
+86  30   1      yes
+87  31   1      yes
+88  32   1      yes
+89  33   1      yes
+90  34   1      yes
+91  35   1      yes
+92  36   1      yes
+93  37   1      yes
+94  38   1      yes
+95  39   1      yes
+96  40   1      yes
+97  41   1      yes
+98  42   1      yes
+99  43   1      yes
+100 44   1      yes
+101 45   1      yes
+102 46   1      yes
+103 47   1      yes
+104 48   1      yes
+105 49   1      yes
+106 50   1      yes
+107 51   1      yes
+108 52   1      yes
+109 53   1      yes
+110 54   1      yes
+111 55   1      yes
+bd9e4c04af68d77e79b984bfc8aa064977f893d3
+slurm_cpus_per_task=4 slurm_job_cpus_per_node=4 slurm_job_gpus=0 alloc_tres=cpu=4,node=1,billing=4,gres/gpu=1 alloc_tres_source=TRES
+allocated_gpu_global_id=0 uuid=GPU-51897aa5-dac4-9d20-523e-830c362cf7a6 name=Tesla V100-SXM2-32GB driver=525.85.12 cuda_visible_devices=0
+selected_GPU_diagnostic=selected-gpu-inventory uuid=GPU-51897aa5-dac4-9d20-523e-830c362cf7a6 exit=0
+index, uuid, name, driver_version, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+0, GPU-51897aa5-dac4-9d20-523e-830c362cf7a6, Tesla V100-SXM2-32GB, 525.85.12, 0 MiB, 32768 MiB, 0 %
+selected_GPU_diagnostic=selected-gpu-processes uuid=GPU-51897aa5-dac4-9d20-523e-830c362cf7a6 exit=0
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+{"phase": "capacity_B512_lower_start", "elapsed_seconds": 19.559697940945625, "rss_bytes": 9722200064}
+{"phase": "capacity_B512_compile_start", "elapsed_seconds": 113.8006706815213, "rss_bytes": 10609459200}
+2026-10-09 01:15:14.618276: E external/xla/xla/service/slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+2026-10-09 01:19:13.060824: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 5m58.442887275s
+
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+{"phase": "capacity_B512_compiled", "elapsed_seconds": 1003.7916928064078, "rss_bytes": 21624291328}
+{"phase": "capacity_B512_fixed1024_sealed", "elapsed_seconds": 1622.26578040421, "rss_bytes": 19163373568, "reused": false}
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 1632.0698751322925, "rss_bytes": 22109949952}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 1698.7526372689754, "rss_bytes": 22380871680}
+{"phase": "capacity_B1024_compiled", "elapsed_seconds": 2689.7735378239304, "rss_bytes": 22608973824}
+{"phase": "capacity_B1024_fixed1024_sealed", "elapsed_seconds": 3299.0821088608354, "rss_bytes": 20171866112, "reused": false}
+	Command being timed: "singularity exec --nv --bind /WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 --pwd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1 /apps/soft/sif/foundationpose /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/scripts/hpc/global_batch_gpu_entry.py --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --full-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/configs/orchidee_man_250919.yaml --asset-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2 --warm-repeats 5 --budget-seconds 5400 --memory-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first --fixed-1024 --b512-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity"
+	User time (seconds): 3267.42
+	System time (seconds): 593.24
+	Percent of CPU this job got: 114%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 56:02.76
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 27212848
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 16856
+	Minor (reclaiming a frame) page faults: 42527701
+	Voluntary context switches: 1908596
+	Involuntary context switches: 66126
+	Swaps: 0
+	File system inputs: 4313096
+	File system outputs: 1823944
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

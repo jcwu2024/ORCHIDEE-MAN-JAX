@@ -1,6 +1,6 @@
 # 全球物理模型吞吐研究
 
-更新：2026-10-08。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-09。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 
@@ -111,11 +111,13 @@ v3作业15643868已终态FAILED，B256完整阶段通过并密封。新canonical
 
 host stack/transfer为2.581256084/1.334585367s，lower98.739008831s，compile892.739054900s，首次完整B512调用22.867870517s，checkpoint序列化0.380422166s、atomic write0.213936657s。完整phase setup/validation未记录，因此没有K amortization估算。父作业1416s对应估算CNY0.944主口径/CNY0.975466667保守口径，在批准的CNY1.80/CNY1.86上限内；账单未核实，child rows未重复计费。compiler临时内存2288514256 bytes不是VRAM峰值；host process峰值19496943616 bytes，GPU前后快照不能作为峰值证据。详见[当前结果](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md)、[付费方案与收据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PAID_PROPOSAL.md)、[因果证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CAUSAL_REPAIR.md)及[协议和终态证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md)。这不是CPU比值、Fortran、年度/50年、669点、10×、训练/AD或一般科学验收；未发生retry、cancel、requeue或automation。
 
-### 当前工作：fixed1024容量作业15662711，尚无新完整stage准入
+### 当前结果：fixed1024双stage准入，独立预算已关闭
 
-新增显式fixed1024合同：同一新进程/作业中先实测B512×2 chunks，再资源准入B1024×1 chunk；两者均为64真实FULL64点×16、连续Days2–8/9–15、48步/日、14336 lane-days，各stage完整atomic seal后才推进。旧fixed512默认身份不变，旧B512作业15657822仅作为数值/schema/真实compiler-memory与RSS来源，不能把旧512计时乘二当新结果。B512目前实测最好，但未证明最优，也未证明B1024容量或性能。
+2026-10-09用户批准的单次job15662711已`COMPLETED0:0`，n05上1node/1task/4Slurm CPU/1V10032GB，parent3371s，90min/no-requeue/no-exclusive；执行SHA `bd9e4c04af68d77e79b984bfc8aa064977f893d3`终态仍clean。test02 exact deployed collector用canonicalCPU环境、affinity0–3、OMPBLAS1、`-B`完成149.98s，exit0，准入2stage、扣留0、不完整0；每stage1027gate、760leaf、1024saved FULL64 comparisons通过。完整checkpoint/report/manifest/events/diagnostics及SHA已保全，见[当前结果](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md)、[终态summary](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/terminal-summary.json)和[artifact index](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/terminal-artifact-index.json)。
 
-90分钟方案已单独获批并单次提交为job15662711；两个阶段启动都需至少2700s剩余，45分钟是预算guard而非完成保证。B1024还需新B512的1027项gate全部通过，资源准入只看时间/内存，不看speedup。设备内存使用真实compiler临时buffer加resident/full-output重叠与2GiB slack；host RSS单独加8GiB，不当作VRAM。canonical test02仅运行actual DIFFUCO helper的512/1024小探针，10/10签名与五项native输出通过；没有新real-model lower/compile/run或GPU初始化。实现、collector readiness与轻量验证见[当前准备结果](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md)及[协议](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/PROTOCOL.md)；资源/node/费用与最终SHA以[新付费提案](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/B1024_PAID_PROPOSAL.md)为准。执行SHA `bd9e4c04af68d77e79b984bfc8aa064977f893d3`已独立部署且clean，原ad6 source仍clean、无Git alternates；[真实部署接口收据](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/deployment-interface-receipt.json)在test02通过10项subprocess及collector code-pin准入，3.206605205s，无PROJECT relocation/JAX/模型执行/GPU初始化。15:40:15UTC节点快照保留n05为临时候选（CPU96/112、load19.37、GPU0/8 allocated），无idle eligible节点或预留。随后用户明确批准同一node/resource/code/command/cost envelope，经gln01/.2单次提交job15662711；17:02:31UTC观测RUNNING、实际n05、4CPU/1GPU/1node/1task/90min/no-requeue。启动affinity24,25,80,81映射2物理核、load18.67,19.75,20.12；选卡global0、UUID GPU-51897aa5-dac4-9d20-523e-830c362cf7a6、V100-SXM2-32GB、driver525.85.12，选卡进程列表为空。无严格完整stage、新吞吐或终态费用发布；[单次提交收据](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/submission-receipt.json)及既有paid ledger追加独立预算，未复用旧预算或创建automation。
+同一新进程中B512×2/B1024×1均为64真实FULL64点×16、连续Days2–8/9–15、48步/日、14336lane-days，五次同步core及wrapper：B512 core median45.543218s、全范围45.537509–45.564560，wrapper52.195214、52.032337–52.241993；B1024 core40.864703、40.859622–40.882893，wrapper47.405972、47.297268–47.626702。新B1024 wrapper吞吐302.409157lane-days/s，较新B512274.661200为1.101026×；median时间及热单位费用降低9.175634%。它是这两个实测shape中热单位费用较低者，不证明独立输入/production IO的最优点。旧job15657822的计时没有乘二或混入；native dtype、完整输出/mask、容差及物理合同未改。
+
+完整parent仅计一次，0.936388889GPU card-hours、3.745555556分配CPU-hours；实际费用估算CNY2.247333主/CNY2.322244保守相加（计费未核实），低于已批3.60/3.72。lower/compile/first-call/stack/transfer/IO与全作业cost分列于结果，不算缺少完整setup归因的K。startup affinity24,25,80,81映射2物理核，load18.67,19.75,20.12；选卡global0/UUID GPU-51897aa5-dac4-9d20-523e-830c362cf7a6/V100-SXM2-32GB/driver525.85.12，进程列表为空；n05提交时MIXED，不是idle/预留。无新CPU/GPU ratio、Fortran、年度669点50年、10×、训练AD或general science acceptance。[既有paid ledger](../../../outputs/research/global_throughput/server-cost-preparation/PAID_EXECUTION_LEDGER.json)独立预算已关闭，旧预算不复用；无重提/延期/取消或新automation。
 
 ### 已完成付费轮与单点诊断
 

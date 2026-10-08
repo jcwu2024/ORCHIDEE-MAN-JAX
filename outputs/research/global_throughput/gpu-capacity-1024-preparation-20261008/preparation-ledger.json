@@ -1,6 +1,6 @@
 {
-  "status": "submitted_running; final_stage_and_cost_unverified",
-  "date": "2026-10-08",
+  "status": "closed_completed_strict_two_stage_exploratory_capacity_passed",
+  "date": "2026-10-09",
   "worktree": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
   "starting_commit": "e0376d1",
   "authorization": {
@@ -292,9 +292,13 @@
   "paid_execution": {
     "receipt": "submission-receipt.json",
     "job_id": "15662711",
-    "state_observed": "RUNNING",
-    "strict_complete_stages_published": [],
-    "terminal_cost_available": false
+    "state_observed": "COMPLETED",
+    "strict_complete_stages_published": [
+      "capacity_B512_fixed1024_v1",
+      "capacity_B1024_fixed1024_v1"
+    ],
+    "terminal_cost_available": true,
+    "collector": "collected-fixed1024.json"
   },
   "submission_preflight": {
     "receipt": "submission-preflight.txt",
@@ -313,14 +317,16 @@
     "reservation_or_exclusivity_claim": false
   },
   "latest_observation": {
-    "receipt": "job-15662711-observation.txt",
-    "UTC": "2026-10-08T17:06:45Z",
-    "state": "RUNNING",
-    "elapsed_seconds": 283,
+    "receipt": "job-15662711-terminal-state.txt",
+    "UTC": "2026-10-08T18:02:24Z",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 3371,
     "node": "ibc13b03n05",
-    "last_saved_phase": "capacity_B512_compile_start",
-    "phase_elapsed_seconds": 113.8006706815213,
-    "phase_rss_bytes": 10609459200,
-    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
-  }
+    "last_saved_phase": "capacity_B1024_fixed1024_sealed",
+    "scope": "terminal raw9 parent/children plus test02 strict saved-array validation passed"
+  },
+  "terminal_result": "terminal-summary.json",
+  "terminal_artifact_index": "terminal-artifact-index.json",
+  "budget_closed": true
 }

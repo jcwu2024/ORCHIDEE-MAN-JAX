@@ -1,5 +1,5 @@
 {
-  "status": "approved_ceiling_submitted; memory_and_timing_remain_planning_estimates",
+  "status": "closed_completed_strict_two_stage_exploratory_capacity_passed",
   "historical_job": "15657822",
   "historical_checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
   "fixed_workload": {
@@ -46,7 +46,7 @@
     "assumes_CPU_GPU_additive": true,
     "billing_verified": false,
     "consumed": true,
-    "terminal_actual_cost_available": false
+    "terminal_actual_cost_available": true
   },
   "planning_memory": {
     "resident_fixed1024_upper_bytes": 3935772784,
@@ -121,14 +121,190 @@
     "reservation_or_exclusivity_claim": false
   },
   "latest_observation": {
-    "receipt": "job-15662711-observation.txt",
-    "UTC": "2026-10-08T17:06:45Z",
-    "state": "RUNNING",
-    "elapsed_seconds": 283,
+    "receipt": "job-15662711-terminal-state.txt",
+    "UTC": "2026-10-08T18:02:24Z",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 3371,
     "node": "ibc13b03n05",
-    "last_saved_phase": "capacity_B512_compile_start",
-    "phase_elapsed_seconds": 113.8006706815213,
-    "phase_rss_bytes": 10609459200,
-    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
-  }
+    "last_saved_phase": "capacity_B1024_fixed1024_sealed",
+    "scope": "terminal raw9 parent/children plus test02 strict saved-array validation passed"
+  },
+  "terminal_result": "terminal-summary.json",
+  "terminal_artifact_index": "terminal-artifact-index.json",
+  "budget_closed": true,
+  "actual_terminal_accounting": {
+    "terminal": true,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "observed_wall_seconds": 3371,
+    "approved_wall_seconds": 5400,
+    "approved_wall_exceeded": false,
+    "node": "ibc13b03n05",
+    "cpus": 4,
+    "tres": {
+      "billing": "4",
+      "cpu": "4",
+      "gres/gpu": "1",
+      "node": "1"
+    },
+    "raw_parent_row": [
+      "15662711",
+      "orchjax-gpu-cap1024",
+      "gnall",
+      "COMPLETED",
+      "3371",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "ibc13b03n05",
+      "0:0"
+    ],
+    "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+    "parent_counted_once": true,
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 2.2473333333333336,
+        "GPU_card_hours": 0.9363888888888889,
+        "allocated_CPU_count_hours": 3.7455555555555557,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; no child rows summed"
+      },
+      "conservative": {
+        "CNY": 2.3222444444444448,
+        "GPU_card_hours": 0.9363888888888889,
+        "allocated_CPU_count_hours": 3.7455555555555557,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; no child rows summed"
+      }
+    }
+  },
+  "measured_stage_resources": [
+    {
+      "shape": 512,
+      "memory": {
+        "executable_memory_analysis": {
+          "available": true,
+          "argument_size_in_bytes": 124473372,
+          "output_size_in_bytes": 110107616,
+          "temp_size_in_bytes": 2288514256,
+          "alias_size_in_bytes": 0,
+          "generated_code_size_in_bytes": 11382256,
+          "scope": "compiler device buffer estimate; not host RSS or measured VRAM peak"
+        },
+        "memory_preflight": {
+          "shape": 512,
+          "resident_1024_input_bytes": 3935772784,
+          "full_1024_output_bytes": 440418304,
+          "estimated_device_bytes": 11481314736,
+          "physical_gpu": {
+            "applicable": true,
+            "uuid": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+            "total_bytes": 34359738368,
+            "free_bytes": 33721155584,
+            "scope": "selected physical GPU snapshot immediately before prospective compilation"
+          },
+          "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee",
+          "input_byte_scope": "actual pure-helper host stacks for the complete1024 collection, including shared-static layout"
+        },
+        "host_memory_preflight": {
+          "MemAvailable_bytes": 356513538048,
+          "historical_B512_process_peak_RSS_bytes": 19496943616,
+          "historical_total1024_projection_bytes": 38993887232,
+          "current_fixed1024_B512_process_peak_RSS_bytes": null,
+          "conservative_required_bytes": 47583821824,
+          "limitation": "max historical512-to1024 projection/current B512 process peak times2 plus8GiB; conservative planning, not measured peak or reservation"
+        },
+        "post_measurement_GPU_memory": {
+          "applicable": true,
+          "uuid": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+          "total_bytes": 34359738368,
+          "free_bytes": 15966666752,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        },
+        "host_peak_RSS_bytes": 24653754368,
+        "host_RSS_bytes_before": 1228029952,
+        "host_RSS_bytes_after": 22988234752,
+        "RSS_peak_scope": "process cumulative peak through this stage; before/after are actual stage boundary snapshots",
+        "VRAM_scope": "actual selected-card preflight/post-measurement snapshots; not a measured peak"
+      },
+      "startup": {
+        "host_stack_seconds": 5.398976597934961,
+        "device_transfer_seconds": 2.561923796311021,
+        "first_full1024_call_seconds": 45.71435352228582,
+        "lower_seconds": 92.8422295935452,
+        "compile_seconds": 889.883490704
+      },
+      "checkpoint_IO": {
+        "available": true,
+        "bytes": 440821931,
+        "serialization_seconds": 0.48089979216456413,
+        "atomic_write_seconds": 1.395775493234396,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      }
+    },
+    {
+      "shape": 1024,
+      "memory": {
+        "executable_memory_analysis": {
+          "available": true,
+          "argument_size_in_bytes": 248946716,
+          "output_size_in_bytes": 220212192,
+          "temp_size_in_bytes": 4571419856,
+          "alias_size_in_bytes": 0,
+          "generated_code_size_in_bytes": 13249008,
+          "scope": "compiler device buffer estimate; not host RSS or measured VRAM peak"
+        },
+        "memory_preflight": {
+          "shape": 1024,
+          "resident_1024_input_bytes": 3935772728,
+          "full_1024_output_bytes": 440418304,
+          "estimated_device_bytes": 13769828880,
+          "physical_gpu": {
+            "applicable": true,
+            "uuid": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+            "total_bytes": 34359738368,
+            "free_bytes": 15979249664,
+            "scope": "selected physical GPU snapshot immediately before prospective compilation"
+          },
+          "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee",
+          "input_byte_scope": "actual pure-helper host stacks for the complete1024 collection, including shared-static layout"
+        },
+        "host_memory_preflight": {
+          "MemAvailable_bytes": 315860516864,
+          "historical_B512_process_peak_RSS_bytes": 19496943616,
+          "historical_total1024_projection_bytes": 38993887232,
+          "current_fixed1024_B512_process_peak_RSS_bytes": 24653754368,
+          "conservative_required_bytes": 57897443328,
+          "limitation": "max historical512-to1024 projection/current B512 process peak times2 plus8GiB; conservative planning, not measured peak or reservation"
+        },
+        "post_measurement_GPU_memory": {
+          "applicable": true,
+          "uuid": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+          "total_bytes": 34359738368,
+          "free_bytes": 15964569600,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        },
+        "host_peak_RSS_bytes": 27865956352,
+        "host_RSS_bytes_before": 18895122432,
+        "host_RSS_bytes_after": 24451923968,
+        "RSS_peak_scope": "process cumulative peak through this stage; before/after are actual stage boundary snapshots",
+        "VRAM_scope": "actual selected-card preflight/post-measurement snapshots; not a measured peak"
+      },
+      "startup": {
+        "host_stack_seconds": 5.584296898916364,
+        "device_transfer_seconds": 0.8164445515722036,
+        "first_full1024_call_seconds": 41.1008816473186,
+        "lower_seconds": 64.84025446884334,
+        "compile_seconds": 990.6975442748517
+      },
+      "checkpoint_IO": {
+        "available": true,
+        "bytes": 440822967,
+        "serialization_seconds": 0.5628267358988523,
+        "atomic_write_seconds": 0.34231998026371,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      }
+    }
+  ],
+  "planning_estimates_scope": "original arithmetic remains planning evidence; measured values are separately recorded below"
 }

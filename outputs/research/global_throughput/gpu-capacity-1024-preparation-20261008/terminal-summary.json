@@ -1,0 +1,290 @@
+{
+  "status": "closed_completed_strict_two_stage_exploratory_capacity_passed",
+  "date_Asia_Shanghai": "2026-10-09",
+  "job_id": "15662711",
+  "code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+  "contract": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1",
+  "collector": {
+    "result": "collected-fixed1024.json",
+    "log": "job-15662711-collector-log.txt",
+    "script": "collect_job15662711.sh",
+    "node": "test02",
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "OMP_OPENBLAS_MKL_threads": 1,
+    "canonical_CPU_env": true,
+    "python_B": true,
+    "exit_code": 0,
+    "wall_seconds": 149.98,
+    "valid_stages": 2,
+    "withheld_stages": 0,
+    "incomplete_stages": 0,
+    "model_invocation_compile_GPU_initialization": false
+  },
+  "stages": [
+    {
+      "stage": "capacity_B512_fixed1024_v1",
+      "batch_size": 512,
+      "chunks_per_collection": 2,
+      "checkpoint_sha256": "678a116038c5c8ad404dfb1d4eb691e1e4a43b2680871fd7353ef557243b07e6",
+      "checkpoint_bytes": 440821931,
+      "total_lanes": 1024,
+      "unique_real_points": 64,
+      "lane_days": 14336,
+      "native_output_leaves": 760,
+      "strict_numerical_passed": true,
+      "actual_saved_output_reference_passed": true,
+      "actual_saved_output_reference_comparison_count": 1024,
+      "core": {
+        "samples_seconds": [
+          45.56455982476473,
+          45.54321781359613,
+          45.53836699947715,
+          45.545320281758904,
+          45.53750883974135
+        ],
+        "median_seconds": 45.54321781359613,
+        "range_seconds": [
+          45.53750883974135,
+          45.56455982476473
+        ],
+        "lane_days": 14336,
+        "unique_real_points": 64,
+        "unique_point_days": 896,
+        "lane_days_per_second": 314.7779337568071,
+        "warm_cost_per_lane_day": {
+          "primary": {
+            "CNY_per_lane_day": 2.1178951736233322e-06,
+            "GPU_card_hours_per_lane_day": 8.82456322343055e-07,
+            "allocated_CPU_count_hours_per_lane_day": 3.52982528937222e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          },
+          "conservative": {
+            "CNY_per_lane_day": 2.188491679410777e-06,
+            "GPU_card_hours_per_lane_day": 8.82456322343055e-07,
+            "allocated_CPU_count_hours_per_lane_day": 3.52982528937222e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          }
+        }
+      },
+      "wrapper": {
+        "samples_seconds": [
+          52.241993460804224,
+          52.20077013224363,
+          52.19521357305348,
+          52.09860190190375,
+          52.03233695216477
+        ],
+        "median_seconds": 52.19521357305348,
+        "range_seconds": [
+          52.03233695216477,
+          52.241993460804224
+        ],
+        "lane_days": 14336,
+        "unique_real_points": 64,
+        "unique_point_days": 896,
+        "lane_days_per_second": 274.66120011052436,
+        "warm_cost_per_lane_day": {
+          "primary": {
+            "CNY_per_lane_day": 2.427232774044526e-06,
+            "GPU_card_hours_per_lane_day": 1.011346989185219e-06,
+            "allocated_CPU_count_hours_per_lane_day": 4.045387956740876e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          },
+          "conservative": {
+            "CNY_per_lane_day": 2.5081405331793433e-06,
+            "GPU_card_hours_per_lane_day": 1.011346989185219e-06,
+            "allocated_CPU_count_hours_per_lane_day": 4.045387956740876e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          }
+        }
+      },
+      "startup": {
+        "host_stack_seconds": 5.398976597934961,
+        "device_transfer_seconds": 2.561923796311021,
+        "first_full1024_call_seconds": 45.71435352228582,
+        "lower_seconds": 92.8422295935452,
+        "compile_seconds": 889.883490704
+      },
+      "checkpoint_IO": {
+        "available": true,
+        "bytes": 440821931,
+        "serialization_seconds": 0.48089979216456413,
+        "atomic_write_seconds": 1.395775493234396,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      },
+      "recorded_gate_count": 1027,
+      "host_cumulative_peak_RSS_bytes": 24653754368,
+      "compiler_temporary_bytes": 2288514256,
+      "checkpoint_local_path": "job-15662711-saved-result/capacity/stage_capacity_B512_fixed1024_v1.pkl"
+    },
+    {
+      "stage": "capacity_B1024_fixed1024_v1",
+      "batch_size": 1024,
+      "chunks_per_collection": 1,
+      "checkpoint_sha256": "6bea479fcf3fa3d81d334c132106641572ca92a58886b26e764bcd7dee6069d5",
+      "checkpoint_bytes": 440822967,
+      "total_lanes": 1024,
+      "unique_real_points": 64,
+      "lane_days": 14336,
+      "native_output_leaves": 760,
+      "strict_numerical_passed": true,
+      "actual_saved_output_reference_passed": true,
+      "actual_saved_output_reference_comparison_count": 1024,
+      "core": {
+        "samples_seconds": [
+          40.88289252668619,
+          40.86151247471571,
+          40.86542783677578,
+          40.85962176695466,
+          40.864703096449375
+        ],
+        "median_seconds": 40.864703096449375,
+        "range_seconds": [
+          40.85962176695466,
+          40.88289252668619
+        ],
+        "lane_days": 14336,
+        "unique_real_points": 64,
+        "unique_point_days": 896,
+        "lane_days_per_second": 350.816203562375,
+        "warm_cost_per_lane_day": {
+          "primary": {
+            "CNY_per_lane_day": 1.9003303151250642e-06,
+            "GPU_card_hours_per_lane_day": 7.918042979687767e-07,
+            "allocated_CPU_count_hours_per_lane_day": 3.1672171918751067e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          },
+          "conservative": {
+            "CNY_per_lane_day": 1.9636746589625662e-06,
+            "GPU_card_hours_per_lane_day": 7.918042979687767e-07,
+            "allocated_CPU_count_hours_per_lane_day": 3.1672171918751067e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          }
+        }
+      },
+      "wrapper": {
+        "samples_seconds": [
+          47.405971959233284,
+          47.41954459622502,
+          47.3630278930068,
+          47.29726834408939,
+          47.626702185720205
+        ],
+        "median_seconds": 47.405971959233284,
+        "range_seconds": [
+          47.29726834408939,
+          47.626702185720205
+        ],
+        "lane_days": 14336,
+        "unique_real_points": 64,
+        "unique_point_days": 896,
+        "lane_days_per_second": 302.40915664229453,
+        "warm_cost_per_lane_day": {
+          "primary": {
+            "CNY_per_lane_day": 2.204518785306608e-06,
+            "GPU_card_hours_per_lane_day": 9.18549493877753e-07,
+            "allocated_CPU_count_hours_per_lane_day": 3.674197975511012e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          },
+          "conservative": {
+            "CNY_per_lane_day": 2.278002744816828e-06,
+            "GPU_card_hours_per_lane_day": 9.18549493877753e-07,
+            "allocated_CPU_count_hours_per_lane_day": 3.674197975511012e-06,
+            "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+          }
+        }
+      },
+      "startup": {
+        "host_stack_seconds": 5.584296898916364,
+        "device_transfer_seconds": 0.8164445515722036,
+        "first_full1024_call_seconds": 41.1008816473186,
+        "lower_seconds": 64.84025446884334,
+        "compile_seconds": 990.6975442748517
+      },
+      "checkpoint_IO": {
+        "available": true,
+        "bytes": 440822967,
+        "serialization_seconds": 0.5628267358988523,
+        "atomic_write_seconds": 0.34231998026371,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      },
+      "recorded_gate_count": 1027,
+      "host_cumulative_peak_RSS_bytes": 27865956352,
+      "compiler_temporary_bytes": 4571419856,
+      "checkpoint_local_path": "job-15662711-saved-result/capacity/stage_capacity_B1024_fixed1024_v1.pkl"
+    }
+  ],
+  "accounting": {
+    "terminal": true,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "observed_wall_seconds": 3371,
+    "approved_wall_seconds": 5400,
+    "approved_wall_exceeded": false,
+    "node": "ibc13b03n05",
+    "cpus": 4,
+    "tres": {
+      "billing": "4",
+      "cpu": "4",
+      "gres/gpu": "1",
+      "node": "1"
+    },
+    "raw_parent_row": [
+      "15662711",
+      "orchjax-gpu-cap1024",
+      "gnall",
+      "COMPLETED",
+      "3371",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "ibc13b03n05",
+      "0:0"
+    ],
+    "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+    "parent_counted_once": true,
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 2.2473333333333336,
+        "GPU_card_hours": 0.9363888888888889,
+        "allocated_CPU_count_hours": 3.7455555555555557,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; no child rows summed"
+      },
+      "conservative": {
+        "CNY": 2.3222444444444448,
+        "GPU_card_hours": 0.9363888888888889,
+        "allocated_CPU_count_hours": 3.7455555555555557,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; no child rows summed"
+      }
+    }
+  },
+  "comparison": {
+    "same_lane_days": 14336,
+    "core_B512_over_B1024_median_ratio": 1.1144879165304216,
+    "wrapper_B512_over_B1024_median_ratio": 1.101026124260013,
+    "wrapper_B1024_median_time_reduction_percent": 9.175633714223764,
+    "scope": "one same-process fixed1024 repeated-FULL64 warm capacity comparison; not proven optimum for unique points/members or production IO"
+  },
+  "checkpoint_preservation": {
+    "remote_run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1",
+    "local_directory": "job-15662711-saved-result",
+    "complete_checkpoint_bytes": 881644898,
+    "local_SHA_matches_manifest": true,
+    "checkpoint_binaries_committed_to_Git": false
+  },
+  "K_amortization": "not reported; complete phase setup attribution is unavailable",
+  "scientific_acceptance": false,
+  "historical_B512_timing_promoted": false,
+  "budget_closed": true,
+  "new_automation": false,
+  "retry_or_new_submission": false,
+  "terminal_code_clean": true,
+  "terminal_code_evidence": "job-15662711-terminal-times-code.txt",
+  "scontrol_terminal_lookup": "job already absent from scontrol; complete sacct raw9 parent/children retained and used for accounting"
+}

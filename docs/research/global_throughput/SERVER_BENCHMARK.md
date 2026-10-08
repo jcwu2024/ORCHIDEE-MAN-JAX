@@ -130,31 +130,41 @@ Only B512 compiled/measured; sealed B128/B256 remained imported comparison origi
 
 The actual12:48UTC [submission snapshot](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/submission-node-snapshot.txt) records requested `ibc13b03n02` as CPU112/112,load22.74,1/8 GPUs allocated; no idle eligible gnall node was observed then. Startup evidence records actual node `ibc13b03n02`, affinity54,55,110,111 (two physical cores for4 charged Slurm CPUs), load26.25,27.24,23.0 and an empty selected-GPU process list. This later startup snapshot must not be used to infer earlier contention. GPU identity was global ID4, UUID `GPU-949cb714-8c53-353c-1f6a-1832c629230e`, Tesla V100-SXM2-32GB, driver525.85.12. Neither occupancy snapshot reserves a node or implies whole-node exclusivity. The scientific goal remains the one-card wrapper cost/trajectory-day curve for future points×members;669-point projection needs separate initialization, tail/padding and IO evidence. [Current result](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md) and [protocol](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md) are the compact current authorities.
 
-## Current Work Order: Approved Fixed1024 Job15662711 Running
+## Completed Fixed1024 Capacity Comparison (2026-10-09 Asia/Shanghai)
 
-The new `--fixed-1024` contract measures fresh B512×2 chunks, then conditional
-B1024×1 chunk, in the same new process/job. Both perform14336 lane-days from
-ordered64 FULL64 points×16, full continuous Days2–8/9–15,48 steps/day, native
-dtypes, full outputs and fixed gates. Historical fixed512 behavior is retained.
-Old job15657822 B512 supplies numerical/schema/actual compiler-memory/RSS
-provenance only; its timing is excluded and never multiplied into this curve.
-B512 is the best measured shape to date, with optimality and B1024 still unproven.
+Single approved job15662711 completed0:0 in3371 parent seconds on n05,
+1node/1task/4Slurm CPU/1V10032GB,90min/no-requeue/no-exclusive. Exactbd9e4c04af68d77e79b984bfc8aa064977f893d3 execution checkout remains clean.
+The deployed strict collector passed on test02 canonicalCPU env/affinity0–3/
+OMPBLAS1/`-B`,149.98s,exit0:2 accepted,0 withheld,0 incomplete. Each stage has
+1027gates/760leaves/1024 saved FULL64 comparisons. Full original checkpoints,
+SHA/report/manifest/events/diagnostics are preserved; see [current result](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md),
+[terminal summary](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/terminal-summary.json)
+and [artifact index](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/terminal-artifact-index.json).
 
-Each stage seals independently before proceeding. Both shapes require2700s
-remaining in a proposed5400s window; B1024 also needs all1027 new B512 gates
-passed. The45-minute threshold is a planning guard, not a completion guarantee;
-resource admission has no speedup condition. Device estimates distinguish outer
-raw-lane byte upper bounds from inner actual-stack bytes and add2GiB slack.
-Host RSS projections add8GiB and are distinct from VRAM. The new strict collector
-requires eventual reviewed code SHA, explicit approved allocation and observed startup GPU identity;
-complete B512 survives later B1024/parent failure, with parent cost counted once.
+Both new same-process stages perform14336lane-days from64 genuine FULL64
+points×16, continuous Days2–8/9–15,48steps/day; all native outputs/masks and
+fixed tolerances remain unchanged. Five synchronized core/wrapper samples:
 
-The new wrapper is `slurm_global_gpu_capacity_1024.sh`,1node/1task,4CPU/1V100,
-90min, no requeue, deployed clean checkout `global-throughput-gpu-fixed1024-v1` at bd9e4c04af68d77e79b984bfc8aa064977f893d3 and
-single-use root `server-benchmark/gpu-fixed1024-v1` (still absent). Independent Git objects/no alternates and preserved clean ad6 source are recorded in the deployment receipt. Actual test02 target interfaces pass10 subprocess checks plus collector admission in3.206605205s, with direct/spooled equality, source certificate/hash admission and no PROJECT relocation/JAX/model/GPU work. The15:40:15UTC snapshot keeps n05 provisional (CPU96/112,load19.37,GPU0/8 allocated); no idle eligible node or reservation is claimed. Subsequent explicit human approval authorized this unchanged envelope; job15662711 was submitted once from gln01 via192.168.11.2. At17:02:31UTC it was RUNNING on n05, allocated4CPU/1GPU/1node/1task,90min/no-requeue. Startup affinity24,25,80,81 maps2 physical cores; load18.67,19.75,20.12 and selected-GPU process list empty. Physical GPU global0/UUID GPU-51897aa5-dac4-9d20-523e-830c362cf7a6 is V100-SXM2-32GB,driver525.85.12. No strict complete stage/new throughput/terminal cost is published. The [submission receipt](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/submission-receipt.json) and existing paid execution ledger record this independent budget; old budgets remain closed, no automation/retry is authorized. The canonical512/1024 probe compiles
-only the actual insertion helper, not a physical-model graph. See [preparation](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md),
-[protocol](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/PROTOCOL.md)
-and the separately owned [resource/cost proposal](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/B1024_PAID_PROPOSAL.md).
+| Stage | Core median [full range],s | Wrapper median [full range],s |
+| --- | --- | --- |
+| B512×2 |45.543218 [45.537509–45.564560]|52.195214 [52.032337–52.241993]|
+| B1024×1 |40.864703 [40.859622–40.882893]|47.405972 [47.297268–47.626702]|
+
+B1024 wrapper is1.101026× faster (302.409157 versus274.661200lane-days/s),
+9.175634% lower median time/warm unit cost. It is the lower warm cost of these
+two measured shapes, not a proven optimum for unique members/production IO.
+Historical job15657822 timing is never doubled/imported. Lower/compile/first
+call/stack/transfer/checkpointIO and complete job cost are separately reported.
+Parent-only3371s accounting gives0.936388889GPUh/3.745555556CPUh and estimated
+CNY2.247333 primary/2.322244 conservative additive, billing unverified, below
+approved3.60/3.72. Child rows are preserved without summing; no full-setup K
+amortization estimate or new CPU/GPU ratio/Fortran/annual669-point50-year/10×/
+trainingAD/general scientific acceptance follows. Startup GPUglobal0/UUID
+GPU-51897aa5-dac4-9d20-523e-830c362cf7a6/V100-SXM2-32GB/driver525.85.12 and
+empty selected-card process list; affinity24,25,80,81 maps2 physical cores,
+load18.67,19.75,20.12. Submission n05 was MIXED, not idle/reserved. This independent
+budget is closed in the existing paid ledger; no retry/extension/cancellation/
+new job or automation was performed, older budgets remain closed.
 
 ## Completed Paid Matrix: Fixed Workload
 

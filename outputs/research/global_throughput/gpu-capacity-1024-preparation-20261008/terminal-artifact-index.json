@@ -1,0 +1,33 @@
+{
+  "archive": "job-15662711-terminal-evidence.zip",
+  "archive_bytes": 365082,
+  "archive_sha256": "345e5d22673d05d8ce541da2f9d078bec8c863c0da36f7aa4ab41ac24266c6b1",
+  "archive_CRC_and_original_file_bytes_verified": true,
+  "archive_contents": [
+    "collected-fixed1024.json",
+    "job-15662711-saved-result/gpu-diagnostic-exits.tsv",
+    "job-15662711-saved-result/gpu-identity.json",
+    "job-15662711-saved-result/launch-context.txt",
+    "job-15662711-saved-result/sacct-raw9.txt",
+    "job-15662711-saved-result/selected-gpu-inventory.stderr.txt",
+    "job-15662711-saved-result/selected-gpu-inventory.stdout.txt",
+    "job-15662711-saved-result/selected-gpu-processes.stderr.txt",
+    "job-15662711-saved-result/selected-gpu-processes.stdout.txt",
+    "job-15662711-saved-result/capacity/events.jsonl",
+    "job-15662711-saved-result/capacity/report.json",
+    "job-15662711-saved-result/capacity/stage_manifest.json"
+  ],
+  "restore": "Extract this ZIP under this preparation directory to restore exact original collector JSON, terminal report, manifest, events and diagnostics. Full checkpoint binaries remain in both local saved-result/capacity and remote immutable run root; their exact SHA/bytes are in terminal-summary.json. No original file was deleted.",
+  "checkpoint_files": [
+    {
+      "path": "job-15662711-saved-result/capacity/stage_capacity_B512_fixed1024_v1.pkl",
+      "bytes": 440821931,
+      "sha256": "678a116038c5c8ad404dfb1d4eb691e1e4a43b2680871fd7353ef557243b07e6"
+    },
+    {
+      "path": "job-15662711-saved-result/capacity/stage_capacity_B1024_fixed1024_v1.pkl",
+      "bytes": 440822967,
+      "sha256": "6bea479fcf3fa3d81d334c132106641572ca92a58886b26e764bcd7dee6069d5"
+    }
+  ]
+}

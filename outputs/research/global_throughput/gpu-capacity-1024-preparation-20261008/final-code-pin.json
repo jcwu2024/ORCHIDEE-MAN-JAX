@@ -1,5 +1,5 @@
 {
-  "status": "immutable_exact_execution_pin_submitted_job15662711",
+  "status": "closed_completed_strict_two_stage_exploratory_capacity_passed",
   "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
   "branch": "research/global-throughput",
   "expected_code_sha_collector_argument": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
@@ -39,10 +39,11 @@
   "validation": {
     "lightweight_tests": 159,
     "canonical_tiny_helper_successive_512_1024_passed": true,
-    "real_fixed1024_model_measurement": false,
+    "real_fixed1024_model_measurement": true,
     "actual_new_immutable_checkout_interfaces": true,
     "new_paid_submission": true,
-    "new_monitoring": false
+    "new_monitoring": false,
+    "strict_saved_stage_collection_passed": true
   },
   "resource_proposal": {
     "file": "B1024_PAID_PROPOSAL.md",
@@ -70,14 +71,17 @@
   "paid_execution_receipt": "submission-receipt.json",
   "job_id": "15662711",
   "latest_observation": {
-    "receipt": "job-15662711-observation.txt",
-    "UTC": "2026-10-08T17:06:45Z",
-    "state": "RUNNING",
-    "elapsed_seconds": 283,
+    "receipt": "job-15662711-terminal-state.txt",
+    "UTC": "2026-10-08T18:02:24Z",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 3371,
     "node": "ibc13b03n05",
-    "last_saved_phase": "capacity_B512_compile_start",
-    "phase_elapsed_seconds": 113.8006706815213,
-    "phase_rss_bytes": 10609459200,
-    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
-  }
+    "last_saved_phase": "capacity_B1024_fixed1024_sealed",
+    "scope": "terminal raw9 parent/children plus test02 strict saved-array validation passed"
+  },
+  "terminal_result": "terminal-summary.json",
+  "terminal_artifact_index": "terminal-artifact-index.json",
+  "budget_closed": true,
+  "terminal_code_clean": true
 }
