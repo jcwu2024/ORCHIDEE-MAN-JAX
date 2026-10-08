@@ -9,3 +9,7 @@
 *.template text eol=lf
 *.nc binary
 *.pkl binary
+# Preserve shell stdout's literal separators in captured dry-run evidence.
+outputs/research/global_throughput/gpu-signature-repair-20261008/canonical-launcher-dry-run.txt whitespace=-blank-at-eol
+outputs/research/global_throughput/gpu-signature-repair-20261008/final-launcher-verification.txt whitespace=-blank-at-eol
+outputs/research/global_throughput/gpu-signature-repair-20261008/deployment-log.txt whitespace=-blank-at-eol

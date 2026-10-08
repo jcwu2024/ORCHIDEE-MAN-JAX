@@ -185,4 +185,3 @@ for size in (128,256,512):
     del nested_compiled,lowered,compiled,bound,normal,bound_result,corrected
     jax.clear_caches(); gc.collect()
 emit(phase='complete',jax=jax.__version__,host=os.uname().nodename,scope='tiny CPU surrogate+sealed baseline read; no real model compile/execution')
-
