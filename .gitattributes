@@ -26,3 +26,7 @@ outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-te
 outputs/research/global_throughput/gpu-metadata-repair-20261008/canonical*.jsonl -text whitespace=-blank-at-eol
 outputs/research/global_throughput/gpu-metadata-repair-20261008/*.txt whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/gpu-metadata-repair-20261008/collect_b512_result.py -text
+outputs/research/global_throughput/gpu-metadata-repair-20261008/job-15657822-saved-capacity/** -text whitespace=-blank-at-eol
+outputs/research/global_throughput/gpu-metadata-repair-20261008/job-15657822-*.txt -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-metadata-repair-20261008/job-15657822-gpu-diagnostic-exits.tsv -text
+outputs/research/global_throughput/gpu-metadata-repair-20261008/selected-gpu-*.txt -text whitespace=-blank-at-eol,-blank-at-eof

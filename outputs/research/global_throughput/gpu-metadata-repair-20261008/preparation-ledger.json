@@ -1,5 +1,5 @@
 {
-  "status": "separate_B512_paid_approved_and_submitted; job15657822_pending_priority",
+  "status": "separate_B512_paid_completed; job15657822_strict_saved_capacity_result_passed",
   "date": "2026-10-08",
   "worktree": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
   "starting_commit": "8b7732a",
@@ -98,7 +98,7 @@
     "additional_collector_tests_passed": 41
   },
   "paid_proposal": {
-    "status": "approved_and_submitted; PENDING Priority",
+    "status": "approved_submitted_once_terminal_COMPLETED; strict_B512_capacity_stage_passed",
     "resources": {
       "partition": "gnall",
       "nodes": 1,
@@ -126,7 +126,7 @@
     "run_root_template": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-${SLURM_JOB_ID}",
     "exact_command_document": "B512_PAID_PROPOSAL.md",
     "submission_endpoint": "gln01 via the working login endpoint and existing SSH identity",
-    "refresh_node_occupancy_before_approved_submission": true,
+    "refresh_node_occupancy_before_approved_submission": false,
     "selected_node": "ibc13b03n02",
     "approval": {
       "user_text": "批准。",
@@ -150,8 +150,8 @@
     "actual_job_id": "15657822",
     "actual_submission": {
       "job_id": "15657822",
-      "state": "PENDING",
-      "reason": "Priority",
+      "state": "COMPLETED",
+      "reason": "None",
       "submit_host": "gln01",
       "login_endpoint": "192.168.11.2",
       "observed_cluster_UTC": "2026-10-08T12:51:09Z",
@@ -166,9 +166,9 @@
       "hard_wall_seconds": 2700,
       "requeue": false,
       "automatic_retry_authorized": false,
-      "consumed_running_wall_seconds": 0,
-      "current_charge_estimate_CNY": 0,
-      "charge_basis": "pending queue is not consumed allocation wall; actual terminal parent accounting required",
+      "consumed_running_wall_seconds": 1416,
+      "current_charge_estimate_CNY": 0.944,
+      "charge_basis": "one terminal raw9 parent:1416s CPU4/GPU1/node1; primaryCNY0.944/conservative0.975466666667, unverified billing; no child sums; queue unbilled",
       "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
       "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822",
       "stage_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity",
@@ -177,8 +177,90 @@
       "evidence": [
         "submission-receipt.txt",
         "job-15657822-initial-status.txt",
-        "submission-node-snapshot.txt"
-      ]
+        "submission-node-snapshot.txt",
+        "job-15657822-terminal-sacct-raw9.txt",
+        "job-15657822-terminal-scontrol.txt",
+        "job-15657822-terminal-log.txt"
+      ],
+      "terminal_accounting": {
+        "terminal": true,
+        "state": "COMPLETED",
+        "parent_row": [
+          "15657822",
+          "COMPLETED",
+          "1416",
+          "4",
+          "billing=4,cpu=4,gres/gpu=1,node=1",
+          "0:0",
+          "ibc13b03n02"
+        ],
+        "observed_wall_seconds": 1416,
+        "exit_code": "0:0",
+        "node": "ibc13b03n02",
+        "whole_job_cost": {
+          "primary": {
+            "CNY": 0.9440000000000002,
+            "GPU_card_hours": 0.3933333333333333,
+            "auxiliary_CPU_count_hours": 1.5733333333333333,
+            "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+            "billing_verified": false
+          },
+          "conservative": {
+            "CNY": 0.9754666666666669,
+            "GPU_card_hours": 0.3933333333333333,
+            "auxiliary_CPU_count_hours": 1.5733333333333333,
+            "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+            "billing_verified": false
+          }
+        },
+        "raw_parent_row": [
+          "15657822",
+          "orchjax-gpu-b512",
+          "gnall",
+          "COMPLETED",
+          "1416",
+          "4",
+          "billing=4,cpu=4,gres/gpu=1,node=1",
+          "ibc13b03n02",
+          "0:0"
+        ],
+        "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode"
+      },
+      "status": "COMPLETED",
+      "initial_state": "PENDING",
+      "initial_reason": "Priority",
+      "terminal_observed_cluster_UTC": "2026-10-08T13:23:38Z",
+      "scheduler_start_time": "2026-10-08T20:57:08",
+      "scheduler_end_time": "2026-10-08T21:20:44",
+      "actual_allocation": {
+        "node": "ibc13b03n02",
+        "nodes": 1,
+        "tasks": 1,
+        "Slurm_CPUs": 4,
+        "GPUs": 1,
+        "Slurm_global_GPU_ID": "4",
+        "GPU_UUID": "GPU-949cb714-8c53-353c-1f6a-1832c629230e",
+        "model": "Tesla V100-SXM2-32GB",
+        "driver": "525.85.12",
+        "logical_affinity": [
+          54,
+          55,
+          110,
+          111
+        ],
+        "physical_cores": 2,
+        "startup_loadavg": [
+          26.25,
+          27.24,
+          23.0
+        ],
+        "selected_GPU_startup_processes": "empty",
+        "evidence": [
+          "job-15657822-launch-context.txt",
+          "job-15657822-gpu-identity.json",
+          "job-15657822-terminal-log.txt"
+        ]
+      }
     }
   },
   "immutable_deployment": {
@@ -195,7 +277,7 @@
     "JAX_imported": false,
     "model_preparation_lower_compile_execution": false,
     "GPU_initialization": false,
-    "unchanged_CUDA_entry_actual_runtime": "pending separately approved GPU job",
+    "unchanged_CUDA_entry_actual_runtime": "passed only bounded B512 full-output capacity execution job15657822; no general scientific acceptance",
     "evidence": [
       "deployment-receipt.json",
       "deployment-interface-receipt.json",
@@ -219,10 +301,10 @@
     "only_new_B512_stage_can_be_accepted": true,
     "denied_incomplete_or_tolerance_failed_stage_throughput_withheld": true,
     "full_native_schema_fixed_tolerances_full_reference_and_five_core_plus_five_wrapper_samples_required": true,
-    "terminal_job_collection_exercised": false,
+    "terminal_job_collection_exercised": true,
     "canonical_interface_source_dependency_probe": "passed; no JAX import or model work; no saved-origin arrays reread",
     "missing_remote_dependency_resolved": "exact existing helper copied only to confirmed-absent path; other existing helper verified unchanged",
-    "new_B512_measured_evidence_available": false,
+    "new_B512_measured_evidence_available": true,
     "scientific_model_rerun_for_collector_preparation": false,
     "evidence": [
       "b512-collector-checks.json",
@@ -230,14 +312,33 @@
       "collector-interface-first-attempt.json",
       "collector-interface-receipt.json",
       "build_collector_interface_probe.py"
-    ]
+    ],
+    "terminal_collection": {
+      "status": "passed",
+      "job_id": "15657822",
+      "CPU_node": "test02",
+      "wall_seconds": 80.06,
+      "scope": "saved arrays only; separate from preparation600s cap; no model execution/compile/GPU initialization",
+      "affinity": "taskset0-3",
+      "thread_limits": "OMP/OPENBLAS/MKL1",
+      "collector_exit_code": 0,
+      "valid_stages": 1,
+      "withheld_stages": 0,
+      "immutable_checkout_clean_after": true,
+      "source_admission": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json",
+      "receipt": "job-15657822-collection-time.txt",
+      "result": "job-15657822-collected-result.json",
+      "verification": "job-15657822-verification.json"
+    }
   },
   "accepted_results_preserved": {
     "B128_job": "15600405",
     "B128_SHA256": "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5",
     "B256_job": "15643868",
     "B256_SHA256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
-    "B512_timing_available": false
+    "B512_timing_available": true,
+    "B512_job": "15657822",
+    "B512_SHA256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a"
   },
   "initial_occupancy": {
     "observed_UTC": "2026-10-08T09:41:07Z",
@@ -254,6 +355,59 @@
     "evidence": "proposal-node-snapshot.txt"
   },
   "current_occupancy": {
+    "observed_cluster_UTC": "2026-10-08T12:48:06Z",
+    "node": "ibc13b03n02",
+    "state": "ALLOCATED",
+    "CPUAlloc": 112,
+    "CPUTot": 112,
+    "CPULoad": 22.74,
+    "allocated_GPUs": 1,
+    "configured_GPUs": 8,
+    "scheduling": "wait for allocated CPU capacity on the approved node; queue time is not consumed allocation wall",
+    "evidence": "submission-node-snapshot.txt"
+  },
+  "connection": {
+    "VPN_confirmed_by_user": true,
+    "initial_both_endpoints_timeout": true,
+    "fresh_both_normal_SSH_authentication_passed": true,
+    "preferred_current_endpoint": "192.168.11.2",
+    "hostkey_checks_retained": true,
+    "final_endpoint_probe": ".1 hostname and .2 scheduler reads passed with existing identity and normal host-key verification"
+  },
+  "terminal_result": {
+    "status": "bounded_exploratory_capacity_stage_strict_saved_pass",
+    "job_id": "15657822",
+    "science_acceptance": false,
+    "checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
+    "checkpoint_bytes": 220430830,
+    "gates": 515,
+    "native_leaves": 760,
+    "lanes": 512,
+    "independent_saved_comparisons": 512,
+    "core_median_seconds": 22.681461047381163,
+    "wrapper_median_seconds": 26.12486007064581,
+    "wrapper_lane_days_per_second": 274.37467533286605,
+    "whole_parent_count": 1,
+    "cost": {
+      "primary": {
+        "CNY": 0.9440000000000002,
+        "GPU_card_hours": 0.3933333333333333,
+        "auxiliary_CPU_count_hours": 1.5733333333333333,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      },
+      "conservative": {
+        "CNY": 0.9754666666666669,
+        "GPU_card_hours": 0.3933333333333333,
+        "auxiliary_CPU_count_hours": 1.5733333333333333,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      }
+    },
+    "K_amortization": "not available; full observed phase setup/validation absent",
+    "evidence": "job-15657822-verification.json"
+  },
+  "historical_proposal_occupancy": {
     "observed_UTC": "2026-10-08T11:21:20Z",
     "candidate": "ibc13b03n02",
     "state": "MIXED",
@@ -268,13 +422,5 @@
     "evidence": "proposal-node-snapshot-approval.txt",
     "changed_from_prior_candidate": "ibc13b02n02",
     "selection_reason": "lowest CPU allocation and load among currently eligible non-draining nodes with spare GPU capacity"
-  },
-  "connection": {
-    "VPN_confirmed_by_user": true,
-    "initial_both_endpoints_timeout": true,
-    "fresh_both_normal_SSH_authentication_passed": true,
-    "preferred_current_endpoint": "192.168.11.2",
-    "hostkey_checks_retained": true,
-    "final_endpoint_probe": ".1 hostname and .2 scheduler reads passed with existing identity and normal host-key verification"
   }
 }

@@ -1,0 +1,161 @@
+{
+  "status": "passed",
+  "job_id": "15657822",
+  "checks": {
+    "collector_exit_zero": true,
+    "collector_stderr_empty": true,
+    "exactly_one_valid_stage_no_withheld": true,
+    "collector_strict_full_reference_pass": true,
+    "all_515_saved_gates_pass": true,
+    "all_512_independent_760_leaf_comparisons_pass": true,
+    "local_checkpoint_hash_matches_manifest_and_collector": true,
+    "local_checkpoint_exact_bytes": true,
+    "report_record_exact_manifest_record": true,
+    "completed_single_B512_only": true,
+    "five_core_and_wrapper_samples": true,
+    "immutable_code_retained": true,
+    "terminal_parent_completed_1416_seconds": true,
+    "exact_single_raw9_parent": true,
+    "scientific_acceptance_false": true
+  },
+  "checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
+  "checkpoint_bytes": 220430830,
+  "core": {
+    "samples_seconds": [
+      22.705473830923438,
+      22.679539527744055,
+      22.680638207122684,
+      22.68213226273656,
+      22.681461047381163
+    ],
+    "median_seconds": 22.681461047381163,
+    "range_seconds": [
+      22.679539527744055,
+      22.705473830923438
+    ],
+    "lane_days_per_second": 316.02902410149755,
+    "lane_days": 7168,
+    "warm_cost_scenarios": {
+      "primary": {
+        "CNY": 0.015120974031587443,
+        "GPU_card_hours": 0.006300405846494768,
+        "auxiliary_CPU_count_hours": 0.02520162338597907,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      },
+      "conservative": {
+        "CNY": 0.015625006499307027,
+        "GPU_card_hours": 0.006300405846494768,
+        "auxiliary_CPU_count_hours": 0.02520162338597907,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      }
+    }
+  },
+  "wrapper": {
+    "samples_seconds": [
+      26.08070334047079,
+      26.154269978404045,
+      26.083423418924212,
+      26.12486007064581,
+      26.167727122083306
+    ],
+    "median_seconds": 26.12486007064581,
+    "range_seconds": [
+      26.08070334047079,
+      26.167727122083306
+    ],
+    "lane_days_per_second": 274.37467533286605,
+    "lane_days": 7168,
+    "warm_cost_scenarios": {
+      "primary": {
+        "CNY": 0.017416573380430542,
+        "GPU_card_hours": 0.007256905575179391,
+        "auxiliary_CPU_count_hours": 0.029027622300717565,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      },
+      "conservative": {
+        "CNY": 0.017997125826444894,
+        "GPU_card_hours": 0.007256905575179391,
+        "auxiliary_CPU_count_hours": 0.029027622300717565,
+        "scope": "warm synchronized512lane collection only; declared scenario, excludes cold/IO"
+      }
+    }
+  },
+  "setup": {
+    "host_stack_seconds": 2.5812560841441154,
+    "device_transfer_seconds": 1.3345853667706251,
+    "first_full512_call_seconds": 22.867870517075062,
+    "lower_seconds": 98.73900883086026,
+    "compile_seconds": 892.7390548996627
+  },
+  "checkpoint_IO": {
+    "available": true,
+    "bytes": 220430830,
+    "serialization_seconds": 0.38042216561734676,
+    "atomic_write_seconds": 0.21393665671348572,
+    "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+  },
+  "terminal_accounting": {
+    "terminal": true,
+    "state": "COMPLETED",
+    "parent_row": [
+      "15657822",
+      "COMPLETED",
+      "1416",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "0:0",
+      "ibc13b03n02"
+    ],
+    "observed_wall_seconds": 1416,
+    "exit_code": "0:0",
+    "node": "ibc13b03n02",
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 0.9440000000000002,
+        "GPU_card_hours": 0.3933333333333333,
+        "auxiliary_CPU_count_hours": 1.5733333333333333,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      },
+      "conservative": {
+        "CNY": 0.9754666666666669,
+        "GPU_card_hours": 0.3933333333333333,
+        "auxiliary_CPU_count_hours": 1.5733333333333333,
+        "scope": "one terminal observed sacct parent row; compile/gates/IO included; no workload division",
+        "billing_verified": false
+      }
+    },
+    "raw_parent_row": [
+      "15657822",
+      "orchjax-gpu-b512",
+      "gnall",
+      "COMPLETED",
+      "1416",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "ibc13b03n02",
+      "0:0"
+    ],
+    "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode"
+  },
+  "B256_wrapper_observed_throughput_ratio": 1.1662668181803897,
+  "B256_wrapper_warm_cost_reduction_percent": 14.256327590610818,
+  "wrapper_CNY_per_million_lane_days_primary": 2.4297674916895287,
+  "wrapper_CNY_per_million_lane_days_conservative": 2.5107597414125133,
+  "max_saved_reference_bound_ratio": 5.985612760528371E-06,
+  "collector_CPU_saved_array_wall_seconds": 80.06,
+  "collector_execution_node": "test02",
+  "collector_affinity_max": 4,
+  "collector_thread_limits": "OMP/OPENBLAS/MKL=1",
+  "collection_budget_scope": "separate saved-array validation; not added to preparation diagnostics or paid parent allocation wall",
+  "source_admission": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json",
+  "source_admission_use": "existing independently admitted original FULL64/source identity; strict deployed collector revalidated exact current origins",
+  "verification_scope": "local preservation/metadata checks and arithmetic; numerical validation belongs to actual deployed collector on test02",
+  "limitations": [
+    "exploratory bounded capacity result only",
+    "historical B128 lazy dispatch differs; separate jobs and repaired cache prevent isolated batch causality",
+    "no CPU ratio, K amortization, global science, Fortran, annual, 669 tail/IO, 50-year, 10x or gradients acceptance",
+    "actual compiler memory and selected-card snapshots are not measured VRAM peak",
+    "cost scenarios are not verified billing"
+  ]
+}

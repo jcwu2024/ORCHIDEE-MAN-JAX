@@ -1,0 +1,4 @@
+{"phase": "capacity_B512_lower_start", "elapsed_seconds": 15.73672147281468, "rss_bytes": 5448261632}
+{"phase": "capacity_B512_compile_start", "elapsed_seconds": 115.86304558441043, "rss_bytes": 6336356352}
+{"phase": "capacity_B512_compiled", "elapsed_seconds": 1008.7229761146009, "rss_bytes": 17353916416}
+{"phase": "capacity_B512_sealed", "elapsed_seconds": 1347.87142945081, "rss_bytes": 15711244288, "reused": false}

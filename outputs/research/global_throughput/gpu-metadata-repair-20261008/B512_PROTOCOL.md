@@ -35,10 +35,11 @@ and copied Slurm spool. Ruff passes for the changed benchmark and tests.
 sealed historical checkpoints against the actual FULL64 reference, with no
 compilation or model execution. B128's locally flattened evidence filenames are
 presented through two unchanged hard links in `sealed-b128-origin-view`; no
-second checkpoint data copy was created. The current GPU runtime and revised
-B512 executable still require their separately planned bounded validation.
+second checkpoint data copy was created. The separately planned bounded GPU
+runtime validation has since completed for B512 job15657822; scope and result
+are recorded in the terminal section below.
 
-The immutable metadata-v1 checkout is now deployed at accepted SHA
+The immutable metadata-v1 checkout was deployed at accepted SHA
 `ad6c0e1faa7e22b590627844e9cb0ad492e9deb3`, clean before/after all 9 declared
 checkout interface checks. Actual CLI help/B512 dry-run, both Bash syntax checks
 and direct/copied-spool wrapper expansion pass; direct and spool commands agree.
@@ -49,10 +50,10 @@ SHA is `b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8`,
 with active exact certificate and canonical baseline `11b6db89...`.
 Total conservative canonical wall is 367.0582004s within the 600s cap. These
 interfaces supersede the earlier streamed old-ROOT preparation; real CPU
-before/after lowering, local 103 tests, and unresolved GPU execution retain
-their separate evidence scopes. Paid approval and submission are recorded in
+before/after lowering, local 103 tests, and terminal GPU execution retain their
+separate evidence scopes. Paid approval and submission are recorded in
 [submission receipt](submission-receipt.txt); the [initial status](job-15657822-initial-status.txt)
-at2026-10-08 12:51:09UTC is PENDING (Priority), with no B512 timing. Queue time is unbilled.
+was PENDING (Priority), with queue time unbilled.
 
 The exact source compatibility certificate distinguishes the full actual source
 hash from the normalized baseline science identity. It admits only the approved
@@ -80,9 +81,58 @@ no automatic retry is authorized. ReqNodeList is `ibc13b03n02`. The actual
 2026-10-08 12:48:06UTC [submission snapshot](submission-node-snapshot.txt) records
 CPUAlloc112/112, CPULoad22.74 and1/8 GPUs allocated; no idle eligible gnall node
 was observed. The earlier11:21 proposal snapshot is historical. Neither snapshot
-reserves the node or implies whole-node exclusivity. Actual node/CPU affinity/load
-and visible GPU processes remain startup evidence to collect.
+reserves the node or implies whole-node exclusivity. Startup evidence records
+actual node/CPU affinity/load and selected-GPU process inventory; the startup
+load does not establish contention at submission or explain earlier timings.
 
 Actual capacity destination is
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity`;
 actual log is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt`.
+
+Job15657822 completed0:0 in1416s parent elapsed on `ibc13b03n02`, using the
+approved node1/task1/CPU4/GPU1 allocation and2700s hard limit, with no requeue.
+Cluster-local start/end on2026-10-08 were20:57:08/21:20:44 (UTC12:57:08/13:20:44).
+It used global GPU ID4, UUID `GPU-949cb714-8c53-353c-1f6a-1832c629230e`,
+Tesla V100-SXM2-32GB, driver525.85.12. At startup, selected-card process
+inventory was empty; affinity was54,55,110,111 (two physical cores for four
+charged Slurm CPUs), and load was26.25,27.24,23.0. The12:48UTC submission
+snapshot recorded CPU112/112, load22.74 and1/8 GPUs allocated, with no idle
+eligible node then observed; that snapshot does not establish contention during
+the completed run.
+
+The strict deployed collector on `test02` admitted1 stage, withheld0 and exited0
+after80.06s saved-array CPU wall. It used the existing
+`gpu-sweetspot-preparation-20261006/target-input-admission.json`; collection did
+not compile or execute the model or initialize a GPU. The B512 stage passed515
+strict gates,760 native output leaves×512 lanes and512 actual FULL64 comparisons.
+The ordered workload was64 genuine points×8 over Days2–8 then9–15,48 steps/day,
+7168 lane-days, not512 distinct points. Sealed FULL64/B128/B256 identities were
+preserved.
+
+Core five-sample seconds were22.705473831,22.679539528,22.680638207,
+22.682132263,22.681461047 (median22.681461047, range22.679539528–22.705473831;
+316.029024 lane-days/s). Prepared-wrapper seconds were26.080703341,
+26.154269978,26.083423419,26.124860071,26.167727122 (median26.124860071,
+range26.080703341–26.167727122;274.374675 lane-days/s). At the unverified
+planning rates, warm median costs areCNY0.015120974/0.015625006 core and
+CNY0.017416573/0.017997126 wrapper, primary/conservative; wrapper cost per
+million lane-days isCNY2.429767492/2.510759741. Compared with B256 wrapper
+30.468557430s, observed throughput is1.166266818x and warm cost14.256327591%
+lower. This compares different jobs/code after the cache repair and is not
+isolated batch-size causality; B128 lazy dispatch also differs.
+
+Startup stack/transfer were2.581256084s/1.334585367s; lower98.739008831s,
+compile892.739054900s, first full B512 call22.867870517s, checkpoint
+serialization0.380422166s and atomic write0.213936657s. Full-phase setup and
+validation time was not recorded; K-amortization is unavailable. Parent elapsed
+1416s gives estimated CNY0.944 primary/CNY0.975466667 conservative, within the
+approved CNY1.80/CNY1.86 ceilings; billing is unverified and child rows are not
+summed into cost. Compiler temporary memory2288514256 bytes is not VRAM peak;
+host process peak was19496943616 bytes, while GPU pre/post snapshots are not
+peak-memory evidence. Evidence is retained in [collection](job-15657822-collected-result.json),
+[saved capacity](job-15657822-saved-capacity/), and [terminal accounting](job-15657822-terminal-sacct-raw9.txt).
+
+This is bounded exploratory capacity evidence only. It establishes no CPU ratio,
+Fortran comparison, annual/50-year result, 669-point timing, 10x throughput,
+training/AD result or general science promotion. No retry, cancellation,
+requeue or automation occurred.

@@ -1,0 +1,29 @@
+JobId=15657822 JobName=orchjax-gpu-b512
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=COMPLETED Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:23:36 TimeLimit=00:45:00 TimeMin=N/A
+   SubmitTime=2026-10-08T20:50:33 EligibleTime=2026-10-08T20:50:33
+   AccrueTime=2026-10-08T20:50:33
+   StartTime=2026-10-08T20:57:08 EndTime=2026-10-08T21:20:44 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-08T20:57:08 Scheduler=Backfill
+   Partition=gnall AllocNode:Sid=ibc13b02n04:52896
+   ReqNodeList=ibc13b03n02 ExcNodeList=(null)
+   NodeList=ibc13b03n02
+   BatchHost=ibc13b03n02
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1/scripts/hpc/slurm_global_gpu_capacity_512.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_512_15657822.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
