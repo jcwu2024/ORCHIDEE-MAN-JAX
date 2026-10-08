@@ -62,7 +62,11 @@ METADATA_PYTHON=$PROJECT/.venvs/orcjax_cpu/bin/python
 CONDITIONAL_512=${CONDITIONAL_512:-1}
 OPTIONAL_B64_BASELINE=${OPTIONAL_B64_BASELINE:-0}
 CONTINUE_256_512=${CONTINUE_256_512:-0}
+CONTINUE_512=${CONTINUE_512:-0}
 B128_BASELINE_DIR=${B128_BASELINE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v1-load512/capacity}
+B256_BASELINE_DIR=${B256_BASELINE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity}
+BUDGET_SECONDS=5400
+WALL_TIME=01:30:00
 GPU_SELECTOR=${SLURM_JOB_GPUS:-}
 GPU_SELECTOR=${GPU_SELECTOR//[[:space:]]/}
 DRY_RUN=0
@@ -85,7 +89,17 @@ fi
 [[ $CONTINUE_256_512 == 0 || $CONTINUE_256_512 == 1 ]] || {
   echo "CONTINUE_256_512 must be 0 or 1" >&2; exit 2;
 }
-if [[ $CONTINUE_256_512 == 1 && $OPTIONAL_B64_BASELINE != 0 ]]; then
+[[ $CONTINUE_512 == 0 || $CONTINUE_512 == 1 ]] || {
+  echo "CONTINUE_512 must be 0 or 1" >&2; exit 2;
+}
+if [[ $CONTINUE_512 == 1 && $CONTINUE_256_512 == 1 ]]; then
+  echo "B512-only and B256/B512 continuation modes are mutually exclusive" >&2; exit 2
+fi
+if [[ $CONTINUE_512 == 1 ]]; then
+  BUDGET_SECONDS=2700
+  WALL_TIME=00:45:00
+fi
+if [[ ( $CONTINUE_256_512 == 1 || $CONTINUE_512 == 1 ) && $OPTIONAL_B64_BASELINE != 0 ]]; then
   echo "continuation forbids optional B64" >&2; exit 2
 fi
 [[ $OPTIONAL_B64_BASELINE == 0 || $OPTIONAL_B64_BASELINE == 1 ]] || {
@@ -106,8 +120,11 @@ if [[ $DRY_RUN -eq 0 ]]; then
   for path in "$PYTHON" "$METADATA_PYTHON" "$IDENTITY_HELPER" "$ENTRY" "$PREPARED_INPUT" "$FULL_REFERENCE_DIR" "$MEMORY_BASELINE_DIR" "$CONFIG" "$ASSET_ROOT" "$IMAGE"; do
     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
   done
-  if [[ $CONTINUE_256_512 == 1 ]]; then
+  if [[ $CONTINUE_256_512 == 1 || $CONTINUE_512 == 1 ]]; then
     [[ -d $B128_BASELINE_DIR ]] || { echo "sealed B128 baseline missing" >&2; exit 2; }
+  fi
+  if [[ $CONTINUE_512 == 1 ]]; then
+    [[ -d $B256_BASELINE_DIR ]] || { echo "sealed B256 baseline missing" >&2; exit 2; }
   fi
   test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)" || {
     echo "benchmark checkout must be clean and immutable" >&2; exit 2;
@@ -129,8 +146,10 @@ export ORCHIDEE_OUTPUT_ROOT=$OUTPUT_DIR
 
 args=(--prepared-input "$PREPARED_INPUT" --full-reference-dir "$FULL_REFERENCE_DIR"
   --output-dir "$OUTPUT_DIR" --config "$CONFIG" --asset-root "$ASSET_ROOT"
-  --warm-repeats 5 --budget-seconds 5400 --memory-baseline-dir "$MEMORY_BASELINE_DIR")
-if [[ $CONTINUE_256_512 == 1 ]]; then
+  --warm-repeats 5 --budget-seconds "$BUDGET_SECONDS" --memory-baseline-dir "$MEMORY_BASELINE_DIR")
+if [[ $CONTINUE_512 == 1 ]]; then
+  args+=(--continue-512 --b128-baseline-dir "$B128_BASELINE_DIR" --b256-baseline-dir "$B256_BASELINE_DIR")
+elif [[ $CONTINUE_256_512 == 1 ]]; then
   args+=(--continue-256-512 --b128-baseline-dir "$B128_BASELINE_DIR")
 elif [[ $CONDITIONAL_512 == 1 ]]; then
   args+=(--conditional-512)
@@ -141,8 +160,8 @@ fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-'<slurm-assigned-device>'}
-  printf 'partition=gnall node=explicit_sbatch_selection nodes=1 tasks=1 cpus=4 gpus=1 wall=01:30:00 output=%q full_reference=%q conditional512=%s\n' \
-    "$OUTPUT_DIR" "$FULL_REFERENCE_DIR" "$CONDITIONAL_512"
+  printf 'partition=gnall node=explicit_sbatch_selection nodes=1 tasks=1 cpus=4 gpus=1 wall=%s output=%q full_reference=%q conditional512=%s\n' \
+    "$WALL_TIME" "$OUTPUT_DIR" "$FULL_REFERENCE_DIR" "$CONDITIONAL_512"
   printf 'host_gpu_identity_source=SLURM_JOB_GPUS global_gpu_selector=%q preserved_cuda_visible_devices=%q alloc_tres=%q\n' \
     "${GPU_SELECTOR:-<from-slurm>}" "$CUDA_VISIBLE_DEVICES" "${ORCHJAX_SLURM_ALLOC_TRES:-<from-scontrol>}"
   printf 'metadata_command='; printf '%q ' "$METADATA_PYTHON" "$IDENTITY_HELPER" --slurm-global-id "${GPU_SELECTOR:-<from-slurm>}" --cuda-visible-devices "$CUDA_VISIBLE_DEVICES" --output "$RUN_ROOT/gpu-identity.json"; printf '\n'

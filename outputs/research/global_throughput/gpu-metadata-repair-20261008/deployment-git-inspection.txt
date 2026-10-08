@@ -1,0 +1,5 @@
+git version 1.8.3.1
+12b495b9425de3ad1dc16efa3a5a0e69d7e89222
+.git
+standalone_git_directory=yes
+new_checkout_exists=no

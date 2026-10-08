@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "observed_run": "2026-10-08, local ORCJAX Windows environment",
+  "test_command": "conda run --no-capture-output -n ORCJAX python -m pytest -q tests/unit/test_diffuco_mask_cache.py tests/unit/test_global_gpu_capacity.py tests/unit/test_global_batch.py",
+  "test_result": "103 passed in 11.08s",
+  "test_exit_code": 0,
+  "test_counts": {"mask_cache": 14, "capacity": 56, "batch": 33},
+  "ruff_command": "conda run --no-capture-output -n ORCJAX python -m ruff check scripts/dev/benchmark_global_batch.py scripts/dev/benchmark_global_gpu_capacity.py scripts/dev/global_source_compatibility.py tests/unit/test_diffuco_mask_cache.py tests/unit/test_global_gpu_capacity.py",
+  "ruff_result": "All checks passed!",
+  "ruff_exit_code": 0,
+  "diff_command": "git diff --check",
+  "diff_result": "passed; line-ending conversion warnings only",
+  "diff_exit_code": 0,
+  "reused_observation": true,
+  "additional_test_execution_for_this_record": false,
+  "limitation": "Local JAX 0.10.1 tests do not establish canonical GPU execution. Whole-file DIFFUCO Ruff retains 9 pre-existing import errors in untouched lines. Subsequent edits were documentation and deployment recipe only."
+}

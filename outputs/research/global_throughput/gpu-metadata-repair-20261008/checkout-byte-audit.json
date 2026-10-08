@@ -1,0 +1,649 @@
+{
+  "immutable_git_revision": "8b7732aaa0c75d58f1aa515a7fccbadd628f353b",
+  "files": [
+    {
+      "path": "jax_orchidee/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "5a1cad2cec1fe45a37d9c5714e65b07b8e1ab78b09985996636a1ab40f27f51a",
+      "baseline_checkout_sha256": "5a1cad2cec1fe45a37d9c5714e65b07b8e1ab78b09985996636a1ab40f27f51a"
+    },
+    {
+      "path": "jax_orchidee/ad_primitives.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "b6e07de35e555befd77e2c536e68b786496d80e7bb1a0a7bce54377e1c2e98f4",
+      "baseline_checkout_sha256": "b6e07de35e555befd77e2c536e68b786496d80e7bb1a0a7bce54377e1c2e98f4"
+    },
+    {
+      "path": "jax_orchidee/cli/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "68f64457c4bb11ea9f215311f4b30600a173b3f3072958e983beb0fd743d4f3b",
+      "baseline_checkout_sha256": "68f64457c4bb11ea9f215311f4b30600a173b3f3072958e983beb0fd743d4f3b"
+    },
+    {
+      "path": "jax_orchidee/cli/main.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "e9598d23ee476ea69ce13b2a8fd7f51a6d73bc77e9340f3c569806b3086519fa",
+      "baseline_checkout_sha256": "e9598d23ee476ea69ce13b2a8fd7f51a6d73bc77e9340f3c569806b3086519fa"
+    },
+    {
+      "path": "jax_orchidee/coupled.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "deb35a5334256947900ba9d911f0f60407256f5a3dc0c3b537628da7fd227f41",
+      "baseline_checkout_sha256": "deb35a5334256947900ba9d911f0f60407256f5a3dc0c3b537628da7fd227f41"
+    },
+    {
+      "path": "jax_orchidee/driver/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "a3c6a4d97e417ad70b062b883f7b09baf646af19b5aa16743c43b66717cb6633",
+      "baseline_checkout_sha256": "a3c6a4d97e417ad70b062b883f7b09baf646af19b5aa16743c43b66717cb6633"
+    },
+    {
+      "path": "jax_orchidee/driver/bundle.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "7e7c3d5981f219cdbc1a2d0bf054098645b548204284b2e96c24e9f8c59c8035",
+      "baseline_checkout_sha256": "7e7c3d5981f219cdbc1a2d0bf054098645b548204284b2e96c24e9f8c59c8035"
+    },
+    {
+      "path": "jax_orchidee/driver/dim2.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "ce9693430eca992dc74faaa274f5e23207e92299bf782c7160efcaedafb89d41",
+      "baseline_checkout_sha256": "ce9693430eca992dc74faaa274f5e23207e92299bf782c7160efcaedafb89d41"
+    },
+    {
+      "path": "jax_orchidee/driver/domain.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "194aceb749fef6f672cf551158fb81b900a55784fe0b533bb0c8ca016542825b",
+      "baseline_checkout_sha256": "194aceb749fef6f672cf551158fb81b900a55784fe0b533bb0c8ca016542825b"
+    },
+    {
+      "path": "jax_orchidee/driver/driver_forcing_completion.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "9b34cb9585638a44d5b34e17a2c26a91a3cc5a0e5d03328fa99e3e75bfffce4b",
+      "baseline_checkout_sha256": "9b34cb9585638a44d5b34e17a2c26a91a3cc5a0e5d03328fa99e3e75bfffce4b"
+    },
+    {
+      "path": "jax_orchidee/driver/fast_state.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "ce20031a100add329d7c8a549283477764d0877031ec836a6be2a91510bf4f21",
+      "baseline_checkout_sha256": "ce20031a100add329d7c8a549283477764d0877031ec836a6be2a91510bf4f21"
+    },
+    {
+      "path": "jax_orchidee/driver/forcing_domain_io.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "01cff6c2707aeb555128e5da63ba0343e6e7bf04fad05c9d561493f5638be49e",
+      "baseline_checkout_sha256": "01cff6c2707aeb555128e5da63ba0343e6e7bf04fad05c9d561493f5638be49e"
+    },
+    {
+      "path": "jax_orchidee/driver/forcing_interpolation.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "e1148a058aa78a4b7522765b63b6a317375ac48af11372fe2d96db85394264eb",
+      "baseline_checkout_sha256": "e1148a058aa78a4b7522765b63b6a317375ac48af11372fe2d96db85394264eb"
+    },
+    {
+      "path": "jax_orchidee/driver/forcing_metadata.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "0d6fc69bd2e97c91dad172ef7ab2e7e281b21006c2e807f23c9dc9afa3f60a0c",
+      "baseline_checkout_sha256": "0d6fc69bd2e97c91dad172ef7ab2e7e281b21006c2e807f23c9dc9afa3f60a0c"
+    },
+    {
+      "path": "jax_orchidee/driver/forcing_readers.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "05a9ed2e4050c5c57dbf74b6001b08b4a21bf3a0fcc1475531da5c22b6d6a0b8",
+      "baseline_checkout_sha256": "05a9ed2e4050c5c57dbf74b6001b08b4a21bf3a0fcc1475531da5c22b6d6a0b8"
+    },
+    {
+      "path": "jax_orchidee/driver/geometry_gauss_jordan.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "4071c70d85ffe8f1000a317c98a023167cf344c43f9426d464b324e067094295",
+      "baseline_checkout_sha256": "4071c70d85ffe8f1000a317c98a023167cf344c43f9426d464b324e067094295"
+    },
+    {
+      "path": "jax_orchidee/driver/geometry_grid.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d7577adedccd9bb890c21823f5bda67c6b7f7c042a46c91f3537b32fca6e53b5",
+      "baseline_checkout_sha256": "d7577adedccd9bb890c21823f5bda67c6b7f7c042a46c91f3537b32fca6e53b5"
+    },
+    {
+      "path": "jax_orchidee/driver/geometry_haversine.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "2cbad228002dd67a26b8a61f87ac5d179ea49f91fb8da73c260e2ecc97b77cd3",
+      "baseline_checkout_sha256": "2cbad228002dd67a26b8a61f87ac5d179ea49f91fb8da73c260e2ecc97b77cd3"
+    },
+    {
+      "path": "jax_orchidee/driver/geometry_interregxy.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "e33c793000cc1eacc336fa42ce510bf160c79b992dd21e7a527ae4cdbff4ee9f",
+      "baseline_checkout_sha256": "e33c793000cc1eacc336fa42ce510bf160c79b992dd21e7a527ae4cdbff4ee9f"
+    },
+    {
+      "path": "jax_orchidee/driver/geometry_llxy.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "bb8e6d61db6d523c565136c63eeb6d53bba891a9ce4ebc66de7177d6e4ef65a6",
+      "baseline_checkout_sha256": "bb8e6d61db6d523c565136c63eeb6d53bba891a9ce4ebc66de7177d6e4ef65a6"
+    },
+    {
+      "path": "jax_orchidee/driver/geometry_polygons.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "6e951777f21a5275ffe6c065b1d94252e36c7398be9aa6f84a7631c9145ccc07",
+      "baseline_checkout_sha256": "6e951777f21a5275ffe6c065b1d94252e36c7398be9aa6f84a7631c9145ccc07"
+    },
+    {
+      "path": "jax_orchidee/driver/global_batch.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "79c3ea9a0a9a0bcd0f88f2ef610c442ef0663fbad5f9cecb20254da3ddb72de2",
+      "baseline_checkout_sha256": "79c3ea9a0a9a0bcd0f88f2ef610c442ef0663fbad5f9cecb20254da3ddb72de2"
+    },
+    {
+      "path": "jax_orchidee/driver/init.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "5baa2af9e91d94310b47d4cb7b11923e8cd33b9104b6f742e6d5692e4cb9d874",
+      "baseline_checkout_sha256": "5baa2af9e91d94310b47d4cb7b11923e8cd33b9104b6f742e6d5692e4cb9d874"
+    },
+    {
+      "path": "jax_orchidee/driver/interpolation.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d841f88e2f7fda339a3caa1ca99f311e26ec519a656351296a59e3d3c59a5e93",
+      "baseline_checkout_sha256": "d841f88e2f7fda339a3caa1ca99f311e26ec519a656351296a59e3d3c59a5e93"
+    },
+    {
+      "path": "jax_orchidee/driver/interpolation_aggregate.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "780ada8d04999e4e2150ef2f722cc1715cd2e53a454e416773274cc95f19bdfd",
+      "baseline_checkout_sha256": "780ada8d04999e4e2150ef2f722cc1715cd2e53a454e416773274cc95f19bdfd"
+    },
+    {
+      "path": "jax_orchidee/driver/interpolation_core12.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "b5d0d67ba85391ac0cf11eb6ae1f85ad670f5b840c290f83baaf7ed94193c2f4",
+      "baseline_checkout_sha256": "b5d0d67ba85391ac0cf11eb6ae1f85ad670f5b840c290f83baaf7ed94193c2f4"
+    },
+    {
+      "path": "jax_orchidee/driver/interpolation_core4cont.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "ce4c0793e5c107f16ff778624e3ba4a3a0adcf9336bc444bcb6711767dc1bfaa",
+      "baseline_checkout_sha256": "ce4c0793e5c107f16ff778624e3ba4a3a0adcf9336bc444bcb6711767dc1bfaa"
+    },
+    {
+      "path": "jax_orchidee/driver/interpolation_file_dims.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d10cbf42587d8a08bbbfddab044a67dc6c243db0d2dcc89b34fad169bbdda8d5",
+      "baseline_checkout_sha256": "d10cbf42587d8a08bbbfddab044a67dc6c243db0d2dcc89b34fad169bbdda8d5"
+    },
+    {
+      "path": "jax_orchidee/driver/interpolation_routing.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "24c1b2a93431d901c461a1db5e8e4c4ed42cfe71492d03b2125ea8b0d5569bb1",
+      "baseline_checkout_sha256": "24c1b2a93431d901c461a1db5e8e4c4ed42cfe71492d03b2125ea8b0d5569bb1"
+    },
+    {
+      "path": "jax_orchidee/driver/orchestration.py",
+      "representation": "exact immutable Git blob LF-to-CRLF checkout",
+      "git_blob_sha256": "be4b332741361524364b39ab45961240af3fa4dc8faf8c70847461bbe5ae8a02",
+      "baseline_checkout_sha256": "3672f5f937d75d505753045575086be2424a19afd4e5719884b267b31ca63816"
+    },
+    {
+      "path": "jax_orchidee/driver/paper_binding.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "a6242e74e6aa7161455d589d9b75962add455619482ae84002d5ede0856c24f6",
+      "baseline_checkout_sha256": "a6242e74e6aa7161455d589d9b75962add455619482ae84002d5ede0856c24f6"
+    },
+    {
+      "path": "jax_orchidee/driver/paper_mosaic.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "3b5faa21316be4f775c7e746899d4f64e91c555644e1df93bbfc77199978d42f",
+      "baseline_checkout_sha256": "3b5faa21316be4f775c7e746899d4f64e91c555644e1df93bbfc77199978d42f"
+    },
+    {
+      "path": "jax_orchidee/driver/paper_validation.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "6fc6e8c30793c86308c1a426a772b88f73fb88b58ea2693c34635ec9dc9dbb1d",
+      "baseline_checkout_sha256": "6fc6e8c30793c86308c1a426a772b88f73fb88b58ea2693c34635ec9dc9dbb1d"
+    },
+    {
+      "path": "jax_orchidee/driver/reference_layout.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "1b3cc8607f9a74de6825324a7dcbb6c105cd1b30bc2f96a2582bfd31ef1d4f65",
+      "baseline_checkout_sha256": "1b3cc8607f9a74de6825324a7dcbb6c105cd1b30bc2f96a2582bfd31ef1d4f65"
+    },
+    {
+      "path": "jax_orchidee/driver/restart.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "900a81b192c70e92318d7626d677afb70132533316e09e0cd45b492f6fae2466",
+      "baseline_checkout_sha256": "900a81b192c70e92318d7626d677afb70132533316e09e0cd45b492f6fae2466"
+    },
+    {
+      "path": "jax_orchidee/driver/restart_bundle.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "af20a102921672cff123504e09476e3acea1dfe104361071d426fbcfe02c78a7",
+      "baseline_checkout_sha256": "af20a102921672cff123504e09476e3acea1dfe104361071d426fbcfe02c78a7"
+    },
+    {
+      "path": "jax_orchidee/driver/restart_export.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "72797f3058440d6bba6850343215eebf14e2b5b9c518d79b16efed74b1ea3b29",
+      "baseline_checkout_sha256": "72797f3058440d6bba6850343215eebf14e2b5b9c518d79b16efed74b1ea3b29"
+    },
+    {
+      "path": "jax_orchidee/driver/restart_file_io.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "87ffe69b195fc043c15b54cb8fa7e6dbc35bf9474f0fc2827a4e1fc06a4da182",
+      "baseline_checkout_sha256": "87ffe69b195fc043c15b54cb8fa7e6dbc35bf9474f0fc2827a4e1fc06a4da182"
+    },
+    {
+      "path": "jax_orchidee/driver/restart_state.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d296b8f69df19bb6727f2c4a87c328aec195c4fd73ecf6efde3d1b14008ea40e",
+      "baseline_checkout_sha256": "d296b8f69df19bb6727f2c4a87c328aec195c4fd73ecf6efde3d1b14008ea40e"
+    },
+    {
+      "path": "jax_orchidee/driver/run_def_materialization.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "59662554ba44f537716379253322c0ada032405dbb97752cae4883790e38ccac",
+      "baseline_checkout_sha256": "59662554ba44f537716379253322c0ada032405dbb97752cae4883790e38ccac"
+    },
+    {
+      "path": "jax_orchidee/driver/sechiba_boundary.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "6784a3e3890d143238aa21dc6d9af73ba101353828244d7064922715d2dd8972",
+      "baseline_checkout_sha256": "6784a3e3890d143238aa21dc6d9af73ba101353828244d7064922715d2dd8972"
+    },
+    {
+      "path": "jax_orchidee/driver/static.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "2e69846fe5df018ede5679da9a4d7f9e414ccbe9e9a6041db834862359c2610e",
+      "baseline_checkout_sha256": "2e69846fe5df018ede5679da9a4d7f9e414ccbe9e9a6041db834862359c2610e"
+    },
+    {
+      "path": "jax_orchidee/driver/stomate_boundary.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "deb7213923ed9ec930ec43d59c1323f15cbdb4dffd0b29e1f258f8936f19cb08",
+      "baseline_checkout_sha256": "deb7213923ed9ec930ec43d59c1323f15cbdb4dffd0b29e1f258f8936f19cb08"
+    },
+    {
+      "path": "jax_orchidee/driver/trace.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "be849fac9bee17ccc38401507dd460c84cdc66227ab74020e5b5dc0f2c02f1ac",
+      "baseline_checkout_sha256": "be849fac9bee17ccc38401507dd460c84cdc66227ab74020e5b5dc0f2c02f1ac"
+    },
+    {
+      "path": "jax_orchidee/driver/trace_schema.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "6c0cd72582b4a2e2d27c7a0c1f60bec55e280034105154d5bf5fce914e2ecc9c",
+      "baseline_checkout_sha256": "6c0cd72582b4a2e2d27c7a0c1f60bec55e280034105154d5bf5fce914e2ecc9c"
+    },
+    {
+      "path": "jax_orchidee/parallel.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "267f139453c7e8aa9fc710e14d673a8422ef2f4c368fa77ccab46fdb2e65abce",
+      "baseline_checkout_sha256": "267f139453c7e8aa9fc710e14d673a8422ef2f4c368fa77ccab46fdb2e65abce"
+    },
+    {
+      "path": "jax_orchidee/parameters/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "083ab4a35fbbd990f914e657e3b5c9a01251704d6dc8b5a723424b1fadd924e6",
+      "baseline_checkout_sha256": "083ab4a35fbbd990f914e657e3b5c9a01251704d6dc8b5a723424b1fadd924e6"
+    },
+    {
+      "path": "jax_orchidee/parameters/constantes.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "39a6971713b7b978ff59b1a8f62c6fcf43c5c7b7b9e87b8004d21bdc9f55226c",
+      "baseline_checkout_sha256": "39a6971713b7b978ff59b1a8f62c6fcf43c5c7b7b9e87b8004d21bdc9f55226c"
+    },
+    {
+      "path": "jax_orchidee/parameters/control.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "f635e1ed29dbd40002bf76ddac3216a2121385b509d61f187d925881b3b4d9a1",
+      "baseline_checkout_sha256": "f635e1ed29dbd40002bf76ddac3216a2121385b509d61f187d925881b3b4d9a1"
+    },
+    {
+      "path": "jax_orchidee/parameters/pft_catalog.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "0f3016a83eeac9b14167814e440ab85df14e6bfd88ed8e9018590ad6cfd56a7f",
+      "baseline_checkout_sha256": "0f3016a83eeac9b14167814e440ab85df14e6bfd88ed8e9018590ad6cfd56a7f"
+    },
+    {
+      "path": "jax_orchidee/parameters/soil.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "345879f2772799a7cd055a070f5a7903967a723e77825f7e301f902ede31212f",
+      "baseline_checkout_sha256": "345879f2772799a7cd055a070f5a7903967a723e77825f7e301f902ede31212f"
+    },
+    {
+      "path": "jax_orchidee/parameters/vertical_soil.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "56aa965b7b0b453225c2d0a7acd01e23196320d7c1a0de89bf09cc97cf5b2162",
+      "baseline_checkout_sha256": "56aa965b7b0b453225c2d0a7acd01e23196320d7c1a0de89bf09cc97cf5b2162"
+    },
+    {
+      "path": "jax_orchidee/runners/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "a2461befec73abb73ab17d40addb9c84ed3f4bdfc9454aaa31484e0a467786a1",
+      "baseline_checkout_sha256": "a2461befec73abb73ab17d40addb9c84ed3f4bdfc9454aaa31484e0a467786a1"
+    },
+    {
+      "path": "jax_orchidee/runners/acceptance.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "6a56a2784561e95fad34f07d7d51a21407a81b2e1324c30b654b93921ceba4ed",
+      "baseline_checkout_sha256": "6a56a2784561e95fad34f07d7d51a21407a81b2e1324c30b654b93921ceba4ed"
+    },
+    {
+      "path": "jax_orchidee/runners/multiyear.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "e4a05a0b93e09d99dc1a12e43b2a118c8333256436e54d0aff3608bfe5599607",
+      "baseline_checkout_sha256": "e4a05a0b93e09d99dc1a12e43b2a118c8333256436e54d0aff3608bfe5599607"
+    },
+    {
+      "path": "jax_orchidee/runtime.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "dabdd68cd394196ae9937a30a60f8886e02c493db66e22d295b9943464b661d1",
+      "baseline_checkout_sha256": "dabdd68cd394196ae9937a30a60f8886e02c493db66e22d295b9943464b661d1"
+    },
+    {
+      "path": "jax_orchidee/sechiba/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "077a3035f5fdcedebbaa5c53cf50d419c5a75f2eea0a25535df779ab5170d70d",
+      "baseline_checkout_sha256": "077a3035f5fdcedebbaa5c53cf50d419c5a75f2eea0a25535df779ab5170d70d"
+    },
+    {
+      "path": "jax_orchidee/sechiba/bridge.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "512a20c0ac5c073bf824c78010f73d0c3c5dfb5ae41d63a1508c6b81c3103d0a",
+      "baseline_checkout_sha256": "512a20c0ac5c073bf824c78010f73d0c3c5dfb5ae41d63a1508c6b81c3103d0a"
+    },
+    {
+      "path": "jax_orchidee/sechiba/condveg.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "e1f3ef1c018b84471e6b90fb4613999d37f364e7d022b12dd4b52c96c3685db9",
+      "baseline_checkout_sha256": "e1f3ef1c018b84471e6b90fb4613999d37f364e7d022b12dd4b52c96c3685db9"
+    },
+    {
+      "path": "jax_orchidee/sechiba/coupling.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "ec3dbea10741da428628495bd4549c12409dc8dde4f9fdeb7211bd703d88679d",
+      "baseline_checkout_sha256": "ec3dbea10741da428628495bd4549c12409dc8dde4f9fdeb7211bd703d88679d"
+    },
+    {
+      "path": "jax_orchidee/sechiba/diffuco.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "04fc1193e85d2deca0f97cc06008989053ccaf956db3dc9552dd6b9cc2549d22",
+      "baseline_checkout_sha256": "04fc1193e85d2deca0f97cc06008989053ccaf956db3dc9552dd6b9cc2549d22"
+    },
+    {
+      "path": "jax_orchidee/sechiba/diffuco_bridge.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "5a6d3e0d49892f2119e9c014e069865f74983721a7aadb9d44b17a6f8e228347",
+      "baseline_checkout_sha256": "5a6d3e0d49892f2119e9c014e069865f74983721a7aadb9d44b17a6f8e228347"
+    },
+    {
+      "path": "jax_orchidee/sechiba/enerbil.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "38364482c14dddab2c78f7bc71b66dcf35f9d1ceab8391b8a8ad604d5670c554",
+      "baseline_checkout_sha256": "38364482c14dddab2c78f7bc71b66dcf35f9d1ceab8391b8a8ad604d5670c554"
+    },
+    {
+      "path": "jax_orchidee/sechiba/enerbil_bridge.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d9ecf3972c8c125f9e18845a0cce8fc869997a2cbc077582ffc9a6fc0fd1ef45",
+      "baseline_checkout_sha256": "d9ecf3972c8c125f9e18845a0cce8fc869997a2cbc077582ffc9a6fc0fd1ef45"
+    },
+    {
+      "path": "jax_orchidee/sechiba/first_step.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "c8211546d9c11b1bd2820b09134c2bf7426652947a2fa2164bbccb886445b4a3",
+      "baseline_checkout_sha256": "c8211546d9c11b1bd2820b09134c2bf7426652947a2fa2164bbccb886445b4a3"
+    },
+    {
+      "path": "jax_orchidee/sechiba/hydrol.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "fbed5e414d0aa9797a8770021592a35acccf192a06e44e6df809dc0552f28bbd",
+      "baseline_checkout_sha256": "fbed5e414d0aa9797a8770021592a35acccf192a06e44e6df809dc0552f28bbd"
+    },
+    {
+      "path": "jax_orchidee/sechiba/hydrol_reference.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "a3b3d0fa354b188b3b14d6a9eb61999b97b635744aadc907fecccbd56b29e785",
+      "baseline_checkout_sha256": "a3b3d0fa354b188b3b14d6a9eb61999b97b635744aadc907fecccbd56b29e785"
+    },
+    {
+      "path": "jax_orchidee/sechiba/hydrol_thermosoil_completion.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "dc800af98cfdb52d8a3489421c743ccc92521b8663e9ced1d2b1a001e3edeeed",
+      "baseline_checkout_sha256": "dc800af98cfdb52d8a3489421c743ccc92521b8663e9ced1d2b1a001e3edeeed"
+    },
+    {
+      "path": "jax_orchidee/sechiba/hydrol_trace.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "78cdb2babd723249bba2f6c5fe20956078476267106087d1adaa604b7cb1cd07",
+      "baseline_checkout_sha256": "78cdb2babd723249bba2f6c5fe20956078476267106087d1adaa604b7cb1cd07"
+    },
+    {
+      "path": "jax_orchidee/sechiba/initialize.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "f003078e6b6833c14cd5478778004d482bcc0bd59379bfeb5e9b5f5e16e5205b",
+      "baseline_checkout_sha256": "f003078e6b6833c14cd5478778004d482bcc0bd59379bfeb5e9b5f5e16e5205b"
+    },
+    {
+      "path": "jax_orchidee/sechiba/io_contracts.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "88b742b3e2e5b72a47e679c1953c4fc4adad3ab7f37126ef6cc192afe831845b",
+      "baseline_checkout_sha256": "88b742b3e2e5b72a47e679c1953c4fc4adad3ab7f37126ef6cc192afe831845b"
+    },
+    {
+      "path": "jax_orchidee/sechiba/lifecycle_completion.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "c0896242fea72257567bef6b27faaecfe4fd13741f5c4e8046dd7b88b4e4e78e",
+      "baseline_checkout_sha256": "c0896242fea72257567bef6b27faaecfe4fd13741f5c4e8046dd7b88b4e4e78e"
+    },
+    {
+      "path": "jax_orchidee/sechiba/main.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "ade2ef9a1b277c52e8369b3aac8fc9ea06d9b3c65265783250cc2cb0e952ce95",
+      "baseline_checkout_sha256": "ade2ef9a1b277c52e8369b3aac8fc9ea06d9b3c65265783250cc2cb0e952ce95"
+    },
+    {
+      "path": "jax_orchidee/sechiba/restart_export.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "3ed0854fa0abeac614c36cf4d5863775c46a2054022487cb4df96b6f5ef3f003",
+      "baseline_checkout_sha256": "3ed0854fa0abeac614c36cf4d5863775c46a2054022487cb4df96b6f5ef3f003"
+    },
+    {
+      "path": "jax_orchidee/sechiba/restart_io.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d68a1a7f43ac3a987342eff005259a8ec2dae45d44a82f7a6f60c6f72976d758",
+      "baseline_checkout_sha256": "d68a1a7f43ac3a987342eff005259a8ec2dae45d44a82f7a6f60c6f72976d758"
+    },
+    {
+      "path": "jax_orchidee/sechiba/restart_lifecycle.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "27c8b9afc7167b9c08764a13bad056624ffd53d150f9ce05080314d90e8ada3e",
+      "baseline_checkout_sha256": "27c8b9afc7167b9c08764a13bad056624ffd53d150f9ce05080314d90e8ada3e"
+    },
+    {
+      "path": "jax_orchidee/sechiba/routing.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "31ff33ad90bd88c2cbcb02ef31c55b8f86b7ac9cfdb5a9d3d528b75fc0daa8ac",
+      "baseline_checkout_sha256": "31ff33ad90bd88c2cbcb02ef31c55b8f86b7ac9cfdb5a9d3d528b75fc0daa8ac"
+    },
+    {
+      "path": "jax_orchidee/sechiba/science_completion.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d53452f5e3af0e75b93ef74802e72bc834d520975ed8eb68c1f5a85e1af3959e",
+      "baseline_checkout_sha256": "d53452f5e3af0e75b93ef74802e72bc834d520975ed8eb68c1f5a85e1af3959e"
+    },
+    {
+      "path": "jax_orchidee/sechiba/sechiba_step.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "445ef03a4143b575abf58ceb01b3795de37acc718befc2c98a2fcf15771fe0e3",
+      "baseline_checkout_sha256": "445ef03a4143b575abf58ceb01b3795de37acc718befc2c98a2fcf15771fe0e3"
+    },
+    {
+      "path": "jax_orchidee/sechiba/slowproc.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "4c12ab42983c121f2445a7522b828051481556ca46c581f22049015a56272d69",
+      "baseline_checkout_sha256": "4c12ab42983c121f2445a7522b828051481556ca46c581f22049015a56272d69"
+    },
+    {
+      "path": "jax_orchidee/sechiba/thermosoil.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "4703f97cb136e4c72b629ae6b6100f72ace18294ff1bcf1927b7f8553ed575bb",
+      "baseline_checkout_sha256": "4703f97cb136e4c72b629ae6b6100f72ace18294ff1bcf1927b7f8553ed575bb"
+    },
+    {
+      "path": "jax_orchidee/sticslai_completion.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "f04e0b8808e4509e8ae816454c33a013e8c063e73d1e9cc00c12a1e60956a8cc",
+      "baseline_checkout_sha256": "f04e0b8808e4509e8ae816454c33a013e8c063e73d1e9cc00c12a1e60956a8cc"
+    },
+    {
+      "path": "jax_orchidee/stomate/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "9111e7770dfb7b348317bd76c5072f1d1e2e530b432d5149cbe22d2b59a8b13e",
+      "baseline_checkout_sha256": "9111e7770dfb7b348317bd76c5072f1d1e2e530b432d5149cbe22d2b59a8b13e"
+    },
+    {
+      "path": "jax_orchidee/stomate/carbon_kernels.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "7c5d535c465721dd4d6e411d4e3df40f284ab9e72b3accf5fc9237a9bfcb6377",
+      "baseline_checkout_sha256": "7c5d535c465721dd4d6e411d4e3df40f284ab9e72b3accf5fc9237a9bfcb6377"
+    },
+    {
+      "path": "jax_orchidee/stomate/daily.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "f55aa6f61f93a1c1b383bc9bd4158fec808eaced9d1f39cf642c86f2a6b5394d",
+      "baseline_checkout_sha256": "f55aa6f61f93a1c1b383bc9bd4158fec808eaced9d1f39cf642c86f2a6b5394d"
+    },
+    {
+      "path": "jax_orchidee/stomate/daily_inputs.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "74cb49f3f429e39c8bb3cb5361db053d42c64c66722dae4a7bb8d38905634058",
+      "baseline_checkout_sha256": "74cb49f3f429e39c8bb3cb5361db053d42c64c66722dae4a7bb8d38905634058"
+    },
+    {
+      "path": "jax_orchidee/stomate/entry.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "cd926302c38457584676cb8d9cbb178166b14c6b043b20f4ff8741d321c748ec",
+      "baseline_checkout_sha256": "cd926302c38457584676cb8d9cbb178166b14c6b043b20f4ff8741d321c748ec"
+    },
+    {
+      "path": "jax_orchidee/stomate/finalize.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "dc4d4486c5606c53d6c65f856173ebe5fd743d927cdc3d581134b82f261c42e4",
+      "baseline_checkout_sha256": "dc4d4486c5606c53d6c65f856173ebe5fd743d927cdc3d581134b82f261c42e4"
+    },
+    {
+      "path": "jax_orchidee/stomate/initialize.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "87b06397feb34639a88b000bd524d21c856ec3c706d91a600ea229f0157d9441",
+      "baseline_checkout_sha256": "87b06397feb34639a88b000bd524d21c856ec3c706d91a600ea229f0157d9441"
+    },
+    {
+      "path": "jax_orchidee/stomate/integration.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "1ff1022323ff2108e988b0f0dd771f95b70a0d7eaa77c285e7d389a7be09dc3a",
+      "baseline_checkout_sha256": "1ff1022323ff2108e988b0f0dd771f95b70a0d7eaa77c285e7d389a7be09dc3a"
+    },
+    {
+      "path": "jax_orchidee/stomate/main.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "601b6aff9814ae14c6709ffe206cfc868ee342bd9cf897b778e7a5825766f7c1",
+      "baseline_checkout_sha256": "601b6aff9814ae14c6709ffe206cfc868ee342bd9cf897b778e7a5825766f7c1"
+    },
+    {
+      "path": "jax_orchidee/stomate/modelout.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "87bd9761b73542b9e3cb2ac1c7563431bd5ac28fe2431c36404e7d9abbabbb13",
+      "baseline_checkout_sha256": "87bd9761b73542b9e3cb2ac1c7563431bd5ac28fe2431c36404e7d9abbabbb13"
+    },
+    {
+      "path": "jax_orchidee/stomate/parameters.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "d081f691810b5f342a70a277ab9d0e168e267764f754ad5534da72aa30b889d9",
+      "baseline_checkout_sha256": "d081f691810b5f342a70a277ab9d0e168e267764f754ad5534da72aa30b889d9"
+    },
+    {
+      "path": "jax_orchidee/stomate/permafrost.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "9cba15d2046709748ba56466f49f0510b58134f99ae059f813dbd46b18d0fc2f",
+      "baseline_checkout_sha256": "9cba15d2046709748ba56466f49f0510b58134f99ae059f813dbd46b18d0fc2f"
+    },
+    {
+      "path": "jax_orchidee/stomate/reference.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "597666ee1d7b1ffdcc47be975677a8547a22551ba0a9e44b102dde6e324921c3",
+      "baseline_checkout_sha256": "597666ee1d7b1ffdcc47be975677a8547a22551ba0a9e44b102dde6e324921c3"
+    },
+    {
+      "path": "jax_orchidee/stomate/restart_io.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "6a61d09ceb61b004c30f54648b1c95c50436d82dc8b62fd7c10623dd6f93e94a",
+      "baseline_checkout_sha256": "6a61d09ceb61b004c30f54648b1c95c50436d82dc8b62fd7c10623dd6f93e94a"
+    },
+    {
+      "path": "jax_orchidee/stomate/season.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "2f1aa51f2253250727931ea0cf467353b10150a83d5aea96c7a523a2b5b97bec",
+      "baseline_checkout_sha256": "2f1aa51f2253250727931ea0cf467353b10150a83d5aea96c7a523a2b5b97bec"
+    },
+    {
+      "path": "jax_orchidee/stomate/soilcarbon_kernels.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "8d306461042c857d309e6d33a462995c6088b0add048ec1d53588045e070140e",
+      "baseline_checkout_sha256": "8d306461042c857d309e6d33a462995c6088b0add048ec1d53588045e070140e"
+    },
+    {
+      "path": "jax_orchidee/stomate/source_helpers.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "bde5f0965a11d7b9eb7c872073d43e591842107a60b53af083e9bfaa348f9d48",
+      "baseline_checkout_sha256": "bde5f0965a11d7b9eb7c872073d43e591842107a60b53af083e9bfaa348f9d48"
+    },
+    {
+      "path": "jax_orchidee/stomate/trace.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "a8a7149bc3ae7009df2bf17e685ec9788d53f62379fd4fdcdcae6cdd5013f749",
+      "baseline_checkout_sha256": "a8a7149bc3ae7009df2bf17e685ec9788d53f62379fd4fdcdcae6cdd5013f749"
+    },
+    {
+      "path": "jax_orchidee/stomate/trace_schema.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "33db07ed28fc1a540d297b7c6586d185b2506a35c98d1ad1dbb5bb5efed1b40f",
+      "baseline_checkout_sha256": "33db07ed28fc1a540d297b7c6586d185b2506a35c98d1ad1dbb5bb5efed1b40f"
+    },
+    {
+      "path": "jax_orchidee/trace/__init__.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "4521b60e9914d692e21c1ffefe11368bd253d8ae9da6c279b4bf2598b952c627",
+      "baseline_checkout_sha256": "4521b60e9914d692e21c1ffefe11368bd253d8ae9da6c279b4bf2598b952c627"
+    },
+    {
+      "path": "jax_orchidee/trace/fixed_format.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "92a03180018dab37c925d166102bbaa7ae66c758ba8d8c57faa9991eca49f0e7",
+      "baseline_checkout_sha256": "92a03180018dab37c925d166102bbaa7ae66c758ba8d8c57faa9991eca49f0e7"
+    },
+    {
+      "path": "jax_orchidee/trace/server_1961.py",
+      "representation": "exact immutable Git blob",
+      "git_blob_sha256": "dc3bb31595f293836f1f7992bc1c78e35d300baaf01fbc86eb84831ddf7d91d5",
+      "baseline_checkout_sha256": "dc3bb31595f293836f1f7992bc1c78e35d300baaf01fbc86eb84831ddf7d91d5"
+    }
+  ],
+  "canonical_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+  "exact_windows_baseline_sha256": "4151db252c62cf24899300c7cb2eac783405888fce1384030332d4622aa2c196",
+  "current_execution_identity": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "99ea5f7522b498d0e637802994d44f449f1b26f935c6e137cdac67e27349fc45",
+    "execution_source_compatibility": {
+      "active": true,
+      "contract": "exact-DIFFUCO-host-mask-cache-repair-v1",
+      "source_path": "jax_orchidee/sechiba/diffuco.py",
+      "original_file_sha256": "04fc1193e85d2deca0f97cc06008989053ccaf956db3dc9552dd6b9cc2549d22",
+      "actual_file_sha256": "42073dd14f427db8ed78803c90cd5a64b677bf822d1edf6b6fbed7aa97166a14",
+      "baseline_full_source_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "baseline_checkout_bytes_sha256": "4151db252c62cf24899300c7cb2eac783405888fce1384030332d4622aa2c196",
+      "baseline_checkout_representation": "exact audited Windows checkout source bytes",
+      "actual_full_source_sha256": "99ea5f7522b498d0e637802994d44f449f1b26f935c6e137cdac67e27349fc45",
+      "compatibility_scope": "exact helper-only immutable host Boolean mask; all other source bytes unchanged",
+      "claim": "audited execution-only equivalence; source bytes differ"
+    }
+  },
+  "method": "each certified baseline file equals immutable Git blob or its exact LF-to-CRLF representation; admission uses two aggregate pins, no generic EOL normalization"
+}

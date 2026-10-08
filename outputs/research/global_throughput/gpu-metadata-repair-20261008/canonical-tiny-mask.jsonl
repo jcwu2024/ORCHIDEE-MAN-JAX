@@ -1,0 +1,8 @@
+{"policy": "original", "size": 2, "public": 10, "internal": 10, "cached_class": "DynamicJaxprTracer", "cached_dtype": "bool", "cached_shape": [14], "tracer_origin": "<jax._src.source_info_util.SourceInfo object at 0x2b819fed8eb0>"}
+{"policy": "original", "size": 2, "native_output_equality": true, "outputs": 5}
+{"policy": "original", "size": 3, "public": 10, "internal": 11, "cached_class": "DynamicJaxprTracer", "cached_dtype": "bool", "cached_shape": [14], "tracer_origin": "<jax._src.source_info_util.SourceInfo object at 0x2b819fed8eb0>"}
+{"policy": "immutable_host_mask", "size": 2, "public": 10, "internal": 10, "cached_class": "ndarray", "cached_dtype": "bool", "cached_shape": [14], "tracer_origin": "None"}
+{"policy": "immutable_host_mask", "size": 2, "native_output_equality": true, "outputs": 5}
+{"policy": "immutable_host_mask", "size": 3, "public": 10, "internal": 10, "cached_class": "ndarray", "cached_dtype": "bool", "cached_shape": [14], "tracer_origin": "None"}
+{"policy": "immutable_host_mask", "size": 3, "native_output_equality": true, "outputs": 5}
+{"phase": "complete", "jax": "0.4.38", "seconds": 0.758374746888876}

@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://raw.githubusercontent.com/jax-ml/jax/jax-v0.4.38/jax/_src/pjit.py",
+    "path": "outputs\\research\\global_throughput\\gpu-metadata-repair-20261008\\jax0438_pjit.py",
+    "sha256": "6fb375759bdccba0e0e18cb4c1f6f1c7d13308284c4774053c592dd6bd89589c",
+    "bytes": 125074
+  },
+  {
+    "url": "https://raw.githubusercontent.com/jax-ml/jax/jax-v0.4.38/jax/_src/core.py",
+    "path": "outputs\\research\\global_throughput\\gpu-metadata-repair-20261008\\jax0438_core.py",
+    "sha256": "4d5a1290b992596809b6ec378383b935b001c659445d77dda3733a00802dcd32",
+    "bytes": 109795
+  },
+  {
+    "url": "https://raw.githubusercontent.com/jax-ml/jax/jax-v0.4.38/jax/_src/interpreters/partial_eval.py",
+    "path": "outputs\\research\\global_throughput\\gpu-metadata-repair-20261008\\jax0438_interpreters_partial_eval.py",
+    "sha256": "95f20a125afd883fe3de2522e89acc06256e3cf6e087ab755c04f4d0c35a4f9c",
+    "bytes": 114589
+  },
+  {
+    "url": "https://raw.githubusercontent.com/jax-ml/jax/jax-v0.4.38/jax/_src/interpreters/pxla.py",
+    "path": "outputs\\research\\global_throughput\\gpu-metadata-repair-20261008\\jax0438_interpreters_pxla.py",
+    "sha256": "b4eb972a11e6e6195e7f43eb27968368d6b92f3045ba4140c4247384dc80ab2d",
+    "bytes": 133449
+  }
+]

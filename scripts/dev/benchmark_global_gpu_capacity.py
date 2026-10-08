@@ -10,10 +10,10 @@ from __future__ import annotations
 import argparse
 import gc
 import hashlib
-import pickle
 import json
 import math
 import os
+import pickle
 import signal
 import statistics
 import sys
@@ -23,13 +23,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from scripts.dev.global_server_reference import finite_tolerance_failure, _evidence_mismatch
+from scripts.dev.global_server_reference import _evidence_mismatch, finite_tolerance_failure
 
 TOTAL_LANES = 512
 UNIQUE_POINTS = 64
 CONTRACT = "GPU-fixed512-repeated-FULL64-capacity-v1"
 B128_SHA256 = "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5"
+B256_SHA256 = "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c"
 CONTINUATION_CONTRACT = "GPU-fixed512-repeated-FULL64-B256-B512-continuation-v1"
+B512_CONTRACT = "GPU-fixed512-repeated-FULL64-B512-only-continuation-v1"
 LABEL = "capacity performance measured; global scientific consistency not accepted"
 
 
@@ -45,8 +47,11 @@ def parser():
     result.add_argument("--warm-repeats", type=int, default=5)
     result.add_argument("--budget-seconds", type=int, default=5400)
     result.add_argument("--conditional-512", action="store_true")
-    result.add_argument("--continue-256-512", action="store_true", help="Import sealed B128 timing origin; measure only B256 then resource-admitted B512, regardless of speedup.")
+    modes = result.add_mutually_exclusive_group()
+    modes.add_argument("--continue-256-512", action="store_true", help="Import sealed B128 timing origin; measure only B256 then resource-admitted B512, regardless of speedup.")
+    modes.add_argument("--continue-512", action="store_true", help="Import sealed B128/B256 origins and B256 compiler memory; measure only resource-admitted B512.")
     result.add_argument("--b128-baseline-dir", type=Path)
+    result.add_argument("--b256-baseline-dir", type=Path)
     result.add_argument("--optional-b64-baseline", action="store_true")
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--admit-inputs", action="store_true", help="Read/audit FULL64 and repeated identities only; no process factory or compilation.")
@@ -133,7 +138,20 @@ def admit_numerical_sources(args, lanes, second, scale, environment):
     return identity, reference, reference_origin, old_record, analysis
 
 
-def import_b128_baseline(directory, expected_identity, destination, jax):
+def import_b128_baseline(directory, expected_identity, destination, jax, *, reference=None):
+    return _import_capacity_baseline(directory, expected_identity, destination, jax,
+        size=128, sha256=B128_SHA256, byte_count=220429366, job_id="15600405",
+        code_sha="a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e", reference=reference)
+
+
+def import_b256_baseline(directory, expected_identity, destination, jax, *, reference=None):
+    return _import_capacity_baseline(directory, expected_identity, destination, jax,
+        size=256, sha256=B256_SHA256, byte_count=220429675, job_id="15643868",
+        code_sha="12b495b9425de3ad1dc16efa3a5a0e69d7e89222", reference=reference)
+
+
+def _import_capacity_baseline(directory, expected_identity, destination, jax, *,
+                              size, sha256, byte_count, job_id, code_sha, reference):
     """Validate sealed historical evidence without modifying or relabeling its stage."""
     from scripts.dev.global_batch_stage_store import StageStore
 
@@ -147,21 +165,23 @@ def import_b128_baseline(directory, expected_identity, destination, jax):
         "warm_repeats", "gate", "precision_policy", "validation_mode", "workload_kind", "total_lanes",
         "lane_origins", "unique_real_points", "candidate_shapes", "conditional_512", "optional_B64_baseline",
         "conditional_policy", "numerical_reference_sha256")
+    if size == 256:
+        admission_keys += ("continuation_B128_sha256",)
     for key in admission_keys:
         if key not in source_identity or source_identity[key] != expected_identity.get(key):
-            raise ValueError(f"B128 baseline identity mismatch: {key}")
-    name = "capacity_B128_fixed512_v1"
+            raise ValueError(f"B{size} baseline identity mismatch: {key}")
+    name = f"capacity_B{size}_fixed512_v1"
     record = manifest["stages"].get(name, {})
-    if record.get("status") != "complete" or record.get("sha256") != B128_SHA256:
-        raise ValueError("B128 baseline must be the sealed job15600405 stage")
+    if record.get("status") != "complete" or record.get("sha256") != sha256:
+        raise ValueError(f"B{size} baseline must be the sealed job{job_id} stage")
     path = directory / ("stage_" + name + ".pkl")
     data = path.read_bytes()
-    if hashlib.sha256(data).hexdigest() != B128_SHA256 or len(data) != 220429366:
-        raise ValueError("B128 baseline full checksum/bytes changed")
+    if hashlib.sha256(data).hexdigest() != sha256 or len(data) != byte_count:
+        raise ValueError(f"B{size} baseline full checksum/bytes changed")
     envelope = pickle.loads(data)
     if (envelope.get("identity") != source_identity or envelope.get("name") != name
             or envelope.get("status") != "complete"):
-        raise ValueError("B128 baseline envelope identity/status mismatch")
+        raise ValueError(f"B{size} baseline envelope identity/status mismatch")
     proof, value = envelope["record"], envelope["value"]
     if (proof.get("measurement_status") != "complete" or proof.get("strict_numerical_passed") is not True
             or len(proof.get("gates", [])) != 515 or any(g.get("passed") is not True for g in proof["gates"])
@@ -169,24 +189,43 @@ def import_b128_baseline(directory, expected_identity, destination, jax):
             or proof.get("provenance") != record.get("provenance")
             or _evidence_mismatch(proof.get("execution_origin"), record.get("execution_origin"),
                                   "record.execution_origin") is not None):
-        raise ValueError("B128 baseline complete strict measurement/provenance mismatch")
+        raise ValueError(f"B{size} baseline complete strict measurement/provenance mismatch")
+    if proof["execution_origin"].get("environment", {}).get("git_head") != code_sha:
+        raise ValueError(f"B{size} baseline original code origin mismatch")
     provenance = proof["provenance"]
     if any(provenance.get(key) != expected for key, expected in {
-            "total_lanes": 512, "unique_real_points": 64, "chunk_size": 128,
+            "workload_kind": "capacity_screen_repeated_FULL64",
+            "total_lanes": 512, "unique_real_points": 64, "chunk_size": size,
+            "chunks_per_collection": TOTAL_LANES // size,
+            "lane_days": TOTAL_LANES * 14, "unique_point_days": UNIQUE_POINTS * 14,
             "blocks": [[2, 8], [9, 15]], "half_hours_per_day": 48,
             "full_outputs": True, "full_two_block_workload": True}.items()):
-        raise ValueError("B128 baseline workload provenance mismatch")
+        raise ValueError(f"B{size} baseline workload provenance mismatch")
     leaves = jax.tree_util.tree_leaves(value["outputs"])
     if len(leaves) != 760 or any(leaf.shape[0] != TOTAL_LANES for leaf in leaves):
-        raise ValueError("B128 baseline full output schema mismatch")
+        raise ValueError(f"B{size} baseline full output schema mismatch")
+    if reference is not None:
+        originals, original_tree = jax.tree_util.tree_flatten(reference)
+        _, imported_tree = jax.tree_util.tree_flatten(value["outputs"])
+        if imported_tree != original_tree or len(originals) != len(leaves) or any(
+                leaf.shape != (TOTAL_LANES, *original.shape[1:]) or leaf.dtype != original.dtype
+                for leaf, original in zip(leaves, originals, strict=True)):
+            raise ValueError(f"B{size} baseline full native output schema/dtype mismatch")
+    if set(value["measurements"]) != {"core", "wrapper"}:
+        raise ValueError(f"B{size} baseline complete core/wrapper timings required")
     for metric in value["measurements"].values():
         if metric != {**metric, **lane_metrics(metric["samples_seconds"])}:
-            raise ValueError("B128 baseline synchronized timing summary mismatch")
-    origin = {"path": str(path), "sha256": B128_SHA256, "bytes": len(data),
+            raise ValueError(f"B{size} baseline synchronized timing summary mismatch")
+    if size == 256:
+        analysis = provenance.get("executable_memory_analysis", {})
+        if (analysis.get("available") is not True
+                or type(analysis.get("temp_size_in_bytes")) is not int or analysis["temp_size_in_bytes"] < 0):
+            raise ValueError("B256 baseline actual compiler memory analysis required")
+    origin = {"path": str(path), "sha256": sha256, "bytes": len(data),
         "manifest": str(manifest_path), "manifest_sha256": hashlib.sha256(manifest_data).hexdigest(),
         "source_stage": name, "source_identity": source_identity, "execution_origin": proof["execution_origin"],
         "timing": value["measurements"], "provenance": provenance,
-        "role": "imported historical baseline; no new B128 measurement, executable, or destination stage"}
+        "role": f"imported historical baseline; no new B{size} measurement, executable, or destination stage"}
     return value["measurements"], origin
 
 
@@ -333,6 +372,7 @@ def benchmark(args, recorder, lanes, second, scale):
     identity, reference, reference_origin, old_record, analysis = admit_numerical_sources(
         args, lanes, second, scale, recorder.result["environment"])
     continuation = getattr(args, "continue_256_512", False)
+    only512 = getattr(args, "continue_512", False)
     identity.update(contract=CONTRACT, precision_policy=scale.PRECISION_POLICY, validation_mode="exploratory",
         workload_kind="capacity_screen_repeated_FULL64", total_lanes=TOTAL_LANES, lane_origins=origins,
         unique_real_points=UNIQUE_POINTS, candidate_shapes=[128, 256], conditional_512=args.conditional_512,
@@ -341,24 +381,48 @@ def benchmark(args, recorder, lanes, second, scale):
         StageStore.validate_source_destination(source, args.output_dir)
     identity["numerical_reference_sha256"] = reference_origin["sha256"]
     baseline_timing, baseline_origin = None, None
-    if continuation:
+    b256_timing, b256_origin = None, None
+    if continuation or only512:
         baseline_identity = {**identity, "candidate_shapes": [128, 256], "conditional_512": True,
                              "optional_B64_baseline": False}
         baseline_timing, baseline_origin = import_b128_baseline(
-            args.b128_baseline_dir, baseline_identity, args.output_dir, scale.jax)
+            args.b128_baseline_dir, baseline_identity, args.output_dir, scale.jax, reference=reference)
         identity.update(contract=CONTINUATION_CONTRACT, candidate_shapes=[256, 512],
             continuation_B128_sha256=B128_SHA256, conditional_512=True, optional_B64_baseline=False,
             conditional_policy="scale_curve_30min_B256compiler_memory_2GiB_GPU_8GiB_host_slack")
+        if only512:
+            b256_timing, b256_origin = import_b256_baseline(
+                args.b256_baseline_dir, identity, args.output_dir, scale.jax, reference=reference)
+            identity.update(contract=B512_CONTRACT, candidate_shapes=[512],
+                continuation_B256_sha256=B256_SHA256, budget_seconds=2700,
+                conditional_policy="B512_only_30min_imported_B256compiler_memory_2GiB_GPU_8GiB_host_slack")
+    # Historical admission uses its exact original schema above. The new
+    # execution records both actual bytes and the narrowly certified identity.
+    from scripts.dev.global_source_compatibility import source_identity
+
+    source = source_identity(ROOT)
+    if "science_sha256" in identity and identity["science_sha256"] != source["science_sha256"]:
+        raise ValueError("capacity execution source changed during baseline admission")
+    identity.update(source)
     store = StageStore(args.output_dir, identity)
     recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen, lane_origins=origins,
         reference_origin=reference_origin, memory_baseline_origin={"directory": str(args.memory_baseline_dir),
             "checkpoint_sha256": old_record["sha256"], "analysis": analysis}, scientific_acceptance=False)
+    recorder.result["execution_source_identity"] = {key: identity[key] for key in (
+        "science_sha256", "actual_science_source_sha256", "execution_source_compatibility") if key in identity}
     base.legacy_factory(args.baseline_ref)
     memory_records, records = {64: analysis}, {}
-    if continuation:
+    if continuation or only512:
         records[128] = baseline_timing
         recorder.result["imported_B128_baseline"] = baseline_origin
+    if only512:
+        records[256] = b256_timing
+        recorder.result["imported_B256_baseline"] = b256_origin
+        # Old B64 remains the historical host RSS origin only. The B512 device
+        # guard uses sealed B256 actual compiler buffers, without a baseline compile.
+        memory_records[64] = {**analysis, "available": False}
+        memory_records[256] = b256_origin["provenance"]["executable_memory_analysis"]
 
     def run(size):
         (value, record), reused = store.run(f"capacity_B{size}_fixed512_v1",
@@ -373,13 +437,16 @@ def benchmark(args, recorder, lanes, second, scale):
         gc.collect()
         return record
 
-    for size in ((256,) if continuation else (128, 256)):
+    for size in (() if only512 else ((256,) if continuation else (128, 256))):
         run(size)
-    if args.conditional_512 or continuation:
+    if args.conditional_512 or continuation or only512:
         snapshot = scale.visible_gpu_memory()
         resident = scale.tree_bytes(([lane.arguments for lane in expanded], others))
         decision = conditional_512_decision(records, args.budget_seconds - (time.time() - start_epoch),
-            memory_estimate(512, resident, scale.tree_bytes(reference) * 8, memory_records), snapshot["free_bytes"], continuation=continuation)
+            memory_estimate(512, resident, scale.tree_bytes(reference) * 8, memory_records), snapshot["free_bytes"], continuation=continuation or only512)
+        if only512:
+            decision["compiler_memory_origin"] = {"shape": 256, "sha256": B256_SHA256,
+                "source_stage": b256_origin["source_stage"], "actual_analysis": memory_records[256]}
         if memory_records.get(256, {}).get("available") is not True:
             decision["permitted"] = False
             decision["reasons"].append("actual B256 compiler memory analysis required")
@@ -392,31 +459,45 @@ def benchmark(args, recorder, lanes, second, scale):
         recorder.flush()
         if decision["permitted"]:
             run(512)
+        elif only512:
+            recorder.result["completed_shapes"] = []
+            recorder.result["comparison_shapes_including_imported_baseline"] = [128, 256]
+            raise MemoryError(f"B512-only resource admission failed: {decision}")
     if args.optional_b64_baseline:
         remaining = args.budget_seconds - (time.time() - start_epoch)
         if remaining >= 1200:
             run(64)
         else:
             recorder.result["optional_B64_skipped"] = "less than20min remaining; candidates retained"
-    recorder.result["completed_shapes"] = [size for size in records if not (continuation and size == 128)]
-    if continuation:
+    recorder.result["completed_shapes"] = [size for size in records if not (
+        (continuation and size == 128) or (only512 and size in (128, 256)))]
+    if continuation or only512:
         recorder.result["comparison_shapes_including_imported_baseline"] = list(records)
 
 
 def main():
     args = parser().parse_args()
-    if args.continue_256_512 and (args.b128_baseline_dir is None or args.optional_b64_baseline):
+    if (args.continue_256_512 or args.continue_512) and (args.b128_baseline_dir is None or args.optional_b64_baseline):
         raise ValueError("B256/B512 continuation requires explicit sealed B128 baseline and forbids optional B64")
-    if args.b128_baseline_dir is not None and not args.continue_256_512:
+    if args.continue_512 and args.b256_baseline_dir is None:
+        raise ValueError("B512-only continuation requires explicit sealed B256 baseline")
+    if args.b256_baseline_dir is not None and not args.continue_512:
+        raise ValueError("B256 baseline directory requires B512-only continuation mode")
+    if args.b128_baseline_dir is not None and not (args.continue_256_512 or args.continue_512):
         raise ValueError("B128 baseline directory requires continuation mode")
-    if args.warm_repeats != 5 or args.budget_seconds != 5400:
-        raise ValueError("fixed five repeats and approved-proposal90min window contract required")
+    budget = 2700 if args.continue_512 else 5400
+    if args.warm_repeats != 5 or args.budget_seconds != budget:
+        raise ValueError(f"fixed five repeats and proposed {budget}s window contract required")
     if args.dry_run:
+        from scripts.dev.global_source_compatibility import source_identity
+
         print(json.dumps({"status": "dry_run", "model_execution": False, "JAX_imported": "jax" in sys.modules,
-            "contract": CONTINUATION_CONTRACT if args.continue_256_512 else CONTRACT,
-            "candidates": [256, 512] if args.continue_256_512 else [128, 256],
-            "conditional_512": args.conditional_512 or args.continue_256_512,
-            "B512_requires_speedup": not args.continue_256_512, "B128_baseline_dir": str(args.b128_baseline_dir),
+            "execution_source_identity": source_identity(ROOT),
+            "contract": B512_CONTRACT if args.continue_512 else (CONTINUATION_CONTRACT if args.continue_256_512 else CONTRACT),
+            "candidates": [512] if args.continue_512 else ([256, 512] if args.continue_256_512 else [128, 256]),
+            "conditional_512": args.conditional_512 or args.continue_256_512 or args.continue_512,
+            "B512_requires_speedup": not (args.continue_256_512 or args.continue_512), "B128_baseline_dir": str(args.b128_baseline_dir),
+            "B256_baseline_dir": str(args.b256_baseline_dir), "budget_seconds": budget,
             "total_lanes": TOTAL_LANES, "unique_real_points": UNIQUE_POINTS, "lane_days": 7168,
             "unique_point_days": 896, "scientific_acceptance": False, "optional_B64": args.optional_b64_baseline}))
         return 0

@@ -1,0 +1,67 @@
+B512-only protocol is implemented as `--continue-512` with explicit sealed B128
+and B256 directories, five core and five wrapper collections, and a 2700-second
+window. The two continuation flags are mutually exclusive. B128/B256 remain
+historical origins and never become destination stages, measurements or compiles.
+Only B512 can appear in `completed_shapes`; comparison retains B128/B256/B512.
+
+The importer preserves original identity, timing, provenance and execution origin,
+requires the original sealed SHA and byte length, 515 strict passed gates, 760
+full output leaves with 512 lanes, and checks complete tree/shape/native dtypes
+against the unchanged FULL64 reference. It rejects changed runtime/compiler,
+science/inputs/reference, workload, gates, original code origin, timings, output
+schema or B256 compiler memory. The existing narrow loadavg tuple/list exception
+preserves all three telemetry values; no general coercion was added.
+
+B512 device admission uses imported B256 actual compiler temporary bytes
+(1,151,609,352 bytes), scaled to B512, plus existing resident/full-output overlap
+and 2 GiB slack. Old B64 actual RSS remains the host estimate origin, with the
+existing 8 GiB host slack. The preset 30-minute remaining-window gate remains.
+These estimates are planning guards; they cannot guarantee completion or peak
+memory. A denied B512-only run reports failure, with no successful B512 claim.
+
+`scripts/hpc/slurm_global_gpu_capacity_512.sh` declares one GPU, four auxiliary
+CPUs and 45 minutes. It resolves the shared launcher through declared `CODE_DIR`
+even after Slurm copies the wrapper to its spool. No job was submitted by this
+protocol task. Actual allocated GPU identity admission and selected-card
+diagnostics remain shared with the existing launcher.
+
+Local ORCJAX validation: 56 capacity tests passed. Tests exercise sealed-B256
+rejections, native schema, loadavg drift, no baseline measurements/compiles,
+B256 memory reuse, resource denial, complete two-block collections, command-line
+protocol rejection, and actual Bash/Python dry-run expansion from both checkout
+and copied Slurm spool. Ruff passes for the changed benchmark and tests.
+
+`b512-baseline-admission.json` records successful local admission of both actual
+sealed historical checkpoints against the actual FULL64 reference, with no
+compilation or model execution. B128's locally flattened evidence filenames are
+presented through two unchanged hard links in `sealed-b128-origin-view`; no
+second checkpoint data copy was created. The current GPU runtime and revised
+B512 executable still require their separately planned bounded validation.
+
+The exact source compatibility certificate distinguishes the full actual source
+hash from the normalized baseline science identity. It admits only the approved
+byte-pinned immutable PFT-mask execution helper repair; every other scientific
+source file remains frozen to the baseline digest. No general AST normalization
+or relaxed importer equality is used. New capacity manifests retain
+`actual_science_source_sha256` and `execution_source_compatibility`; the report and
+dry-run proposal also expose the complete execution source identity. Historical
+baseline source identities and execution origins remain their original values.
+The aggregate certificate recognizes exactly the canonical LF baseline hash
+`11b6db89...` and audited Windows checkout hash `4151db25...`; it applies no
+generic line-ending normalization. DIFFUCO itself retains the exact approved
+module hash. Unapproved module line endings, helper/body/formula changes and an
+altered aggregate from any other source file fail admission. Reverification with
+the current production `scientific_source_digest()` API admits both sealed
+origins and confirms its canonical science SHA matches their original identity.
+
+The concrete proposed allocation is one V100, four auxiliary CPUs and 45 minutes
+in `gnall`, with the immutable declared checkout and a new output directory.
+Worst-case GPU card-hours are 0.75 and auxiliary CPU-hours are 3.0. At the current
+planning prices of 2.2 CNY/GPU-hour and 0.05/0.07 CNY/CPU-hour, the full-window
+cost envelopes are 1.80 CNY primary and 1.86 CNY conservative. These are proposal
+estimates, not scheduler billing. The node must be selected explicitly using a
+fresh node occupancy and CPU-load snapshot before submission. A bounded login/
+test-node metadata or launcher dry-run does not reserve the paid GPU node.
+Root's 2026-10-08 10:24 UTC snapshot nominates `ibc13b02n02`: MIXED,
+CPUAlloc 8/112, CPULoad 1.81 and 6/8 GPUs free. This is a candidate snapshot,
+not a reservation or permission to submit; refresh it before paid approval.

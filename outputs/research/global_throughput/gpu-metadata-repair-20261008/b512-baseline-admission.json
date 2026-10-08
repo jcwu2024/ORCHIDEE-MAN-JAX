@@ -1,0 +1,566 @@
+{
+  "status": "sealed_baselines_admitted",
+  "model_execution": false,
+  "compiled": false,
+  "FULL64_reference_origin": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-round4\\model\\stage_B4_group_references.pkl",
+    "sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "manifest_sha256": "cce5ed91f94c19cd576856b223e63830f91e3e0fa6def046d786e013317f8319",
+    "source_identity": {
+      "contract": "unique-real-points-two-seven-day-blocks-B16-B64-v1",
+      "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+      "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "lanes": [
+        {
+          "landpoint_id": "001.0-071.0",
+          "inputs_sha256": "96f50f14b83f6b54a313e9dfadf38ae12a428ab29ec0989e787534762071be11"
+        },
+        {
+          "landpoint_id": "069.0-119.0",
+          "inputs_sha256": "ab13050e8d4489e54dd16861eb34e0745402dd3c1191e5811f6e9c6289250bd5"
+        },
+        {
+          "landpoint_id": "319.0-057.0",
+          "inputs_sha256": "a5d149999fed923b2938d8a2546d84bd730811c0684a46ef3dd895367783179e"
+        },
+        {
+          "landpoint_id": "331.0-057.0",
+          "inputs_sha256": "26d60383204b86a32ce1e18d8e5c9013b816fa336a18544d48b3a092e2743517"
+        },
+        {
+          "landpoint_id": "215.0-115.0",
+          "inputs_sha256": "3311cd80b9a138948113ef7b3802622b1061ba78c3d7117238ab3c1782cf5501"
+        },
+        {
+          "landpoint_id": "127.0-095.0",
+          "inputs_sha256": "f0a77d1c0c18586ee2414d241672bc52cf21e06caf9fa2fafa588ef36e09a2ee"
+        },
+        {
+          "landpoint_id": "299.0-115.0",
+          "inputs_sha256": "e7afb68c2d53a09d81016ee1862d7f611c8981f0002b0bdebcf17bddbf28f44c"
+        },
+        {
+          "landpoint_id": "221.0-087.0",
+          "inputs_sha256": "d77057bd4ec79b9e66f9afe721b2211f5f4b9fcb3c7ce044faf9d6d7311ca76f"
+        },
+        {
+          "landpoint_id": "025.0-109.0",
+          "inputs_sha256": "ea3e70cc63a55eb600aab6132364f0c2c75cdee4ab7a437be08dbf8f303ab3e2"
+        },
+        {
+          "landpoint_id": "139.0-067.0",
+          "inputs_sha256": "5db1b5e5748194951deb4f0273983565197e7f36efefbbee5e94e0e93cb81946"
+        },
+        {
+          "landpoint_id": "215.0-119.0",
+          "inputs_sha256": "ee74bf108a0cc9ff6c24595185855f39e64beeea42030c9597742c9e15b6584f"
+        },
+        {
+          "landpoint_id": "285.0-087.0",
+          "inputs_sha256": "8fc21907dc58d10516081a7e10107bab575acac7fa1f1432d58ac61c8e7b1dd9"
+        },
+        {
+          "landpoint_id": "087.0-107.0",
+          "inputs_sha256": "13ed1b35a7bb1f78e956fa1fcf1e027034c2f310d6d0cb949882c2f52b2bbe07"
+        },
+        {
+          "landpoint_id": "293.0-113.0",
+          "inputs_sha256": "0d984db7c696963f8bc3069a031f41d10a1980e7698e12e45259b2af75aff9d5"
+        },
+        {
+          "landpoint_id": "287.0-085.0",
+          "inputs_sha256": "fdeb70e9c72bd3176534e042b9fe5282a86a83db121d8a8b94db571118b8e325"
+        },
+        {
+          "landpoint_id": "229.0-073.0",
+          "inputs_sha256": "25f92109aaa2560285c222f786c30e51fce2537a9c40f2b5ce89963d1ac1e399"
+        },
+        {
+          "landpoint_id": "103.0-099.0",
+          "inputs_sha256": "30d4639e6ffc9b1f43c88cd63bdc8e90e9e2368bdafd0d308d4be4fe7beb7643"
+        },
+        {
+          "landpoint_id": "277.0-105.0",
+          "inputs_sha256": "070b490bd7b26abc90638f4ebc00800ba3e4a3b7617bf9a80bc314dd52cb0e98"
+        },
+        {
+          "landpoint_id": "215.0-113.0",
+          "inputs_sha256": "4f55aa53ab6390344d6adff1fa0cb7ec43449193dbc844c6f224ab086796644b"
+        },
+        {
+          "landpoint_id": "209.0-057.0",
+          "inputs_sha256": "07a951ae84527dc54fd384e4e62949debb41d2300f1923804f86e7adb16f31c9"
+        },
+        {
+          "landpoint_id": "169.0-097.0",
+          "inputs_sha256": "5db37eb8905f2de38b500bdfef55942f140bbd541d8b158d3cfbce12f2f80bd8"
+        },
+        {
+          "landpoint_id": "189.0-091.0",
+          "inputs_sha256": "6102ba8b695647a527721612b4c056cf85273707522e302750b5f8bfd72e398b"
+        },
+        {
+          "landpoint_id": "131.0-065.0",
+          "inputs_sha256": "6d3736c05ba6626595ab3af83ca0683d9f9c2621fbe80924d74e21135a231095"
+        },
+        {
+          "landpoint_id": "101.0-091.0",
+          "inputs_sha256": "428c099ee56aed302bb0342ab957887a6b73f3d44cdf50156bffa13617b828a1"
+        },
+        {
+          "landpoint_id": "101.0-099.0",
+          "inputs_sha256": "73b5a1e8f5916dcbe776731eeca3c5d7498ac6088de6d2939d252d4d2bfc0b75"
+        },
+        {
+          "landpoint_id": "099.0-085.0",
+          "inputs_sha256": "7cbedfbafd2c3bddb88db8b6e11cc3efbf95ed2cb659bc47e5ea489faf462ab8"
+        },
+        {
+          "landpoint_id": "307.0-117.0",
+          "inputs_sha256": "e385c84a87ee2b36cb6bfca49b7ba97fa035ac50739de875a824410d44c87579"
+        },
+        {
+          "landpoint_id": "089.0-105.0",
+          "inputs_sha256": "4cfadfa4a9c979e9221ce834b9af9c502f3bf9120b99fb9b234eba25f917d08b"
+        },
+        {
+          "landpoint_id": "225.0-101.0",
+          "inputs_sha256": "eff520e20e34d12babd84cb717a1b8c1c064f9856c8b3ff4ed624a4ff459196f"
+        },
+        {
+          "landpoint_id": "213.0-065.0",
+          "inputs_sha256": "e637fb764e927220ed170a16c95c8f74bd3731c30f4a28febd97248530e3a97c"
+        },
+        {
+          "landpoint_id": "283.0-095.0",
+          "inputs_sha256": "ed287ed439824ac3049b103075b6cdb994a9c153ba928ade6fb6740b056281e1"
+        },
+        {
+          "landpoint_id": "299.0-091.0",
+          "inputs_sha256": "dffa4a3f17e8f0ce2dbb5f7738139b9855fe8107428ae1e74bfcd6fe73456ee9"
+        },
+        {
+          "landpoint_id": "295.0-061.0",
+          "inputs_sha256": "6176b21337e455097ba3f20813c9caab52eea1dbadfd04d6656995a1d3d6c125"
+        },
+        {
+          "landpoint_id": "213.0-117.0",
+          "inputs_sha256": "5d515ca344e2d1b30045feeb4935931faa634cb24e3608ed46b4b03238a0487d"
+        },
+        {
+          "landpoint_id": "101.0-111.0",
+          "inputs_sha256": "de6fcb912ce1ce18b203b46a8e189c3a5d25018d3a8b3beec0a34983f86348f1"
+        },
+        {
+          "landpoint_id": "357.0-051.0",
+          "inputs_sha256": "17b12f8868c4431f7896537940f45e8e1e946de1b24ebd9e5cf16bf895717baa"
+        },
+        {
+          "landpoint_id": "319.0-085.0",
+          "inputs_sha256": "b792dc62b247e81faa1f71743577f98ec1a896d0cdc03d96d13419d18cd56b82"
+        },
+        {
+          "landpoint_id": "313.0-079.0",
+          "inputs_sha256": "dc20ebae8ef573025a94d1e273a50a0d98397f01d7812920b3e194040a88259b"
+        },
+        {
+          "landpoint_id": "301.0-091.0",
+          "inputs_sha256": "f30d2b8f5d578f4a44ed2636871490b750242688763feccbc56f532e49f15fa0"
+        },
+        {
+          "landpoint_id": "067.0-115.0",
+          "inputs_sha256": "ddbc432b36adad1efc86e7c4f1ee8ba215a6dabe10c3ccc5a60bebc663505815"
+        },
+        {
+          "landpoint_id": "073.0-115.0",
+          "inputs_sha256": "fba981c15daf406718862c322ea96a0094ff3713928f5569cf42b1eebd25a70d"
+        },
+        {
+          "landpoint_id": "021.0-111.0",
+          "inputs_sha256": "81d701da5a9c4e8fec55ec47f6b011955c57c52894eeced365ad9138ef1ec796"
+        },
+        {
+          "landpoint_id": "309.0-119.0",
+          "inputs_sha256": "9dd06918631c878379386d13458f467440e3b9018992bdea664af0b40a807742"
+        },
+        {
+          "landpoint_id": "357.0-053.0",
+          "inputs_sha256": "3698acc28a5cc255beeb7a940ff65b90ddd001886434d1424f59e044648f33d0"
+        },
+        {
+          "landpoint_id": "139.0-071.0",
+          "inputs_sha256": "cd547e21f0b3197e7575946e0803be3aa500def8755d2c746607a21bd72f3a7f"
+        },
+        {
+          "landpoint_id": "283.0-091.0",
+          "inputs_sha256": "0515b30e3313f1aae157b88641747755e26d47c3fc5b09b51ee052b79a62e29e"
+        },
+        {
+          "landpoint_id": "315.0-097.0",
+          "inputs_sha256": "12e6a988b1c28ba72083eb4b157e60964cd7e70df7ae3dc339453b9aee6eddc6"
+        },
+        {
+          "landpoint_id": "253.0-111.0",
+          "inputs_sha256": "8622b0697c5dbaff95c6939f20bed1c06c91807841ab595da79d2c670828d5f0"
+        },
+        {
+          "landpoint_id": "325.0-051.0",
+          "inputs_sha256": "e278ad601f59db5778e8d157c69c1679f9864c813ae4cde7b9374cd1f9263024"
+        },
+        {
+          "landpoint_id": "123.0-095.0",
+          "inputs_sha256": "e8b6de9a6351f2a6315055d1023e3f42e7c1d26c408185680ddf4ef3aa14ccd4"
+        },
+        {
+          "landpoint_id": "223.0-067.0",
+          "inputs_sha256": "c749ff91a506871098850a91938632b9e25be05e574b11e5b5adaf9b9e01b202"
+        },
+        {
+          "landpoint_id": "245.0-115.0",
+          "inputs_sha256": "0fa5ad44c0f83c823c9af1e8a6a55504614386e56771b7301bba269e5ee7b554"
+        },
+        {
+          "landpoint_id": "231.0-117.0",
+          "inputs_sha256": "d34aa2931ef43e3cf39b26add9376e1283e42e5733605ad17ac656462b9f53d2"
+        },
+        {
+          "landpoint_id": "223.0-073.0",
+          "inputs_sha256": "5f190bfa7b57c7e201fe1edcba9bb2eded73db9154fc146444c542d4da3cad19"
+        },
+        {
+          "landpoint_id": "183.0-097.0",
+          "inputs_sha256": "c71468939a9db1f9610f2443b4099799e12d4fc2be091f527137e9416f8bee6f"
+        },
+        {
+          "landpoint_id": "293.0-083.0",
+          "inputs_sha256": "b0426745cc24a057b382f267617f59942145dfa7a675f299c3047d4c0cb8cace"
+        },
+        {
+          "landpoint_id": "353.0-093.0",
+          "inputs_sha256": "18784e7f56e7051dca4c89064ee7036ef2f12f6551991446f6a33419fe0d5adb"
+        },
+        {
+          "landpoint_id": "007.0-077.0",
+          "inputs_sha256": "30f8a1804182857b18208cced11f54dd83b1c9d0fe622a7314f17ef4281b8fd5"
+        },
+        {
+          "landpoint_id": "163.0-103.0",
+          "inputs_sha256": "930d81df3c5e68f0be9725435b8400bbfd5af6b50f0e059af0d1b0e869c9f1b9"
+        },
+        {
+          "landpoint_id": "109.0-111.0",
+          "inputs_sha256": "bdb29b514f174ac7f3da545ed716ce83669a5654ab9f92e5428991a60acca1b7"
+        },
+        {
+          "landpoint_id": "095.0-101.0",
+          "inputs_sha256": "a98afdb95ae7018d37457ec2e5c0dd6414ea4e59589c1672e47bb4e3ef799d5b"
+        },
+        {
+          "landpoint_id": "303.0-079.0",
+          "inputs_sha256": "d36af3439f53c856ab67f6d76d848b2b60784a3052dde88e0c483f1fcc7eefe2"
+        },
+        {
+          "landpoint_id": "031.0-073.0",
+          "inputs_sha256": "08f48ae27d471299f78c8cdcc0a8b785214b3bce14cbad472fd512b579d61e32"
+        },
+        {
+          "landpoint_id": "181.0-097.0",
+          "inputs_sha256": "3d5e94a4a30213e4acebdf6c3c6c8aa723c605a26d96b44aed693f4821312c46"
+        }
+      ],
+      "runtime": {
+        "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+        "jax": "0.4.38",
+        "jaxlib": "0.4.38",
+        "numpy": "2.4.6",
+        "device_details": [
+          {
+            "platform": "gpu",
+            "kind": "Tesla V100-SXM2-32GB",
+            "id": 0
+          }
+        ],
+        "x64_enabled": true,
+        "backend_platform_version": "PJRT C API\ncuda 12030"
+      },
+      "compiler_environment": {
+        "XLA_FLAGS": null,
+        "JAX_PLATFORMS": null,
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "warm_repeats": 5,
+      "gate": {
+        "atol": 1e-08,
+        "rtol": 1e-10,
+        "discrete_schema_dtype": "exact",
+        "sentinel": "declared_bare_soil_roughheight_only"
+      },
+      "reference_manifest_sha256": "f5a9bbd04b86cdaf06d629a80a4d53be449768fbe0764aa98c6f7d39da8a367c",
+      "precision_policy": "JAX x64 enabled; baseline native dtypes retained; geographical payload and solar subcalculation contain FP32"
+    },
+    "execution_origin": {
+      "available": true,
+      "environment": {
+        "command": [
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1/scripts/dev/benchmark_global_scale.py",
+          "--asset-root",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2",
+          "--output-dir",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+          "--cache-mode",
+          "persistent",
+          "--cache-root",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round2/xla_cache",
+          "--prepared-input",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+          "--reference-dir",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round3/model",
+          "--config",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1/configs/orchidee_man_250919.yaml",
+          "--truth-root",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+          "--sizes",
+          "16",
+          "--warm-repeats",
+          "5"
+        ],
+        "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1",
+        "platform": "Linux-3.10.0-1160.el7.nosig.x86_64-x86_64-with-glibc2.31",
+        "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+        "jax": "0.4.38",
+        "jaxlib": "0.4.38",
+        "numpy": "2.4.6",
+        "devices": [
+          "cuda:0"
+        ],
+        "device_details": [
+          {
+            "platform": "gpu",
+            "kind": "Tesla V100-SXM2-32GB",
+            "id": 0
+          }
+        ],
+        "backend_platform_version": "PJRT C API\ncuda 12030",
+        "x64_enabled": true,
+        "cpu_count": 56,
+        "cpu_affinity": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "cpu_model": "x86_64",
+        "hostname": "ibc13b02n04",
+        "physical_gpu": {
+          "uuid": "GPU-daa2988f-72e7-d5e0-45e5-1bef9c1cc688",
+          "driver_version": "525.85.12",
+          "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"
+        },
+        "loadavg": [
+          0.07,
+          0.03,
+          0.1
+        ],
+        "env": {
+          "XLA_FLAGS": null,
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "JAX_PLATFORMS": null,
+          "JAX_COMPILATION_CACHE_DIR": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round2/xla_cache",
+          "ORCHJAX_DISABLE_COMPILATION_CACHE": "0",
+          "CUDA_VISIBLE_DEVICES": "0",
+          "XLA_PYTHON_CLIENT_PREALLOCATE": "false"
+        },
+        "cache_policy": "persistent_cache_may_hit",
+        "gpu_count": 1,
+        "visible_affinity_core_count": 4,
+        "assigned_cpu_count": null,
+        "rss_instrumentation": "proc_statm_current_RSS_100ms_sample_plus_resource_ru_maxrss_Linux_KiB_converted_to_bytes",
+        "warm_reset_policy": "each repeat uses the same frozen Day1 end state; two sequential seven-day blocks",
+        "block_days": [
+          [
+            2,
+            8
+          ],
+          [
+            9,
+            15
+          ]
+        ],
+        "inner_npts": 1,
+        "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+        "git_head": "ac34b833784cd93222b7dd82e98c7d47277084ae",
+        "fortran_science_gate": "not_run; separate annual/source acceptance contract",
+        "explicit_cache_policy": {
+          "mode": "persistent",
+          "root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round2/xla_cache",
+          "min_compile_time_seconds": 0,
+          "min_entry_bytes": 0,
+          "public_cache_reset": true
+        }
+      },
+      "pid": 52151,
+      "process_start_monotonic": 10740048.892294938,
+      "window_identity": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/windows/model1",
+      "report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/windows/model1/benchmark-report.json"
+    },
+    "role": "complete numerical evidence only; no prior executable or timing reuse",
+    "backend_conditions": {
+      "source": {
+        "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+        "jax": "0.4.38",
+        "jaxlib": "0.4.38",
+        "numpy": "2.4.6",
+        "device_details": [
+          {
+            "platform": "gpu",
+            "kind": "Tesla V100-SXM2-32GB",
+            "id": 0
+          }
+        ],
+        "x64_enabled": true,
+        "backend_platform_version": "PJRT C API\ncuda 12030"
+      },
+      "current": {
+        "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+        "jax": "0.4.38",
+        "jaxlib": "0.4.38",
+        "numpy": "2.4.6",
+        "device_details": [
+          {
+            "platform": "gpu",
+            "kind": "Tesla V100-SXM2-32GB",
+            "id": 0
+          }
+        ],
+        "x64_enabled": true,
+        "backend_platform_version": "PJRT C API\ncuda 12030"
+      }
+    },
+    "point_ids": [
+      "001.0-071.0",
+      "069.0-119.0",
+      "319.0-057.0",
+      "331.0-057.0",
+      "215.0-115.0",
+      "127.0-095.0",
+      "299.0-115.0",
+      "221.0-087.0",
+      "025.0-109.0",
+      "139.0-067.0",
+      "215.0-119.0",
+      "285.0-087.0",
+      "087.0-107.0",
+      "293.0-113.0",
+      "287.0-085.0",
+      "229.0-073.0",
+      "103.0-099.0",
+      "277.0-105.0",
+      "215.0-113.0",
+      "209.0-057.0",
+      "169.0-097.0",
+      "189.0-091.0",
+      "131.0-065.0",
+      "101.0-091.0",
+      "101.0-099.0",
+      "099.0-085.0",
+      "307.0-117.0",
+      "089.0-105.0",
+      "225.0-101.0",
+      "213.0-065.0",
+      "283.0-095.0",
+      "299.0-091.0",
+      "295.0-061.0",
+      "213.0-117.0",
+      "101.0-111.0",
+      "357.0-051.0",
+      "319.0-085.0",
+      "313.0-079.0",
+      "301.0-091.0",
+      "067.0-115.0",
+      "073.0-115.0",
+      "021.0-111.0",
+      "309.0-119.0",
+      "357.0-053.0",
+      "139.0-071.0",
+      "283.0-091.0",
+      "315.0-097.0",
+      "253.0-111.0",
+      "325.0-051.0",
+      "123.0-095.0",
+      "223.0-067.0",
+      "245.0-115.0",
+      "231.0-117.0",
+      "223.0-073.0",
+      "183.0-097.0",
+      "293.0-083.0",
+      "353.0-093.0",
+      "007.0-077.0",
+      "163.0-103.0",
+      "109.0-111.0",
+      "095.0-101.0",
+      "303.0-079.0",
+      "031.0-073.0",
+      "181.0-097.0"
+    ],
+    "native_input_identity_verified": true,
+    "fixed_gate": {
+      "atol": 1e-08,
+      "rtol": 1e-10,
+      "discrete_schema_dtype": "exact",
+      "sentinel": "declared_bare_soil_roughheight_only"
+    }
+  },
+  "B128": {
+    "sha256": "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5",
+    "bytes": 220429366,
+    "source_stage": "capacity_B128_fixed512_v1",
+    "role": "imported historical baseline; no new B128 measurement, executable, or destination stage"
+  },
+  "B256": {
+    "sha256": "ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c",
+    "bytes": 220429675,
+    "source_stage": "capacity_B256_fixed512_v1",
+    "role": "imported historical baseline; no new B256 measurement, executable, or destination stage"
+  },
+  "B128_original_path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-sweetspot-preparation-20261006\\job-15600405-terminal-evidence",
+  "B128_view_policy": "local hard links to unchanged sealed flattened files; no data copy or source mutation",
+  "B128_code": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+  "B256_code": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+  "strict_gates_per_origin": 515,
+  "native_leaves_per_origin": 760,
+  "full_output_schema_dtypes_against_FULL64": true,
+  "imported_B256_actual_compiler_memory": {
+    "available": true,
+    "argument_size_in_bytes": 62236700,
+    "output_size_in_bytes": 55055328,
+    "temp_size_in_bytes": 1151609352,
+    "alias_size_in_bytes": 0,
+    "generated_code_size_in_bytes": 11552212,
+    "scope": "compiler device buffer estimate; not host RSS or measured VRAM peak"
+  },
+  "current_execution_source_identity": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "99ea5f7522b498d0e637802994d44f449f1b26f935c6e137cdac67e27349fc45",
+    "execution_source_compatibility": {
+      "active": true,
+      "contract": "exact-DIFFUCO-host-mask-cache-repair-v1",
+      "source_path": "jax_orchidee/sechiba/diffuco.py",
+      "original_file_sha256": "04fc1193e85d2deca0f97cc06008989053ccaf956db3dc9552dd6b9cc2549d22",
+      "actual_file_sha256": "42073dd14f427db8ed78803c90cd5a64b677bf822d1edf6b6fbed7aa97166a14",
+      "baseline_full_source_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "baseline_checkout_bytes_sha256": "4151db252c62cf24899300c7cb2eac783405888fce1384030332d4622aa2c196",
+      "baseline_checkout_representation": "exact audited Windows checkout source bytes",
+      "actual_full_source_sha256": "99ea5f7522b498d0e637802994d44f449f1b26f935c6e137cdac67e27349fc45",
+      "compatibility_scope": "exact helper-only immutable host Boolean mask; all other source bytes unchanged",
+      "claim": "audited execution-only equivalence; source bytes differ"
+    }
+  },
+  "expected_science_identity_source": "current benchmark_global_batch.scientific_source_digest API",
+  "current_certified_science_matches_sealed_origin": true,
+  "new_destination_stage_directory_created": false,
+  "limitation": "local origin admission only; current deployed GPU executable not validated"
+}

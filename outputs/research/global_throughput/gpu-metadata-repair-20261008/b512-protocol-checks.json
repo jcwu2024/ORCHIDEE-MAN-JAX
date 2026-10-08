@@ -1,0 +1,23 @@
+{
+  "scope": "B512-only protocol implementation; local checks only",
+  "tests": {
+    "command": "conda run -n ORCJAX python -m pytest tests/unit/test_global_gpu_capacity.py -q -p no:cacheprovider",
+    "passed": 56,
+    "failed": 0,
+    "warning": "pytest existing cache_dir config is unknown when cacheprovider is intentionally disabled"
+  },
+  "ruff": {
+    "command": "conda run -n ORCJAX python -m ruff check scripts/dev/benchmark_global_gpu_capacity.py tests/unit/test_global_gpu_capacity.py",
+    "status": "passed"
+  },
+  "actual_sealed_origin_admission": {
+    "command": "conda run -n ORCJAX python outputs/research/global_throughput/gpu-metadata-repair-20261008/verify_b512_baseline_protocol.py",
+    "status": "passed",
+    "artifact": "b512-baseline-admission.json",
+    "model_execution": false,
+    "compiled": false
+  },
+  "submitted_jobs": 0,
+  "remote_compute": false,
+  "limitation": "Local CPU tests and historical snapshot admission do not certify a revised deployed B512 GPU executable."
+}

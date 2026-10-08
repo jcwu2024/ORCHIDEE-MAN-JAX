@@ -107,146 +107,27 @@ planning scenarios. Its CPU1 CNY0.025/0.035 figures were based on a30-minute cei
 not actual parent-job cost; actual terminal scenarios are CNY0.016333333/0.022866667.
 The conditional CPU4 CNY0.15/0.21 scenario is not executable approval.
 
-## Current Work Order: Repair and B256/B512 Preparation
+## Current Work Order: Causal Cache Repair and B512-Only Proposal
 
-Job15600405 is terminal FAILED on `ibc13b03n04` after2,135 parent seconds, with one
-Tesla V100 and four allocated Slurm CPUs; observed affinity used two physical cores
-through SMT. B128 fixed512 is complete and independently validated. B256 reached
-compile-complete at stage elapsed2,058.173263s (lower63.179012s,
-compile752.614130s), but its first `run_collection` call failed at
-`executable(*first)` with `TypeError: Computation compiled for 673 inputs but called
-with 536`. B256 has no completed first call, checkpoint or five-plus-five warm
-samples, so no throughput is published. This is an AOT invocation-signature error,
-not a numerical gate failure, OOM or timeout. The historical job did not diagnose
-the cause, and B512 did not run. The bounded canonical JAX0.4.38 lower-only check
-did not reproduce the natural failure: the caller, public tree and internal
-AllArgsInfo agreed at536 inputs with417 kept. No full model compile or run occurred.
-Sequential synthetic B128/B256/B512 signature checks passed; unrelated fault
-injection of a673-input lazy-binding mismatch recreated the old exception, while
-the `Compiled.call` bypass produced identical outputs. The defensive call-adapter
-repair is not evidence that the historical cause was reproduced or fixed.
-Frozen physics, dtype and tolerances are unchanged. See the
-[repair report](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/REPAIR_REPORT.md),
-[current result](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/CURRENT_RESULT.md)
-and [paid-run preparation](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/PAID_RUN_REVIEW.md).
-The latest canonical parent row records
-`FAILED`, elapsed2135s, exit`1:0`. Earlier RUNNING snapshots remain historical.
+Canonical JAX0.4.38 CPU sequential lowering establishes the source-backed cause of the v3 B512536/673 mismatch: the DIFFUCO PFT-mask Python cache retains a Boolean DynamicJaxprTracer from the earlier trace; JAX lifts all137 constants into the later transition. The exact immutable NumPy host-mask repair preserves integer comparison and all consumers. Repaired real B256/B512 lower536/536 with417 retained inputs and zero lifted constants; earlier-stage metadata remains unchanged. Real model compile/run never occurred in these diagnostics. Native insertion outputs match an independent NumPy check exactly. See [causal evidence](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CAUSAL_REPAIR.md) and [exact signature summary](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/causal-evidence-summary.json).
 
-The user approved one v2 submission, job15643327, submitted from `gln01` at2026-10-08 14:26:10 Asia/Shanghai. The requested n03 had all eight GPUs allocated, so after notifying the user the still-pending job was retargeted to n02 with `scontrol`, without requeue or restart. The retarget snapshot at2026-10-08T06:28:47Z recorded CPUAlloc12/112, load3.19, freeMem323835MiB and AllocTRES `cpu=12,gres/gpu=1`. The job started14:30:20 and ended14:30:21 Asia/Shanghai, `FAILED` exit127:0: its copied wrapper incorrectly looked for the child launcher under `/ram/var/spool/slurm/d/job15643327/`. It failed before GPU/model initialization; no stage, output, gate or sample exists. Parent accounting is one row: 1 wall second, 4 CPU-seconds and 1 GPU card-second. Estimated one-second allocation cost is CNY0.000666667 primary / CNY0.000688889 conservative; billing/rounding are unverified. See [submission receipt](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/submission-receipt.txt), [initial pending snapshot](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/submission-status.txt), [retarget-time node snapshot](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/submission-node-snapshot.txt), [retarget receipt](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/node-retarget-receipt.txt), [terminal parent accounting](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643327-parent-final.txt), and [startup failure](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643327-startup-failure.txt).
+Local103 tests, changed-file Ruff and diff checks pass. Whole-file DIFFUCO retains9 pre-existing import errors in untouched lines. Conservative new canonical CPU diagnostic wall is353.528515s within600s. Current streamed canonical CLI/Python and direct/copied-spool Bash interface checks pass without JAX or model work, but use old immutable v3 ROOT for stdlib source admission. The new committed/deployed checkout's final source/CLI/Bash receipt is pending root deployment; the unchanged CUDA entry and repaired actual GPU executable remain unvalidated.
 
-The v2 approval covered only its failed attempt and is consumed. After separate fresh approval, v3 job15643868 ran on `ibc13b03n02` from15:31:39 to15:53:15 Asia/Shanghai and ended `FAILED`, exit1:0. Parent-only accounting is 1296 seconds, 5184 CPU-seconds and 1296 GPU-card-seconds; estimated charge scenarios are CNY0.864 primary/CNY0.8928 conservative, not verified billing. B256 completed and was sealed with all specified validation gates passing. On the same7168 lane-day/fixed512 workload, core median was27.024156772s and prepared-wrapper median30.468557430s (235.258922788 lane-days/s); B128 wrapper comparison was33.838030240s, but its lazy-call path differs from B256's Python-bound dispatch. Warm wrapper cost was CNY2.833757201/Mlane-days primary and CNY2.928215775 conservative for B256, versus CNY3.147138229/Mlane-days primary for B128. Do not attribute the observed +11.06% throughput to batch size alone. B512 failed at lower-time AOT signature audit (expected536, actual673) before compile/run. See [terminal parent record](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-terminal-parent-final.txt), [failure diagnostics](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-failure-diagnostics.json), and [B256 evidence capture](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/job-15643868-B256-evidence/capture.json). No requeue, resubmission or automation was created.
+The exact source certificate records actual full-source digest independently from the admitted baseline science identity. It permits only exact old/new DIFFUCO module hashes plus the exact helper-only inverse byte transformation and two audited full baseline byte representations (canonicalLF11b6db89…/Windows4151db25…). All other byte changes, unapproved helper/body/formula or EOL changes fail. The [104-file immutable audit](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/checkout-byte-audit.json) and [current-production-identity baseline admission](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/b512-baseline-admission.json) preserve historical B128/B256 provenance and FULL64/native/strict gates. This is saved-evidence admission, not new input or runtime validation.
 
-The workload contains 512 lanes from 64 unique FULL64 points repeated eight times,
-covering two consecutive seven-day blocks. It measures 7,168 lane-days; 896
-unique-point-days are listed separately and are not the effective throughput
-denominator.
+| Fixed512 repeated-FULL64,7168 lane-days | Core median(s) | Prepared-wrapper median(s) | Source |
+| --- | ---: | ---: | --- |
+| B128,4 chunks |29.617320834|33.838030240|sealed job15600405|
+| B256,2 chunks |27.024156772|30.468557430|sealed job15643868|
+| B512,1 chunk |pending|pending|new proposal only|
 
-The B128 reader was rechecked against original SHA/bytes, 760×512 leaves, 515
-gates, 5+5 samples and provenance. JSON tuple/list equivalence applies only to
-`loadavg`; science-input and schema mismatches remain rejected. The old B128
-lazy-call and new B256/B512 Python-bound dispatch differ, so actual collection
-times and costs can be compared but rate ratios cannot be attributed to batch size
-alone. The natural old failure remains unexplained. Final module-level canonical
-JAX0.4.38 validation passed against the actual immutable checkout at
-`9d19f0760b93e1186eaf796db4903ddfd16a806f`; the diagnostic records module paths,
-hashes and commit. Final Bash syntax and target-shell argument expansion also
-passed, producing candidate `[256,512]`; dry-run imported no JAX and initialized no
-model/GPU. See [final module diagnostic](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/final-module-canonical-diagnostic.jsonl),
-[launcher verification](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/final-launcher-verification.txt)
-and [deployment verification](../../../outputs/research/global_throughput/gpu-signature-repair-20261008/deployment-verification.json).
-The checkout is a clean independent clone with no hardlinks or alternates; old
-checkout `a51efcd` is unchanged. No GPU B256/B512 collection has been validated.
+B256 passed515 strict saved gates,760 native leaves×512 lanes and512 actual reference comparisons. Its wrapper rate is235.258923 lane-days/s; estimated wrapper cost isCNY2.833757201 primary/CNY2.928215775 conservative per million lane-days. Historical B128 lazy dispatch differs from B256 Python-bound dispatch, so the comparison does not isolate batch size. Prior parent costs and failed attempts remain closed in their original ledgers. No global science, annual, Fortran,669-point/50-year or10× claim follows from these capacity windows.
 
-| B128 fixed512 capacity stage | Median [range] | Throughput / warm cost scenario |
-| --- | ---: | ---: |
-| Synchronized core, five collections | 29.617320834s [29.605399007,29.623860434] | 242.020541 lane-days/s; CNY0.019744881 primary /0.020403043 conservative |
-| Prepared wrapper, five collections | 33.838030240s [33.780365391,33.889177628] | 211.832661 lane-days/s; CNY0.022558687 primary /0.023310643 conservative |
+The [new paid proposal](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PAID_PROPOSAL.md) is B512 alone:1node/1task,gnall,4 auxiliary CPUs,1V100,45min, no requeue;0.75card-hours+3CPU-hours, additive worst-caseCNY1.80 primary/CNY1.86 conservative. New immutable CODE_DIR is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1`; new RUN_ROOT is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-${SLURM_JOB_ID}`. Exact working directory/command/source paths are in the proposal. Code SHA and deployed receipt will be filled after root commit. Approval/submission are pending; no old budget is reused.
 
-The complete stage passed 515 gates and 512 independent saved-output/source-B4
-comparisons across 760 native output leaves per lane and both blocks. All 512 output
-lanes were retained. Strict numerical and saved-reference checks passed; checkpoint
-SHA256 is `e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5`.
-This is `exploratory_capacity_performance` with `scientific_acceptance=false`;
-repeated lanes do not represent 512 distinct real grids, and B128 alone neither
-establishes a sweet spot nor demonstrates global scientific benefit.
+Only B512 compiles/measures. Sealed B128/B256 remain imported comparison origins; B256 actual compiler temporary memory1,151,609,352bytes is the device estimate source, with unchanged2GiB device/8GiB host slack and1800s remaining-window gate. Keep ordered64 genuine points×8, continuous Days2–8/9–15,48steps/day, full native outputs/physical masks and5+5 synchronized collections.45min is a bounded attempt, not a completion or peak-memory guarantee. No fake B1024 comparison, training, AD or architecture change is authorized.
 
-Separate B128 timing: lower92.979298s, compile744.949671s, first complete call
-29.778435s, host stack3.176700s, device transfer1.047304s, checkpoint serialization
-0.321704s and atomic write0.251202s. Actual compiler analysis recorded argument,
-output and temporary buffers of 31,118,364/27,529,184/582,289,872 bytes. The selected
-V100 snapshot immediately before compilation had 33,721,155,584 of 34,359,738,368
-bytes free; job-start Host MemAvailable was 352,786,501,632 bytes; cumulative process
-peak RSS through B128 was 14,736,539,648 bytes. GPU memory is a boundary snapshot,
-not a measured VRAM peak; compiler analysis is not actual peak allocation. B256 and
-B512 require their own memory evidence. Warm costs above cover only one synchronized
-512-lane collection using one GPU and four allocated CPUs; they exclude setup,
-compilation and checkpoint IO. Whole-job cost will use one terminal parent `sacct`
-row and count job15600405 once.
-
-The parent allocation used 0.59305556 GPU card-hours and 2.37222222 allocated CPU
-count-hours. At the declared GPU CNY2.20/card-hour and CPU CNY0.05/core-hour rates,
-the estimated whole-job primary cost is CNY1.423333333; using CPU CNY0.07 gives
-CNY1.470777778. Terminal collector cross-check accepted these as allocation
-estimates, not a verified bill. Queue time and child steps are not added; the parent
-is counted once.
-The report's `observed_window_wall_seconds=2121.916518688202` is a separate window
-measurement. `elapsed_seconds=2060.684793` is stale and is not terminal billing.
-
-Evidence: [current result](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/CURRENT_RESULT.md),
-[terminal validation](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-validation.json),
-[terminal transfer verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-transfer-verification.json),
-[B256 failure diagnostics](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-failure-diagnostics.json),
-[collector verification](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/collector-verification.json),
-[terminal raw nine-field `sacct`](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-sacct-raw9.txt),
-[terminal collector seven-field `sacct`](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-sacct-collector7.txt),
-[terminal evidence capture](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-evidence/capture.json),
-[preserved B128 checkpoint](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/job-15600405-terminal-evidence/capacity__stage_capacity_B128_fixed512_v1.pkl),
-and [current ledger](../../../outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/preparation-ledger.json).
-
-Deployed code remains immutable at `a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e`.
-Heartbeat `gpu-15600405` was confirmed `PAUSED`; its old-job terminal follow-up is
-complete. The deleted old Explore1000 heartbeat is not restored, and no new
-automation is planned. The repair diagnostics are free and bounded. Immutable
-deployment and private-API validation passed. The v2 paid continuation was approved
-and attempted once; job15643327 failed during wrapper startup before model/GPU
-initialization, as detailed above. After fresh explicit approval, v3 job15643868
-ran once and is closed as `FAILED`. It requested `gnall`, 1 node, 1 task, 4 Slurm
-CPUs, 1 Tesla V100 32GiB and 90 minutes; terminal parent accounting is the sole
-charge basis. Its earlier CNY3.60 primary/CNY3.72 conservative values are upper
-allocation scenarios, not the final estimates. The immutable checkout is
-`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3`
-at commit `12b495b9425de3ad1dc16efa3a5a0e69d7e89222`; the job used its run root
-`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512`.
-Startup checks selected GPU UUID `GPU-949cb714-8c53-353c-1f6a-1832c629230e`
-(Tesla V100-SXM2-32GB, driver525.85.12); the initial status showed four CPUs and
-one GPU allocated with zero visible GPU processes. The candidate-node snapshot at
-07:30:08Z recorded CPUAlloc12/112, load2.65, 323154MiB free and 1/8 GPUs allocated.
-The B256 stage is sealed and passed 515 strict saved gates plus 512 independent
-saved-reference comparisons, with 760 native leaves×512 across two seven-day
-blocks. Its checkpoint SHA256 is `ee7210f2c83ea11346e9aa752320e8760560b2a6c1e377aa2058aa53da16b08c`
-(220429675 bytes). Core median is27.024156772s (265.244168785 lane-days/s); prepared-wrapper
-median is30.468557430s (235.258922788 lane-days/s), range30.319014769–30.538280688s.
-The B128 wrapper reference is33.838030240s (211.832661 lane-days/s), but its lazy-call
-dispatch differs from B256's Python-bound path. B256 warm unit costs are CNY2.833757201/Mlane-days
-primary and CNY2.928215775 conservative; B128 primary is CNY3.147138229/Mlane-days.
-The observed +11.06% throughput/−9.96% unit-cost difference is not attributed to batch size.
-B512 was rejected before compile/run when lower-time AOT audit found expected536 versus actual673
-input metadata. This was not a memory/time admission failure. No B512 output, gate, sample or
-checkpoint exists. This fixed512 repeated-input result measures unit trajectory-day
-capacity, not a true669-point single-scenario end-to-end run or a batch-size cap. A
-14-day arithmetic illustration batches669 points into768 lanes (157 real plus99
-padding in the tail), projecting45.702836s and CNY0.030468557/CNY0.031484176 at the
-B256 wrapper rate. It assumes equal chunk time and unverified heterogeneous-input
-behavior, excludes Day1/initialization, annual aggregation, setup and checkpoint, and
-is neither a measurement nor a 50-year projection. For future point×parameter/scenario
-members, free-diagnose B512 first; any paid retry requires separate approval. Use larger
-shared real-input sets for larger batches such as B1024. If throughput plateaus, select
-a near-peak range with lower memory/compiler cost. Keep short/long horizons and startup,
-compile, checkpoint IO and whole-job cost separate from warm wrapper/core rates; under
-fixed rates unit cost is reciprocal to throughput. Existing GPU B16/B64 results are
-separate evidence; 1-to-2-card work comes later. CPU reader commit `7d20a17` is accepted
-and CPU-internal reader admission passed, but the two CPU/GPU tolerance failures remain
-and CPU4 was not run. CPU expansion remains paused and is not a prerequisite here.
+The10:24UTC occupancy snapshot only nominates `ibc13b02n02` (MIXED,CPUAlloc8/112,load1.81,6/8 GPUs unallocated); no eligible idle node was observed. This is not a reservation or whole-node exclusivity. Refresh before approval/submission and record actual node,CPU allocation/affinity/load and GPU processes at startup. The scientific goal remains the one-card wrapper cost/trajectory-day curve for future points×members;669-point projection needs separate initialization, tail/padding and IO evidence. [Current result](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md) and [protocol](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md) are the compact current authorities.
 
 ## Completed Paid Matrix: Fixed Workload
 

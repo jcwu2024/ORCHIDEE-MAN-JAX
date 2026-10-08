@@ -437,6 +437,27 @@ def _aval_signature(avals):
     return tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in avals)
 
 
+def describe_aot_signature(stage, arguments, *, lowered=False):
+    """Preserve failed admission metadata without changing JAX internals."""
+    pairs, tree = jax.tree_util.tree_flatten_with_path((tuple(arguments), {}))
+    expected = _aval_signature([value for _, value in pairs])
+    public = _aval_signature(jax.tree_util.tree_leaves(stage.in_avals))
+    mesh = stage._lowering if lowered else stage._executable
+    info = mesh.compile_args.get("all_args_info") if lowered else getattr(mesh, "_all_args_info", None)
+    kept = mesh.compile_args.get("kept_var_idx") if lowered else getattr(mesh, "_kept_var_idx", None)
+    internal = None if info is None else _aval_signature(info.in_avals)
+    return {"caller_leaves": len(expected), "public_input_leaves": len(public),
+            "internal_all_args_leaves": None if internal is None else len(internal),
+            "kept_input_leaves": None if kept is None else len(kept),
+            "public_tree_shape_dtype_weak_type_equal": stage.in_tree == tree and public == expected,
+            "internal_signature_equal": None if internal is None else internal == expected,
+            "caller_paths": [str(path) for path, _ in pairs], "caller_signature": expected,
+            "public_signature": public, "internal_signature": internal,
+            "stage_id": id(stage), "lowering_or_executable_id": id(mesh), "all_args_info_id": id(info),
+            "kept_indices": None if kept is None else sorted(kept),
+            "debug_info": None if info is None else str(getattr(info, "debug_info", None))}
+
+
 def audit_aot_signature(stage, arguments, *, lowered=False):
     """Fail before compile when public/internal AOT argument metadata diverges.
 
@@ -494,11 +515,17 @@ def lower_compile(fn, arguments, name, recorder):
     t = time.perf_counter()
     lowered = jax.jit(fn).lower(*arguments)
     recorder.result["timing"][name + "_lower_seconds"] = time.perf_counter() - t
-    lowered_signature = audit_aot_signature(lowered, arguments, lowered=True)
-    ir = str(lowered.compiler_ir(dialect="stablehlo"))
-    compilation = {"stablehlo_sha256": hashlib.sha256(ir.encode()).hexdigest(),
-                   "lowered_input_signature": lowered_signature}
+    compilation = {"lowered_input_metadata": describe_aot_signature(lowered, arguments, lowered=True)}
     recorder.result.setdefault("compilations", {})[name] = compilation
+    try:
+        lowered_signature = audit_aot_signature(lowered, arguments, lowered=True)
+    except TypeError as error:
+        compilation["signature_admission_error"] = str(error)
+        recorder.phase(name + "_lower_signature_rejected")
+        raise
+    ir = str(lowered.compiler_ir(dialect="stablehlo"))
+    compilation.update(stablehlo_sha256=hashlib.sha256(ir.encode()).hexdigest(),
+                       lowered_input_signature=lowered_signature)
     recorder.phase(name + "_compile_start")
     t = time.perf_counter()
     observer = getattr(recorder, "cache_observer", None)
@@ -733,11 +760,9 @@ def benchmark(args, recorder, lanes, second):
 
 
 def scientific_source_digest():
-    paths = subprocess.check_output(["git", "ls-files", "jax_orchidee"], cwd=ROOT, text=True).splitlines()
-    digest = hashlib.sha256()
-    for path in paths:
-        digest.update(path.encode() + b"\0" + (ROOT / path).read_bytes() + b"\0")
-    return digest.hexdigest()
+    from scripts.dev.global_source_compatibility import source_identity
+
+    return source_identity(ROOT)["science_sha256"]
 
 
 def semantic_reference_identity(args, lane, second):
