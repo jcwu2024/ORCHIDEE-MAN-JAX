@@ -18,3 +18,4 @@ outputs/research/global_throughput/gpu-signature-repair-20261008/submission-stat
 outputs/research/global_throughput/gpu-signature-repair-20261008/spool-fix-deployment-log.txt whitespace=-blank-at-eol
 outputs/research/global_throughput/gpu-signature-repair-20261008/spool-regression-tests.txt whitespace=-blank-at-eol
 outputs/research/global_throughput/gpu-signature-repair-20261008/spool-target-verification.txt whitespace=-blank-at-eol
+outputs/research/global_throughput/gpu-signature-repair-20261008/v3-job-15643868-initial-status.txt whitespace=-blank-at-eol

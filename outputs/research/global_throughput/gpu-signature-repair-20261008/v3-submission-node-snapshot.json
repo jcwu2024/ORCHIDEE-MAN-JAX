@@ -1,0 +1,15 @@
+{
+  "observed_utc": "2026-10-08T07:30:08Z",
+  "node": "ibc13b03n02",
+  "state": "MIXED",
+  "allocated_CPUs": 12,
+  "total_CPUs": 112,
+  "load": 2.65,
+  "free_memory_MiB": 323154,
+  "allocated_GPUs": 1,
+  "configured_GPUs": 8,
+  "code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+  "checkout_clean": true,
+  "run_root_unused": true,
+  "node_reserved": false
+}

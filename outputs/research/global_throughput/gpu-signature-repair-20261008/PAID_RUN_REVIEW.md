@@ -1,6 +1,8 @@
 # B256/B512 v3 Continuation Proposal
 
-Status: prepared and verified; awaiting fresh explicit paid approval. The user approved one v2 submission, job15643327, which failed in wrapper startup before model/GPU initialization. That approval is consumed and does not authorize this corrected v3 attempt. Historical v2 command provenance remains in [APPROVAL_COMMAND.sh](APPROVAL_COMMAND.sh); its terminal record and one-second accounting are in [CURRENT_RESULT.md](CURRENT_RESULT.md) and [preparation-ledger.json](preparation-ledger.json). Do not automatically resubmit.
+Status: v3 approved and submitted once; job15643868 is RUNNING. The user separately approved this v3 allocation after the earlier v2 submission, job15643327, failed during wrapper startup before model/GPU initialization. The v2 approval is consumed and the old command remains historical provenance in [APPROVAL_COMMAND.sh](APPROVAL_COMMAND.sh). The exact v3 command is [APPROVAL_COMMAND_V3.sh](APPROVAL_COMMAND_V3.sh). Current job details and terminal one-row accounting policy are in [CURRENT_RESULT.md](CURRENT_RESULT.md) and [preparation-ledger.json](preparation-ledger.json). No automatic retry, requeue or monitoring automation was created.
+
+Job15643868 was submitted from `gln01` at2026-10-08 15:31:05 Asia/Shanghai and started at15:31:39 on `ibc13b03n02`, with a 17:01:39 bound end. At07:32:08Z it was RUNNING with four CPUs and one GPU allocated, no restart/requeue, and the expected Tesla V100 identity passed startup checks. No saved B256/B512 outputs, gates or samples are yet observed; throughput and final parent charge remain pending. The CNY3.60/CNY3.72 figures below are cost scenarios for the full allocation, not final billing. See [v3 receipt](v3-submission-receipt.txt), [node snapshot](v3-submission-node-snapshot.json), and [initial status](v3-job-15643868-initial-status.txt).
 
 ## Proposed execution
 
@@ -28,7 +30,7 @@ B512 requires actual B256 compiler-memory evidence, 2GiB GPU slack, 8GiB host sl
 
 ## Exact command
 
-The following command is the v3 proposal. It has not been submitted:
+The following exact v3 command was submitted once after approval:
 
 ```bash
 cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
@@ -40,4 +42,4 @@ B128_BASELINE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/researc
   /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3/scripts/hpc/slurm_global_gpu_capacity_continue.sh
 ```
 
-The wrapper's Bash-to-Python argument expansion passed a dry-run; the exact `sbatch` command itself was not executed. No paid job or monitoring automation is authorized yet. Obtain new explicit approval for the resources, wall time, worst-case cost, working directory, and exact command before every `sbatch`, as required by the [Explore1000 skill](C:/Users/admin/.codex/skills/explore1000-job-script/SKILL.md): “Before every `sbatch`, show the proposed resources, requested wall time, worst-case estimated charge, command, and working directory. Submit only after the user explicitly approves that estimate.”
+The wrapper's Bash-to-Python argument expansion passed a dry-run before submission. The exact `sbatch` command was later submitted once after fresh approval; no retry, requeue or automation is active. The approved resources were one `gnall` node, one task, four Slurm CPUs, one Tesla V100, 90 minutes and no exclusive allocation. Price only the final terminal parent accounting once; the CNY3.60/CNY3.72 numbers are scenarios, not actual final billing. The [Explore1000 skill](C:/Users/admin/.codex/skills/explore1000-job-script/SKILL.md) requires explicit approval before each paid submission: “Before every `sbatch`, show the proposed resources, requested wall time, worst-case estimated charge, command, and working directory. Submit only after the user explicitly approves that estimate.”

@@ -1,5 +1,5 @@
 {
-  "status": "v2_submission_failed_startup_v3_awaiting_fresh_paid_approval",
+  "status": "v3_submitted_running",
   "date": "2026-10-08",
   "code_commit_v2": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
   "code_checkout_v2": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
@@ -68,13 +68,28 @@
     "conservative_CNY_estimate": 0.000688889,
     "billing_or_rounding_verified": false
   },
-  "candidates_v2": [256, 512],
+  "candidates_v2": [
+    256,
+    512
+  ],
   "total_ordered_lanes": 512,
   "unique_real_FULL64_points": 64,
   "repeats_per_point": 8,
-  "blocks": [[2, 8], [9, 15]],
+  "blocks": [
+    [
+      2,
+      8
+    ],
+    [
+      9,
+      15
+    ]
+  ],
   "half_hours_per_day": 48,
-  "samples_per_shape": {"synchronized_core": 5, "synchronized_wrapper": 5},
+  "samples_per_shape": {
+    "synchronized_core": 5,
+    "synchronized_wrapper": 5
+  },
   "B512_admission": "resource/time only; actual B256 compiler analysis, GPU2GiB slack, host8GiB slack, >=1800s remaining; no speedup prerequisite",
   "B128_source_job": "15600405",
   "B128_full_checkpoint_SHA256": "e91db1391ccb5f525f9ec29f1cba24235c4ce9cd4153b9297fe2ed014d0c9cb5",
@@ -83,29 +98,86 @@
   "historical_failure_trigger": "unresolved; defensive stage binding repair verified on canonical small surrogate",
   "real_GPU_B256_B512_verified": false,
   "scientific_acceptance": false,
-  "verification": ["checks.json", "REPAIR_REPORT.md", "final-module-canonical-diagnostic.jsonl", "final-launcher-verification.txt", "deployment-verification.json"],
+  "verification": [
+    "checks.json",
+    "REPAIR_REPORT.md",
+    "final-module-canonical-diagnostic.jsonl",
+    "final-launcher-verification.txt",
+    "deployment-verification.json"
+  ],
   "historical_command_file": "APPROVAL_COMMAND.sh",
   "historical_command_must_not_authorize_v3": true,
   "corrected_v3_proposal": {
-    "status": "prepared_verified_awaiting_fresh_explicit_approval",
+    "status": "submitted_running",
     "code_commit": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
     "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
     "working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
     "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512",
-    "run_root_unused": true,
+    "run_root_unused": false,
     "node_candidate": "ibc13b03n02",
     "node_snapshot": "spool-fix-node-snapshot.txt",
     "node_snapshot_utc": "2026-10-08T06:50:43Z",
     "node_snapshot_state": "mixed; CPUAlloc12/112; load2.85; freeMem323601MiB; AllocTRES cpu=12,gres/gpu=1; 7 GPUs unallocated; candidate, not reservation",
-    "resources": {"partition": "gnall", "nodes": 1, "tasks": 1, "allocated_CPUs": 4, "GPUs": 1, "GPU_kind": "Tesla V10032GiB", "wall_seconds": 5400, "requeue": false, "exclusive": false},
-    "cost_scenarios_CNY": {"primary_additive": 3.6, "conservative_additive": 3.72, "billing_verified": false},
-    "candidates": [256, 512],
+    "resources": {
+      "partition": "gnall",
+      "nodes": 1,
+      "tasks": 1,
+      "allocated_CPUs": 4,
+      "GPUs": 1,
+      "GPU_kind": "Tesla V10032GiB",
+      "wall_seconds": 5400,
+      "requeue": false,
+      "exclusive": false
+    },
+    "cost_scenarios_CNY": {
+      "primary_additive": 3.6,
+      "conservative_additive": 3.72,
+      "billing_verified": false
+    },
+    "candidates": [
+      256,
+      512
+    ],
     "command_file": "APPROVAL_COMMAND_V3.sh",
-    "approval": null,
-    "submitted": false,
+    "approval": {
+      "user_response": "批准。",
+      "scope": "one execution of APPROVAL_COMMAND_V3.sh; gnall 1 node 1 task 4 CPUs 1 V100 5400s; primary CNY3.60 conservative CNY3.72",
+      "automatic_retry": false,
+      "status": "granted_for_one_submission_and_consumed"
+    },
+    "submitted": true,
     "automation_created_or_resumed": false,
-    "verification": ["spool-regression-tests.txt", "spool-target-verification.txt", "spool-fix-deployment-log.txt", "spool-fix-deployment-verification.json"],
-    "independent_review": "no blocking launcher issue found; allocated Slurm/container startup and real GPU B256/B512 remain unverified"
+    "verification": [
+      "spool-regression-tests.txt",
+      "spool-target-verification.txt",
+      "spool-fix-deployment-log.txt",
+      "spool-fix-deployment-verification.json"
+    ],
+    "independent_review": "no blocking launcher issue found; allocated Slurm/container startup and real GPU B256/B512 remain unverified",
+    "submission_node_snapshot": "v3-submission-node-snapshot.json",
+    "job_id": "15643868",
+    "submission_endpoint": "gln01",
+    "submission_time_local": "2026-10-08T15:31:05+08:00",
+    "start_time_local": "2026-10-08T15:31:39+08:00",
+    "hard_end_time_local": "2026-10-08T17:01:39+08:00",
+    "submission_receipt": "v3-submission-receipt.txt",
+    "initial_status": "v3-job-15643868-initial-status.txt",
+    "actual_node": "ibc13b03n02",
+    "actual_allocated_CPUs": 4,
+    "actual_allocated_GPUs": 1,
+    "observed_state": "RUNNING",
+    "observed_utc": "2026-10-08T07:32:08Z",
+    "actual_GPU_identity": {
+      "uuid": "GPU-949cb714-8c53-353c-1f6a-1832c629230e",
+      "name": "Tesla V100-SXM2-32GB",
+      "startup_inventory_and_process_diagnostics_exit": 0,
+      "CUDA_VISIBLE_DEVICES": "0",
+      "driver": "525.85.12",
+      "global_id": 4
+    },
+    "completed_shapes": [],
+    "final_parent_accounting": null,
+    "monitoring_mode": "foreground read-only follow-up; no automation created"
   },
   "automatic_resubmission": false,
   "automation_created_or_resumed": false
