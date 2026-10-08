@@ -183,7 +183,7 @@
     "existing_batch_regression_tests": 33,
     "existing_batch_regression_seconds": 5.45,
     "total_capacity_mask_launcher_and_batch_tests": 144,
-    "eventual_immutable_checkout_real_target_interfaces": "not executed; final parent SHA/deployment pending, fixture is not deployment admission",
+    "eventual_immutable_checkout_real_target_interfaces": "not executed; execution SHA pinned, deployment pending; fixture is not deployment admission",
     "collector_tests": 15,
     "collector_test_seconds": 0.06,
     "collector_test_scope": "synthetic contract/control-flow fixtures; no real fixed1024 saved model evidence",
@@ -211,10 +211,11 @@
     "future_commands": "PYTHONDONTWRITEBYTECODE=1 and python-B"
   },
   "remaining": [
-    "parent implementation commit and expected-code-sha pin",
-    "parent source bundle and separate resource/cost approval",
+    "separate resource/code/command/node/wall/cost approval",
     "immutable checkout deployment and actual real-target interfaces not performed",
     "real fixed1024 GPU stage execution/gates/timings/cost not measured"
   ],
-  "scientific_acceptance": false
+  "scientific_acceptance": false,
+  "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+  "final_source_pin": "final-code-pin.json"
 }

@@ -61,7 +61,7 @@ single-use planned run root is
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1`.
 Capacity evidence is its `/capacity` child; scheduler log is
 `runtime/logs/global_gpu_capacity_1024_%j.txt`. The exact invocation, working
-directory, node basis, resource/cost decision and eventual implementation SHA
+directory, node basis, resource/cost decision and pinned execution SHA
 belong to [the separate paid proposal](B1024_PAID_PROPOSAL.md). Preparation
 does not deploy this paid checkout or submit a job; old budgets remain closed.
 
@@ -90,3 +90,38 @@ the actual DIFFUCO insertion helper on CPU JAX0.4.38:512/1024 each public/intern
 and unchanged first signature. It performs no physical-model preparation,
 lowering, compilation, invocation or GPU initialization. Real fixed1024 GPU
 capacity, timing and memory acceptance remain unmeasured.
+
+Execution code is pinned to `bd9e4c04af68d77e79b984bfc8aa064977f893d3` in
+[final-code-pin.json](final-code-pin.json). The verified incremental bundle
+requires the preserved accepted `ad6c0e1` Git history. Subsequent documentation
+commits are not the execution revision. Captured shell raw SHA values bind to
+the committed LF shell blobs through the fixture's explicit CRLF-to-LF step;
+the only semantic fixture edit is PROJECT relocation. This shell handling does
+not alter the exact scientific-source certificate. Deployment and actual target
+entry/collector interfaces remain unperformed.
+
+After separately approved execution, collect the raw9 sacct record on a login
+endpoint and validate saved arrays on `test02`. The future numeric JOB_ID,
+GPU_UUID, GLOBAL_GPU_ID and DRIVER_VERSION come from that job's actual startup
+and verified gpu-identity.json; they are not new resource approval requests.
+COLLECTOR_CPU_SET contains four currently allowed CPU IDs on test02; select it
+from that process's actual affinity before collection. The approved node must
+match terminal/startup evidence. These are templates,
+not commands executed during preparation:
+
+```bash
+# Login endpoint: scheduler query only; CODE_DIR and RUN_ROOT are proposal paths.
+/rmprog/slurm/v22.05.7/bin/sacct -n -P -j "$JOB_ID" --format=JobIDRaw,JobName%64,Partition%64,State%64,ElapsedRaw,AllocCPUS,AllocTRES%512,NodeList%128,ExitCode > "$RUN_ROOT/sacct-raw9.txt"
+
+# test02: canonical CPU Python, affinity limited to four available CPUs,
+# OMP/OPENBLAS/MKL=1; no model invocation or GPU initialization.
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 taskset -c "$COLLECTOR_CPU_SET" /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python -B "$CODE_DIR/outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/collect_fixed1024_result.py" \
+  --code-dir "$CODE_DIR" --expected-code-sha bd9e4c04af68d77e79b984bfc8aa064977f893d3 \
+  --stage-dir "$RUN_ROOT/capacity" --sacct-file "$RUN_ROOT/sacct-raw9.txt" \
+  --admission /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json \
+  --b512-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity \
+  --job-id "$JOB_ID" --job-name orchjax-gpu-cap1024 --node ibc13b03n05 \
+  --gpu-uuid "$GPU_UUID" --slurm-global-gpu-id "$GLOBAL_GPU_ID" --driver-version "$DRIVER_VERSION" \
+  --approved-nodes 1 --approved-tasks 1 --approved-cpus 4 --approved-gpus 1 --approved-wall-seconds 5400 \
+  --output "$RUN_ROOT/collected-fixed1024.json"
+```

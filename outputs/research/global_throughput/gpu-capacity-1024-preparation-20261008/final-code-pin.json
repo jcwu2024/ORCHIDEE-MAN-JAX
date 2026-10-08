@@ -1,0 +1,69 @@
+{
+  "status": "code_and_local_bundle_pinned; preparation_only",
+  "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+  "branch": "research/global-throughput",
+  "expected_code_sha_collector_argument": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+  "planned_immutable_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+  "planned_output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1",
+  "local_bundle": {
+    "file": "fixed1024-bd9e4c0.bundle",
+    "bytes": 273676,
+    "sha256": "a84da4a91faab7ca2925e7aaabe6815654f1eca9feb4467dc6898bf94b36113d",
+    "verified": true,
+    "ref": "refs/heads/research/global-throughput",
+    "commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+    "required_existing_commit": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+    "scope": "incremental bundle against the preserved accepted immutable B512 checkout; not a standalone full-history clone"
+  },
+  "commit_blob_sha256": {
+    "scripts/hpc/slurm_global_gpu_capacity.sh": "735757027a5cf8dba49f48b6ff77ed4c77ec73e3302c71651c9f73fa59221e62",
+    "scripts/hpc/slurm_global_gpu_capacity_1024.sh": "6f30b3e47e1e803fb525b23594f03c07111ba8d759498d96f3be23ccbaa54b2a",
+    "scripts/dev/benchmark_global_gpu_capacity.py": "aaa22c2b83eafe2e2c516014d13567574cabaf15df938c1a17335cb8326159e3",
+    "outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/collect_fixed1024_result.py": "5d399a2c490ca9f1e42cfbd2cf5922ed9961481a38f2abbc753539e212d6e659"
+  },
+  "canonical_fixture_binding": {
+    "both_raw_source_hashes_match_captured_receipt": true,
+    "both_sources_after_the_fixture_CRLF_to_LF_conversion_equal_committed_Bash_blobs": true,
+    "raw_shared_launcher_sha256": "f371cc441932aa7166cdc0ed384ffd9b4b926d550f89e8b45366861c823ff38f",
+    "committed_LF_shared_launcher_sha256": "735757027a5cf8dba49f48b6ff77ed4c77ec73e3302c71651c9f73fa59221e62",
+    "scope": "Bash source fixture performs its recorded CRLF-to-LF conversion and PROJECT relocation; shell conversion does not change scientific-source admission or certificate"
+  },
+  "scientific_source": {
+    "git_diff_against_accepted_B512_code": "no changed jax_orchidee files",
+    "baseline_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "inherited_accepted_Linux_actual_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "certificate": "exact-DIFFUCO-host-mask-cache-repair-v1",
+    "new_full_source_audit": false,
+    "scope": "reuse exact accepted source bytes; final target checkout must verify source certificate before paid execution"
+  },
+  "validation": {
+    "lightweight_tests": 159,
+    "canonical_tiny_helper_successive_512_1024_passed": true,
+    "real_fixed1024_model_measurement": false,
+    "actual_new_immutable_checkout_interfaces": false,
+    "new_paid_submission": false,
+    "new_monitoring": false
+  },
+  "resource_proposal": {
+    "file": "B1024_PAID_PROPOSAL.md",
+    "wall_seconds": 5400,
+    "CPUs": 4,
+    "GPUs": 1,
+    "primary_CNY_ceiling": 3.6,
+    "conservative_CNY_ceiling": 3.72,
+    "paid_approval": false
+  },
+  "remaining_before_execution": [
+    "separate explicit resource/command/working-directory/node-basis/wall/code/cost approval",
+    "deploy this exact commit to a new clean immutable checkout and verify actual target entry/collector interfaces on allowed test02 without model work",
+    "fresh node occupancy/load review; proposed node is historical snapshot, not reservation"
+  ],
+  "evidence": [
+    "verification.json",
+    "canonical-helper-probe.json",
+    "canonical-launcher-interfaces.json",
+    "historical-b512-admission.json",
+    "collector-readiness.json"
+  ],
+  "documentation_followup": "Subsequent documentation-only commit is not the execution-code revision."
+}

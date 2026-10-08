@@ -1,0 +1,104 @@
+{
+  "status": "planning_estimate_not_execution",
+  "historical_job": "15657822",
+  "historical_checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
+  "fixed_workload": {
+    "unique_real_points": 64,
+    "total_lanes": 1024,
+    "lane_days": 14336,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "steps_per_day": 48
+  },
+  "request": {
+    "partition": "gnall",
+    "nodes": 1,
+    "tasks": 1,
+    "auxiliary_Slurm_CPUs": 4,
+    "GPUs": 1,
+    "GPU_type": "V100 32GB",
+    "hard_wall_seconds": 5400,
+    "hard_wall": "01:30:00",
+    "B1024_minimum_remaining_seconds": 2700,
+    "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3"
+  },
+  "cost": {
+    "GPU_card_hours": 1.5,
+    "allocated_CPU_hours": 6,
+    "primary": {
+      "GPU_CNY": 3.3,
+      "CPU_CNY": 0.3,
+      "total_CNY": 3.6
+    },
+    "conservative": {
+      "GPU_CNY": 3.3,
+      "CPU_CNY": 0.42,
+      "total_CNY": 3.72
+    },
+    "assumes_CPU_GPU_additive": true,
+    "billing_verified": false,
+    "consumed": false
+  },
+  "planning_memory": {
+    "resident_fixed1024_upper_bytes": 3935772784,
+    "full_output_fixed1024_bytes": 440418304,
+    "B512_observed_temp_bytes": 2288514256,
+    "B512_fixed1024_device_estimate_bytes": 11481314736,
+    "B1024_scaled_device_estimate_bytes": 13769828992,
+    "physical_GPU_slack_bytes": 2147483648,
+    "B512_free_GPU_required_upper_bytes": 13628798384,
+    "B1024_free_GPU_required_upper_bytes": 15917312640,
+    "B512_observed_cumulative_host_peak_bytes": 19496943616,
+    "host_required_estimate_bytes": 47583821824,
+    "runtime_host_guard": "max(2*historical fixed512 B512 process peak, 2*new fixed1024 B512 cumulative process peak) +8GiB; initial planning number uses historical origin only",
+    "formula": "2*resident full workload + 3*full outputs + max linearly scaled actual compiler temporary bytes; 2GiB GPU slack; 2*observed B512 host peak + 8GiB host slack",
+    "limitations": [
+      "resident upper bound doubles measured B512 collection including shared-static overhead; actual per-shape stacked bytes must replace it at startup",
+      "compiler temporary bytes and snapshots are not measured VRAM peak",
+      "host is process cumulative peak scaling, not reservation or guaranteed peak",
+      "no large-shape lower/compile diagnostic performed"
+    ]
+  },
+  "time_basis": {
+    "observed_B512_lower_seconds": 98.73900883086026,
+    "observed_B512_compile_seconds": 892.7390548996627,
+    "observed_B512_parent_seconds": 1416,
+    "limitation": "New B512 fixed1024 and B1024 timings are unknown. Two compiles expected with cache off; 90min is a finite ceiling, not predicted runtime."
+  },
+  "storage": {
+    "full_outputs_two_new_stages_bytes": 880836608,
+    "checkpoint_estimated_two_stages_bytes_rounded": 900000000,
+    "scope": "two consolidated full checkpoint containers plus small manifests/reports; no per-lane/per-variable files",
+    "old_outputs_preserved": true
+  },
+  "authorization": {
+    "scope": "preparation_only",
+    "paid_submission": false,
+    "monitoring": false,
+    "old_budgets_closed": true
+  },
+  "node_basis": {
+    "snapshot_UTC": "2026-10-08T14:04:49Z",
+    "source": "node-snapshot.txt",
+    "selected_provisional": "ibc13b03n05",
+    "partition": "gnall",
+    "state": "MIXED",
+    "allocated_CPUs": 96,
+    "total_Slurm_CPUs": 112,
+    "CPU_load": 20.19,
+    "allocated_GPUs": 0,
+    "configured_GPUs": 8,
+    "reported_FreeMem_MB": 338186,
+    "eligible_idle_node_observed": false,
+    "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other GPU-available eligible nodes",
+    "limitation": "scheduler snapshot, no reservation and no selected-card process evidence; inspect again before submission and record startup identity/load/affinity/inventory"
+  }
+}

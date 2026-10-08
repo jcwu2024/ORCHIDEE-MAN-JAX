@@ -33,8 +33,12 @@ See [collector readiness](collector-readiness.json),
 The [canonical Bash receipt](canonical-launcher-interfaces.json) proves actual
 argument expansion and direct/spooled equality in a PROJECT-only relocated
 diagnostic fixture. It is not deployment admission: the eventual immutable
-final-SHA checkout's real-target interface has not been executed. Final code
-SHA, source bundle, paid approval and any subsequent execution remain separate.
+final-SHA checkout's real-target interface has not been executed. Execution code
+is pinned to `bd9e4c04af68d77e79b984bfc8aa064977f893d3`; the verified local source
+bundle and captured shell-source correspondence are recorded in
+[final code pin](final-code-pin.json). The [separate paid proposal](B1024_PAID_PROPOSAL.md)
+sets the CPU4/GPU1/90min ceilings at CNY3.60 primary/CNY3.72 conservative.
+Paid approval, deployment/actual target interfaces and execution remain pending.
 
 Automatic approval review blocked removal of two generated ignored `.pyc`
 files under this preparation's `__pycache__`, with reason `blocked by policy`.

@@ -5,7 +5,7 @@
   "actual_result_or_scientific_acceptance": false,
   "collector": "collect_fixed1024_result.py",
   "test_file": "test_collect_fixed1024_result.py",
-  "expected_execution_code_sha": "not assigned; required explicitly through --expected-code-sha after immutable checkout deployment",
+  "expected_execution_code_sha": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
   "source_identity": {
     "baseline_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
     "actual_linux_science_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
@@ -37,9 +37,10 @@
     "no historical timing promotion, K amortization, CPU/GPU ratio, 10x result or general scientific claim"
   ],
   "remaining_external_evidence": [
-    "completed immutable execution checkout SHA and clean HEAD admission",
-    "deployed runner/collector identity and external job approval",
+    "deployed immutable checkout clean HEAD matches pinned bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+    "deployed runner/collector identity and separate job approval",
     "terminal raw9 sacct row and actual observed node/GPU/driver identity pins",
     "actual complete stage checkpoints or explicit denied/incomplete stage records"
-  ]
+  ],
+  "final_source_pin": "final-code-pin.json"
 }
