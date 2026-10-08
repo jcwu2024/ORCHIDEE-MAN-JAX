@@ -1,0 +1,33 @@
+2026-10-08T17:01:13Z
+NODELIST|STATE|CPUS(A/I/O/T)|CPU_LOAD|FREE_MEM|GRES
+ibc13b02n01|drng|12/0/100/112|3.36|299277|gpu:v100:8(S:0-1)
+ibc13b02n02|mix|104/8/0/112|25.93|350995|gpu:v100:8(S:0-1)
+ibc13b02n03|mix|100/12/0/112|32.76|110542|gpu:v100:8(S:0-1)
+ibc13b03n01|mix|100/12/0/112|32.19|164346|gpu:v100:8(S:0-1)
+ibc13b03n02|alloc|112/0/0/112|22.02|314931|gpu:v100:8(S:0-1)
+ibc13b03n03|mix|96/16/0/112|13.67|110421|gpu:v100:8(S:0-1)
+ibc13b03n04|mix|108/4/0/112|44.25|126657|gpu:v100:8(S:0-1)
+ibc13b03n05|mix|96/16/0/112|19.69|336420|gpu:v100:8(S:0-1)
+ibc13b03n06|down*|0/0/112/112|0.01|350348|gpu:v100:8(S:0-1)
+ibc13b03n07|mix|96/16/0/112|9.03|331644|gpu:v100:8(S:0-1)
+NodeName=ibc13b03n05 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=96 CPUEfctv=112 CPUTot=112 CPULoad=19.69
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:v100:8(S:0-1)
+   NodeAddr=ibc13b03n05 NodeHostName=ibc13b03n05 Version=22.05.7
+   OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022 
+   RealMemory=320000 AllocMem=0 FreeMem=336420 Sockets=2 Boards=1
+   State=MIXED ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=gnall 
+   BootTime=2026-06-03T10:42:32 SlurmdStartTime=2026-06-03T10:48:41
+   LastBusyTime=2026-10-08T20:58:42
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=cpu=96
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+
+bd9e4c04af68d77e79b984bfc8aa064977f893d3
+RUN_ROOT_absent=true
+JOBID|NAME|STATE|NODELIST|WORK_DIR

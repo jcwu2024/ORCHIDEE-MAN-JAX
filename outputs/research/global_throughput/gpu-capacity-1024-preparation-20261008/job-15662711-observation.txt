@@ -1,0 +1,7 @@
+2026-10-08T17:06:45Z
+15662711|orchjax-gpu-cap1024|RUNNING|0:0|283|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n05|90
+15662711.batch|batch|RUNNING|0:0|283|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n05|
+15662711.extern|extern|RUNNING|0:0|283|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n05|
+15662711.0|time|RUNNING|0:0|276|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n05|
+{"phase": "capacity_B512_lower_start", "elapsed_seconds": 19.559697940945625, "rss_bytes": 9722200064}
+{"phase": "capacity_B512_compile_start", "elapsed_seconds": 113.8006706815213, "rss_bytes": 10609459200}

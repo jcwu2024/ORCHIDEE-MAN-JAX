@@ -1,0 +1,122 @@
+{
+  "budget_id": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1-job15662711",
+  "status": "submitted_running; final_stage_and_cost_unverified",
+  "approval": {
+    "source": "human approval relayed by parent task /root",
+    "date_Asia_Shanghai": "2026-10-09",
+    "scope": "single exact concrete B1024_PAID_PROPOSAL.md allocation/command/code/node/cost",
+    "approved": true
+  },
+  "job_id": "15662711",
+  "submission_attempts": 1,
+  "sbatch_stdout": "Submitted batch job 15662711",
+  "submission_endpoint": "gln01 via192.168.11.2 login jump",
+  "command": "cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX\n/rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n05 --export=ALL,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1,RUN_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/scripts/hpc/slurm_global_gpu_capacity_1024.sh",
+  "code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+  "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+  "scheduler_working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+  "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1",
+  "resources": {
+    "partition": "gnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_Slurm_CPUs": 4,
+    "GPUs": 1,
+    "GPU_type": "Tesla V100 32GB",
+    "requested_node": "ibc13b03n05",
+    "hard_wall_seconds": 5400,
+    "no_requeue": true,
+    "exclusive": false
+  },
+  "cost_ceiling": {
+    "GPU_card_hours": 1.5,
+    "allocated_CPU_hours": 6,
+    "primary_CNY": 3.6,
+    "conservative_additive_CNY": 3.72,
+    "billing_verified": false,
+    "queue_time_billed": false,
+    "terminal_cost_available": false,
+    "parent_counted_once": true,
+    "child_rows_not_summed": true
+  },
+  "preflight": {
+    "receipt": "submission-preflight.txt",
+    "UTC": "2026-10-08T17:01:13Z",
+    "code_exact_clean": true,
+    "output_root_absent": true,
+    "duplicate_user_jobs_observed": false,
+    "node_state": "MIXED",
+    "node_CPUAlloc": 96,
+    "node_CPUTot": 112,
+    "node_CPULoad": 19.69,
+    "node_GPUAlloc": 0,
+    "node_GPUConfigured": 8,
+    "node_FreeMem_MB": 336420,
+    "eligible_idle_node_observed": false,
+    "reservation_or_exclusivity_claim": false
+  },
+  "observed": {
+    "receipt": "job-15662711-initial-state.txt",
+    "UTC": "2026-10-08T17:02:31Z",
+    "state": "RUNNING",
+    "elapsed_seconds": 29,
+    "node": "ibc13b03n05",
+    "AllocTRES": "billing=4,cpu=4,gres/gpu=1,node=1",
+    "submit_UTC": "2026-10-08T17:01:36Z",
+    "start_UTC": "2026-10-08T17:02:02Z",
+    "scheduled_limit_end_UTC": "2026-10-08T18:32:02Z",
+    "terminal": false
+  },
+  "startup": {
+    "log": "job-15662711-startup-log.txt",
+    "GPU_identity": "job-15662711-gpu-identity.json",
+    "node": "ibc13b03n05",
+    "affinity": [
+      24,
+      25,
+      80,
+      81
+    ],
+    "physical_cores": 2,
+    "host_load": [
+      18.67,
+      19.75,
+      20.12
+    ],
+    "GPU_global_id": 0,
+    "GPU_UUID": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+    "GPU_model": "Tesla V100-SXM2-32GB",
+    "GPU_driver": "525.85.12",
+    "selected_card_process_inventory_empty": true,
+    "metadata_verification_is_CUDA_execution_acceptance": false
+  },
+  "strict_complete_stages_published": [],
+  "new_throughput_published": false,
+  "scientific_acceptance": false,
+  "new_automation": false,
+  "old_budgets_reused": false,
+  "retry_or_resubmission_authorized": false,
+  "contract": {
+    "ordered_lanes": 1024,
+    "genuine_FULL64_points": 64,
+    "repeat_count": 16,
+    "lane_days": 14336,
+    "B512_chunks": 2,
+    "conditional_B1024_chunks": 1,
+    "gates_per_stage": 1027,
+    "native_leaves": 760,
+    "warm_core_samples": 5,
+    "warm_wrapper_samples": 5
+  },
+  "latest_observation": {
+    "receipt": "job-15662711-observation.txt",
+    "UTC": "2026-10-08T17:06:45Z",
+    "state": "RUNNING",
+    "elapsed_seconds": 283,
+    "node": "ibc13b03n05",
+    "last_saved_phase": "capacity_B512_compile_start",
+    "phase_elapsed_seconds": 113.8006706815213,
+    "phase_rss_bytes": 10609459200,
+    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
+  }
+}

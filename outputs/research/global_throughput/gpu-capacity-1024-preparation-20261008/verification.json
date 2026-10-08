@@ -1,5 +1,5 @@
 {
-  "status": "deployed_actual_interfaces_passed; no_paid_submission",
+  "status": "submitted_running; final_stage_and_cost_unverified",
   "contract": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1",
   "workload": {
     "unique_real_points": 64,
@@ -33,8 +33,8 @@
     "full_outputs_masks_native_dtype_tolerances_unchanged": true
   },
   "authorization": {
-    "preparation_only": true,
-    "paid_submission": false,
+    "preparation_only": false,
+    "paid_submission": true,
     "new_paid_checkout_deployment": true,
     "new_automation": false,
     "old_budget_reuse": false,
@@ -219,8 +219,7 @@
     "future_commands": "PYTHONDONTWRITEBYTECODE=1 and python-B"
   },
   "remaining": [
-    "separate resource/code/command/node/wall/cost approval",
-    "real fixed1024 GPU stage execution/gates/timings/cost not measured"
+    "terminal accounting and strict complete-stage collector verification; no new paid submission"
   ],
   "scientific_acceptance": false,
   "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
@@ -241,5 +240,39 @@
     "eligible_idle_node_observed": false,
     "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other eligible nodes with available GPUs and at least4 free CPUs; lower-load n03/n07 had all8 GPUs allocated",
     "limitation": "scheduler snapshot, no reservation and no selected-card process evidence; inspect again before submission and record startup identity/load/affinity/inventory"
+  },
+  "paid_execution": {
+    "receipt": "submission-receipt.json",
+    "job_id": "15662711",
+    "state_observed": "RUNNING",
+    "strict_complete_stages_published": [],
+    "terminal_cost_available": false
+  },
+  "submission_preflight": {
+    "receipt": "submission-preflight.txt",
+    "UTC": "2026-10-08T17:01:13Z",
+    "code_exact_clean": true,
+    "output_root_absent": true,
+    "duplicate_user_jobs_observed": false,
+    "node_state": "MIXED",
+    "node_CPUAlloc": 96,
+    "node_CPUTot": 112,
+    "node_CPULoad": 19.69,
+    "node_GPUAlloc": 0,
+    "node_GPUConfigured": 8,
+    "node_FreeMem_MB": 336420,
+    "eligible_idle_node_observed": false,
+    "reservation_or_exclusivity_claim": false
+  },
+  "latest_observation": {
+    "receipt": "job-15662711-observation.txt",
+    "UTC": "2026-10-08T17:06:45Z",
+    "state": "RUNNING",
+    "elapsed_seconds": 283,
+    "node": "ibc13b03n05",
+    "last_saved_phase": "capacity_B512_compile_start",
+    "phase_elapsed_seconds": 113.8006706815213,
+    "phase_rss_bytes": 10609459200,
+    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
   }
 }

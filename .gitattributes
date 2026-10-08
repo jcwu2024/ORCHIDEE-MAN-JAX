@@ -37,3 +37,7 @@ outputs/research/global_throughput/gpu-metadata-repair-20261008/selected-gpu-*.t
 # Preserve raw fixed1024 Git/scheduler capture whitespace.
 outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/deployment-log.txt whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/node-snapshot.txt whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve fixed1024 submission/startup scheduler text verbatim.
+outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/submission-*.txt whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/job-15662711-*.txt whitespace=-blank-at-eol,-blank-at-eof

@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "approval": {
+    "user_message": "p批准。",
+    "approved_review": "SUBMISSION_REVIEW.md",
+    "CPU1": {
+      "CPU_count": 1,
+      "maximum_wall_seconds": 3600
+    },
+    "CPU4": {
+      "CPU_count": 4,
+      "maximum_wall_seconds": 3600
+    },
+    "GPU": {
+      "CPU_count": 4,
+      "GPU_count": 1,
+      "maximum_wall_seconds": 3600
+    },
+    "primary_CNY_ceiling": 2.65,
+    "conservative_CNY_ceiling": 2.83,
+    "pricing": {
+      "primary_CPU_CNY_per_hour": 0.05,
+      "conservative_CPU_CNY_per_hour": 0.07,
+      "GPU_CNY_per_hour": 2.2,
+      "additive_assumption": true,
+      "billing_verified": false
+    }
+  },
+  "attempts": [
+    {
+      "job_id": "15579685",
+      "workload": "CPU1",
+      "commit": "526236333b44c5ecacf148722c2a84349d3695bc",
+      "state": "FAILED",
+      "exit_code": "2:0",
+      "observed_wall_seconds": 4,
+      "CPU_count": 1,
+      "GPU_count": 0,
+      "node": "ibc11b02n25",
+      "actual_AllocTRES_from_sacct": "billing=1,cpu=1,node=1",
+      "model_started": false,
+      "failure": "launcher expected AllocTRES; scontrol used TRES"
+    },
+    {
+      "job_id": "15579687",
+      "workload": "GPU",
+      "commit": "526236333b44c5ecacf148722c2a84349d3695bc",
+      "state": "FAILED",
+      "exit_code": "2:0",
+      "observed_wall_seconds": 3,
+      "CPU_count": 4,
+      "GPU_count": 1,
+      "node": "ibc13b03n03",
+      "actual_AllocTRES_from_sacct": "billing=4,cpu=4,gres/gpu=1,node=1",
+      "model_started": false,
+      "failure": "launcher expected AllocTRES; scontrol used TRES"
+    },
+    {
+      "job_id": "15579758",
+      "workload": "CPU1",
+      "commit": "7879d8e357ba69a59d4b2eaf794d69ebd32f8850",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "observed_wall_seconds": 852,
+      "CPU_count": 1,
+      "GPU_count": 0,
+      "node": "ibc11b02n25",
+      "wall_limit_seconds": 3540,
+      "submit_utc": "2026-10-05T14:00:11Z",
+      "start_utc": "2026-10-05T14:00:15Z",
+      "end_utc": "2026-10-05T14:14:27Z",
+      "actual_TRES_from_scontrol": "cpu=1,node=1,billing=1",
+      "actual_AllocTRES_from_sacct": "billing=1,cpu=1,node=1",
+      "TRES_source": "TRES",
+      "model_started": true,
+      "completed_scalar_reference_stages": [],
+      "failure_class": "numerical_parity_gate",
+      "failure": "B16 scalar lane6 299.0-115.0 GPU-reference gate failed fixed tolerance; B64 not run",
+      "failed_gate": "B16_scalar_lane_6_299.0-115.0_GPU_reference",
+      "failed_leaf_path": "[0][0][0][7]",
+      "max_bound_ratio": 1.228488222708634,
+      "child_time_wall_seconds": 848.66,
+      "child_user_seconds": 756.48,
+      "child_system_seconds": 39.82,
+      "child_time_peak_RSS_KiB": 20882480,
+      "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v1-7879d8e/cpu1"
+    },
+    {
+      "job_id": "15579759",
+      "workload": "GPU",
+      "commit": "7879d8e357ba69a59d4b2eaf794d69ebd32f8850",
+      "state": "FAILED",
+      "exit_code": "6:0",
+      "observed_wall_seconds": 2,
+      "CPU_count": 4,
+      "GPU_count": 1,
+      "node": "ibc13b03n03",
+      "wall_limit_seconds": 3540,
+      "submit_utc": "2026-10-05T14:01:00Z",
+      "start_utc": "2026-10-05T14:01:34Z",
+      "end_utc": "2026-10-05T14:01:36Z",
+      "actual_AllocTRES_from_sacct": "billing=4,cpu=4,gres/gpu=1,node=1",
+      "model_started": false,
+      "failure": "GPU launcher exit6 before launch-context/Python; identity/driver setup localized, exact command/global GPU ID unobserved; cgroup index mismatch unproven",
+      "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v1-7879d8e/gpu-b64"
+    },
+    {
+      "job_id": "15579869",
+      "workload": "GPU",
+      "commit": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "observed_wall_seconds": 2110,
+      "CPU_count": 4,
+      "GPU_count": 1,
+      "requested_node": "ibc13b03n03",
+      "node": "ibc13b03n03",
+      "wall_limit_seconds": 3480,
+      "submit_utc": "2026-10-05T14:26:19Z",
+      "start_utc": "2026-10-06T00:21:41Z",
+      "end_utc": "2026-10-06T00:56:51Z",
+      "actual_AllocTRES_from_sacct": "billing=4,cpu=4,gres/gpu=1,node=1",
+      "model_started": true,
+      "completed_candidate_stages": [
+        "B64_candidate_first_v1",
+        "B16_candidate_first_v1"
+      ],
+      "accepted_candidate_stages": [
+        "B64_candidate_first_v1",
+        "B16_candidate_first_v1"
+      ],
+      "validation_status": "strict_passed",
+      "verification": "../server-cost-results/verification.json",
+      "child_time_wall_seconds": 2102.45,
+      "child_user_seconds": 2414.22,
+      "child_system_seconds": 157.07,
+      "child_time_peak_RSS_KiB": 12567712,
+      "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-startup-v2",
+      "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64"
+    }
+  ],
+  "startup_failure_accounting": {
+    "source": "failed-startup-accounting-5262363.txt and replacement-gpu-accounting-7879d8e.txt; sacct parent job rows only, steps not added",
+    "CPU_allocated_count_seconds": 24,
+    "GPU_card_seconds": 5,
+    "primary_CNY_estimate": 0.003388888888888889,
+    "conservative_CNY_estimate": 0.0035222222222222226
+  },
+  "remaining_plan": {
+    "CPU1_replacement_ceiling_seconds": 3540,
+    "GPU_replacement_ceiling_seconds": 3480,
+    "CPU4_ceiling_seconds": 3600,
+    "CPU4_prerequisite": "CPU1 complete and verified scalar B16/B64 stages",
+    "CPU4_status": "withheld; CPU1 terminated without sealed scalar reference stages",
+    "CPU1_status": "terminal; no automatic scientific-stage replay",
+    "startup_failures_plus_remaining_plan_CPU_count_seconds": 31884,
+    "startup_failures_plus_remaining_plan_GPU_card_seconds": 3485,
+    "startup_failures_plus_remaining_plan_primary_CNY_ceiling": 2.5725555555555557,
+    "startup_failures_plus_remaining_plan_conservative_CNY_ceiling": 2.749688888888889,
+    "scope": "startup repair of the approved workloads, no scientific stage replay or expanded resource envelope"
+  },
+  "deployed_nonmodel_cache_interface_check": {
+    "status": "passed_nonmodel_cache_interface",
+    "jax": "0.4.38",
+    "policy": {
+      "mode": "off",
+      "root": null,
+      "public_cache_reset": true
+    },
+    "model_execution": false,
+    "node": "test02"
+  },
+  "active_remaining_envelope": {
+    "only_remaining_job": null,
+    "status": "closed_GPU_terminal_no_remaining_jobs",
+    "GPU_wall_limit_seconds": 3480,
+    "terminal_attempts_plus_active_GPU_CPU_count_seconds_ceiling": 14796,
+    "terminal_attempts_plus_active_GPU_card_seconds_ceiling": 3485,
+    "primary_CNY_ceiling": 2.3352222222222223,
+    "conservative_CNY_ceiling": 2.417422222222222
+  },
+  "terminal_attempts_observed_accounting": {
+    "source": "sacct parent rows only; no .batch/.extern double counting",
+    "CPU_allocated_count_seconds": 9316,
+    "GPU_card_seconds": 2115,
+    "primary_CNY_estimate": 1.421888888888889,
+    "conservative_CNY_estimate": 1.4736444444444443,
+    "billing_verified": false
+  },
+  "follow_up": {
+    "automation_id": "explore1000",
+    "kind": "current_thread_heartbeat",
+    "interval_minutes": 30,
+    "status": "PAUSED",
+    "paused_utc": "2026-10-06T01:33:43Z",
+    "completion": "GPU terminal evidence preserved and strict B64/B16 validation passed; current report and branch entry documents updated",
+    "report": "../server-cost-results/EVIDENCE_REPORT.md",
+    "scope": "read-only GPU15579869 follow-up and terminal result validation; no new submissions",
+    "notify_when": "meaningful valid stage, startup anomaly, terminal result, or user action; quiet while unchanged",
+    "stop_rule": "pause heartbeat after terminal evidence/report delivered"
+  },
+  "latest_GPU_observation": {
+    "job_id": "15579869",
+    "server_UTC": "2026-10-06T01:10:18Z",
+    "state": "COMPLETED",
+    "reason": null,
+    "elapsed_seconds": 2110,
+    "assigned_node": "ibc13b03n03",
+    "allocated_TRES": "billing=4,cpu=4,gres/gpu=1,node=1",
+    "last_saved_phase": "complete",
+    "candidate_stage_status": "accepted_B64_B16",
+    "complete_checkpoint_observed": true,
+    "source": "../server-cost-results/gpu-15579869/terminal-snapshot.txt",
+    "startup_evidence": "../server-cost-results/gpu-15579869/startup"
+  },
+  "status": "CPU1_failed_CPU4_withheld_GPU_15579869_validated_follow_up_paused",
+  "independent_followup_budgets": [
+    {
+      "budget_id": "GPU-fixed1024-repeated-FULL64-B512-B1024-capacity-v1-job15662711",
+      "status": "submitted_running; final_stage_and_cost_unverified",
+      "approval": {
+        "source": "human approval relayed by parent task /root",
+        "date_Asia_Shanghai": "2026-10-09",
+        "scope": "single exact concrete B1024_PAID_PROPOSAL.md allocation/command/code/node/cost",
+        "approved": true
+      },
+      "job_id": "15662711",
+      "submission_attempts": 1,
+      "sbatch_stdout": "Submitted batch job 15662711",
+      "submission_endpoint": "gln01 via192.168.11.2 login jump",
+      "command": "cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX\n/rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n05 --export=ALL,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1,RUN_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/scripts/hpc/slurm_global_gpu_capacity_1024.sh",
+      "code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+      "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+      "scheduler_working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+      "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1",
+      "resources": {
+        "partition": "gnall",
+        "nodes": 1,
+        "tasks": 1,
+        "allocated_Slurm_CPUs": 4,
+        "GPUs": 1,
+        "GPU_type": "Tesla V100 32GB",
+        "requested_node": "ibc13b03n05",
+        "hard_wall_seconds": 5400,
+        "no_requeue": true,
+        "exclusive": false
+      },
+      "cost_ceiling": {
+        "GPU_card_hours": 1.5,
+        "allocated_CPU_hours": 6,
+        "primary_CNY": 3.6,
+        "conservative_additive_CNY": 3.72,
+        "billing_verified": false,
+        "queue_time_billed": false,
+        "terminal_cost_available": false,
+        "parent_counted_once": true,
+        "child_rows_not_summed": true
+      },
+      "preflight": {
+        "receipt": "submission-preflight.txt",
+        "UTC": "2026-10-08T17:01:13Z",
+        "code_exact_clean": true,
+        "output_root_absent": true,
+        "duplicate_user_jobs_observed": false,
+        "node_state": "MIXED",
+        "node_CPUAlloc": 96,
+        "node_CPUTot": 112,
+        "node_CPULoad": 19.69,
+        "node_GPUAlloc": 0,
+        "node_GPUConfigured": 8,
+        "node_FreeMem_MB": 336420,
+        "eligible_idle_node_observed": false,
+        "reservation_or_exclusivity_claim": false
+      },
+      "observed": {
+        "receipt": "job-15662711-initial-state.txt",
+        "UTC": "2026-10-08T17:02:31Z",
+        "state": "RUNNING",
+        "elapsed_seconds": 29,
+        "node": "ibc13b03n05",
+        "AllocTRES": "billing=4,cpu=4,gres/gpu=1,node=1",
+        "submit_UTC": "2026-10-08T17:01:36Z",
+        "start_UTC": "2026-10-08T17:02:02Z",
+        "scheduled_limit_end_UTC": "2026-10-08T18:32:02Z",
+        "terminal": false
+      },
+      "startup": {
+        "log": "job-15662711-startup-log.txt",
+        "GPU_identity": "job-15662711-gpu-identity.json",
+        "node": "ibc13b03n05",
+        "affinity": [
+          24,
+          25,
+          80,
+          81
+        ],
+        "physical_cores": 2,
+        "host_load": [
+          18.67,
+          19.75,
+          20.12
+        ],
+        "GPU_global_id": 0,
+        "GPU_UUID": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+        "GPU_model": "Tesla V100-SXM2-32GB",
+        "GPU_driver": "525.85.12",
+        "selected_card_process_inventory_empty": true,
+        "metadata_verification_is_CUDA_execution_acceptance": false
+      },
+      "strict_complete_stages_published": [],
+      "new_throughput_published": false,
+      "scientific_acceptance": false,
+      "new_automation": false,
+      "old_budgets_reused": false,
+      "retry_or_resubmission_authorized": false,
+      "contract": {
+        "ordered_lanes": 1024,
+        "genuine_FULL64_points": 64,
+        "repeat_count": 16,
+        "lane_days": 14336,
+        "B512_chunks": 2,
+        "conditional_B1024_chunks": 1,
+        "gates_per_stage": 1027,
+        "native_leaves": 760,
+        "warm_core_samples": 5,
+        "warm_wrapper_samples": 5
+      },
+      "receipt": "../gpu-capacity-1024-preparation-20261008/submission-receipt.json",
+      "latest_observation": {
+        "receipt": "job-15662711-observation.txt",
+        "UTC": "2026-10-08T17:06:45Z",
+        "state": "RUNNING",
+        "elapsed_seconds": 283,
+        "node": "ibc13b03n05",
+        "last_saved_phase": "capacity_B512_compile_start",
+        "phase_elapsed_seconds": 113.8006706815213,
+        "phase_rss_bytes": 10609459200,
+        "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
+      }
+    }
+  ]
+}

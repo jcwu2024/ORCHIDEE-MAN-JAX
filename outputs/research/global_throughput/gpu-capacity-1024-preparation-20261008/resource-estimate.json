@@ -1,5 +1,5 @@
 {
-  "status": "planning_estimate_not_execution",
+  "status": "approved_ceiling_submitted; memory_and_timing_remain_planning_estimates",
   "historical_job": "15657822",
   "historical_checkpoint_sha256": "1c44d84ad73f3a04f6d21522a0b35011d157e3a1dbc5b155dc93833a44912a2a",
   "fixed_workload": {
@@ -45,7 +45,8 @@
     },
     "assumes_CPU_GPU_additive": true,
     "billing_verified": false,
-    "consumed": false
+    "consumed": true,
+    "terminal_actual_cost_available": false
   },
   "planning_memory": {
     "resident_fixed1024_upper_bytes": 3935772784,
@@ -80,8 +81,8 @@
     "old_outputs_preserved": true
   },
   "authorization": {
-    "scope": "preparation_only",
-    "paid_submission": false,
+    "scope": "approved_single_job15662711",
+    "paid_submission": true,
     "monitoring": false,
     "old_budgets_closed": true
   },
@@ -101,5 +102,33 @@
     "selection_reason": "available GPUs and 16 unallocated Slurm CPUs; lower observed CPU load than other eligible nodes with available GPUs and at least4 free CPUs; lower-load n03/n07 had all8 GPUs allocated",
     "limitation": "scheduler snapshot, no reservation and no selected-card process evidence; inspect again before submission and record startup identity/load/affinity/inventory"
   },
-  "deployment_receipt": "deployment-receipt.json"
+  "deployment_receipt": "deployment-receipt.json",
+  "paid_execution_receipt": "submission-receipt.json",
+  "submission_preflight": {
+    "receipt": "submission-preflight.txt",
+    "UTC": "2026-10-08T17:01:13Z",
+    "code_exact_clean": true,
+    "output_root_absent": true,
+    "duplicate_user_jobs_observed": false,
+    "node_state": "MIXED",
+    "node_CPUAlloc": 96,
+    "node_CPUTot": 112,
+    "node_CPULoad": 19.69,
+    "node_GPUAlloc": 0,
+    "node_GPUConfigured": 8,
+    "node_FreeMem_MB": 336420,
+    "eligible_idle_node_observed": false,
+    "reservation_or_exclusivity_claim": false
+  },
+  "latest_observation": {
+    "receipt": "job-15662711-observation.txt",
+    "UTC": "2026-10-08T17:06:45Z",
+    "state": "RUNNING",
+    "elapsed_seconds": 283,
+    "node": "ibc13b03n05",
+    "last_saved_phase": "capacity_B512_compile_start",
+    "phase_elapsed_seconds": 113.8006706815213,
+    "phase_rss_bytes": 10609459200,
+    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
+  }
 }

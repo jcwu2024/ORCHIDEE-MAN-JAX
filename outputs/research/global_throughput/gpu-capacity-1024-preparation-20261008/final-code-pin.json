@@ -1,5 +1,5 @@
 {
-  "status": "exact_execution_pin_deployed_clean_actual_interfaces_passed; preparation_only",
+  "status": "immutable_exact_execution_pin_submitted_job15662711",
   "execution_code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
   "branch": "research/global-throughput",
   "expected_code_sha_collector_argument": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
@@ -41,7 +41,7 @@
     "canonical_tiny_helper_successive_512_1024_passed": true,
     "real_fixed1024_model_measurement": false,
     "actual_new_immutable_checkout_interfaces": true,
-    "new_paid_submission": false,
+    "new_paid_submission": true,
     "new_monitoring": false
   },
   "resource_proposal": {
@@ -51,12 +51,9 @@
     "GPUs": 1,
     "primary_CNY_ceiling": 3.6,
     "conservative_CNY_ceiling": 3.72,
-    "paid_approval": false
+    "paid_approval": true
   },
-  "remaining_before_execution": [
-    "separate explicit resource/command/working-directory/node-basis/wall/code/cost approval",
-    "reinspect occupancy/load before authorized submission; snapshot is not a reservation"
-  ],
+  "remaining_before_execution": [],
   "evidence": [
     "verification.json",
     "canonical-helper-probe.json",
@@ -69,5 +66,18 @@
   ],
   "documentation_followup": "Subsequent documentation-only commit is not the execution-code revision.",
   "deployment_receipt": "deployment-receipt.json",
-  "interface_receipt": "deployment-interface-receipt.json"
+  "interface_receipt": "deployment-interface-receipt.json",
+  "paid_execution_receipt": "submission-receipt.json",
+  "job_id": "15662711",
+  "latest_observation": {
+    "receipt": "job-15662711-observation.txt",
+    "UTC": "2026-10-08T17:06:45Z",
+    "state": "RUNNING",
+    "elapsed_seconds": 283,
+    "node": "ibc13b03n05",
+    "last_saved_phase": "capacity_B512_compile_start",
+    "phase_elapsed_seconds": 113.8006706815213,
+    "phase_rss_bytes": 10609459200,
+    "scope": "phase event and scheduler state only; compiler completion, strict full-stage validation and throughput not yet observed"
+  }
 }

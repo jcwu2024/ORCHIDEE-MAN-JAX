@@ -63,7 +63,7 @@ Capacity evidence is its `/capacity` child; scheduler log is
 `runtime/logs/global_gpu_capacity_1024_%j.txt`. The exact invocation, working
 directory, node basis, resource/cost decision and pinned execution SHA
 belong to [the separate paid proposal](B1024_PAID_PROPOSAL.md). Preparation
-has deployed and verified the pinned checkout; it submits no job and old budgets remain closed.
+deployed and verified the pinned checkout. Subsequent explicit human approval authorized the single recorded job15662711; old budgets remain closed and no retry is authorized.
 
 [Target Bash interface evidence](canonical-launcher-interfaces.json) validates
 actual runtime argument expansion and identical direct/spooled commands in a
@@ -96,9 +96,9 @@ requires the preserved accepted `ad6c0e1` Git history. Subsequent documentation
 commits are not the execution revision. Captured shell raw SHA values bind to
 the committed LF shell blobs through the fixture's explicit CRLF-to-LF step;
 the only semantic fixture edit is PROJECT relocation. This shell handling does
-not alter the exact scientific-source certificate. [Deployment](deployment-receipt.json) and actual target entry/collector interfaces pass; paid approval and real fixed1024 results remain pending.
+not alter the exact scientific-source certificate. [Deployment](deployment-receipt.json) and actual target entry/collector interfaces pass; the user subsequently approved the exact proposal and job15662711 was submitted once. Real fixed1024 complete-stage verification and terminal cost remain pending; see [submission receipt](submission-receipt.json).
 
-After separately approved execution, collect the raw9 sacct record on a login
+After the recorded approved execution reaches terminal state, collect the raw9 sacct record on a login
 endpoint and validate saved arrays on `test02`. The future numeric JOB_ID,
 GPU_UUID, GLOBAL_GPU_ID and DRIVER_VERSION come from that job's actual startup
 and verified gpu-identity.json; they are not new resource approval requests.

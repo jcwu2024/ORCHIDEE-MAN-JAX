@@ -1,6 +1,6 @@
 # B1024 single-card continuation proposal
 
-Status: preparation only. No new paid allocation is approved or submitted under this proposal, no monitor is created, and the earlier B512 allocation and diagnostic budgets are closed.
+Status: approved single submission, job15662711 RUNNING as observed at2026-10-08T17:02:31Z (2026-10-09 Asia/Shanghai). The user approved this exact node/resource/command/code/cost envelope; submitted once from gln01 via192.168.11.2. No monitor is created and earlier budgets remain closed. [Submission receipt](submission-receipt.json) retains preflight, initial scheduler accounting and startup evidence. No complete stage or terminal cost is yet validated.
 
 B512 is the best measured single-card capacity point so far, not a confirmed optimum. The next comparison measures the exact same ordered fixed1024 workload in one new process and allocation: B512 as two serial chunks, followed by B1024 as one chunk. Each collection advances all 1024 lanes continuously through Days2–8 and then9–15, 48 half-hour steps/day, for 14336 lane-days. These are the original 64 real inputs repeated16 times, not 1024 unique points or independent ensemble members. Native dtypes, all outputs/masks, physical processes and the fixed numerical tolerances remain unchanged.
 
@@ -15,7 +15,7 @@ The accepted job15657822 B512 stage remains immutable historical evidence. Its e
 | Auxiliary allocated Slurm CPUs | 4; not a claim of 4 physical cores |
 | GPUs | 1 Tesla V100 32GB |
 | Hard wall limit | 01:30:00 (5400s) |
-| Provisional explicit node | `ibc13b03n05` |
+| Approved and actual node | `ibc13b03n05` |
 | Code checkout | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1` |
 | Output root | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1` |
 | Scheduler working directory | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX` |
@@ -23,11 +23,11 @@ The accepted job15657822 B512 stage remains immutable historical evidence. Its e
 
 The checkout is a separately deployed clean immutable source snapshot; [deployment receipt](deployment-receipt.json) records exact execution pin, independent Git objects and unchanged clean accepted source. The [final code pin](final-code-pin.json) binds this execution commit, source-file digests and the verified local [incremental Git bundle](fixed1024-bd9e4c0.bundle), 273676 bytes, SHA256 `a84da4a91faab7ca2925e7aaabe6815654f1eca9feb4467dc6898bf94b36113d`. The bundle requires preserved accepted commit `ad6c0e1faa7e22b590627844e9cb0ad492e9deb3`; it is sufficient for a new checkout cloned from that immutable B512 repository. A later documentation-only commit is not the execution-code revision. Deployment and actual-target clean/source/interface verification passed on test02, with no JAX import, model work or GPU initialization. The new output root remained absent; recheck it before any authorized submission. A failed or partial experiment preserves complete stages and failure evidence without retry, requeue, time extension, cancellation or another submission.
 
-The 2026-10-08T15:40:15Z [scheduler snapshot](node-snapshot.txt) shows no idle eligible gnall node. Candidate `ibc13b03n05` was MIXED, CPU96/112 allocated, CPULoad19.37, GPU0/8 allocated, reported FreeMem337213MB. Among eligible nodes with unallocated GPUs and at least4 free CPUs, it had lower observed load than `ibc13b02n02` (load23.78), `ibc13b03n01` (GPU7/8 allocated, CPU100/112 allocated, load32.19) and `ibc13b03n04` (load48.44). Lower-load `ibc13b03n03` and `ibc13b03n07` each had all8 GPUs allocated; `ibc13b03n02` had no unallocated CPUs. All eligible nodes were MIXED or ALLOCATED; drained/down nodes were excluded. This is a scheduler snapshot, not a reservation or an idle-node claim. Reinspect occupancy/load before submission; a changed node or resource envelope needs an updated concrete proposal. At startup retain actual node, allocation and affinity/SMT mapping, host load, selected physical GPU UUID/model/driver and selected-card process inventory. This snapshot cannot attribute any historical slowdown to contention.
+The 2026-10-08T15:40:15Z [scheduler snapshot](node-snapshot.txt) shows no idle eligible gnall node. Candidate `ibc13b03n05` was MIXED, CPU96/112 allocated, CPULoad19.37, GPU0/8 allocated, reported FreeMem337213MB. Among eligible nodes with unallocated GPUs and at least4 free CPUs, it had lower observed load than `ibc13b02n02` (load23.78), `ibc13b03n01` (GPU7/8 allocated, CPU100/112 allocated, load32.19) and `ibc13b03n04` (load48.44). Lower-load `ibc13b03n03` and `ibc13b03n07` each had all8 GPUs allocated; `ibc13b03n02` had no unallocated CPUs. All eligible nodes were MIXED or ALLOCATED; drained/down nodes were excluded. This is a scheduler snapshot, not a reservation or an idle-node claim. The final17:01:13UTC [submission preflight](submission-preflight.txt) rechecked approved n05 as MIXED,CPU96/112,load19.69,GPU0/8 allocated,FreeMem336420MB; exact checkout was clean, run root absent and no user jobs were queued. The approved node and envelope were retained. At startup retain actual node, allocation and affinity/SMT mapping, host load, selected physical GPU UUID/model/driver and selected-card process inventory. This snapshot cannot attribute any historical slowdown to contention.
 
 ## Cost ceiling
 
-GPU1 ×1.5h ×CNY2.20 = CNY3.30. CPU4 ×1.5h ×CNY0.05 = CNY0.30: primary maximum **CNY3.60**. With CPU CNY0.07, the CPU component is CNY0.42 and the conservative additive maximum is **CNY3.72**. The ceiling is 1.5 GPU card-hours and6 allocated CPU-hours. These are unverified billing scenarios and requested-time ceilings, not money or runtime already consumed; queue time is unbilled. Terminal accounting will count the sacct parent once, retaining but not summing .batch/.extern/step rows.
+GPU1 ×1.5h ×CNY2.20 = CNY3.30. CPU4 ×1.5h ×CNY0.05 = CNY0.30: primary maximum **CNY3.60**. With CPU CNY0.07, the CPU component is CNY0.42 and the conservative additive maximum is **CNY3.72**. The ceiling is 1.5 GPU card-hours and6 allocated CPU-hours. These are unverified billing scenarios and requested-time ceilings, not final money or runtime consumed; execution has started, final parent accounting remains pending and queue time is unbilled. Terminal accounting will count the sacct parent once, retaining but not summing .batch/.extern/step rows.
 
 ## Resource and stage guards
 
@@ -43,14 +43,14 @@ Compiler buffer analysis is not measured VRAM peak, RSS is host memory, and snap
 
 ## Proposed command
 
-After a further occupancy review and separate approval of this complete allocation, command, directory and worst cost:
+The user approved the following complete allocation, command, directory and worst cost. It was executed once as job15662711; this is a record, not an instruction to resubmit:
 
 ```bash
 cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 /rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n05 --export=ALL,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1,RUN_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1/scripts/hpc/slurm_global_gpu_capacity_1024.sh
 ```
 
-The wrapper resolves helpers from declared CODE_DIR after Slurm spooling. The [verification](verification.json) records 159 passed lightweight tests and the [small canonical helper probe](canonical-helper-probe.json). The [actual direct/spooled argument expansion](canonical-launcher-interfaces.json) passed in a PROJECT-relocated source fixture; its recorded CRLF-to-LF shell conversion is bound to the committed Linux shell bytes in the final code pin. The [actual deployed interface receipt](deployment-interface-receipt.json) now supplies deployment admission: exact clean SHA and four committed interface hashes, real CLI help/dry-run, direct/spooled command equality, existing source certificate and deployed collector code-pin admission all pass. Its10 subprocess checks took3.206605205s on test02 affinity0–3/BLAS1, without model work or GPU initialization. The relocated fixture remains historical evidence. This document authorizes no sbatch invocation.
+The wrapper resolves helpers from declared CODE_DIR after Slurm spooling. The [verification](verification.json) records 159 passed lightweight tests and the [small canonical helper probe](canonical-helper-probe.json). The [actual direct/spooled argument expansion](canonical-launcher-interfaces.json) passed in a PROJECT-relocated source fixture; its recorded CRLF-to-LF shell conversion is bound to the committed Linux shell bytes in the final code pin. The [actual deployed interface receipt](deployment-interface-receipt.json) now supplies deployment admission: exact clean SHA and four committed interface hashes, real CLI help/dry-run, direct/spooled command equality, existing source certificate and deployed collector code-pin admission all pass. Its10 subprocess checks took3.206605205s on test02 affinity0–3/BLAS1, without model work or GPU initialization. The relocated fixture remains historical evidence. The separate human approval authorized the single recorded invocation; no retry, cancellation, requeue, extension or additional job is authorized.
 
 ## Collection and interpretation
 
