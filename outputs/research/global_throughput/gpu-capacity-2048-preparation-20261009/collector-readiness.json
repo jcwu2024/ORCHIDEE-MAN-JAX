@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "local_collector_readiness_only",
+  "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
+  "collector": "collect_fixed2048_result.py",
+  "test_file": "test_collect_fixed2048_result.py",
+  "actual_result_or_scientific_acceptance": false,
+  "execution_code_pin": {
+    "expected_code_sha": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+    "required_cli_argument": "--expected-code-sha",
+    "binding_policy": "The outcome owner supplies the immutable deployment commit after commit; the collector requires an explicit clean checkout match and does not infer a pin."
+  },
+  "local_checks": {
+    "pytest": {
+      "command": "conda run -n ORCJAX python -B -m pytest -p no:cacheprovider outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/test_collect_fixed2048_result.py -q",
+      "result": "24 passed",
+      "test_runtime_seconds": 0.14,
+      "scope": "synthetic metadata/control-flow fixtures; no saved scientific checkpoints"
+    },
+    "ruff": "passed for collector and targeted tests",
+    "cli_help": "passed; explicit code SHA, allocation pins, and fixed 7200-second approved wall argument are present",
+    "import_safety": "passed; module import loads neither JAX nor NumPy",
+    "model_or_gpu_execution": false,
+    "compilation": false,
+    "remote_access_or_job_submission": false
+  },
+  "collector_contracts_checked": [
+    "2048 cyclic lanes preserve the ordered 64 admitted FULL64 source points; exact source/reference and compatibility certificates are required",
+    "B1024 then B2048 use 2 and 1 chunks respectively, 28672 lane-days, two complete blocks, and five core plus five wrapper samples",
+    "each child stage binds its complete identity, report, manifest, full checkpoint SHA/bytes, native 760-leaf schema, strict 2051 gates, and 2048 actual saved-reference comparisons",
+    "the historical B1024 checkpoint is admitted only for source/schema/compiler/RSS provenance and its timing is removed",
+    "the coordinator receipt proves successful B1024 seal/exit before candidate dispatch; worker PIDs differ and process-start timestamps lie inside non-overlapping dispatch windows",
+    "fresh child runtime, science, input, node, physical GPU, stable Slurm resources, default allocator, and allocation-window identity must match; worker TID census may differ while declared logical CPU masks may not",
+    "phase-aware preallocation and postcompile memory estimates are recomputed against the original selected-GPU free budget with the required 2 GiB margin; post-transfer and postcompile free-memory observations are telemetry only",
+    "a valid B1024 stage is retained when B2048 is absent, denied, incomplete, invalid, timed out, or fails common-origin checks; no two-stage ratio is emitted",
+    "raw9 terminal parent cost is counted once, including observed cost above the approved wall limit; wall overrun withholds stage promotion"
+  ],
+  "remaining_external_evidence": [
+    "outcome owner supplies and commits the immutable execution code SHA for the explicit CLI pin",
+    "approved job identity and observed node, UUID, Slurm global GPU ID, and driver version",
+    "terminal raw9 accounting and final coordinator orchestration receipt",
+    "complete child checkpoints/reports/manifests or explicit denial/incomplete records"
+  ],
+  "scope_limitations": [
+    "No JAX arrays, model process, GPU, compilation, remote host, scheduler, or paid job were used in local verification.",
+    "Local synthetic collector tests do not establish numerical or scientific acceptance of a deployed result."
+  ],
+  "deployed_interface_receipt": "deployment-interface-receipt.json"
+}

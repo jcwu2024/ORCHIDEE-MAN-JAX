@@ -130,6 +130,28 @@ Only B512 compiled/measured; sealed B128/B256 remained imported comparison origi
 
 The actual12:48UTC [submission snapshot](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/submission-node-snapshot.txt) records requested `ibc13b03n02` as CPU112/112,load22.74,1/8 GPUs allocated; no idle eligible gnall node was observed then. Startup evidence records actual node `ibc13b03n02`, affinity54,55,110,111 (two physical cores for4 charged Slurm CPUs), load26.25,27.24,23.0 and an empty selected-GPU process list. This later startup snapshot must not be used to infer earlier contention. GPU identity was global ID4, UUID `GPU-949cb714-8c53-353c-1f6a-1832c629230e`, Tesla V100-SXM2-32GB, driver525.85.12. Neither occupancy snapshot reserves a node or implies whole-node exclusivity. The scientific goal remains the one-card wrapper cost/trajectory-day curve for future points×members;669-point projection needs separate initialization, tail/padding and IO evidence. [Current result](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md) and [protocol](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md) are the compact current authorities.
 
+## Next Operation: Fixed2048 READY, Separate Approval Pending
+
+Implementation `8aa2e05aa24b65dc4d30a27d4ee857bba6312221` is independently deployed and its actual
+canonical test02 interfaces passed without JAX/model/GPU work. The new fresh-process
+contract compares B1024x2 and conditional B2048x1 at the same28672 lane-days,64 genuine
+FULL64 points repeated32, two continuous seven-day blocks and48steps/day. Each stage
+retains native dtype/full outputs/masks/fixed tolerances,2051 gates/760 leaves/5+5 samples.
+The CPU-only coordinator requires complete sealed successful control exit; the collector
+independently checks common allocation/science/input/card identity and distinct worker
+lifetimes. Phase-aware device guards retain2resident+3output+max actual scaled temporary
+plus2GiB against the original pre-device_put physical-free budget; post-transfer and
+postcompile free are telemetry. Candidate failure preserves valid control without a curve.
+
+The [concrete proposal](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/B2048_PAID_PROPOSAL.md) names
+n03,1node/1task/4Slurm CPUs/1V10032GB,120min/no-requeue/no-exclusive, primary
+CNY4.80/conservative additive4.96 ceiling. Scheduler basis is MIXED rather than idle;
+recheck before any approved submission. [Current preparation](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md)
+and [target receipt](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/deployment-interface-receipt.json)
+record readiness. No paid approval/submission, automation or retry exists. Older budgets
+remain closed. Accepted prior B1024 timing is planning-only, never doubled/imported;
+B2048 is unmeasured and no plateau,10x, training AD or broad science result is claimed.
+
 ## Completed Fixed1024 Capacity Comparison (2026-10-09 Asia/Shanghai)
 
 Single approved job15662711 completed0:0 in3371 parent seconds on n05,

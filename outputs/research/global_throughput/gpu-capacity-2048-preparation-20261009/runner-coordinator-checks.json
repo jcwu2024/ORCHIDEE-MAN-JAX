@@ -1,0 +1,56 @@
+{
+  "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
+  "status": "local_protocol_checks_passed",
+  "owner": "runner_and_cpu_coordinator",
+  "files": [
+    "scripts/dev/benchmark_global_gpu_capacity.py",
+    "scripts/hpc/global_gpu_capacity_2048_coordinator.py",
+    "tests/unit/test_global_gpu_capacity_2048.py"
+  ],
+  "checks": [
+    {
+      "command": "conda run -n ORCJAX --no-capture-output python -B -m pytest tests/unit/test_global_gpu_capacity_2048.py -q -p no:cacheprovider",
+      "exit_code": 0,
+      "passed": 67,
+      "scope": "Final fixed2048 tests after phase-aware memory guard change; includes actual stdlib-only fresh subprocess dispatch, no model/JAX GPU work"
+    },
+    {
+      "command": "conda run -n ORCJAX --no-capture-output python -B -m pytest tests/unit/test_global_gpu_capacity_2048.py tests/unit/test_global_gpu_capacity_1024.py -q -p no:cacheprovider",
+      "exit_code": 0,
+      "passed": 94,
+      "scope": "Prior final fixed1024 regression plus fixed2048 tests before six new2048-only postcompile guard tests; subsequent guard edit branches only on total_lanes2048"
+    },
+    {
+      "command": "conda run -n ORCJAX --no-capture-output python -B -m pytest tests/unit/test_global_gpu_capacity.py -q -k 'not launcher and not actual and not real_Bash' -p no:cacheprovider",
+      "exit_code": 0,
+      "passed": 45,
+      "deselected": 11,
+      "scope": "Affected historical fixed512 protocol/helper regression; launcher and AOT diagnostics remain lead-owned"
+    },
+    {
+      "command": "conda run -n ORCJAX --no-capture-output python -B -m ruff check --no-cache scripts/dev/benchmark_global_gpu_capacity.py scripts/hpc/global_gpu_capacity_2048_coordinator.py tests/unit/test_global_gpu_capacity_2048.py",
+      "exit_code": 0,
+      "result": "All checks passed"
+    }
+  ],
+  "verified_behavior": [
+    "2048 ordered lanes from64 genuine FULL64 sources repeated32 times;28672 lane-days; two continuous seven-day blocks",
+    "Fresh B1024 two-chunk control followed only after successful command exit and strict atomic stage by fresh B2048 one-chunk candidate",
+    "Common allocation-window/job/node/physical-GPU/runtime/source/input identity; varying process TIDs remain per-process provenance",
+    "Actual startup epoch comes from GPU entry before backend initialization",
+    "Independent child actual-stack input admission; immutable7200s allocation window and3600s minimum remaining",
+    "Historical B1024 exact checksum/code/source/schema/native760 gates/compiler/RSS evidence admitted read-only; historical timing excluded",
+    "Five core and five wrapper complete-workload samples,2051 numerical gates, full native outputs preserved",
+    "Whole-stage preallocation budget preserved for updated actual compiler estimate;2GiB margin unchanged; post-transfer/compile free memory is telemetry only",
+    "Control checkpoint retained on candidate denial, numerical failure, identity/proof mismatch, nonzero exit or timeout",
+    "No retries, submission, cancellation or old-stage reuse"
+  ],
+  "limitations": [
+    "Local protocol evidence uses tiny arrays, mocked model boundaries and stdlib-only subprocesses",
+    "No real model lowering/compilation, prepared-data generation/read, GPU initialization, server access or paid job submission",
+    "Production throughput, CUDA/runtime admission and scientific acceptance remain unmeasured",
+    "Memory estimates are planning bounds, not measured peaks, reservations or OOM/completion guarantees",
+    "Pytest emits the existing Unknown config option cache_dir warning with its cache plugin disabled"
+  ],
+  "commit_performed": false
+}

@@ -1,0 +1,38 @@
+{
+  "status": "READY_awaiting_paid_approval",
+  "execution_code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+  "local_runner": "runner-coordinator-checks.json",
+  "local_launcher": "LOCAL_VERIFICATION.md",
+  "local_collector": "collector-readiness.json",
+  "immutable_deployment": "deployment-log.txt",
+  "actual_interfaces": "deployment-interface-receipt.json",
+  "scheduler_basis": {
+    "UTC": "2026-10-09T04:18:18Z",
+    "node": "ibc13b03n03",
+    "state": "MIXED",
+    "CPUAlloc": 64,
+    "CPUTot": 112,
+    "CPULoad": 13.24,
+    "GPUAlloc": 0,
+    "GPUConfigured": 8,
+    "FreeMem_MB": 188243,
+    "idle_eligible_node_observed": false,
+    "reservation_or_exclusivity_claim": false,
+    "selection_reason": "Lowest observed CPU load among eligible normal gnall nodes with at least4 unallocated CPUs and at least1 unallocated GPU; no idle eligible node observed"
+  },
+  "graph": {
+    "tier": "Verify",
+    "project": "E-ORCHIDEE-MAN-JAX",
+    "generation": "2026-10-08T18:30:49Z",
+    "worktree_coverage": "excluded_not_tracked",
+    "source_fallback": true,
+    "child_transport_closed": true
+  },
+  "paid_submission": false,
+  "model_lower_compile_run": false,
+  "GPU_initialization": false,
+  "new_inputs": false,
+  "scientific_acceptance": false,
+  "final_preparation_integrity": "passed_exact_pin_source_hashes_actual_receipt_node_proposal_ledger_binding",
+  "old_closed_budgets_preserved_exact": true
+}

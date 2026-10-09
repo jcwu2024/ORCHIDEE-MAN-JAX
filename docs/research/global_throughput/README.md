@@ -111,6 +111,14 @@ v3作业15643868已终态FAILED，B256完整阶段通过并密封。新canonical
 
 host stack/transfer为2.581256084/1.334585367s，lower98.739008831s，compile892.739054900s，首次完整B512调用22.867870517s，checkpoint序列化0.380422166s、atomic write0.213936657s。完整phase setup/validation未记录，因此没有K amortization估算。父作业1416s对应估算CNY0.944主口径/CNY0.975466667保守口径，在批准的CNY1.80/CNY1.86上限内；账单未核实，child rows未重复计费。compiler临时内存2288514256 bytes不是VRAM峰值；host process峰值19496943616 bytes，GPU前后快照不能作为峰值证据。详见[当前结果](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md)、[付费方案与收据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PAID_PROPOSAL.md)、[因果证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CAUSAL_REPAIR.md)及[协议和终态证据](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md)。这不是CPU比值、Fortran、年度/50年、669点、10×、训练/AD或一般科学验收；未发生retry、cancel、requeue或automation。
 
+### 下一操作：fixed2048准备READY，等待独立付费批准
+
+新合同为共同2048 lanes（64真实FULL64点×32，28672lane-days），先B1024×2，再条件B2048×1；每shape采用对称fresh GPU进程，默认allocator/native dtype/全部输出及mask/固定容差不变。CPU-only coordinator在严格密封control成功退出后才启动candidate；每stage2051gate、760leaf、5+5同步样本，3600s剩余窗口及保守host/device guards。显存whole-stage bound使用device_put前的原始free预算，后续free仅telemetry；无缩减margin或reservation抵扣。
+
+实现SHA `8aa2e05aa24b65dc4d30a27d4ee857bba6312221`已独立部署且test02实际immutable target interfaces通过。本地runner/coordinator、launcher及collector focused checks通过；见[当前准备结果](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md)、[精确提案](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/B2048_PAID_PROPOSAL.md)和[接口receipt](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/deployment-interface-receipt.json)。提案为gnall n03、1node/1task/4SlurmCPU/1V10032GB、120min、no-requeue/no-exclusive、CNY4.80主/CNY4.96保守加和上限；当前MIXED快照不是idle或reservation，提交前再核查。**未批准、未提交、无automation/retry/extension**，旧预算保持关闭。
+
+旧B1024为已测shape中最低热单位费用；未证明plateau，B2048尚无测量。旧计时仅规划来源，绝不乘二或混入新曲线；candidate失败保留严格control并扣留双stage曲线。本轮不产生训练AD/10×/年度/669点50年/Fortran/CPU-GPU ratio/一般科学验收。
+
 ### 当前结果：fixed1024双stage准入，独立预算已关闭
 
 2026-10-09用户批准的单次job15662711已`COMPLETED0:0`，n05上1node/1task/4Slurm CPU/1V10032GB，parent3371s，90min/no-requeue/no-exclusive；执行SHA `bd9e4c04af68d77e79b984bfc8aa064977f893d3`终态仍clean。test02 exact deployed collector用canonicalCPU环境、affinity0–3、OMPBLAS1、`-B`完成149.98s，exit0，准入2stage、扣留0、不完整0；每stage1027gate、760leaf、1024saved FULL64 comparisons通过。完整checkpoint/report/manifest/events/diagnostics及SHA已保全，见[当前结果](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md)、[终态summary](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/terminal-summary.json)和[artifact index](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/terminal-artifact-index.json)。

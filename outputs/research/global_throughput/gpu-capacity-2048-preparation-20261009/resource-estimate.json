@@ -1,0 +1,228 @@
+{
+  "status": "READY_planning_only_awaiting_paid_approval_no_submission",
+  "date_Asia_Shanghai": "2026-10-09",
+  "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
+  "historical_origin": {
+    "job_id": "15662711",
+    "code_commit": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+    "stage": "capacity_B1024_fixed1024_v1",
+    "checkpoint_sha256": "6bea479fcf3fa3d81d334c132106641572ca92a58886b26e764bcd7dee6069d5",
+    "checkpoint_bytes": 440822967,
+    "accepted_evidence": "../gpu-capacity-1024-preparation-20261008/terminal-summary.json",
+    "scope": "reused accepted numeric/native schema/source/compiler/RSS evidence; no timing import, doubling or reacceptance"
+  },
+  "proposed_workload": {
+    "ordered_lanes": 2048,
+    "genuine_FULL64_points": 64,
+    "repeats": 32,
+    "lane_days": 28672,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "half_hour_steps_per_day": 48,
+    "stage_shapes": [
+      1024,
+      2048
+    ],
+    "chunks_per_collection": [
+      2,
+      1
+    ],
+    "core_samples_per_stage": 5,
+    "wrapper_samples_per_stage": 5,
+    "strict_gates_per_stage": 2051,
+    "native_output_leaves": 760,
+    "native_dtypes_outputs_masks_tolerances_unchanged": true
+  },
+  "process_strategy": {
+    "mode": "symmetric_fresh_child_per_shape",
+    "common_Slurm_parent_node_physical_GPU_resources": true,
+    "default_allocator_unchanged": true,
+    "PREALLOCATE": false,
+    "coordinator_GPU_context": false,
+    "first_child_exit_and_atomic_strict_stage_required": true,
+    "before_each_compile_actual_stack_host_device_time_guards": true,
+    "reason": "default allocator can retain a pool after cache clear/gc; process exit releases the previous process pool without changing allocation behavior within either warm measurement",
+    "claimed_snapshot_is_peak": false,
+    "conservative_refusal_is_physical_impossibility": false
+  },
+  "request": {
+    "partition": "gnall",
+    "nodes": 1,
+    "tasks": 1,
+    "auxiliary_Slurm_CPUs": 4,
+    "GPUs": 1,
+    "GPU_type": "Tesla V100 32GB",
+    "hard_wall_seconds": 7200,
+    "hard_wall": "02:00:00",
+    "minimum_remaining_seconds_per_stage": 3600,
+    "no_requeue": true,
+    "exclusive": false
+  },
+  "cost_ceiling": {
+    "GPU_card_hours": 2,
+    "allocated_CPU_hours": 8,
+    "primary_CNY": 4.8,
+    "conservative_additive_CNY": 4.96,
+    "billing_verified": false,
+    "paid_approval": false,
+    "consumed": false
+  },
+  "observed_fixed1024_B1024_resources": {
+    "executable_memory_analysis": {
+      "available": true,
+      "argument_size_in_bytes": 248946716,
+      "output_size_in_bytes": 220212192,
+      "temp_size_in_bytes": 4571419856,
+      "alias_size_in_bytes": 0,
+      "generated_code_size_in_bytes": 13249008,
+      "scope": "compiler device buffer estimate; not host RSS or measured VRAM peak"
+    },
+    "memory_preflight": {
+      "shape": 1024,
+      "resident_1024_input_bytes": 3935772728,
+      "full_1024_output_bytes": 440418304,
+      "estimated_device_bytes": 13769828880,
+      "physical_gpu": {
+        "applicable": true,
+        "uuid": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+        "total_bytes": 34359738368,
+        "free_bytes": 15979249664,
+        "scope": "selected physical GPU snapshot immediately before prospective compilation"
+      },
+      "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee",
+      "input_byte_scope": "actual pure-helper host stacks for the complete1024 collection, including shared-static layout"
+    },
+    "host_memory_preflight": {
+      "MemAvailable_bytes": 315860516864,
+      "historical_B512_process_peak_RSS_bytes": 19496943616,
+      "historical_total1024_projection_bytes": 38993887232,
+      "current_fixed1024_B512_process_peak_RSS_bytes": 24653754368,
+      "conservative_required_bytes": 57897443328,
+      "limitation": "max historical512-to1024 projection/current B512 process peak times2 plus8GiB; conservative planning, not measured peak or reservation"
+    },
+    "post_measurement_GPU_memory": {
+      "applicable": true,
+      "uuid": "GPU-51897aa5-dac4-9d20-523e-830c362cf7a6",
+      "total_bytes": 34359738368,
+      "free_bytes": 15964569600,
+      "scope": "selected physical GPU snapshot immediately before prospective compilation"
+    },
+    "host_peak_RSS_bytes": 27865956352,
+    "host_RSS_bytes_before": 18895122432,
+    "host_RSS_bytes_after": 24451923968,
+    "RSS_peak_scope": "process cumulative peak through this stage; before/after are actual stage boundary snapshots",
+    "VRAM_scope": "actual selected-card preflight/post-measurement snapshots; not a measured peak"
+  },
+  "planning_fixed2048": {
+    "resident_upper_bytes": 7871545456,
+    "full_output_bytes": 880836608,
+    "B1024_compiler_temp_bytes": 4571419856,
+    "B2048_scaled_compiler_temp_bytes": 9142839712,
+    "GPU_slack_bytes": 2147483648,
+    "B1024_free_GPU_required_upper_bytes": 25104504240,
+    "B2048_free_GPU_required_upper_bytes": 29675924096,
+    "physical_GPU_bytes": 34359738368,
+    "B2048_nominal_physical_margin_bytes": 4683814272,
+    "host_required_projection_bytes": 64321847296,
+    "historical_MemAvailable_bytes": 315860516864,
+    "scope": "conservative planning derived from prior actual stack/output/compiler/host-peak origins, not measured fixed2048 peak or completion. Shared static leaves mean exact runtime per-shape pure stacks may be slightly lower."
+  },
+  "time_basis": {
+    "historical_fixed1024_B1024": {
+      "host_stack_seconds": 5.584296898916364,
+      "device_transfer_seconds": 0.8164445515722036,
+      "first_full1024_call_seconds": 41.1008816473186,
+      "lower_seconds": 64.84025446884334,
+      "compile_seconds": 990.6975442748517
+    },
+    "historical_warm_core": {
+      "samples_seconds": [
+        40.88289252668619,
+        40.86151247471571,
+        40.86542783677578,
+        40.85962176695466,
+        40.864703096449375
+      ],
+      "median_seconds": 40.864703096449375,
+      "range_seconds": [
+        40.85962176695466,
+        40.88289252668619
+      ],
+      "lane_days": 14336,
+      "unique_real_points": 64,
+      "unique_point_days": 896,
+      "lane_days_per_second": 350.816203562375,
+      "warm_cost_per_lane_day": {
+        "primary": {
+          "CNY_per_lane_day": 1.9003303151250642e-06,
+          "GPU_card_hours_per_lane_day": 7.918042979687767e-07,
+          "allocated_CPU_count_hours_per_lane_day": 3.1672171918751067e-06,
+          "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+        },
+        "conservative": {
+          "CNY_per_lane_day": 1.9636746589625662e-06,
+          "GPU_card_hours_per_lane_day": 7.918042979687767e-07,
+          "allocated_CPU_count_hours_per_lane_day": 3.1672171918751067e-06,
+          "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+        }
+      }
+    },
+    "historical_warm_wrapper": {
+      "samples_seconds": [
+        47.405971959233284,
+        47.41954459622502,
+        47.3630278930068,
+        47.29726834408939,
+        47.626702185720205
+      ],
+      "median_seconds": 47.405971959233284,
+      "range_seconds": [
+        47.29726834408939,
+        47.626702185720205
+      ],
+      "lane_days": 14336,
+      "unique_real_points": 64,
+      "unique_point_days": 896,
+      "lane_days_per_second": 302.40915664229453,
+      "warm_cost_per_lane_day": {
+        "primary": {
+          "CNY_per_lane_day": 2.204518785306608e-06,
+          "GPU_card_hours_per_lane_day": 9.18549493877753e-07,
+          "allocated_CPU_count_hours_per_lane_day": 3.674197975511012e-06,
+          "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+        },
+        "conservative": {
+          "CNY_per_lane_day": 2.278002744816828e-06,
+          "GPU_card_hours_per_lane_day": 9.18549493877753e-07,
+          "allocated_CPU_count_hours_per_lane_day": 3.674197975511012e-06,
+          "scope": "measured warm collection only; excludes startup, checkpoint IO, and parent allocation"
+        }
+      }
+    },
+    "new_same2048_B1024_timing_required": true,
+    "extrapolation": "expanded common2048 first/core/wrapper/full validation plus2 fresh compiles/reloads/imports; B2048 compile may be roughly twice prior B1024 as a planning scenario.120min finite ceiling and3600s stage guards are not completion guarantees. Prior fixed1024 timing is only planning provenance, not a new2048 measurement."
+  },
+  "authorization": {
+    "preparation_only": true,
+    "paid_submission": false,
+    "new_automation": false,
+    "old_budgets_reused": false,
+    "model_compile_or_run_during_preparation": false
+  },
+  "storage_planning": {
+    "two_full_stage_output_arrays_bytes": 1761673216,
+    "checkpoint_total_estimate_rounded_bytes": 1800000000,
+    "single_atomic_write_transient_estimate_rounded_bytes": 900000000,
+    "layout": "two consolidated checkpoint containers plus reports/manifests/orchestration/events/diagnostics; no per-lane/per-variable files",
+    "expected_stage_checkpoint_files": 2,
+    "scope": "planning output/storage scale only, actual checkpoint bytes unknown; all original data/results preserved"
+  }
+}

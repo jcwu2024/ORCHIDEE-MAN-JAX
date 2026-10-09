@@ -1,0 +1,37 @@
+{
+  "status": "READY_immutable_deployment_and_actual_interfaces_passed_awaiting_paid_approval",
+  "execution_code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+  "commit_blob_sha256": {
+    "scripts/dev/benchmark_global_gpu_capacity.py": "0d45256fffc1fecabce5ccca116fe52cbfb0f0b305dfe9cce0fa3e3369da7161",
+    "scripts/hpc/global_gpu_capacity_2048_coordinator.py": "a663aaf55b8446ffa77aa45e6841bb996f000a9dcbe49d84d815b36d9565e960",
+    "scripts/hpc/slurm_global_gpu_capacity.sh": "e0e2e6f24e9046cc7e67bd7f32678acd017f585b65007848b7bcbec72c3d6988",
+    "scripts/hpc/slurm_global_gpu_capacity_2048.sh": "43980f35896808058e36caf92177bbdb67ff35adf04a02a553ecde4d8939de0b",
+    "scripts/hpc/global_batch_gpu_entry.py": "7b697701ab2b6f097c3f3bc342bcc3d1e05b4937fd494b1902adc577971a5dd8",
+    "outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collect_fixed2048_result.py": "5b902c4c6bcd17848efb9f8109b61fc815b7f6a32ac96b4bf804926cc6f8fbc5"
+  },
+  "bundle": {
+    "name": "fixed2048-8aa2e05aa24b.bundle",
+    "sha256": "e4027eae764e527cf10fa65ca0a094ba95a437899bb8385d948c64dfb4122cf5",
+    "bytes": 283033,
+    "prerequisite": "bd9e4c04af68d77e79b984bfc8aa064977f893d3"
+  },
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
+  "source_checkout_preserved": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+  "paid_submission": false,
+  "model_or_GPU_execution": false,
+  "deployment_interface_receipt": "deployment-interface-receipt.json",
+  "scheduler_basis": {
+    "UTC": "2026-10-09T04:18:18Z",
+    "node": "ibc13b03n03",
+    "state": "MIXED",
+    "CPUAlloc": 64,
+    "CPUTot": 112,
+    "CPULoad": 13.24,
+    "GPUAlloc": 0,
+    "GPUConfigured": 8,
+    "FreeMem_MB": 188243,
+    "idle_eligible_node_observed": false,
+    "reservation_or_exclusivity_claim": false,
+    "selection_reason": "Lowest observed CPU load among eligible normal gnall nodes with at least4 unallocated CPUs and at least1 unallocated GPU; no idle eligible node observed"
+  }
+}

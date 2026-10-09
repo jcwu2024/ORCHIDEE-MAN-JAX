@@ -1,0 +1,18 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/fixed2048-8aa2e05aa24b.bundle is okay
+The bundle contains this ref:
+8aa2e05aa24b65dc4d30a27d4ee857bba6312221 refs/heads/research/global-throughput
+The bundle requires this ref:
+bd9e4c04af68d77e79b984bfc8aa064977f893d3 
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1'...
+done.
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/fixed2048-8aa2e05aa24b.bundle
+ * branch            research/global-throughput -> FETCH_HEAD
+Previous HEAD position was bd9e4c0... Prepare fixed1024 B512 and B1024 single-card capacity comparison
+HEAD is now at 8aa2e05... Prepare fresh-process fixed2048 GPU capacity contract
+target_commit=8aa2e05aa24b65dc4d30a27d4ee857bba6312221
+target_clean=true
+independent_objects=true
+no_alternates=true
+source_commit=bd9e4c04af68d77e79b984bfc8aa064977f893d3
+source_clean_after=true
+2026-10-09T04:17:01Z

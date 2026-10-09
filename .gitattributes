@@ -41,3 +41,7 @@ outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/node-s
 # Preserve fixed1024 submission/startup scheduler text verbatim.
 outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/submission-*.txt whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/job-15662711-*.txt whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve raw fixed2048 deployment and scheduler capture whitespace.
+outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/deployment-log.txt -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/scheduler-node-snapshot.txt -text whitespace=-blank-at-eol,-blank-at-eof

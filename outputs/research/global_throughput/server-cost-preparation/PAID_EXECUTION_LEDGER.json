@@ -406,6 +406,59 @@
         "model_invocation_compile_GPU_initialization": false
       },
       "receipt": "../gpu-capacity-1024-preparation-20261008/submission-receipt.json"
+    },
+    {
+      "budget_id": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1-preparation",
+      "status": "READY_awaiting_explicit_paid_approval_not_submitted",
+      "approved": false,
+      "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
+      "code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+      "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
+      "scheduler_working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+      "command": "cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX\n/rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n03 --export=ALL,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1,RUN_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/slurm_global_gpu_capacity_2048.sh",
+      "output_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1",
+      "resources": {
+        "partition": "gnall",
+        "nodes": 1,
+        "tasks": 1,
+        "allocated_Slurm_CPUs": 4,
+        "GPUs": 1,
+        "GPU_type": "Tesla V100 32GB",
+        "requested_node": "ibc13b03n03",
+        "hard_wall_seconds": 7200,
+        "no_requeue": true,
+        "exclusive": false
+      },
+      "cost_ceiling": {
+        "GPU_card_hours": 2,
+        "allocated_CPU_hours": 8,
+        "primary_CNY": 4.8,
+        "conservative_additive_CNY": 4.96,
+        "billing_verified": false,
+        "queue_time_billed": false
+      },
+      "proposal": "../gpu-capacity-2048-preparation-20261009/B2048_PAID_PROPOSAL.md",
+      "pin": "../gpu-capacity-2048-preparation-20261009/final-code-pin.json",
+      "scheduler_basis": {
+        "UTC": "2026-10-09T04:18:18Z",
+        "node": "ibc13b03n03",
+        "state": "MIXED",
+        "CPUAlloc": 64,
+        "CPUTot": 112,
+        "CPULoad": 13.24,
+        "GPUAlloc": 0,
+        "GPUConfigured": 8,
+        "FreeMem_MB": 188243,
+        "idle_eligible_node_observed": false,
+        "reservation_or_exclusivity_claim": false,
+        "selection_reason": "Lowest observed CPU load among eligible normal gnall nodes with at least4 unallocated CPUs and at least1 unallocated GPU; no idle eligible node observed"
+      },
+      "submission_attempts": 0,
+      "paid_submission": false,
+      "new_automation": false,
+      "old_budgets_reused": false,
+      "retry_extension_requeue_cancellation_authorized": false,
+      "scientific_acceptance": false
     }
   ]
 }
