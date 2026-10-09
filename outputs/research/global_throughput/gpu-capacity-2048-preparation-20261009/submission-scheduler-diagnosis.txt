@@ -1,0 +1,37 @@
+2026-10-09T04:50:51Z
+PartitionName=gnall
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=112
+   Nodes=ibc13b02n[01-03],ibc13b03n[01-07]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=1120 TotalNodes=10 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=1120,mem=3125G,node=10,billing=1120,gres/gpu=80
+
+JOBID USER PRIORITY TIME_LIMIT NODES NODELIST(REASON)
+sbatch: Job 15668268 to start at 2041-05-10T15:20:51 using 4 processors on nodes ibc13b02n02 in partition gnall
+sbatch: Job 15668269 to start at 2041-05-10T15:20:51 using 4 processors on nodes ibc13b03n02 in partition gnall
+NodeName=ibc13b03n03 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=100 CPUEfctv=112 CPUTot=112 CPULoad=9.91
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:v100:8(S:0-1)
+   GresDrain=N/A
+   GresUsed=gpu:v100:3(IDX:0-1,4)
+   NodeAddr=ibc13b03n03 NodeHostName=ibc13b03n03 Version=22.05.7
+   OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022 
+   RealMemory=320000 AllocMem=0 FreeMem=198685 Sockets=2 Boards=1
+   State=MIXED ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=gnall 
+   BootTime=2026-06-03T10:42:40 SlurmdStartTime=2026-06-03T10:48:10
+   LastBusyTime=2026-10-06T08:21:41
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=cpu=100,gres/gpu=3
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+

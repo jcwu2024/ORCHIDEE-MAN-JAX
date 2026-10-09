@@ -1,0 +1,164 @@
+2026-10-09T04:55:18Z
+ibc13b03n03
+ 12:55:18 up 128 days,  2:12,  0 users,  load average: 18.79, 15.67, 13.42
+pid 55847's current affinity list: 16,17,72,73
+pre_query_slurm_job=15671732 global_gpu_id=0 preserved_cuda_visible_devices=0 cpus=4
+2026-10-09T04:55:22Z
+ibc13b03n03
+ 12:55:22 up 128 days,  2:12,  0 users,  load average: 20.73, 16.13, 13.57
+JobId=15671732 JobName=orchjax-gpu-cap2048
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:07 TimeLimit=02:00:00 TimeMin=N/A
+   SubmitTime=2026-10-09T12:54:47 EligibleTime=2026-10-09T12:54:47
+   AccrueTime=2026-10-09T12:54:47
+   StartTime=2026-10-09T12:55:15 EndTime=2026-10-09T14:55:15 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-09T12:55:15 Scheduler=Backfill
+   Partition=gnall AllocNode:Sid=ibc13b02n04:63522
+   ReqNodeList=ibc13b03n03 ExcNodeList=(null)
+   NodeList=ibc13b03n03
+   BatchHost=ibc13b03n03
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=gpu:v100:1
+     Nodes=ibc13b03n03 CPU_IDs=32-35 Mem=0 GRES=gpu:v100:1(IDX:0)
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/slurm_global_gpu_capacity_2048.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+pid 55847's current affinity list: 16,17,72,73
+CPU CORE SOCKET ONLINE
+0   0    0      yes
+1   1    0      yes
+2   2    0      yes
+3   3    0      yes
+4   4    0      yes
+5   5    0      yes
+6   6    0      yes
+7   7    0      yes
+8   8    0      yes
+9   9    0      yes
+10  10   0      yes
+11  11   0      yes
+12  12   0      yes
+13  13   0      yes
+14  14   0      yes
+15  15   0      yes
+16  16   0      yes
+17  17   0      yes
+18  18   0      yes
+19  19   0      yes
+20  20   0      yes
+21  21   0      yes
+22  22   0      yes
+23  23   0      yes
+24  24   0      yes
+25  25   0      yes
+26  26   0      yes
+27  27   0      yes
+28  28   1      yes
+29  29   1      yes
+30  30   1      yes
+31  31   1      yes
+32  32   1      yes
+33  33   1      yes
+34  34   1      yes
+35  35   1      yes
+36  36   1      yes
+37  37   1      yes
+38  38   1      yes
+39  39   1      yes
+40  40   1      yes
+41  41   1      yes
+42  42   1      yes
+43  43   1      yes
+44  44   1      yes
+45  45   1      yes
+46  46   1      yes
+47  47   1      yes
+48  48   1      yes
+49  49   1      yes
+50  50   1      yes
+51  51   1      yes
+52  52   1      yes
+53  53   1      yes
+54  54   1      yes
+55  55   1      yes
+56  0    0      yes
+57  1    0      yes
+58  2    0      yes
+59  3    0      yes
+60  4    0      yes
+61  5    0      yes
+62  6    0      yes
+63  7    0      yes
+64  8    0      yes
+65  9    0      yes
+66  10   0      yes
+67  11   0      yes
+68  12   0      yes
+69  13   0      yes
+70  14   0      yes
+71  15   0      yes
+72  16   0      yes
+73  17   0      yes
+74  18   0      yes
+75  19   0      yes
+76  20   0      yes
+77  21   0      yes
+78  22   0      yes
+79  23   0      yes
+80  24   0      yes
+81  25   0      yes
+82  26   0      yes
+83  27   0      yes
+84  28   1      yes
+85  29   1      yes
+86  30   1      yes
+87  31   1      yes
+88  32   1      yes
+89  33   1      yes
+90  34   1      yes
+91  35   1      yes
+92  36   1      yes
+93  37   1      yes
+94  38   1      yes
+95  39   1      yes
+96  40   1      yes
+97  41   1      yes
+98  42   1      yes
+99  43   1      yes
+100 44   1      yes
+101 45   1      yes
+102 46   1      yes
+103 47   1      yes
+104 48   1      yes
+105 49   1      yes
+106 50   1      yes
+107 51   1      yes
+108 52   1      yes
+109 53   1      yes
+110 54   1      yes
+111 55   1      yes
+8aa2e05aa24b65dc4d30a27d4ee857bba6312221
+slurm_cpus_per_task=4 slurm_job_cpus_per_node=4 slurm_job_gpus=0 alloc_tres=cpu=4,node=1,billing=4,gres/gpu=1 alloc_tres_source=TRES
+allocated_gpu_global_id=0 uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 name=Tesla V100-SXM2-32GB driver=525.85.12 cuda_visible_devices=0
+selected_GPU_diagnostic=selected-gpu-inventory uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 exit=0
+index, uuid, name, driver_version, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+0, GPU-38115eff-1b81-4dee-ae92-996c77969246, Tesla V100-SXM2-32GB, 525.85.12, 0 MiB, 32768 MiB, 0 %
+selected_GPU_diagnostic=selected-gpu-processes uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 exit=0
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 22.68581367097795, "rss_bytes": 10404990976}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 123.94937132671475, "rss_bytes": 11293470720}

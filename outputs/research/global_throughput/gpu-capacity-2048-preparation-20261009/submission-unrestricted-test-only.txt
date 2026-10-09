@@ -1,0 +1,27 @@
+2026-10-09T04:52:08Z
+sbatch: Job 15668962 to start at 2041-05-10T15:22:08 using 4 processors on nodes ibc13b02n01 in partition gnall
+JOBID USER NODELIST CPUS TRES_PER_NODE TIME_LIMIT END_TIME
+AccountingStorageEnforce = associations,limits,qos
+PriorityType            = priority/multifactor
+SchedulerParameters     = bf_interval=60,bf_continue,bf_resolution=300,bf_max_job_test=5000,bf_max_job_user=100,enable_user_top
+SchedulerType           = sched/backfill
+SelectType              = select/cons_tres
+SelectTypeParameters    = CR_CORE
+NodeName=ibc13b02n02 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=96 CPUEfctv=112 CPUTot=112 CPULoad=21.02
+   GresUsed=gpu:v100:0(IDX:N/A)
+   RealMemory=320000 AllocMem=0 FreeMem=367379 Sockets=2 Boards=1
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=cpu=96
+NodeName=ibc13b03n02 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=108 CPUEfctv=112 CPUTot=112 CPULoad=18.76
+   GresUsed=gpu:v100:1(IDX:0)
+   RealMemory=320000 AllocMem=0 FreeMem=323019 Sockets=2 Boards=1
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=cpu=108,gres/gpu=1
+NodeName=ibc13b03n03 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=76 CPUEfctv=112 CPUTot=112 CPULoad=9.91
+   GresUsed=gpu:v100:1(IDX:1)
+   RealMemory=320000 AllocMem=0 FreeMem=198685 Sockets=2 Boards=1
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=cpu=76,gres/gpu=1

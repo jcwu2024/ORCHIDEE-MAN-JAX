@@ -1,5 +1,5 @@
 {
-  "status": "READY_immutable_deployment_and_actual_interfaces_passed_awaiting_paid_approval",
+  "status": "submitted_once_RUNNING_initial_B1024_compile",
   "execution_code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
   "commit_blob_sha256": {
     "scripts/dev/benchmark_global_gpu_capacity.py": "0d45256fffc1fecabce5ccca116fe52cbfb0f0b305dfe9cce0fa3e3369da7161",
@@ -17,8 +17,7 @@
   },
   "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
   "source_checkout_preserved": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
-  "paid_submission": false,
-  "model_or_GPU_execution": false,
+  "paid_submission": true,
   "deployment_interface_receipt": "deployment-interface-receipt.json",
   "scheduler_basis": {
     "UTC": "2026-10-09T04:18:18Z",
@@ -33,5 +32,9 @@
     "idle_eligible_node_observed": false,
     "reservation_or_exclusivity_claim": false,
     "selection_reason": "Lowest observed CPU load among eligible normal gnall nodes with at least4 unallocated CPUs and at least1 unallocated GPU; no idle eligible node observed"
-  }
+  },
+  "submission_receipt": "submission-receipt.json",
+  "job_id": "15671732",
+  "latest_observation": "2026-10-09T04:58:34Z",
+  "model_or_GPU_execution_during_deployment": false
 }

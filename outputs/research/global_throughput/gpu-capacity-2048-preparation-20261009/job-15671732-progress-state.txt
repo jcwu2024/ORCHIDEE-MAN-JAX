@@ -1,0 +1,22 @@
+2026-10-09T04:58:34Z
+JobId=15671732 JobName=orchjax-gpu-cap2048 UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A Priority=1 Nice=0 Account=users QOS=defaultqos JobState=RUNNING Reason=None Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:03:19 TimeLimit=02:00:00 TimeMin=N/A SubmitTime=2026-10-09T12:54:47 EligibleTime=2026-10-09T12:54:47 AccrueTime=2026-10-09T12:54:47 StartTime=2026-10-09T12:55:15 EndTime=2026-10-09T14:55:15 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-09T12:55:15 Scheduler=Backfill Partition=gnall AllocNode:Sid=ibc13b02n04:63522 ReqNodeList=ibc13b03n03 ExcNodeList=(null) NodeList=ibc13b03n03 BatchHost=ibc13b03n03 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* TRES=cpu=4,node=1,billing=4,gres/gpu=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/slurm_global_gpu_capacity_2048.sh WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt StdIn=/dev/null StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt Power= TresPerNode=gres:gpu:1 
+{
+  "status": "running",
+  "phases": [
+    {
+      "phase": "capacity_B1024_lower_start",
+      "elapsed_seconds": 22.68581367097795,
+      "rss_bytes": 10404990976
+    },
+    {
+      "phase": "capacity_B1024_compile_start",
+      "elapsed_seconds": 123.94937132671475,
+      "rss_bytes": 11293470720
+allocated_gpu_global_id=0 uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 name=Tesla V100-SXM2-32GB driver=525.85.12 cuda_visible_devices=0
+selected_GPU_diagnostic=selected-gpu-inventory uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 exit=0
+index, uuid, name, driver_version, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+0, GPU-38115eff-1b81-4dee-ae92-996c77969246, Tesla V100-SXM2-32GB, 525.85.12, 0 MiB, 32768 MiB, 0 %
+selected_GPU_diagnostic=selected-gpu-processes uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 exit=0
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 22.68581367097795, "rss_bytes": 10404990976}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 123.94937132671475, "rss_bytes": 11293470720}

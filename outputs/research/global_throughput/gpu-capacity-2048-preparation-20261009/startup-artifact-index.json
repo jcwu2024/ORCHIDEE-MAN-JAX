@@ -1,0 +1,42 @@
+{
+  "scope": "bounded live-job startup snapshots; no completed checkpoint or terminal evidence",
+  "job_id": "15671732",
+  "files": {
+    "job-15671732-startup/B1024-report.json": {
+      "bytes": 521922,
+      "sha256": "9e0486653079b448f888e1ccdac0075d9578e3201fa433a4779c7f69df6d52ad"
+    },
+    "job-15671732-startup/events.jsonl": {
+      "bytes": 211,
+      "sha256": "53af19e1445837a1312118d954f9684094cfe3fddca13d802635ad1ddf34cef0"
+    },
+    "job-15671732-startup/gpu-diagnostic-exits.tsv": {
+      "bytes": 50,
+      "sha256": "38e41d075ca5505cbc26831532a63076bdf3f276a6be8c6cea55d33e072d3de0"
+    },
+    "job-15671732-startup/gpu-identity.json": {
+      "bytes": 1362,
+      "sha256": "9239bc5b34413b6c35cb4b17e16d14828a039deaa507551f12915d70de4f1a41"
+    },
+    "job-15671732-startup/launch-context.txt": {
+      "bytes": 5123,
+      "sha256": "6cecbc36c5f0357cebfea766a9ea9231bc09b245dc3d9d0c6c29ee4672ccce9b"
+    },
+    "job-15671732-startup/orchestration.json": {
+      "bytes": 2835,
+      "sha256": "2194c67cdbb4b884b2ce8d4e20fc7a3a73ddf64678f5137f6c28490cc02930a1"
+    },
+    "job-15671732-startup/selected-gpu-inventory.stdout.txt": {
+      "bytes": 194,
+      "sha256": "4112ab239e021c38faf2dcec72c9ff57f97feb0566ff562cfe491456c6ea0b1b"
+    },
+    "job-15671732-startup/selected-gpu-processes.stdout.txt": {
+      "bytes": 51,
+      "sha256": "185facacd43b2b47152f1040bb6d81a57e8f284965fbf5ff6e6fbf0276871185"
+    },
+    "job-15671732-startup-log.txt": {
+      "bytes": 5230,
+      "sha256": "cc7b1f3f92d816c8f26dac5b3c6f829893c9aca2e090a2a998259cfeb8f15735"
+    }
+  }
+}

@@ -1,15 +1,22 @@
 # Fixed2048 preparation current result
 
-**READY for separate paid approval; no job submitted.** Implementation commit
-`8aa2e05aa24b65dc4d30a27d4ee857bba6312221` was independently deployed to the fixed2048 immutable
-checkout. Canonical CPU-only test02 interfaces passed, including direct/spooled Bash
-argument expansion, actual coordinator plans for both shapes and exact clean collector
-code admission. Science identity remains the accepted exact DIFFUCO host-mask repair.
+**Human-approved job15671732 submitted once and RUNNING on n03.**
+Submitted2026-10-09T04:54:47Z, started04:55:15Z after28s. Latest04:58:34Z
+confirms4CPU/1V100/1node/1task/7200s, no-requeue/no-exclusive, and first B1024
+`capacity_B1024_compile_start`. No completed stage or new throughput exists.
+[Submission/startup receipt](submission-receipt.json) and [raw startup index](startup-artifact-index.json)
+record actual allocation/card/runtime/affinity/load and the single submission.
+Old closed budgets remain unchanged; this independent budget is now active.
 
-[Paid proposal](B2048_PAID_PROPOSAL.md) names n03,4 Slurm CPUs,1V10032GB,120min,
-CNY4.80 primary/CNY4.96 conservative additive ceiling. Scheduler snapshot `2026-10-09T04:18:18Z`
-showed MIXED n03,64/112 allocated CPUs,0/8 allocated GPUs and load13.24. No idle node
-or reservation is claimed; a fresh pre-submission check is still required.
+[Approved proposal](B2048_PAID_PROPOSAL.md) and execution pin
+`8aa2e05aa24b65dc4d30a27d4ee857bba6312221` remain unchanged. The ceiling is
+CNY4.80 primary/CNY4.96 conservative additive, billing unverified; terminal cost
+is unavailable and will count the parent once. Immediate04:54:47Z preflight found
+n03 MIXED,100/112 allocated CPUs and3/8 allocated GPUs (12 CPUs/5 GPUs available),
+CPULoad9.91,FreeMem198685MB, no reservations and no existing own jobs. Earlier
+04:18:18Z comparison remains separate evidence. No idle node or reservation is claimed.
+All test-only node alternatives/unrestricted gnall predicted2041; this forecast was
+not pin-specific and the actual approved job started after28s. No retarget was needed.
 
 Both shapes use28672 lane-days:64 genuine FULL64 points repeated32, two continuous
 seven-day blocks,48steps/day. New B1024x2 then conditional B2048x1 each uses a fresh

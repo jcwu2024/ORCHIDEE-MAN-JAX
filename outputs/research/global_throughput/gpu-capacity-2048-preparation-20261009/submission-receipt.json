@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "status": "submitted_once_RUNNING_initial_B1024_compile",
+  "job_id": "15671732",
+  "approval": {
+    "source": "explicit human approval relayed by parent /root",
+    "user_message": "我批准这个作业，你要确定一下提交节点是否有资源，别搞成别的节点有资源，我们却还在排队。",
+    "date_Asia_Shanghai": "2026-10-09",
+    "approved": true,
+    "node_selection_within_same_envelope_authorized": true
+  },
+  "submission_attempts": 1,
+  "actual_sbatch_exit": 0,
+  "sbatch_stdout": "Submitted batch job 15671732",
+  "submission_endpoint": "gln01 via192.168.11.2 existing login identity",
+  "scheduler_working_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+  "command": "cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX\n/rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n03 --export=ALL,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1,RUN_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/slurm_global_gpu_capacity_2048.sh",
+  "execution_code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+  "execution_checkout_exact_clean_at_submission": true,
+  "submit_UTC": "2026-10-09T04:54:47Z",
+  "start_UTC": "2026-10-09T04:55:15Z",
+  "queue_wait_seconds": 28,
+  "latest_observation_UTC": "2026-10-09T04:58:34Z",
+  "state": "RUNNING",
+  "reason": "None",
+  "node": "ibc13b03n03",
+  "resources": {
+    "partition": "gnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_Slurm_CPUs": 4,
+    "GPUs": 1,
+    "GPU_type": "Tesla V100-SXM2-32GB",
+    "hard_wall_seconds": 7200,
+    "actual_TRES": "cpu=4,node=1,billing=4,gres/gpu=1",
+    "Requeue": 0,
+    "Restarts": 0,
+    "exclusive": false
+  },
+  "cost_ceiling": {
+    "primary_CNY": 4.8,
+    "conservative_additive_CNY": 4.96,
+    "GPU_card_hours": 2,
+    "allocated_CPU_hours": 8,
+    "billing_verified": false,
+    "terminal_cost_available": false,
+    "parent_counted_once": true,
+    "children_not_summed": true
+  },
+  "preflight": {
+    "UTC": "2026-10-09T04:54:47Z",
+    "node": "ibc13b03n03",
+    "state": "MIXED",
+    "available_Slurm_CPUs": 12,
+    "GPUAlloc": 3,
+    "GPUConfigured": 8,
+    "available_GPUs": 5,
+    "CPULoad": 9.91,
+    "host_FreeMem_MB": 198685,
+    "no_idle_eligible_node_observed": true,
+    "reservation_or_exclusivity_claim": false,
+    "reservations_observed": false,
+    "existing_own_jobs_observed": false,
+    "user_account": "liwei"
+  },
+  "scheduling_diagnosis": {
+    "test_only_is_submission": false,
+    "actual_paid_submissions": 1,
+    "test_only_predictions": "all tested pinned alternatives and unrestricted gnall predicted2041, not node-specific; actual approved job started after28seconds",
+    "global_queue_visibility": "PrivateData=jobs; header-only other-user queue queries do not prove empty global queue",
+    "same_job_node_retarget_required": false,
+    "cancellation_or_resubmission": false
+  },
+  "startup": {
+    "GPU_identity": {
+      "status": "verified_metadata_only",
+      "slurm_global_gpu_id": "0",
+      "CUDA_VISIBLE_DEVICES_preserved": "0",
+      "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+      "name": "Tesla V100-SXM2-32GB",
+      "driver": "525.85.12",
+      "device_minor": 0,
+      "pci_bus_id": "00000000:1A:00.0",
+      "origin": "SLURM_JOB_GPUS numeric ID -> exact /proc Device Minor -> NVML UUID/minor/PCI cross-check",
+      "proc_record": {
+        "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+        "minor": 0,
+        "pci": "0000:1a:00.0",
+        "path": "/proc/driver/nvidia/gpus/0000:1a:00.0/information"
+      },
+      "accessible_NVML_devices": [
+        {
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "minor": 0,
+          "pci": "00000000:1A:00.0",
+          "name": "Tesla V100-SXM2-32GB"
+        }
+      ],
+      "model_execution": false,
+      "CUDA_selector_UUID_resolution_verified": false,
+      "CUDA_execution_condition": "single allocated Slurm GPU cgroup and preserved CUDA_VISIBLE_DEVICES; helper verifies NVML physical metadata, not CUDA selector resolution",
+      "mapping_constraint": "numeric Slurm ID must equal recorded NVIDIA device minor; arbitrary first-visible GPU is never accepted",
+      "NVML_query": {
+        "command": [
+          "nvidia-smi",
+          "-q",
+          "-x"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "stdout_bytes": 21011,
+        "scope": "read-only metadata; no GPU context/compute"
+      }
+    },
+    "selected_card_process_inventory_empty": true,
+    "affinity": [
+      16,
+      17,
+      72,
+      73
+    ],
+    "physical_cores": 2,
+    "worker_host_load": [
+      19.86,
+      16.72,
+      13.94
+    ],
+    "launch_host_load": [
+      18.79,
+      15.67,
+      13.42
+    ],
+    "runtime": {
+      "jax": "0.4.38",
+      "jaxlib": "0.4.38",
+      "numpy": "2.4.6",
+      "devices": [
+        "cuda:0"
+      ],
+      "x64_enabled": true,
+      "cache_policy": "disabled",
+      "allocator": null,
+      "PREALLOCATE": "false"
+    },
+    "first_child": {
+      "shape": 1024,
+      "status": "running",
+      "last_phase": {
+        "phase": "capacity_B1024_compile_start",
+        "elapsed_seconds": 123.94937132671475,
+        "rss_bytes": 11293470720
+      },
+      "dispatcher_pid": 55891,
+      "dispatch_start_epoch": 1791521723.971247,
+      "coordinator_JAX_imported": false,
+      "dispatch_decision": {
+        "permitted": true,
+        "remaining_seconds": 7194.033087015152,
+        "minimum_remaining_seconds": 3600,
+        "reasons": []
+      }
+    },
+    "candidate_started": false,
+    "completed_shapes": []
+  },
+  "evidence": {
+    "preflight": "submission-node-preflight.txt",
+    "test_only": "submission-test-only.txt",
+    "alternate_test_only": "submission-scheduler-diagnosis.txt",
+    "unrestricted_test_only": "submission-unrestricted-test-only.txt",
+    "queue_visibility": "submission-account-visibility.txt",
+    "actual_sbatch": "submission-preflight-and-response.txt",
+    "initial_state": "job-15671732-initial-state.txt",
+    "latest_state": "job-15671732-progress-state.txt",
+    "startup_log": "job-15671732-startup-log.txt",
+    "startup_artifacts": "job-15671732-startup"
+  },
+  "new_automation": false,
+  "retry_extension_requeue_cancellation_authorized": false,
+  "old_budgets_reused": false,
+  "valid_exploratory_stages": [],
+  "new_throughput_published": false,
+  "scientific_acceptance": false,
+  "scope": "bounded submission/startup handoff; no long compile polling or final-result acceptance"
+}

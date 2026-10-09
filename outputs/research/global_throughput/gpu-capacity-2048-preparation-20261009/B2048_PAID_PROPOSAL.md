@@ -1,21 +1,27 @@
 # Fixed2048 B1024/B2048 one-card paid proposal
 
-Status: **READY for separate explicit paid approval**; no submission or automation.
+Status: **human-approved, submitted once as job15671732; RUNNING on n03**.
+Submitted2026-10-09T04:54:47Z, started04:55:15Z (28s queue); latest04:58:34Z
+shows the first B1024 child compiling. No retarget or resubmission was required.
+See [actual submission/startup receipt](submission-receipt.json). No automation.
 Old accepted job15662711 and all previous budgets remain closed. Exact implementation
 pin, independent immutable deployment and actual test02 interfaces passed; see
 [pin](final-code-pin.json), [interface receipt](deployment-interface-receipt.json) and
 [local verification](LOCAL_VERIFICATION.md).
 
-Proposed resources: gnall1node/1task,4 allocated Slurm CPUs,1Tesla V10032GB,
+Approved resources: gnall1node/1task,4 allocated Slurm CPUs,1Tesla V10032GB,
 120min/7200s hard wall,no-requeue,no-exclusive. Scheduler cwd:
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
 Checkout: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1`.
 Single-use run root: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1`.
-Execution SHA: `8aa2e05aa24b65dc4d30a27d4ee857bba6312221`. Explicit proposed node: `ibc13b03n03`.
-Scheduler basis `2026-10-09T04:18:18Z`: MIXED,64/112 CPUs allocated,0/8 GPUs allocated,
+Execution SHA: `8aa2e05aa24b65dc4d30a27d4ee857bba6312221`. Actual selected node: `ibc13b03n03`.
+Earlier preparation basis `2026-10-09T04:18:18Z`: MIXED,64/112 CPUs allocated,0/8 GPUs allocated,
 CPULoad13.24,FreeMem188243MB. No idle eligible node was observed; this is no
-reservation or exclusivity claim. Recheck occupancy immediately before any approved
-submission. Node selection does not change the approved resource/cost envelope.
+reservation or exclusivity claim. Immediate actual submission preflight04:54:47Z
+confirmed n03 CPUAlloc100/112,GPUAlloc3/8,12freeCPUs/5freeGPUs,hostFreeMem198685MB,
+load9.91 and no reservations. The one approved job started after28s. Test-only
+forecasts were anomalously2041 for every tested node and unrestricted gnall; no
+node-specific avoidable queue or retarget was observed. Resource/cost envelope unchanged.
 
 Same28672 lane-days for both fresh shapes: ordered64 genuine FULL64 points×32,
 continuous Days2–8/9–15,48steps/day,native dtype/full outputs/masks/tolerances.
@@ -41,7 +47,7 @@ maximum **CNY4.96**.2GPU card-hours/8 allocated CPU-hours; billing unverified,
 queue time unbilled. Actual terminal cost counts the parent once, never adds children.
 No retry, extension, requeue, cancellation or second job is included.
 
-After READY preparation and separate explicit approval, proposed command:
+Approved command executed once from gln01 (unchanged resources/time/cost):
 
 ```bash
 cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX

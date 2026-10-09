@@ -1,0 +1,7 @@
+2026-10-09T04:54:47Z
+existing_own_jobs=
+NodeName=ibc13b03n03 Arch=x86_64 CoresPerSocket=28  CPUAlloc=100 CPUEfctv=112 CPUTot=112 CPULoad=9.91 AvailableFeatures=(null) ActiveFeatures=(null) Gres=gpu:v100:8(S:0-1) NodeAddr=ibc13b03n03 NodeHostName=ibc13b03n03 Version=22.05.7 OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022  RealMemory=320000 AllocMem=0 FreeMem=198685 Sockets=2 Boards=1 State=MIXED ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A Partitions=gnall  BootTime=2026-06-03T10:42:40 SlurmdStartTime=2026-06-03T10:48:10 LastBusyTime=2026-10-06T08:21:41 CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8 AllocTRES=cpu=100,gres/gpu=3 CapWatts=n/a CurrentWatts=0 AveWatts=0 ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+preflight_exact_clean=true output_root_absent=true qualified_node=ibc13b03n03 available_slurm_cpus=12 available_gpus=5 host_free_mb=198685
+actual_submission_command=/rmprog/slurm/v22.05.7/bin/sbatch --nodelist=ibc13b03n03 --export=ALL\,CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1\,RUN_ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/slurm_global_gpu_capacity_2048.sh 
+actual_sbatch_exit=0
+Submitted batch job 15671732

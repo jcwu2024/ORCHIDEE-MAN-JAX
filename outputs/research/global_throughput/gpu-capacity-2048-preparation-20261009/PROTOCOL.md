@@ -1,6 +1,6 @@
 # Fixed2048 fresh-process capacity protocol
 
-2026-10-09 Asia/Shanghai; preparation only. New explicit contract
+2026-10-09 Asia/Shanghai; contract accepted for single job15671732. New explicit contract
 `GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1`.
 The next single-card comparison measures fresh B1024×2 chunks and conditional
 B2048×1 chunk, both the same ordered2048 lanes from64 genuine FULL64 points

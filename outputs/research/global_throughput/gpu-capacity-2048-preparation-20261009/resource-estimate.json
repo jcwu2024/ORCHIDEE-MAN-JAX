@@ -1,5 +1,5 @@
 {
-  "status": "READY_planning_only_awaiting_paid_approval_no_submission",
+  "status": "planning_basis_preserved_approved_job15671732_RUNNING_no_new_measurement",
   "date_Asia_Shanghai": "2026-10-09",
   "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
   "historical_origin": {
@@ -211,11 +211,13 @@
     "extrapolation": "expanded common2048 first/core/wrapper/full validation plus2 fresh compiles/reloads/imports; B2048 compile may be roughly twice prior B1024 as a planning scenario.120min finite ceiling and3600s stage guards are not completion guarantees. Prior fixed1024 timing is only planning provenance, not a new2048 measurement."
   },
   "authorization": {
-    "preparation_only": true,
-    "paid_submission": false,
+    "preparation_only": false,
+    "paid_submission": true,
     "new_automation": false,
     "old_budgets_reused": false,
-    "model_compile_or_run_during_preparation": false
+    "model_compile_or_run_during_preparation": false,
+    "job_id": "15671732",
+    "resources_time_cost_unchanged": true
   },
   "storage_planning": {
     "two_full_stage_output_arrays_bytes": 1761673216,

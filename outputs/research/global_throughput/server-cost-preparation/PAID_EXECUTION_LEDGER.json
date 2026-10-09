@@ -408,9 +408,9 @@
       "receipt": "../gpu-capacity-1024-preparation-20261008/submission-receipt.json"
     },
     {
-      "budget_id": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1-preparation",
-      "status": "READY_awaiting_explicit_paid_approval_not_submitted",
-      "approved": false,
+      "budget_id": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1-job15671732",
+      "status": "submitted_once_RUNNING_initial_B1024_compile",
+      "approved": true,
       "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
       "code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
       "code_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
@@ -453,12 +453,71 @@
         "reservation_or_exclusivity_claim": false,
         "selection_reason": "Lowest observed CPU load among eligible normal gnall nodes with at least4 unallocated CPUs and at least1 unallocated GPU; no idle eligible node observed"
       },
-      "submission_attempts": 0,
-      "paid_submission": false,
+      "submission_attempts": 1,
+      "paid_submission": true,
       "new_automation": false,
       "old_budgets_reused": false,
       "retry_extension_requeue_cancellation_authorized": false,
-      "scientific_acceptance": false
+      "scientific_acceptance": false,
+      "approval": {
+        "source": "explicit human approval relayed by parent /root",
+        "user_message": "我批准这个作业，你要确定一下提交节点是否有资源，别搞成别的节点有资源，我们却还在排队。",
+        "date_Asia_Shanghai": "2026-10-09",
+        "approved": true,
+        "node_selection_within_same_envelope_authorized": true
+      },
+      "job_id": "15671732",
+      "sbatch_stdout": "Submitted batch job 15671732",
+      "submission_endpoint": "gln01 via192.168.11.2 existing login identity",
+      "preflight": {
+        "UTC": "2026-10-09T04:54:47Z",
+        "node": "ibc13b03n03",
+        "state": "MIXED",
+        "available_Slurm_CPUs": 12,
+        "GPUAlloc": 3,
+        "GPUConfigured": 8,
+        "available_GPUs": 5,
+        "CPULoad": 9.91,
+        "host_FreeMem_MB": 198685,
+        "no_idle_eligible_node_observed": true,
+        "reservation_or_exclusivity_claim": false,
+        "reservations_observed": false,
+        "existing_own_jobs_observed": false,
+        "user_account": "liwei"
+      },
+      "observed": {
+        "UTC": "2026-10-09T04:58:34Z",
+        "state": "RUNNING",
+        "reason": "None",
+        "node": "ibc13b03n03",
+        "actual_TRES": "cpu=4,node=1,billing=4,gres/gpu=1",
+        "submit_UTC": "2026-10-09T04:54:47Z",
+        "start_UTC": "2026-10-09T04:55:15Z",
+        "queue_wait_seconds": 28,
+        "first_child_phase": "capacity_B1024_compile_start"
+      },
+      "startup": {
+        "artifact_index": "../gpu-capacity-2048-preparation-20261009/startup-artifact-index.json",
+        "GPU_UUID": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+        "GPU_global_id": "0",
+        "affinity": [
+          16,
+          17,
+          72,
+          73
+        ],
+        "worker_host_load": [
+          19.86,
+          16.72,
+          13.94
+        ],
+        "selected_card_process_inventory_empty": true
+      },
+      "receipt": "../gpu-capacity-2048-preparation-20261009/submission-receipt.json",
+      "new_throughput_published": false,
+      "valid_exploratory_stages": [],
+      "terminal_cost_available": false,
+      "budget_closed": false
     }
   ]
 }

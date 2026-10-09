@@ -1,0 +1,8 @@
+2026-10-09T04:53:06Z
+DefMemPerNode           = UNLIMITED
+JobSubmitPlugins        = (null)
+PrivateData             = jobs
+SlurmctldParameters     = enable_configless
+liwei|users||defaultqos|defaultqos||||
+normal||0|||||
+defaultqos||0|||||
