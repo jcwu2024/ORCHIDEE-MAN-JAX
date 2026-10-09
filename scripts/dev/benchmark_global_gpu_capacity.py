@@ -38,6 +38,12 @@ B512_BYTES = 220430830
 B512_CODE_SHA = "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3"
 B512_ACTUAL_SOURCE_SHA256 = "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8"
 B512_PEAK_RSS_BYTES = 19496943616
+FIXED2048_CONTRACT = "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1"
+PROCESS_STRATEGY_2048 = "sequential_fresh_process_per_shape"
+B1024_SHA256 = "6bea479fcf3fa3d81d334c132106641572ca92a58886b26e764bcd7dee6069d5"
+B1024_BYTES = 440822967
+B1024_CODE_SHA = "bd9e4c04af68d77e79b984bfc8aa064977f893d3"
+B1024_PEAK_RSS_BYTES = 27865956352
 LABEL = "capacity performance measured; global scientific consistency not accepted"
 
 
@@ -57,6 +63,10 @@ def parser():
     modes.add_argument("--continue-256-512", action="store_true", help="Import sealed B128 timing origin; measure only B256 then resource-admitted B512, regardless of speedup.")
     modes.add_argument("--continue-512", action="store_true", help="Import sealed B128/B256 origins and B256 compiler memory; measure only resource-admitted B512.")
     modes.add_argument("--fixed-1024", action="store_true", help="Measure new same1024-lane B512 then resource-admitted B1024; historical B512 is numerical/memory evidence only.")
+    modes.add_argument("--fixed-2048", action="store_true", help="One fresh-process stage of the symmetric2048-lane capacity screen.")
+    result.add_argument("--stage-shape", type=int, choices=(1024, 2048))
+    result.add_argument("--control-stage-dir", type=Path)
+    result.add_argument("--b1024-evidence-dir", type=Path)
     result.add_argument("--b512-evidence-dir", type=Path)
     result.add_argument("--b128-baseline-dir", type=Path)
     result.add_argument("--b256-baseline-dir", type=Path)
@@ -70,8 +80,8 @@ def capacity_layout(lanes, second, total_lanes=TOTAL_LANES):
     ids = [lane.landpoint_id for lane in lanes]
     if len(lanes) != UNIQUE_POINTS or len(second) != UNIQUE_POINTS or len(set(ids)) != UNIQUE_POINTS:
         raise ValueError("exact unique FULL64 source lanes and aligned second blocks required")
-    if total_lanes not in (512, 1024):
-        raise ValueError("capacity collection must contain512 or1024 lanes")
+    if total_lanes not in (512, 1024, 2048):
+        raise ValueError("capacity collection must contain512,1024 or2048 lanes")
     origins = [{"lane_index": index, "source_index": index % UNIQUE_POINTS,
                 "landpoint_id": ids[index % UNIQUE_POINTS], "repeat_index": index // UNIQUE_POINTS}
                for index in range(total_lanes)]
@@ -341,11 +351,38 @@ def device_screen(size, resident_bytes, output_bytes, memory_records, scale, tot
     result = {"shape": size, f"resident_{total_lanes}_input_bytes": resident_bytes, f"full_{total_lanes}_output_bytes": output_bytes,
         "estimated_device_bytes": estimated, "physical_gpu": physical,
         "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee"}
-    if total_lanes == 1024:
-        result["input_byte_scope"] = "actual pure-helper host stacks for the complete1024 collection, including shared-static layout"
+    if total_lanes in (1024, 2048):
+        result["input_byte_scope"] = f"actual pure-helper host stacks for the complete{total_lanes} collection, including shared-static layout"
+    if total_lanes == 2048:
+        result["phase"] = "preallocation_whole_stage_budget_before_device_put"
+        result["required_physical_slack_bytes"] = 2 * 1024**3
+        if not physical.get("uuid"):
+            raise MemoryError("fixed2048 requires selected physical GPU UUID before allocation")
     if (not physical.get("applicable") or physical["total_bytes"] < 30 * 1024**3
             or estimated is None or physical["free_bytes"] < estimated + 2 * 1024**3):
         raise MemoryError(f"capacity shape memory preflight failed: {result}")
+    return result
+
+
+def fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_records, scale, original, actual):
+    """Update the whole-stage bound against its original, untouched free budget."""
+    physical = scale.visible_gpu_memory()
+    budget = original["physical_gpu"]
+    if (actual.get("available") is not True or type(actual.get("temp_size_in_bytes")) is not int
+            or actual["temp_size_in_bytes"] < 0):
+        raise MemoryError("fixed2048 postcompile requires actual nonnegative compiler temporary analysis")
+    estimated = memory_estimate(size, resident_bytes, output_bytes, memory_records)
+    result = {"phase": "postcompile_updated_whole_stage_bound_against_preallocation_budget", "shape": size,
+        "original_preallocation_physical_gpu_budget": budget, "postcompile_physical_gpu_snapshot": physical,
+        "resident_2048_input_bytes": resident_bytes, "full_2048_output_bytes": output_bytes,
+        "estimated_device_bytes": estimated, "required_physical_slack_bytes": 2 * 1024**3,
+        "actual_executable_memory_analysis": actual, "resident_inputs_already_placed": True,
+        "scope": "whole-stage estimate retains2resident+3fulloutput+max scaled actual temporary+2GiB; compare original free budget; postcompile free is telemetry only, no reservation credit"}
+    result["permitted"] = (physical.get("applicable") is True and physical.get("uuid") == budget["uuid"]
+        and physical.get("total_bytes") == budget["total_bytes"] and estimated is not None
+        and estimated + 2 * 1024**3 <= budget["free_bytes"])
+    if not result["permitted"]:
+        raise MemoryError(f"fixed2048 updated compiler whole-stage budget denied: {result}")
     return result
 
 
@@ -360,7 +397,7 @@ def host_screen(size, old_peak):
     return result
 
 
-def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_records, total_lanes=TOTAL_LANES):
+def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_records, total_lanes=TOTAL_LANES, prepared_host=None):
     """Compile once, measure the full fixed collection, return atomic-stage payload."""
     if len(lanes) != total_lanes or len(second) != total_lanes or total_lanes % size:
         raise ValueError("aligned complete fixed collection required")
@@ -369,23 +406,31 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
     gate_start, started = len(recorder.result["gates"]), time.perf_counter()
     rss_before = base.rss_bytes()
     chunks = [(lanes[start:start + size], second[start:start + size]) for start in range(0, total_lanes, size)]
-    host = [(base.batch.stack_lanes(first), base.stack_second(first, other)) for first, other in chunks]
-    host_stack_seconds = time.perf_counter() - started
+    host = ([(base.batch.stack_lanes(first), base.stack_second(first, other)) for first, other in chunks]
+        if prepared_host is None else prepared_host[0])
+    host_stack_seconds = time.perf_counter() - started if prepared_host is None else prepared_host[1]
     resident_bytes, output_bytes = scale.tree_bytes(host), scale.tree_bytes(reference) * (total_lanes // UNIQUE_POINTS)
-    host_preflight = (fixed1024_host_screen(memory_records[512].get("current_process_peak_RSS_bytes"))
-        if total_lanes == 1024 else host_screen(size, memory_records[64]["old_benchmark_peak_RSS_bytes"]))
+    host_preflight = (fixed2048_host_screen(memory_records[1024].get("current_process_peak_RSS_bytes"))
+        if total_lanes == 2048 else (fixed1024_host_screen(memory_records[512].get("current_process_peak_RSS_bytes"))
+        if total_lanes == 1024 else host_screen(size, memory_records[64]["old_benchmark_peak_RSS_bytes"])))
     preflight = device_screen(size, resident_bytes, output_bytes, memory_records, scale, total_lanes)
     started = time.perf_counter()
     pairs = jax.device_put(host)
     base.sync(pairs)
     transfer_seconds = time.perf_counter() - started
+    post_transfer = ({"phase": "post_transfer_physical_free_telemetry_only", "physical_gpu": scale.visible_gpu_memory()}
+        if total_lanes == 2048 else None)
+    if total_lanes == 2048 and any(post_transfer["physical_gpu"].get(key) != preflight["physical_gpu"].get(key)
+            for key in ("uuid", "total_bytes")):
+        raise MemoryError("fixed2048 selected GPU UUID/total changed after input transfer")
     # Pure source-backed factory; no process logic copied or approximated here.
     base.driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
     executable = base.lower_compile(base.batch.make_batch_transition(chunks[0][0]), pairs[0][0], label, recorder)
     memory = scale.executable_memory(executable)
     memory_records[size] = ({**memory, "temp_size_in_bytes": max(memory["temp_size_in_bytes"], memory_records[size]["temp_size_in_bytes"])}
-        if total_lanes == 1024 and size in memory_records and memory.get("available") is True else memory)
-    device_screen(size, resident_bytes, output_bytes, memory_records, scale, total_lanes)
+        if total_lanes in (1024, 2048) and size in memory_records and memory.get("available") is True else memory)
+    postcompile = (fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_records, scale, preflight, memory)
+        if total_lanes == 2048 else device_screen(size, resident_bytes, output_bytes, memory_records, scale, total_lanes))
 
     def run_collection(wrapper=False):
         outputs = []
@@ -459,6 +504,8 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
             "chunk_size": size, "chunks_per_collection": len(chunks), "blocks": [[2, 8], [9, 15]],
             "half_hours_per_day": 48, "full_outputs": True, "full_two_block_workload": True,
             "executable_memory_analysis": memory, "memory_preflight": preflight,
+            **({"post_transfer_GPU_memory": post_transfer, "postcompile_memory_budget_validation": postcompile}
+                if total_lanes == 2048 else {}),
             "host_memory_preflight": host_preflight,
             "post_measurement_GPU_memory": scale.visible_gpu_memory(), "host_peak_RSS_bytes": base.linux_ru_maxrss_bytes(),
             "host_RSS_bytes_before": rss_before, "host_RSS_bytes_after": base.rss_bytes(),
@@ -469,6 +516,8 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
 
 
 def benchmark(args, recorder, lanes, second, scale):
+    if getattr(args, "fixed_2048", False):
+        return benchmark_fixed2048(args, recorder, lanes, second, scale)
     if getattr(args, "fixed_1024", False):
         return benchmark_fixed1024(args, recorder, lanes, second, scale)
     from scripts.dev.global_batch_stage_store import StageStore
@@ -663,8 +712,236 @@ def benchmark_fixed1024(args, recorder, lanes, second, scale):
         gc.collect()
 
 
+def historical_b1024_identity(identity, origins, reference_sha):
+    previous = b512_evidence_identity(identity, origins, reference_sha)
+    certificate = previous["execution_source_compatibility"]
+    return {**identity, "actual_science_source_sha256": B512_ACTUAL_SOURCE_SHA256,
+        "execution_source_compatibility": certificate, "contract": FIXED1024_CONTRACT,
+        "validation_mode": "exploratory", "workload_kind": "capacity_screen_repeated_FULL64",
+        "total_lanes": 1024, "lane_origins": origins[:1024], "unique_real_points": 64,
+        "candidate_shapes": [512, 1024], "warm_repeats": 5, "budget_seconds": 5400,
+        "conditional_512": False, "conditional_1024": True, "optional_B64_baseline": False,
+        "historical_B512_evidence_sha256": B512_SHA256, "numerical_reference_sha256": reference_sha,
+        "conditional_policy": "fixed1024_resource_only_2700s_2GiB_GPU_8GiB_host_slack"}
+
+
+def _native_capacity_schema(outputs, reference, total_lanes, jax):
+    leaves, tree = jax.tree_util.tree_flatten(outputs)
+    originals, original_tree = jax.tree_util.tree_flatten(reference)
+    if tree != original_tree or len(leaves) != 760 or len(originals) != 760 or any(
+            leaf.shape != (total_lanes, *original.shape[1:]) or leaf.dtype != original.dtype
+            for leaf, original in zip(leaves, originals, strict=True)):
+        raise ValueError("full760 native capacity output schema/dtype mismatch")
+    return [{"shape": list(leaf.shape), "dtype": str(leaf.dtype)} for leaf in leaves]
+
+
+def import_b1024_evidence(directory, expected_identity, destination, jax, *, reference):
+    """Exact job15662711 evidence only; never import its timing into new curve."""
+    from scripts.dev.global_batch_stage_store import StageStore
+
+    StageStore.validate_source_destination(directory, destination)
+    directory = Path(directory)
+    manifest_path, report_path = directory / "stage_manifest.json", directory / "report.json"
+    manifest_data, report_data = manifest_path.read_bytes(), report_path.read_bytes()
+    manifest, report = json.loads(manifest_data), json.loads(report_data)
+    if manifest.get("identity") != expected_identity:
+        raise ValueError("historical B1024 exact input/science/source/runtime contract mismatch")
+    name = "capacity_B1024_fixed1024_v1"
+    stage = manifest.get("stages", {}).get(name, {})
+    path = directory / f"stage_{name}.pkl"
+    data = path.read_bytes()
+    if stage.get("status") != "complete" or stage.get("sha256") != B1024_SHA256 or len(data) != B1024_BYTES or hashlib.sha256(data).hexdigest() != B1024_SHA256:
+        raise ValueError("historical B1024 exact checkpoint checksum/bytes/status mismatch")
+    envelope = pickle.loads(data)
+    if envelope.get("identity") != expected_identity or envelope.get("status") != "complete" or envelope.get("name") != name:
+        raise ValueError("historical B1024 envelope identity/status mismatch")
+    proof, value = envelope["record"], envelope["value"]
+    gates = proof.get("gates", [])
+    if (proof.get("measurement_status") != "complete" or proof.get("strict_numerical_passed") is not True
+            or len(gates) != 1027 or any(gate.get("passed") is not True for gate in gates)
+            or proof.get("timing") != value.get("measurements") or proof.get("timing") != stage.get("timing")
+            or proof.get("provenance") != stage.get("provenance")
+            or _evidence_mismatch(proof.get("execution_origin"), stage.get("execution_origin"), "record.execution_origin") is not None):
+        raise ValueError("historical B1024 strict complete record/manifest mismatch")
+    origin = proof["execution_origin"]
+    if origin.get("environment", {}).get("git_head") != B1024_CODE_SHA:
+        raise ValueError("historical B1024 exact code origin mismatch")
+    provenance = proof["provenance"]
+    for key, expected in {"workload_kind": "capacity_screen_repeated_FULL64", "total_lanes": 1024,
+        "chunk_size": 1024, "chunks_per_collection": 1, "lane_days": 14336, "unique_real_points": 64,
+        "unique_point_days": 896, "blocks": [[2, 8], [9, 15]], "half_hours_per_day": 48,
+        "full_outputs": True, "full_two_block_workload": True, "host_peak_RSS_bytes": B1024_PEAK_RSS_BYTES}.items():
+        if provenance.get(key) != expected:
+            raise ValueError(f"historical B1024 workload/RSS mismatch: {key}")
+    memory = provenance.get("executable_memory_analysis", {})
+    if memory.get("available") is not True or type(memory.get("temp_size_in_bytes")) is not int or memory["temp_size_in_bytes"] < 0:
+        raise ValueError("historical B1024 actual compiler temporary required")
+    _native_capacity_schema(value["outputs"], reference, 1024, jax)
+    if set(value["measurements"]) != {"core", "wrapper"}:
+        raise ValueError("historical B1024 complete two timing boundaries required")
+    for metric in value["measurements"].values():
+        if metric != {**metric, **lane_metrics(metric["samples_seconds"], 1024)}:
+            raise ValueError("historical B1024 five synchronized timing summaries mismatch")
+    if (report.get("status") != "completed_exploratory_capacity_screen" or report.get("completed_shapes") != [512, 1024]
+            or report.get("stages", {}).get(name) != stage
+            or _evidence_mismatch(origin["environment"], report.get("environment"), "record.execution_origin.environment") is not None):
+        raise ValueError("historical B1024 report/manifest/origin mismatch")
+    return {"path": str(path), "sha256": B1024_SHA256, "bytes": len(data), "source_stage": name,
+        "source_identity": expected_identity, "execution_origin": origin, "provenance": provenance,
+        "manifest_sha256": hashlib.sha256(manifest_data).hexdigest(), "report_sha256": hashlib.sha256(report_data).hexdigest(),
+        "historical_process_peak_RSS_bytes": B1024_PEAK_RSS_BYTES,
+        "role": "historical numerical/schema/compiler-temp/RSS evidence only; excluded from current timing curve"}
+
+
+def fixed2048_host_screen(current_control_peak=None):
+    available = next(int(line.split()[1]) * 1024 for line in Path("/proc/meminfo").read_text().splitlines()
+        if line.startswith("MemAvailable:"))
+    required = 2 * max(B1024_PEAK_RSS_BYTES, current_control_peak or 0) + 8 * 1024**3
+    result = {"MemAvailable_bytes": available, "historical_B1024_process_peak_RSS_bytes": B1024_PEAK_RSS_BYTES,
+        "current_control_process_peak_RSS_bytes": current_control_peak, "conservative_required_bytes": required,
+        "limitation": "twice max historical/current control process peak plus8GiB; planning not measured peak/reservation"}
+    if available < required:
+        raise MemoryError(f"fixed2048 host memory admission failed: {result}")
+    return result
+
+
+def stable_resource_identity(resources):
+    """Enclosing allocation proof; per-process thread census stays in provenance."""
+    keys = ("mode", "allocated_CPU_request_count", "observed_unique_physical_cores", "original_affinity",
+        "selected_logical_cpus", "topology", "hostname", "CUDA_VISIBLE_DEVICES_preserved", "Slurm")
+    result = {key: resources[key] for key in keys if key in resources}
+    census = resources.get("thread_affinity_after_backend")
+    if census is not None:
+        result["backend_thread_affinity_contract"] = {key: census[key] for key in (
+            "expected_logical_cpus", "all_observed_thread_masks_within_declared_cores")}
+    return result
+
+
+def benchmark_fixed2048(args, recorder, lanes, second, scale):
+    """Exactly one stage per GPU worker; the coordinator supplies process symmetry."""
+    from scripts.dev.global_batch_stage_store import StageStore
+    from scripts.dev.global_server_reference import load_reference
+    from scripts.dev.global_source_compatibility import source_identity
+    from scripts.hpc.global_gpu_capacity_2048_coordinator import validate_stage_receipt
+
+    size, base = args.stage_shape, scale.base
+    worker_start = float(os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START_EPOCH"])
+    if not math.isfinite(worker_start) or worker_start <= 0:
+        raise ValueError("finite positive GPU-entry worker startup epoch required")
+    started = time.perf_counter()
+    expanded, others, origins = capacity_layout(lanes, second, 2048)
+    identity = base.stage_identity(args, lanes, second, recorder.result["environment"])
+    identity.update(contract=CONTRACT, precision_policy=scale.PRECISION_POLICY)
+    reference, reference_origin = load_reference(args.full_reference_dir, identity)
+    history = import_b1024_evidence(args.b1024_evidence_dir,
+        historical_b1024_identity(identity, origins, reference_origin["sha256"]), args.output_dir, scale.jax, reference=reference)
+    source = source_identity(ROOT)
+    if source["science_sha256"] != identity["science_sha256"]:
+        raise ValueError("fixed2048 science source changed during admission")
+    environment = recorder.result["environment"]
+    allocator = os.environ.get("XLA_PYTHON_CLIENT_ALLOCATOR")
+    if allocator not in (None, "") or os.environ.get("XLA_PYTHON_CLIENT_PREALLOCATE", "").lower() != "false":
+        raise ValueError("fresh2048 requires default allocator and PREALLOCATE=false")
+    job = os.environ.get("SLURM_JOB_ID")
+    if not job or not environment.get("hostname") or not environment.get("physical_gpu", {}).get("uuid"):
+        raise ValueError("fresh2048 requires actual Slurm job/node/physical GPU identity")
+    window_start = float(os.environ["ORCHJAX_GPU_WINDOW_START_EPOCH"])
+    if not math.isfinite(window_start) or window_start <= 0:
+        raise ValueError("finite positive shared allocation-window epoch required")
+    identity.update(source)
+    identity.update(contract=FIXED2048_CONTRACT, process_strategy=PROCESS_STRATEGY_2048, stage_shape=size,
+        total_lanes=2048, lane_origins=origins, unique_real_points=64, candidate_shapes=[1024, 2048],
+        warm_repeats=5, budget_seconds=7200, minimum_remaining_seconds=3600, validation_mode="exploratory",
+        workload_kind="capacity_screen_repeated_FULL64", numerical_reference_sha256=reference_origin["sha256"],
+        historical_B1024_evidence_sha256=B1024_SHA256,
+        run_binding={"Slurm_job_id": job, "hostname": environment["hostname"], "physical_gpu": environment["physical_gpu"],
+            "server_resources": stable_resource_identity(recorder.result["server_resources"]), "allocator": "default", "preallocate": False,
+            "window_start_epoch": window_start})
+    memories = {1024: history["provenance"]["executable_memory_analysis"].copy()}
+    control_origin = None
+    if size == 2048:
+        StageStore.validate_source_destination(args.control_stage_dir, args.output_dir)
+        common = {key: value for key, value in identity.items() if key != "stage_shape"}
+        receipt = validate_stage_receipt(args.control_stage_dir, 1024, common_identity=common)
+        orchestration = json.loads((args.control_stage_dir.parent / "orchestration.json").read_text())
+        control_dispatch = orchestration.get("children", {}).get("1024", {})
+        if (control_dispatch.get("returncode") != 0 or type(control_dispatch.get("exit_epoch")) not in (int, float)
+                or not math.isfinite(control_dispatch["exit_epoch"]) or control_dispatch["exit_epoch"] <= 0
+                or control_dispatch["exit_epoch"] > worker_start
+                or control_dispatch.get("sealed_receipt", {}).get("sha256") != receipt["sha256"]):
+            raise ValueError("candidate requires coordinator-recorded successful control process exit and same sealed checkpoint")
+        control = pickle.loads(Path(receipt["path"]).read_bytes())
+        if control["identity"] != receipt["identity"] or control.get("name") != "capacity_B1024_fixed2048_fresh_v1" or control.get("status") != "complete":
+            raise ValueError("fresh control envelope/receipt identity mismatch")
+        for key in ("gates", "timing", "provenance", "execution_origin", "measurement_status", "strict_numerical_passed"):
+            if _evidence_mismatch(control["record"].get(key), receipt["stage"].get(key), f"record.{key}") is not None:
+                raise ValueError(f"fresh control checkpoint proof differs from manifest: {key}")
+        _native_capacity_schema(control["value"]["outputs"], reference, 2048, scale.jax)
+        if (receipt["execution_origin"]["pid"] == os.getpid()
+                or receipt["execution_origin"]["process_start_epoch"] >= worker_start):
+            raise ValueError("fresh candidate requires distinct later worker process")
+        actual = receipt["stage"]["provenance"]["executable_memory_analysis"]
+        memories[1024] = {**actual, "temp_size_in_bytes": max(actual["temp_size_in_bytes"], memories[1024]["temp_size_in_bytes"]),
+            "current_process_peak_RSS_bytes": receipt["stage"]["provenance"]["host_peak_RSS_bytes"]}
+        control_origin = {key: receipt[key] for key in ("path", "sha256", "bytes", "manifest_sha256", "report_sha256", "execution_origin")}
+        del control, receipt
+        gc.collect()
+    reload = time.perf_counter() - started
+    stack_started = time.perf_counter()
+    host = [(base.batch.stack_lanes(expanded[start:start + size]), base.stack_second(expanded[start:start + size], others[start:start + size]))
+        for start in range(0, 2048, size)]
+    stack_seconds = time.perf_counter() - stack_started
+    remaining = args.budget_seconds - (time.time() - window_start)
+    decision = {"permitted": remaining >= 3600, "remaining_seconds": remaining, "minimum_remaining_seconds": 3600,
+        "requires_performance_improvement": False, "reasons": [] if remaining >= 3600 else ["at least3600s remaining required; no completion guarantee"]}
+    try:
+        decision["host_memory"] = fixed2048_host_screen(memories[1024].get("current_process_peak_RSS_bytes"))
+        decision["device_memory"] = device_screen(size, scale.tree_bytes(host), scale.tree_bytes(reference) * 32, memories, scale, 2048)
+    except MemoryError as exc:
+        decision["permitted"] = False
+        decision["reasons"].append(str(exc))
+    recorder.result.update(fixed2048_stage_decision=decision, imported_B1024_evidence=history,
+        control_stage_origin=control_origin, completed_shapes=[], comparison_shapes=[], reference_origin=reference_origin,
+        execution_source_identity=source, process_strategy=PROCESS_STRATEGY_2048,
+        process_start_epoch=worker_start, input_reference_reload_seconds=reload, scientific_acceptance=False)
+    recorder.flush()
+    if not decision["permitted"]:
+        raise MemoryError(f"fresh2048 stage B{size} admission denied: {decision}")
+    if (args.output_dir / "stage_manifest.json").exists():
+        raise ValueError("fresh2048 stage directory single-use; no previous-worker stage reuse")
+    store = StageStore(args.output_dir, identity)
+    recorder.result["stages"] = store.manifest["stages"]
+    recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
+    def operation():
+        value, record = measure_shape(size, args, recorder, expanded, others, reference, scale, memories, 2048,
+            prepared_host=(host, stack_seconds))
+        record["provenance"].update(process_strategy=PROCESS_STRATEGY_2048,
+            full_output_native_schema=_native_capacity_schema(value["outputs"], reference, 2048, scale.jax),
+            admission_compiler_memory_records={str(key): memory for key, memory in memories.items()})
+        record["startup"]["input_reference_reload_seconds"] = reload
+        record["startup"]["prepared_input_reload_seconds"] = recorder.result.get("prepared_input_reload_seconds", 0)
+        record["execution_origin"].update(process_start_epoch=worker_start,
+            process_start_epoch_source="GPU entry main before JAX/backend initialization",
+            process_strategy=PROCESS_STRATEGY_2048, Slurm_job_id=job,
+            hostname=environment["hostname"], physical_gpu=environment["physical_gpu"])
+        return value, record
+    store.run(f"capacity_B{size}_fixed2048_fresh_v1", operation)
+    recorder.result.update(completed_shapes=[size], comparison_shapes=[size])
+    recorder.phase(f"capacity_B{size}_fixed2048_fresh_sealed")
+    recorder.flush()
+
+
 def main():
     args = parser().parse_args()
+    if args.fixed_2048:
+        if args.b1024_evidence_dir is None or args.stage_shape is None:
+            raise ValueError("fixed2048 child requires historical B1024 evidence and explicit stage-shape")
+        if args.optional_b64_baseline or args.conditional_512 or args.b128_baseline_dir or args.b256_baseline_dir or args.b512_evidence_dir or args.admit_inputs:
+            raise ValueError("fixed2048 forbids historical timing/other capacity modes/input re-audit")
+        if (args.stage_shape == 2048) != (args.control_stage_dir is not None):
+            raise ValueError("only candidate B2048 requires sealed fresh control-stage-dir")
+    elif args.stage_shape is not None or args.control_stage_dir is not None or args.b1024_evidence_dir is not None:
+        raise ValueError("stage shape/control/B1024 evidence arguments require fixed2048 mode")
     if args.fixed_1024:
         if args.b512_evidence_dir is None:
             raise ValueError("fixed1024 requires explicit sealed B512 evidence directory")
@@ -682,12 +959,24 @@ def main():
         raise ValueError("B256 baseline directory requires B512-only continuation mode")
     if args.b128_baseline_dir is not None and not (args.continue_256_512 or args.continue_512):
         raise ValueError("B128 baseline directory requires continuation mode")
-    budget = 2700 if args.continue_512 else 5400
+    budget = 7200 if args.fixed_2048 else (2700 if args.continue_512 else 5400)
     if args.warm_repeats != 5 or args.budget_seconds != budget:
         raise ValueError(f"fixed five repeats and proposed {budget}s window contract required")
     if args.dry_run:
         from scripts.dev.global_source_compatibility import source_identity
 
+        if args.fixed_2048:
+            print(json.dumps({"status": "dry_run", "model_execution": False, "JAX_imported": "jax" in sys.modules,
+                "contract": FIXED2048_CONTRACT, "process_strategy": PROCESS_STRATEGY_2048,
+                "execution_source_identity": source_identity(ROOT), "stage_shape": args.stage_shape,
+                "candidate_shapes": [1024, 2048], "total_lanes": 2048, "unique_real_points": 64,
+                "lane_days": 28672, "unique_point_days": 896, "warm_repeats": 5,
+                "budget_seconds": 7200, "minimum_remaining_seconds": 3600,
+                "historical_timing_is_curve_origin": False, "requires_performance_improvement": False,
+                "B1024_evidence_dir": str(args.b1024_evidence_dir), "control_stage_dir": str(args.control_stage_dir),
+                "initial_conservative_host_required_bytes": 2 * B1024_PEAK_RSS_BYTES + 8 * 1024**3,
+                "scientific_acceptance": False}))
+            return 0
         if args.fixed_1024:
             print(json.dumps({"status": "dry_run", "model_execution": False, "JAX_imported": "jax" in sys.modules,
                 "execution_source_identity": source_identity(ROOT), "contract": FIXED1024_CONTRACT,
@@ -771,6 +1060,8 @@ def main():
     configure_cache("off", None)
     recorder = scale.base.Recorder(args.output_dir)
     recorder.result.update(environment=scale.base.metadata(args), server_resources=resources)
+    if args.fixed_2048:
+        recorder.result["environment"]["env"]["XLA_PYTHON_CLIENT_ALLOCATOR"] = os.environ.get("XLA_PYTHON_CLIENT_ALLOCATOR")
     previous = {}
     def stopped(number, frame):
         raise InterruptedError(f"signal{number}; completed capacity snapshots retained")
@@ -782,7 +1073,10 @@ def main():
         if available < 24 * 1024**3:
             raise MemoryError("at least24GiB host MemAvailable required")
         recorder.result["host_MemAvailable_bytes_at_start"] = available
+        read_started = time.perf_counter()
         lanes, second = scale.read_prepared(args.prepared_input, args.config)
+        if args.fixed_2048:
+            recorder.result["prepared_input_reload_seconds"] = time.perf_counter() - read_started
         benchmark(args, recorder, lanes, second, scale)
         recorder.result["status"] = "completed_exploratory_capacity_screen"
     except (InterruptedError, KeyboardInterrupt) as exc:

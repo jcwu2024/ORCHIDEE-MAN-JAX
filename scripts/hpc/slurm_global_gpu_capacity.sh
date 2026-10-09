@@ -64,9 +64,12 @@ OPTIONAL_B64_BASELINE=${OPTIONAL_B64_BASELINE:-0}
 CONTINUE_256_512=${CONTINUE_256_512:-0}
 CONTINUE_512=${CONTINUE_512:-0}
 FIXED_1024=${FIXED_1024:-0}
+FIXED_2048=${FIXED_2048:-0}
+COORDINATOR=$CODE_DIR/scripts/hpc/global_gpu_capacity_2048_coordinator.py
 B128_BASELINE_DIR=${B128_BASELINE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v1-load512/capacity}
 B256_BASELINE_DIR=${B256_BASELINE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-sweetspot-v3-continue256512/capacity}
 B512_EVIDENCE_DIR=${B512_EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-capacity-512-15657822/capacity}
+B1024_EVIDENCE_DIR=${B1024_EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity}
 BUDGET_SECONDS=5400
 WALL_TIME=01:30:00
 GPU_SELECTOR=${SLURM_JOB_GPUS:-}
@@ -97,6 +100,19 @@ fi
 [[ $FIXED_1024 == 0 || $FIXED_1024 == 1 ]] || {
   echo "FIXED_1024 must be 0 or 1" >&2; exit 2;
 }
+[[ $FIXED_2048 == 0 || $FIXED_2048 == 1 ]] || {
+  echo "FIXED_2048 must be 0 or 1" >&2; exit 2;
+}
+if [[ $FIXED_2048 == 1 ]]; then
+  if [[ $FIXED_1024 != 0 || $CONTINUE_512 != 0 || $CONTINUE_256_512 != 0 || $OPTIONAL_B64_BASELINE != 0 || $CONDITIONAL_512 != 0 ]]; then
+    echo "fixed2048 forbids fixed1024/fixed512 continuation, conditional512 and optional B64 modes" >&2; exit 2
+  fi
+  if [[ -n ${XLA_PYTHON_CLIENT_ALLOCATOR:-} || -n ${SINGULARITYENV_XLA_PYTHON_CLIENT_ALLOCATOR:-} ]]; then
+    echo "fixed2048 requires the unchanged default allocator; explicit allocator overrides are forbidden" >&2; exit 2
+  fi
+  BUDGET_SECONDS=7200
+  WALL_TIME=02:00:00
+fi
 if [[ $FIXED_1024 == 1 && ( $CONTINUE_512 == 1 || $CONTINUE_256_512 == 1 || $OPTIONAL_B64_BASELINE != 0 || $CONDITIONAL_512 != 0 ) ]]; then
   echo "fixed1024 forbids fixed512 continuation, conditional512 and optional B64 modes" >&2; exit 2
 fi
@@ -128,7 +144,9 @@ if [[ $DRY_RUN -eq 0 ]]; then
   for path in "$PYTHON" "$METADATA_PYTHON" "$IDENTITY_HELPER" "$ENTRY" "$PREPARED_INPUT" "$FULL_REFERENCE_DIR" "$CONFIG" "$ASSET_ROOT" "$IMAGE"; do
     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
   done
-  if [[ $FIXED_1024 == 1 ]]; then
+  if [[ $FIXED_2048 == 1 ]]; then
+    [[ -f $COORDINATOR && -d $B1024_EVIDENCE_DIR ]] || { echo "fixed2048 coordinator or sealed B1024 evidence missing" >&2; exit 2; }
+  elif [[ $FIXED_1024 == 1 ]]; then
     [[ -d $B512_EVIDENCE_DIR ]] || { echo "sealed B512 numerical/memory evidence missing" >&2; exit 2; }
   else
     [[ -e $MEMORY_BASELINE_DIR ]] || { echo "old B64 memory evidence missing" >&2; exit 2; }
@@ -160,7 +178,9 @@ export ORCHIDEE_OUTPUT_ROOT=$OUTPUT_DIR
 args=(--prepared-input "$PREPARED_INPUT" --full-reference-dir "$FULL_REFERENCE_DIR"
   --output-dir "$OUTPUT_DIR" --config "$CONFIG" --asset-root "$ASSET_ROOT"
   --warm-repeats 5 --budget-seconds "$BUDGET_SECONDS" --memory-baseline-dir "$MEMORY_BASELINE_DIR")
-if [[ $FIXED_1024 == 1 ]]; then
+if [[ $FIXED_2048 == 1 ]]; then
+  args+=(--fixed-2048 --b1024-evidence-dir "$B1024_EVIDENCE_DIR")
+elif [[ $FIXED_1024 == 1 ]]; then
   args+=(--fixed-1024 --b512-evidence-dir "$B512_EVIDENCE_DIR")
 elif [[ $CONTINUE_512 == 1 ]]; then
   args+=(--continue-512 --b128-baseline-dir "$B128_BASELINE_DIR" --b256-baseline-dir "$B256_BASELINE_DIR")
@@ -183,8 +203,14 @@ if [[ $DRY_RUN -eq 1 ]]; then
   CUDA_DRIVER=$(readlink -m /usr/lib64/libcuda.so.1)
   NVML_DRIVER=$(readlink -m /usr/lib64/libnvidia-ml.so.1)
   BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
-  printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
-    /usr/bin/time -v singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR" "$IMAGE" "$PYTHON" "$ENTRY" "${args[@]}"; printf '\n'
+  child_command=("$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores
+    /usr/bin/time -v singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR" "$IMAGE" "$PYTHON" "$ENTRY" "${args[@]}")
+  if [[ $FIXED_2048 == 1 ]]; then
+    printf 'process_strategy=symmetric_fresh_child_per_shape allocator=default preallocate=false\n'
+    printf 'command='; printf '%q ' "$METADATA_PYTHON" "$COORDINATOR" --output-dir "$OUTPUT_DIR" --budget-seconds "$BUDGET_SECONDS" -- "${child_command[@]}"; printf '\n'
+  else
+    printf 'command='; printf '%q ' "${child_command[@]}"; printf '\n'
+  fi
   exit 0
 fi
 
@@ -271,6 +297,13 @@ export SINGULARITYENV_NUMEXPR_NUM_THREADS=1
 mkdir -p "$OUTPUT_DIR"
 cd "$CODE_DIR"
 STARTUP_STEP=allocated_candidate_execution
+if [[ $FIXED_2048 == 1 ]]; then
+  "$METADATA_PYTHON" "$COORDINATOR" --output-dir "$OUTPUT_DIR" --budget-seconds "$BUDGET_SECONDS" -- \
+    "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
+    /usr/bin/time -v singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR" \
+    "$IMAGE" "$PYTHON" "$ENTRY" "${args[@]}"
+  exit $?
+fi
 "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
   /usr/bin/time -v singularity exec --nv --bind "$BINDS" --pwd "$CODE_DIR" \
   "$IMAGE" "$PYTHON" "$ENTRY" "${args[@]}"

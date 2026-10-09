@@ -15,6 +15,9 @@ from pathlib import Path
 
 def main() -> None:
     os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START"] = str(time.perf_counter())
+    # Operational worker-entry epoch captured before backend initialization;
+    # fresh-process capacity receipts use it to prove non-overlapping lifetimes.
+    os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START_EPOCH"] = str(time.time())
     candidate_first = "--execution-order=candidate-first" in sys.argv or any(
         left == "--execution-order" and right == "candidate-first" for left, right in zip(sys.argv, sys.argv[1:]))
     capacity = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY") == "benchmark_global_gpu_capacity.py"
