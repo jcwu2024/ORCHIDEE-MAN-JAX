@@ -1,5 +1,5 @@
 {
-  "status": "submitted_once_RUNNING_initial_B1024_compile",
+  "status": "terminal_FAILED_B2048_wrapper_OOM_strict_B1024_retained_budget_closed",
   "execution_code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
   "local_runner": "runner-coordinator-checks.json",
   "local_launcher": "LOCAL_VERIFICATION.md",
@@ -35,10 +35,88 @@
   "old_closed_budgets_preserved_exact": true,
   "submission_receipt": "submission-receipt.json",
   "job_id": "15671732",
-  "latest_observation": "2026-10-09T04:58:34Z",
+  "latest_observation": "2026-10-09T09:15:26Z",
   "preparation_model_lower_compile_run": false,
   "preparation_GPU_initialization": false,
   "approved_job_initial_control_compile_started": true,
   "submission_integrity": "passed_exact_unchanged_envelope_pin_one_submission_older_budgets_preserved_raw_hashes",
-  "current_entry_artifact_links_checked": 26
+  "current_entry_artifact_links_checked": 26,
+  "terminal_summary": "terminal-summary.json",
+  "budget_closed": true,
+  "terminal_accounting": {
+    "terminal": true,
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "observed_wall_seconds": 3800,
+    "approved_wall_seconds": 7200,
+    "approved_wall_exceeded": false,
+    "node": "ibc13b03n03",
+    "cpus": 4,
+    "tres": {
+      "billing": "4",
+      "cpu": "4",
+      "gres/gpu": "1",
+      "node": "1"
+    },
+    "raw_parent_row": [
+      "15671732",
+      "orchjax-gpu-cap2048",
+      "gnall",
+      "FAILED",
+      "3800",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "ibc13b03n03",
+      "1:0"
+    ],
+    "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+    "parent_counted_once": true,
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 2.5333333333333337,
+        "GPU_card_hours": 1.0555555555555556,
+        "allocated_CPU_count_hours": 4.222222222222222,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; child rows are never summed"
+      },
+      "conservative": {
+        "CNY": 2.6177777777777784,
+        "GPU_card_hours": 1.0555555555555556,
+        "allocated_CPU_count_hours": 4.222222222222222,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; child rows are never summed"
+      }
+    }
+  },
+  "actual_saved_array_collector": {
+    "script": "collect_job15671732.sh",
+    "json": "collected-fixed2048.json",
+    "log": "job-15671732-collector-log.txt",
+    "node": "test02",
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "canonical_CPU_env": true,
+    "OMP_OPENBLAS_MKL_threads": 1,
+    "python_B": true,
+    "exit_code": 0,
+    "wall_seconds": 158.59,
+    "execution_checkout_clean_after": true,
+    "valid_stages": 1,
+    "withheld_stages": 1,
+    "incomplete_stages": 0,
+    "saved_array_validation_only": true,
+    "model_invocation_or_GPU_initialization": false
+  },
+  "accepted_stage_count": 1,
+  "capacity_curve_available": false,
+  "startup_observation": "2026-10-09T04:58:34Z",
+  "terminal_observation": "2026-10-09T09:15:26Z",
+  "terminal_records_integrity": "passed_older_budgets_unchanged_exact_envelope_actual_warm_cost_arithmetic_local19artifact_bytes_links",
+  "actual_saved_array_collector_runs": 1,
+  "large_checkpoint_rehash_after_collection": false,
+  "large_checkpoint_in_Git": false
 }

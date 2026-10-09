@@ -1,5 +1,5 @@
 {
-  "status": "planning_basis_preserved_approved_job15671732_RUNNING_no_new_measurement",
+  "status": "historical_planning_preserved_job15671732_terminal_budget_closed",
   "date_Asia_Shanghai": "2026-10-09",
   "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
   "historical_origin": {
@@ -72,8 +72,10 @@
     "primary_CNY": 4.8,
     "conservative_additive_CNY": 4.96,
     "billing_verified": false,
-    "paid_approval": false,
-    "consumed": false
+    "paid_approval": true,
+    "consumed": true,
+    "budget_closed": true,
+    "consumption_scope": "one approved job used then budget closed; actual3800s does not mean full7200s ceiling spent"
   },
   "observed_fixed1024_B1024_resources": {
     "executable_memory_analysis": {
@@ -226,5 +228,51 @@
     "layout": "two consolidated checkpoint containers plus reports/manifests/orchestration/events/diagnostics; no per-lane/per-variable files",
     "expected_stage_checkpoint_files": 2,
     "scope": "planning output/storage scale only, actual checkpoint bytes unknown; all original data/results preserved"
+  },
+  "terminal_result": "terminal-summary.json",
+  "actual_terminal_accounting": {
+    "terminal": true,
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "observed_wall_seconds": 3800,
+    "approved_wall_seconds": 7200,
+    "approved_wall_exceeded": false,
+    "node": "ibc13b03n03",
+    "cpus": 4,
+    "tres": {
+      "billing": "4",
+      "cpu": "4",
+      "gres/gpu": "1",
+      "node": "1"
+    },
+    "raw_parent_row": [
+      "15671732",
+      "orchjax-gpu-cap2048",
+      "gnall",
+      "FAILED",
+      "3800",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "ibc13b03n03",
+      "1:0"
+    ],
+    "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+    "parent_counted_once": true,
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 2.5333333333333337,
+        "GPU_card_hours": 1.0555555555555556,
+        "allocated_CPU_count_hours": 4.222222222222222,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; child rows are never summed"
+      },
+      "conservative": {
+        "CNY": 2.6177777777777784,
+        "GPU_card_hours": 1.0555555555555556,
+        "allocated_CPU_count_hours": 4.222222222222222,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; child rows are never summed"
+      }
+    }
   }
 }

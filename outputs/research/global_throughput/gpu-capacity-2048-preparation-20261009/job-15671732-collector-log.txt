@@ -1,0 +1,30 @@
+2026-10-09T09:20:43Z
+ibtest02
+pid 113818's current affinity list: 0-55
+{"output": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collected-fixed2048.json", "valid_stages": 1, "capacity_curve_available": false}
+	Command being timed: "taskset -c 0-3 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python -B /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collect_fixed2048_result.py --code-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1 --expected-code-sha 8aa2e05aa24b65dc4d30a27d4ee857bba6312221 --stage-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity --sacct-file /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/job-15671732-sacct-raw9.txt --admission /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-sweetspot-preparation-20261006/target-input-admission.json --b1024-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --job-id 15671732 --job-name orchjax-gpu-cap2048 --node ibc13b03n03 --gpu-uuid GPU-38115eff-1b81-4dee-ae92-996c77969246 --slurm-global-gpu-id 0 --driver-version 525.85.12 --approved-nodes 1 --approved-tasks 1 --approved-cpus 4 --approved-gpus 1 --approved-wall-seconds 7200 --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collected-fixed2048.json"
+	User time (seconds): 53.84
+	System time (seconds): 5.30
+	Percent of CPU this job got: 37%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:38.59
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1196864
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 9962
+	Minor (reclaiming a frame) page faults: 725919
+	Voluntary context switches: 19523
+	Involuntary context switches: 4199
+	Swaps: 0
+	File system inputs: 3080112
+	File system outputs: 14168
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+collector_exit=0
+execution_checkout_clean_after=true
+2026-10-09T09:23:23Z

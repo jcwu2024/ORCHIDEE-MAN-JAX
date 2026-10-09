@@ -1,0 +1,128 @@
+{
+  "job_id": "15671732",
+  "scope": "complete terminal raw artifacts; large checkpoint SHA/manifest/report proof reused from successful strict saved-array collector; no model/GPU call",
+  "files": {
+    "job-15671732-saved-result/capacity/B1024/events.jsonl": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024/events.jsonl",
+      "bytes": 428,
+      "sha256": "582bc3c82b4cbde2541c4f6d08f4ff138c256f4b81ce5b13f2cdc7c0ed0562a5",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/capacity/B1024/report.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024/report.json",
+      "bytes": 13025529,
+      "sha256": "dcdefbe366d2dcfa010648a203fd458741b9767e0f44cb299516681058d346ba",
+      "hash_method": "completed_strict_collector_full_SHA256_reused_no_second_large_hash"
+    },
+    "job-15671732-saved-result/capacity/B1024/stage_capacity_B1024_fixed2048_fresh_v1.pkl": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024/stage_capacity_B1024_fixed2048_fresh_v1.pkl",
+      "bytes": 881624142,
+      "sha256": "639f9ba7c8645818e914eeff3534fbbdf584d7794c118b7a794e52d47faca9d8",
+      "hash_method": "completed_strict_collector_full_SHA256_reused_no_second_large_hash"
+    },
+    "job-15671732-saved-result/capacity/B1024/stage_manifest.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024/stage_manifest.json",
+      "bytes": 6900496,
+      "sha256": "e38e79af3a09a5098f425ba70b6d1d2b7e8955aee3055ac5a4267128c0ffbaad",
+      "hash_method": "completed_strict_collector_full_SHA256_reused_no_second_large_hash"
+    },
+    "job-15671732-saved-result/capacity/B2048/events.jsonl": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B2048/events.jsonl",
+      "bytes": 312,
+      "sha256": "007839c0602bdbd76d6773f763ca65d8381e22593e0241a186c14868616b64f1",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/capacity/B2048/report.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B2048/report.json",
+      "bytes": 6422500,
+      "sha256": "ad50bfdffe84b4e0a360951b6faff04b2b707c899ab1a38980c0c7dce2b4efec",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/capacity/B2048/stage_manifest.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B2048/stage_manifest.json",
+      "bytes": 297365,
+      "sha256": "59f497d6198f9cc46f2c99dca099d11366e0f6288703db775a104d446efd9475",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/capacity/orchestration.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/orchestration.json",
+      "bytes": 11564,
+      "sha256": "b48b086d0e3a363cca18631f41aad5796cdb4e89e34a3ad33d86fc8a1be4e1ba",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/gpu-diagnostic-exits.tsv": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/gpu-diagnostic-exits.tsv",
+      "bytes": 50,
+      "sha256": "38e41d075ca5505cbc26831532a63076bdf3f276a6be8c6cea55d33e072d3de0",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/gpu-identity.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/gpu-identity.json",
+      "bytes": 1362,
+      "sha256": "9239bc5b34413b6c35cb4b17e16d14828a039deaa507551f12915d70de4f1a41",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/launch-context.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/launch-context.txt",
+      "bytes": 22379,
+      "sha256": "6a8cde124ef8a3abe78f461af35ae72c1d0466722c60bcf946c47092e75d1adb",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/selected-gpu-inventory.stderr.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/selected-gpu-inventory.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/selected-gpu-inventory.stdout.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/selected-gpu-inventory.stdout.txt",
+      "bytes": 194,
+      "sha256": "4112ab239e021c38faf2dcec72c9ff57f97feb0566ff562cfe491456c6ea0b1b",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/selected-gpu-processes.stderr.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/selected-gpu-processes.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-saved-result/selected-gpu-processes.stdout.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/selected-gpu-processes.stdout.txt",
+      "bytes": 51,
+      "sha256": "185facacd43b2b47152f1040bb6d81a57e8f284965fbf5ff6e6fbf0276871185",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-terminal-log.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt",
+      "bytes": 22379,
+      "sha256": "6a8cde124ef8a3abe78f461af35ae72c1d0466722c60bcf946c47092e75d1adb",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-sacct-raw9.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/job-15671732-sacct-raw9.txt",
+      "bytes": 429,
+      "sha256": "20aaa3ce338589252c185d61866369cae8bbdf2c796b5e1185329608830c881d",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "collected-fixed2048.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collected-fixed2048.json",
+      "bytes": 7247551,
+      "sha256": "8284fd5c02882155f6be7b62af69fe6988e82a9f0549bbc9eb269b624731cbf2",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    },
+    "job-15671732-collector-log.txt": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/job-15671732-collector-log.txt",
+      "bytes": 2573,
+      "sha256": "ca4503e16a3305130d328956ebd4eec4a0cd68c15b17f415ea6e972c92efda20",
+      "hash_method": "test02_stdlib_SHA256_small_terminal_metadata"
+    }
+  },
+  "B2048_checkpoint_exists": false,
+  "hashing_host": "test02",
+  "affinity": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

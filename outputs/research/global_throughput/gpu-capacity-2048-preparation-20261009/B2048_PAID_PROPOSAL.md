@@ -1,9 +1,11 @@
 # Fixed2048 B1024/B2048 one-card paid proposal
 
-Status: **human-approved, submitted once as job15671732; RUNNING on n03**.
-Submitted2026-10-09T04:54:47Z, started04:55:15Z (28s queue); latest04:58:34Z
-shows the first B1024 child compiling. No retarget or resubmission was required.
-See [actual submission/startup receipt](submission-receipt.json). No automation.
+Status: **single approved job15671732 terminal FAILED1:0; independent budget closed**.
+Parent3800s, actual costsCNY2.533333333 primary/2.617777778 conservative additive.
+Strict collector retains B1024; B2048 wrapper second-block execution OOM requested
+9161696464B, no complete checkpoint or two-shape curve. No retry or extension.
+See [current result](CURRENT_RESULT.md) and [terminal summary](terminal-summary.json).
+Original single submission/startup facts remain in [receipt](submission-receipt.json).
 Old accepted job15662711 and all previous budgets remain closed. Exact implementation
 pin, independent immutable deployment and actual test02 interfaces passed; see
 [pin](final-code-pin.json), [interface receipt](deployment-interface-receipt.json) and

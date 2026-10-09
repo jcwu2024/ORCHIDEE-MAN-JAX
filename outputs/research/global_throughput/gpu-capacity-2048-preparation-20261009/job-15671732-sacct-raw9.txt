@@ -1,0 +1,5 @@
+15671732|orchjax-gpu-cap2048|gnall|FAILED|3800|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n03|1:0
+15671732.batch|batch||FAILED|3800|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n03|1:0
+15671732.extern|extern||COMPLETED|3800|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n03|0:0
+15671732.0|time||COMPLETED|2287|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n03|0:0
+15671732.1|time||FAILED|1501|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n03|1:0

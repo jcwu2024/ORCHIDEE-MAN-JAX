@@ -1,0 +1,417 @@
+{
+  "status": "terminal_FAILED_B2048_wrapper_OOM_strict_B1024_retained_budget_closed",
+  "job_id": "15671732",
+  "execution_code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+  "parent_accounting": {
+    "terminal": true,
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "observed_wall_seconds": 3800,
+    "approved_wall_seconds": 7200,
+    "approved_wall_exceeded": false,
+    "node": "ibc13b03n03",
+    "cpus": 4,
+    "tres": {
+      "billing": "4",
+      "cpu": "4",
+      "gres/gpu": "1",
+      "node": "1"
+    },
+    "raw_parent_row": [
+      "15671732",
+      "orchjax-gpu-cap2048",
+      "gnall",
+      "FAILED",
+      "3800",
+      "4",
+      "billing=4,cpu=4,gres/gpu=1,node=1",
+      "ibc13b03n03",
+      "1:0"
+    ],
+    "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+    "parent_counted_once": true,
+    "whole_job_cost": {
+      "primary": {
+        "CNY": 2.5333333333333337,
+        "GPU_card_hours": 1.0555555555555556,
+        "allocated_CPU_count_hours": 4.222222222222222,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; child rows are never summed"
+      },
+      "conservative": {
+        "CNY": 2.6177777777777784,
+        "GPU_card_hours": 1.0555555555555556,
+        "allocated_CPU_count_hours": 4.222222222222222,
+        "billing_verified": false,
+        "scope": "one raw9 terminal parent row; child rows are never summed"
+      }
+    }
+  },
+  "parent_successfully_completed": false,
+  "budget_closed": true,
+  "submission_attempts": 1,
+  "old_budgets_reused": false,
+  "accepted_stages": [
+    {
+      "stage": "capacity_B1024_fixed2048_fresh_v1",
+      "batch_size": 1024,
+      "chunks_per_collection": 2,
+      "lane_days": 28672,
+      "unique_real_points": 64,
+      "strict_numerical_passed": true,
+      "native_output_leaves": 760,
+      "gates": 2051,
+      "actual_saved_output_reference_comparison_count": 2048,
+      "checkpoint_sha256": "639f9ba7c8645818e914eeff3534fbbdf584d7794c118b7a794e52d47faca9d8",
+      "checkpoint_bytes": 881624142,
+      "metrics": {
+        "core": {
+          "samples_seconds": [
+            81.78785334713757,
+            81.76531629636884,
+            81.77291877008975,
+            81.77044777199626,
+            81.77365431934595
+          ],
+          "median_seconds": 81.77291877008975,
+          "range_seconds": [
+            81.76531629636884,
+            81.78785334713757
+          ],
+          "lane_days": 28672,
+          "unique_real_points": 64,
+          "lane_days_per_second": 350.6295290817896,
+          "warm_cost_per_lane_day": {
+            "primary": {
+              "CNY_per_lane_day": 1.9013420472956137e-06,
+              "GPU_card_hours_per_lane_day": 7.922258530398389e-07,
+              "allocated_CPU_count_hours_per_lane_day": 3.1689034121593556e-06
+            },
+            "conservative": {
+              "CNY_per_lane_day": 1.964720115538801e-06
+            },
+            "scope": "accepted synchronized full2048 warm collection only; excludes startup, compile, validation, checkpoint IO and failed candidate; not whole-job cost"
+          }
+        },
+        "wrapper": {
+          "samples_seconds": [
+            95.64514034986496,
+            95.92778546735644,
+            96.19554238393903,
+            95.80751875042915,
+            95.8481539208442
+          ],
+          "median_seconds": 95.8481539208442,
+          "range_seconds": [
+            95.64514034986496,
+            96.19554238393903
+          ],
+          "lane_days": 28672,
+          "unique_real_points": 64,
+          "lane_days_per_second": 299.1398250995909,
+          "warm_cost_per_lane_day": {
+            "primary": {
+              "CNY_per_lane_day": 2.228612209841057e-06,
+              "GPU_card_hours_per_lane_day": 9.285884207671073e-07,
+              "allocated_CPU_count_hours_per_lane_day": 3.714353683068429e-06
+            },
+            "conservative": {
+              "CNY_per_lane_day": 2.302899283502426e-06
+            },
+            "scope": "accepted synchronized full2048 warm collection only; excludes startup, compile, validation, checkpoint IO and failed candidate; not whole-job cost"
+          }
+        }
+      },
+      "startup": {
+        "host_stack_seconds": 9.991418547928333,
+        "device_transfer_seconds": 2.1452521700412035,
+        "first_full2048_call_seconds": 81.97876997478306,
+        "lower_seconds": 99.94253262132406,
+        "compile_seconds": 970.4302640799433,
+        "input_reference_reload_seconds": 4.259086482226849,
+        "prepared_input_reload_seconds": 4.5142368581146
+      },
+      "checkpoint_io": {
+        "available": true,
+        "bytes": 881624142,
+        "serialization_seconds": 0.8103828094899654,
+        "atomic_write_seconds": 0.7673897407948971,
+        "scope": "host snapshot pickle serialization and atomic write/fsync/replace; excludes manifest/report/event writes"
+      },
+      "host_peak_RSS_bytes": 28977266688,
+      "executable_memory_analysis": {
+        "available": true,
+        "argument_size_in_bytes": 248946716,
+        "output_size_in_bytes": 220212192,
+        "temp_size_in_bytes": 4571419856,
+        "alias_size_in_bytes": 0,
+        "generated_code_size_in_bytes": 13249008,
+        "scope": "compiler device buffer estimate; not host RSS or measured VRAM peak"
+      },
+      "memory_preflight": {
+        "shape": 1024,
+        "resident_2048_input_bytes": 7871545456,
+        "full_2048_output_bytes": 880836608,
+        "estimated_device_bytes": 22957020592,
+        "physical_gpu": {
+          "applicable": true,
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "total_bytes": 34359738368,
+          "free_bytes": 33721155584,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        },
+        "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee",
+        "input_byte_scope": "actual pure-helper host stacks for the complete2048 collection, including shared-static layout",
+        "phase": "preallocation_whole_stage_budget_before_device_put",
+        "required_physical_slack_bytes": 2147483648
+      },
+      "post_transfer_GPU_memory": {
+        "phase": "post_transfer_physical_free_telemetry_only",
+        "physical_gpu": {
+          "applicable": true,
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "total_bytes": 34359738368,
+          "free_bytes": 24864882688,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        }
+      },
+      "postcompile_memory_budget_validation": {
+        "phase": "postcompile_updated_whole_stage_bound_against_preallocation_budget",
+        "shape": 1024,
+        "original_preallocation_physical_gpu_budget": {
+          "applicable": true,
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "total_bytes": 34359738368,
+          "free_bytes": 33721155584,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        },
+        "postcompile_physical_gpu_snapshot": {
+          "applicable": true,
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "total_bytes": 34359738368,
+          "free_bytes": 24703401984,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        },
+        "resident_2048_input_bytes": 7871545456,
+        "full_2048_output_bytes": 880836608,
+        "estimated_device_bytes": 22957020592,
+        "required_physical_slack_bytes": 2147483648,
+        "actual_executable_memory_analysis": {
+          "available": true,
+          "argument_size_in_bytes": 248946716,
+          "output_size_in_bytes": 220212192,
+          "temp_size_in_bytes": 4571419856,
+          "alias_size_in_bytes": 0,
+          "generated_code_size_in_bytes": 13249008,
+          "scope": "compiler device buffer estimate; not host RSS or measured VRAM peak"
+        },
+        "resident_inputs_already_placed": true,
+        "scope": "whole-stage estimate retains2resident+3fulloutput+max scaled actual temporary+2GiB; compare original free budget; postcompile free is telemetry only, no reservation credit",
+        "permitted": true
+      },
+      "execution_origin": {
+        "available": true,
+        "environment": {
+          "command": [
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/dev/benchmark_global_gpu_capacity.py",
+            "--prepared-input",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+            "--full-reference-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+            "--output-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024",
+            "--config",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/configs/orchidee_man_250919.yaml",
+            "--asset-root",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2",
+            "--warm-repeats",
+            "5",
+            "--budget-seconds",
+            "7200",
+            "--memory-baseline-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first",
+            "--fixed-2048",
+            "--b1024-evidence-dir",
+            "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity",
+            "--stage-shape",
+            "1024"
+          ],
+          "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
+          "platform": "Linux-3.10.0-1160.el7.nosig.x86_64-x86_64-with-glibc2.31",
+          "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+          "jax": "0.4.38",
+          "jaxlib": "0.4.38",
+          "numpy": "2.4.6",
+          "devices": [
+            "cuda:0"
+          ],
+          "device_details": [
+            {
+              "platform": "gpu",
+              "kind": "Tesla V100-SXM2-32GB",
+              "id": 0
+            }
+          ],
+          "backend_platform_version": "PJRT C API\ncuda 12030",
+          "x64_enabled": true,
+          "cpu_count": 112,
+          "cpu_affinity": [
+            16,
+            17,
+            72,
+            73
+          ],
+          "cpu_model": "x86_64",
+          "hostname": "ibc13b03n03",
+          "physical_gpu": {
+            "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+            "driver_version": "525.85.12",
+            "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"
+          },
+          "loadavg": [
+            19.86,
+            16.72,
+            13.94
+          ],
+          "env": {
+            "XLA_FLAGS": null,
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "JAX_PLATFORMS": null,
+            "JAX_COMPILATION_CACHE_DIR": null,
+            "ORCHJAX_DISABLE_COMPILATION_CACHE": "1",
+            "CUDA_VISIBLE_DEVICES": "0",
+            "XLA_PYTHON_CLIENT_PREALLOCATE": "false",
+            "XLA_PYTHON_CLIENT_ALLOCATOR": null
+          },
+          "cache_policy": "disabled",
+          "gpu_count": 1,
+          "visible_affinity_core_count": 4,
+          "assigned_cpu_count": "4",
+          "rss_instrumentation": "proc_statm_current_RSS_100ms_sample_plus_resource_ru_maxrss_Linux_KiB_converted_to_bytes",
+          "warm_reset_policy": "each repeat uses the same frozen Day1 end state; two sequential seven-day blocks",
+          "block_days": [
+            [
+              2,
+              8
+            ],
+            [
+              9,
+              15
+            ]
+          ],
+          "inner_npts": 1,
+          "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+          "git_head": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+          "fortran_science_gate": "not_run; separate annual/source acceptance contract"
+        },
+        "pid": 55922,
+        "process_start_epoch": 1791521725.756789,
+        "process_start_epoch_source": "GPU entry main before JAX/backend initialization",
+        "process_strategy": "sequential_fresh_process_per_shape",
+        "Slurm_job_id": "15671732",
+        "hostname": "ibc13b03n03",
+        "physical_gpu": {
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "driver_version": "525.85.12",
+          "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"
+        }
+      }
+    }
+  ],
+  "candidate_failure": {
+    "shape": 2048,
+    "stage_status": "failed_not_sealed",
+    "checkpoint_exists": false,
+    "exception": "XlaRuntimeError",
+    "message": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 9161696464 bytes.",
+    "traceback_source": "job-15671732-saved-result/capacity/B2048/report.json",
+    "location": "measure_shape run_collection(wrapper=True), run_two second continuous seven-day block executable; runner470/439, batch508",
+    "requested_allocation_bytes": 9161696464,
+    "explicit_timing": {
+      "capacity_B2048_lower_seconds": 66.69622523337603,
+      "capacity_B2048_compile_seconds": 1129.0879216305912
+    },
+    "input_reference_reload_seconds": 6.849605780094862,
+    "prepared_input_reload_seconds": 2.470364471897483,
+    "initial_decision": {
+      "permitted": true,
+      "remaining_seconds": 4880.35683131218,
+      "minimum_remaining_seconds": 3600,
+      "requires_performance_improvement": false,
+      "reasons": [],
+      "host_memory": {
+        "MemAvailable_bytes": 340845158400,
+        "historical_B1024_process_peak_RSS_bytes": 27865956352,
+        "current_control_process_peak_RSS_bytes": 28977266688,
+        "conservative_required_bytes": 66544467968,
+        "limitation": "twice max historical/current control process peak plus8GiB; planning not measured peak/reservation"
+      },
+      "device_memory": {
+        "shape": 2048,
+        "resident_2048_input_bytes": 7871545400,
+        "full_2048_output_bytes": 880836608,
+        "estimated_device_bytes": 27528440336,
+        "physical_gpu": {
+          "applicable": true,
+          "uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246",
+          "total_bytes": 34359738368,
+          "free_bytes": 33721155584,
+          "scope": "selected physical GPU snapshot immediately before prospective compilation"
+        },
+        "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee",
+        "input_byte_scope": "actual pure-helper host stacks for the complete2048 collection, including shared-static layout",
+        "phase": "preallocation_whole_stage_budget_before_device_put",
+        "required_physical_slack_bytes": 2147483648
+      }
+    },
+    "actual_compiler_memory_analysis": null,
+    "postcompile_memory_snapshot": null,
+    "postcompile_evidence_limit": "measure_shape constructs published provenance after successful operation; failed wrapper did not persist its calculated postcompile guard/compiler analysis/snapshot. OOM requested bytes are not substituted as compiler analysis. No peak-VRAM or hardware impossibility claim.",
+    "unsealed_first_core_wrapper_samples_promoted": false
+  },
+  "collector": {
+    "script": "collect_job15671732.sh",
+    "json": "collected-fixed2048.json",
+    "log": "job-15671732-collector-log.txt",
+    "node": "test02",
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "canonical_CPU_env": true,
+    "OMP_OPENBLAS_MKL_threads": 1,
+    "python_B": true,
+    "exit_code": 0,
+    "wall_seconds": 158.59,
+    "execution_checkout_clean_after": true,
+    "valid_stages": 1,
+    "withheld_stages": 1,
+    "incomplete_stages": 0,
+    "saved_array_validation_only": true,
+    "model_invocation_or_GPU_initialization": false
+  },
+  "capacity_curve_available": false,
+  "B2048_over_B1024_throughput_ratio": null,
+  "scientific_acceptance": false,
+  "artifact_index": "terminal-artifact-index.json",
+  "checkpoint_preservation": {
+    "remote_original_preserved": true,
+    "local_complete_copy_exists": true,
+    "local_bytes_checked_against_strict_verified_source": true,
+    "large_checkpoint_SHA_reused_from_completed_collector": true,
+    "local_large_checkpoint_independent_rehash": false,
+    "large_checkpoint_committed_to_Git": false
+  },
+  "scientific_claims": {
+    "cpu_gpu_ratio": null,
+    "ten_x_improvement": null,
+    "general_scientific_acceptance": false
+  },
+  "new_automation": false,
+  "retry_extension_requeue_cancellation": false,
+  "terminal_observation_UTC": "2026-10-09T09:15:26Z"
+}

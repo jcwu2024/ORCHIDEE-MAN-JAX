@@ -409,7 +409,7 @@
     },
     {
       "budget_id": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1-job15671732",
-      "status": "submitted_once_RUNNING_initial_B1024_compile",
+      "status": "terminal_FAILED_B2048_wrapper_OOM_strict_B1024_retained_budget_closed",
       "approved": true,
       "contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1",
       "code_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
@@ -435,7 +435,10 @@
         "primary_CNY": 4.8,
         "conservative_additive_CNY": 4.96,
         "billing_verified": false,
-        "queue_time_billed": false
+        "queue_time_billed": false,
+        "terminal_cost_available": true,
+        "parent_counted_once": true,
+        "child_rows_not_summed": true
       },
       "proposal": "../gpu-capacity-2048-preparation-20261009/B2048_PAID_PROPOSAL.md",
       "pin": "../gpu-capacity-2048-preparation-20261009/final-code-pin.json",
@@ -486,15 +489,13 @@
         "user_account": "liwei"
       },
       "observed": {
-        "UTC": "2026-10-09T04:58:34Z",
-        "state": "RUNNING",
-        "reason": "None",
+        "state": "FAILED",
+        "exit_code": "1:0",
+        "parent_elapsed_seconds": 3800,
         "node": "ibc13b03n03",
-        "actual_TRES": "cpu=4,node=1,billing=4,gres/gpu=1",
-        "submit_UTC": "2026-10-09T04:54:47Z",
-        "start_UTC": "2026-10-09T04:55:15Z",
-        "queue_wait_seconds": 28,
-        "first_child_phase": "capacity_B1024_compile_start"
+        "source": "job-15671732-sacct-raw9.txt",
+        "scope": "raw9 terminal parent/children; strict saved-array collector accepts B1024 only",
+        "UTC": "2026-10-09T09:15:26Z"
       },
       "startup": {
         "artifact_index": "../gpu-capacity-2048-preparation-20261009/startup-artifact-index.json",
@@ -514,10 +515,87 @@
         "selected_card_process_inventory_empty": true
       },
       "receipt": "../gpu-capacity-2048-preparation-20261009/submission-receipt.json",
-      "new_throughput_published": false,
-      "valid_exploratory_stages": [],
-      "terminal_cost_available": false,
-      "budget_closed": false
+      "new_throughput_published": true,
+      "valid_exploratory_stages": [
+        "capacity_B1024_fixed2048_fresh_v1"
+      ],
+      "terminal_cost_available": true,
+      "budget_closed": true,
+      "terminal_accounting": {
+        "terminal": true,
+        "state": "FAILED",
+        "exit_code": "1:0",
+        "observed_wall_seconds": 3800,
+        "approved_wall_seconds": 7200,
+        "approved_wall_exceeded": false,
+        "node": "ibc13b03n03",
+        "cpus": 4,
+        "tres": {
+          "billing": "4",
+          "cpu": "4",
+          "gres/gpu": "1",
+          "node": "1"
+        },
+        "raw_parent_row": [
+          "15671732",
+          "orchjax-gpu-cap2048",
+          "gnall",
+          "FAILED",
+          "3800",
+          "4",
+          "billing=4,cpu=4,gres/gpu=1,node=1",
+          "ibc13b03n03",
+          "1:0"
+        ],
+        "raw_schema": "JobIDRaw|JobName|Partition|State|ElapsedRaw|AllocCPUS|AllocTRES|NodeList|ExitCode",
+        "parent_counted_once": true,
+        "whole_job_cost": {
+          "primary": {
+            "CNY": 2.5333333333333337,
+            "GPU_card_hours": 1.0555555555555556,
+            "allocated_CPU_count_hours": 4.222222222222222,
+            "billing_verified": false,
+            "scope": "one raw9 terminal parent row; child rows are never summed"
+          },
+          "conservative": {
+            "CNY": 2.6177777777777784,
+            "GPU_card_hours": 1.0555555555555556,
+            "allocated_CPU_count_hours": 4.222222222222222,
+            "billing_verified": false,
+            "scope": "one raw9 terminal parent row; child rows are never summed"
+          }
+        }
+      },
+      "terminal_result": "../gpu-capacity-2048-preparation-20261009/terminal-summary.json",
+      "terminal_artifact_index": "../gpu-capacity-2048-preparation-20261009/terminal-artifact-index.json",
+      "strict_complete_stages_published": [
+        "capacity_B1024_fixed2048_fresh_v1"
+      ],
+      "candidate_failure": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 9161696464 bytes.",
+      "capacity_curve_available": false,
+      "collector": {
+        "script": "collect_job15671732.sh",
+        "json": "collected-fixed2048.json",
+        "log": "job-15671732-collector-log.txt",
+        "node": "test02",
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "canonical_CPU_env": true,
+        "OMP_OPENBLAS_MKL_threads": 1,
+        "python_B": true,
+        "exit_code": 0,
+        "wall_seconds": 158.59,
+        "execution_checkout_clean_after": true,
+        "valid_stages": 1,
+        "withheld_stages": 1,
+        "incomplete_stages": 0,
+        "saved_array_validation_only": true,
+        "model_invocation_or_GPU_initialization": false
+      }
     }
   ]
 }

@@ -1,0 +1,4 @@
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 22.68581367097795, "rss_bytes": 10404990976}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 123.94937132671475, "rss_bytes": 11293470720}
+{"phase": "capacity_B1024_compiled", "elapsed_seconds": 1094.4736171141267, "rss_bytes": 22397612032}
+{"phase": "capacity_B1024_fixed2048_fresh_sealed", "elapsed_seconds": 2216.427093166858, "rss_bytes": 22762991616}

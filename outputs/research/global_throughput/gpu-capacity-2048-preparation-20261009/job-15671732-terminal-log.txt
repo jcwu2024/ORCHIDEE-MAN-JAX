@@ -1,0 +1,240 @@
+2026-10-09T04:55:18Z
+ibc13b03n03
+ 12:55:18 up 128 days,  2:12,  0 users,  load average: 18.79, 15.67, 13.42
+pid 55847's current affinity list: 16,17,72,73
+pre_query_slurm_job=15671732 global_gpu_id=0 preserved_cuda_visible_devices=0 cpus=4
+2026-10-09T04:55:22Z
+ibc13b03n03
+ 12:55:22 up 128 days,  2:12,  0 users,  load average: 20.73, 16.13, 13.57
+JobId=15671732 JobName=orchjax-gpu-cap2048
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:07 TimeLimit=02:00:00 TimeMin=N/A
+   SubmitTime=2026-10-09T12:54:47 EligibleTime=2026-10-09T12:54:47
+   AccrueTime=2026-10-09T12:54:47
+   StartTime=2026-10-09T12:55:15 EndTime=2026-10-09T14:55:15 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-09T12:55:15 Scheduler=Backfill
+   Partition=gnall AllocNode:Sid=ibc13b02n04:63522
+   ReqNodeList=ibc13b03n03 ExcNodeList=(null)
+   NodeList=ibc13b03n03
+   BatchHost=ibc13b03n03
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=gpu:v100:1
+     Nodes=ibc13b03n03 CPU_IDs=32-35 Mem=0 GRES=gpu:v100:1(IDX:0)
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/slurm_global_gpu_capacity_2048.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_capacity_2048_15671732.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+pid 55847's current affinity list: 16,17,72,73
+CPU CORE SOCKET ONLINE
+0   0    0      yes
+1   1    0      yes
+2   2    0      yes
+3   3    0      yes
+4   4    0      yes
+5   5    0      yes
+6   6    0      yes
+7   7    0      yes
+8   8    0      yes
+9   9    0      yes
+10  10   0      yes
+11  11   0      yes
+12  12   0      yes
+13  13   0      yes
+14  14   0      yes
+15  15   0      yes
+16  16   0      yes
+17  17   0      yes
+18  18   0      yes
+19  19   0      yes
+20  20   0      yes
+21  21   0      yes
+22  22   0      yes
+23  23   0      yes
+24  24   0      yes
+25  25   0      yes
+26  26   0      yes
+27  27   0      yes
+28  28   1      yes
+29  29   1      yes
+30  30   1      yes
+31  31   1      yes
+32  32   1      yes
+33  33   1      yes
+34  34   1      yes
+35  35   1      yes
+36  36   1      yes
+37  37   1      yes
+38  38   1      yes
+39  39   1      yes
+40  40   1      yes
+41  41   1      yes
+42  42   1      yes
+43  43   1      yes
+44  44   1      yes
+45  45   1      yes
+46  46   1      yes
+47  47   1      yes
+48  48   1      yes
+49  49   1      yes
+50  50   1      yes
+51  51   1      yes
+52  52   1      yes
+53  53   1      yes
+54  54   1      yes
+55  55   1      yes
+56  0    0      yes
+57  1    0      yes
+58  2    0      yes
+59  3    0      yes
+60  4    0      yes
+61  5    0      yes
+62  6    0      yes
+63  7    0      yes
+64  8    0      yes
+65  9    0      yes
+66  10   0      yes
+67  11   0      yes
+68  12   0      yes
+69  13   0      yes
+70  14   0      yes
+71  15   0      yes
+72  16   0      yes
+73  17   0      yes
+74  18   0      yes
+75  19   0      yes
+76  20   0      yes
+77  21   0      yes
+78  22   0      yes
+79  23   0      yes
+80  24   0      yes
+81  25   0      yes
+82  26   0      yes
+83  27   0      yes
+84  28   1      yes
+85  29   1      yes
+86  30   1      yes
+87  31   1      yes
+88  32   1      yes
+89  33   1      yes
+90  34   1      yes
+91  35   1      yes
+92  36   1      yes
+93  37   1      yes
+94  38   1      yes
+95  39   1      yes
+96  40   1      yes
+97  41   1      yes
+98  42   1      yes
+99  43   1      yes
+100 44   1      yes
+101 45   1      yes
+102 46   1      yes
+103 47   1      yes
+104 48   1      yes
+105 49   1      yes
+106 50   1      yes
+107 51   1      yes
+108 52   1      yes
+109 53   1      yes
+110 54   1      yes
+111 55   1      yes
+8aa2e05aa24b65dc4d30a27d4ee857bba6312221
+slurm_cpus_per_task=4 slurm_job_cpus_per_node=4 slurm_job_gpus=0 alloc_tres=cpu=4,node=1,billing=4,gres/gpu=1 alloc_tres_source=TRES
+allocated_gpu_global_id=0 uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 name=Tesla V100-SXM2-32GB driver=525.85.12 cuda_visible_devices=0
+selected_GPU_diagnostic=selected-gpu-inventory uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 exit=0
+index, uuid, name, driver_version, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+0, GPU-38115eff-1b81-4dee-ae92-996c77969246, Tesla V100-SXM2-32GB, 525.85.12, 0 MiB, 32768 MiB, 0 %
+selected_GPU_diagnostic=selected-gpu-processes uuid=GPU-38115eff-1b81-4dee-ae92-996c77969246 exit=0
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 22.68581367097795, "rss_bytes": 10404990976}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 123.94937132671475, "rss_bytes": 11293470720}
+2026-10-09 13:08:15.300788: E external/xla/xla/service/slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+2026-10-09 13:14:04.089172: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 7m48.788577205s
+
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+{"phase": "capacity_B1024_compiled", "elapsed_seconds": 1094.4736171141267, "rss_bytes": 22397612032}
+{"phase": "capacity_B1024_fixed2048_fresh_sealed", "elapsed_seconds": 2216.427093166858, "rss_bytes": 22762991616}
+	Command being timed: "singularity exec --nv --bind /WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 --pwd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1 /apps/soft/sif/foundationpose /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/global_batch_gpu_entry.py --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --full-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024 --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/configs/orchidee_man_250919.yaml --asset-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2 --warm-repeats 5 --budget-seconds 7200 --memory-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first --fixed-2048 --b1024-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --stage-shape 1024"
+	User time (seconds): 1941.98
+	System time (seconds): 552.95
+	Percent of CPU this job got: 109%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 38:06.51
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 28298112
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 16569
+	Minor (reclaiming a frame) page faults: 30873703
+	Voluntary context switches: 1049777
+	Involuntary context switches: 37543
+	Swaps: 0
+	File system inputs: 4765936
+	File system outputs: 1754272
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"phase": "capacity_B2048_lower_start", "elapsed_seconds": 24.493528719991446, "rss_bytes": 10411479040}
+{"phase": "capacity_B2048_compile_start", "elapsed_seconds": 92.3471212554723, "rss_bytes": 11299606528}
+2026-10-09 13:46:44.697213: E external/xla/xla/service/slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+2026-10-09 13:53:20.622127: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 8m35.925099855s
+
+********************************
+[Compiling module jit_transition] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+{"phase": "capacity_B2048_compiled", "elapsed_seconds": 1221.5704460758716, "rss_bytes": 25270415360}
+2026-10-09 13:58:22.059145: W external/xla/xla/tsl/framework/bfc_allocator.cc:501] Allocator (GPU_0_bfc) ran out of memory trying to allocate 8.53GiB (rounded to 9161696512)requested by op 
+2026-10-09 13:58:22.068621: W external/xla/xla/tsl/framework/bfc_allocator.cc:512] ******************************************************************__________________________________
+E1009 13:58:22.069053   58742 pjrt_stream_executor_client.cc:3086] Execution of replica 0 failed: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 9161696464 bytes.
+Command exited with non-zero status 1
+	Command being timed: "singularity exec --nv --bind /WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 --pwd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1 /apps/soft/sif/foundationpose /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/global_batch_gpu_entry.py --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --full-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B2048 --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/configs/orchidee_man_250919.yaml --asset-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2 --warm-repeats 5 --budget-seconds 7200 --memory-baseline-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first --fixed-2048 --b1024-evidence-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity --stage-shape 2048 --control-stage-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024"
+	User time (seconds): 1675.99
+	System time (seconds): 141.59
+	Percent of CPU this job got: 121%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 25:00.54
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 32965096
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 32
+	Minor (reclaiming a frame) page faults: 26155683
+	Voluntary context switches: 892800
+	Involuntary context switches: 26419
+	Swaps: 0
+	File system inputs: 26488
+	File system outputs: 16800
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+srun: error: ibc13b03n03: task 0: Exited with exit code 1
+{"contract": "GPU-fixed2048-repeated-FULL64-B1024-B2048-fresh-process-capacity-v1", "process_strategy": "sequential_fresh_process_per_shape", "coordinator_pid": 55889, "coordinator_start_epoch": 1791521723.9591527, "window_start_epoch": 1791521718.0, "budget_seconds": 7200, "status": "candidate_failed", "children": {"1024": {"command": ["/rmprog/slurm/v22.05.7/bin/srun", "--ntasks=1", "--cpus-per-task=4", "--cpu-bind=cores", "/usr/bin/time", "-v", "singularity", "exec", "--nv", "--bind", "/WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1", "--pwd", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1", "/apps/soft/sif/foundationpose", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/global_batch_gpu_entry.py", "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl", "--full-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model", "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024", "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/configs/orchidee_man_250919.yaml", "--asset-root", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2", "--warm-repeats", "5", "--budget-seconds", "7200", "--memory-baseline-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first", "--fixed-2048", "--b1024-evidence-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity", "--stage-shape", "1024"], "dispatch_start_epoch": 1791521723.971247, "command_process_pid": 55891, "returncode": 0, "exit_epoch": 1791524011.4201984, "dispatch_wall_seconds": 2287.448951482773, "worker_execution_origin": {"available": true, "environment": {"command": ["/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/dev/benchmark_global_gpu_capacity.py", "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl", "--full-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model", "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024", "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/configs/orchidee_man_250919.yaml", "--asset-root", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2", "--warm-repeats", "5", "--budget-seconds", "7200", "--memory-baseline-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first", "--fixed-2048", "--b1024-evidence-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity", "--stage-shape", "1024"], "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1", "platform": "Linux-3.10.0-1160.el7.nosig.x86_64-x86_64-with-glibc2.31", "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]", "jax": "0.4.38", "jaxlib": "0.4.38", "numpy": "2.4.6", "devices": ["cuda:0"], "device_details": [{"platform": "gpu", "kind": "Tesla V100-SXM2-32GB", "id": 0}], "backend_platform_version": "PJRT C API\ncuda 12030", "x64_enabled": true, "cpu_count": 112, "cpu_affinity": [16, 17, 72, 73], "cpu_model": "x86_64", "hostname": "ibc13b03n03", "physical_gpu": {"uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246", "driver_version": "525.85.12", "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"}, "loadavg": [19.86, 16.72, 13.94], "env": {"XLA_FLAGS": null, "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "JAX_PLATFORMS": null, "JAX_COMPILATION_CACHE_DIR": null, "ORCHJAX_DISABLE_COMPILATION_CACHE": "1", "CUDA_VISIBLE_DEVICES": "0", "XLA_PYTHON_CLIENT_PREALLOCATE": "false", "XLA_PYTHON_CLIENT_ALLOCATOR": null}, "cache_policy": "disabled", "gpu_count": 1, "visible_affinity_core_count": 4, "assigned_cpu_count": "4", "rss_instrumentation": "proc_statm_current_RSS_100ms_sample_plus_resource_ru_maxrss_Linux_KiB_converted_to_bytes", "warm_reset_policy": "each repeat uses the same frozen Day1 end state; two sequential seven-day blocks", "block_days": [[2, 8], [9, 15]], "inner_npts": 1, "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299", "git_head": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221", "fortran_science_gate": "not_run; separate annual/source acceptance contract"}, "pid": 55922, "process_start_epoch": 1791521725.756789, "process_start_epoch_source": "GPU entry main before JAX/backend initialization", "process_strategy": "sequential_fresh_process_per_shape", "Slurm_job_id": "15671732", "hostname": "ibc13b03n03", "physical_gpu": {"uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246", "driver_version": "525.85.12", "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"}}, "sealed_receipt": {"path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024/stage_capacity_B1024_fixed2048_fresh_v1.pkl", "sha256": "639f9ba7c8645818e914eeff3534fbbdf584d7794c118b7a794e52d47faca9d8", "bytes": 881624142, "manifest_sha256": "e38e79af3a09a5098f425ba70b6d1d2b7e8955aee3055ac5a4267128c0ffbaad", "report_sha256": "dcdefbe366d2dcfa010648a203fd458741b9767e0f44cb299516681058d346ba"}}, "2048": {"command": ["/rmprog/slurm/v22.05.7/bin/srun", "--ntasks=1", "--cpus-per-task=4", "--cpu-bind=cores", "/usr/bin/time", "-v", "singularity", "exec", "--nv", "--bind", "/WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1", "--pwd", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1", "/apps/soft/sif/foundationpose", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/scripts/hpc/global_batch_gpu_entry.py", "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl", "--full-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model", "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B2048", "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1/configs/orchidee_man_250919.yaml", "--asset-root", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2", "--warm-repeats", "5", "--budget-seconds", "7200", "--memory-baseline-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first", "--fixed-2048", "--b1024-evidence-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity", "--stage-shape", "2048", "--control-stage-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed2048-v1/capacity/B1024"], "dispatch_start_epoch": 1791524014.0328, "command_process_pid": 58708, "returncode": 1, "exit_epoch": 1791525515.1103349, "dispatch_wall_seconds": 1501.0774636268616, "error_type": "RuntimeError", "error": "child B2048 exited1"}}, "completed_shapes": [1024], "comparison_shapes": [1024], "scientific_acceptance": false, "JAX_imported": false, "B1024_dispatch_decision": {"permitted": true, "remaining_seconds": 7194.033087015152, "minimum_remaining_seconds": 3600, "reasons": []}, "B2048_dispatch_decision": {"permitted": true, "reasons": [], "remaining_seconds": 4903.98931479454, "minimum_remaining_seconds": 3600, "estimated_device_bytes": 27528440448, "conservative_host_required_bytes": 66544467968, "physical_snapshot": {"GPU_uuid": "GPU-38115eff-1b81-4dee-ae92-996c77969246", "GPU_total_bytes": 34359738368, "GPU_free_bytes": 34078720000, "MemAvailable_bytes": 349802086400}, "requires_performance_improvement": false, "scope": "control actual-stack collection bytes plus scaled actual compiler temporary; candidate repeats actual-stack admission in fresh worker; planning not peak/reservation/OOM guarantee"}, "orchestration_wall_seconds": 3791.1511926651}
+GPU launcher failed: step=allocated_candidate_execution line=301 exit=1 command=\"\$METADATA_PYTHON\"\ \"\$COORDINATOR\"\ --output-dir\ \"\$OUTPUT_DIR\"\ --budget-seconds\ \"\$BUDGET_SECONDS\"\ --\ \"\$SLURM_BIN/srun\"\ --ntasks=1\ --cpus-per-task=4\ --cpu-bind=cores\ /usr/bin/time\ -v\ singularity\ exec\ --nv\ --bind\ \"\$BINDS\"\ --pwd\ \"\$CODE_DIR\"\ \"\$IMAGE\"\ \"\$PYTHON\"\ \"\$ENTRY\"\ \"\$\{args\[@\]\}\"

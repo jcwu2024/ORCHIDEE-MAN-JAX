@@ -130,31 +130,38 @@ Only B512 compiled/measured; sealed B128/B256 remained imported comparison origi
 
 The actual12:48UTC [submission snapshot](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/submission-node-snapshot.txt) records requested `ibc13b03n02` as CPU112/112,load22.74,1/8 GPUs allocated; no idle eligible gnall node was observed then. Startup evidence records actual node `ibc13b03n02`, affinity54,55,110,111 (two physical cores for4 charged Slurm CPUs), load26.25,27.24,23.0 and an empty selected-GPU process list. This later startup snapshot must not be used to infer earlier contention. GPU identity was global ID4, UUID `GPU-949cb714-8c53-353c-1f6a-1832c629230e`, Tesla V100-SXM2-32GB, driver525.85.12. Neither occupancy snapshot reserves a node or implies whole-node exclusivity. The scientific goal remains the one-card wrapper cost/trajectory-day curve for future points×members;669-point projection needs separate initialization, tail/padding and IO evidence. [Current result](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/CURRENT_RESULT.md) and [protocol](../../../outputs/research/global_throughput/gpu-metadata-repair-20261008/B512_PROTOCOL.md) are the compact current authorities.
 
-## Active Operation: Fixed2048 Job15671732 RUNNING on n03
+## Terminal Fixed2048: Strict B1024 Retained, B2048 Execution OOM
 
-Implementation `8aa2e05aa24b65dc4d30a27d4ee857bba6312221` is independently deployed and its actual
-canonical test02 interfaces passed without JAX/model/GPU work. The new fresh-process
-contract compares B1024x2 and conditional B2048x1 at the same28672 lane-days,64 genuine
-FULL64 points repeated32, two continuous seven-day blocks and48steps/day. Each stage
-retains native dtype/full outputs/masks/fixed tolerances,2051 gates/760 leaves/5+5 samples.
-The CPU-only coordinator requires complete sealed successful control exit; the collector
-independently checks common allocation/science/input/card identity and distinct worker
-lifetimes. Phase-aware device guards retain2resident+3output+max actual scaled temporary
-plus2GiB against the original pre-device_put physical-free budget; post-transfer and
-postcompile free are telemetry. Candidate failure preserves valid control without a curve.
+Single approved job15671732 endedFAILED1:0 on n03 after3800 parent seconds,
+4Slurm CPUs/1V10032GB/1node1task/7200s/no-requeue/no-exclusive, unchanged8aa2e05.
+B1024 child completed0:0/2287s; B2048 failed1:0/1501s, no complete checkpoint.
+Actual canonical test02 strict collector passed in158.59s,exit0,codeclean: one
+accepted B1024 stage,2051gates/760leaves/2048saved FULL64 comparisons; one withheld
+B2048 stage and no two-shape curve. [Current result](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md),
+[terminal summary](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/terminal-summary.json),
+[actual collector](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collected-fixed2048.json)
+and [artifact index](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/terminal-artifact-index.json)
+retain complete original snapshots locally/remotely;881MB pickle stays outsideGit.
 
-The [concrete proposal](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/B2048_PAID_PROPOSAL.md) names
-n03,1node/1task/4Slurm CPUs/1V10032GB,120min/no-requeue/no-exclusive, primary
-CNY4.80/conservative additive4.96 ceiling. Immediate submission basis was MIXED rather than idle: n03 CPU100/112,GPU3/8,
-12freeCPUs/5freeGPUs,load9.91,hostFreeMem198685MB and no reservations. [Current preparation](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md)
-and [target receipt](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/deployment-interface-receipt.json)
-record readiness. The human approved this one job. Fresh all-gnall resources were checked; exactly one
-submission started after28seconds on n03,4CPU/1V100/7200s, and the first B1024
-child is compiling. No node retarget/cancel/resubmit or automation/retry occurred.
-[Submission/startup receipt](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/submission-receipt.json)
-records actual resources/card/affinity/load and the remaining unchanged cost ceiling.
-Older budgets remain closed; this independent budget is active. Accepted prior B1024 timing is planning-only, never doubled/imported;
-B2048 is unmeasured and no plateau,10x, training AD or broad science result is claimed.
+Accepted B1024x2 performs28672lane-days from64 genuine FULL64 points repeated32,
+two continuous seven-day blocks,48steps/day, full native outputs/masks/tolerances.
+Five core samples median81.772918770s/range81.765316296–81.787853347; wrapper
+95.848153921/range95.645140350–96.195542384,350.629529/299.139825lane-days/s.
+Primary warm cost is core1.9013420473e-06/wrapper2.22861220984e-06CNY/lane-day;
+conservative1.96472011554e-06/2.3028992835e-06.
+Explicit lower99.942532621s/compile970.430264080s/first81.978769975s/reload/stack/
+transfer/checkpoint IO are separate. Historical timing is never doubled/imported.
+No incomplete setup-based K estimate,CPU/GPU ratio,Fortran,annual669-point50-year,
+10x, trainingAD, plateau or broad scientific acceptance follows.
+
+B2048 compiled but wrapper second-block execution requested9161696464B and OOMed.
+Unsealed first/core samples are not accepted throughput. Failed operation did not
+persist its calculated actual postcompile analysis/snapshot; saved initial bound
+and exact error are reported, without peakVRAM/hardware-impossibility inference.
+Parent-only raw9 cost is1.055555556GPUh/4.222222222allocatedCPUh,CNY2.533333333
+primary/2.617777778 conservative additive, below4.80/4.96; billing unverified,
+28s queue unbilled, child rows not summed. This independent budget is closed;
+older budgets remain unchanged. No retry/extension/newjob/automation occurred.
 
 ## Completed Fixed1024 Capacity Comparison (2026-10-09 Asia/Shanghai)
 
