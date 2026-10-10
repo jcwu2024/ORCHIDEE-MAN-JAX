@@ -2,6 +2,11 @@
 
 English | [简体中文](README.zh-CN.md)
 
+The root checkout uses `main`. Daily neural research and global physical-model
+throughput research have separate fixed worktrees; see
+[workspace management](docs/WORKSPACE_MANAGEMENT.md) for paths, entry documents,
+commit/push, deployment and recovery rules.
+
 Source-backed JAX implementation of the ORCHIDEE-MAN paper-era model for the
 PFT14 mangrove configuration. Scientific process logic is ported from the
 Fortran source and carries file, procedure, and line-span provenance.
