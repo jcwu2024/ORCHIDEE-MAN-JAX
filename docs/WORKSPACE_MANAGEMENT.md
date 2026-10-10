@@ -55,7 +55,12 @@ with `git ls-remote --heads origin` when synchronization matters.
 Large local assets stay at their existing paths under the root workspace:
 `data`, `reference`, `traces`, `fortran_source`, `outputs` and `runtime`.
 Daily worktree asset junctions reuse existing ignored child directories without
-copying data. Tracked README/manifests remain checkout-owned. `runtime` is not
+copying data; where checkout-owned tracked directories already exist, missing
+ignored files use hardlinks and missing child directories use junctions.
+Existing tracked files are not replaced. Preserve these historical shared files;
+use new uniquely named result directories for new work rather than editing an
+old shared artifact. Cache and temporary directories are not shared.
+Tracked README/manifests remain checkout-owned. `runtime` is not
 junctioned into its descendant worktree (that would create a cycle); use the
 declared absolute root runtime path. Global's existing output tree stays local
 to its checkout. New reports must name the actual input/output paths.
