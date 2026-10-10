@@ -7,6 +7,9 @@ throughput research have separate fixed worktrees; see
 [workspace management](docs/WORKSPACE_MANAGEMENT.md) for paths, entry documents,
 commit/push, deployment and recovery rules.
 
+本目录固定为 `main`；日尺度神经研究和全球运行效率研究使用各自独立工作树。
+中文路径表和操作入口见[工作目录管理规范](docs/WORKSPACE_MANAGEMENT.md)。
+
 Source-backed JAX implementation of the ORCHIDEE-MAN paper-era model for the
 PFT14 mangrove configuration. Scientific process logic is ported from the
 Fortran source and carries file, procedure, and line-span provenance.
