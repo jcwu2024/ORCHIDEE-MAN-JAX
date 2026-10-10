@@ -404,7 +404,9 @@ original reference的编译成本分开列，不计作本轮新执行。热core�
 ## 工作目录与操作约束
 
 本分支目录：`E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput`。
-父目录仍是活跃的日尺度研究工作区，不能在那里切分支或修改研究状态页。
+根目录现为 `main`；日尺度研究已迁至同级 `daily-coarse-graining` 工作树。
+每个线程固定 cwd，不在另一个工作树切分支或修改其研究状态页。
+管理、同步和恢复入口见[工作树规范](../../WORKSPACE_MANAGEMENT.md)。
 外部数据、Fortran source 和参考资产仍在父工作区，按已声明绝对路径只读复用；
 新生成物放本分支 `outputs/`，不要复制一份大型数据树。
 

@@ -2,6 +2,9 @@
 
 English | [简体中文](README.zh-CN.md)
 
+See [workspace management](docs/WORKSPACE_MANAGEMENT.md) for fixed checkout
+paths, independent research handoffs and versioned deployment.
+
 This branch, `research/global-throughput`, starts from `main@5910ba9` and studies
 global physical-model throughput. See the [research entry](docs/research/global_throughput/README.md)
 for the baseline evidence, grid-batching plan, and validation gates.
