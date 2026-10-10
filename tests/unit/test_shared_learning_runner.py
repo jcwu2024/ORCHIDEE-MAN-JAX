@@ -16,10 +16,12 @@ from scripts.hpc.run_shared_learning import (
     compile_gradient_evaluators,
     execute_learning_update,
     load_learning_checkpoint,
+    make_learning_daily_accumulator,
     make_tree_operations,
     parser,
     save_learning_checkpoint,
 )
+from scripts.hpc.shared_daily_microbatch import make_microbatch_objective
 
 
 def _daily_objective(parameters, sample):
@@ -293,3 +295,37 @@ def test_parser_exposes_prepare_and_same_run_resume_modes():
     args = parser().parse_args(argv)
     assert args.prepare_only is True
     assert args.resume_checkpoint.name == "resume.pkl"
+    assert args.daily_slice_execution == "leaf"
+    assert parser().parse_args(argv + ["--daily-slice-execution", "tree"]).daily_slice_execution == "tree"
+
+
+def test_learning_accumulator_opt_in_preserves_complete_update():
+    parameters = _parameters()
+    daily = jnp.linspace(-1.0, 1.0, 32, dtype=jnp.float32)
+    microbatch_objective = make_microbatch_objective(jax, jnp, _daily_objective)
+    evaluators = _evaluators()
+    evaluators["daily"] = jax.jit(jax.value_and_grad(microbatch_objective, has_aux=True))
+    results = {}
+    for mode in ("leaf", "tree"):
+        accumulator = make_learning_daily_accumulator(
+            jax=jax, jnp=jnp, microbatch_size=4, evaluator=evaluators["daily"],
+            expected_count=32, slice_execution=mode,
+        )
+        results[mode] = execute_learning_update(
+            jax=jax, parameters=parameters, optimizer=jnp.asarray(0),
+            daily_samples=daily, seven_case=(jnp.asarray(0.2),),
+            thirty_case=(jnp.asarray(-0.4),), evaluators=evaluators,
+            operations=make_tree_operations(jax, jnp, 32), update=_toy_update(),
+            daily_accumulator=accumulator,
+        )
+    for left, right in zip(
+        jax.tree_util.tree_leaves(results["leaf"][:2]),
+        jax.tree_util.tree_leaves(results["tree"][:2]), strict=True,
+    ):
+        np.testing.assert_allclose(left, right, rtol=1e-5, atol=1e-6)
+    for left, right in zip(
+        jax.tree_util.tree_leaves(results["leaf"][2]["loss"]),
+        jax.tree_util.tree_leaves(results["tree"][2]["loss"]), strict=True,
+    ):
+        assert left == pytest.approx(right, rel=1e-5, abs=1e-6)
+    assert int(results["tree"][1]) == 1

@@ -4509,6 +4509,13 @@ def turnover_leaf_age_fall(
     npts, nvm, _, _ = biomass.shape
     lm_old = biomass[:, :, ILEAF, ICARBON]
     delta_lm = jnp.zeros((npts, nvm, NLEAFAGES), dtype=biomass.dtype)
+    # The source fraction numerator and denominator share lm_old. Track the
+    # identical sequential survival factors separately to cancel that scale
+    # before AD; all physical stock/turnover updates below retain their source
+    # order. Fortran turn 569-665: with p_0=1, each class has
+    # delta_rel_i=-p_(i-1)*f_i*rate_i and p_i=p_(i-1)+delta_rel_i.
+    relative_leaf_mass = jnp.ones_like(lm_old)
+    relative_delta_lm = jnp.zeros_like(delta_lm)
     leaf_age_crit = turnover_critical_leaf_age(
         t2m_longterm,
         is_tree,
@@ -4548,6 +4555,9 @@ def turnover_leaf_age_fall(
         )
 
         dturnover = biomass[:, :, ILEAF, ICARBON] * leaf_frac[:, :, leaf_class] * rate
+        relative_dturnover = relative_leaf_mass * leaf_frac[:, :, leaf_class] * rate
+        relative_leaf_mass = relative_leaf_mass - relative_dturnover
+        relative_delta_lm = relative_delta_lm.at[:, :, leaf_class].set(-relative_dturnover)
         turnover = turnover.at[:, :, ILEAF, ICARBON].add(dturnover)
         biomass = biomass.at[:, :, ILEAF, ICARBON].add(-dturnover)
         delta_lm = delta_lm.at[:, :, leaf_class].set(-dturnover)
@@ -4582,6 +4592,27 @@ def turnover_leaf_age_fall(
         safe_fraction_numerator,
         safe_leaf_biomass,
     )
+    # Preserve the existing source-ratio tangent policy below its physical
+    # denominator cutoff, including zero/negative mass and degenerate factors.
+    # In the represented positive-mass branch the exact algebraic identity is
+    # (f_i * lm_old + delta_rel_i * lm_old) / (p_N * lm_old)
+    # = (f_i + delta_rel_i) / p_N, with sequential prefixes defined above.
+    represented_leaf_mass = jnp.abs(safe_leaf_biomass) >= jnp.sqrt(
+        jnp.finfo(safe_leaf_biomass.dtype).tiny
+    )
+    relative_mass = relative_leaf_mass[:, :, None]
+    use_relative_fraction = (
+        has_leaf_biomass
+        & represented_leaf_mass
+        & jnp.isfinite(relative_mass)
+        & (relative_mass != 0.0)
+    )
+    safe_relative_numerator = jnp.where(
+        use_relative_fraction, leaf_frac + relative_delta_lm, 0.0
+    )
+    safe_relative_denominator = jnp.where(use_relative_fraction, relative_mass, 1.0)
+    relative_frac = safe_relative_numerator / safe_relative_denominator
+    updated_frac = jnp.where(use_relative_fraction, relative_frac, updated_frac)
     leaf_frac = jnp.where(has_leaf_biomass, updated_frac, 0.0)
     leaf_frac = leaf_frac.at[:, 0, :].set(0.0)
     turnover = turnover.at[:, 0, :, :].set(0.0)

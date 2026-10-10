@@ -24,7 +24,6 @@ import numpy as np
 from scripts.hpc.checked_recurrent_execution import device_helper_cache
 from scripts.hpc.probe_shared_execution import compare_trees
 from scripts.hpc.probe_shared_split_profile import concatenate_daily
-from scripts.hpc.training_artifact_io import _atomic_json
 
 
 def _load_adjacent_overlay(name):
@@ -45,6 +44,14 @@ def _load_adjacent_overlay(name):
         del sys.modules[module_name]
         raise
 
+
+try:
+    from scripts.hpc.training_artifact_io import _atomic_json
+except ModuleNotFoundError as error:
+    if error.name != "scripts.hpc.training_artifact_io":
+        raise
+    _load_adjacent_overlay("training_artifact_io")
+    from scripts.hpc.training_artifact_io import _atomic_json
 
 _load_adjacent_overlay("probe_shared_dual")
 _load_adjacent_overlay("probe_shared_serialized_updates")
@@ -295,15 +302,35 @@ class RecurrentWorker:
     def evaluate(self, jax, parameters, cases):
         # Host transfer, serialization, worker GPU upload/execution and the
         # gradient response are all inside the measured complete update.
+        began = time.perf_counter()
         message = {
             "kind": "evaluate", "parameters": jax.device_get(parameters),
             "cases": jax.device_get(cases),
+            "parameter_version": getattr(self, "parameter_version", None),
         }
+        host_seconds = time.perf_counter() - began
+        write_started = time.perf_counter()
         pickle.dump(message, self.process.stdin, protocol=pickle.HIGHEST_PROTOCOL)
         self.process.stdin.flush()
+        write_seconds = time.perf_counter() - write_started
+        receive_started = time.perf_counter()
         response = self._receive()
         if response.get("status") != "passed":
             raise RuntimeError(f"recurrent worker evaluation failed: {response}")
+        if (message["parameter_version"] is not None
+                and response.get("executed_parameter_version") != message["parameter_version"]):
+            raise RuntimeError("recurrent worker executed parameter version differs")
+        self.last_parameter_version = response.get("executed_parameter_version")
+        self.last_evaluation_metrics = {
+            "parent_device_get": host_seconds,
+            "request_pickle_write": write_seconds,
+            "response_wait_read_unpickle": time.perf_counter() - receive_started,
+            "request_response_total": time.perf_counter() - began,
+            **response.get("timing_seconds", {}),
+        }
+        self.last_device_memory = response.get("device_memory", {})
+        if self.metadata.get("mode") != "echo_test" and set(response["result"]) != set(cases):
+            raise ValueError("worker returned a different recurrent horizon set")
         return response["result"], response["recurrent_seconds"], response["worker_total_seconds"]
 
     def close(self):
@@ -328,7 +355,8 @@ class RemoteDualExecutor:
     """Overlap local daily AD with remote saved recurrent AD, then update once."""
 
     def __init__(self, *, jax, parameters, optimizer, daily_branch, worker,
-                 combine, update, finite):
+                 combine, update, finite, local_recurrent_branch=None,
+                 preserve_components=False, audit_parameter_versions=False):
         self.jax = jax
         self.parameters = parameters
         self.optimizer = optimizer
@@ -337,6 +365,9 @@ class RemoteDualExecutor:
         self.combine = combine
         self.update = update
         self.finite = finite
+        self.local_recurrent_branch = local_recurrent_branch
+        self.preserve_components = preserve_components
+        self.audit_parameter_versions = audit_parameter_versions
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="remote_recurrent")
 
     def close(self):
@@ -350,15 +381,32 @@ class RemoteDualExecutor:
 
     def step(self, *, daily_payload, recurrent_payload, persist):
         began = time.perf_counter()
+        parameter_version = int(np.asarray(self.optimizer.step))
+        if persist and self.audit_parameter_versions:
+            self.worker.parameter_version = parameter_version
+        if set(recurrent_payload) != {7, 30}:
+            raise ValueError("complete proposal requires exactly T7 and T30")
+        remote_cases = ({30: recurrent_payload[30]} if self.local_recurrent_branch
+                        else recurrent_payload)
         future = self.pool.submit(
-            self.worker.evaluate, self.jax, self.parameters, recurrent_payload
+            self.worker.evaluate, self.jax, self.parameters, remote_cases
         )
         try:
             daily = self.daily_branch(self.parameters, daily_payload)
+            local = {}
+            local_seconds = 0.0
+            if self.local_recurrent_branch is not None:
+                local, local_seconds = self.local_recurrent_branch(
+                    self.parameters, {7: recurrent_payload[7]})
+                if set(local) != {7}:
+                    raise ValueError("local branch must return exactly T7")
         except BaseException:
             future.result()
             raise
         recurrent, recurrent_seconds, worker_total_seconds = future.result()
+        if set(recurrent) != set(remote_cases):
+            raise ValueError("remote branch returned wrong horizon set")
+        recurrent = {**local, **recurrent}
         branch_seconds = time.perf_counter() - began
         hard = {"daily": daily["hard"],
                 "T7": recurrent[7]["hard"], "T30": recurrent[30]["hard"]}
@@ -367,8 +415,12 @@ class RemoteDualExecutor:
         merge_started = time.perf_counter()
         seven = self.jax.device_put(recurrent[7]["gradient"])
         thirty = self.jax.device_put(recurrent[30]["gradient"])
+        self.jax.block_until_ready((seven, thirty))
+        gradient_upload_seconds = time.perf_counter() - merge_started
+        combine_started = time.perf_counter()
         mixed = self.combine(daily["gradient"], seven, thirty)
         self.jax.block_until_ready(mixed)
+        combine_seconds = time.perf_counter() - combine_started
         losses = {"daily": daily["loss"], "T7": recurrent[7]["loss"],
                   "T30": recurrent[30]["loss"]}
         norms = {"daily": daily["norm"], "T7": recurrent[7]["norm"],
@@ -377,10 +429,12 @@ class RemoteDualExecutor:
                 or not all(np.isfinite(value) and value >= 0 for value in norms.values())
                 or not bool(np.asarray(self.finite(mixed)))):
             raise ValueError("remote dual component or mixed gradient is nonfinite")
+        update_started = time.perf_counter()
         proposal, next_optimizer, gradient_norm, clip_scale = self.update(
             self.parameters, mixed, self.optimizer
         )
         self.jax.block_until_ready((proposal, next_optimizer, gradient_norm, clip_scale))
+        optimizer_seconds = time.perf_counter() - update_started
         if (not bool(np.asarray(self.finite((proposal, next_optimizer))))
                 or not np.isfinite(float(gradient_norm))
                 or not 0.0 < float(clip_scale) <= 1.0
@@ -399,15 +453,46 @@ class RemoteDualExecutor:
             "hard": hard, "all_hard_counts_zero": True,
             "timing_seconds": {
                 "daily_microbatch": daily["seconds"],
+                "parent_T7": local_seconds,
                 "recurrent_worker_total": worker_total_seconds,
                 "recurrent_gpu_branch": recurrent_seconds,
                 "branches_elapsed_including_ipc": branch_seconds,
                 "merge_checks_optimizer": merge_seconds,
+                "returned_gradient_device_put_and_sync": gradient_upload_seconds,
+                "component_merge_and_sync": combine_seconds,
+                "adamw_and_sync": optimizer_seconds,
                 "total": time.perf_counter() - began,
             },
         }
-        return record, {"gradient": mixed, "parameters": proposal,
-                        "optimizer": next_optimizer}
+        record["worker_request_response_timings"] = getattr(self.worker, "last_evaluation_metrics", {})
+        record["worker_device_memory"] = getattr(self.worker, "last_device_memory", {})
+        if persist and self.audit_parameter_versions:
+            record["branch_parameter_versions"] = {
+                "daily": parameter_version, "T7": parameter_version,
+                "T30": getattr(self.worker, "last_parameter_version", None)}
+            if not self.local_recurrent_branch:
+                record["branch_parameter_versions"]["T7"] = getattr(self.worker, "last_parameter_version", None)
+            if any(value != parameter_version for value in record["branch_parameter_versions"].values()):
+                raise ValueError("changing update component parameter version differs")
+        record["component_seconds"] = {
+            "daily": daily["seconds"],
+            "T7": recurrent[7].get("seconds"),
+            "T30": recurrent[30].get("seconds"),
+        }
+        total = record["timing_seconds"]["total"]
+        parent_busy = daily["seconds"] + local_seconds
+        record["card_seconds"] = {
+            "card0_synchronized_branch": parent_busy,
+            "card1_synchronized_branch": recurrent_seconds,
+            "card0_branch_wait_or_host": max(0.0, branch_seconds-parent_busy),
+            "card1_other_or_wait": max(0.0, total-recurrent_seconds),
+            "two_cards_elapsed": 2.0*total,
+            "scope": "blocked branch wall proxies, not GPU utilization; host/IPC/check time is not pure transfer",
+        }
+        values = {"gradient": mixed, "parameters": proposal, "optimizer": next_optimizer}
+        if self.preserve_components:
+            values["components"] = {"daily": daily, "T7": recurrent[7], "T30": recurrent[30]}
+        return record, values
 
 
 def compare_proposal(jax, dual_values, serial_values):
@@ -934,6 +1019,258 @@ def run(args):
         args.output = output
 
 
+def compare_schedule_pair(jax, old_record, old_values, new_record, new_values):
+    """Compare full proposals and every retained component, outside timing."""
+    checks = compare_proposal(jax, new_values, old_values)
+    components = {}
+    for name in ("daily", "T7", "T30"):
+        old = old_values["components"][name]
+        new = new_values["components"][name]
+        components[name] = {
+            "gradient": compare_trees(jax, new["gradient"], old["gradient"], rtol=RTOL, atol=ATOL),
+            "auxiliary": compare_trees(jax, new["auxiliary"], old["auxiliary"], rtol=RTOL, atol=ATOL),
+            "loss_close": bool(np.isclose(new["loss"], old["loss"], rtol=RTOL, atol=ATOL)),
+            "norm_close": bool(np.isclose(new["norm"], old["norm"], rtol=RTOL, atol=ATOL)),
+            "physical_counters_equal": new["hard"] == old["hard"],
+        }
+    scalar_checks = {
+        key: bool(np.isclose(new_record[key], old_record[key], rtol=RTOL, atol=ATOL))
+        for key in ("optimizer_gradient_norm", "clip_scale", "optimizer_step")
+    }
+    joint_close = bool(np.isclose(new_record["loss"]["joint"], old_record["loss"]["joint"], rtol=RTOL, atol=ATOL))
+    passed = all(item["passed"] for item in checks.values()) and all(scalar_checks.values()) and joint_close
+    passed = passed and all(
+        item["gradient"]["passed"] and item["auxiliary"]["passed"] and item["loss_close"]
+        and item["norm_close"] and item["physical_counters_equal"]
+        for item in components.values()
+    )
+    return {"status": "passed" if passed else "rejected", "full_tree_comparisons": checks,
+            "components": components, "optimizer_scalars_close": scalar_checks,
+            "joint_loss_close": joint_close}
+
+
+def measure_schedule_pairs(*, jax, old, new, daily, cases, repeats, emit, output=None):
+    """Warm both schedules, then discard every alternating fixed-state proposal."""
+    if repeats < 3:
+        raise ValueError("schedule comparison requires at least three paired repeats")
+    initial = [(executor.parameters, executor.optimizer) for executor in (old, new)]
+    rows = []
+    for name, executor in (("old", old), ("new", new)):
+        emit("schedule_warmup", schedule=name)
+        executor.step(daily_payload=daily, recurrent_payload=cases, persist=False)
+    for index in range(repeats):
+        order = ("old", "new") if index % 2 == 0 else ("new", "old")
+        actual = {}
+        for name in order:
+            emit("schedule_proposal", pair=index+1, schedule=name)
+            executor = old if name == "old" else new
+            record, values = executor.step(daily_payload=daily, recurrent_payload=cases, persist=False)
+            jax.block_until_ready((values["gradient"], values["parameters"], values["optimizer"]))
+            actual[name] = (record, values)
+        comparison = compare_schedule_pair(jax, *actual["old"], *actual["new"])
+        row = {"pair": index+1, "order": list(order), "old": actual["old"][0],
+               "new": actual["new"][0], "comparison": comparison}
+        row["old_over_new_wall_ratio"] = row["old"]["timing_seconds"]["total"] / row["new"]["timing_seconds"]["total"]
+        if index == 0 and output is not None:
+            path = output.with_suffix(".auxiliary.pkl")
+            aux = {mode: {name: component["auxiliary"] for name, component in values["components"].items()}
+                   for mode, (_, values) in actual.items()}
+            with path.open("wb") as handle:
+                pickle.dump(jax.device_get(aux), handle, protocol=pickle.HIGHEST_PROTOCOL)
+            row["retained_actual_auxiliary"] = str(path)
+            row["auxiliary_leaf_shapes"] = {
+                name: [{"shape": list(np.shape(value)), "dtype": str(np.asarray(value).dtype)}
+                       for value in jax.tree_util.tree_leaves(aux["old"][name])]
+                for name in ("daily", "T7", "T30")
+            }
+            row["auxiliary_top_level_keys"] = {name: list(aux["old"][name]) for name in ("daily", "T7", "T30")}
+        rows.append(row)
+        emit("schedule_pair_compared", paired_rows=rows)
+        for executor, (parameters, optimizer) in zip((old, new), initial, strict=True):
+            if executor.parameters is not parameters or executor.optimizer is not optimizer:
+                raise ValueError("fixed proposal advanced parameter/AdamW state")
+        if comparison["status"] != "passed":
+            raise ValueError("schedule full proposal or retained component differs")
+        del actual
+    medians = {name: float(np.median([row[name]["timing_seconds"]["total"] for row in rows]))
+               for name in ("old", "new")}
+    gain = medians["old"] / medians["new"]
+    return {"paired_rows": rows, "median_seconds": medians,
+            "old_over_new_throughput_ratio": gain, "throughput_gain_fraction": gain-1.0,
+            "wall_reduction_fraction": 1.0-1.0/gain,
+            "median_card_seconds_per_proposal": {name: 2*value for name, value in medians.items()},
+            "weight_policy": "identical_update0_parameter_and_AdamW_objects_all_proposals_discarded",
+            "proposals_per_schedule_including_warmup": repeats+1,
+            "completed_changing_updates": 0}
+
+
+def measure_changing_schedule_pairs(*, jax, old, new, payloads, updates, emit, output):
+    """Advance two independent diagnostic chains through the public AdamW."""
+    if not 1 <= updates <= 16 or not payloads:
+        raise ValueError("changing schedule chains require 1..16 actual updates")
+    initial_step = int(np.asarray(old.optimizer.step))
+    if initial_step != 0 or int(np.asarray(new.optimizer.step)) != 0:
+        raise ValueError("changing schedules require the same original update0")
+    rows = []
+    for index in range(updates):
+        payload = payloads[index % len(payloads)]
+        order = ("old", "new") if index % 2 == 0 else ("new", "old")
+        actual = {}
+        previous = {name: executor.parameters for name, executor in (("old", old), ("new", new))}
+        for name in order:
+            executor = old if name == "old" else new
+            emit("changing_schedule_update", update=index+1, schedule=name)
+            actual[name] = executor.step(daily_payload=payload["daily"], recurrent_payload=payload["cases"], persist=True)
+            jax.block_until_ready((executor.parameters, executor.optimizer))
+        comparison = compare_schedule_pair(jax, *actual["old"], *actual["new"])
+        advanced = {}
+        for name, executor in (("old", old), ("new", new)):
+            changed = any(not np.array_equal(np.asarray(a), np.asarray(b))
+                for a, b in zip(jax.tree_util.tree_leaves(previous[name]),
+                    jax.tree_util.tree_leaves(executor.parameters), strict=True))
+            step = int(np.asarray(executor.optimizer.step))
+            if not changed or step != index+1:
+                raise ValueError("changing schedule parameter/AdamW state did not advance")
+            advanced[name] = {"parameters_changed": changed, "optimizer_step": step,
+                "all_component_parameter_versions": actual[name][0]["branch_parameter_versions"],
+                "version_evidence": "worker echoes executed request version; local branches receive current executor tree directly"}
+        rows.append({"update": index+1, "payload_index": index % len(payloads), "order": list(order),
+            "old": actual["old"][0], "new": actual["new"][0], "comparison": comparison,
+            "state_progression": advanced})
+        emit("changing_schedule_pair_compared", changing_rows=rows)
+        if comparison["status"] != "passed":
+            raise ValueError("changing schedule full proposal/components differ")
+        del actual, previous
+    retained = {}
+    for name, executor in (("old", old), ("new", new)):
+        path = output.with_suffix(f".{name}.diagnostic-chain.pkl")
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        with temporary.open("wb") as handle:
+            pickle.dump(jax.device_get({"parameters": executor.parameters, "optimizer": executor.optimizer,
+                "completed_updates": updates, "purpose": "changing_schedule_diagnostic_only"}), handle,
+                protocol=pickle.HIGHEST_PROTOCOL)
+        os.replace(temporary, path)
+        retained[name] = str(path)
+    return {"completed_changing_updates": updates, "changing_rows": rows,
+        "retained_diagnostic_chains": retained, "final_optimizer_steps": {"old": updates, "new": updates},
+        "weight_policy": "two independent chains from same original update0; each public AdamW result feeds the next update",
+        "actual_updates_all_chains": 2*updates}
+
+
+def run_schedule_comparison(args):
+    """Load update-0/binaries directly; never enter a learning/bootstrap replay."""
+    if args.input_bundle is None or args.daily_counts != [32] or args.repeats < 3:
+        raise ValueError("comparison-only requires compact bundle, daily-counts 32 and >=3 pairs")
+    if args.prepare_only or args.resume_checkpoint or args.prepare_input_bundle:
+        raise ValueError("comparison-only cannot prepare or resume training")
+    started = time.perf_counter()
+    report = {"status": "running", "scope": "fixed_parameter_old_vs_daily_T7_T30_dual_schedule",
+              "scientific_acceptance": False, "completed_changing_updates": 0,
+              "retained_formal_training_updates": 0, "model_gradient_compilations": 0,
+              "comparison_rtol": RTOL, "comparison_atol": ATOL,
+              "state_AD_scope": "existing saved parameter-gradient binaries and retained auxiliary outputs; no new independent initial-state AD certification",
+              "old_schedule": "parent GPU0 daily32; worker GPU1 T7+T30",
+              "new_schedule": "parent GPU0 daily32 then T7; worker GPU1 T30",
+              "workload": "daily32/eight distinct micro4 + full one T7 + full one T30",
+              "loss_weight_policy": "existing already-weighted saved binaries; original daily/T7/T30 combiner order",
+              "native_retarget_supported": False}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    worker = None
+    executors = []
+
+    def emit(stage, **values):
+        report.update(stage=stage, elapsed_seconds=time.perf_counter()-started, **values)
+        _atomic_json(args.output, report)
+        print(f"schedule_comparison stage={stage} seconds={report['elapsed_seconds']:.1f}", flush=True)
+
+    try:
+        emit("validate_reference_and_bundle")
+        profile, reference, digest = _reference_and_profile(args)
+        paths = admission_report_paths(args)
+        admissions = validate_admissions(profile, reference, paths, profile_sha256=digest)
+        with args.input_bundle.open("rb") as handle:
+            bundle = pickle.load(handle)
+        ids = _validate_bundle(bundle, profile_sha256=digest, reference=reference, source_head=_source_head())
+        from scripts.hpc import run_shared_learning as learning
+        from research.daily_coarse_graining.daily_operator.fresh_start_training import make_update
+        from scripts.hpc.probe_shared_compile_cache import _require_supported_jax
+        import jax
+        import jax.numpy as jnp
+        from jax.experimental.serialize_executable import deserialize_and_load
+        _require_supported_jax(jax)
+        device, = jax.local_devices()
+        selector = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+        if device.platform != "gpu" or not selector or "," in selector or not args.worker_cuda_device or "," in args.worker_cuda_device or selector == args.worker_cuda_device:
+            raise ValueError("comparison requires distinct single physical GPU parent/worker selectors")
+        require_distinct_batches(jax, ids, *(payload["daily"] for payload in bundle["payloads"]))
+        checkpoint = learning.load_learning_checkpoint(Path(bundle["initial_checkpoint"]), expected_method=reference["method"])
+        if checkpoint["completed_updates"] != 0:
+            raise ValueError("comparison requires original update-0")
+        limit = int(reference["method"]["configuration"]["gradient_memory_limit_gib"])*2**30
+        report.update(source_git_head=bundle["source_git_head"], source_profile=str(args.source_profile),
+                      source_profile_sha256=digest, input_bundle=str(args.input_bundle), artifact_ids=ids,
+                      tested_artifact_id=ids[0], initial_checkpoint=bundle["initial_checkpoint"],
+                      admitted_overrides=admissions, parent_device=str(device), parent_cuda_selector=selector,
+                      worker_cuda_selector=args.worker_cuda_device, memory_limit_bytes=limit)
+        with jax.default_device(device), device_helper_cache(device):
+            parameters, optimizer = _device_tree(jax, (checkpoint["parameters"], checkpoint["optimizer"]), device)
+            daily, cases = _device_tree(jax, (bundle["payloads"][0]["daily"], bundle["payloads"][0]["cases"]), device)
+            operations = learning.make_tree_operations(jax, jnp, 32)
+            update = make_update(reference["method"]["daily_protocol"])
+            combine = make_component_combiner(jax)
+            evaluators, metadata = load_evaluators(profile, deserialize=deserialize_and_load,
+                memory_sizes=learning.memory_sizes, memory_limit_bytes=limit, emit=emit, overrides=admissions)
+        changing_payloads = bundle["payloads"]
+        del checkpoint, bundle
+        report["parent_executables"] = metadata
+        emit("start_worker")
+        worker = RecurrentWorker(args.source_profile, cuda_device=args.worker_cuda_device,
+                                 memory_limit_bytes=limit, admission_reports=paths)
+        if worker.metadata.get("admitted_overrides", {}) != admissions:
+            raise ValueError("worker admission provenance differs")
+        for name in ("T7", "T30"):
+            if Path(worker.metadata["executables"][name]["source_executable"]).resolve() != Path(metadata[name]["source_executable"]).resolve():
+                raise ValueError("worker/parent executable selection differs")
+        report["worker"] = worker.metadata
+        emit("graphs_ready_no_model_compile", graphs_ready_seconds=time.perf_counter()-started)
+        daily_branch = make_microbatch_daily_branch(jax=jax, jnp=jnp, device=device,
+            evaluator=evaluators["daily"], operations=operations, microbatch_size=4,
+            expected_count=32, preserve_auxiliary=True)
+        seven_branch = make_recurrent_branch(jax=jax, device=device, evaluators={7: evaluators["T7"]},
+            operations=operations, horizons=(7,), preserve_auxiliary=True)
+        for local in (None, seven_branch):
+            executors.append(RemoteDualExecutor(jax=jax, parameters=parameters, optimizer=optimizer,
+                daily_branch=daily_branch, worker=worker, combine=combine, update=update,
+                finite=operations["finite"], local_recurrent_branch=local, preserve_components=True))
+        if getattr(args, "schedule_changing_updates", 0):
+            for executor in executors:
+                executor.audit_parameter_versions = True
+        changing_updates = getattr(args, "schedule_changing_updates", 0)
+        if changing_updates:
+            report["scope"] = "changing_parameter_old_vs_daily_T7_T30_dual_schedule"
+            report.update(measure_changing_schedule_pairs(jax=jax, old=executors[0], new=executors[1],
+                payloads=changing_payloads, updates=changing_updates, emit=emit, output=args.output))
+        else:
+            report.update(measure_schedule_pairs(jax=jax, old=executors[0], new=executors[1],
+                daily=daily, cases=cases, repeats=args.repeats, emit=emit, output=args.output))
+        report["parent_device_memory"] = device.memory_stats()
+        report["worker_device_memory"] = getattr(worker, "last_device_memory", {})
+        for name in ("parent_device_memory", "worker_device_memory"):
+            if (report[name] or {}).get("peak_bytes_in_use", 0) > limit:
+                raise ValueError(f"{name} exceeds unchanged memory limit")
+        emit("completed", status="passed", initial_optimizer_step=int(np.asarray(optimizer.step)),
+             final_optimizer_step=int(np.asarray(executors[0].optimizer.step)))
+        return report
+    except Exception as error:
+        emit("exception", status="error", error_type=type(error).__name__, error=str(error))
+        raise
+    finally:
+        for executor in executors:
+            executor.close()
+        if worker is not None:
+            worker.close()
+
+
 def parser():
     from scripts.hpc.run_shared_learning import parser as base_parser
 
@@ -950,6 +1287,10 @@ def parser():
     _serialized_module.add_admission_arguments(result)
     result.add_argument("--daily-counts", type=int, nargs="+", choices=(32, 64), default=[32, 64])
     result.add_argument("--inspect-only", action="store_true")
+    result.add_argument("--comparison-only", action="store_true",
+                        help="compare fixed old/new two-GPU schedules; skip changing updates and checkpoint persistence")
+    result.add_argument("--schedule-changing-updates", type=int, choices=range(1, 17), default=0,
+                        help="with comparison-only, advance two original diagnostic chains 1..16 updates instead of fixed proposals")
     return result
 
 
@@ -1051,8 +1392,12 @@ if __name__ == "__main__":
         result = run_worker_smoke(Path(sys.argv[3]), sys.argv[4])
     else:
         args = parser().parse_args()
+        if args.schedule_changing_updates and not args.comparison_only:
+            raise SystemExit("--schedule-changing-updates requires --comparison-only")
         if args.inspect_only:
             result = inspect_inputs(args)
+        elif args.comparison_only:
+            result = run_schedule_comparison(args)
         elif args.prepare_input_bundle:
             if args.input_bundle is None:
                 raise SystemExit("--prepare-input-bundle requires --input-bundle")

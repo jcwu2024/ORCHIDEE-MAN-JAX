@@ -146,6 +146,18 @@ def _batch_size(jax: Any, daily_batch: Any) -> int:
     return sizes[0]
 
 
+def make_daily_batch_slicer(jax: Any, microbatch_size: int) -> Callable[[Any, Any], Any]:
+    size = int(microbatch_size)
+
+    def slice_batch(batch: Any, start: Any) -> Any:
+        return jax.tree_util.tree_map(
+            lambda value: jax.lax.dynamic_slice_in_dim(value, start, size, axis=0),
+            batch,
+        )
+
+    return jax.jit(slice_batch)
+
+
 def _hard_counts(auxiliary: Any) -> dict[str, int]:
     if not isinstance(auxiliary, dict) or "hard" not in auxiliary:
         raise ValueError("daily auxiliary must contain the declared hard-count mapping")
@@ -164,7 +176,9 @@ def accumulate_daily_gradients(
     microbatch_size: int,
     evaluator: Callable[[Any, Any], tuple[tuple[Any, Any], Any]],
     expected_count: int,
+    slice_execution: str = "leaf",
     _operations: _AccumulatorOperations | None = None,
+    _batch_slicer: Callable[[Any, Any], Any] | None = None,
 ) -> tuple[tuple[Any, Any], Any]:
     """Evaluate and accumulate an exact equal-sample daily mean gradient.
 
@@ -184,6 +198,10 @@ def accumulate_daily_gradients(
         raise ValueError("daily batch row count differs from the declared mean")
     if count % size:
         raise ValueError("daily batch must divide into equal-sized microbatches")
+    if slice_execution not in {"leaf", "tree"}:
+        raise ValueError("slice_execution must be 'leaf' or 'tree'")
+    if slice_execution == "tree" and _batch_slicer is None:
+        _batch_slicer = make_daily_batch_slicer(jax, size)
 
     microbatch_count = count // size
     operations = _operations or _make_accumulator_operations(jax, jnp, microbatch_count)
@@ -191,9 +209,12 @@ def accumulate_daily_gradients(
     auxiliary_total = None
     gradient_total = None
     for microbatch_index, start in enumerate(range(0, count, size)):
-        microbatch = jax.tree_util.tree_map(
-            lambda value, lower=start: value[lower : lower + size], daily_batch
-        )
+        if slice_execution == "tree":
+            microbatch = _batch_slicer(daily_batch, jnp.asarray(start, dtype=jnp.int32))
+        else:
+            microbatch = jax.tree_util.tree_map(
+                lambda value, lower=start: value[lower : lower + size], daily_batch
+            )
         (value, auxiliary), gradient = evaluator(parameters, microbatch)
         hard = _hard_counts(auxiliary)
         finite_value = bool(np.isfinite(float(np.asarray(value))))
@@ -225,6 +246,8 @@ def make_daily_accumulator(
     microbatch_size: int,
     evaluator: Callable[[Any, Any], tuple[tuple[Any, Any], Any]],
     expected_count: int,
+    slice_execution: str = "leaf",
+    _batch_slicer: Callable[[Any, Any], Any] | None = None,
 ) -> Callable[[Any, Any], tuple[tuple[Any, Any], Any]]:
     """Bind one compiled evaluator and cached device accumulation operations."""
 
@@ -232,7 +255,12 @@ def make_daily_accumulator(
     count = int(expected_count)
     if size <= 0 or count <= 0 or count % size:
         raise ValueError("declared daily count must divide into equal-sized microbatches")
+    if slice_execution not in {"leaf", "tree"}:
+        raise ValueError("slice_execution must be 'leaf' or 'tree'")
     operations = _make_accumulator_operations(jax, jnp, count // size)
+    batch_slicer = _batch_slicer
+    if slice_execution == "tree" and batch_slicer is None:
+        batch_slicer = make_daily_batch_slicer(jax, size)
 
     def evaluate(parameters: Any, daily_batch: Any) -> tuple[tuple[Any, Any], Any]:
         return accumulate_daily_gradients(
@@ -243,7 +271,9 @@ def make_daily_accumulator(
             microbatch_size=size,
             evaluator=evaluator,
             expected_count=count,
+            slice_execution=slice_execution,
             _operations=operations,
+            _batch_slicer=batch_slicer,
         )
 
     return evaluate
@@ -254,5 +284,6 @@ __all__ = [
     "accumulate_daily_gradients",
     "compile_microbatch_evaluator",
     "make_daily_accumulator",
+    "make_daily_batch_slicer",
     "make_microbatch_objective",
 ]

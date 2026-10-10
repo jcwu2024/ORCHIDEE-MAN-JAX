@@ -4,12 +4,13 @@ set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 OVERLAY=${OVERLAY:-"$ROOT/runtime/transfer/shared-combined-full-update-20260926"}
 INSPECT_ONLY=${INSPECT_ONLY:-0}
+COMPARISON_ONLY=${COMPARISON_ONLY:-0}
 DRY_ARGS=()
 if [[ ${1:-} == --dry-run ]]; then DRY_ARGS+=(--dry-run); shift; fi
 case $INSPECT_ONLY in
   0)
     case $(hostname -s) in gln01|ibgln01|ibc13b02n04) ;; *) [[ ${#DRY_ARGS[@]} == 1 ]] || exit 2 ;; esac
-    RUN_TIMEOUT=30m
+    RUN_TIMEOUT=${RUN_TIMEOUT:-30m}
     DEFAULT_OUTPUT="$ROOT/runtime/outputs/diagnostics/shared-combined-full-update-20260926.json"
     ;;
   1)
@@ -19,7 +20,7 @@ case $INSPECT_ONLY in
     ;;
   *) exit 2 ;;
 esac
-export INSPECT_ONLY RUN_TIMEOUT
+export INSPECT_ONLY RUN_TIMEOUT COMPARISON_ONLY
 export ENTRY_FILE="$OVERLAY/probe_shared_serialized_dual.py"
 export INPUT_BUNDLE="$ROOT/runtime/outputs/diagnostics/shared-split-dual-inputs-c599236.pkl"
 export OUTPUT=${OUTPUT:-"$DEFAULT_OUTPUT"}

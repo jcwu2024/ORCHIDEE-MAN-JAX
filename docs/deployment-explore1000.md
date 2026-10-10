@@ -46,6 +46,28 @@ Keep existing paid approval rules and do not infer historical contention from
 current load alone. If no node is idle, report that fact when preparing the
 bounded request rather than calling a partially free node idle.
 
+For node selection, first require enough **unallocated GPU and CPU resources**
+for the job, then compare CPU load among eligible nodes. Read GPU allocations
+from `CfgTRES`/`AllocTRES`; `sinfo`'s GRES inventory is the installed GPU count,
+not the free count. Low device utilization alone does not mean Slurm can
+allocate that device. A low-load node with all GPUs allocated is not an
+eligible immediate placement when another node has both requested resources.
+If several suitable nodes exist, declare an eligible node set in the paid
+proposal rather than unnecessarily pinning the job to one busy node. Refresh
+the candidates immediately before submission and verify the actual assigned
+GPU and CPU affinity at launch. If a pending job's placement needs correction,
+prefer updating that same job within the approved resource/time/cost envelope;
+hold it during any launcher compatibility repair, preserve the original
+approval and submission records, and record the placement change separately.
+Do not submit a replacement merely to change placement.
+
+Before submitting a new launcher, pass its complete generated phase arguments
+through the target entry point's CPU-only argument validation as well as the
+target shell's dry-run. Printing valid shell arguments alone does not prove
+that the downstream program accepts their limits. Check that the funded
+window, phase caps and protected completion time agree across both launch
+layers before spending a GPU allocation.
+
 The first Teacher capture benchmark is defined by
 `scripts/hpc/slurm_teacher_cpu_benchmark.sh`: one `cnall` task, 8 allocated
 CPUs, a one-hour limit, one cold capture, and three in-process hot repeats over

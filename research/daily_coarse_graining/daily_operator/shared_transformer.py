@@ -49,6 +49,9 @@ class SharedTransformerConfig:
     output_chunk_size: int = 64
     normalization_epsilon: float = 1.0e-6
     decoder_execution: str = "gather_reuse"
+    # Research architecture opt-in; execution variants above retain their defaults.
+    decoder_architecture: str = "coordinate"
+    latent_reader_execution: str = "field"
 
     # The audited canonical tokenizer remains narrower than the new backbone.
     input_width: int = 384
@@ -76,6 +79,10 @@ class SharedTransformerConfig:
         return self.attention_heads if self.decoder_attention_heads is None else self.decoder_attention_heads
 
     def validate(self) -> None:
+        if self.decoder_architecture not in {"coordinate", "latent_reader"}:
+            raise ValueError("unknown shared decoder architecture")
+        if self.latent_reader_execution not in {"field", "expert"}:
+            raise ValueError("latent reader execution must be field or expert")
         if self.width <= 0 or self.input_width <= 0 or self.forcing_width <= 0:
             raise ValueError("shared Transformer widths must be positive")
         if self.width % self.attention_heads:
@@ -259,7 +266,7 @@ def initialize_shared_transformer_parameters(
         ),
         "coordinate_blocks": tuple(
             _residual_block_parameters(next(keys), decoder_width, config.resolved_decoder_ffn_width)
-            for _ in range(config.coordinate_blocks)
+            for _ in range(config.coordinate_blocks if config.decoder_architecture == "coordinate" else 0)
         ),
         "field_embedding": _normal(next(keys), (len(schema.fields), decoder_width), decoder_width),
         "label_embedding": _normal(next(keys), (len(schema.labels), decoder_width), decoder_width),
@@ -270,12 +277,24 @@ def initialize_shared_transformer_parameters(
         ),
         "axis_slot_embedding": _normal(next(keys), (layout.max_output_rank, decoder_width), decoder_width),
         "local_value_input": _linear_parameters(next(keys), 2, decoder_width),
-        "readout_first": _linear_parameters(next(keys), decoder_width, config.readout_width),
-        "readout_second": _linear_parameters(next(keys), config.readout_width, 1),
+        "readout_first": (
+            _linear_parameters(next(keys), decoder_width, config.readout_width)
+            if config.decoder_architecture == "coordinate" else None
+        ),
+        "readout_second": (
+            _linear_parameters(next(keys), config.readout_width, 1)
+            if config.decoder_architecture == "coordinate" else None
+        ),
         "carbon": carbon,
     }
     if decoder_width != config.width:
         shared["decoder_bridge"] = _linear_parameters(next(keys), config.width, decoder_width)
+    if config.decoder_architecture == "latent_reader":
+        from .shared_latent_reader import initialize_latent_reader_parameters
+
+        # The selected tree contains no old wide coordinate blocks/readout.
+        shared.pop("coordinate_blocks")
+        shared.update(initialize_latent_reader_parameters(keys, config=config))
     return {"tokenizer": tokenizer, "shared_transformer": shared}
 
 
@@ -1345,6 +1364,15 @@ def shared_transformer_raw_outputs(
     config.validate()
     if tuple(field.name for field in schema.fields) != tuple(field.name for field in layout.ledger):
         raise ValueError("shared Transformer schema and layout drift")
+    if config.decoder_architecture == "latent_reader":
+        from .shared_latent_reader import shared_latent_reader_raw_outputs
+
+        return shared_latent_reader_raw_outputs(
+            parameters, context, inputs, schema=schema, layout=layout,
+            input_normalization=input_normalization, config=config,
+            carbon_state_layout=carbon_state_layout,
+            field_reference=config.latent_reader_execution == "field",
+        )
     family_tokens, family_mask = _source_family_bank(context, layout)
     context, family_tokens = _project_decoder_context(parameters, context, family_tokens, family_mask)
     raw_carbon = carbon_defined = None

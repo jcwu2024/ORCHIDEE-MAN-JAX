@@ -156,6 +156,16 @@ def load_helper(path):
     return module
 
 
+def load_cache_evidence():
+    name = '_shared_native_cache_evidence'
+    if name not in sys.modules:
+        spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name('shared_native_cache_evidence.py'))
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+    return sys.modules[name]
+
+
 def staged_daily_functions(jax, head, sample, context, make_objective, captured, learned_method, *, neural_remat=False):
     """Factor existing shared owners, never reimplement loss or physical rules.
 
@@ -266,7 +276,9 @@ def module_signature(module):
                 total += math.prod(tensor.shape) * max(bits // 8, 1)
             return total
         return {'argument_leaves': len(signature.inputs), 'argument_nominal_bytes': nominal_bytes(signature.inputs),
-                'result_leaves': len(signature.results), 'result_nominal_bytes': nominal_bytes(signature.results)}
+                'result_leaves': len(signature.results), 'result_nominal_bytes': nominal_bytes(signature.results),
+                'argument_types': [str(value) for value in signature.inputs],
+                'result_types': [str(value) for value in signature.results]}
     raise ValueError('compiled stage has no main signature')
 
 
@@ -274,6 +286,7 @@ def module_signature(module):
 def stage_compilation_evidence(args, helper, emit, report):
     """Observe native compiler units and retain each completed persistent cache."""
     from jax._src import compiler
+    evidence = load_cache_evidence()
     original = compiler.compile_or_get_cached
     original_backend = compiler.backend_compile
     active = None
@@ -289,9 +302,11 @@ def stage_compilation_evidence(args, helper, emit, report):
         prior_mode = prior.get('mode')
 
     def backend(*arguments, **keywords):
-        if active is not None and active.get('required_cache_hit'):
-            active['status'] = 'completed_unit_cache_miss'
-            emit('stopped_before_backend', status='completed_unit_cache_miss')
+        if active is not None and (active.get('required_cache_hit') or getattr(args, 'forbid_named_model_backend', False)):
+            active['status'] = ('completed_unit_cache_miss' if active.get('required_cache_hit')
+                                else 'model_backend_forbidden')
+            active['blocked_backend_entries'] = active.get('blocked_backend_entries', 0) + 1
+            emit('stopped_before_backend', status=active['status'])
             raise RuntimeError('refusing to recompile completed unit: ' + active['module'])
         began = time.perf_counter()
         if active is not None:
@@ -316,13 +331,47 @@ def stage_compilation_evidence(args, helper, emit, report):
         event = {'module': name, 'ordinal': ordinal, 'stablehlo_artifact': str(artifact), 'status': 'compiling'}
         event.update(backend_compile_calls=0, backend_compile_seconds=0.0)
         event['main_signature'] = module_signature(module)
-        require_old = prior_mode == args.mode or 'neural_stage' not in name
-        if require_old and ordinal < len(prior_units) and prior_units[ordinal].get('status') == 'completed':
-            old = prior_units[ordinal]
-            if (old['module'], old['main_signature']) != (name, event['main_signature']):
-                raise ValueError('completed stage module/signature changed')
-            event['required_cache_hit'] = True
+        event['jax_canonical_computation_sha256'] = evidence.native_computation_digest(module)
+        event['native_cache_key_calls'] = []
         events.append(event)
+        require_old = prior_mode == args.mode or 'neural_stage' not in name
+        mandatory = ordinal in getattr(args, 'required_cache_ordinals', ())
+        if mandatory and (ordinal >= len(prior_units) or prior_units[ordinal].get('status') != 'completed'):
+            event['status'] = 'cache_reference_missing'
+            emit('stopped_before_cache_lookup', status=event['status'], active_compile_unit=ordinal)
+            raise ValueError('mandatory completed cache unit is missing')
+        if (require_old or mandatory) and ordinal < len(prior_units) and prior_units[ordinal].get('status') == 'completed':
+            old = prior_units[ordinal]
+            old_signature = old['main_signature']
+            if getattr(args, 'require_saved_ir_interface', False):
+                from jax._src.interpreters import mlir
+                from jaxlib.mlir import ir
+                old_path = Path(old.get('stablehlo_artifact', args.reuse_stage_report.with_suffix(f'.stage-{ordinal:02d}.hlo.pkl')))
+                event['prior_stablehlo_artifact'] = str(old_path)
+                try:
+                    with old_path.open('rb') as handle:
+                        old_source = pickle.load(handle)
+                    if not isinstance(old_source, str):
+                        raise ValueError('completed stage StableHLO must be preserved text')
+                    with mlir.make_ir_context():
+                        old_module = ir.Module.parse(old_source)
+                        old_signature = module_signature(old_module)
+                        event['prior_jax_canonical_computation_sha256'] = evidence.native_computation_digest(old_module)
+                    event['prior_ordered_interface_source'] = 'preserved_StableHLO_not_reconstructed_GPU_options'
+                except Exception as error:
+                    event.update(status='cache_reference_missing', error_type=type(error).__name__, error=str(error))
+                    emit('stopped_before_cache_lookup', status=event['status'], active_compile_unit=ordinal)
+                    raise
+            try:
+                if old['module'] != name:
+                    raise ValueError('completed stage module/signature changed')
+                event['prior_interface_evidence'] = evidence.compare_recorded_signatures(old_signature, event['main_signature'])
+            except ValueError as error:
+                event.update(status='completed_unit_interface_mismatch', prior_main_signature=old_signature,
+                             interface_mismatch=str(error))
+                emit('stopped_before_cache_lookup', status=event['status'], active_compile_unit=ordinal)
+                raise
+            event['required_cache_hit'] = True
         emit('compile_stage', active_compile_unit=ordinal)
         if args.neural_remat and 'neural_stage' in name and ordinal == 0:
             signature = event['main_signature']
@@ -332,12 +381,21 @@ def stage_compilation_evidence(args, helper, emit, report):
                 raise ValueError('checkpoint did not reduce previous measured residual interface')
         began = time.perf_counter()
         active = event
-        limit = args.final_neural_compile_seconds if ordinal == 5 and 'neural_stage' in name else 300
+        limit = 300
+        if 'neural_stage' in name:
+            if ordinal == 5:
+                limit = args.final_neural_compile_seconds
+            elif ordinal == 0:
+                limit = getattr(args, 'neural_forward_compile_seconds', 300)
         event['compile_limit_seconds'] = limit
         try:
             with deadline(limit, 'compile_unit_' + name, emit):
                 result = original(*arguments, **keywords)
         finally:
+            calls = event['native_cache_key_calls']
+            event['native_cache_key_status'] = ('observed' if any(call['status'] == 'observed_native_key' for call in calls)
+                                               else 'native_get_failed' if calls
+                                               else 'unavailable_native_get_not_called')
             active = None
         event.update(status='completed', seconds=time.perf_counter() - began)
         event['cache_hit'] = event['backend_compile_calls'] == 0
@@ -355,7 +413,8 @@ def stage_compilation_evidence(args, helper, emit, report):
     compiler.compile_or_get_cached = lookup
     compiler.backend_compile = backend
     try:
-        yield
+        with evidence.observe_native_cache_keys(lambda: active):
+            yield
     finally:
         compiler.compile_or_get_cached = original
         compiler.backend_compile = original_backend

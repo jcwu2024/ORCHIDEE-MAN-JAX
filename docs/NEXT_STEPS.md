@@ -1,127 +1,83 @@
 # Current Work Order
 
-Updated: 2026-09-28. This page controls current operations; dated evidence does
-not authorize its old proposed next action.
+Updated: 2026-10-10. First-day localization completed both graphs/24 JVPs.
+Finite, defined next-state tangents differ for every direction, including control 200;
+raw state coordinate 20 is nonfinite. Numerical exit 3, GPU released, scope
+closed. Raw-neural v3-final saved-evidence audit is accepted with active numerical
+failures; 24 results saved/GPU released/scope closed. Handoff complete; stop.
 
-## Completed: source and context cleanup
+## Main task and final acceptance
 
-Entry-document consolidation and substantive source retirement are complete.
-Current shared helpers are independent of historical runners; abandoned
-experimental implementations and their exclusive scripts, declarative
-configurations and tests have retired. Current shared model/data/performance
-paths, Teacher functionality, prepared-data class identities and scientific
-evidence are preserved. Architecture, loss, gradient and data semantics are
-unchanged. No further broad cleanup is the active work order.
+Improve T1/daily, T7 and T30 effective training throughput before formal
+training. The10x target is cumulative research. Final acceptance uses changing
+weights, the same GPU count and daily32/eight distinct micro4 plus one T7 and
+one T30: public losses, complete parameter/initial-state gradients, physics,
+masks and AdamW. State derivatives do not enter AdamW but remain a gate.
+Keep strict `rtol=1e-5, atol=1e-6`, finite values and24GiB. No automatic
+candidate adoption, reference/tolerance change or formal training is authorized.
 
-The source-retirement baseline is tag
-`research/daily-before-source-retirement-20260926` (`5682064`). Remaining
-dependencies, unit collection and targeted tests were checked; measured
-reduction and validation limits are in
-[WORKSPACE_INVENTORY.md](research/daily_coarse_graining/WORKSPACE_INVENTORY.md).
-Follow [RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md) to keep new context bounded.
+## Effective evidence
 
-The pre-cleanup tracked documents are preserved at annotated Git tag
-`research/daily-before-context-cleanup-20260926` (`273157c6`). Recovery and
-question-based historical routing are in
-[HISTORY_INDEX.md](research/daily_coarse_graining/HISTORY_INDEX.md).
+| Evidence | Result and limit |
+|---|---|
+| [Forward/AD timing](research/daily_coarse_graining/shared_forward_reverse_results_20260930.md) | Matched medians: forward2.104821s/18.57%, additional gradients/recompute9.228212s/81.43%; AdamW0.02–0.03s. Pure reverse and exact whole-update partition remain unmeasured. |
+| [Original complete-update scheduling](research/daily_coarse_graining/shared_original_full_state_schedule_followup_results_20261005.md) | Same two cards9.810149→7.647413s/+28.28%; state gates fail. Specific common-leaf-mass cancellation repair is independently closed. No complete admission. |
+| [Selected latent components and T7 B4](research/daily_coarse_graining/shared_latent_reader_results_20261004.md) | Corrected T7/T30 component throughput improves about28%. Same742/275/482/299 T7 inputs: serial5.025831→B4 1.967053s/2.555005x. Loss/all parameters/aux/physics/masks/memory pass; states fail9/9/11. Corrected daily/full updates remain unmeasured. |
+| [Saved-B1 synchronization](research/daily_coarse_graining/T7_saved_B1_dispatch_results_20261009.md) | 1.024075x over three pairs, state cross/self fails; separate scope closed. Keep helper for later whole-workload use, without polishing this small gain now. |
+| [Saved-state/input analysis](research/daily_coarse_graining/T7_state_repeats_analysis_20261009.md) | Three sample299 B4/B1 ranges stay separated beyond observed B1 variation. Inputs FP64/normalization FP32; selected masks valid/no DOC tail. None of four selected coordinates lies on an initial field/axis extrema tie; later recurrent ties and derivative contributions remain unproved. |
+| [Current JVP completion](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | 32 B1/B4 JVPs/four full VJPs complete; cycles repeat exactly. B1/4–B4 fails at 434/2382, passes 2621/control 200; own JVP/VJP and full-state gates fail. Full parameter self repeats, primal/aux/physics/memory pass. Reverse repeat variability alone does not describe the whole discrepancy; cause and derivative reference remain unresolved. |
+| [First-day localization](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md) | Next-state tangents fail 200/16/14/16 coordinates for input 434/2382/2621/control 200 in every cycle. Finite primals/observations and exact auxiliaries pass; raw state 20 nonfinite remains a separate failure. Differences occur before later recurrence/loss; no cause or derivative reference/adoption inferred. |
+| [Accepted raw-neural result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md) | Active tangent coordinates fail 1769/10/36/21 for 434/2382/2621/control200; four active primal coordinates fail. All 161 masks exact; 16 nontrivial repeats exact and 12 B4 isolation checks pass. Numerical gate failed; scope closed/released. |
 
-## Now: speed only, before training
+No complete-update optimization has passed every gate. Fixed-weight four-T7
+batching is a component screen, not a changed formal sampling mix. T30 trace
+and source MAC shares do not isolate pure AD/module time or a launch bottleneck.
+V4/V7 direct substitution stays stopped; T30 chunk-vmap and decoder128 remain
+unselected. A precision/reference change is not selected by the JVP result.
 
-Do not start neural training at the current throughput. Target an order of
-magnitude improvement in effective complete-update throughput, preserving
-data counts, daily/recurrent loss mix, parameter/state gradients and physical
-checks. Report GPU count/card-hours. Track startup/compile time separately.
+## Current action and next gate
 
-FP32 union stays opt-in; default field remains. Actual row0 canonical loss and
-all64,884,481 parameter gradients pass strict1e-5/1e-6 against saved field
-binary replay; physical checks pass. State gradients are finite/undefined-zero
-but lack independent reference. Paid job15418739 completed0:0 in13:12
-(0.22card-hours; estimated CNY0.6072, not bill). Six route units are persisted;
-four physical/loss units reused. Repeats33.939/2.579/2.572s have unknown first-
-repeat overhead, not training throughput. Free observed cache replay ended124
-at its100s cold-call cap: neural forward hit cache, zero backend calls; no
-full result/warm attribution. Cold retracing budget was underestimated.
-Next define the original-four-row production micro4 comparison using public
-mean daily objective/full parameter-gradient interface and saved field binary;
-new union graph compile needed, proposed lower180/backend900/process1500s
-budgets informed by prior micro4 timings, not authorized by this result.
-No more generic profiler rerun. Retain the full state-gradient admission route;
-retain a small saved-field directional state check before production adoption,
-not a new gradient-infrastructure workstream. Preserve derivatives and physical
-gates. No GPU job is active. No new paid job, production adoption, tolerance
-change, recurrent run or training is launched by this result. Component27-
-coordinate failure remains separate. Preserve all references/cache artifacts.
+The [accepted result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
+reproduces active differences in the separately compiled canonical neural prefix,
+before physical transforms/update. First differing operation, integrated-graph
+cause and B1 derivative truth remain unproved. Batch-dependent FP32 contractions
+are a source/HLO hypothesis; native JAX mapped scalar execution is a future
+discussion candidate with correctness/speed unmeasured. No repair is selected.
+Keep strict gates, unchanged precision/weights, complete fields/masks and AD.
+The one-V100 scope closed at2169.713308/5400 seconds/0.602698 card-hours/CNY0,
+exit3; two graphs/24 JVPs, zero VJPs/updates. The saved evidence and
+[handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md) are complete.
+Stop as explicitly directed:
+“不自动开启下一轮 GPU 诊断或长训练，不自行移动目录/切根分支/清理 runtime。”
+No automatic next graph, scope question, precision/reference choice or adoption.
 
-Read only these latest route/evidence pages for that decision:
+## Completed scope and assets
 
-- [Union dynamic-bank component results](research/daily_coarse_graining/shared_dynamic_projection_results_20260927.md).
-- [Structural speed route](research/daily_coarse_graining/shared_next_structural_speed_route_20260926.md).
-- [FFN precision results](research/daily_coarse_graining/shared_ffn_precision_results_20260926.md).
-- [Broader-neural bounded assessment](research/daily_coarse_graining/shared_neural_precision_results_20260927.md).
-- [Daily64 balance results](research/daily_coarse_graining/shared_combined_daily64_balance_20260926.md).
-- [Unchanged-work complete-update results](research/daily_coarse_graining/shared_combined_full_update_20260926.md).
+The [first-day scope](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md)
+closed at 2124.572662062943/5400 GPU seconds/0.5901590727952619 card-hours/CNY 0,
+actual exit 3, GPU released. Two graphs compiled once each, 24 JVPs,
+zero VJPs/updates; no retry. Unused 3275.427337937057 seconds grant no new run.
+Independent NumPy analysis and seven target guards preserve failures; no
+full-T7 loss/parameter VJP/fourteen-hard-gate or update-speed acceptance.
+The [original/B4 recovery](research/daily_coarse_graining/T7_state_JVP_results_20261009.md)
+closed at 2809.490106/3600 free GPU seconds/CNY 0. The separately approved
+[B1 completion](research/daily_coarse_graining/T7_B1_state_JVP_completion_proposal_20261009.md)
+closed at 1780.7436698693782/3600 seconds/0.4946510194081606 card-hours/CNY 0,
+zero updates. Numeric status is `numerical_failed`, ledger child exit 3;
+[exit/release receipt](../outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.exit-release.json)
+confirms GPU 1 at 0 MiB/0%, no compute processes and completed PIDs absent. Independent
+test01 NumPy analysis completed in 4.87128541059792s, exit 0, six guards passed.
+Exact measurements/commands/receipts and native/scaled comparisons are in the
+[completion report](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md).
 
-Daily64 + one T7 + one T30 is a measured load-balancing candidate, not the
-adopted training sampling recipe. Doubling daily rows changes sampling;
-approximately doubled daily rows/s does not prove same-workload 2x or 10x.
-Another small tile/packing sweep is not the default primary route.
+Preserve both successful JVP graphs, saved VJPs and full arrays remotely under
+`runtime/outputs/diagnostics/shared-latent-reader-20261004/`. Compact analysis
+and CPU receipts are local under the same project-relative output directory.
+Keep the accepted source archive and false/true approval records. Completed
+commands must not be rerun; no Teacher regeneration.
 
-## Thread handoff
-
-Continue on `research/daily-coarse-graining`. The next micro4 comparison is
-specified in the union results page above but **not implemented or submitted**.
-Implement the production-interface comparison first; preserve the original four
-distinct rows and saved field reference. Do not rerun the capped row0 profiler
-or assume the existing integrated Slurm script implements this next experiment.
-No new paid allocation has approval; previous approval covered completed
-job15418739 only. Free bounded checks remain within the user's standing scope.
-
-Remote root: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. Reuse immutable checkout
-`runtime/checkouts/shared-split-width-v1` at `c599236bcf57b745e9bafed678298010f4c3b58f`.
-Under `runtime/outputs/diagnostics/`, preserve
-`shared-split-profile-c599236.json`, `shared-expert-real-daily-context-c599236.pkl`,
-`shared-union-integrated-20260927.pkl`, its `.field-reference.pkl`, and
-`shared-neural-reference-20260927-staged.stages-cache/`. Full result pickles
-stay on the server; small reports/logs are also local under `outputs/diagnostics/`.
-The old field-reference pickle uses repeated row0, so it is **not** the numerical
-reference for four distinct rows; use the admitted field executable with those
-original rows. See the dated union report for measured evidence and limits.
-
-## Preserve the method
-
-- Reuse accepted v6 fixed data; no regeneration or v5 joins.
-- Preserve the shared 768/eight-block + 384/two-block candidate, all potentially
-  active outputs, ownership/PFT/mask semantics and physical precision.
-- Use canonical `bind_daily_operator`, conservative updater, retained tail,
-  shared science extractors/losses and native checkpointed AD. No independent
-  runner cotangent implementation or shortened recurrent gradients.
-- Architecture/capacity, sampling or production precision changes need a
-  separate explicit decision. An auxiliary label does not justify deletion
-  or reduced capacity. Permanently masked-coordinate omission must be proven
-  against the declared static layout and restore full shape.
-- For changed loss/state/AD/JIT boundaries, reuse relevant prior evidence and
-  add bounded deployed-runtime, meaningful-gradient and complete-update gates.
-  Documentation/logging-only changes do not require new expensive checks.
-
-## Remaining acceptance gates
-
-| Gate | Current state / next requirement |
-| --- | --- |
-| Teacher port | Scoped PFT14 evidence accepted; full 669-point Fortran equivalence still separate |
-| Data | Coherent v6 fixed release accepted; reuse unchanged |
-| Structure | PFT registry/interface, canonical process boundary and replay accepted within scope; PFT2-PFT13 unsupported |
-| Training execution | Bounded native AD and complete-update parity passes; 10x goal unmet |
-| Final training method | Specify architecture, splits/sampling, seeds/init, losses, trainable scope, transitions, stop/selection rules; execute end to end |
-| Science | Demonstrate learning and held-out daily/recurrent accuracy; 365-day/long-site drift and productivity/biomass validation pending |
-| Surrogate gradients (D2) | Physical-parameter validation pending; Teacher D1 does not certify the surrogate |
-| Product | Final model/IO/restart/release acceptance pending |
-
-## Execution authority
-
-No new paid job, production training or production precision adoption is
-authorized by this page or cleanup. Paid `cnall`/`cnmix`/`gnall` submission
-requires explicit resources, wall time, directory, command and worst-case-cost
-approval. Use Explore1000 under `/WORK/liwei_work/jcwu/`; never compute on login
-nodes. Before future HPC work, read
-[deployment-explore1000.md](deployment-explore1000.md) and the job-script skill.
-Prefer local `ORCJAX`, lightweight tests and output files under `outputs/`.
+All earlier windows and unused balances remain closed/separately accounted.
+New paid work requires approved resources, time, directory, command and
+worst-case CPU+GPU cost. Architecture/capacity, precision/reference, loss,
+sampling, tolerance or recurrence choices need an explicit scientific decision.
+Work only in jcwu's remote tree; never compute on login nodes.

@@ -1,147 +1,148 @@
 # Current Project Status
 
-Updated: 2026-09-27. This is the current facts/evidence authority, not a progress
-log. [NEXT_STEPS.md](NEXT_STEPS.md) controls operations.
+Updated: 2026-10-10. First-day localization completed both graphs and 24 JVPs.
+Finite, defined next-state tangents differ for all directions, including control 200;
+the discrepancy is already within the first daily transition. Raw state 20
+is nonfinite, a separate retained failure. Numerical exit 3/GPU released,
+that scope closed. Raw-neural v3-final evidence is accepted with active numerical
+failures; 24 results/GPU released/scope closed. Preservation handoff complete; stop.
+[NEXT_STEPS.md](NEXT_STEPS.md) owns execution and authority.
 
-## Work and authorization
+## Main task and measured outcome
 
-Entry-document consolidation and substantial source retirement are complete.
-Current shared helpers are detached from historical runners; obsolete
-experiment families and exclusive scripts/configurations/tests are retired.
-731 files retired; the final dependency check reports zero surviving owners
-referencing retired source/configuration, and all 3,014 unit tests collect.
-Targeted numerical/contract checks pass within the scope recorded in
-[WORKSPACE_INVENTORY.md](research/daily_coarse_graining/WORKSPACE_INVENTORY.md);
-this is not a full-suite or scientific revalidation claim. Teacher/source truth,
-data, weights and dated scientific reports are unchanged; pickle identities
-remain intact. Recovery is available from the source-retirement tag.
-All bounded GPU diagnostics have ended. Approved paid diagnostic15418739
-completed0:0 in13:12 on `ibc13b03n06` (0.22card-hours; estimated CNY0.6072,
-not a bill); no neural training is active. Speed optimization continues;
-production precision and architecture remain unchanged. The 10x
-throughput target is unmet and is not a promise.
+Improve T1/daily, T7 and T30 effective training throughput before formal
+training. The10x goal is cumulative research. Final comparison uses changing
+weights, the same GPU count, daily32/eight distinct micro4 plus one T7 and one
+T30, public losses, complete parameter/initial-state gradients, masks, physics
+and AdamW. State derivatives do not enter AdamW but remain an acceptance gate.
+No complete-update optimization has passed every gate.
 
-## Accepted foundations and scope
+| Current evidence | Result and limit |
+|---|---|
+| [Forward/AD timing](research/daily_coarse_graining/shared_forward_reverse_results_20260930.md) | Matched component medians: forward2.104821s/18.57%, additional gradient/recomputation9.228212s/81.43%, AdamW0.02–0.03s. Evaluators occupied97.20% of the synchronized proposal. These do not isolate pure reverse or exactly partition an update. |
+| [Original changing-update scheduling](research/daily_coarse_graining/shared_original_full_state_schedule_followup_results_20261005.md) | Four pairs1→5, three post-first medians9.810149→7.647413s/1.282806x on the same two V100s. Parameter/AdamW/loss/physics pass; daily/T7/T30 states fail. The specific common-leaf-mass cancellation at four2243 domains is independently repaired and verified; other state failures remain. No complete admission. |
+| [Corrected latent32/reader64 components](research/daily_coarse_graining/shared_latent_reader_results_20261004.md) | Three alternating same-card full-AD pairs: T7 1.571275→1.225237s/+28.24%; T30 6.650839→5.189475s/+28.16%. Forward/full parameters, finite/14 per-window hard counts/memory pass; strict states fail in both architectures. Both horizons' corrected graphs/full arrays are saved. |
+| [Four-window T7 B4](research/daily_coarse_graining/shared_latent_reader_results_20261004.md) | Exact TRAIN742/275/482/299, fixed candidate weights:5.025831s serial→1.967053s B4/2.555005x. Full parameters/loss/auxiliary/finite/physics/masks/24GiB pass; states fail9/9/11 of15,416 coordinates, worst11.65x allowance. Sampled card peak9939MiB. No optimizer update, adoption or full-update speed claim. |
+| [Saved-B1 synchronization](research/daily_coarse_graining/T7_saved_B1_dispatch_results_20261009.md) | Three pairs: block-each5.035198s→dispatch-four4.916826s median/1.024075x, pair gains0.24–2.90%. Loss/all66,123,713 parameter gradients/aux/finite/physics/memory pass; states cross fail1/1/2 and both self repeats fail. Scope closed at389.092703 GPU seconds/CNY0, GPU released; final stdout actual exit1 and saved numeric failure remain distinct. CPU receipt repair passes9 checks. |
+| [B1/B4 state JVP completion](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | 32 JVPs/four full VJPs complete. JVP cycles repeat exactly; B1/4–B4 fails at 434/2382, passes 2621/control 200. Own JVP/VJP and full-state self/cross gates retain failures. Primal/full parameter self repeats/aux/physics/memory pass. Independent scope charged 1780.743670s/CNY 0 and released; no derivative reference or adoption. |
+| [First-day localization](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md) | Next-state tangent failures 200/16/14/16 for input 434/2382/2621/control 200 in every cycle; worst allowance ratios 30.739/9.498/4.439/11.426. Finite primals/observations and exact auxiliaries pass; raw next-state 20 is nonfinite. Scope closed at 2124.572662 seconds/0.590159 card-hours/CNY 0/released. No cause, reference or update-speed/adoption acceptance. |
+| [Accepted raw-neural result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md) | Active tangent failures 1769/10/36/21 for input434/2382/2621/control200; worst ratios459.384/14.523/19.572/12.198. Four active primal coordinates fail in two DOC inventory fields (worst1.276019). All161 masks exact; 16 nontrivial repeats exact, 12 B4 isolation checks pass. Scope closed at2169.713308s/0.602698 card-hours/CNY0/released, exit3; numerical gate failed. |
 
-| Foundation | Accepted evidence / limitation |
-| --- | --- |
-| Teacher | Source-backed PFT14 half-hour model and exact daily tail; scoped cold/restart/365-day/cross-landpoint/year-handoff checks pass |
-| Teacher branch synchronization | Accepted core `5910ba9` on main / `10030eb` on research; [parity acceptance](teacher-branch-parity-acceptance.md) |
-| Teacher release | Seven previously unused points completed 1961-2010 checks, largest 2010 AGB/BGB/GPP/NPP relative error `8.5e-5`; full 669-point Fortran equivalence remains a distinct gate |
-| PFT interface | Stable identity/catalog, named channels, mask/permutation/variable-axis structural gates; PFT2-PFT13 unsupported and fail closed |
-| Canonical daily boundary | Process prediction -> conservative updater -> retained exact daily tail; label replay/lifecycle/mask/budget evidence accepted within tested scope |
-| Teacher gradients D1 | Bounded process, Day-2, two-day, restart and source-extracted finite-difference cases accepted; not surrogate D2 |
-| Teacher data | Coherent **v6 fixed**, 669 points x 1961-2010, 33,450 point-years, 12,208,581 transitions accepted; reuse without regeneration or v5 joins |
+Historical latent daily micro4+18.81% preceded guarded turnover. Corrected
+candidate daily is missing; complete corrected updates and the1.5x complete
+engineering screen remain unmeasured. Component gains and65.75% lower planned
+T30 live memory do not certify complete throughput or scientific accuracy.
+Compile/load/startup costs, extra GPUs and card-hours remain separate evidence.
 
-Dataset evidence is in
-[teacher_v6_full_production_acceptance_20260807.md](research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md).
-The accepted dataset and successful Teacher checks do not establish all Fortran
-branches, all PFTs, or the surrogate's scientific validity. Source-driven
-process/branch coverage remains the porting rule.
+## Current diagnosis and next action
 
-## Current neural method
+[Saved-state CPU analysis](research/daily_coarse_graining/T7_state_repeats_analysis_20261009.md)
+extracts21 full4x3854 arrays and reproduces every official failure count.
+Sample3 coordinates434/2382/2621 retain disjoint B4/B1 ranges; nearest gaps
+7.21/3.30/3.02 times observed same-paid B1 range width. This establishes
+persistent measured separation, not cause, future drift or scientific harm.
+Whole-state relative L2/cosine do not replace the unchanged coordinate gate.
 
-The current shared candidate has **64,884,481 parameters**: source-masked
-shared Transformer backbone width 768/eight blocks; common coordinate decoder
-width 384/two blocks. Every potentially active output retains the shared
-decoder; auxiliary labels do not imply scientific dispensability.
+Exact input metadata verifies FP64 initial states, FP32 normalization, defined
+masks and no DOC tail conditioning at the selected coordinates. Coordinate434
+is zero with scale1.702166e-7, one field/18 axis-pool memberships and a local
+feature. Initial-input CPU arithmetic finds no selected coordinate on a tied
+field/axis extremum across65 axis memberships;2621/control200 are unique field
+minima. Later recurrent ties and actual derivative contributions remain unverified.
 
-Canonical assembler/binding, conservative updater and retained-tail adapter
-remain unique. Inference is one true daily transition with native six-hour
-forcing, no 48-step state scan or reconstruction. Explicit physical state
-supplies recurrent memory. PFT/source/defined masks and physical-parameter
-ownership remain intact; `vcmax25` and maintenance-respiration factors retain
-explicit routes, while `alloc_min`/`residence_time` remain exact retained logic.
+The [completion result](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md)
+uses unchanged candidate weights/inputs, public checkpointed loss and guarded
+turnover, FP32 neural/FP64 physics and FP64 state directions. All four cycles
+give identical native/scaled JVPs. B1/4–B4 error/allowance is 23.774186 at 434
+and 1.163141 at 2382; 2621/control 200 pass. Own JVP/VJP native checks fail
+44/64; mean-scaled checks fail 40/64. Stable forward differences mean reverse
+repeat variability alone does not describe the whole discrepancy; cause,
+harmlessness and derivative truth remain unresolved.
 
-Native checkpointed JAX AD is the preferred multi-day route. Completed trained
-T7/T30 directional evidence is reused; shared public rollout losses and science
-extractors remain authoritative. A changed loss/state/AD boundary needs relevant
-bounded checks, not closure of every abandoned custom-reverse experiment.
+Independent full-array CPU acceptance checks all 355 numeric FP32 parameter
+leaves/66,123,713 coordinates, two static `None` paths and complete auxiliary
+trees. Parameters/loss/19 auxiliary leaves/14 physical-mask gates pass self
+repeats; all 64 primal/aux bridges pass. B1 native state self repeats fail
+3/3854 (33/180/2621), B1/4 fails 2 (33/2621), B4 fails 2/15416
+(sample 3: 434/2621). Complete sample-299 cross states fail 5/3854 at each
+endpoint (33/434/515/2382/2621). All values are finite. Native and /4 gates
+retain their own absolute allowance; neither replaces the other.
 
-Final scientific training must start from declared fresh initialization and
-optimize the full network jointly, with any stages justified and transitions
-specified beforehand. Exploratory weights/checkpoints remain diagnostics and
-resource probes, not a default inherited final-method chain. Fresh-init
-admission requires physical/numerical/meaningful-gradient gates followed by
-learning; it does not require untrained accuracy to match an old checkpoint.
+One B1 compile succeeded (lowering 143.991934s/backend 992.923233s); B4 JVP
+and both VJPs loaded. Cycles 2–4 median synchronized JVP calls are B1 0.455632s,
+B4 0.662332s. JAX peak 3.399438 GiB and NVML peak 10.557617 GiB pass 24 GiB.
+These are diagnostic calls, with zero updates, not complete-update throughput.
+The independent scope charged 1780.7436698693782s/0.4946510194081606 card-hours,
+CNY 0. Ledger child exit 3/numeric status `numerical_failed` is retained;
+[exit/release receipt](../outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.exit-release.json)
+confirms GPU 1 at 0 MiB/0%, no compute processes and completed PIDs absent.
+Its separate CPU shell check verifies native SSH transmission of exit 3.
+test01 NumPy-only
+analysis completed in 4.87128541059792s, exit 0, with six guards passed.
 
-Architecture roles and source ownership are in [CODE_MAP.md](CODE_MAP.md);
-controlling documents are selected in [DOCUMENT_STATUS.md](DOCUMENT_STATUS.md).
+The [first-day result](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md)
+uses the same weights, inputs, FP32 neural/FP64 physics and native per-case
+scale/no /4. All 24 calls completed, no retries/VJPs/updates. Finite tangent
+differences reproduce before later recurrence/loss, including control 200.
+Finite own-route primal/tangent repeat deltas are exactly zero and auxiliaries
+match exactly; one B1/four B4 raw nonfinite primal admissions remain failures,
+not evidence of repeat variability. Accepted v3 metadata confirms exact finite
+values/nonfinite patterns/masks, all failed tangent coordinates defined in
+both routes, and state 20 as source-undefined roughness `[0,0]`. Independent
+NumPy analysis and seven target guards preserve
+the strict failures; full arrays/binaries/HLO are saved remotely.
+Accepted saved-HLO v2 identifies a candidate state-20 gather/select with an
+FP64 NaN operand; predicate unevaluated, no causal/runtime claim. The prepared
+raw-neural result reproduces finite active differences before transforms/update
+in separately compiled prefix graphs. Accepted NumPy v3-final verifies all161
+fields/masks and reconciliation; five negative guards pass. All failed coordinates
+are active, no nonfinite compared values. Sixteen nontrivial repeats are exact;
+eight cycle1 baseline-self checks are distinct sanity checks. Twelve B4 other-case
+tangents are exactly zero. B1/B4 FP32 projection/GEMM and attention shapes/algorithms
+differ in saved HLO, supporting a batch-dependent contraction hypothesis, not
+causality. Assembly/normalization, first differing operation, integrated-graph
+cause and B1 derivative truth remain open. Native JAX mapped scalar execution
+is a future discussion candidate, with correctness/speed unmeasured.
+The closed two-graph/24-JVP scope used zero VJPs/updates; independent audit
+accepted saved evidence with numerical gate failed. Preserve the
+[handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md) and stop.
+No precision/reference choice, inactive-mask exemption or adoption follows. This
+component does not certify full T7 loss/parameter VJP, fourteen hard gates
+or update throughput. Old original742
+JVP/FP64 is a different architecture/case, and the
+inconclusive boundary FD is not repeated. Keep the cheap dispatch helper for
+later full-workload verification. T30 trace58.78% fused/35.34% GEMM/4.90%
+transfer-set and field64 source89.43% MAC share do not partition wall time,
+modules or pure AD; no launch-bound conclusion or width reduction follows.
+V4/V7 direct substitution remains stopped after
+[mixed learning](research/daily_coarse_graining/shared_v4_learning_sensitivity_results_20261004.md)
+and [held-out science](research/daily_coarse_graining/shared_v4_heldout_science_results_20261004.md).
+T30 chunk-vmap expansion, decoder128 and full T7 fanout precision expansion
+remain unselected/deferred. Strict `rtol=1e-5, atol=1e-6` and24GiB stay unchanged.
 
-## Latest completed execution evidence
+## Scientific boundaries and authority
 
-All following measurements are bounded diagnostics, not final scientific
-acceptance. No corresponding free-GPU task remains active.
+First-day scope closed at 2124.572662/5400 GPU seconds/0.590159 card-hours/CNY 0,
+actual exit 3/GPU released/zero VJPs or updates. Its unused 3275.427338 seconds
+grant no new graph. Original/B4 recovery and independent B1 completion remain
+separately closed at 2809.490106/3600s and 1780.743670/3600s. NEXT_STEPS owns
+completed raw-neural handoff and stop boundary. Successful graphs/full artifacts stay preserved. All earlier
+windows stay closed/independent; paid records and raw
+failures remain in their named reports. New paid jobs and architecture/capacity,
+precision/reference, loss/sampling/tolerance or recurrence choices require
+explicit approval. No formal training or automatic adoption follows.
 
-| Test | Outcome and scope |
-| --- | --- |
-| Combined unchanged daily32 + T7 + T30 update | Serial `12.553775s`, dual `10.270496s`; complete changing-update gradients/parameters/AdamW and physical parity pass; zero new model-gradient compiles |
-| Daily32/64 dual balance | `9.859359s` / `9.769036s`; daily64 branches about `8.313s` / `8.326s`; all proposal parity/physical checks pass; changed daily count, not same-work speedup |
-| Daily64 serial vs dual | `16.879002s` vs `9.769036s`, 42.12% less wall with 15.75% more GPU-seconds; free test, learning at daily64 untested |
-| Native FFN `F16_F16_F32`, micro4 | Forward + native VJP `72.415 -> 46.250ms`, `1.566x` |
-| Native FFN `F16_F16_F32`, micro1 | Forward + native VJP `114.759 -> 95.827ms`, `1.198x` |
-| Broader-neural checkpointed native parameter/state AD | Five executable units now cached; final neural transpose hit its `600s` unit cap at process `1,188.472s`; no complete gradients, candidate comparison or warm result; no active job |
-| FP32 union dynamic-bank reuse | Opt-in implemented; local forward/native-AD tests pass. Actual-token scalar component `9.483 -> 6.738ms` (`1.407x`), strict parameter-gradient gate fails27 coordinates; not adopted/integrated throughput |
-| Full neural-transpose lower/IR only | Paired field/union operations `218,689 -> 140,541`, dots `5,704 -> 1,564`; matching full gradient shapes and16 while summaries; zero full executable lookups/backend compiles/executions, no numerical or GPU-speed acceptance |
-| Actual row0 union canonical daily AD | Strict loss/all64,884,481 parameter gradients pass against saved field binary; all hard counts zero; state3,854 finite/undefined-zero, no independent state-gradient reference. Six route units persisted, repeats33.939/2.579/2.572s; not training throughput |
-| Observed cache-only union replay | Free process ended124 at100s cold-call cap (149.721s total);290 initialization +1 neural-forward cache hits, zero backend calls; no full result/warm/profile evidence, prior numerical acceptance unchanged |
+Original shared model:64,884,481 parameters, backbone768/eight blocks,
+coordinate decoder384/two blocks. Selected diagnostic prototype:66,123,713
+parameters, expert32x384 latents/private reader64x2, canonical field/chunk64.
+Canonical binding, conservative updater, retained exact tail and native six-hour
+forcing remain authoritative; physical state carries inter-day memory.
 
-FFN values and VJPs are finite, but strict `1e-5`/`1e-6` comparison fails.
-Relative L2 errors: forward `0.04193%`, synthetic-cotangent parameter VJP
-`0.27757%`, input VJP `0.04524%`. Tiny deployed capability trace confirms
-Tensor-Core kernels. This is neural fragment evidence, not actual rollout
-gradients, a production numerical-error contract, scientific accuracy or
-full-update speed. Physical precision and production defaults are unchanged.
-The broader-neural boundary retains the canonical daily objective and all
-64,884,481 parameter plus continuous input-state gradients. Compilation
-timeout is not a numerical failure or precision acceptance. The latest free
-one-V100 attempt used about 0.330 card-hours; prior attempts are itemized in
-the dated assessment, not included in that figure. Union reuse now has bounded
-component evidence: real union K/V12.52MiB; compile/temp reductions, but strict
-gradient failure remains. Scalar timing avoids the original 1,298-leaf boundary;
-neither represents integrated decoder or full-update throughput. Independent
-FP64 checks cover only27 failed coordinates, not all gradients. Default field
-stays unchanged; no job is active. The paired lower-only full-transpose graph
-reduction is material (35.73% operations,72.58% dots), not FLOPs or measured
-full-update speed. It completed in176.795s (0.04911 free wall-exposure card-hours).
-The completed actual row0 union check now passes strict canonical-loss/all-
-parameter parity (max gradient delta3.8743e-7, relative L2 8.7937e-7), without
-changing tolerances or erasing the synthetic-component failure. State/full-
-output-mask reference gaps remain. Four unchanged physical/loss units hit cache;
-new neural transpose backend completed331.985s, not a compile-speed ratio
-against the timed-out field route. Cold first call579.769s includes tracing/
-compile/cache/persistence/dispatch/execution; first repeat33.939s is unexplained,
-then2.579/2.572s. Whole-process live peak10.501GiB differs from16.998GiB pool.
-The observed cache replay subsequently hit its100s cold-call cap after neural
-forward cache retrieval/execution; no warm call or new model compile occurred.
-The cold budget was underestimated;33.94s/2.57s attribution remains unknown.
-Next scope production original-micro4 same-work comparison against saved field
-binary, with a new union graph budget based on previous115s lower/708s compile,
-not another generic profiler loop. Keep full state-derivative capability and
-a small independent state-directional gate before adoption. No new task or
-training automatically follows.
-
-Read [full update](research/daily_coarse_graining/shared_combined_full_update_20260926.md),
-[union-bank results](research/daily_coarse_graining/shared_dynamic_projection_results_20260927.md),
-[daily64 balance](research/daily_coarse_graining/shared_combined_daily64_balance_20260926.md),
-and [FFN results](research/daily_coarse_graining/shared_ffn_precision_results_20260926.md)
-and [broader-neural assessment](research/daily_coarse_graining/shared_neural_precision_results_20260927.md)
-for exact experiment/data/runtime identities and limitations. Preserve prepared
-inputs, completed reference gradients and executable provenance; do not repeat
-large compilations solely to reconstruct already recorded evidence.
-
-## Still pending
-
-- Effective same-workload 10x complete-update throughput; fragment, startup,
-  changed sampling and extra-GPU gains remain separate evidence.
-- An independently specified executable final training protocol and its
-  end-to-end learning/validation, not exploratory checkpoint replay.
-- Held-out scientific accuracy, long-horizon canopy/carbon/productivity/biomass
-  trajectories, 365-day/long-site drift and sealed final evaluation.
-- Surrogate physical-parameter gradient D2, full Teacher release equivalence,
-  and final user-facing product acceptance.
-
-For named past experiments, use
-[HISTORY_INDEX.md](research/daily_coarse_graining/HISTORY_INDEX.md).
-Earlier successes/negative results remain intact; none is promoted to a final
-model by this context cleanup.
+Formal training needs independently declared fresh initialization, full-network
+joint optimization and an executable, reproduced protocol. Diagnostic inherited
+checkpoints are not that method. Long-horizon accuracy/final-method execution
+remain pending. [DOCUMENT_STATUS.md](DOCUMENT_STATUS.md) maps the contracts.
+Teacher PFT14 is source-backed with scoped daily/lifecycle checks; coherent v6
+fixed covers669 points/33,450 point-years/12,208,581 transitions. Full669-point
+Fortran equivalence is separate; PFT2–13 remain structural only and fail closed.
+Reuse existing Teacher/prepared data without regeneration.

@@ -173,6 +173,21 @@ def _mean_terms(rows: Sequence[Mapping[str, float]]) -> Mapping[str, float]:
     return {key: float(np.mean([row[key] for row in rows], dtype=np.float64)) for key in keys}
 
 
+def make_learning_daily_accumulator(
+    *, jax: Any, jnp: Any, microbatch_size: int, evaluator: Callable[..., Any],
+    expected_count: int, slice_execution: str = "leaf",
+    batch_slicer: Callable[..., Any] | None = None,
+) -> Callable[[Any, Any], Any]:
+    from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
+
+    return make_daily_accumulator(
+        jax=jax, jnp=jnp, microbatch_size=microbatch_size,
+        evaluator=evaluator, expected_count=expected_count,
+        slice_execution=slice_execution,
+        **({"_batch_slicer": batch_slicer} if batch_slicer is not None else {}),
+    )
+
+
 def execute_learning_update(
     *,
     jax: Any,
@@ -444,6 +459,9 @@ def run(args: Any) -> Mapping[str, Any]:
             args.validation_manifest,
         )
         config = loaded["config"]
+        daily_slice_execution = getattr(args, "daily_slice_execution", "leaf")
+        if daily_slice_execution not in ("leaf", "tree"):
+            raise ValueError("daily slice execution must be leaf or tree")
         technical_updates = getattr(args, "technical_updates", None)
         if technical_updates is not None:
             if config["schema_version"] != "shared_learning_v2" or technical_updates != 2:
@@ -457,6 +475,8 @@ def run(args: Any) -> Mapping[str, Any]:
             if config["schema_version"] == "shared_learning_v2"
             else None
         )
+        if daily_slice_execution == "tree" and microbatch_size is None:
+            raise ValueError("whole-tree slicing requires the v2 daily microbatch method")
         plan = loaded["plan"]
         daily_protocol = loaded["daily_protocol"]
         report.update(
@@ -471,6 +491,7 @@ def run(args: Any) -> Mapping[str, Any]:
             gradient_composition=(
                 "mean_32_joint_daily_contributions_plus_T7_plus_T30_no_extra_averaging"
             ),
+            daily_slice_execution=daily_slice_execution,
         )
         if technical_updates is not None:
             report.update(
@@ -757,14 +778,13 @@ def run(args: Any) -> Mapping[str, Any]:
             report["compiled_gradient_graphs"] = graph_metadata
         daily_accumulator = None
         if microbatch_size is not None and evaluators is not None:
-            from scripts.hpc.shared_daily_microbatch import make_daily_accumulator
-
-            daily_accumulator = make_daily_accumulator(
+            daily_accumulator = make_learning_daily_accumulator(
                 jax=jax,
                 jnp=jnp,
                 microbatch_size=microbatch_size,
                 evaluator=evaluators["daily"],
                 expected_count=int(config["daily_rows_per_update"]),
+                slice_execution=daily_slice_execution,
             )
         update_function = make_update(daily_protocol)
         for index in range(completed, update_limit):
@@ -889,6 +909,7 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--prepare-only", action="store_true")
     result.add_argument("--resume-checkpoint", type=Path)
     result.add_argument("--technical-updates", type=int, choices=(2,))
+    result.add_argument("--daily-slice-execution", choices=("leaf", "tree"), default="leaf")
     return result
 
 

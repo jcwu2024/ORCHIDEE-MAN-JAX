@@ -12,7 +12,13 @@ WORKER_GPU_DEVICE=${WORKER_GPU_DEVICE:-1}
 RUN_TIMEOUT=${RUN_TIMEOUT:-30m}
 PREPARE_INPUT_BUNDLE=${PREPARE_INPUT_BUNDLE:-0}
 INSPECT_ONLY=${INSPECT_ONLY:-0}
+COMPARISON_ONLY=${COMPARISON_ONLY:-0}
 EXTRA_ARGS=()
+if [[ $COMPARISON_ONLY == 1 ]]; then EXTRA_ARGS+=(--comparison-only); elif [[ $COMPARISON_ONLY != 0 ]]; then exit 2; fi
+if [[ -n ${SCHEDULE_CHANGING_UPDATES:-} ]]; then
+  [[ $COMPARISON_ONLY == 1 && $SCHEDULE_CHANGING_UPDATES =~ ^[0-9]+$ && $SCHEDULE_CHANGING_UPDATES -ge 1 && $SCHEDULE_CHANGING_UPDATES -le 16 ]] || exit 2
+  EXTRA_ARGS+=(--schedule-changing-updates "$SCHEDULE_CHANGING_UPDATES")
+fi
 if [[ -n ${INPUT_BUNDLE:-} ]]; then EXTRA_ARGS+=(--input-bundle "$INPUT_BUNDLE"); fi
 if [[ $PREPARE_INPUT_BUNDLE == 1 || $INSPECT_ONLY == 1 ]]; then
   [[ -n ${INPUT_BUNDLE:-} ]] || exit 2
@@ -34,10 +40,34 @@ elif [[ $PREPARE_INPUT_BUNDLE == 0 ]]; then
 else
   exit 2
 fi
+if [[ $COMPARISON_ONLY == 1 && $INSPECT_ONLY == 0 ]]; then
+  # One persistent 1800-second window, including the <=30-second kill tail.
+  # Retries use this same deadline; a dry-run never opens the GPU window.
+  BUDGET_FILE=${BUDGET_FILE:-"${OUTPUT%.json}.budget-deadline"}
+  RESOLVED_BUDGET=$(readlink -m "$BUDGET_FILE")
+  case $RESOLVED_BUDGET in "$ROOT/runtime/outputs/"*) ;; *) echo 'budget path outside project runtime outputs' >&2; exit 2 ;; esac
+  RUN_TIMEOUT=1770s
+  if [[ $DRY_RUN == 0 ]]; then
+    BUSY_PROCESSES=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader)
+    [[ -z $BUSY_PROCESSES ]] || { echo 'free GPU node has compute processes; not starting' >&2; exit 3; }
+    mkdir -p "$(dirname "$RESOLVED_BUDGET")"
+    NOW_SECONDS=$(date +%s)
+    if [[ ! -f $RESOLVED_BUDGET ]]; then
+      (set -o noclobber; printf '%s\n' "$((NOW_SECONDS+1800))" > "$RESOLVED_BUDGET")
+    fi
+    read -r DEADLINE_SECONDS < "$RESOLVED_BUDGET"
+    [[ $DEADLINE_SECONDS =~ ^[0-9]+$ ]] || exit 2
+    REMAINING_SECONDS=$((DEADLINE_SECONDS-NOW_SECONDS-30))
+    (( REMAINING_SECONDS > 0 && REMAINING_SECONDS <= 1770 )) || { echo 'persistent GPU budget exhausted or invalid' >&2; exit 4; }
+    RUN_TIMEOUT="${REMAINING_SECONDS}s"
+    echo "persistent_gpu_deadline=$DEADLINE_SECONDS timeout=$RUN_TIMEOUT kill_tail=30s budget=$RESOLVED_BUDGET"
+  fi
+fi
 COMMAND=(timeout --signal=TERM --kill-after=30s "$RUN_TIMEOUT" env -u LD_LIBRARY_PATH
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs
   "${BACKEND_ENV[@]}"
   SINGULARITYENV_JAX_ENABLE_X64=true
+  SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
   SINGULARITYENV_XLA_PYTHON_CLIENT_MEM_FRACTION=0.80
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$ROOT/runtime/cache/jax/orcjax_gpu/shared-transformer-v1"
   SINGULARITYENV_ORCHIDEE_REPO_ROOT="$CODE_ROOT" SINGULARITYENV_PYTHONPATH="$CODE_ROOT"

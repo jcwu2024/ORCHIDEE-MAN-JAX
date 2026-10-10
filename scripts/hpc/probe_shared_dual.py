@@ -98,6 +98,7 @@ def make_microbatch_daily_branch(
     operations: Mapping[str, Callable[..., Any]],
     microbatch_size: int,
     expected_count: int,
+    preserve_auxiliary: bool = False,
 ) -> Callable[[Any, Any], Mapping[str, Any]]:
     """Return the exact equal-row mean-gradient branch using bounded chunks."""
 
@@ -129,13 +130,17 @@ def make_microbatch_daily_branch(
             )
             if not np.isfinite(norm):
                 raise ValueError("dual_daily_numerical_or_physical: nonfinite gradient norm")
-        return {
+        result = {
             "gradient": gradient,
             "loss": float(np.asarray(value)),
             "norm": norm,
             "hard": hard,
             "seconds": time.perf_counter() - began,
         }
+        if preserve_auxiliary:
+            result["auxiliary"] = jax.device_get(auxiliary)
+            result["seconds"] = time.perf_counter() - began
+        return result
 
     return branch
 
@@ -146,19 +151,21 @@ def make_recurrent_branch(
     device: Any,
     evaluators: Mapping[int, Callable[..., Any]],
     operations: Mapping[str, Callable[..., Any]],
+    horizons: tuple[int, ...] = (7, 30),
+    preserve_auxiliary: bool = False,
 ) -> Callable[[Any, Mapping[int, Sequence[Any]]], tuple[Mapping[int, Any], float]]:
     """Return the unchanged sequential T7/T30 branch on one device."""
 
-    if set(evaluators) != {7, 30}:
-        raise ValueError("dual recurrent evaluators must be exactly T7 and T30")
+    if horizons not in ((7,), (30,), (7, 30)) or set(evaluators) != set(horizons):
+        raise ValueError("dual recurrent evaluators must match declared T7/T30 horizons")
 
     def branch(parameters: Any, cases: Mapping[int, Sequence[Any]]) -> tuple[Mapping[int, Any], float]:
-        if set(cases) != {7, 30}:
-            raise ValueError("dual recurrent cases must be exactly T7 and T30")
+        if set(cases) != set(horizons):
+            raise ValueError("dual recurrent cases must match declared T7/T30 horizons")
         began = time.perf_counter()
         results = {}
         with jax.default_device(device), device_helper_cache(device):
-            for horizon in (7, 30):
+            for horizon in horizons:
                 started = time.perf_counter()
                 (value, auxiliary), gradient = evaluators[horizon](parameters, *cases[horizon])
                 _check_gradient_component(
@@ -177,6 +184,9 @@ def make_recurrent_branch(
                     },
                     "seconds": time.perf_counter() - started,
                 }
+                if preserve_auxiliary:
+                    results[horizon]["auxiliary"] = jax.device_get(auxiliary)
+                    results[horizon]["seconds"] = time.perf_counter() - started
         return results, time.perf_counter() - began
 
     return branch

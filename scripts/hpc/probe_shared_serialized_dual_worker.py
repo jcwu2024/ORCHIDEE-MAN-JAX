@@ -25,7 +25,7 @@ def load_overlays():
     root = os.environ.get("ORCHIDEE_REPO_ROOT", str(Path(__file__).resolve().parents[2]))
     if root not in sys.path:
         sys.path.insert(0, root)
-    for name in ("probe_shared_dual", "probe_shared_serialized_updates"):
+    for name in ("training_artifact_io", "probe_shared_dual", "probe_shared_serialized_updates"):
         module_name = f"scripts.hpc.{name}"
         spec = importlib.util.spec_from_file_location(module_name, Path(__file__).with_name(name + ".py"))
         module = importlib.util.module_from_spec(spec)
@@ -99,9 +99,14 @@ def serve(profile_path, memory_limit_bytes, admission_reports=None):
               f"deserialize_cpu_seconds={deserialize_cpu_seconds:.3f}",
               file=sys.stderr, flush=True)
     operations = make_tree_operations(jax, jnp, 32)
-    branch = make_recurrent_branch(
-        jax=jax, device=device, evaluators=evaluators, operations=operations
-    )
+    branches = {
+        horizons: make_recurrent_branch(
+            jax=jax, device=device,
+            evaluators={h: evaluators[h] for h in horizons}, operations=operations,
+            horizons=horizons, preserve_auxiliary=True,
+        )
+        for horizons in ((7, 30), (30,))
+    }
     send({"status": "ready", "jax_version": jax.__version__,
           "device": str(device), "executables": metadata,
           "source_profile": str(profile_path), "admitted_overrides": admissions})
@@ -115,13 +120,24 @@ def serve(profile_path, memory_limit_bytes, admission_reports=None):
             continue
         try:
             began = time.perf_counter()
+            horizons = tuple(sorted(command["cases"]))
+            if horizons not in branches:
+                raise ValueError("worker supports exactly T7+T30 or T30")
             parameters = jax.device_put(command["parameters"], device)
             cases = jax.device_put(command["cases"], device)
-            result, recurrent_seconds = branch(parameters, cases)
+            jax.block_until_ready((parameters, cases))
+            input_seconds = time.perf_counter() - began
+            result, recurrent_seconds = branches[horizons](parameters, cases)
+            download_started = time.perf_counter()
             result = jax.device_get(result)
+            download_seconds = time.perf_counter() - download_started
             send({"status": "passed", "result": result,
+                  "executed_parameter_version": command.get("parameter_version"),
                   "recurrent_seconds": recurrent_seconds,
-                  "worker_total_seconds": time.perf_counter() - began})
+                  "worker_total_seconds": time.perf_counter() - began,
+                  "timing_seconds": {"worker_input_device_put_and_sync": input_seconds,
+                                     "worker_result_device_get": download_seconds},
+                  "device_memory": device.memory_stats()})
         except Exception as error:
             send({"status": "error", "error_type": type(error).__name__,
                   "error": str(error)})

@@ -1,107 +1,103 @@
 # Code Map
 
-Updated: 2026-09-26. A bounded ownership map, not an exhaustive import inventory.
-Current operations are in [NEXT_STEPS.md](NEXT_STEPS.md).
+Updated: 2026-10-10. Bounded task navigation, not an exhaustive inventory.
+First-day/raw-neural JVP execution and CPU acceptance are complete; preserve graphs/HLO/full results.
+[NEXT_STEPS.md](NEXT_STEPS.md) controls the handoff/stop and closed-scope boundaries;
+[current-status.md](current-status.md) owns measured facts and limits.
 
 ## Source and Teacher
 
 | Path | Responsibility |
-| --- | --- |
-| `fortran_source/ORCHIDEE/` | Fortran source truth; process/branch provenance |
-| `fortran_run_scripts/paper_250919/` | Paper runtime protocol truth |
-| `jax_orchidee/cli/`, `runners/`, `driver/` | Public Teacher, forcing/restart orchestration, compiled lifecycle |
-| `jax_orchidee/sechiba/`, `stomate/` | Source-backed half-hour processes and retained daily physics |
-| `jax_orchidee/parameters/` | Parameter/PFT catalog and stable-identity ownership |
-| `jax_orchidee/coupled.py`, `ad_primitives.py` | Source-order composition and canonical derivatives |
-| `reference/`, `traces/`, `docs/source_audits/` | Reference/provenance/branch evidence, not surrogate logic |
+|---|---|
+| `fortran_source/ORCHIDEE/` | Fortran process/branch truth |
+| `fortran_run_scripts/paper_250919/`, `reference/`, `traces/`, `docs/source_audits/` | Paper protocol, source audit/reference/trace provenance |
+| `jax_orchidee/cli/`, `runners/`, `driver/` | Public Teacher, IO and compiled lifecycle |
+| `jax_orchidee/sechiba/`, `stomate/`, `coupled.py`, `ad_primitives.py` | Source-order physics and canonical derivatives |
+| `jax_orchidee/parameters/` | Parameter/PFT catalog and stable identities |
 
-Teacher and research remain separate products. `main` carries the user-facing
-Teacher; `research/daily-coarse-graining` adds research code. The accepted core
-synchronization is recorded at `5910ba9` / `10030eb`; it is not a claim that
-all later branch contents are identical. PFT14 is supported within declared
-scope; PFT2-PFT13 are `structural_only` and fail closed if activated.
+Teacher and surrogate research are separate. Reuse coherent v6 fixed Teacher
+and prepared shards; no v5 joins/regeneration. Scoped PFT14 closure is not
+full669-point Fortran/all-branch acceptance. PFT2–13 remain structural only
+and fail closed. A named old result is not current execution authority.
 
-## Current daily model and training
+## Public daily model
 
-Paths below are relative to `research/daily_coarse_graining/daily_operator/`.
+Paths are under `research/daily_coarse_graining/daily_operator/`.
 
-| Module | Owns |
-| --- | --- |
-| `model.py::bind_daily_operator` | Canonical input -> process head -> conservative updater -> retained-tail composition |
-| `shared_transformer.py` | Shared masked backbone and common coordinate decoder |
-| `shared_process_head.py::SharedTransformerProcessHead` | Neural outputs bound to typed physical process boundary |
-| `shared_persistent_outputs.py`, `shared_cimean.py` | Persistent endpoint coordinates and source-backed annual-Ca identity |
-| `shared_trajectory_loss.py`, `shared_training.py` | Shared science terms and daily objective |
-| `shared_recurrent_training.py`, `rollout_loss.py` | Joint daily/T7/T30 objective and public native checkpointed rollout AD |
+| Owner | Responsibility |
+|---|---|
+| `model.py::bind_daily_operator` | Canonical input→head→conservative updater→retained-tail binding |
+| `shared_transformer.py`, `shared_latent_reader.py` | Original masked shared transformer and opt-in latent32/reader64; public factory/field execution |
+| `shared_process_head.py::SharedTransformerProcessHead` | Typed neural process outputs bound to physical processes |
+| `shared_decoder_expert_execution.py`, `shared_decoder_macro_packed.py`, `shared_backbone_execution.py`, `shared_backbone_projection_reuse.py` | Original field/expert execution, identical projection/source reuse and stable serialized identities |
+| `shared_persistent_outputs.py`, `shared_cimean.py` | Persistent endpoints and source-backed annual-Ca identity |
+| `shared_trajectory_loss.py`, `shared_training.py`, `shared_recurrent_training.py`, `rollout_loss.py` | Shared science terms, daily/joint loss and public native checkpointed rollout AD |
 
-Under `scripts/hpc/`, `shared_transformer_runtime.py` binds accepted prepared
-inputs/calibration; `shared_learning_plan.py` owns seeded ordering/panels;
-`run_shared_learning.py` composes full-network updates;
-`shared_learning_monitor.py` evaluates fixed scientific/physical panels;
-`shared_daily_microbatch.py` preserves sample-mean objective accumulation.
-`canonical_training_runtime.py` and `retained_training_runtime.py` own data
-bootstrap and retained templates; `training_artifact_io.py` and
-`runtime_diagnostics.py` provide shared host-side helpers. Current consumers
-use these modules rather than importing retired experimental runners.
-These executable paths are not authorization to resume training.
+Original:64,884,481 parameters, backbone768x8, coordinate decoder384x2.
+Selected diagnostic prototype:66,123,713 parameters, expert32x384 latents,
+private reader64x2, canonical field/chunk64. Physical state carries inter-day
+memory. Preserve canonical six-hour forcing/binding/updater/tail, potentially
+active outputs/masks and complete parameter/state AD; no default adoption.
 
-Current candidate: 64,884,481 parameters, backbone 768/eight blocks, decoder
-384/two blocks. Physical state supplies day-to-day memory. All candidate heads
-enter the same canonical binding, updater and retained tail; no final daily
-inference path may execute a 48-step state scan.
+## Current T7 diagnostic and shared runtime
 
-## Data and reusable dependencies
+Paths are under `scripts/hpc/`.
 
-Modules in `research/daily_coarse_graining/` owning Teacher release, shards,
-typed storage/masks, dataset/statistics, PFT interface, flux inventory/replay,
-physical-parameter registry and target-oriented optimization remain reusable
-infrastructure. A filename containing `canonical`, `target_oriented`, `v5`,
-`successor` or an old architecture name does **not** prove dead code.
-Check live imports and contract responsibilities before moving/removing it.
-Use [WORKSPACE_INVENTORY.md](research/daily_coarse_graining/WORKSPACE_INVENTORY.md)
-for the current dependency/classification inventory and its reproducible check.
+| Owner | Responsibility |
+|---|---|
+| `shared_transformer_runtime.py`, `canonical_training_runtime.py`, `retained_training_runtime.py` | Prepared inputs/calibration, bootstrap and retained templates |
+| `target_oriented_training_prepared.py`, `training_artifact_io.py`, `runtime_diagnostics.py` | Prepared artifact identities, shared host artifacts and diagnostic observations |
+| `shared_daily_microbatch.py`, `shared_daily_dual_ad.py`, `shared_full_state_ad_execution.py` | Public sample-mean daily parameter/state AD, saved graph identity/ABI and optimizer views |
+| `probe_shared_latent_reader_T7_pair.py` | Corrected original/candidate public objective, exact parameters/context/source identities, guarded turnover and saved T7/T30 full-AD graphs |
+| `shared_latent_T7_batch_assets.py`, `shared_latent_T7_batch_ad.py`, `probe_shared_latent_T7_batch.py` | Four distinct TRAIN windows742/275/482/299, five dynamic inputs, `grad(mean(vmap(public checkpointed loss)))`, saved-B1 denominator and complete B4 comparisons |
+| `probe_shared_latent_T7_state_jvp.py`, `shared_latent_T7_state_jvp.py` | Completed B1/B4 directions 434/2382/2621/control 200 at sample299; FP32 neural/FP64 physics/state directions; native B1 tangents plus separate /4 versus B4 mean, graph identities/full-VJP endpoints, tangent/primal/hard/self/cross comparisons and retained failures |
+| `run_shared_latent_T7_state_jvp.py`, its shell launcher | Actual runtime preflight, isolated overlay resolution, independent approval-bound3600-second occupation, route/load/compile caps, actual memory/exit observations and saved-only VJP loading |
+| `shared_latent_T7_day_jvp.py`, `probe_shared_latent_T7_day_jvp.py`, `run_shared_latent_T7_day_jvp.py`, `run_shared_latent_T7_day_jvp.sh` | Completed canonical `RolloutLoss.step` first-day B1/B4 full outputs/native tangents at natural scale/no /4; exact assets, saved binaries/HLO/24 raw results, strict numeric/discrete/mask comparisons, actual exit 3 and settled independent occupation; no retry/VJP/update |
+| `shared_latent_T7_raw_neural_jvp.py`, `probe_shared_latent_T7_raw_neural_jvp.py`, `run_shared_latent_T7_raw_neural_jvp.py`, `run_shared_latent_T7_raw_neural_jvp.sh` | Completed canonical neural prefix/all 161 raw fields/exact masks; 24 native JVPs, binaries/HLO; accepted v3-final audit retains active primal/tangent failures, exact repeats/isolation; scope closed/handoff/stop |
+| `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
+| `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
+| `probe_shared_latent_T7_dispatch.py`, `shared_latent_T7_dispatch_ad.py` | Completed saved-B1 synchronization comparison; cheap device-side merge retained for eventual complete-workload verification |
+| `prepare_shared_latent_full_update.py`, `probe_shared_latent_dual.py`, its worker | Corrected saved-graph readiness and changing-weight complete-update integration; deferred until current gates/remaining corrected daily graph are resolved |
+| `probe_shared_forward_reverse.py`, `analyze_shared_update_trace.py`, `profile_shared_latent_saved_T30.py`, `analyze_shared_execution_trace.py` | Existing forward/additional-AD and saved-T30 execution evidence; source/profile hints do not isolate pure reverse or exclusive module time |
 
-Machine identities live in `manifests/coarse_graining/`. Formal training uses
-the accepted coherent **v6 fixed** release, not historical v5 rows or an
-immutable-parent sidecar join. Runtime/Teacher cache data are external assets;
-do not materialize one file per day/update for the full data release.
+Relevant regression: `tests/unit/test_shared_latent_T7_state_jvp.py` exercises
+small independent AD, direction/scaling/bridge/caps, deployed-interface compile
+options and launcher admission. First-day helper/launcher tests are
+`tests/unit/test_shared_latent_T7_day_jvp.py` and
+`tests/unit/test_shared_latent_T7_day_jvp_launcher.py` (27 focused passes).
+Actual model/GPU checks remain separate.
+Runtime checkout is c599236 at `runtime/checkouts/shared-split-width-v1`;
+unchanged assets are in `runtime/transfer/shared-latent-reader-20261004`.
+Named results preserve overlays, ABI identities and exact binary paths.
+The B1 completion's separate 3600-second grant is closed. Its NumPy analyzer is
+`outputs/diagnostics/shared-latent-reader-20261004/analyze_T7_state_jvp_completion_20261009.py`.
+It checks native/scaled arrays, complete numeric/static tree topology, primal
+bridges, strict comparisons, actual occupation and NVML. The named completion
+report links its compact JSON and CPU receipts. The selected
+[first-day results](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md)
+own completed evidence, raw paths, runtime/occupation/release and limitations.
+`outputs/diagnostics/shared-latent-reader-20261004/analyze_T7_first_day_jvp_20261009.py`
+is the independent NumPy-only saved-array analyzer; seven target guards pass.
+The [raw-neural result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
+links accepted v3-final audit, raw arrays, binaries/HLO and settled resources.
+Its batch-dependent FP32 contractions remain a hypothesis; mapped scalar
+execution is discussion-only, unimplemented/unmeasured. Preserve the
+[handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md) and stop.
 
-## Execution diagnostics, not model defaults
+## Retained older evidence and navigation
 
-`scripts/hpc/probe_shared_serialized_updates.py` and
-`probe_shared_serialized_dual.py` compare saved-binary full proposals and
-optimizer parity. `probe_shared_combined_recurrent.py` admits bounded T7/T30
-execution changes. The `shared_*execution.py` adapters and saved daily/recurrent
-profilers are opt-in function-preserving experiments, not a new model family.
+Original full-state scheduling/leaf CUDA/JVP source families, V4/V7 learning
+and science families, and previous precision/fanout/checkpoint/compile probes
+remain bounded historical evidence. Their closed windows and failures are in
+named reports, the
+[variant registry](research/daily_coarse_graining/shared_execution_variant_registry_20260930.md)
+and [history index](research/daily_coarse_graining/HISTORY_INDEX.md).
+Consult a named family when needed; do not read the script/report collection
+as current context or reopen a closed architecture/precision route implicitly.
 
-`probe_shared_ffn_precision.py` captures actual FFN inputs;
-`probe_shared_ffn_algorithm.py` tests native dot policies/forward/input and
-parameter VJPs. These are isolated precision diagnostics, not production
-mixed precision or custom AD. Latest evidence is linked from NEXT_STEPS.
-
-`shared_decoder_expert_execution.py` owns opt-in union dynamic projections;
-the default remains field execution. `probe_shared_dynamic_projection.py`
-tests that component; `probe_shared_neural_precision.py` owns the staged native
-daily AD diagnostic. `probe_shared_neural_transpose_lower.py`,
-`probe_shared_union_integrated.py` and `probe_shared_union_replay.py` preserve
-lowering, actual-loss parity and cache-replay experiments respectively. These
-are diagnostic interfaces, not the pending production micro4 speed comparison.
-
-## History, tests and generated files
-
-- Retired neural experiment implementations are recoverable from the source
-  snapshot linked in HISTORY_INDEX. Scientific reports and retained Oracle/replay
-  evidence remain available. Read
-  [failed architecture lessons](research/daily_coarse_graining/failed_architecture_lessons.md)
-  before reopening a rejected architecture.
-- `tests/unit/`: lightweight model/contract/research checks; `tests/parity/`:
-  external-data and Fortran comparisons; `tests/fortran_oracles/`: Oracle assets.
-- `scripts/dev/`: source/branch audits and local diagnostics; `scripts/hpc/`:
-  current launchers, shared runtime helpers and retained diagnostics.
-- `outputs/`: new generated reports/assets; remote runtime belongs under the
-  declared project runtime root. Neither is source truth.
-- [HISTORY_INDEX.md](research/daily_coarse_graining/HISTORY_INDEX.md) routes
-  named historical questions without loading the whole chronology.
-
-This bounded map does not establish exhaustive dependency closure or dead code.
-Use graph coverage and exact imports/source for the particular change.
+Preserve public module boundaries, serialized prepared-data class/module
+identities, exact Teacher/scientific arrays and successful graphs. Map edits
+do not authorize asset deletion. Follow
+[RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md) for current facts and historical
+recovery; environment/server rules remain in AGENTS and
+[deployment-explore1000.md](deployment-explore1000.md).

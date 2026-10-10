@@ -1,57 +1,61 @@
 # Project Start Here
 
-Updated: 2026-09-26. Entry-document and obsolete-source cleanup are complete.
-The current work is speed research before training; see NEXT_STEPS for job status.
+Updated: 2026-10-10. First-day localization completed both graphs and 24 JVPs.
+Finite, defined next-state tangents differ for all four directions, including control
+200, within the first daily transition. Raw state coordinate 20 is nonfinite,
+a separate retained failure. Numerical exit 3; that GPU scope is released/closed.
+The [accepted raw-neural result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
+confirms active primal/tangent failures before physical transforms; exact repeats
+and masks pass. Exit 3/GPU released/scope closed. The
+[handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md) is the stop state.
+[NEXT_STEPS.md](NEXT_STEPS.md) controls action/authority.
 
-## Two products, separate claims
+The main task is faster T1/daily, T7 and T30 training before formal training.
+The10x target is cumulative research. Final acceptance preserves changing
+weights, GPU count, daily32/eight distinct micro4 plus one T7 and one T30,
+public losses, complete parameter/state gradients, physics/masks and AdamW.
+Strict `rtol=1e-5, atol=1e-6` and24GiB remain; no candidate is automatically
+adopted. No complete-update optimization has passed every gate.
 
-The **PFT14 Teacher** is the source-backed JAX port of the paper-era ORCHIDEE-MAN
-configuration. It retains 48 half-hour transitions and the daily STOMATE tail.
-Scoped Fortran/lifecycle validations pass; full 669-point Fortran-equivalence
-release acceptance is a separate, still-pending gate.
+Current measured evidence:
 
-The **daily surrogate** is research, not a Fortran-equivalent or accepted
-user-facing model. Its inference boundary is:
+- Matched component medians: forward18.57%, additional gradients/recompute
+  81.43%, AdamW0.02–0.03s. These do not isolate pure reverse or exactly partition
+  one update; compute/AD remains the priority.
+- Corrected latent32/private-reader64 components improve T7/T30 throughput
+  about28%; state repeats fail. Corrected daily/full updates remain pending.
+- Same four TRAIN T7 windows: serial5.025831s→B4 1.967053s/2.555005x.
+  Loss/all parameters/aux/physics/masks/memory pass; states fail9/9/11.
+- Saved-B1 synchronization gives only1.024075x, with strict state failures;
+  its separate900s window is closed. Keep the helper for future full-workload
+  verification; later batching/state-gradient work awaits a new decision.
+- Full-T7 JVP completion retained B1/4–B4 differences at 434/2382 and own
+  JVP/VJP failures. The [first-day result](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md)
+  reproduces next-state tangent differences before later recurrence/loss;
+  finite primals/observations and exact auxiliaries pass, raw state finiteness
+  fails at a source-undefined roughness slot. The accepted audit confirms all
+  tangent failures are defined and own repeats exact; no cause/reference follows.
 
-```text
-day-start physical state + native six-hour forcing + static/physical parameters
-  -> shared masked neural process head
-  -> conservative daily updater + retained exact daily processes
-  -> next-day physical state
-```
+[current-status.md](current-status.md) gives current facts and limits;
+[CODE_MAP.md](CODE_MAP.md) gives bounded navigation;
+[DOCUMENT_STATUS.md](DOCUMENT_STATUS.md) maps active contracts and named reports.
+Keep experiment detail in its report, following
+[RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md). The historical handoff and report
+collection are not onboarding context. Closed balances grant no new runs.
 
-No 48-step forcing reconstruction or state scan belongs in final daily
-inference. Inter-day memory is explicit physical state, not neural hidden state.
-PFT-axis extensibility and physical-parameter gradient validity are separate
-claims; neither follows from a finite neural loss or a successful PFT14 run.
+The source-backed PFT14 Teacher and research surrogate are separate. Reuse
+coherent v6 fixed Teacher/prepared shards; no regeneration or v5 joins.
+Fortran truth remains `fortran_source/ORCHIDEE`; paper scripts/reference/traces
+remain provenance. Scoped PFT14 checks do not establish full669-point Fortran
+or all-PFT coverage. Unsupported branches fail closed.
 
-## Read only what the task needs
-
-1. [NEXT_STEPS.md](NEXT_STEPS.md): current operation, gates and authorization.
-2. [CODE_MAP.md](CODE_MAP.md): where changes belong and what remains live.
-3. [current-status.md](current-status.md): accepted facts and latest evidence.
-4. [DOCUMENT_STATUS.md](DOCUMENT_STATUS.md): select a controlling contract.
-
-These pages are current-only. For a named old experiment or a decision's
-provenance, use [HISTORY_INDEX.md](research/daily_coarse_graining/HISTORY_INDEX.md).
-Do not read the whole `HANDOFF.md` or dated report collection for onboarding.
-
-## Stable boundaries
-
-- Source truth: `fortran_source/ORCHIDEE`; paper protocol:
-  `fortran_run_scripts/paper_250919`; reference truth: `reference/` and `traces/`.
-- Teacher code: `jax_orchidee/`; research: `research/daily_coarse_graining/`.
-- Accepted coherent Teacher dataset: **v6 fixed**, 669 points, 1961-2010,
-  33,450 point-years, 12,208,581 transitions. Reuse it; do not regenerate or
-  join historical v5 rows. Dataset admission is not full Fortran equivalence.
-- Current neural candidate: 64,884,481 parameters; shared backbone width 768,
-  eight blocks; common coordinate decoder width 384, two blocks; native
-  checkpointed AD; canonical binding/updater/retained tail.
-- Formal training must specify fresh initialization and full-network joint
-  optimization reproducibly. Old checkpoints are diagnostic assets, not the
-  default final-method starting point. Scientific and product acceptance remain
-  pending.
-
-Return to **speed optimization before training**. The 10x target is a research
-goal, not a measured result or promise. See NEXT_STEPS, not old
-reports' proposed launches, for what is authorized.
+Formal training requires independently declared fresh initialization,
+full-network joint optimization and an executable reproduced protocol.
+Diagnostic checkpoints and exploratory accuracy do not supply that method.
+Native checkpointed AD/public science and loss components remain authoritative.
+Use ORCJAX locally and the declared Explore1000 runtime remotely. Work only in
+jcwu's remote tree; never compute on login nodes. New paid work and consequential
+scientific choices require approval. First-day occupation closed at
+2124.572662/5400 free GPU seconds/0.590159 card-hours/CNY 0; closed balances
+grant no new graph. Same precision/inputs/weights and strict gates remain;
+no adoption or newly accepted complete-update gain follows.

@@ -92,16 +92,24 @@ def summarize(trace, sources=None, gemm_shapes=None):
     source_totals = defaultdict(lambda: {"calls": 0, "summed_seconds": 0.0})
     precision = defaultdict(lambda: {"calls": 0, "summed_seconds": 0.0})
     shape_totals = defaultdict(lambda: {"calls": 0, "summed_seconds": 0.0})
+    module_totals = defaultdict(lambda: {"calls": 0, "summed_seconds": 0.0})
+    axial_ffn = {"calls": 0, "summed_seconds": 0.0}
     for event in gpu:
         name = event["name"]
         args = event.get("args", {})
         source = sources.get(args.get("hlo_op"))
         source_key = f"{source[0]}:{source[1]}" if source else "unmapped"
-        groups = [(totals, kernel_category(name)), (names, name), (source_totals, source_key)]
+        module = Path(source[0]).name if source else "unmapped"
+        groups = [(totals, kernel_category(name)), (names, name), (source_totals, source_key),
+                  (module_totals, module)]
         shape = gemm_shapes.get(args.get("hlo_op"))
         if shape:
             shape_key = f"{shape['operand_dtype']} B={shape['batch']} M={shape['m']} N={shape['n']} K={shape['k']}"
             groups.append((shape_totals, shape_key))
+            if shape["operand_dtype"] == "f32" and shape["batch"] == 1 and sorted(
+                    (shape["m"], shape["n"], shape["k"])) == [384, 1536, 4032]:
+                axial_ffn["calls"] += 1
+                axial_ffn["summed_seconds"] += event["dur"] * 1e-6
         if kernel_category(name) == "matrix_multiply":
             label = ("explicit_fp64" if "dgemm" in name.lower() else
                      "explicit_fp32" if "sgemm" in name.lower() else "unknown_or_other")
@@ -142,6 +150,10 @@ def summarize(trace, sources=None, gemm_shapes=None):
         "categories": ranked(totals), "gemm_precision_by_explicit_kernel_name": ranked(precision),
         "top_kernel_names": ranked(names, 30), "top_hlo_source_locations": ranked(source_totals, 30),
         "top_cublas_operand_shapes": ranked(shape_totals, 40),
+        "module_source_hints": ranked(module_totals),
+        "axis_padded_ffn_shape_matched_gemm": {**axial_ffn,
+            "summed_device_time_fraction": axial_ffn["summed_seconds"] / summed,
+            "mapping": "FP32 unbatched384/1536/4032 cuBLAS operands match padded axial FFN; includes forward/AD/recompute, not a pure phase measurement"},
         "limitations": [
             "Profiler instrumentation perturbs execution; warm unprofiled timing is the throughput evidence.",
             "Summed device duration can overlap; union/span/gaps are reported separately.",
@@ -157,6 +169,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trace", required=True, type=Path)
     parser.add_argument("--hlo", type=Path)
+    parser.add_argument("--hlo-index", type=Path, help="source/shape index from an already loaded saved executable")
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     with gzip.open(args.trace, "rt", encoding="utf-8") as handle:
@@ -167,6 +180,12 @@ def main():
         with gzip.open(args.hlo, "rt", encoding="utf-8") as handle:
             text = handle.read()
         sources, gemm_shapes = hlo_sources(text), hlo_gemm_shapes(text)
+    if args.hlo_index:
+        if args.hlo:
+            raise ValueError("select HLO text or index")
+        index = json.loads(args.hlo_index.read_text())
+        sources = {key: (value["file"], value["line"]) for key, value in index["sources"].items()}
+        gemm_shapes = index["gemm_shapes"]
     report = summarize(trace, sources, gemm_shapes)
     report.update(trace_file=str(args.trace), hlo_file=str(args.hlo))
     _atomic_json(args.output, report)
