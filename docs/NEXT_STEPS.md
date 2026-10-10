@@ -6,6 +6,11 @@ raw state coordinate 20 is nonfinite. Numerical exit 3, GPU released, scope
 closed. Raw-neural v3-final saved-evidence audit is accepted with active numerical
 failures; 24 results saved/GPU released/scope closed. Handoff complete; stop.
 
+The later project-maintenance authorization establishes the fixed daily checkout
+at `runtime/worktrees/daily-coarse-graining` under the root workspace. See
+[workspace management](WORKSPACE_MANAGEMENT.md). Commit/push and checkout
+maintenance do not reopen any scientific run or closed GPU scope below.
+
 ## Main task and final acceptance
 
 Improve T1/daily, T7 and T30 effective training throughput before formal

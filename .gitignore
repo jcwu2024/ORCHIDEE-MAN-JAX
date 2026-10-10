@@ -63,6 +63,7 @@ dist/
 
 # Locally downloaded publisher article
 /docs/J Adv Model Earth Syst*.pdf
+/docs/Lahlou_26*.pdf
 
 # OS files
 .DS_Store

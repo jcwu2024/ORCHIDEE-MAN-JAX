@@ -2,6 +2,9 @@
 
 English | [简体中文](README.zh-CN.md)
 
+For the fixed main/daily/global checkout paths, synchronization and recovery,
+see [workspace management](docs/WORKSPACE_MANAGEMENT.md).
+
 This project has two connected stages: a source-backed, differentiable JAX
 implementation of the ORCHIDEE-MAN paper-era PFT14 mangrove model, and a
 Transformer/Attention-based daily neural operator trained from that model.
