@@ -1,5 +1,9 @@
 # 全球物理模型吞吐研究
 
+新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)和
+[可复制开场指令](NEW_PROJECT_PROMPT.md)。交接按最新 B1024/B2048 终态定序；
+下面保留历史实验上下文，旧“下一步”及额度不自动恢复为新授权。
+
 更新：2026-10-09。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
