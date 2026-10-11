@@ -1,6 +1,6 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-11。先读本页、本轮实现报告，再按需读两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
+更新：2026-10-11。先读本页、[碳核心本地同步结果](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)，再按需读生命周期实现及两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
 此交接保存停止点和研究问题，**不恢复任何 GPU 诊断、付费作业或旧额度**。
 可复制[新项目开场指令](NEW_PROJECT_PROMPT.md)。
 
@@ -56,6 +56,8 @@ AD/校准价值另论；当前没有梯度/训练、匹配Fortran加速比或普
 
 ## 3. 最新结果：1024最佳已测，2048执行OOM
 
+本节性能与科学验收只属于第6节的历史执行pin；不能转授已同步的新碳核心。
+
 先读[fixed1024结果](../../../outputs/research/global_throughput/gpu-capacity-1024-preparation-20261008/CURRENT_RESULT.md)
 和[fixed2048终态](../../../outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md)。
 
@@ -96,16 +98,41 @@ wrapper为7.052818 point-days/s，仍有两项cross-GPU严格容差失败，CPU4
 B2048×1没有前chunk，不能用跨chunk结果重叠解释其OOM。
 
 本地[实现与验收](../../../outputs/research/global_throughput/memory-lifecycle-implementation-20261011/CURRENT_RESULT.md)
-已完成，199项相关轻量测试、Ruff及diff检查通过，工作区尚未commit/push/deploy。
+已完成，199项相关轻量测试、Ruff及diff检查通过，已提交为
+`277aa35793e5b6dd3a1d436a32b4cbc97a305106`，作为碳核心同步前baseline。
+该实现报告保留当时未提交状态，不回写历史验收证据；当前阶段见下述同步报告。未部署。
 默认保留legacy交替顺序；新B1024-only `phased_resident_control` / `phased_release`
 均先5次core后5次wrapper，仅后者在wrapper前清空core输入根引用。计时外及时保存
 analysis、guard及collection/sample边界，原物理合同和内存guard未放宽。
 真实GPU数值、allocator回收、显存变化与吞吐收益未验证。
 
+[碳核心本地同步与验收](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)
+已完成：依次 `cherry-pick -x` main的NPP修复 `e317fa8` →本线
+`c6a88afd41120dfd6434bdf5d442b72b58b34ccd`，以及leaf fraction修复 `2a3e303` →本线
+`ef271cef8551f47f82cccf234949d021e958917e`。两次pick无冲突、来源独立保留。
+新科学测试pin为`ef271cef`，普通记录提交的最终HEAD从Git及报告目录同步收据读取。
+
+同fixture、各pin独立模块上下文的NPP适配器、post-NPP生产适配器和turnover_step，
+在eager/JIT/vmapped-JIT三模式通过354/354个完整返回叶子记录：348个精确相同；
+57个碳库/turnover及84个离散/text记录全部精确相同。仅六个leaf_frac记录有舍入差，
+最大绝对差`3.3306690738754696e-16`、非零baseline最大相对差
+`4.803236536610133e-16`，原`atol=1e-8, rtol=1e-10`通过，零坐标无变化。
+相关新增回归37项通过，Ruff及diff检查通过；此前199项复用，不计作新核心数值验收。
+范围为14个小型合成fixture、allocation之后的三个现有生产entry，CPU/x64、
+JAX0.10.1；未运行外层全球driver、完整物理图、FULL64、两块连续窗口或GPU。
+调用来源、实际命令、逐叶指标及图工具Transport closed的源码回退限制均在同步报告。
+
+当前新核心被旧source_identity guard预期拒绝：`science source changed outside
+certified execution-only cache repair`。这是版本隔离拒绝，与数值结果分开。
+旧DIFFUCO-only execution certificate及helper原样保留，碳过程修复不归入旧execution-only
+equivalence。后续须准备独立新科学核心identity及对旧冻结FULL64的显式严格comparison
+admission；旧goldens、历史pin/终态不改。新完整全球runner与GPU准入尚未完成。
+
 [GPU验证提案](../../../outputs/research/global_throughput/memory-lifecycle-implementation-20261011/GPU_VALIDATION_PROPOSAL.md)
 规划同一新allocation内两个fresh B1024进程，统一phased顺序，不能与历史交替样本混比。
 拟1 V10032GB+4 CPUs、120min，主/保守worst-case CNY4.80/4.96，未获新执行授权。
-执行SHA、专用两组launcher、strategy-aware saved-array验证及目标Bash dry-run仍待准备；
+本地核心同步已验收；新科学来源准入、未来执行SHA、专用两组launcher、
+strategy-aware saved-array验证及目标Bash dry-run仍待准备，提案未就绪；
 旧fixed2048 launcher会派B2048，不能直接复用，旧额度保持关闭。
 
 中间批量、真实669点+尾批、独立集合成员、长窗口/年和匹配Fortran基准仍为后续另议。
@@ -147,7 +174,7 @@ analysis、guard及collection/sample边界，原物理合同和内存guard未放
 服务器统一入口 `P/runtime/deployment/README.md`、`registry.json`、bare `repository.git`；
 本机[registry证据](../../../../../../outputs/maintenance/20261010/server/registry.json)与
 [维护报告](../../../../../../outputs/maintenance/20261010/server/server-report.md)记录2026-10-10快照。
-当时global镜像pin为`c537f59f33568b6e5960254fe55fb307f82ca503`；本次文档commit推进本地/GitHub，
+当时global镜像pin为`c537f59f33568b6e5960254fe55fb307f82ca503`；本次本地提交推进本地/GitHub，
 **不更新服务器镜像或执行checkout**。当前开发SHA用`git rev-parse HEAD`读取，不能替代上述执行pin。
 服务器旧Git无worktree/-C支持，按bare镜像与精确SHA bundle同步，不新造一树一版本。
 

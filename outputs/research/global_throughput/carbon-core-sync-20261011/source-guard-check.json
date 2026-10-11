@@ -1,0 +1,14 @@
+{
+  "code_pin": "ef271cef8551f47f82cccf234949d021e958917e",
+  "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "command": "conda run -n ORCJAX python -B -c \"from pathlib import Path; from scripts.dev.global_source_compatibility import source_identity; print(source_identity(Path.cwd()))\"",
+  "exit_code": 1,
+  "exception_type": "ValueError",
+  "message": "science source changed outside certified execution-only cache repair",
+  "source": "scripts/dev/global_source_compatibility.py:53",
+  "classification": "expected_new_scientific_core_admission_refusal",
+  "numerical_test": false,
+  "guard_changed": false,
+  "GPU_or_model_execution": false,
+  "next_scope": "Establish an independent scientific-source identity for the new core and explicit strict comparison admission against old frozen FULL64 references before future GPU execution; preserve the old DIFFUCO-only execution certificate, original golden outputs and tolerances."
+}

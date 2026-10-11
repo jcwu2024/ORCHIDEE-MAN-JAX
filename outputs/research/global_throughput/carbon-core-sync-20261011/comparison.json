@@ -1,0 +1,7194 @@
+{
+  "baseline": "277aa35793e5b6dd3a1d436a32b4cbc97a305106",
+  "candidate": "ef271cef8551f47f82cccf234949d021e958917e",
+  "atol": 1e-08,
+  "rtol": 1e-10,
+  "passed": true,
+  "metadata_gates_passed": true,
+  "stock_exact_required": true,
+  "relative_metric": "abs(candidate-baseline)/abs(baseline) on nonzero baseline coordinates; zeros counted separately",
+  "array_records": 354,
+  "case_count": 14,
+  "summary": {
+    "exact_records": 348,
+    "changed_records": [
+      "post_npp_production_adapter/scalar_eager/.turnover.leaf_frac",
+      "post_npp_production_adapter/scalar_jit/.turnover.leaf_frac",
+      "post_npp_production_adapter/vmapped_jit/.turnover.leaf_frac",
+      "turnover_step/scalar_eager/.leaf_frac",
+      "turnover_step/scalar_jit/.leaf_frac",
+      "turnover_step/vmapped_jit/.leaf_frac"
+    ],
+    "non_leaf_fraction_records_exact": true,
+    "stock_records": 57,
+    "stock_records_exact": true,
+    "discrete_and_text_records": 84,
+    "discrete_and_text_records_exact": true,
+    "numeric_values_finite": true,
+    "leaf_frac_max_abs": 3.3306690738754696e-16,
+    "leaf_frac_max_relative_nonzero": 4.803236536610133e-16,
+    "leaf_frac_max_bound_ratio": 3.300198168921189e-08,
+    "leaf_frac_reference_zero_count": 13176,
+    "leaf_frac_changed_reference_zero_count": 0
+  },
+  "worker_evidence": {
+    "baseline": {
+      "pin": "277aa35793e5b6dd3a1d436a32b4cbc97a305106",
+      "pid": 51024,
+      "fixture_sha256": "8860b5f54e2b62e3d3255062043143a48962179adb054285a47a3b68f9f39ca3",
+      "cases": [
+        "ordinary_growth",
+        "ordinary_pumping",
+        "tiny_active_mass",
+        "tiny_active_maintenance",
+        "zero_mass",
+        "negative_mass",
+        "below_cutoff",
+        "cutoff_previous",
+        "cutoff_exact",
+        "cutoff_next",
+        "absent_pft",
+        "laidev_mask",
+        "bare_soil",
+        "natural_grass"
+      ],
+      "runtime": {
+        "python": "3.11.15",
+        "numpy": "2.4.6",
+        "jax": "0.10.1",
+        "jaxlib": "0.10.1",
+        "platform": "cpu",
+        "x64": true
+      },
+      "structures": {
+        "npp_adapter/scalar_eager": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]))",
+        "npp_adapter/scalar_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]))",
+        "npp_adapter/vmapped_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]))",
+        "post_npp_production_adapter/scalar_eager": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonKillGapTurnoverResult], [CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[CrownResult], [*, *, *, *]), CustomNode(namedtuple[GapMortalityResult], [*, *, *, *, *, *, *, *]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]), None, None, None, None, None, None, None, *, None, None, None, None, *, ()]))",
+        "post_npp_production_adapter/scalar_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonKillGapTurnoverResult], [CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[CrownResult], [*, *, *, *]), CustomNode(namedtuple[GapMortalityResult], [*, *, *, *, *, *, *, *]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]), None, None, None, None, None, None, None, *, None, None, None, None, *, ()]))",
+        "post_npp_production_adapter/vmapped_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonKillGapTurnoverResult], [CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[CrownResult], [*, *, *, *]), CustomNode(namedtuple[GapMortalityResult], [*, *, *, *, *, *, *, *]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]), None, None, None, None, None, None, None, *, None, None, None, None, *, ()]))",
+        "turnover_step/scalar_eager": "PyTreeDef(CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]))",
+        "turnover_step/scalar_jit": "PyTreeDef(CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]))",
+        "turnover_step/vmapped_jit": "PyTreeDef(CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]))"
+      },
+      "imported_science_files": [
+        "jax_orchidee/__init__.py",
+        "jax_orchidee/ad_primitives.py",
+        "jax_orchidee/parameters/__init__.py",
+        "jax_orchidee/parameters/pft_catalog.py",
+        "jax_orchidee/stomate/__init__.py",
+        "jax_orchidee/stomate/carbon_kernels.py",
+        "jax_orchidee/stomate/daily.py",
+        "jax_orchidee/stomate/daily_inputs.py",
+        "jax_orchidee/stomate/integration.py",
+        "jax_orchidee/stomate/main.py",
+        "jax_orchidee/stomate/modelout.py",
+        "jax_orchidee/stomate/permafrost.py",
+        "jax_orchidee/stomate/season.py",
+        "jax_orchidee/stomate/soilcarbon_kernels.py"
+      ],
+      "array_records": 354,
+      "callchain": [
+        {
+          "file": "jax_orchidee/driver/global_batch.py",
+          "function": "make_scalar_transition",
+          "line": 311,
+          "end_line": 319,
+          "calls": [
+            {
+              "callee": "_paper_later_day_block_transition_factory",
+              "line": 312
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/driver/global_batch.py",
+          "function": "make_batch_transition",
+          "line": 322,
+          "end_line": 325,
+          "calls": [
+            {
+              "callee": "make_scalar_transition",
+              "line": 325
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/driver/orchestration.py",
+          "function": "_paper_day_stomate_daily_carbon_from_bundles",
+          "line": 7598,
+          "end_line": 7639,
+          "calls": []
+        },
+        {
+          "file": "jax_orchidee/driver/orchestration.py",
+          "function": "paper_1961_driver_later_day_runtime_result",
+          "line": 10748,
+          "end_line": 11182,
+          "calls": [
+            {
+              "callee": "_paper_day_stomate_daily_carbon_from_bundles",
+              "line": 11072
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/driver/orchestration.py",
+          "function": "_paper_later_day_block_transition_factory",
+          "line": 11185,
+          "end_line": 11307,
+          "calls": [
+            {
+              "callee": "paper_1961_driver_later_day_runtime_result",
+              "line": 11232
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_carbon_explicit",
+          "line": 1660,
+          "end_line": 1750,
+          "calls": [
+            {
+              "callee": "npp_closed_update",
+              "line": 1702
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_carbon_kill_gap_turnover_explicit",
+          "line": 2219,
+          "end_line": 3132,
+          "calls": [
+            {
+              "callee": "stomate_daily_carbon_explicit",
+              "line": 2425
+            },
+            {
+              "callee": "turnover_step",
+              "line": 2588
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+          "line": 3249,
+          "end_line": 3372,
+          "calls": [
+            {
+              "callee": "stomate_daily_carbon_kill_gap_turnover_explicit",
+              "line": 3349
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "_daily_carbon_static_dispatch",
+          "line": 3412,
+          "end_line": 3482,
+          "calls": [
+            {
+              "callee": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+              "line": 3474
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled",
+          "line": 3510,
+          "end_line": 3557,
+          "calls": [
+            {
+              "callee": "_daily_carbon_static_dispatch",
+              "line": 3548
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/carbon_kernels.py",
+          "function": "npp_closed_update",
+          "line": 3954,
+          "end_line": 4053,
+          "calls": []
+        },
+        {
+          "file": "jax_orchidee/stomate/carbon_kernels.py",
+          "function": "turnover_leaf_age_fall",
+          "line": 4476,
+          "end_line": 4584,
+          "calls": []
+        },
+        {
+          "file": "jax_orchidee/stomate/carbon_kernels.py",
+          "function": "turnover_step",
+          "line": 4744,
+          "end_line": 4918,
+          "calls": [
+            {
+              "callee": "turnover_leaf_age_fall",
+              "line": 4857
+            }
+          ]
+        }
+      ],
+      "fixture_controls": {
+        "lpj_gap_const_mort": true,
+        "ok_dgvm": false,
+        "wire_cover": false,
+        "wire_vmax": false,
+        "residence_time": "positive infinity: zero gap mortality; isolates turnover cutoff",
+        "min_stomate": 0.0,
+        "nvm": 14,
+        "nparts": 12,
+        "nelements": 1,
+        "npts": 1,
+        "outer_vmap_lanes": 14
+      }
+    },
+    "candidate": {
+      "pin": "ef271cef8551f47f82cccf234949d021e958917e",
+      "pid": 27688,
+      "fixture_sha256": "8860b5f54e2b62e3d3255062043143a48962179adb054285a47a3b68f9f39ca3",
+      "cases": [
+        "ordinary_growth",
+        "ordinary_pumping",
+        "tiny_active_mass",
+        "tiny_active_maintenance",
+        "zero_mass",
+        "negative_mass",
+        "below_cutoff",
+        "cutoff_previous",
+        "cutoff_exact",
+        "cutoff_next",
+        "absent_pft",
+        "laidev_mask",
+        "bare_soil",
+        "natural_grass"
+      ],
+      "runtime": {
+        "python": "3.11.15",
+        "numpy": "2.4.6",
+        "jax": "0.10.1",
+        "jaxlib": "0.10.1",
+        "platform": "cpu",
+        "x64": true
+      },
+      "structures": {
+        "npp_adapter/scalar_eager": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]))",
+        "npp_adapter/scalar_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]))",
+        "npp_adapter/vmapped_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]))",
+        "post_npp_production_adapter/scalar_eager": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonKillGapTurnoverResult], [CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[CrownResult], [*, *, *, *]), CustomNode(namedtuple[GapMortalityResult], [*, *, *, *, *, *, *, *]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]), None, None, None, None, None, None, None, *, None, None, None, None, *, ()]))",
+        "post_npp_production_adapter/scalar_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonKillGapTurnoverResult], [CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[CrownResult], [*, *, *, *]), CustomNode(namedtuple[GapMortalityResult], [*, *, *, *, *, *, *, *]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]), None, None, None, None, None, None, None, *, None, None, None, None, *, ()]))",
+        "post_npp_production_adapter/vmapped_jit": "PyTreeDef(CustomNode(namedtuple[ExplicitDailyCarbonKillGapTurnoverResult], [CustomNode(namedtuple[ExplicitDailyCarbonResult], [CustomNode(namedtuple[DailyCarbonBoundary], [*, *, *, None, *, *, (CustomNode(StaticText[bm_alloc], []), CustomNode(StaticText[biomass_before_alloc], []), CustomNode(StaticText[biomass_after_alloc], []), CustomNode(StaticText[biomass_before_npp], []), CustomNode(StaticText[biomass_after_npp], []), CustomNode(StaticText[resp_growth], []), CustomNode(StaticText[npp_daily], []), CustomNode(StaticText[agr_pools_before], []), CustomNode(StaticText[agr_pools_after], []))]), CustomNode(namedtuple[NPPUpdateResult], [*, *, *, *, *, *]), CustomNode(namedtuple[NPPAgeSLAResult], [*, *, *, *, *, *]), ()]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[CrownResult], [*, *, *, *]), CustomNode(namedtuple[GapMortalityResult], [*, *, *, *, *, *, *, *]), CustomNode(namedtuple[KillResult], [*, *, *, *, *, *, *, *, *, *, *, *, *, *, *]), CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]), None, None, None, None, None, None, None, *, None, None, None, None, *, ()]))",
+        "turnover_step/scalar_eager": "PyTreeDef(CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]))",
+        "turnover_step/scalar_jit": "PyTreeDef(CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]))",
+        "turnover_step/vmapped_jit": "PyTreeDef(CustomNode(namedtuple[TurnoverResult], [*, *, *, *, *, *, *, *, *, *, *]))"
+      },
+      "imported_science_files": [
+        "jax_orchidee/__init__.py",
+        "jax_orchidee/ad_primitives.py",
+        "jax_orchidee/parameters/__init__.py",
+        "jax_orchidee/parameters/pft_catalog.py",
+        "jax_orchidee/stomate/__init__.py",
+        "jax_orchidee/stomate/carbon_kernels.py",
+        "jax_orchidee/stomate/daily.py",
+        "jax_orchidee/stomate/daily_inputs.py",
+        "jax_orchidee/stomate/integration.py",
+        "jax_orchidee/stomate/main.py",
+        "jax_orchidee/stomate/modelout.py",
+        "jax_orchidee/stomate/permafrost.py",
+        "jax_orchidee/stomate/season.py",
+        "jax_orchidee/stomate/soilcarbon_kernels.py"
+      ],
+      "array_records": 354,
+      "callchain": [
+        {
+          "file": "jax_orchidee/driver/global_batch.py",
+          "function": "make_scalar_transition",
+          "line": 311,
+          "end_line": 319,
+          "calls": [
+            {
+              "callee": "_paper_later_day_block_transition_factory",
+              "line": 312
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/driver/global_batch.py",
+          "function": "make_batch_transition",
+          "line": 322,
+          "end_line": 325,
+          "calls": [
+            {
+              "callee": "make_scalar_transition",
+              "line": 325
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/driver/orchestration.py",
+          "function": "_paper_day_stomate_daily_carbon_from_bundles",
+          "line": 7598,
+          "end_line": 7639,
+          "calls": []
+        },
+        {
+          "file": "jax_orchidee/driver/orchestration.py",
+          "function": "paper_1961_driver_later_day_runtime_result",
+          "line": 10748,
+          "end_line": 11182,
+          "calls": [
+            {
+              "callee": "_paper_day_stomate_daily_carbon_from_bundles",
+              "line": 11072
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/driver/orchestration.py",
+          "function": "_paper_later_day_block_transition_factory",
+          "line": 11185,
+          "end_line": 11307,
+          "calls": [
+            {
+              "callee": "paper_1961_driver_later_day_runtime_result",
+              "line": 11232
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_carbon_explicit",
+          "line": 1660,
+          "end_line": 1750,
+          "calls": [
+            {
+              "callee": "npp_closed_update",
+              "line": 1702
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_carbon_kill_gap_turnover_explicit",
+          "line": 2219,
+          "end_line": 3132,
+          "calls": [
+            {
+              "callee": "stomate_daily_carbon_explicit",
+              "line": 2425
+            },
+            {
+              "callee": "turnover_step",
+              "line": 2588
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+          "line": 3249,
+          "end_line": 3372,
+          "calls": [
+            {
+              "callee": "stomate_daily_carbon_kill_gap_turnover_explicit",
+              "line": 3349
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "_daily_carbon_static_dispatch",
+          "line": 3412,
+          "end_line": 3482,
+          "calls": [
+            {
+              "callee": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+              "line": 3474
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/integration.py",
+          "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled",
+          "line": 3510,
+          "end_line": 3557,
+          "calls": [
+            {
+              "callee": "_daily_carbon_static_dispatch",
+              "line": 3548
+            }
+          ]
+        },
+        {
+          "file": "jax_orchidee/stomate/carbon_kernels.py",
+          "function": "npp_closed_update",
+          "line": 3954,
+          "end_line": 4057,
+          "calls": []
+        },
+        {
+          "file": "jax_orchidee/stomate/carbon_kernels.py",
+          "function": "turnover_leaf_age_fall",
+          "line": 4480,
+          "end_line": 4619,
+          "calls": []
+        },
+        {
+          "file": "jax_orchidee/stomate/carbon_kernels.py",
+          "function": "turnover_step",
+          "line": 4779,
+          "end_line": 4953,
+          "calls": [
+            {
+              "callee": "turnover_leaf_age_fall",
+              "line": 4892
+            }
+          ]
+        }
+      ],
+      "fixture_controls": {
+        "lpj_gap_const_mort": true,
+        "ok_dgvm": false,
+        "wire_cover": false,
+        "wire_vmax": false,
+        "residence_time": "positive infinity: zero gap mortality; isolates turnover cutoff",
+        "min_stomate": 0.0,
+        "nvm": 14,
+        "nparts": 12,
+        "nelements": 1,
+        "npts": 1,
+        "outer_vmap_lanes": 14
+      }
+    }
+  },
+  "records": [
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.age_sla.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.age_sla.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.age_sla.leaf_age_weighted",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.age_sla.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.age_sla.sla_age1",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.age_sla.sla_calc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2300,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2324,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.f_alloc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.gpp_daily",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U8",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[0]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U20",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[1]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U19",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[2]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U18",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[3]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U17",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[4]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U11",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[5]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U9",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[6]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U16",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[7]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U15",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.requires_trace[8]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2336,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.boundary.resp_maint_part",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.npp_update.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2296,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.npp_update.biomass_before_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2346,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.npp_update.bm_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.npp_update.npp",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.npp_update.resp_growth",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_eager/.npp_update.resp_maint",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.age_sla.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.age_sla.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.age_sla.leaf_age_weighted",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.age_sla.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.age_sla.sla_age1",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.age_sla.sla_calc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2300,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2324,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.f_alloc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.gpp_daily",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U8",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[0]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U20",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[1]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U19",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[2]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U18",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[3]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U17",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[4]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U11",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[5]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U9",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[6]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U16",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[7]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U15",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.requires_trace[8]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2336,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.boundary.resp_maint_part",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.npp_update.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2296,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.npp_update.biomass_before_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2346,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.npp_update.bm_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.npp_update.npp",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.npp_update.resp_growth",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/scalar_jit/.npp_update.resp_maint",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.age_sla.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.age_sla.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.age_sla.leaf_age_weighted",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.age_sla.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.age_sla.sla_age1",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.age_sla.sla_calc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2300,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2324,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.f_alloc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.gpp_daily",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U8",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[0]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U20",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[1]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U19",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[2]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U18",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[3]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U17",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[4]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U11",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[5]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U9",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[6]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U16",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[7]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U15",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.requires_trace[8]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2336,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.boundary.resp_maint_part",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.npp_update.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2296,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.npp_update.biomass_before_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2346,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.npp_update.bm_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.npp_update.npp",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.npp_update.resp_growth",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "npp_adapter/vmapped_jit/.npp_update.resp_maint",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.crown_after_npp.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.crown_after_npp.height",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.crown_after_npp.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.crown_after_npp.woodmass_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.age_sla.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.age_sla.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.age_sla.leaf_age_weighted",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.age_sla.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.age_sla.sla_age1",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.age_sla.sla_calc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2300,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2324,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.f_alloc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.gpp_daily",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U8",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[0]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U20",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[1]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U19",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[2]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U18",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[3]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U17",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[4]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U11",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[5]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U9",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[6]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U16",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[7]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U15",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.requires_trace[8]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2336,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.boundary.resp_maint_part",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.npp_update.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2296,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.npp_update.biomass_before_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2346,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.npp_update.bm_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.npp_update.npp",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.npp_update.resp_growth",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.daily_carbon.npp_update.resp_maint",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.availability",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.delta_biomass",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.mortality",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.mortality_fraction",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.gap.vigour",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.everywhere",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.npp_longterm",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.rip_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.was_killed",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_gap.when_growthinit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.everywhere",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.npp_longterm",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.rip_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.was_killed",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.kill_after_npp.when_growthinit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.lai_after_setlai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2293,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.c_export",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.lai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.leaf_age_crit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": false,
+      "finite": true,
+      "max_abs": 2.220446049250313e-16,
+      "max_relative_nonzero": 4.780024155649044e-16,
+      "reference_zero_count": 740,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 2.1997124494474913e-08,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.leaf_meanage",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2331,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.turnover",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 195,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_eager/.turnover.turnover_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.crown_after_npp.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.crown_after_npp.height",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.crown_after_npp.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.crown_after_npp.woodmass_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.age_sla.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.age_sla.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.age_sla.leaf_age_weighted",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.age_sla.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.age_sla.sla_age1",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.age_sla.sla_calc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2300,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2324,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.f_alloc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.gpp_daily",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U8",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[0]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U20",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[1]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U19",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[2]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U18",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[3]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U17",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[4]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U11",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[5]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U9",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[6]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U16",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[7]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U15",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.requires_trace[8]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2336,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.boundary.resp_maint_part",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.npp_update.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2296,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.npp_update.biomass_before_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2346,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.npp_update.bm_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.npp_update.npp",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.npp_update.resp_growth",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.daily_carbon.npp_update.resp_maint",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.availability",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.delta_biomass",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.mortality",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.mortality_fraction",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.gap.vigour",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.everywhere",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.npp_longterm",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.rip_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.was_killed",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_gap.when_growthinit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.everywhere",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.npp_longterm",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.rip_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.was_killed",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.kill_after_npp.when_growthinit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.lai_after_setlai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2293,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.c_export",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.lai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.leaf_age_crit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": false,
+      "finite": true,
+      "max_abs": 3.3306690738754696e-16,
+      "max_relative_nonzero": 3.6073323044979997e-16,
+      "reference_zero_count": 740,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 3.300198168921189e-08,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.leaf_meanage",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2331,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.turnover",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 195,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/scalar_jit/.turnover.turnover_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.crown_after_npp.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.crown_after_npp.height",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.crown_after_npp.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.crown_after_npp.woodmass_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.age_sla.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.age_sla.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.age_sla.leaf_age_weighted",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.age_sla.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.age_sla.sla_age1",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.age_sla.sla_calc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2300,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2324,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.f_alloc",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.gpp_daily",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U8",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[0]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U20",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[1]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U19",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[2]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U18",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[3]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U17",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[4]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U11",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[5]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U9",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[6]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U16",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[7]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14
+      ],
+      "dtype": "<U15",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.requires_trace[8]",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2336,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.boundary.resp_maint_part",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.npp_update.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2296,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.npp_update.biomass_before_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2346,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.npp_update.bm_alloc",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.npp_update.npp",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.npp_update.resp_growth",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 192,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.daily_carbon.npp_update.resp_maint",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.availability",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.delta_biomass",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.mortality",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.mortality_fraction",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.gap.vigour",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.everywhere",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.npp_longterm",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.rip_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.was_killed",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_gap.when_growthinit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2304,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2352,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.bm_to_litter",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.cn_ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.everywhere",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.ind",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 728,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.npp_longterm",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.pft_present",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.rip_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 183,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.veget_max",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.was_killed",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.kill_after_npp.when_growthinit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 185,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.lai_after_setlai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 193,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2293,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.c_export",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.lai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.leaf_age_crit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": false,
+      "finite": true,
+      "max_abs": 3.3306690738754696e-16,
+      "max_relative_nonzero": 3.6073323044979997e-16,
+      "reference_zero_count": 740,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 3.300198168921189e-08,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.leaf_meanage",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2331,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.turnover",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 195,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "post_npp_production_adapter/vmapped_jit/.turnover.turnover_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 11,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2288,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.c_export",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.lai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.leaf_age_crit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": false,
+      "finite": true,
+      "max_abs": 3.3306690738754696e-16,
+      "max_relative_nonzero": 4.803236536610132e-16,
+      "reference_zero_count": 740,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 3.2995686741712367e-08,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.leaf_meanage",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2328,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.turnover",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 195,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_eager/.turnover_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 11,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2288,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.c_export",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.lai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.leaf_age_crit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": false,
+      "finite": true,
+      "max_abs": 3.3306690738754696e-16,
+      "max_relative_nonzero": 4.803236536610133e-16,
+      "reference_zero_count": 740,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 3.2995586321261584e-08,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.leaf_meanage",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2328,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.turnover",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 195,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/scalar_jit/.turnover_time",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 11,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2288,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.biomass",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 196,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.c_export",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.lai",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 744,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.leaf_age",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 0,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.leaf_age_crit",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": false,
+      "finite": true,
+      "max_abs": 3.3306690738754696e-16,
+      "max_relative_nonzero": 4.803236536610133e-16,
+      "reference_zero_count": 740,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 3.2995586321261584e-08,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.leaf_frac",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 186,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.leaf_meanage",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "bool",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "discrete_exact": true,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.senescence",
+      "stock_output": false
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 2328,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.turnover",
+      "stock_output": true
+    },
+    {
+      "shape": [
+        14,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "shape_equal": true,
+      "dtype_equal": true,
+      "exact": true,
+      "finite": true,
+      "max_abs": 0.0,
+      "max_relative_nonzero": 0.0,
+      "reference_zero_count": 195,
+      "changed_reference_zero_count": 0,
+      "max_bound_ratio": 0.0,
+      "passed": true,
+      "path": "turnover_step/vmapped_jit/.turnover_time",
+      "stock_output": false
+    }
+  ],
+  "failures": [],
+  "limitations": [
+    "Local CPU runtime, not canonical JAX0.4.38 CUDA/GPU validation",
+    "One explicit post-allocation production boundary; no prescribe/allocation, half-hour driver, complete-day or multi-day execution",
+    "Synthetic declared small inputs, no FULL64/Teacher/reference/golden mutation",
+    "Forward-only comparison; imported AD regressions are reported separately, no training/AD method change",
+    "Unchanged native dtype, masks and complete returned leaves; no GPU readiness or source certificate admission inferred"
+  ]
+}

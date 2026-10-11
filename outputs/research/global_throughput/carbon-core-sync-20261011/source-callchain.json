@@ -1,0 +1,406 @@
+{
+  "baseline": [
+    {
+      "file": "jax_orchidee/driver/global_batch.py",
+      "function": "make_scalar_transition",
+      "line": 311,
+      "end_line": 319,
+      "calls": [
+        {
+          "callee": "_paper_later_day_block_transition_factory",
+          "line": 312,
+          "source_line": "return driver._paper_later_day_block_transition_factory(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/driver/global_batch.py",
+      "function": "make_batch_transition",
+      "line": 322,
+      "end_line": 325,
+      "calls": [
+        {
+          "callee": "make_scalar_transition",
+          "line": 325,
+          "source_line": "return jax.vmap(make_scalar_transition(lanes[0], **capture_kwargs), in_axes=(0, 0, None, 0, 0, 0, 0, 0, 0))",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/driver/orchestration.py",
+      "function": "_paper_day_stomate_daily_carbon_from_bundles",
+      "line": 7598,
+      "end_line": 7639,
+      "calls": [
+        {
+          "callee": "runner",
+          "line": 7627,
+          "source_line": "return runner(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": [
+        {
+          "line": 7620,
+          "end_line": 7626,
+          "source": "runner = (\n        stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled\n        if outer_compiled_static_dispatch is not None\n        else stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit\n        if bool(use_static_jit)\n        else stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit\n    )"
+        }
+      ]
+    },
+    {
+      "file": "jax_orchidee/driver/orchestration.py",
+      "function": "paper_1961_driver_later_day_runtime_result",
+      "line": 10748,
+      "end_line": 11182,
+      "calls": [
+        {
+          "callee": "_paper_day_stomate_daily_carbon_from_bundles",
+          "line": 11072,
+          "source_line": "stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(",
+          "route_arguments": {
+            "outer_compiled_static_dispatch": "outer_compiled_daily_carbon_dispatch"
+          }
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/driver/orchestration.py",
+      "function": "_paper_later_day_block_transition_factory",
+      "line": 11185,
+      "end_line": 11307,
+      "calls": [
+        {
+          "callee": "paper_1961_driver_later_day_runtime_result",
+          "line": 11232,
+          "source_line": "day = paper_1961_driver_later_day_runtime_result(",
+          "route_arguments": {
+            "module_jit": "True",
+            "use_static_jit_daily_carbon": "False",
+            "outer_compiled_daily_carbon_dispatch": "daily_carbon_dispatch"
+          }
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_carbon_explicit",
+      "line": 1660,
+      "end_line": 1750,
+      "calls": [
+        {
+          "callee": "npp_closed_update",
+          "line": 1702,
+          "source_line": "npp_update = npp_closed_update(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_carbon_kill_gap_turnover_explicit",
+      "line": 2219,
+      "end_line": 3132,
+      "calls": [
+        {
+          "callee": "stomate_daily_carbon_explicit",
+          "line": 2425,
+          "source_line": "daily_carbon = stomate_daily_carbon_explicit(",
+          "route_arguments": {}
+        },
+        {
+          "callee": "turnover_step",
+          "line": 2588,
+          "source_line": "turnover = turnover_step(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+      "line": 3249,
+      "end_line": 3372,
+      "calls": [
+        {
+          "callee": "stomate_daily_carbon_kill_gap_turnover_explicit",
+          "line": 3349,
+          "source_line": "post_npp = stomate_daily_carbon_kill_gap_turnover_explicit(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "_daily_carbon_static_dispatch",
+      "line": 3412,
+      "end_line": 3482,
+      "calls": [
+        {
+          "callee": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+          "line": 3474,
+          "source_line": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled",
+      "line": 3510,
+      "end_line": 3557,
+      "calls": [
+        {
+          "callee": "_daily_carbon_static_dispatch",
+          "line": 3548,
+          "source_line": "result = _daily_carbon_static_dispatch(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/carbon_kernels.py",
+      "function": "npp_closed_update",
+      "line": 3954,
+      "end_line": 4053,
+      "calls": [],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/carbon_kernels.py",
+      "function": "turnover_leaf_age_fall",
+      "line": 4476,
+      "end_line": 4584,
+      "calls": [],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/carbon_kernels.py",
+      "function": "turnover_step",
+      "line": 4744,
+      "end_line": 4918,
+      "calls": [
+        {
+          "callee": "turnover_leaf_age_fall",
+          "line": 4857,
+          "source_line": "biomass, turnover, leaf_frac, leaf_age_crit = turnover_leaf_age_fall(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    }
+  ],
+  "candidate": [
+    {
+      "file": "jax_orchidee/driver/global_batch.py",
+      "function": "make_scalar_transition",
+      "line": 311,
+      "end_line": 319,
+      "calls": [
+        {
+          "callee": "_paper_later_day_block_transition_factory",
+          "line": 312,
+          "source_line": "return driver._paper_later_day_block_transition_factory(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/driver/global_batch.py",
+      "function": "make_batch_transition",
+      "line": 322,
+      "end_line": 325,
+      "calls": [
+        {
+          "callee": "make_scalar_transition",
+          "line": 325,
+          "source_line": "return jax.vmap(make_scalar_transition(lanes[0], **capture_kwargs), in_axes=(0, 0, None, 0, 0, 0, 0, 0, 0))",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/driver/orchestration.py",
+      "function": "_paper_day_stomate_daily_carbon_from_bundles",
+      "line": 7598,
+      "end_line": 7639,
+      "calls": [
+        {
+          "callee": "runner",
+          "line": 7627,
+          "source_line": "return runner(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": [
+        {
+          "line": 7620,
+          "end_line": 7626,
+          "source": "runner = (\n        stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled\n        if outer_compiled_static_dispatch is not None\n        else stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit\n        if bool(use_static_jit)\n        else stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit\n    )"
+        }
+      ]
+    },
+    {
+      "file": "jax_orchidee/driver/orchestration.py",
+      "function": "paper_1961_driver_later_day_runtime_result",
+      "line": 10748,
+      "end_line": 11182,
+      "calls": [
+        {
+          "callee": "_paper_day_stomate_daily_carbon_from_bundles",
+          "line": 11072,
+          "source_line": "stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(",
+          "route_arguments": {
+            "outer_compiled_static_dispatch": "outer_compiled_daily_carbon_dispatch"
+          }
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/driver/orchestration.py",
+      "function": "_paper_later_day_block_transition_factory",
+      "line": 11185,
+      "end_line": 11307,
+      "calls": [
+        {
+          "callee": "paper_1961_driver_later_day_runtime_result",
+          "line": 11232,
+          "source_line": "day = paper_1961_driver_later_day_runtime_result(",
+          "route_arguments": {
+            "module_jit": "True",
+            "use_static_jit_daily_carbon": "False",
+            "outer_compiled_daily_carbon_dispatch": "daily_carbon_dispatch"
+          }
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_carbon_explicit",
+      "line": 1660,
+      "end_line": 1750,
+      "calls": [
+        {
+          "callee": "npp_closed_update",
+          "line": 1702,
+          "source_line": "npp_update = npp_closed_update(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_carbon_kill_gap_turnover_explicit",
+      "line": 2219,
+      "end_line": 3132,
+      "calls": [
+        {
+          "callee": "stomate_daily_carbon_explicit",
+          "line": 2425,
+          "source_line": "daily_carbon = stomate_daily_carbon_explicit(",
+          "route_arguments": {}
+        },
+        {
+          "callee": "turnover_step",
+          "line": 2588,
+          "source_line": "turnover = turnover_step(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+      "line": 3249,
+      "end_line": 3372,
+      "calls": [
+        {
+          "callee": "stomate_daily_carbon_kill_gap_turnover_explicit",
+          "line": 3349,
+          "source_line": "post_npp = stomate_daily_carbon_kill_gap_turnover_explicit(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "_daily_carbon_static_dispatch",
+      "line": 3412,
+      "end_line": 3482,
+      "calls": [
+        {
+          "callee": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit",
+          "line": 3474,
+          "source_line": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/integration.py",
+      "function": "stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled",
+      "line": 3510,
+      "end_line": 3557,
+      "calls": [
+        {
+          "callee": "_daily_carbon_static_dispatch",
+          "line": 3548,
+          "source_line": "result = _daily_carbon_static_dispatch(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/carbon_kernels.py",
+      "function": "npp_closed_update",
+      "line": 3954,
+      "end_line": 4057,
+      "calls": [],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/carbon_kernels.py",
+      "function": "turnover_leaf_age_fall",
+      "line": 4480,
+      "end_line": 4619,
+      "calls": [],
+      "indirect_callable_bindings": []
+    },
+    {
+      "file": "jax_orchidee/stomate/carbon_kernels.py",
+      "function": "turnover_step",
+      "line": 4779,
+      "end_line": 4953,
+      "calls": [
+        {
+          "callee": "turnover_leaf_age_fall",
+          "line": 4892,
+          "source_line": "biomass, turnover, leaf_frac, leaf_age_crit = turnover_leaf_age_fall(",
+          "route_arguments": {}
+        }
+      ],
+      "indirect_callable_bindings": []
+    }
+  ],
+  "evidence_kind": "exact Git source AST, including conditional runner binding and route arguments; source reachability only, no complete-day graph execution",
+  "graph_status": "Transport closed; source fallback only"
+}

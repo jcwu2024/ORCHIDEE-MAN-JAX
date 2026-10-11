@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-11",
+  "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "branch": "research/global-throughput",
+  "actual_module_import_path": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/jax_orchidee/__init__.py",
+  "comparison_command": "conda run -n ORCJAX python -B scripts/dev/verify_global_carbon_core_sync.py --baseline 277aa35793e5b6dd3a1d436a32b4cbc97a305106 --candidate ef271cef8551f47f82cccf234949d021e958917e --output-dir outputs/research/global_throughput/carbon-core-sync-20261011",
+  "comparison_exit_code": 0,
+  "pytest_launcher": [
+    "conda",
+    "run",
+    "-n",
+    "ORCJAX",
+    "python",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "<system TEMP>/orcjax-carbon-sync-20261011"
+  ],
+  "pytest_environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "JAX_PLATFORMS": "cpu",
+    "JAX_ENABLE_X64": "true"
+  },
+  "pytest_selection": [
+    "tests/unit/test_global_carbon_core_sync.py",
+    "tests/unit/test_turnover_fraction_conditioning.py",
+    "tests/unit/test_stomate_carbon_kernels.py::test_npp_closed_update_matches_source_algebra_with_supplied_alloc_and_maintenance",
+    "tests/unit/test_stomate_carbon_kernels.py::test_npp_closed_update_pumps_only_fortran_explicit_biomass_pools_when_tax_exceeded",
+    "tests/unit/test_stomate_carbon_kernels.py::test_npp_negative_stock_lands_exactly_on_threshold_without_activating_leaf_fraction_gate",
+    "tests/unit/test_stomate_carbon_kernels.py::test_npp_closed_update_absent_pft_has_finite_zero_maintenance_gradient",
+    "tests/unit/test_stomate_carbon_kernels.py::test_npp_closed_update_subnormal_active_maintenance_has_finite_gradient",
+    "tests/unit/test_stomate_carbon_kernels.py::test_turnover_leaf_age_fall_preserves_fortran_sequential_biomass_updates",
+    "tests/unit/test_stomate_carbon_kernels.py::test_turnover_leaf_fraction_tiny_active_mass_has_stable_jvp",
+    "tests/unit/test_stomate_carbon_kernels.py::test_turnover_leaf_age_inactive_zero_critical_age_has_finite_gradient",
+    "tests/unit/test_stomate_carbon_kernels.py::test_turnover_inactive_tree_zero_denominators_have_finite_gradients",
+    "tests/unit/test_stomate_carbon_kernels.py::test_turnover_step_closes_tree_mixed_senescence_and_fruit_sapwood_path",
+    "tests/unit/test_stomate_integration.py::test_explicit_daily_carbon_adapter_matches_direct_npp_kernel",
+    "tests/unit/test_stomate_integration.py::test_explicit_daily_carbon_adapter_can_run_npp_age_sla_bookkeeping",
+    "tests/unit/test_stomate_integration.py::test_npp_age_sla_uses_post_maintenance_leaf_mass_for_leaf_fractions",
+    "tests/unit/test_stomate_integration.py::test_explicit_daily_carbon_turnover_adapter_matches_direct_composition",
+    "tests/unit/test_stomate_integration.py::test_explicit_daily_carbon_kill_gap_turnover_adapter_matches_direct_order_composition"
+  ],
+  "pytest_exit_code": 0,
+  "pytest_passed": 34,
+  "pytest_counts": {
+    "comparator_gates": 11,
+    "turnover_conditioning": 8,
+    "carbon_kernels": 10,
+    "integration": 5
+  },
+  "pytest_seconds": 17.61,
+  "pytest_warning": "cache_dir config option is unknown when cacheprovider is disabled; no numerical warning",
+  "lint_commands": [
+    "conda run -n ORCJAX python -B -m ruff check scripts/dev/verify_global_carbon_core_sync.py tests/unit/test_global_carbon_core_sync.py",
+    "conda run -n ORCJAX python -B -m ruff format --check scripts/dev/verify_global_carbon_core_sync.py tests/unit/test_global_carbon_core_sync.py",
+    "git diff --check"
+  ],
+  "lint_exit_codes": [
+    0,
+    0,
+    0
+  ],
+  "graph_attempts": [
+    {
+      "tool": "list_projects",
+      "result": "Transport closed"
+    },
+    {
+      "tool": "check_index_coverage",
+      "result": "Transport closed",
+      "paths": [
+        "scripts/dev/verify_global_carbon_core_sync.py",
+        "tests/unit/test_global_carbon_core_sync.py",
+        "jax_orchidee/driver/global_batch.py",
+        "jax_orchidee/driver/orchestration.py",
+        "jax_orchidee/stomate/integration.py",
+        "jax_orchidee/stomate/carbon_kernels.py",
+        "tests/unit/test_stomate_carbon_kernels.py",
+        "tests/unit/test_stomate_integration.py",
+        "tests/unit/test_turnover_fraction_conditioning.py"
+      ]
+    }
+  ],
+  "evidence_scope": "Exact Git source fallback, local CPU x64 forward at existing NPP/post-NPP/turnover entries, narrow native-AD regressions. No full physical graph, FULL64 golden admission, CUDA validation, deployment, SSH, jobs, NN experiments, or algorithm edits.",
+  "source_certificate": "Parent-owned source-guard-check.json separately records the expected old DIFFUCO-only certificate admission refusal. It is not a numerical failure.",
+  "checked_source_sha256": {
+    "scripts/dev/verify_global_carbon_core_sync.py": "6392423d2d2783c6cf378fa5e882823d116f9429b09bc88654b712fa31602bfb",
+    "tests/unit/test_global_carbon_core_sync.py": "43f49e00319926d5508e0386afc2b0c6faa45071448ff39f0136979fc676396a"
+  },
+  "global_entry_regressions": {
+    "command": "conda run -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_batch.py::test_stack_all_eight_numeric_groups_and_keep_none tests/unit/test_global_batch.py::test_vmap_is_applied_to_callable_and_each_lane_is_independent tests/unit/test_global_batch.py::test_factory_retains_capture_validation",
+    "exit_code": 0,
+    "passed": 3,
+    "seconds": 2.45,
+    "environment": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "JAX_PLATFORMS": "cpu",
+      "JAX_ENABLE_X64": "true"
+    },
+    "scope": "Thin existing factory/stack/vmap test doubles only; no real complete-day graph compiled"
+  },
+  "total_new_regression_passes": 37,
+  "comparison_metadata_enrichment": "Numeric workers reused unchanged after summary and exact-source-callchain reporting additions; no scientific, fixture, entry or JIT changes after the successful worker run",
+  "temporary_directory_cleanup": {
+    "path": "C:/Users/admin/AppData/Local/Temp/orcjax-carbon-sync-20261011",
+    "status": "retained",
+    "reason": "Automatic approval review rejected both verified native PowerShell cleanup attempts with blocked by policy; no bypass attempted"
+  }
+}

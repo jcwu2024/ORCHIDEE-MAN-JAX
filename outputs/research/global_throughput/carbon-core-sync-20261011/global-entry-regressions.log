@@ -1,0 +1,17 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
+rootdir: E:\ORCHIDEE-MAN-JAX\runtime\worktrees\global-throughput
+configfile: pyproject.toml
+plugins: anyio-4.13.0, jaxtyping-0.3.10
+collected 3 items
+
+tests\unit\test_global_batch.py ...                                      [100%]
+
+============================== warnings summary ===============================
+C:\Users\admin\.conda\envs\ORCJAX\Lib\site-packages\_pytest\config\__init__.py:1434
+  C:\Users\admin\.conda\envs\ORCJAX\Lib\site-packages\_pytest\config\__init__.py:1434: PytestConfigWarning: Unknown config option: cache_dir
+
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 3 passed, 1 warning in 2.45s =========================
