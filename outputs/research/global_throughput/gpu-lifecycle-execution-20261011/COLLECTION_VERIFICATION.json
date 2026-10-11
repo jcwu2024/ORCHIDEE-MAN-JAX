@@ -1,0 +1,40 @@
+{
+  "schema": "global-gpu-lifecycle-terminal-metadata-recovery-v1",
+  "archive": "terminal-evidence-15769234.tar.gz",
+  "archive_sha256": "538f4254a9b1d03afc4c010d4942278b9153f5d1cf98d4043c02f650251e07b5",
+  "archive_bytes": 87684,
+  "source_sha256_receipt": "15-collect-terminal.stdout.txt",
+  "verified_compact_run_files": [
+    "allocation-identity.txt",
+    "gpu-identity.json",
+    "launch-context.txt",
+    "orchestration-events.jsonl",
+    "orchestration.json",
+    "phased_resident_control/capacity/B1024/events.jsonl",
+    "phased_resident_control/capacity/B1024/report.json",
+    "phased_resident_control/capacity/B1024/stage_manifest.json"
+  ],
+  "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+  "terminal_checkout_clean": true,
+  "parent_slurm": {
+    "JobIDRaw": "15769234",
+    "State": "FAILED",
+    "ExitCode": "1:0",
+    "ElapsedRaw": "1140",
+    "Start": "2026-10-11T16:47:51",
+    "End": "2026-10-11T17:06:51",
+    "AllocCPUS": "4",
+    "AllocTRES": "billing=4,cpu=4,gres/gpu=1,node=1",
+    "NodeList": "ibc13b03n02",
+    "MaxRSS": ""
+  },
+  "orchestration_status": "first_arm_failed",
+  "only_control_dispatched": true,
+  "failed_initial_array_sha256": "698d3dece201424778d9cf4b0f10c1ac3b1802a1ce35b7d231f73b751641ddc5",
+  "failed_array_hash_matches_independent_collection_manifest": true,
+  "scientific_arrays_retrieved_or_loaded": false,
+  "scientific_arrays_preserved_remote": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/failed_initial_arrays.pkl",
+  "array_and_scientific_acceptance": false,
+  "throughput_ratio": null,
+  "model_or_jax_execution": false
+}

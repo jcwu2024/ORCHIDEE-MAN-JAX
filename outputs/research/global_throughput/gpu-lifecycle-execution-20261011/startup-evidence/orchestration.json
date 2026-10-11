@@ -1,0 +1,120 @@
+{
+  "budget_seconds": 7200,
+  "children": {
+    "phased_resident_control": {
+      "command": [
+        "/rmprog/slurm/v22.05.7/bin/srun",
+        "--ntasks=1",
+        "--cpus-per-task=4",
+        "--cpu-bind=cores",
+        "/usr/bin/time",
+        "-v",
+        "singularity",
+        "exec",
+        "--nv",
+        "--bind",
+        "/WORK:/WORK,/usr/lib64/libcuda.so.525.85.12:/usr/lib/x86_64-linux-gnu/libcuda.so.1,/usr/lib64/libnvidia-ml.so.525.85.12:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1",
+        "--pwd",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+        "/apps/soft/sif/foundationpose",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/global_batch_gpu_entry.py",
+        "--prepared-input",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+        "--full-reference-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+        "--memory-baseline-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first",
+        "--b1024-evidence-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity",
+        "--config",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/configs/orchidee_man_250919.yaml",
+        "--asset-root",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2",
+        "--output-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024",
+        "--warm-repeats",
+        "5",
+        "--budget-seconds",
+        "7200",
+        "--stage-shape",
+        "1024",
+        "--measurement-strategy",
+        "phased_resident_control",
+        "--expected-code-sha",
+        "3b4ae35e695f85480ecb72461e4ba93f4534bbd8"
+      ],
+      "command_process_pid": 109775,
+      "dispatch_decision": {
+        "minimum_remaining_seconds": 1,
+        "permitted": true,
+        "remaining_seconds": 7197.055746078491
+      },
+      "dispatch_start_epoch": 1791708474.9656222,
+      "final_dispatch_guard": {
+        "minimum_remaining_seconds": 1,
+        "remaining_seconds": 7197.034382343292
+      },
+      "pre_dispatch_physical_gpu": {
+        "free_bytes": 34078720000,
+        "source": "nvidia-smi selected-card boundary snapshot",
+        "total_bytes": 34359738368,
+        "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd"
+      },
+      "status": "dispatching"
+    }
+  },
+  "comparison_allowed": false,
+  "contract": "GPU-B1024-phased-memory-lifecycle-new-science-v1",
+  "coordinator_pid": 109773,
+  "coordinator_start_epoch": 1791708474.9340167,
+  "expected_code_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+  "full_reference_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+  "minimum_remaining_before_second_seconds": 3600,
+  "process_strategy": "sequential_fresh_process_per_strategy",
+  "ratio_published": false,
+  "selected_gpu_identity": {
+    "CUDA_VISIBLE_DEVICES_preserved": "0",
+    "CUDA_execution_condition": "single allocated Slurm GPU cgroup and preserved CUDA_VISIBLE_DEVICES; helper verifies NVML physical metadata, not CUDA selector resolution",
+    "CUDA_selector_UUID_resolution_verified": false,
+    "NVML_query": {
+      "command": [
+        "nvidia-smi",
+        "-q",
+        "-x"
+      ],
+      "exit_code": 0,
+      "scope": "read-only metadata; no GPU context/compute",
+      "stderr": "",
+      "stdout_bytes": 21011
+    },
+    "accessible_NVML_devices": [
+      {
+        "minor": 0,
+        "name": "Tesla V100-SXM2-32GB",
+        "pci": "00000000:1A:00.0",
+        "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd"
+      }
+    ],
+    "device_minor": 0,
+    "driver": "525.85.12",
+    "mapping_constraint": "numeric Slurm ID must equal recorded NVIDIA device minor; arbitrary first-visible GPU is never accepted",
+    "model_execution": false,
+    "name": "Tesla V100-SXM2-32GB",
+    "origin": "SLURM_JOB_GPUS numeric ID -> exact /proc Device Minor -> NVML UUID/minor/PCI cross-check",
+    "pci_bus_id": "00000000:1A:00.0",
+    "proc_record": {
+      "minor": 0,
+      "path": "/proc/driver/nvidia/gpus/0000:1a:00.0/information",
+      "pci": "0000:1a:00.0",
+      "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd"
+    },
+    "slurm_global_gpu_id": "0",
+    "status": "verified_metadata_only",
+    "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd"
+  },
+  "stage_name": "capacity_B1024_lifecycle_v1",
+  "status": "running",
+  "updated_epoch": 1791708474.9677596,
+  "window_start_epoch": 1791708472.0
+}

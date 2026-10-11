@@ -1,0 +1,46 @@
+NodeName=ibc13b03n02 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=0 CPUEfctv=112 CPUTot=112 CPULoad=0.01
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:v100:8(S:0-1)
+   NodeAddr=ibc13b03n02 NodeHostName=ibc13b03n02 Version=22.05.7
+   OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022 
+   RealMemory=320000 AllocMem=0 FreeMem=326025 Sockets=2 Boards=1
+   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=gnall 
+   BootTime=2026-06-18T14:30:23 SlurmdStartTime=2026-06-18T14:39:22
+   LastBusyTime=2026-10-10T17:14:12
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+Submitted batch job 15769234
+JobId=15769234 JobName=orchjax-gpu-life
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=PENDING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:00:00 TimeLimit=02:00:00 TimeMin=N/A
+   SubmitTime=2026-10-11T16:47:34 EligibleTime=2026-10-11T16:47:34
+   AccrueTime=Unknown
+   StartTime=Unknown EndTime=Unknown Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T16:47:34 Scheduler=Main
+   Partition=gnall AllocNode:Sid=ibc13b02n04:51816
+   ReqNodeList=ibc13b03n02 ExcNodeList=(null)
+   NodeList=
+   NumNodes=1-1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,mem=312.50G,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/slurm_global_gpu_lifecycle.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+

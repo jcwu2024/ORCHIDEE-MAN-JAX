@@ -1,8 +1,11 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-11。先读本页、[B1024双臂本地准备](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)，
+更新：2026-10-11。先读本页、[B1024双臂获批执行](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)，
+及[B1024双臂本地准备](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)，
 再按需读[碳核心本地同步结果](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)、生命周期实现及两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
-此交接保存停止点和研究问题，**不恢复任何 GPU 诊断、付费作业或旧额度**。
+job15769234已终态FAILED1:0/1140s，追加保存数组CPU/NumPy只读定位已获主管接受；
+本轮科学执行关闭，原因未归属；
+**不恢复任何 GPU 诊断、付费作业或旧额度**。
 可复制[新项目开场指令](NEW_PROJECT_PROMPT.md)。
 
 ## 1. 角色、目录与开场检查
@@ -151,10 +154,25 @@ source/runner/validator/observer有效43项（最新30项重跑，复用未变�
 Slurm日志固定到共享绝对 `runtime/logs/global_gpu_lifecycle_%j.txt`，提交前核查父目录存在且可写；
 该检查须在脚本执行之前完成。Windows Bash路径/token映射与目标runtime验证的边界在本轮报告中保留。
 
-拟1 V10032GB+4 CPUs、120min、no-requeue、非exclusive，主/保守worst-case
-CNY4.80/4.96，未获新执行授权。未来固定cwd为
+用户已明确批准1 V10032GB+4 CPUs、120min、no-requeue、非exclusive，主/保守worst-case
+CNY4.80/4.96，仅提交job15769234一次。固定执行SHA为`3b4ae35e695f85480ecb72461e4ba93f4534bbd8`，
+后续记账HEAD不替代该pin。固定cwd为
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1`，
-未创建或部署；canonical JAX0.4.38/CUDA、新核心FULL64、allocator回收、显存/吞吐收益仍未验证。
+已按registry规范精确部署，干净且无overlay/alternate，旧树保留；目标Bash、库版本/绑定与源准入通过。
+首臂已编译、postcompile原budget guard通过；初始返回的FULL64数组在lane45
+（283.0-091.0）严格浮点容差失败，完整失败数组及hash保留；第二臂未派发。
+没有warm样本/封存stage/双臂比值。整allocation估算主/保守CNY0.76/0.785333333，
+账单未核实，唯一作业额度关闭，不复用余额。主管追加有界免费CPU/NumPy只读逐叶定位已在test03完成：
+760leaf/2048lane全检，唯一超差为点283.0-091.0、Day8末
+`diffuco_previous_step_state.rveget`、float64、inner[0,13]（PFT14）；
+actual515.7648516411803/ref515.7648515535959，abs8.758433978073299e-08，
+原bound6.157648515535959e-08、比1.4223666641536081。
+lane45+64k（k0–31）共32次重复的坐标和数值逐字节一致；其余63真实点无失败。
+无模型/JAX导入、模型/GPU重跑。主管已验读并接受该定位，关闭本轮科学执行，不再加检查或扩大溯因。
+该数值字段差异不是旧ABI故障证据；新科学pin对旧冻结参考的差异尚无碳修复/生命周期因果归属，
+不自动修科学代码/改容差/重跑，保留原pin与旧证据。
+新核心FULL64、allocator回收、显存/吞吐收益均未验收，详见执行报告和
+[保存数组解释](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/SAVED_ARRAY_EXPLANATION.md)。
 旧fixed2048 launcher会派B2048，不能复用；旧额度保持关闭，失败不自动重试或扩大batch。
 
 中间批量、真实669点+尾批、独立集合成员、长窗口/年和匹配Fortran基准仍为后续另议。

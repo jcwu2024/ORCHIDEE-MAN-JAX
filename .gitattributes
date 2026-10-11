@@ -55,3 +55,15 @@ outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/job-15
 outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/job-15671732-saved-result/** -text whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/job-15671732-collector-log.txt -text whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/gpu-capacity-2048-preparation-20261009/collected-fixed2048.json -text
+
+# Preserve lifecycle execution receipts and recovered server evidence byte-for-byte.
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/*.stdout.txt -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/*.stderr.txt -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/deployment-before/** -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/deployment-after/** -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/startup-evidence/** -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/terminal-evidence/** -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/state-layout.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/explain_saved_failure.py -text
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/extract_state_layout.py -text
+outputs/research/global_throughput/gpu-lifecycle-execution-20261011/saved-array-explanation/** -text whitespace=-blank-at-eol,-blank-at-eof

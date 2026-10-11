@@ -1,0 +1,43 @@
+ibcln01
+2026-10-11T08:39:48Z
+git version 1.8.3.1
+7cae3e02adad23674767a590fdf4d27f239ce065 refs/heads/main
+7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/heads/research/daily-coarse-graining
+c537f59f33568b6e5960254fe55fb307f82ca503 refs/heads/research/global-throughput
+NODELIST|STATE|CPUS(A/I/O/T)|CPU_LOAD|GRES
+ibc13b02n01|mixed|96/16/0/112|17.45|gpu:v100:8(S:0-1)
+ibc13b02n02|allocated|112/0/0/112|7.60|gpu:v100:8(S:0-1)
+ibc13b02n03|mixed|88/24/0/112|5.10|gpu:v100:8(S:0-1)
+ibc13b03n01|idle|0/112/0/112|0.01|gpu:v100:8(S:0-1)
+ibc13b03n02|idle|0/112/0/112|0.01|gpu:v100:8(S:0-1)
+ibc13b03n03|mixed|12/100/0/112|1.52|gpu:v100:8(S:0-1)
+ibc13b03n04|mixed|48/64/0/112|6.90|gpu:v100:8(S:0-1)
+ibc13b03n05|idle|0/112/0/112|0.02|gpu:v100:8(S:0-1)
+ibc13b03n06|down*|0/0/112/112|0.01|gpu:v100:8(S:0-1)
+ibc13b03n07|mixed|98/14/0/112|8.89|gpu:v100:8(S:0-1)
+NodeName=ibc13b03n02 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=0 CPUEfctv=112 CPUTot=112 CPULoad=0.01
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:v100:8(S:0-1)
+   NodeAddr=ibc13b03n02 NodeHostName=ibc13b03n02 Version=22.05.7
+   OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022 
+   RealMemory=320000 AllocMem=0 FreeMem=326025 Sockets=2 Boards=1
+   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=gnall 
+   BootTime=2026-06-18T14:30:23 SlurmdStartTime=2026-06-18T14:39:22
+   LastBusyTime=2026-10-10T17:14:12
+   CfgTRES=cpu=112,mem=312.50G,billing=112,gres/gpu=8
+   AllocTRES=
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+
+SHARED_LOG_PARENT_WRITABLE
+LIFECYCLE_CHECKOUT_ABSENT
+be35fd8949f8b1df0581424641b70398e1ff0a382baa5b9e9ee1dcfd966ecb97  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json
+existing_asset=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl
+existing_asset=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model
+existing_asset=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first
+existing_asset=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity
+existing_asset=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2

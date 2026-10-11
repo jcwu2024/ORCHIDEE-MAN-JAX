@@ -1,0 +1,20 @@
+ibtest03
+2026-10-11T09:52:34Z
+ 17:52:34 up 130 days,  6:55,  6 users,  load average: 56.18, 56.08, 56.10
+pid 86247's current affinity list: 0-55
+              total        used        free      shared  buff/cache   available
+Mem:         192085       69773       83080        1516       39232      120061
+Swap:             0           0           0
+virtual_memory_limit_KiB=8388608
+selected_CPU=0
+outer_wall_limit_seconds=600
+inner_budget_seconds=540
+PYTHONDONTWRITEBYTECODE=1
+CUDA_VISIBLE_DEVICES=
+OPENBLAS_NUM_THREADS=1
+OMP_NUM_THREADS=1
+MKL_NUM_THREADS=1
+NUMEXPR_NUM_THREADS=1
+execution_SHA=3b4ae35e695f85480ecb72461e4ba93f4534bbd8
+code_checkout_porcelain_begin
+code_checkout_porcelain_end

@@ -1,0 +1,19 @@
+{
+  "command": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-o",
+    "ConnectionAttempts=1",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/terminal-evidence-15769234.tar.gz",
+    "outputs/research/global_throughput/gpu-lifecycle-execution-20261011/terminal-evidence-15769234.tar.gz"
+  ],
+  "stdin": null,
+  "started_utc": "2026-10-11T09:20:02.335778+00:00",
+  "ended_utc": "2026-10-11T09:20:02.656093+00:00",
+  "returncode": 0,
+  "stdout_bytes": 0,
+  "stderr_bytes": 0
+}

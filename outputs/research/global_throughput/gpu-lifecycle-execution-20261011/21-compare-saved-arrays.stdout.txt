@@ -1,0 +1,49 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/explain_saved_failure.py: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/state-layout.json: OK
+ibtest03
+2026-10-11T09:52:34Z
+ 17:52:34 up 130 days,  6:55,  6 users,  load average: 56.18, 56.08, 56.10
+pid 86247's current affinity list: 0-55
+              total        used        free      shared  buff/cache   available
+Mem:         192085       69773       83080        1516       39232      120061
+Swap:             0           0           0
+virtual_memory_limit_KiB=8388608
+selected_CPU=0
+outer_wall_limit_seconds=600
+inner_budget_seconds=540
+PYTHONDONTWRITEBYTECODE=1
+CUDA_VISIBLE_DEVICES=
+OPENBLAS_NUM_THREADS=1
+OMP_NUM_THREADS=1
+MKL_NUM_THREADS=1
+NUMEXPR_NUM_THREADS=1
+execution_SHA=3b4ae35e695f85480ecb72461e4ba93f4534bbd8
+code_checkout_porcelain_begin
+code_checkout_porcelain_end
+/usr/bin/time -v -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234-saved-array-explanation/gnu-time.txt timeout --kill-after=10s 600s taskset -c 0 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python -B /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/explain_saved_failure.py --code-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1 --failed-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/failed_initial_arrays.pkl --reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --report /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/report.json --state-layout-json /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/state-layout.json --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234-saved-array-explanation/comparison --lane-chunk 64 --budget-seconds 540 
+0
+{"status": "complete_saved_initial_failure_comparison", "failing_leaf_count": 1, "failing_lane_count": 32, "failing_unique_point_count": 1, "field_mapping_complete": true}
+	Command being timed: "timeout --kill-after=10s 600s taskset -c 0 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python -B /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/explain_saved_failure.py --code-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1 --failed-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/failed_initial_arrays.pkl --reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --report /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/report.json --state-layout-json /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/state-layout.json --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234-saved-array-explanation/comparison --lane-chunk 64 --budget-seconds 540"
+	User time (seconds): 7.12
+	System time (seconds): 2.19
+	Percent of CPU this job got: 31%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:29.54
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 985164
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 2788
+	Minor (reclaiming a frame) page faults: 491435
+	Voluntary context switches: 12871
+	Involuntary context switches: 1951
+	Swaps: 0
+	File system inputs: 1871264
+	File system outputs: 96
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+explanation_output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234-saved-array-explanation

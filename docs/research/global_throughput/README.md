@@ -2,6 +2,9 @@
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)和
 [可复制开场指令](NEW_PROJECT_PROMPT.md)。交接按最新 B1024/B2048 终态定序；
+最新job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
+283.0-091.0、Day8末rveget/PFT14，32重复一致；原因未归属，本轮科学执行关闭。详见
+[B1024双臂执行结果](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)。
 当前本地准备见[B1024双臂生命周期诊断](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)。
 下面保留历史实验上下文，旧“下一步”及额度不自动恢复为新授权。
 

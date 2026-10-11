@@ -1,0 +1,38 @@
+ibcln01
+2026-10-11T08:57:19Z
+JobId=15769234 JobName=orchjax-gpu-life UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A Priority=1 Nice=0 Account=users QOS=defaultqos JobState=RUNNING Reason=None Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:09:29 TimeLimit=02:00:00 TimeMin=N/A SubmitTime=2026-10-11T16:47:34 EligibleTime=2026-10-11T16:47:34 AccrueTime=2026-10-11T16:47:34 StartTime=2026-10-11T16:47:51 EndTime=2026-10-11T18:47:51 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T16:47:51 Scheduler=Backfill Partition=gnall AllocNode:Sid=ibc13b02n04:51816 ReqNodeList=ibc13b03n02 ExcNodeList=(null) NodeList=ibc13b03n02 BatchHost=ibc13b03n02 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* TRES=cpu=4,node=1,billing=4,gres/gpu=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/slurm_global_gpu_lifecycle.sh WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1 StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt StdIn=/dev/null StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt Power= TresPerNode=gres:gpu:1 
+JobIDRaw|State|ExitCode|ElapsedRaw|Start|End|AllocCPUS|AllocTRES|NodeList|MaxRSS
+15769234|RUNNING|0:0|569|2026-10-11T16:47:51|Unknown|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n02|
+15769234.batch|RUNNING|0:0|569|2026-10-11T16:47:51|Unknown|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n02|
+15769234.extern|RUNNING|0:0|569|2026-10-11T16:47:51|Unknown|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n02|
+15769234.0|RUNNING|0:0|566|2026-10-11T16:47:54|Unknown|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n02|
+allocation-identity.txt 4519 bytes
+gpu-identity.json 1362 bytes
+launch-context.txt 1960 bytes
+orchestration-events.jsonl 465 bytes
+orchestration.json 5145 bytes
+phased_resident_control/capacity/B1024/events.jsonl 1809 bytes
+phased_resident_control/capacity/B1024/report.json 900833 bytes
+phased_resident_control/capacity/B1024/stage_manifest.json 303484 bytes
+tail=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/orchestration-events.jsonl
+{"epoch": 1791708474.9409313, "event": "coordinator_started"}
+{"epoch": 1791708474.9640975, "event": "child_dispatch_started", "physical_gpu": {"free_bytes": 34078720000, "source": "nvidia-smi selected-card boundary snapshot", "total_bytes": 34359738368, "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd"}, "strategy": "phased_resident_control"}
+{"epoch": 1791708474.9730966, "event": "child_process_started", "pid": 109775, "strategy": "phased_resident_control"}
+tail=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/launch-context.txt
+2026-10-11T08:47:52Z
+ibc13b03n02
+ 16:47:52 up 115 days,  2:17,  0 users,  load average: 0.08, 0.03, 0.05
+pid 109715's current affinity list: 0,1,56,57
+{"phase": "capacity_B1024_input_transfer_start", "elapsed_seconds": 19.85225726850331, "rss_bytes": 9011552256, "measurement_strategy": "phased_resident_control", "sampling_order": "five_core_then_five_wrapper", "wrapper_resident_input_policy": "retain_core_inputs", "diagnostic_IO_scope": "collection-boundary persistence outside warm timers; no measured VRAM release claim", "memory_preflight": {"shape": 1024, "resident_2048_input_bytes": 7871545456, "full_2048_output_bytes": 880836608, "estimated_device_bytes": 22957020592, "physical_gpu": {"applicable": true, "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd", "total_bytes": 34359738368, "free_bytes": 33721155584, "scope": "selected physical GPU snapshot immediately before prospective compilation"}, "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee", "input_byte_scope": "actual pure-helper host stacks for the complete2048 collection, including shared-static layout", "phase": "preallocation_whole_stage_budget_before_device_put", "required_physical_slack_bytes": 2147483648}}
+{"phase": "capacity_B1024_input_transfer_complete", "elapsed_seconds": 22.020456852391362, "rss_bytes": 10405179392, "post_transfer_GPU_memory": {"phase": "post_transfer_physical_free_telemetry_only", "physical_gpu": {"applicable": true, "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd", "total_bytes": 34359738368, "free_bytes": 24864882688, "scope": "selected physical GPU snapshot immediately before prospective compilation"}}, "post_transfer_identity_matches": true}
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 23.53155709244311, "rss_bytes": 10407886848}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 115.06246276758611, "rss_bytes": 11293425664}
+SLURM_LOG_TAIL
+2026-10-11T08:47:52Z
+ibc13b03n02
+ 16:47:52 up 115 days,  2:17,  0 users,  load average: 0.08, 0.03, 0.05
+pid 109715's current affinity list: 0,1,56,57
+{"phase": "capacity_B1024_input_transfer_start", "elapsed_seconds": 19.85225726850331, "rss_bytes": 9011552256, "measurement_strategy": "phased_resident_control", "sampling_order": "five_core_then_five_wrapper", "wrapper_resident_input_policy": "retain_core_inputs", "diagnostic_IO_scope": "collection-boundary persistence outside warm timers; no measured VRAM release claim", "memory_preflight": {"shape": 1024, "resident_2048_input_bytes": 7871545456, "full_2048_output_bytes": 880836608, "estimated_device_bytes": 22957020592, "physical_gpu": {"applicable": true, "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd", "total_bytes": 34359738368, "free_bytes": 33721155584, "scope": "selected physical GPU snapshot immediately before prospective compilation"}, "limitation": "scaled actual compiler temporary buffers plus full collection overlap; estimate is not a measured peak or OOM guarantee", "input_byte_scope": "actual pure-helper host stacks for the complete2048 collection, including shared-static layout", "phase": "preallocation_whole_stage_budget_before_device_put", "required_physical_slack_bytes": 2147483648}}
+{"phase": "capacity_B1024_input_transfer_complete", "elapsed_seconds": 22.020456852391362, "rss_bytes": 10405179392, "post_transfer_GPU_memory": {"phase": "post_transfer_physical_free_telemetry_only", "physical_gpu": {"applicable": true, "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd", "total_bytes": 34359738368, "free_bytes": 24864882688, "scope": "selected physical GPU snapshot immediately before prospective compilation"}}, "post_transfer_identity_matches": true}
+{"phase": "capacity_B1024_lower_start", "elapsed_seconds": 23.53155709244311, "rss_bytes": 10407886848}
+{"phase": "capacity_B1024_compile_start", "elapsed_seconds": 115.06246276758611, "rss_bytes": 11293425664}

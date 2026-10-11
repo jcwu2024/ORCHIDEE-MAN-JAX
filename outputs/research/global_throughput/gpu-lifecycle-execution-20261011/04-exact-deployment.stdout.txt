@@ -1,0 +1,10 @@
+The bundle contains this ref:
+3b4ae35e695f85480ecb72461e4ba93f4534bbd8 refs/heads/research/global-throughput
+The bundle records a complete history.
+3b4ae35e695f85480ecb72461e4ba93f4534bbd8 refs/heads/research/global-throughput
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1'...
+done.
+3b4ae35e695f85480ecb72461e4ba93f4534bbd8
+exact_code_dir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1
+no_alternates=true
+{"schema": "global_lifecycle_exact_deployment_v1", "utc": "2026-10-11T08:42:24.544280+00:00", "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8", "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1", "branch": "research/global-throughput", "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/global-throughput-3b4ae35.bundle", "bundle_sha256": "c41277078f7c05efac832a7f25136e5cc64b037f8594774c64e2af86fbfa4ed5", "bundle_bytes": 4861356, "registry_previous_sha256": "be35fd8949f8b1df0581424641b70398e1ff0a382baa5b9e9ee1dcfd966ecb97", "checkout_porcelain": "", "source_overlay": null, "alternate_dependencies": [], "old_checkouts_preserved": true, "main_daily_refs_preserved": true, "authorization": "User explicitly approved bounded lifecycle two-arm plan via supervisor 01a128d2-3ec2-77a1-8d51-1665c220d2ca on 2026-10-11.", "allocation": {"partition": "gnall", "nodes": 1, "tasks": 1, "V100_32GB_count": 1, "Slurm_CPUs": 4, "wall_seconds": 7200, "requeue": false, "exclusive": false, "primary_worst_case_CNY": 4.8, "conservative_worst_case_CNY": 4.96}, "submitted": false}

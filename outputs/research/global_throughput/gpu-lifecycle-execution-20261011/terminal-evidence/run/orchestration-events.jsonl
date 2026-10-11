@@ -1,0 +1,5 @@
+{"epoch": 1791708474.9409313, "event": "coordinator_started"}
+{"epoch": 1791708474.9640975, "event": "child_dispatch_started", "physical_gpu": {"free_bytes": 34078720000, "source": "nvidia-smi selected-card boundary snapshot", "total_bytes": 34359738368, "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd"}, "strategy": "phased_resident_control"}
+{"epoch": 1791708474.9730966, "event": "child_process_started", "pid": 109775, "strategy": "phased_resident_control"}
+{"epoch": 1791709611.8602629, "error": "phased_resident_control child exited with code 1", "error_type": "RuntimeError", "event": "child_failed_preserve_outputs", "strategy": "phased_resident_control"}
+{"epoch": 1791709611.8821216, "event": "coordinator_finished", "status": "first_arm_failed"}

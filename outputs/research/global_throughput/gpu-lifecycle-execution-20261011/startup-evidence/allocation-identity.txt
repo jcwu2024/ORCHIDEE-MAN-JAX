@@ -1,0 +1,151 @@
+allocation_window_start_epoch=1791708472
+job=15769234 node=ibc13b03n02 cpus=4 gpu_global_id=0 uuid=GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd name=Tesla V100-SXM2-32GB driver=525.85.12 visible=0
+expected_code_sha=3b4ae35e695f85480ecb72461e4ba93f4534bbd8 actual_code_sha=3b4ae35e695f85480ecb72461e4ba93f4534bbd8 alloc_tres_source=TRES alloc_tres=cpu=4,node=1,billing=4,gres/gpu=1
+JobId=15769234 JobName=orchjax-gpu-life
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:03 TimeLimit=02:00:00 TimeMin=N/A
+   SubmitTime=2026-10-11T16:47:34 EligibleTime=2026-10-11T16:47:34
+   AccrueTime=2026-10-11T16:47:34
+   StartTime=2026-10-11T16:47:51 EndTime=2026-10-11T18:47:51 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T16:47:51 Scheduler=Backfill
+   Partition=gnall AllocNode:Sid=ibc13b02n04:51816
+   ReqNodeList=ibc13b03n02 ExcNodeList=(null)
+   NodeList=ibc13b03n02
+   BatchHost=ibc13b03n02
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=gpu:v100:1
+     Nodes=ibc13b03n02 CPU_IDs=0-3 Mem=0 GRES=gpu:v100:1(IDX:0)
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/slurm_global_gpu_lifecycle.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+CPU CORE SOCKET ONLINE
+0   0    0      yes
+1   1    0      yes
+2   2    0      yes
+3   3    0      yes
+4   4    0      yes
+5   5    0      yes
+6   6    0      yes
+7   7    0      yes
+8   8    0      yes
+9   9    0      yes
+10  10   0      yes
+11  11   0      yes
+12  12   0      yes
+13  13   0      yes
+14  14   0      yes
+15  15   0      yes
+16  16   0      yes
+17  17   0      yes
+18  18   0      yes
+19  19   0      yes
+20  20   0      yes
+21  21   0      yes
+22  22   0      yes
+23  23   0      yes
+24  24   0      yes
+25  25   0      yes
+26  26   0      yes
+27  27   0      yes
+28  28   1      yes
+29  29   1      yes
+30  30   1      yes
+31  31   1      yes
+32  32   1      yes
+33  33   1      yes
+34  34   1      yes
+35  35   1      yes
+36  36   1      yes
+37  37   1      yes
+38  38   1      yes
+39  39   1      yes
+40  40   1      yes
+41  41   1      yes
+42  42   1      yes
+43  43   1      yes
+44  44   1      yes
+45  45   1      yes
+46  46   1      yes
+47  47   1      yes
+48  48   1      yes
+49  49   1      yes
+50  50   1      yes
+51  51   1      yes
+52  52   1      yes
+53  53   1      yes
+54  54   1      yes
+55  55   1      yes
+56  0    0      yes
+57  1    0      yes
+58  2    0      yes
+59  3    0      yes
+60  4    0      yes
+61  5    0      yes
+62  6    0      yes
+63  7    0      yes
+64  8    0      yes
+65  9    0      yes
+66  10   0      yes
+67  11   0      yes
+68  12   0      yes
+69  13   0      yes
+70  14   0      yes
+71  15   0      yes
+72  16   0      yes
+73  17   0      yes
+74  18   0      yes
+75  19   0      yes
+76  20   0      yes
+77  21   0      yes
+78  22   0      yes
+79  23   0      yes
+80  24   0      yes
+81  25   0      yes
+82  26   0      yes
+83  27   0      yes
+84  28   1      yes
+85  29   1      yes
+86  30   1      yes
+87  31   1      yes
+88  32   1      yes
+89  33   1      yes
+90  34   1      yes
+91  35   1      yes
+92  36   1      yes
+93  37   1      yes
+94  38   1      yes
+95  39   1      yes
+96  40   1      yes
+97  41   1      yes
+98  42   1      yes
+99  43   1      yes
+100 44   1      yes
+101 45   1      yes
+102 46   1      yes
+103 47   1      yes
+104 48   1      yes
+105 49   1      yes
+106 50   1      yes
+107 51   1      yes
+108 52   1      yes
+109 53   1      yes
+110 54   1      yes
+111 55   1      yes
+uuid, name, driver_version, memory.total [MiB], memory.free [MiB], memory.used [MiB]
+GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd, Tesla V100-SXM2-32GB, 525.85.12, 32768 MiB, 32500 MiB, 0 MiB
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]

@@ -1,0 +1,21 @@
+{
+  "command": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-o",
+    "ConnectionAttempts=1",
+    "cln01",
+    "bash",
+    "-s"
+  ],
+  "stdin": "outputs\\research\\global_throughput\\gpu-lifecycle-execution-20261011\\collect-saved-array-explanation.sh",
+  "started_utc": "2026-10-11T10:01:47.228750+00:00",
+  "ended_utc": "2026-10-11T10:01:47.514928+00:00",
+  "returncode": 0,
+  "stdout_bytes": 597,
+  "stderr_bytes": 0
+}

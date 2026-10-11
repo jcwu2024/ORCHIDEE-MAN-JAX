@@ -1,0 +1,657 @@
+{
+  "schema": "orchidee_server_deployment_registry_v1",
+  "updated_utc": "2026-10-10T08:45:57.611513Z",
+  "runtime": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime",
+  "branch_mirror": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+  "branch_sync_status": "v2 verified bundle: main fast-forward management-doc update; daily/global refs unchanged and all three refs equal expected",
+  "source_branches": [
+    "main",
+    "research/daily-coarse-graining",
+    "research/global-throughput"
+  ],
+  "scientific_execution": "Existing immutable checkouts and overlay identities remain authoritative; mirrored refs do not change an execution checkout or authorize computation.",
+  "preserved_root": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+    "sha": "688e14cd4bd36d700ad67bc27c7a71195d282697",
+    "branch": "research/daily-coarse-graining",
+    "porcelain": "",
+    "alternate_dependencies": []
+  },
+  "retained_checkouts": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+      "sha": "688e14cd4bd36d700ad67bc27c7a71195d282697",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-checked-v2",
+      "sha": "45da5f97571cf5da9ecd3ac36c37581ded1c26c8",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-checked-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-profile-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-schedule-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-physical-recurrent-t30-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-physical-recurrent-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/physical-microbatch-v1/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-dual-integration-v1-incomplete",
+      "sha": "b2e156254f5c9a5de104ac074314240d122dea98",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-dual-paid-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-validator-cache-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-dual-placement-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-budget-profile-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-parallel-routes-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-epoch-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-checked-reuse-v1/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dual-8cce49e",
+      "sha": "8cce49e81dab8537d0f39ff76de81350a1f923e8",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-local-v2",
+      "sha": "f220013852d1ad7777a154090c360b9ef9cdc920",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-reuse-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-reuse-v1",
+      "sha": "cfc518d095efa468b9ceb2a317fe9dfe035f7c62",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-execution-0507e1b",
+      "sha": "0507e1b4286ee673d7865d40e4c58e73bdab1dc9",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4",
+      "sha": "605c941ef830ba0ca001cb0736a332530e4f0cf1",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-recurrent-605c941/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-persistent-158192f/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-thermal-6467453/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-admission-8004a11/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-decoder-094dfd2/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-transformer-4eeb168/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full",
+      "sha": "c2498e4936c52f0a081ea38d0c6fc6c92e6bb3e8",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-learning-4408daf",
+      "sha": "4408dafe01c7ab1688b9de5f2a60b17ad8db732c",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1",
+      "sha": "c599236bcf57b745e9bafed678298010f4c3b58f",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-local-v2/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-reuse-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1",
+      "sha": "ef8c23f2456e57af962c47145724ba6064a1368e",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-parallel-v1",
+      "sha": "630207126d75e688f0bd04af7dd7fa81f3cb5c66",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-v1",
+      "sha": "08e7f4895b3cd14ea20bffc2f474a9dc52a76c47",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-performance-v1",
+      "sha": "4bc82a0747c2fd156430956e41ba426271a88b20",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+      "sha": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
+      "sha": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
+      "sha": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-startup-v2",
+      "sha": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "branch": "research/global-throughput",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v1",
+      "sha": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
+      "sha": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
+      "sha": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1",
+      "sha": "7879d8e357ba69a59d4b2eaf794d69ebd32f8850",
+      "branch": "research/global-throughput",
+      "porcelain": "",
+      "alternate_dependencies": []
+    }
+  ],
+  "summary": {
+    "git_roots": 78,
+    "archived_markers": 55,
+    "retained_working_trees": 23,
+    "alternate_using_roots": 46,
+    "all_observed_head_resolve": true,
+    "all_direct_alternates_exist": true
+  },
+  "activity_snapshot_utc": "2026-10-10T08:20:24.894481Z",
+  "scheduler": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "processes": {
+    "login": {
+      "project_processes": [
+        {
+          "pid": "82135",
+          "cmd": "python3 -c import os,json\nr=[]; unresolved=[]; root='/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX'\nuid=os.getuid()\nfor name in os.listdir('/proc'):\n if not name.isdigit(): continue\n p='/proc/'+name\n try:\n  if os.stat(p).st_uid!=uid: continue\n  cmd=open(p+'/cmdline','rb').read().replace(b'\\0',b' ').decode('utf-8','replace')\n  try: cwd=os.readlink(p+'/cwd')\n  except Exception as e: cwd='UNREADABLE'; unresolved.append({'pid':name,'cmd':cmd,'error':str(e)})\n  try: env=open(p+'/environ','rb').read().decode('utf-8','replace')\n  except Exception: env=''\n  if root in cmd or root in cwd or root in env: r.append({'pid':name,'cmd':cmd,'cwd':cwd,'environment_mentions_project':root in env})\n except (FileNotFoundError,ProcessLookupError): pass\n except Exception as e: unresolved.append({'pid':name,'error':str(e)})\nprint(json.dumps({'project_processes':r,'unreadable_processes':unresolved})) ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        }
+      ],
+      "unreadable_processes": [
+        {
+          "pid": "81609",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/81609/cwd'"
+        }
+      ]
+    },
+    "test01": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "1360",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/1360/cwd'"
+        },
+        {
+          "pid": "15111",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/15111/cwd'"
+        },
+        {
+          "pid": "113448",
+          "cmd": "sshd: liwei@pts/19   ",
+          "error": "[Errno 13] Permission denied: '/proc/113448/cwd'"
+        }
+      ]
+    },
+    "test02": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "37543",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/37543/cwd'"
+        },
+        {
+          "pid": "62115",
+          "cmd": "sshd: liwei@pts/6    ",
+          "error": "[Errno 13] Permission denied: '/proc/62115/cwd'"
+        }
+      ]
+    },
+    "test03": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "88738",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/88738/cwd'"
+        }
+      ]
+    },
+    "test04": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "90941",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/90941/cwd'"
+        }
+      ]
+    },
+    "gln01": {
+      "project_processes": [
+        {
+          "pid": "16813",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-original-30610006-0000-4000-8000-000000000001.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "26041",
+          "cmd": "bash -c tail -3 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log; tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "26046",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "43655",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "49870",
+          "cmd": "bash -c tail -2 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-matched-30610006-0000-4000-8000-000000000003.launcher.log; tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-matched-30610006-0000-4000-8000-000000000003.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "49875",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-matched-30610006-0000-4000-8000-000000000003.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "60743",
+          "cmd": "tail -n 2 -f /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T7-20261006-free-migration.compile.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "75082",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T7-batch-20261008.compile-and-compare.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        }
+      ],
+      "unreadable_processes": [
+        {
+          "pid": "1152",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/1152/cwd'"
+        }
+      ]
+    }
+  },
+  "gpu_compute_apps": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "process_limits": "A bounded instantaneous snapshot. Privilege-separated sshd cwd/environ is unreadable; readable workers were inspected. No unknown scientific jobs were cancelled.",
+  "quota_observation": {
+    "scope": "shared liwei account, not project usage or attributable project growth",
+    "utc": "2026-10-10T08:15Z",
+    "filesystem": "/WORK",
+    "kbytes": 25133031976,
+    "quota_kbytes": 25000000000,
+    "grace": "2d6h10m45s",
+    "files": 9187470,
+    "quota_files": 10000000,
+    "hard_limit_fields": 0,
+    "source": "bash -lc login banner; no recursive account scan"
+  },
+  "data_assets": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/data",
+      "role": "canonical forcing/static science inputs; approx 42.6 GB forcing is prior documented scope, no new recursive measurement"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/assets/teacher_669_a403cd3/landpoints",
+      "role": "669-point reference landpoint assets"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "role": "canonical prepared global input"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029",
+      "role": "daily consolidated prepared training data"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6",
+      "role": "unique Teacher data"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004",
+      "role": "daily raw arrays, successful binaries, HLO, full AD, manifests and closed budgets"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput",
+      "role": "global CPU/GPU evidence; B1024 valid, B2048 OOM, neither result authorizes another run"
+    }
+  ],
+  "exists_verification": {
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/assets/teacher_669_a403cd3/landpoints": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-nvlink-12.6.85": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-runtime-compat-12.3.101-driver-545.23.08": true
+  },
+  "environments": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu"
+  ],
+  "toolchains": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-nvlink-12.6.85",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-runtime-compat-12.3.101-driver-545.23.08"
+  ],
+  "daily_overlay_recovery": {
+    "timestamp_utc": "2026-10-10T08:21:37.603831Z",
+    "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1",
+    "checkout_sha": "c599236bcf57b745e9bafed678298010f4c3b58f",
+    "archive": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/maintenance-20261010/daily-source-overlays.tar.gz",
+    "archive_sha256": "1aa8535160096564e6f1dd1626794012396085f62c4a292700161219f27febbb",
+    "member_count": 132,
+    "source_roots": [
+      "transfer/shared-latent-reader-20261004",
+      "transfer/T7-raw-neural-jvp-20261010",
+      "transfer/shared-combined-recurrent-20260926"
+    ],
+    "validation": "exact member set, SHA256/source equality, modes and symlink targets; source originals preserved",
+    "restore": "tar -xzf /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/maintenance-20261010/daily-source-overlays.tar.gz -C /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime",
+    "scope": "source overlay recovery only; no data, result arrays, caches or environments copied/deleted"
+  },
+  "accepted_raw_neural_source_archive": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.source.tar.gz",
+    "observed_sha256": "f3dbcc7f62aed4f3afe478ae3f8f434d3d8a7efd1dba292c6c2aea62e1c2fd86",
+    "matches_handoff": true
+  },
+  "existing_archives": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkouts-20260922.tar.gz",
+      "report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkouts-20260922.tar.json",
+      "trees": 45,
+      "report_status": "archived_and_working_files_removed",
+      "bytes": 511838380
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-worktrees-20260922.tar.gz",
+      "report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-worktrees-20260922.tar.json",
+      "trees": 10,
+      "report_status": "archived_and_working_files_removed",
+      "bytes": 70720864
+    }
+  ],
+  "existing_archive_verification": "Completion reports and markers read, every surviving HEAD and alternate target checked. Historical byte-comparison acceptance reused; no full archive rehash this session.",
+  "archive_candidates_deferred": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
+      "sha": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-startup-v2",
+      "sha": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v1",
+      "sha": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
+      "sha": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
+      "sha": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1",
+      "sha": "7879d8e357ba69a59d4b2eaf794d69ebd32f8850",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    }
+  ],
+  "maintenance_changes": "One 132-member verified source overlay archive plus compact registry/entry/receipts and a refs-only bare mirror. No existing checkout working file, data, results, environments, caches or Git store removed.",
+  "restoration": "See deployment/README.md. Keep .git objects and all alternate ancestors. Never git gc/prune/clean/reset or interpret archived missing files as source deletions.",
+  "branch_import": {
+    "schema": "server_mirror_docs_update_v2",
+    "timestamp_utc": "2026-10-10T08:45:57.611513Z",
+    "mirror": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010-v2.bundle",
+    "bundle_sha256": "721b9d50bf52db047472d00f8bbfca461495a768e8cac097e0205318f7a94369",
+    "bundle_bytes": 12426182,
+    "previous_branches": {
+      "main": "08882286b064af1337dfbf2e229f55f22c431499",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "expected_branches": {
+      "main": "7cae3e02adad23674767a590fdf4d27f239ce065",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "actual_branches": {
+      "main": "7cae3e02adad23674767a590fdf4d27f239ce065",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "bundle_verify": {
+      "rc": 0,
+      "stdout": "The bundle contains these 3 refs:\n7cae3e02adad23674767a590fdf4d27f239ce065 refs/heads/main\n7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/heads/research/daily-coarse-graining\nc537f59f33568b6e5960254fe55fb307f82ca503 refs/heads/research/global-throughput\nThe bundle records a complete history.",
+      "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010-v2.bundle is okay"
+    },
+    "fetch_main_only": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010-v2.bundle\n   0888228..7cae3e0  main       -> main"
+    },
+    "main_fast_forward_verified": true,
+    "changed_paths": [
+      "A\tdocs/RESEARCH_WORKFLOW.md",
+      "A\tdocs/deployment-explore1000.md",
+      "A\truntime/README.md"
+    ],
+    "daily_global_refs_unchanged": true,
+    "self_contained_evidence": "v1 accepted self-contained mirror reused; no alternate configuration changed",
+    "validation_scope": "Only bundle/object/branch identities and three management documents. Prior 78 Git roots / 132 overlay / scientific asset and runtime process evidence reused without repeating checks.",
+    "mirror_entries": 31,
+    "mirror_regular_files": 21,
+    "mirror_bytes": 25754472,
+    "new_execution_working_trees": 0,
+    "existing_execution_checkouts_untouched": true
+  },
+  "branch_routes": [
+    {
+      "branch": "main",
+      "local_checkout": "E:/ORCHIDEE-MAN-JAX",
+      "mirror_sha": "7cae3e02adad23674767a590fdf4d27f239ce065",
+      "execution_checkout": null,
+      "role": "local shared-policy/development root; no server science deployment implied"
+    },
+    {
+      "branch": "research/daily-coarse-graining",
+      "local_checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/daily-coarse-graining",
+      "mirror_sha": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1",
+      "execution_sha": "c599236bcf57b745e9bafed678298010f4c3b58f",
+      "execution_overlays": [
+        "transfer/shared-latent-reader-20261004",
+        "transfer/T7-raw-neural-jvp-20261010",
+        "transfer/shared-combined-recurrent-20260926"
+      ],
+      "role": "mirrored development head differs from preserved source/overlay execution identity"
+    },
+    {
+      "branch": "research/global-throughput",
+      "local_checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+      "mirror_sha": "c537f59f33568b6e5960254fe55fb307f82ca503",
+      "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+      "execution_sha": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+      "role": "mirrored development head differs from preserved B1024 execution identity"
+    }
+  ],
+  "local_management_documents": [
+    "docs/WORKSPACE_MANAGEMENT.md",
+    "scripts/dev/workspace_status.py"
+  ],
+  "latest_activity_snapshot_utc": "2026-10-10T08:30:33.912234Z",
+  "latest_scheduler": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "latest_gpu_compute_apps": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "final_validation": "All 78 observed original HEADs/branches/status/alternates/archive markers unchanged; all 132 overlay source identities and archive SHA still match.",
+  "quota_raw_receipt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/maintenance-20261010/quota-login-banner.txt",
+  "initial_branch_import": {
+    "timestamp_utc": "2026-10-10T08:28:59.554158Z",
+    "mirror": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010.bundle",
+    "bundle_sha256": "be64d2b74cf7f3fbe97e30dcfdcfe5e3d5f9e24620027ec98253b82541b2f043",
+    "bundle_bytes": 12400208,
+    "expected_branches": {
+      "main": "08882286b064af1337dfbf2e229f55f22c431499",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "actual_branches": {
+      "main": "08882286b064af1337dfbf2e229f55f22c431499",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "bundle_verify": {
+      "rc": 0,
+      "stdout": "The bundle contains these 3 refs:\n08882286b064af1337dfbf2e229f55f22c431499 refs/heads/main\n7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/heads/research/daily-coarse-graining\nc537f59f33568b6e5960254fe55fb307f82ca503 refs/heads/research/global-throughput\nThe bundle records a complete history.",
+      "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010.bundle is okay"
+    },
+    "fetch": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010.bundle\n * [new branch]      main       -> main\n * [new branch]      research/daily-coarse-graining -> research/daily-coarse-graining\n * [new branch]      research/global-throughput -> research/global-throughput"
+    },
+    "fsck": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "self_contained": true,
+    "new_working_trees": 0,
+    "mirror_entries": 29,
+    "mirror_regular_files": 19,
+    "mirror_bytes": 12872283,
+    "unchanged_execution_checkouts": true
+  },
+  "management_document_update": {
+    "utc": "2026-10-10T08:45:57.611513Z",
+    "main_previous": "08882286b064af1337dfbf2e229f55f22c431499",
+    "main_current": "7cae3e02adad23674767a590fdf4d27f239ce065",
+    "paths": [
+      "A\tdocs/RESEARCH_WORKFLOW.md",
+      "A\tdocs/deployment-explore1000.md",
+      "A\truntime/README.md"
+    ],
+    "previous_scientific_execution_evidence_reused": true
+  }
+}

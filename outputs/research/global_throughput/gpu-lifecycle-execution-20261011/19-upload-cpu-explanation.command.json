@@ -1,0 +1,20 @@
+{
+  "command": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-o",
+    "ConnectionAttempts=1",
+    "outputs/research/global_throughput/gpu-lifecycle-execution-20261011/explain_saved_failure.py",
+    "outputs/research/global_throughput/gpu-lifecycle-execution-20261011/state-layout.json",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/"
+  ],
+  "stdin": null,
+  "started_utc": "2026-10-11T09:58:18.351054+00:00",
+  "ended_utc": "2026-10-11T09:58:18.665289+00:00",
+  "returncode": 0,
+  "stdout_bytes": 0,
+  "stderr_bytes": 0
+}

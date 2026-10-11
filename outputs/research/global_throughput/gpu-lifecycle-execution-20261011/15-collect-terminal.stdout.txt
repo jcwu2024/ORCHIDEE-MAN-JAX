@@ -1,0 +1,4 @@
+538f4254a9b1d03afc4c010d4942278b9153f5d1cf98d4043c02f650251e07b5  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/terminal-evidence-15769234.tar.gz
+87684 bytes
+compact_archive=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/terminal-evidence-15769234.tar.gz
+full_scientific_arrays_retained=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234

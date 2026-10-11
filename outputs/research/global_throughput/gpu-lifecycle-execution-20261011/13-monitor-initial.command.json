@@ -1,0 +1,20 @@
+{
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-o",
+    "ConnectionAttempts=1",
+    "cln01",
+    "bash",
+    "-s"
+  ],
+  "stdin": "outputs\\research\\global_throughput\\gpu-lifecycle-execution-20261011\\monitor-job.sh",
+  "started_utc": "2026-10-11T09:14:38.009704+00:00",
+  "ended_utc": "2026-10-11T09:14:38.445641+00:00",
+  "returncode": 0,
+  "stdout_bytes": 8221,
+  "stderr_bytes": 0
+}

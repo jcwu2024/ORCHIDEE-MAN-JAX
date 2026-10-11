@@ -1,0 +1,48 @@
+{
+  "status": "passed_local_preparation_only",
+  "execution_code_pin": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+  "artifacts": {
+    "explain_saved_failure.py": {"sha256": "a4d14fe02c7718e48ac9a7acd6ed6c81b84841013f4c7a40eb91d8739ec9ec80", "bytes": 26742},
+    "extract_state_layout.py": {"sha256": "e3afc4f1f57b0fe0b3f1b459fd5e7a1d2250097863c3f01be928a812112d67e2", "bytes": 4020},
+    "state-layout.json": {"sha256": "8fcdaa71441ac5e9c193f54801bd2e583290ff544c90220aab620e5c2f944a89", "bytes": 14023}
+  },
+  "checks_run": [
+    "conda run --no-capture-output -n ORCJAX python -B outputs/research/global_throughput/gpu-lifecycle-execution-20261011/explain_saved_failure.py --help: passed",
+    "compile(source, filename, 'exec'): passed; no bytecode written",
+    "--self-check: passed NumPy-only declared14PFTNaN/discrete_exact/tolerance_equality/nextafter_violation/scalar_coordinate/unexpected_nonfinite checks",
+    "exact CODE_PIN Git blobs parsed with AST; all334 canonical state names mapped; source-backed roughheight_pft positions component0/field13 andcomponent5/field18 match",
+    "metadata-only extraction: all60 canonical bound layouts equal; every source/bound named_field_bijection component/field index checked",
+    "canonical audit reader-screen static_digest exactly equals saved failed report input_compatibility_audit.static_digest",
+    "Ruff check passed for both scripts; Ruff format applied"
+  ],
+  "JAX_imported": false,
+  "jaxlib_imported": false,
+  "model_imported": false,
+  "real_saved_arrays_loaded_locally": false,
+  "local_canonical_source_mapping": {
+    "components": 7,
+    "field_counts": [36, 13, 48, 17, 113, 93, 14],
+    "fields": 334,
+    "source_audit_path": "outputs/research/global_throughput/round4-inputs-remote-canonical/remote-preparation-audit.json",
+    "source_audit_sha256": "259ddf5358c69b3d01b05924c17b709764f95a8ceebdfa993f00c39df01d0180",
+    "canonical_prepared_pickle_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "static_digest": "b1b4d5b9819ff8845ecb7b0cc68bf641da1c5740effc1c13185f9bde872fe329",
+    "source_spans": [
+      {"path": "jax_orchidee/driver/fast_state.py", "symbol": "fast_state_from_previous_packet", "start": 143, "end": 169},
+      {"path": "jax_orchidee/driver/orchestration.py", "symbol": "_paper_later_day_block_transition_factory", "start": 11185, "end": 11307},
+      {"path": "jax_orchidee/stomate/modelout.py", "symbol": "ModeloutResult", "start": 61, "end": 67},
+      {"path": "scripts/dev/benchmark_global_batch.py", "symbol": "run_two", "start": 506, "end": 510}
+    ]
+  },
+  "target_CLI": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python -B /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-lifecycle-execution-20261011/explain_saved_failure.py --code-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1 --failed-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/failed_initial_arrays.pkl --reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --report /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/report.json --state-layout-json /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-lifecycle-execution-20261011/state-layout.json --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-lifecycle-execution-20261011/saved-array-comparison-15769234 --lane-chunk 64 --budget-seconds 540",
+  "target_execution_owner": "root; single allowed test03 CPU, external600s/8GiB cap, no child SSH or target execution",
+  "outputs_protocol": {
+    "summary.json": "all760/all2048 completion flag; every failing leaf with field/source/block/time/dtype/shape; all failing lanes, origins and unique points; input/source/detail hashes; host/Python/NumPy/elapsed/peakRSS/noJAX/noJAXlib/noModel",
+    "all-failing-coordinates.jsonl.gz": "leaf_failure headers, exact_repeat_group lane lists/origins, then complete failed_coordinate records with inner coordinate/science day/actual/reference/signed and absolute delta/fixed bound/ratio/reason. Full native coordinates are [lane,*inner_coordinate] for every group's verified lane list.",
+    "deduplication": "only matching point origins with byte-identical failing coordinate indices and actual/reference native values are grouped; other repetition differences are preserved",
+    "partial_run": "budget breach or exception leaves partial gzip without a completed summary; do not treat partial output as all-lane evidence"
+  },
+  "graph": {"tier": "Verify with exact-source fallback", "MCP": "Transport closed", "prior_main_generation": "2026-10-10T08:46:50Z", "global_worktree_coverage": "not covered", "completeness_claim": false},
+  "not_performed_by_child": ["SSH", "remote execution", "real failed-array comparison", "model/JAX/JIT/GPU execution", "new jobs", "retries", "tolerance changes", "scientific source edits", "broad regression tests", "commit or push"],
+  "claim_boundary": "script/layout preparation only. The eventual comparison can describe saved new-science versus frozen old-science failures; it cannot establish a cause or scientific/performance acceptance."
+}

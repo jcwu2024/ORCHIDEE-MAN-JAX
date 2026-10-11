@@ -1,0 +1,20 @@
+{
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-o",
+    "ConnectionAttempts=1",
+    "cln01",
+    "bash",
+    "-s"
+  ],
+  "stdin": "outputs\\research\\global_throughput\\gpu-lifecycle-execution-20261011\\deploy-exact-pin.sh",
+  "started_utc": "2026-10-11T08:50:37.100252+00:00",
+  "ended_utc": "2026-10-11T08:50:45.453351+00:00",
+  "returncode": 0,
+  "stdout_bytes": 1691,
+  "stderr_bytes": 875
+}

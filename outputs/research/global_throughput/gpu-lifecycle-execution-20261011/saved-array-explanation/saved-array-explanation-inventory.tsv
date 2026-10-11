@@ -1,0 +1,10 @@
+0	cpu.stderr.txt
+1327	comparison/all-failing-coordinates.jsonl.gz
+1377	command.txt
+172	cpu.stdout.txt
+1922	gnu-time.txt
+2	exit-status.txt
+21	comparison-end-utc.txt
+21	comparison-start-utc.txt
+39782	comparison/summary.json
+693	environment.txt

@@ -1,5 +1,21 @@
 # Explore1000 Server Benchmark Contract
 
+Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
+terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the
+original preallocation memory guard passed; the initial FULL64 comparison stopped
+at lane45 (283.0-091.0). The control arm saved its full failed arrays; no warm
+samples, sealed stage, release-arm dispatch or lifecycle throughput ratio exists.
+The one-allocation grant and this scientific execution are closed. The supervisor
+accepted the completed bounded saved-array CPU/NumPy explanation: all760 leaves
+and2048 lanes were checked; only point283.0-091.0's Day8 end-state float64
+`diffuco_previous_step_state.rveget` at inner[0,13] (PFT14) exceeds the unchanged
+bound, by1.4223666641536081 times, identically in32 repeated lanes. No model/JAX
+imports or model/GPU rerun occurred. This numerical difference is not evidence of
+the old ABI failure; its cause remains unassigned. See the [accepted explanation](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/SAVED_ARRAY_EXPLANATION.md),
+[terminal result](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)
+and [parent accounting](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/terminal-measurements.json).
+The following sections retain the historical server matrices and accepted pins.
+
 Status: CPU1 exploratory B16 job15591356 completed in1176s using1 CPU and0 GPUs.
 Its full timing record is publishable as exploratory performance evidence;
 cross-backend scientific consistency is not accepted and accepted CPU stage count

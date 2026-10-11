@@ -1,0 +1,498 @@
+{
+  "schema": "global-gpu-lifecycle-paid-execution-ledger-v1",
+  "created_local_date": "2026-10-11",
+  "authorization": {
+    "status": "approved",
+    "decision": "批准",
+    "provenance": "User approval recorded in supervisor thread 01a128d2-3ec2-77a1-8d51-1665c220d2ca and conveyed by the current explicit delegation.",
+    "approved_contract": "GPU-B1024-phased-memory-lifecycle-new-science-v1",
+    "approved_code_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+    "approved_scope": "Exactly one gnall allocation using one node, one task, one V100 32GB, four Slurm CPUs and a 7200-second wall limit."
+  },
+  "historical_candidate": {
+    "path": "outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/EXECUTION_CANDIDATE.json",
+    "recorded_status": "local_preparation_complete_execution_unapproved",
+    "recorded_code_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+    "handling": "Preserve this pre-authorization candidate unchanged. Do not regenerate it after accounting commits and do not substitute the local checkout HEAD for the approved execution pin."
+  },
+  "execution": {
+    "status": "failed_initial_validation",
+    "submission_performed": true,
+    "submission_attempts": 1,
+    "maximum_allocations": 1,
+    "job_id": "15769234",
+    "job_evidence": {
+      "job_name": "orchjax-gpu-life",
+      "partition": "gnall",
+      "requested_node": "ibc13b03n02",
+      "state_at_last_receipt": "FAILED",
+      "reason_at_last_receipt": "NonZeroExitCode",
+      "start_time": "2026-10-11T16:47:51",
+      "end_time": "2026-10-11T17:06:51",
+      "elapsed_raw_seconds": 1140,
+      "time_limit": "02:00:00",
+      "requeue": 0,
+      "restarts": 0,
+      "nodes": 1,
+      "tasks": 1,
+      "cpus_per_task": 4,
+      "tres": "cpu=4,mem=312.50G,node=1,billing=4,gres/gpu=1",
+      "stdout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt",
+      "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_15769234.txt",
+      "exit_code_field_at_last_receipt": "1:0",
+      "terminal_success": false,
+      "throughput_ratios_published": false,
+      "source_receipts": [
+        "08-submission.stdout.txt",
+        "08-submission.stderr.txt",
+        "08-submission.command.json",
+        "startup-evidence/allocation-identity.txt",
+        "startup-evidence/gpu-identity.json",
+        "startup-evidence/orchestration.json",
+        "09-monitor-start.stdout.txt",
+        "09-monitor-start.command.json",
+        "10-monitor-compile.stdout.txt",
+        "10-monitor-compile.command.json",
+        "11-monitor-compile.stdout.txt",
+        "11-monitor-compile.command.json",
+        "13-monitor-initial.stdout.txt",
+        "13-monitor-initial.command.json",
+        "14-monitor-initial-gate.stdout.txt",
+        "14-monitor-initial-gate.command.json",
+        "terminal-evidence/terminal-sacct.txt",
+        "terminal-evidence/run/orchestration.json",
+        "terminal-evidence/run/phased_resident_control/capacity/B1024/report.json",
+        "COLLECTION_VERIFICATION.json",
+        "terminal-evidence/terminal-code-identity.txt",
+        "terminal-evidence/run-sha256.txt"
+      ]
+    },
+    "successful_completion_evidence": null
+  },
+  "allocation": {
+    "partition": "gnall",
+    "nodes": 1,
+    "tasks": 1,
+    "slurm_cpus": 4,
+    "gpu_count": 1,
+    "gpu_type": "V100 32GB",
+    "wall_seconds": 7200,
+    "wall_time": "02:00:00",
+    "requeue": false,
+    "exclusive": false,
+    "primary_worst_case_cost_cny": 4.8,
+    "conservative_worst_case_cost_cny": 4.96,
+    "cost_basis": "Approved worst-case allocation estimate; not a verified bill.",
+    "selected_node": "ibc13b03n02",
+    "node_selection_evidence": {
+      "source": "07-pre-submit-snapshot.stdout.txt",
+      "server_utc_snapshot": "2026-10-11T08:46:39Z",
+      "state": "IDLE",
+      "cpu_allocated": 0,
+      "cpu_total": 112,
+      "cpu_load": 0.01,
+      "observed_before_submission": true
+    },
+    "no_resource_escalation": true
+  },
+  "checkout": {
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+    "expected_code_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+    "coordinator": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/global_gpu_lifecycle_coordinator.py",
+    "launcher": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/slurm_global_gpu_lifecycle.sh"
+  },
+  "submission": {
+    "command_argv_template": [
+      "/rmprog/slurm/v22.05.7/bin/sbatch",
+      "--partition=gnall",
+      "--nodes=1",
+      "--ntasks=1",
+      "--cpus-per-task=4",
+      "--gres=gpu:1",
+      "--time=02:00:00",
+      "--no-requeue",
+      "--chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+      "--output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_%j.txt",
+      "--error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_%j.txt",
+      "--nodelist=ibc13b03n02",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/slurm_global_gpu_lifecycle.sh"
+    ],
+    "environment": {
+      "CODE_DIR": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+      "EXPECTED_CODE_SHA": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8"
+    },
+    "actual_submission_command": "/rmprog/slurm/v22.05.7/bin/sbatch --partition=gnall --nodes=1 --ntasks=1 --cpus-per-task=4 --gres=gpu:1 --time=02:00:00 --no-requeue --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1 --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_%j.txt --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_gpu_lifecycle_%j.txt --nodelist=ibc13b03n02 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/scripts/hpc/slurm_global_gpu_lifecycle.sh",
+    "submission_receipts": {
+      "stdout": "08-submission.stdout.txt",
+      "stderr": "08-submission.stderr.txt",
+      "local_command_receipt": "08-submission.command.json",
+      "target_submission_script": "submit-once.sh",
+      "successful_sbatch_confirmation": "Submitted batch job 15769234"
+    },
+    "unresolved_after_submission": [],
+    "submission_owner": "Root execution owner only. This bookkeeping task did not connect, transfer, deploy, submit, monitor, or retrieve.",
+    "no_resource_escalation": true
+  },
+  "output": {
+    "root_pattern": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-${SLURM_JOB_ID}",
+    "single_use": true,
+    "per_arm_pattern": "${OUTPUT_ROOT}/${MEASUREMENT_STRATEGY}/capacity/B1024",
+    "strategies_in_order": [
+      "phased_resident_control",
+      "phased_release"
+    ]
+  },
+  "inputs": {
+    "prepared_input": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+    "full_reference_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+    "memory_baseline_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/global-throughput-v2-2b14506/gpu-b64/candidate-first",
+    "b1024_evidence_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-fixed1024-v1/capacity",
+    "config": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1/configs/orchidee_man_250919.yaml",
+    "asset_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs/selected64-assets-v2",
+    "reference_stage": "B4_group_references",
+    "reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "new_science_sha256": "8c8b1dfd0b207e96bbb81c2d3eb85ae6edccb9ed3c6b77fb470dabc58c5fa77d"
+  },
+  "scientific_contract": {
+    "process_strategy": "sequential_fresh_process_per_strategy",
+    "stage_name": "capacity_B1024_lifecycle_v1",
+    "shape": "B1024 x 2 chunks",
+    "inputs": "64 genuine FULL64 points repeated 32 times; 2048 effective lanes; 28672 lane-days per arm",
+    "sampling_order": "five_core_then_five_wrapper",
+    "samples_per_boundary": 5,
+    "continuous_window": "Days 2-8 followed by Days 9-15; 48 half-hour steps per day",
+    "precision_and_gates": {
+      "atol": 1E-08,
+      "rtol": 1E-10,
+      "discrete_schema_dtype": "exact",
+      "only_allowed_nan_mask": "declared bare-soil roughheight coordinates"
+    },
+    "runtime": {
+      "jax_enable_x64": true,
+      "allocator": "default",
+      "XLA_PYTHON_CLIENT_PREALLOCATE": false,
+      "host_and_container_entry": "benchmark_global_gpu_lifecycle.py"
+    },
+    "memory_guard": "Retain the original-preallocation physical-free guard 2R + 3O + scaled_temp + 2 GiB; do not weaken it.",
+    "acceptance": [
+      "Each arm exits successfully and records full stage and process provenance.",
+      "Each arm seals outputs and independently passes the CPU/NumPy saved-array validator.",
+      "Recheck 2051 gates, 760 native leaves, 2048 FULL64 comparisons, reset/permutation/replacement arrays, and exact two-chunk state handoffs.",
+      "First arm must exit, seal, and independently pass before dispatching the second arm.",
+      "At least 3600 seconds must remain immediately before second-arm dispatch.",
+      "Publish core and wrapper release/control throughput ratios only after both arms independently pass and common identity matches."
+    ],
+    "comparison_identity": "Common identity preserves sampling_order and excludes only measurement_strategy and wrapper_resident_input_policy.",
+    "claim_boundary": "64 repeated FULL64 inputs are a capacity workload, not 669 heterogeneous points or independent ensemble members. No training, Fortran speedup, 10x, production, or peak-VRAM claim is authorized by this execution."
+  },
+  "target_admission_evidence": {
+    "deployment": {
+      "receipt": "deployment-after/gpu-lifecycle-20261011-deployment.json",
+      "utc": "2026-10-11T16:42:24.54428+08:00",
+      "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+      "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+      "checkout_porcelain": "",
+      "alternate_dependencies": [],
+      "bundle_sha256": "c41277078f7c05efac832a7f25136e5cc64b037f8594774c64e2af86fbfa4ed5"
+    },
+    "target_bash_runtime": {
+      "receipt": "05-target-bash-runtime.stdout.txt",
+      "host": "ibc13b02n04",
+      "server_utc": "2026-10-11T08:44:15Z",
+      "bash": "GNU bash 4.2.46(2)-release (x86_64-redhat-linux-gnu)",
+      "direct_and_spooled_argv_match": true,
+      "coordinator_dry_run": "passed; model_execution=false; JAX_imported=false; array_validation=false",
+      "driver_bind_paths": "/usr/lib64/libcuda.so.525.85.12 and /usr/lib64/libnvidia-ml.so.525.85.12"
+    },
+    "source_admission": {
+      "receipt": "06-target-source-admission.stdout.txt",
+      "host": "ibtest02",
+      "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+      "actual_science_sha256": "8c8b1dfd0b207e96bbb81c2d3eb85ae6edccb9ed3c6b77fb470dabc58c5fa77d",
+      "expected_science_sha256": "8c8b1dfd0b207e96bbb81c2d3eb85ae6edccb9ed3c6b77fb470dabc58c5fa77d",
+      "JAX_imported": false,
+      "model_execution": false
+    },
+    "runtime_library_import": {
+      "receipt": "05-target-bash-runtime.stdout.txt",
+      "python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python",
+      "jax": "0.4.38",
+      "jaxlib": "0.4.38",
+      "x64_enabled": true,
+      "driver_libraries_loaded": true,
+      "devices_enumerated": false,
+      "gpu_initialized": false,
+      "model_or_jit_executed": false
+    },
+    "gln_gpu_probe": {
+      "receipt": "02-gln-metadata.stdout.txt",
+      "host": "ibc13b02n04",
+      "observation": "Both visible V100 32GB GPUs had active compute processes using approximately 31.7 GB each; no additional GPU probe was run.",
+      "additional_probe_run": false
+    },
+    "local_test_evidence_preserved": {
+      "receipt": "../gpu-lifecycle-preparation-20261011/coordinator-launcher-tests.log",
+      "accepted_total": 57,
+      "historical_groups": {
+        "coordinator_launcher": 14,
+        "source_runner_validator_observer": 43
+      },
+      "rerun_for_submission_update": false
+    }
+  },
+  "startup_evidence": {
+    "allocation_identity_receipt": "startup-evidence/allocation-identity.txt",
+    "gpu_identity_receipt": "startup-evidence/gpu-identity.json",
+    "orchestration_receipt": "startup-evidence/orchestration.json",
+    "execution_sha_matches_pin": true,
+    "allocation_window_start_epoch": 1791708472,
+    "selected_node": "ibc13b03n02",
+    "slurm_cpus": 4,
+    "cpu_affinity": "0,1,56,57",
+    "initial_host_load_average": "0.08/0.03/0.05",
+    "selected_gpu": {
+      "slurm_global_gpu_id": "0",
+      "uuid": "GPU-18a4abb8-43d5-5142-c32f-a1898866d9bd",
+      "name": "Tesla V100-SXM2-32GB",
+      "driver": "525.85.12",
+      "verification_scope": "read-only physical metadata; model_execution=false; CUDA selector UUID resolution not verified"
+    },
+    "coordinator_status_at_startup": "running",
+    "first_child_strategy": "phased_resident_control",
+    "first_child_status_at_startup": "dispatching",
+    "compile_start_elapsed_seconds": 115.06246276758611
+  },
+  "clock_provenance": {
+    "windows_local_command_receipt_started_utc": "2026-10-11T16:55:54.232049+08:00",
+    "server_pre_submit_snapshot_utc": "2026-10-11T08:46:39Z",
+    "slurm_reported_submit_time": "2026-10-11T16:47:34",
+    "slurm_submit_time_timezone": "server local time, UTC+08:00, inferred from paired server UTC and Slurm timestamps",
+    "observed_clock_difference_note": "The Windows UTC command receipt began at 2026-10-11T08:55:54.232049Z, approximately 8 minutes 20 seconds (about 8 minutes 21 seconds) later than normalized Slurm SubmitTime. Preserve source timestamps separately; do not derive job duration or cost by cross-host subtraction.",
+    "duration_and_cost_source": "Use Slurm allocation/Elapsed evidence from the same server/job clock only.",
+    "slurm_reported_submit_time_timezone": "Server local time, UTC+08:00, inferred from paired server UTC and Slurm timestamps.",
+    "slurm_submit_time_normalized_utc": "2026-10-11T08:47:34Z"
+  },
+  "stop_and_retry_policy": {
+    "on_any_failure": "Stop the sequence, preserve artifacts, and publish no throughput ratio or memory-benefit claim.",
+    "retry": false,
+    "second_job": false,
+    "extension": false,
+    "requeue": false,
+    "larger_shape_or_scale_up": false,
+    "allocator_or_tolerance_change": false,
+    "unapproved_resource_escalation": "Stop and report to root execution owner.",
+    "execution_window_closed": true,
+    "residual_budget_reuse": false
+  },
+  "actual_job_updates": [
+    {
+      "job_id": "15769234",
+      "status": "submitted_pending",
+      "receipt": "08-submission.stdout.txt",
+      "slurm_reported_state": "PENDING",
+      "terminal_success": false,
+      "ratios_published": false
+    },
+    {
+      "job_id": "15769234",
+      "status": "running",
+      "receipt": "09-monitor-start.stdout.txt",
+      "windows_command_receipt_started_utc": "2026-10-11T09:00:24.926897+00:00",
+      "server_utc_observation": "2026-10-11T08:52:04Z",
+      "slurm_reported_state": "RUNNING",
+      "slurm_elapsed_seconds": 253,
+      "slurm_start_time": "2026-10-11T16:47:51",
+      "terminal_success": false,
+      "ratios_published": false
+    },
+    {
+      "job_id": "15769234",
+      "status": "running",
+      "receipt": "10-monitor-compile.stdout.txt",
+      "windows_command_receipt_started_utc": "2026-10-11T09:05:40.408696+00:00",
+      "server_utc_observation": "2026-10-11T08:57:19Z",
+      "slurm_reported_state": "RUNNING",
+      "slurm_elapsed_seconds": 569,
+      "child_compile_start_elapsed_seconds": 115.06246276758611,
+      "terminal_success": false,
+      "ratios_published": false
+    },
+    {
+      "job_id": "15769234",
+      "status": "running",
+      "receipt": "11-monitor-compile.stdout.txt",
+      "windows_command_receipt_started_utc": "2026-10-11T09:08:10.752928+00:00",
+      "server_utc_observation": "2026-10-11T08:59:50Z",
+      "slurm_reported_state": "RUNNING",
+      "slurm_elapsed_seconds": 719,
+      "slurm_remaining_seconds_from_7200_second_limit": 6481,
+      "slurm_start_time": "2026-10-11T16:47:51",
+      "slurm_scheduled_end_time": "2026-10-11T18:47:51",
+      "terminal_success": false,
+      "ratios_published": false
+    },
+    {
+      "job_id": "15769234",
+      "status": "running",
+      "receipt": "13-monitor-initial.stdout.txt",
+      "windows_command_receipt_started_utc": "2026-10-11T09:14:38.009704+00:00",
+      "server_utc_observation": "2026-10-11T09:06:17Z",
+      "slurm_reported_state": "RUNNING",
+      "slurm_elapsed_seconds": 1106,
+      "slurm_remaining_seconds_from_7200_second_limit": 6094,
+      "slurm_start_time": "2026-10-11T16:47:51",
+      "slurm_scheduled_end_time": "2026-10-11T18:47:51",
+      "child_execution": {
+        "strategy": "phased_resident_control",
+        "compile_start_elapsed_seconds": 115.06246276758611,
+        "compile_complete_elapsed_seconds": 981.6652711387724,
+        "compile_duration_seconds": 866.6028083711863,
+        "compiler_temp_size_bytes": 4567176144,
+        "compiler_temp_size_scope": "compiler device-buffer estimate; not measured VRAM peak",
+        "postcompile_original_preallocation_guard_permitted": true,
+        "initial_collection_start_elapsed_seconds": 983.6003610007465,
+        "acceptance_gates_or_independent_validation_observed": false
+      },
+      "terminal_success": false,
+      "ratios_published": false
+    },
+    {
+      "job_id": "15769234",
+      "status": "failed_initial_validation",
+      "receipt": "14-monitor-initial-gate.stdout.txt",
+      "server_utc_observation": "2026-10-11T09:10:17Z",
+      "slurm_reported_state": "FAILED",
+      "slurm_exit_code": "1:0",
+      "slurm_elapsed_seconds": 1140,
+      "slurm_start_time": "2026-10-11T16:47:51",
+      "slurm_end_time": "2026-10-11T17:06:51",
+      "allocation": {
+        "cpus": 4,
+        "gpu_count": 1,
+        "gpu_type": "V100 32GB",
+        "cpu_count_seconds": 4560,
+        "gpu_card_seconds": 1140
+      },
+      "terminal_evidence": {
+        "sacct_receipt": "terminal-evidence/terminal-sacct.txt",
+        "orchestration_receipt": "terminal-evidence/run/orchestration.json",
+        "stage_report_receipt": "terminal-evidence/run/phased_resident_control/capacity/B1024/report.json",
+        "collection_verification_receipt": "COLLECTION_VERIFICATION.json",
+        "metadata_archive": "terminal-evidence-15769234.tar.gz",
+        "metadata_archive_bytes": 87684,
+        "metadata_archive_sha256": "538f4254a9b1d03afc4c010d4942278b9153f5d1cf98d4043c02f650251e07b5",
+        "metadata_archive_hash_verified": true,
+        "terminal_checkout_clean": true,
+        "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+        "only_control_dispatched": true,
+        "coordinator_status": "first_arm_failed"
+      },
+      "initial_validation_failure": {
+        "status": "independent saved-array FULL64 tolerance failed at lane 45",
+        "failed_arrays_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/gpu-lifecycle-20261011-15769234/phased_resident_control/capacity/B1024/failed_initial_arrays.pkl",
+        "failed_arrays_bytes": 880948565,
+        "failed_arrays_sha256": "698d3dece201424778d9cf4b0f10c1ac3b1802a1ce35b7d231f73b751641ddc5",
+        "failed_array_hash_matches_independent_collection_manifest": true,
+        "scientific_arrays_retrieved_or_loaded": false,
+        "scientific_arrays_preserved_remote": true,
+        "warm_samples_started": false,
+        "stage_sealed": false,
+        "independent_stage_acceptance": false
+      },
+      "second_arm_dispatched": false,
+      "throughput_ratio": null,
+      "root_release_evidence": false,
+      "accounting": {
+        "elapsed_seconds": 1140,
+        "allocated_seconds": 7200,
+        "primary_cost_cny_estimate": 0.76,
+        "conservative_cost_cny_estimate": 0.785333333,
+        "bill_verified": false,
+        "basis": "Slurm parent elapsed 1140 seconds on the server/job clock, prorated from the approved two-hour allocation estimates CNY 4.80 primary and CNY 4.96 conservative."
+      },
+      "execution_disposition": {
+        "grant_closed": true,
+        "submission_attempts": 1,
+        "retry": false,
+        "requeue": false,
+        "extension": false,
+        "extra_job": false,
+        "residual_budget_reuse": false
+      },
+      "terminal_success": false,
+      "ratios_published": false
+    }
+  ],
+  "post_terminal_saved_array_explanation": {
+    "authorization": {
+      "status": "approved_and_completed",
+      "provenance": "Supervisor's explicit follow-up authorization in source thread 01a128d2-3ec2-77a1-8d51-1665c220d2ca.",
+      "scope": "Exactly one saved-array CPU/NumPy comparison on free test03; no model, JAX, GPU, or new scheduler job. This does not reopen or extend the closed paid allocation."
+    },
+    "actual_comparison": {
+      "stdout_receipt": "21-compare-saved-arrays.stdout.txt",
+      "command_receipt": "21-compare-saved-arrays.command.json",
+      "summary": "saved-array-explanation/comparison/summary.json",
+      "coordinate_detail": "saved-array-explanation/comparison/all-failing-coordinates.jsonl.gz",
+      "collection_verification": "EXPLANATION_COLLECTION.json",
+      "status": "complete_saved_initial_failure_comparison",
+      "runtime_host": "ibtest03",
+      "numpy_version": "2.2.6",
+      "all_760_leaves_and_2048_lanes_checked": true,
+      "comparison_runs": 1,
+      "script_elapsed_seconds": 22.631719475612044,
+      "outer_elapsed_seconds": 29.54,
+      "peak_rss_bytes": 1008807936,
+      "jax_imported": false,
+      "jaxlib_imported": false,
+      "model_imported": false,
+      "model_execution": false,
+      "jit_execution": false,
+      "gpu_initialization": false,
+      "field_mapping_complete": true
+    },
+    "finding": {
+      "failing_leaf_count": 1,
+      "path": "[0][0][0][7]",
+      "component": "diffuco_previous_step_state",
+      "field": "rveget",
+      "dtype": "float64",
+      "state_boundary": "end of science Day 8",
+      "failed_unique_point": "283.0-091.0",
+      "failing_lanes": "45 + 64*k for k=0..31",
+      "native_failing_coordinates_including_repeats": 32,
+      "exact_repeat_failure_groups": 1,
+      "all_other_unique_points_passed": true,
+      "tolerance": {
+        "atol": 1E-08,
+        "rtol": 1E-10,
+        "discrete_shape_dtype": "exact"
+      },
+      "scientific_acceptance": false,
+      "accepted_as_difference_localization_by_supervisor": true,
+      "causal_attribution": null,
+      "old_abi_failure_evidence": false
+    },
+    "array_handling": {
+      "terminal_metadata_recovery_snapshot_arrays_retrieved_or_loaded": false,
+      "later_test03_comparison_read_preserved_arrays_at_remote_path": true,
+      "original_arrays_downloaded_to_local_checkout": false,
+      "raw_failed_array_sha256": "698d3dece201424778d9cf4b0f10c1ac3b1802a1ce35b7d231f73b751641ddc5",
+      "raw_failed_arrays_remain_preserved_remote": true
+    },
+    "preflight_history": {
+      "attempt_receipt": "20-compare-saved-arrays.command.json",
+      "archived_stdin": "cpu-explanation-preflight-old-git.sh",
+      "archived_stdin_sha256": "e31c61efb8ebc14b9e48127afe8123ed30f36806774ad36ffc7da23de0450c24",
+      "outcome": "Old Git rejected -C and stopped before input verification, output creation, or array loading; 21-compare-saved-arrays is the sole actual comparison."
+    },
+    "grant_disposition": {
+      "original_paid_grant_remains_closed": true,
+      "additional_scheduler_jobs": 0,
+      "paid_retries_or_extensions": 0,
+      "residual_paid_budget_reused": false,
+      "throughput_ratio_published": false,
+      "root_release_evidence": false
+    }
+  }
+}

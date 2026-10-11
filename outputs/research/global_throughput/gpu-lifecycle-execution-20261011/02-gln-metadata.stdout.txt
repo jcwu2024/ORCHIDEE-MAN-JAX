@@ -1,0 +1,14 @@
+ibc13b02n04
+TZ
+ 16:37:30 up 130 days,  5:58,  5 users,  load average: 44.21, 43.95, 43.88
+index, uuid, name, driver_version, memory.total [MiB], memory.free [MiB]
+0, GPU-daa2988f-72e7-d5e0-45e5-1bef9c1cc688, Tesla V100-SXM2-32GB, 525.85.12, 32768 MiB, 793 MiB
+1, GPU-07ee30e1-0b7d-4067-5c0a-3384e598e751, Tesla V100-SXM2-32GB, 525.85.12, 32768 MiB, 795 MiB
+gpu_uuid, pid, process_name, used_gpu_memory [MiB]
+GPU-daa2988f-72e7-d5e0-45e5-1bef9c1cc688, 74375, /WORK/wangz_work/fyq/egnn2/.venv_mace/bin/python, 31704 MiB
+GPU-07ee30e1-0b7d-4067-5c0a-3384e598e751, 73253, /WORK/wangz_work/fyq/egnn2/.venv_mace/bin/python, 31702 MiB
+/usr/lib64/libcuda.so.525.85.12
+/usr/lib64/libnvidia-ml.so.525.85.12
+CPU_PYTHON_EXISTS
+GPU_PYTHON_EXISTS
+CONTAINER_EXISTS

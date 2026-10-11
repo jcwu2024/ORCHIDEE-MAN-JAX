@@ -1,0 +1,24 @@
+cpu_test_node=test01
+ibtest01
+2026-10-11T09:24:32Z
+ 17:24:32 up 130 days,  6:27,  7 users,  load average: 59.63, 58.37, 58.47
+pid 9855's current affinity list: 0-55
+              total        used        free      shared  buff/cache   available
+Mem:         192085      124918       33380        1688       33787       64744
+Swap:             0           0           0
+cpu_test_node=test03
+ibtest03
+2026-10-11T09:24:33Z
+ 17:24:33 up 130 days,  6:27,  6 users,  load average: 56.15, 56.09, 56.12
+pid 81932's current affinity list: 0-55
+              total        used        free      shared  buff/cache   available
+Mem:         192085       69762       81725        1511       40597      120077
+Swap:             0           0           0
+cpu_test_node=test04
+ibtest04
+2026-10-11T09:24:33Z
+ 17:24:33 up 130 days,  6:27,  5 users,  load average: 102.13, 102.11, 102.15
+pid 89901's current affinity list: 0-55
+              total        used        free      shared  buff/cache   available
+Mem:         192085      174945        5641        6612       11499        9788
+Swap:             0           0           0
