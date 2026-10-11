@@ -27,6 +27,15 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
+The [paid affine preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
+prepares one separate gnall job:4 allocated Slurm CPUs,1 V100,20 minutes,
+estimated maximum CNY0.83 and proposed approval ceiling CNY1.00. No specific
+paid submission is approved or started. Actual allocation/GPU validation remains
+pending; the package requires exact Slurm/cgroup identity, common scope mutex
+and read-only known free-state admission under the sole paid launch owner.
+Free dispatch is temporarily paused; the unchanged b676 entry is untouched.
+The free approval remains valid/unconsumed and is not automatically migrated.
+
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing
 weights, GPU count, daily32/eight distinct micro4 plus one T7 and one T30,

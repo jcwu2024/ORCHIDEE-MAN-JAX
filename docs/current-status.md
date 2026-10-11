@@ -65,6 +65,22 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
+The [paid affine package](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
+is preparation only, separately proposed and not submitted/approved for paid
+execution. Saved gnall metadata selects idle `ibc13b03n01`;4 allocated Slurm
+CPUs/1V100/20min cost at current additive rates is0.8266667 CNY, upward0.83,
+with a proposed1.00 ceiling. CR_CORE/SMT2 means4 Slurm CPUs are2 physical
+cores; no `--hint=nomultithread` or implicit8-CPU acceptance. Actual allocation,
+cgroup GPU mapping, container/PJRT/GPU admission remain unverified. New entry
+mutex cannot govern b676 by itself. The sole authorized launch owner dispatches
+paid only while free dispatch is paused; bounded read-only checks require the
+known free entry unchanged and its scope/ledger/execution evidence absent. New paid output/
+ledger/job-attempt identities are separate; no GPU/job/resource was reserved
+or started, and both the free one-shot and proposed paid attempt are unconsumed.
+Revised local mocks cover spool-copy/early failure, exact actual-job cgroup,
+kernel minor/UUID, source/HEAD and management-chain admission; real target
+isolation and optional CUDA-driver/PJRT binding still await approved execution.
+
 | Current evidence | Result and limit |
 |---|---|
 | [Forward/AD timing](research/daily_coarse_graining/shared_forward_reverse_results_20260930.md) | Matched component medians: forward2.104821s/18.57%, additional gradient/recomputation9.228212s/81.43%, AdamW0.02–0.03s. Evaluators occupied97.20% of the synchronized proposal. These do not isolate pure reverse or exactly partition an update. |

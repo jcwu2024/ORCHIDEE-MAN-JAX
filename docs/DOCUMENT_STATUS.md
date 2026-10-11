@@ -26,6 +26,7 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
+| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Current paid preparation contract/quote: one gnall job, preferred ibc13b03n01,4 actual Slurm CPUs/1V100/nonexclusive/20min/no-requeue; worst-case0.8266667 CNY/upward0.83, proposed1.00 ceiling awaiting specific approval. Separate false scope/output/ledger/job-attempt, cooperative mutex plus read-only known free admission; sole owner dispatches paid while free is paused. No paid submission/allocation/GPU/preflight/training; free approval preserved and not migrated. |
 | [GPU deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md) | Current execution authority/status: user approved the separate1200s/one idle nonexclusive V100/CNY0 scope; clean b676353 deployment and target CPU shell/private-phase readiness accepted. Both GPUs busy at final refresh; actual container/PJRT/GPU/numerical comparison pending. No launch/preflight/open scope/ledger reservation;0 GPU seconds/card-hours/cost and unconsumed one-shot. `approved_waiting_resources`; approval persists, no automatic polling/monitoring/retry. |
 | [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md), [execution contract](research/daily_coarse_graining/T7_batch_numerics_GPU_execution_contract_20261011.md) | Accepted local affine launcher/input and frozen-method authority. Fresh recovery NPZ/receipt have new identities and six preincident numeric SHA matches after a three-file unsafe-test incident. Its false proposed1200s snapshot is preserved; later approval/deployment status is in the current result above. Historical CPU12/91 is separate and was not rerun. |
 | [Current B1/B4 JVP completion results](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | Current derivative evidence: 32 JVPs/four full VJPs, exact JVP repeats, strict B1/4–B4 failures at 434/2382 plus own JVP/VJP/full-state failures. Primal/parameter self repeats/aux/physics/memory pass. Independent scope closed at 1780.743670s/CNY 0/released; CPU analysis accepted. No derivative reference/adoption. |
@@ -70,6 +71,16 @@ T30 chunk-vmap expansion and decoder128 remain unselected. Current source MAC
 and trace buckets do not isolate wall time or certify a launch-bound bottleneck.
 
 ## Current authorization boundary
+
+User authorized preparation of a single paid affine route, including necessary
+implementation/integration/tests and a concrete resource/command/cost package.
+The revised preparation binds Slurm spool checkout/cwd, early attempt identity,
+exact job/kernel/UUID and source/HEAD; sole-owner management admission reads
+known free state without changing the old checkout/scope/ledger. Mock/local evidence does not certify actual allocation or GPU runtime.
+Final current-code regressions, ordinary commit/push, independent deployment
+and target CPU-only dry-run are authorized. That is not paid-submission approval. The paid proposal above requires
+consolidated artifact acceptance and explicit resource/wall/cwd/command/cost
+approval before one `sbatch`; no `salloc`, GPU startup or paid fallback here.
 
 The current affine scope is approved but waiting for resources and unconsumed;
 see the deployment result above. This task stops without further polling or

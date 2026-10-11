@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from scripts.hpc import probe_shared_latent_T7_batch_numerics as probe
+from scripts.hpc.shared_affine_gpu_admission import AffineScopeLock, SCOPE_LOCK
 
 REMOTE = Path('/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime')
 SCOPE_ID = 'T7-summary-affine-gpu-20261011-v1'
@@ -38,6 +39,8 @@ SOURCE_PATHS = ('scripts/hpc/run_shared_latent_T7_batch_numerics.py',
     'scripts/hpc/probe_shared_latent_T7_batch_numerics.py',
     'scripts/hpc/orcjax_gpu_runtime.py', 'scripts/hpc/check_daily_training_runtime.py',
     'scripts/hpc/capture_shared_latent_T7_summary_operands.py',
+    'scripts/hpc/shared_affine_gpu_admission.py',
+    'scripts/hpc/shared_affine_cuda_identity.py',
     'research/daily_coarse_graining/daily_operator/strong_baseline_architecture.py')
 
 
@@ -73,8 +76,8 @@ def validate_live_host(hostname, platform):
         raise ValueError('live execution requires the gln01 GPU test node on POSIX')
 
 
-def prepare(args):
-    """Identity and argv admission only; does not initialize any GPU or model."""
+def admit_capture(args):
+    """The shared, unchanged thin-capture identity and numeric-byte admission."""
     code = args.checkout_root.resolve()
     if code != ROOT or not code.is_dir():
         raise ValueError('launcher must resolve from its own declared checkout')
@@ -102,6 +105,13 @@ def prepare(args):
                     'sha256_bytes_C_order': hashlib.sha256(value.tobytes(order='C')).hexdigest()}
         if identity != capture['array_identities'][key]:
             raise ValueError('numeric operand/receipt binding differs: ' + key)
+    return identities, capture
+
+
+def prepare(args):
+    """Identity and argv admission only; does not initialize any GPU or model."""
+    code = args.checkout_root.resolve()
+    identities, capture = admit_capture(args)
     small_sha(args.scope_json, 20000)
     scope = json.loads(args.scope_json.read_text(encoding='utf-8'))
     if (scope.get('schema_version') != SCHEMA or scope.get('scope_id') != SCOPE_ID
@@ -294,6 +304,7 @@ class Supervisor:
             CUDA_VISIBLE_DEVICES=self.plan['scope']['gpu_uuid'], JAX_PLATFORMS='cuda,cpu',
             XLA_PYTHON_CLIENT_PREALLOCATE='false', OMP_NUM_THREADS='4', OPENBLAS_NUM_THREADS='1')
         env['ORCJAX_NUMERICS_SHELL_STARTED_EPOCH'] = str(self.plan.get('shell_started_epoch') or time.time())
+        env.update(self.plan.get('phase_environment', {}))
         stem = Path(self.plan['output']).with_suffix('.' + name)
         row = dict(name=name, argv=self.plan['commands'][name], started_epoch=time.time(),
                    cap_seconds=seconds, stdout=str(stem)+'.stdout.txt', stderr=str(stem)+'.stderr.txt')
@@ -337,7 +348,7 @@ class Supervisor:
         self.out.parent.mkdir(parents=True, exist_ok=True)
         self.ledger.parent.mkdir(parents=True, exist_ok=True)
         with self.ledger.open('x', encoding='utf-8') as stream:
-            json.dump(dict(schema_version='T7_affine_gpu_one_shot_ledger_v1', scope_id=SCOPE_ID,
+            json.dump(dict(schema_version='T7_affine_gpu_one_shot_ledger_v1', scope_id=self.plan['scope'].get('scope_id', SCOPE_ID),
                 status='reserved', reserved_gpu_seconds=1200, old_budget_read=False), stream)
         if self.watchdog_enabled:
             threading.Thread(target=self.watchdog, daemon=True).start()
@@ -354,6 +365,13 @@ class Supervisor:
                     if (preflight.get('passed') is not True or preflight.get('actual_backend') != 'gpu'
                             or preflight.get('jax_version') != '0.4.38' or len(preflight.get('devices', [])) != 1):
                         raise ValueError('actual target JAX0.4.38/single-GPU preflight gate failed')
+                    expected_uuid = self.plan.get('phase_environment', {}).get('ORCJAX_AFFINE_EXPECTED_GPU_UUID')
+                    if expected_uuid is not None:
+                        binding = preflight.get('affine_gpu_identity', {})
+                        if (binding.get('passed') is not True or binding.get('expected_gpu_uuid') != expected_uuid
+                                or binding.get('driver_gpu_uuid', '').lower() != expected_uuid.lower()
+                                or binding.get('driver_device_count') != 1 or binding.get('pjrt_local_hardware_id') != 0):
+                            raise ValueError('paid CUDA-driver/PJRT UUID binding preflight gate failed')
                     primary = self.phase('probe', self.plan['scope']['caps']['probe_seconds'])
                     if primary[1] == 0:
                         report = json.loads(Path(self.plan['output']).read_text(encoding='utf-8'))
@@ -391,7 +409,7 @@ class Supervisor:
             self.record.update(status=primary[0] if result == primary[1] else 'resource_unverified', exit_code=result)
             # Unknown release remains charged at the entire reservation and
             # one-shot closed; no successful accounting hides a primary failure.
-            atomic_json(self.ledger, dict(schema_version='T7_affine_gpu_one_shot_ledger_v1', scope_id=SCOPE_ID,
+            atomic_json(self.ledger, dict(schema_version='T7_affine_gpu_one_shot_ledger_v1', scope_id=self.plan['scope'].get('scope_id', SCOPE_ID),
                 status='closed' if release_verified else 'closed_release_unverified', reserved_gpu_seconds=1200,
                 charged_gpu_seconds=elapsed if release_verified else 1200, primary_status=primary[0],
                 primary_exit_code=primary[1], exit_code=result, release_verified=release_verified,
@@ -423,7 +441,14 @@ def main(argv=None):
         supervisor = Supervisor(plan)
         for signum in (signal.SIGTERM, signal.SIGINT):
             signal.signal(signum, lambda number, frame: setattr(supervisor, 'interrupted', number))
-        return supervisor.run()
+        # New free and paid entries cooperate through one persistent atomic
+        # directory lock. The historical b676 entry needs separate quarantine;
+        # this change alone does not govern that earlier executable.
+        lock = AffineScopeLock(SCOPE_LOCK, SCOPE_ID).acquire()
+        try:
+            return supervisor.run()
+        finally:
+            lock.release(release_verified=supervisor.record.get('release_verified') is True)
     except (ValueError, FileNotFoundError, FileExistsError, KeyError) as error:
         print(json.dumps(dict(status='admission_rejected', GPU_executed=False,
             error_type=type(error).__name__, error=str(error))))

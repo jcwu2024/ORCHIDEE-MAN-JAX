@@ -469,7 +469,16 @@ def main(argv: list[str] | None = None) -> int:
     started = time.perf_counter()
     try:
         jax, jnp, devices = _initialize_runtime(arguments.backend)
+        binding = None
+        expected_uuid = os.environ.get('ORCJAX_AFFINE_EXPECTED_GPU_UUID')
+        if expected_uuid is not None:
+            from scripts.hpc.shared_affine_cuda_identity import verify_expected_gpu
+            if arguments.backend != 'gpu':
+                raise ValueError('paid physical GPU binding requires GPU backend')
+            binding = verify_expected_gpu(devices, expected_uuid)
         report = check_runtime(jax, jnp)
+        if binding is not None:
+            report['affine_gpu_identity'] = binding
         report.update(
             requested_backend=arguments.backend,
             actual_backend=str(jax.default_backend()),

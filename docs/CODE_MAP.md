@@ -57,6 +57,8 @@ Paths are under `scripts/hpc/`.
 | `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
 | `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Deployed b676353 NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; target CPU shell/private-phase checks accepted, container/PJRT/GPU pending; both cards busy, no GPU/preflight/open scope/ledger reservation |
+| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Candidate independent gnall paid admission/one-shot: exact job/node/NumCPUs/AllocTRES/StartTime, actual-job cgroup/NVML minor/kernel device mapping and optional CUDA-driver/PJRT UUID binding,20min/4CPU/1GPU/24GiB/quote caps; shared unchanged capture admission and Supervisor, fixed affine probe; proposed only, no submission/GPU validation |
+| `shared_affine_gpu_admission.py`, `shared_affine_cuda_identity.py`, `freeze_shared_affine_paid_scope.py` | Candidate persistent atomic cross-scope mutex, bounded read-only known free-state admission under the sole paid launch owner; old b676 remains untouched, actual accepted-commit→false scope/source manifest generation; no automatic free-approval migration or stale-lock takeover |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
 | `probe_shared_latent_T7_dispatch.py`, `shared_latent_T7_dispatch_ad.py` | Completed saved-B1 synchronization comparison; cheap device-side merge retained for eventual complete-workload verification |
@@ -81,6 +83,12 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
+The [paid proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
+owns the separate candidate gnall contract/quote and focused CPU/shell evidence.
+New paid tests are `tests/unit/test_shared_latent_T7_batch_numerics_paid.py`
+and `tests/unit/test_shared_latent_T7_batch_numerics_paid_shell.py`; they mutate
+only isolated temporary fixtures. Actual Slurm allocation/device runtime and
+management-chain admission are live gates; the current b676 deployment remains unchanged.
 The [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md)
 owns the current launcher/tests/scope/manifest and three-file test incident.
 Original capture NPZ/receipt remain missing; new `summary-recovery.v1.*` six arrays

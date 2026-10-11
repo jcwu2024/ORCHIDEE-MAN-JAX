@@ -55,6 +55,32 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
+Prepare the [single paid affine package](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
+for consolidated supervisor acceptance, then specific approval of resources,
+wall time, cwd, command and maximum cost before submission. Candidate scope
+is false/proposed:gnall, preferred `ibc13b03n01`,1node/1task/4 actual allocated
+Slurm CPUs/1 V100/nonexclusive/20min/no-requeue. Current CPU0.07 and GPU2.20
+CNY/hour give additive0.8266667, rounded upward0.83; proposed ceiling1.00 is
+not yet approved. The saved idle-node snapshot reserves nothing; one resource
+refresh immediately before an approved single submission is a future step.
+Do not `sbatch`/`salloc`, start GPU/preflight, recapture, train or repeat resource
+checks in this preparation stage. Allocation start, not late Python startup,
+owns the1200s cap and≥180s release reserve. Preserve fixed inputs/math/gates.
+
+The new paid and future free entries share an atomic persistent mutex; the
+legacy b676 entry does not cooperate. Paid admission also requires reviewed
+read-only known free scope/ledger/entry admission and the declared sole launch
+owner: paid only, free dispatch paused, free approval preserved. No old-entry
+mutation or restoration machinery remains. Fixed Slurm spool checkout/cwd,
+early attempt persistence, actual-job/kernel/UUID gates remain preparation only.
+Final local regressions, normal commit/push, independent deployment and target
+CPU dry-run are authorized continuously. New code freezes from a genuine clean
+commit; never overwrite b676 or substitute a guessed HEAD. No free approval
+migration or automatic paid retry follows. Sol owns continuous implementation,
+integration and focused verification; Astra reviews the actual artifacts at
+the consolidated delivery point, with interim escalation for material scope,
+science or cost changes. The detailed package below preserves earlier evidence.
+
 The previous accepted [early summary_input capture package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
 completed the authorized eight-file read-only retrieval, real thin capture
 and unchanged CPU affine probe. Exact TRAIN742/275/482/299 window0/day0 inputs
