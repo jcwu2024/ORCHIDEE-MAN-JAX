@@ -1,9 +1,10 @@
 # main 物理正确性检查入口
 
 核查日期：2026-10-11。**本轮没有发现已确认的 main 生产物理实现 bug；
-第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限。**
+第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
+第四阶段已定位年度主要分量；当前 day199 土温局部效应与年度主残差异号，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
-本页记录第一阶段有界盘点、第二阶段 319 历史身份调查及第三阶段当前首年对照，
+本页记录有界盘点、319 历史身份、当前首年对照及第四阶段局部来源核查，
 不是全模型重新验收，也不改既有科学合同。
 
 ## 固定基线和支持范围
@@ -17,6 +18,10 @@
   实际 runner/source、输入和执行身份见
   [identity.json](../../outputs/reviews/main-physics-20261011/319-current/identity.json)。
   这是新执行的 producer 身份，不是旧 A/B 产出的 producer 身份。
+- 第四阶段从第三阶段接受提交
+  `a8e92e6646a1d6d08f7bcd2beeee080ab88e5a4c` 的干净 main 开始；生产源码与
+  第三阶段数值 producer 相同。新的 cold-start day198 前缀与同年 day199 回放
+  使用该当前身份；旧 day198 checkpoint 的原 producer 仍未知。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -234,15 +239,116 @@ CSV 核验、内容身份和点位限制见
 1961 已失败，按批准的条件与主控确认，**未继续到 1963**，也未执行 50 年或
 669 点积分。现有 A/B、单年 restart、七个其他点和已接受 C1–C3 的结论继续保留；
 当前数值接近历史 A 的 1961 残差不构成 producer 或因果同一性。
-最小下一步只核对 **1961 NPP 的来源与有限局部证据**：先核对 daily NPP、
-maintenance/growth respiration 与 annual 汇总的观测/单位/时刻，再复用
-[day173@1e-10](../../outputs/reference_mode/diagnose_319_maintenance_first_divergence.json)
+第三阶段提出的有限 NPP/呼吸来源核查已在第四阶段执行，见下节。
+旧 [day173@1e-10](../../outputs/reference_mode/diagnose_319_maintenance_first_divergence.json)
 和 [day200@1e-6](../../outputs/reference_mode/diagnose_319_maintenance_material_divergence.json)
-的命名线索，保留其 **maintenance 累积后、非 turnover 后 biomass** 的观测边界，
-沿温度/长期温度、根状态和维持呼吸核对命名输入与写回；必要的执行证据限定
-到相应局部过程和有来源的输入，不扩大到新年度窗口或 50 年。
-旧记录没有本次 producer 身份，不能称为当前首偏差日；并先核定上述局部开关
-的点位适用性。本阶段不自动改生产函数或容差，也不启动新的模型/trace。
+仍仅为命名历史线索，不能称为当前首偏差日；当前新证据明确区分观测边界和状态来源。
+
+## 第四阶段：年度分量与当前 day199 土温输入
+
+全部新证据位于 [319-npp-local](../../outputs/reviews/main-physics-20261011/319-npp-local/)。
+复用第三阶段两份全年产物，未重复全年两模式。对实际 319 NetCDF 读取的
+GPP/NPP/maintenance/growth 均为 float32、`average`、`1800 s` / `1 yr`，
+选择 `[0,13,0,0]`。paper extractor 直接读 GPP/NPP；`0.02` 仅用于 AGB/BGB，
+GPP/NPP 的 `[0,1]` normalizer 不改值。Fortran `npp_calc` 最终为
+`gpp - resp_growth - resp_maint`，后者含 biomass-floor 修正，不能混同未经修正的
+日累计 root 分量。精确输出/采样源码见
+[sampling audit](../../outputs/reviews/main-physics-20261011/319-npp-local/sampling-scope/audit.json)。
+
+| 对 compiled 年均 NPP 有符号残差的贡献 | gC/m²/day | 占净残差 |
+| --- | ---: | ---: |
+| ΔGPP | −0.0000376356734781 | −4.594% |
+| −Δmaintenance | +0.0008469708371584 | 103.382% |
+| −Δgrowth | +0.0000099310713905 | 1.212% |
+
+[分解](../../outputs/reviews/main-physics-20261011/319-npp-local/npp-component-decomposition.json)
+在浮点舍入内闭合，strict 同样以 maintenance 为主要分量。它解释年度残差的
+**数值构成**，不是 maintenance 公式错误的因果证明。原 NPP 超限和门槛不变。
+compiled 的年度 `MAINT_RESP`（JAX − reference）为 **`−0.0008469708371584`**，
+即维持呼吸偏低使 NPP 偏高；表中正值是其对 NPP 的贡献，不能误读为呼吸偏高。
+命名历史 Fortran LPJ trace 恰有 365 条，四通量日均值转为 float32 后均等于当前
+319 年度 NetCDF；[记录](../../outputs/reviews/main-physics-20261011/319-npp-local/saved-trace-analysis.json)
+提供数值桥，仍不能补出原 binary/source 身份或 XIOS 实际发送覆盖。
+
+先对 SHA256 `918d17fb720f95a6a22bc26ebe8289a5c6d44ca8b0c55624571de62cb1ed7ddb`
+的历史 day198 状态做当前一天回放；原 producer 未记录，其重新生成的 48 次
+maintenance 输入与旧 Oracle 的 binary digest 精确相同。随后按主控指令使用
+**第三阶段冻结的同点同配置输入**，在当前 SHA 上执行一次既有 compiled cold-start
+前缀：198 日、block=7、末步 9503，runner 375.927 s。
+[receipt](../../outputs/reviews/main-physics-20261011/319-npp-local/current-prefix/receipt.json)
+记录实际 argv、输入/源码身份及新 checkpoint。虽通用文件名含 `year_end`，
+该状态只到 day198；下一天直接调用 `year=1961/start_tstep=9504` 的 later-day
+诊断，未 rebase 或走新年 restart。day199 回放耗时 105.640 s，总计 109.257 s。
+不把 198 日均值与全年 reference 比较，也不赋予旧 checkpoint 当前 producer 身份。
+
+仅用保存值进一步做[分段诊断](../../outputs/reviews/main-physics-20261011/319-npp-local/maintenance-period-decomposition.json)。
+[口径补核](../../outputs/reviews/main-physics-20261011/319-npp-local/period-definition-scope/audit.json)
+确认两份 JAX `MAINT_RESP` 都取 post-NPP 的 `resp_maint`，含 biomass-floor 修正，
+单位为 gC/m²/day，198/365 个日值均含首日零值；输入、模式及生产源码相同。
+历史 LPJ 日 trace 的总量定义仍属暂定匹配，365 日 NPP 恒等式最大残差 `6.00e-15`，
+四通量均值转 float32 均匹配 NC；这些支持数值诊断，仍不恢复原运行身份/发送覆盖。
+前段 JAX 总量为前缀均值×198，后段为全年均值×365 减前段，Fortran 两段直接加日值：
+
+| 区间 | JAX 累计，gC/m² | 历史 Fortran trace 累计，gC/m² | JAX − trace，gC/m² |
+| --- | ---: | ---: | ---: |
+| Day1–198，独立前缀 | 37.622801792519 | 37.622801571907 | `+2.206119376e-7` |
+| Day199–365，**差分推得** | 46.304479981856 | 46.613624362209 | `−0.309144380353` |
+
+全年相对 trace 的累计差为 `−0.309144159742`；后段占净负差约 **100.0000714%**，
+前段微小正差抵消一部分。后段不是新增逐日观测。维持呼吸 trace 均值减 float32 NC
+为 `−5.364967082e-10 gC/m²/day`，乘365后的累计差为 `−1.958213005e-7 gC/m²`；
+加入此舍入差即得到原 NC 基准的全年累计残差 `−0.309144355563`。
+`fsum` 与既有 NumPy trace 均值差仅 `5.55e-17 gC/m²/day`。
+
+两份运行的 Day1 单独执行，Day2–197 为28个相同分块；前缀 Day198 走单日 runtime，
+全年则在 Day198–204 七日 compiled 块内。令 ε 为全年原轨迹前198日总量减独立前缀
+总量，则所报前段差为原前段差−ε，所报后段差为原后段差+ε。保存的全年摘要没有
+Day198 日值/前198日总量，**无法给 ε 数值上界**；旧历史 checkpoint 比较不能充当它。
+均值除法再乘天数及后段减法本身的 float64 总量恢复舍入上界约 `2.21e-14 gC/m²`，
+不包含 ε、原累加或 trace 输出精度。故此为带上述限制的时间段线索，非精确轨迹切片或因果闭合。
+
+[当前回放](../../outputs/reviews/main-physics-20261011/319-npp-local/current-maintenance-replay.json)
+与历史 day198 的相关状态差异：biomass 最大 `8.34e-12`、stempdiag `1.08e-12`、
+动态 nroot `1.10e-13`；较大量纲能量系数 pcapa_en 最大绝对差 `3.15e-7`，
+其按参考量级缩放的描述性比较另列于 verification，不作全状态等价断言。
+day199 的 air forcing、长期温度、SLA、rprof、系数和开关
+精确相同；48 次土温最大差 `4.15e-11`。这些是有界字段比较，不是旧版本身份恢复。
+当前和历史状态回放各自的十项同输入 Fortran Oracle 检查均通过：原始过程抽取、
+core/JIT/cache、48 次有序累积与写回；per-part 最大误差 `6.51e-19`，日累积/写回精确。
+这排除了该输入上的公式/缓存数值不等价，不能扩大为所有分支或输入域通过。
+
+[时序审计](../../outputs/reviews/main-physics-20261011/319-npp-local/maintenance-timing-scope/audit.json)
+确认源码顺序为每步 maintenance 计算/累积先于 `IF(do_slow)` 中的日过程，
+随后消费并清零累计量。所查 OK_LEAK 路径虽将 biomass 声明为 `INTENT(inout)`，
+过程体只有读取；PFT14 的 `ok_laidev=false` 用当前叶 biomass/SLA 求 LAI。
+这支持所查路径的日内静态缓存，NPP 可在日边界改变 biomass，不能跨日沿用。
+冷启动/初始季节时序及原 Fortran 实际调用/发送覆盖仍未核定。
+
+当前命名窗口 **day199 最后半小时**（JAX tstep9551 / Fortran itime9552），
+只换历史 Fortran 同时刻的 `stempdiag`，保留 JAX biomass/SLA/rprof/系数：
+
+| 同一步量 | 原当前输入 | 换参考土温后 |
+| --- | ---: | ---: |
+| 根温度 K | 282.7275886171008 | 282.7199175916129 |
+| 总 maintenance radia 对 Fortran 的有符号残差，gC/m²/半小时 | `2.68757852284e-8` | `2.91463591109e-10` |
+
+[局部归因](../../outputs/reviews/main-physics-20261011/319-npp-local/local-attribution.json)
+给出约 **98.9155% 的该半小时残差**来自土温输入效应；root 和 sapbelow 分量的
+变化分别为 `−2.478e-8`、`−1.805e-9`，再换 air/longterm 几乎无额外效应。
+根温度使用 `rprof=1.25 m` 的源卷积，**不是 HYDROL 动态 nroot**。
+本日累计 pre-NPP 根呼吸残差为 `2.10241929047e-7`；仅换最后一步后仍为
+`1.85462369448e-7`，只解释 **11.7862% 的全天根分量残差**。其余 47 次 Fortran
+土温输入未保存在所用 day-end trace 中，不能以末步或 daily mean 代替。
+更关键的是，**该半小时总呼吸及本日 pre-NPP 根呼吸残差均为正，与年度总
+maintenance 的负残差方向相反**。98.9% 是局部输入效应，不能解释年度主要偏差，
+也不支持据此修改 THERMOSOIL；全天或年度因果均未闭合，当前首偏差日未确定。
+
+[PEAT 审计](../../outputs/reviews/main-physics-20261011/319-npp-local/peat-scope/audit.json)
+保留 raw 配置与 HYDROL 局部 SAVE 的区别；319 有效 Fortran 局部值仍未核定，
+未据 case001 False trace 改开关。**本阶段没有确认可达源级物理错误或提出生产修复。**
+分段诊断把优先范围进一步收窄至 **Day199–365 的年度维持呼吸负差贡献**。
+下一步复用保存的日值/分量定位其中的主要时段和输入，并区分日累计与 NPP 修正后的总量；再按命名窗口关联 Fortran
+运行身份和相应输入。现有同输入 Oracle 与当前前缀状态可复用；本阶段不再运行模型窗口。
 
 ## 已确认限制与优先检查清单
 
@@ -276,7 +382,10 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    B 有匹配的相邻四分片命令、首超限 1963 NPP。两条 producer 均未核定，
    本地三条完整同点候选均未过原门槛，未建立有效替代；单年通过及七个其他点
    不能关闭它们。第三阶段的当前 identified cold-start 1961 NPP 同样超限；
-   strict 分类及最小 owner/state 后续范围见第三阶段，不从科学失败直接认定物理函数 bug。
+   第四阶段定位 maintenance 年度负残差及当前 day199 土温输入效应；同输入 Oracle
+   通过，局部效应与年度主残差异号；保存值的条件性分段诊断将几乎全部净负差
+   指向 Day199–365，后段为差分推得且尾部执行差异 ε 未量化。年度因果仍未闭合。
+   不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
 3. **当前三文件 restart 与年接续的完整状态合同（有通过证据，待版本关联）。**
@@ -343,3 +452,19 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 语义相等、链接与修改范围及 `git diff --check`。未改原 JSON/pickle/receipt、生产
 源码、测试、科学阈值或原通过结论；未执行 pytest/GPU/训练/SSH/服务器作业。
 提交与推送由主控在实际产物验收后执行。
+
+第四阶段只更新本页和 `outputs/reviews/main-physics-20261011/319-npp-local/`。
+[命令](../../outputs/reviews/main-physics-20261011/319-npp-local/commands.md) 记录保存值分析、
+历史状态一天回放、当前 cold-start 198 日前缀和同年 day199 回放；未重复全年模型。
+[verification](../../outputs/reviews/main-physics-20261011/319-npp-local/verification.json)
+核对原产物/冻结输入保留、当前前缀身份、两组各十项原 Oracle 检查、年度/局部异号、
+三份审计的字面源码、引用和修改范围及 `git diff --check`。
+[图记录](../../outputs/reviews/main-physics-20261011/319-npp-local/graph-receipt.json)
+沿用所提供的 Verify generation；本地工具仍为 `Transport closed`，采用有界源码回退。
+未改生产源码、测试、科学阈值或旧产出，未执行 GPU/训练/SSH/服务器作业；
+提交与推送留由主控验收后执行。
+
+提交前补充仅分析已有198/365日摘要及365条 LPJ 日值，没有新模型执行。
+[补充 verification](../../outputs/reviews/main-physics-20261011/319-npp-local/verification.with-periods.json)
+保留原九组终验并增加分段口径/输入身份、差分来源、舍入与 ε 限制核验；
+原 verification 和日志保留，原科学阈值及年度/局部异号结论不变。
