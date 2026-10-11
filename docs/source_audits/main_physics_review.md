@@ -1,15 +1,22 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-11。**本轮没有发现已确认的 main 生产物理实现 bug。**
-已有通过结果保留；优先补证据与当前执行版本的关联，并核对命名高风险旧结果的有效范围。
-本页记录第一阶段有界盘点及第二阶段 319 历史身份调查，不是全模型重新验收，也不改既有科学合同。
+核查日期：2026-10-11。**本轮没有发现已确认的 main 生产物理实现 bug；
+第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限。**
+已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
+本页记录第一阶段有界盘点、第二阶段 319 历史身份调查及第三阶段当前首年对照，
+不是全模型重新验收，也不改既有科学合同。
 
 ## 固定基线和支持范围
 
 - cwd / Git root：`E:/ORCHIDEE-MAN-JAX`；分支 `main`。第一阶段基线
   `ee42eb14058a028c697147a5651912d9b8eb75e3`，已接受于
   `cd9c6b8022061a6e6e480de2e825ab28e72eac68`；第二阶段从该提交开始。
-  两阶段开始时工作区均干净；旧数值产出不赋予这些审查提交的 producer 身份。
+  前两阶段开始时工作区均干净；旧数值产出不赋予这些审查提交的 producer 身份。
+- 第三阶段使用第二阶段接受提交
+  `09968cf86551e8dfc039c1740b94fb3d42cf3f12`；开始时工作区干净，
+  实际 runner/source、输入和执行身份见
+  [identity.json](../../outputs/reviews/main-physics-20261011/319-current/identity.json)。
+  这是新执行的 producer 身份，不是旧 A/B 产出的 producer 身份。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -122,11 +129,120 @@ Git 的初始快照 `7333b46` 已无条件输出 `compiled_day_block_size`，当
   诊断容差下分别报 day 173 / 200 首偏差，但没有连到 A/B 的源码身份。
   这些 owner/state 线索不是当前 main 反例或完整修复证据；七个新点也不包含 319。
 
-本阶段没有确认当前 main 物理 bug，也没有确认这两条旧失败已被有效替代。
+第二阶段没有确认当前 main 物理 bug，也没有确认这两条旧失败已被有效替代。
 最小后续步骤是取得命名原执行的 source/manifest；若无法恢复，才以明确当前 SHA
 和输入身份做 319 cold-start 首年、必要时 carried 1961–1963 的有界比较，复用
 对应 owner/state 线索且保留原门槛。最终声称长链关闭仍需有身份的 1961–2010
-完整实际通过记录。本阶段没有启动这些运行。
+完整实际通过记录。第二阶段没有启动这些运行；第三阶段实际执行范围见下节。
+
+## 第三阶段：有身份的当前 319 cold-start 首年
+
+新产出独立保存在
+[319-current](../../outputs/reviews/main-physics-20261011/319-current/)。
+点位为 `319.0-057.0/I5/S26_69.834_0.0019_0.3980_97.918`，
+稳定 layout 为 `paper_250919_legacy14`、mangrove index 13；1961、365 日、
+48 半小时/日、cold-start，无旧 checkpoint 输入。
+`used_run.def` 为当前 materialized 文件的逐字节副本；配置也保存了内容副本，
+实际仍从 main 的原配置路径读取，以保留 source reader 的根目录语义。
+manifest 保存 36 个配置候选输入/参考文件的 SHA256、大小和时间，合计
+3,305,915,411 bytes；该集合不声称每个 static asset 都被实际消费。
+环境为本地 ORCJAX / Python 3.11.15 / JAX 0.10.1 / CPU，实际导入路径如上。
+
+compiled 使用 on / block=7 / static daily-carbon JIT on，
+NumPy accumulator 和 single-pass fold off，module/local DIFFUCO JIT on，
+prebuild day payloads on；显式请求全部 15 个 science/diagnostic fields。
+同身份 strict 使用 compiled off / block=0 / static daily-carbon JIT off，
+其余输入、冷初始化和窗口相同，module/local DIFFUCO JIT 继续 on，
+与既有 failure-classification 路径一致。
+实际 argv、源码/输入运行后检查和结果见
+[compiled receipt](../../outputs/reviews/main-physics-20261011/319-current/compiled-1961.receipt.json)、
+[strict receipt](../../outputs/reviews/main-physics-20261011/319-current/strict-1961.receipt.json)；
+完整命令与前置 helper 失败见
+[命令记录](../../outputs/reviews/main-physics-20261011/319-current/commands.md)。
+
+| 1961 年度变量 | compiled JAX | strict JAX | Fortran reference | compiled abs_error / 原 limit |
+| --- | ---: | ---: | ---: | ---: |
+| AGB_model | 4.591235924144104 | 4.591235924144387 | 4.590915203094482 | 0.00032072104962121983 / 0.004600915203094482 |
+| BGB_model | 4.120666870505465 | 4.120666870505813 | 4.120461463928223 | 0.00020540657724232858 / 0.004130461463928223 |
+| GPP_model | 0.7776216017113179 | 0.777621601711987 | 0.7776592373847961 | 0.00003763567347825347 / 0.0007876592373847962 |
+| NPP_model | **0.3860042397133881** | **0.3860042397139073** | **0.38518497347831726** | **0.0008192662350708368 / 0.0003951849734783173** |
+
+compiled 完成 365 日、15 字段 count 均为 365、末步 17519，
+无 missing/stopped component，JSON 所列科学/诊断数值均有限。
+runner 年度耗时 275.2018044000142 s，wrapper 含结果/状态核验
+276.4121996999893 s。只有 NPP 超过原年度科学门槛；
+单年 normalized bias / RMSE 均为 `0.0021269423562208477`，
+同样超过 `1e-3`。更严的 numerical diagnostic gate 也失败，单独保留。
+strict 同样完整完成 365 日、15 字段，所列数值有限，runner 年度耗时
+956.6834202000173 s，wrapper 含核验 957.554574199981 s；
+NPP abs_error=`0.0008192662355900326`，normalized bias / RMSE
+均为 `0.0021269423575687608`，只有 NPP 未过年度科学门槛。
+两次 code=0，运行后 source/input metadata/config/run.def unchanged 均为 True，
+当前 live 1961 reference 与保存 reference 精确相同。
+四个年度 JAX 值的 strict/compiled 最大差约 `6.692e-13`（GPP），
+NPP 差约 `5.192e-13`。按原政策分类为
+**`shared_semantic_input_or_reference_mismatch`：共享语义、输入绑定、汇总或参考差异待定位**。
+这不是 compiled-only 退化，也尚未证明共享物理过程实现必有 bug；
+当前科学超限本身没有定位物理函数缺陷。完整数值核验见
+[analysis.json](../../outputs/reviews/main-physics-20261011/319-current/analysis.json)。
+
+**完整状态有限性与科学输出有限性分别记录。** 两份 checkpoint 的原始全树扫描各
+为 351 个 numeric leaves、23,992 个元素，发现两个 NaN，故 raw state finite=false：
+`diffuco_previous_step_state.roughheight_pft` 与
+`sechiba_finalize_state.roughheight_pft`，均为 shape `(1,14)` 的 `[0,0]`。
+该位置是 Fortran PFT1 / bare_soil，layout 的 active_mask **确为 True**、
+prescribed fraction 为 0，不能按全局 inactive mask 排除。
+实际 `IMPOSE_AZE=FALSE`、`ROUGH_DYN=TRUE`；动态 producer
+`condveg.py` 364/366/417–419 保留 bare slot NaN，只写后续 PFT，
+对应 `condveg.f90::condveg_z0cdrag_dyn` 1707–1718 的 `DO jv=2,nvm`。
+Fortran `diffuco_aero` 1067–1069、1107–1118、1128–1134 同样从 PFT2 开始，
+PFT 特定 drag 还受 `ok_LAIdev` 控制；本地 14 个 `OK_LAIDEV` 均为 False。
+JAX `diffuco.py` 4168–4177 在运算前用 grid roughheight 替换未消费坐标，
+4227–4233 选择 grid drag；orchestration 2936–2937/3131 保留该 sidecar。
+因此这两个特定未定义坐标是当前有界 producer/consumer 路径的合法哨兵，
+不是已确认的 NaN 传播 bug；原始 checkpoint 和 receipt 保留不改。
+
+原 receipt 的 `partial_exactly_matches_cached_summaries=false` 也保留。
+pickle 的 `paper_modelout_csv_delta` 是 tuple，JSON 是 list；按结构和数值语义
+比较后相同，partial summary 与结果 year prefix 相同。
+这不修改原序列化格式，也不把 Python 容器类型差异当作 year-state 缺失。
+两份 checkpoint 都只有上述两个坐标非有限，其余 23,990 个 numeric 元素有限。
+精确坐标和 tuple/list 语义比较见 analysis；对应
+[source excerpts](../../outputs/reviews/main-physics-20261011/319-current/source-excerpts.txt)
+保留本阶段 producer/consumer 和 Fortran 条件。
+
+**PEAT_HYDRO 仍有 319 配置/语义边界待核定。** raw run.def 值为 `TRUE`，
+当前 JAX `orchestration.py` 68–75/630–631 则区分参数开关与 HYDROL soil 的
+`PAPER_1961_HYDROL_SOIL_PEAT_HYDRO=False`，6381–6382/6987–6988
+传入 soil/root/water-stress 路径。Fortran `hydrol.f90` 95 声明局部
+`LOGICAL,SAVE :: peat_hydro`，该声明没有初始化器；
+`pft_parameters.f90` 3626–3627 对参数开关读取 run.def。
+`hydrol_main` 1278 调用 `hydrol_soil`，tile loop 的 5858/5891 调用
+`hydrol_soil_coef`，8259/8290 的实际条件是 **HYDROL 局部变量为 True 且
+Fortran soil tile 为 4/5/6**，不能由 raw 字符串直接决定。
+现有 [hydrol v9 audit](hydrol_1961_v9_audit.md) 保存 tile4/bottom11 的 1200 个
+coefficient rows，均为 `peat_hydro=F/branch_peat=F`，以及 144 个 tile4 step rows。
+其配套 [设计入口](../porting/pft14_extensible_design.md) 9–10 关联
+`reference/case_001_071`；CSV 没有点位/producer 字段，未建立对应 319 Fortran
+执行的身份桥。第一阶段 ledger 的 False 只保留其原审计范围，不能仅凭 case001
+trace 外推 319 也应 False；无初始化器的声明也不是全运行 False 的来源证明。
+CSV 核验、内容身份和点位限制见
+[peat-trace-scope.json](../../outputs/reviews/main-physics-20261011/319-current/peat-trace-scope.json)。
+当前 pinning 的 319 有效性尚需核定，既未排除也未确认为本次 NPP 原因，
+不声称所有其他 peat 相关消费者 inactive。
+
+1961 已失败，按批准的条件与主控确认，**未继续到 1963**，也未执行 50 年或
+669 点积分。现有 A/B、单年 restart、七个其他点和已接受 C1–C3 的结论继续保留；
+当前数值接近历史 A 的 1961 残差不构成 producer 或因果同一性。
+最小下一步只核对 **1961 NPP 的来源与有限局部证据**：先核对 daily NPP、
+maintenance/growth respiration 与 annual 汇总的观测/单位/时刻，再复用
+[day173@1e-10](../../outputs/reference_mode/diagnose_319_maintenance_first_divergence.json)
+和 [day200@1e-6](../../outputs/reference_mode/diagnose_319_maintenance_material_divergence.json)
+的命名线索，保留其 **maintenance 累积后、非 turnover 后 biomass** 的观测边界，
+沿温度/长期温度、根状态和维持呼吸核对命名输入与写回；必要的执行证据限定
+到相应局部过程和有来源的输入，不扩大到新年度窗口或 50 年。
+旧记录没有本次 producer 身份，不能称为当前首偏差日；并先核定上述局部开关
+的点位适用性。本阶段不自动改生产函数或容差，也不启动新的模型/trace。
 
 ## 已确认限制与优先检查清单
 
@@ -136,7 +252,9 @@ stage6 2/3 代表点结果，不能把该旧 false 直接当作当前实现失�
 证书已有另一套 arm 分类/owner 路由，不是 4,732 个未实现过程。
 HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 reachability
 为 inactive，并给出了 audited runtime `peat_hydro=F` 的来源理由；其 regression-only
-不能脱离有效配置解释成可达缺口。更一般的潜在输入域仍受原交付合同约束。
+不能脱离有效配置解释成可达缺口。该 False 的点位范围须保留：第三阶段仅确认
+所关联 case001 trace；对 319 的有效 Fortran 局部值尚未建立身份桥，见上节。
+更一般的潜在输入域仍受原交付合同约束。
 
 下列四项按下一步价值排序；它们是检查对象，非四个待修 bug。
 
@@ -150,14 +268,15 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    小型 Oracle/回归；相同代码复用证据。尚未核定这些档案的完整当前版本桥，
    这不撤销原通过结果，也不要求首轮穷尽 producer 历史或重跑长序列。
 
-2. **319 高风险历史长序列的有效版本及首个科学偏差（第二阶段已做有界调查，身份仍待补）。**
+2. **319 高风险历史长序列及当前首年科学偏差（历史身份仍待补；第三阶段已取得当前首年反例）。**
    [第一阶段失败值](../../outputs/reviews/main-physics-20261011/named-high-risk-history.json)
    和 [第二阶段 receipts](../../outputs/reviews/main-physics-20261011/319-history/receipts.json)
    保留第一阶段 069 保存 50 年链通过的结论，以及两个 319 失败和反证：
    A 为已验证的 21+29 年恢复链、首超限 1961 NPP；
    B 有匹配的相邻四分片命令、首超限 1963 NPP。两条 producer 均未核定，
    本地三条完整同点候选均未过原门槛，未建立有效替代；单年通过及七个其他点
-   不能关闭它们。具体输入、源码、owner/state 范围和最小后续步骤见上节。
+   不能关闭它们。第三阶段的当前 identified cold-start 1961 NPP 同样超限；
+   strict 分类及最小 owner/state 后续范围见第三阶段，不从科学失败直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
 3. **当前三文件 restart 与年接续的完整状态合同（有通过证据，待版本关联）。**
@@ -192,7 +311,7 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 `docs/RESEARCH_WORKFLOW.md` 导航。未修改生产源码、测试、科学阈值或旧产出。
 未执行 pytest/GPU/长模型运行、训练、服务器作业、Teacher/prepared 生成或数据重标。
 
-本轮图工具恢复可用：项目 `E-ORCHIDEE-MAN-JAX`、generation
+第一阶段图工具恢复可用：项目 `E-ORCHIDEE-MAN-JAX`、generation
 `2026-10-10T08:46:50Z`、12,100 nodes / 72,107 edges。
 [图记录](../../outputs/reviews/main-physics-20261011/graph-receipt.json) 和
 [补充覆盖](../../outputs/reviews/main-physics-20261011/graph-additional.json) 明确显示
@@ -210,3 +329,17 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 [第二阶段 verification](../../outputs/reviews/main-physics-20261011/319-history/verification.json)
 记录链接、证据引用、原产出身份、基线、修改范围及 `git diff --check`。
 未改生产源码、测试、科学阈值或原产出，未执行长模型/GPU/训练/服务器工作。
+
+第三阶段只更新本页和 `outputs/reviews/main-physics-20261011/319-current/`。
+实际执行两个当前有身份的 1961 单年模型；未续跑 1962/1963、50 年或 669 点。
+[命令](../../outputs/reviews/main-physics-20261011/319-current/commands.md) 及原始 receipt
+分别记录执行完成与科学失败；辅助 analysis 只读取现有产物并写新 sidecar。
+[图记录](../../outputs/reviews/main-physics-20261011/319-current/graph-receipt.json)
+保留所提供的 Verify generation，但本阶段 index_status/trace_path/coverage 的
+本地调用为 `Transport closed`，不声称 fresh MCP 或全模型完整性；关键结论直接
+核对当前有界源片段。新
+[verification](../../outputs/reviews/main-physics-20261011/319-current/verification.json)
+记录实际 input/result/checkpoint 身份、原政策复核、科学输出与状态有限性分离、
+语义相等、链接与修改范围及 `git diff --check`。未改原 JSON/pickle/receipt、生产
+源码、测试、科学阈值或原通过结论；未执行 pytest/GPU/训练/SSH/服务器作业。
+提交与推送由主控在实际产物验收后执行。
