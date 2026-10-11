@@ -25,6 +25,17 @@ checks. This permits the two research lines to progress independently; it
 does not claim new-data acceptance or reopen any closed GPU/training scope.
 See [NEXT_STEPS.md](NEXT_STEPS.md) for the operative boundary.
 
+The [current early summary_input preparation](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
+adds a thin CPU extraction/fixture boundary after the accepted affine method.
+The implementation passes10 fixture tests; its synthetic NPZ passes6 unchanged
+affine measurements with49 arrays retained (one warm cycle). The supervisor
+accepted local methods and failure preservation and authorized commit/push.
+Bounded local lookup found the SHA-matched original T7 manifest; parameters,
+context and prepared data are still unavailable. Real capture is
+`not_executed`, not a CPU non-reproduction result. It establishes no original
+T7 numerical repair, GPU readiness or complete-update speed/science acceptance.
+The historical state-gradient failures and roughness state20 NaN remain.
+
 | Current evidence | Result and limit |
 |---|---|
 | [Forward/AD timing](research/daily_coarse_graining/shared_forward_reverse_results_20260930.md) | Matched component medians: forward2.104821s/18.57%, additional gradient/recomputation9.228212s/81.43%, AdamW0.02–0.03s. Evaluators occupied97.20% of the synchronized proposal. These do not isolate pure reverse or exactly partition an update. |

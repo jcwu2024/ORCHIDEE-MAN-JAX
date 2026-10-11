@@ -55,13 +55,24 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
+The current [early summary_input capture package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
+has implemented the thin CPU extractor: 10 fixture tests pass and the captured
+synthetic NPZ passes the unchanged affine discriminator (6 measurements/49
+arrays, one warm cycle). The supervisor has accepted local methods and failure
+preservation and authorized committing/pushing the seven task files. Asset lookup is closed: the original
+T7 manifest is found and SHA-matched, while required parameters/context and
+prepared data remain unavailable. Real capture is `not_executed`, not CPU
+non-reproduction. Preserve the fixed Teacher/prepared version and original
+experiment identities; no later-layer graph, GPU wrapper/bootstrap, remote
+execution, training or automatic repair is part of this package.
+
 The separately authorized [local numerical preparation](research/daily_coarse_graining/T7_batch_numerics_local_preparation_20261011.md)
 is accepted by the supervisor as completed local methods and preparation:
 bounded input source audit, independent affine method/identity admission and
 retained nonfinite rejection evidence.
 Input6/matrix6 local tests pass; real operands remain unavailable. No production
 repair is selected. The [GPU discrimination plan](research/daily_coarse_graining/T7_batch_numerics_GPU_confirmation_plan_20261011.md)
-still needs original assets/thin capture, bounded wrapper and deployed bootstrap
+still needs missing original assets/real thin capture, bounded wrapper and deployed bootstrap
 verification; it is not GPU ready. The accepted stage may be committed and
 pushed on this research branch; acceptance grants no remote/GPU run, training
 or reopening of the closed scopes, and establishes no original-model repair,

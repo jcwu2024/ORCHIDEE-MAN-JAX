@@ -20,7 +20,7 @@ attention contraction差别，只支持“batch lowering改变FP32舍入/归约�
 `5.025831s → 1.967053s`、`2.555005×`，但state AD gate失败，未采用。
 B1不是真值；NumPy FP64小算子oracle是独立诊断，不改变生产reference/precision。
 
-## 真实输入：必须完成的下一项本地准备
+## 真实输入：当前提取器与未完成捕获
 
 64→64 reader的内部x/direction未保存；不为获取它构造shared-backbone大图。
 推荐先提取最早的tokenizer state-field `summary_input` projection：
@@ -31,13 +31,19 @@ B1不是真值；NumPy FP64小算子oracle是独立诊断，不改变生产refer
 参数初始化来源 `shared_transformer.py:177`，实际saved parameter leaf path须核验。
 这是early projection干预；通过或未复现均不能排除later64→64/attention原因。
 
-**thin CPU extractor尚未实现，是下一项准备，不是已经到位的输入。**只反序列化
+当前薄CPU extractor/fixture工作包与证据见
+[early summary_input结果](T7_summary_capture_results_20261011.md)：已实现且10项fixture
+tests通过；synthetic NPZ接入既有probe的6测量/49数组通过（`--repeats 1`，一次
+warm cycle）。主管已接受本地方法与失败保存，授权提交/推送。
+**真实捕获因必要资产
+缺失为not_executed，不是CPU未复现，真实输入仍未到位。**只反序列化
 原context的head/contract/layout、参数与TRAIN742/275/482/299四个首T7窗口day0，
 复用canonical rebuild/assembler的state定义和PFT mask。保留原
 `head.input_normalization` mean/scale/tail threshold/tail mask、state-field pool、
 element-PFT index；只执行上述三个helpers，不调用完整head/context forward、
 backbone、raw prefix或物理步。对该小preprocessing函数做CPU JVP，取方向
-434/2382/2621/control200的dsummary（仅sample3激活），不做整网reverse/T7/T30。
+434的dsummary（仅sample3激活），不做整网reverse/T7/T30。当前extractor没有
+方向选择CLI；2382/2621/control200是将来另选的扩展，尚未实现或验证。
 若真实资产无法取得或小边界不能执行，明确缺口并停止；人工方向不得标成captured。
 
 输入从历史 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/` 下解析：
@@ -50,14 +56,19 @@ backbone、raw prefix或物理步。对该小preprocessing函数做CPU JVP，取
 | dataset manifest | `outputs/training/pft14-daily-teacher-v6/dataset_manifest.json` |
 | 原manifest | `transfer/shared-latent-reader-20261004/latent-reader-T7-20261005.manifest.json` |
 
-input bundle取原manifest的`input_bundle`；四个artifact路径/rows从prepared manifest
-解析，不猜shard路径。身份导航 `probe_shared_latent_reader_T7_pair.py:203 assets`
+原manifest仍声明`input_bundle`/source profile；当前thin loader从已验证的
+parameters/context交叉核验method，不依赖这两个独立文件。四个artifact路径/rows
+从prepared manifest解析，不猜shard路径。身份导航 `probe_shared_latent_reader_T7_pair.py:203 assets`
 还会绑定overlays并检查profile/reference/admission/head/source，不能直接当thin loader；
 `shared_latent_T7_batch_assets.py:114 load_training_T7_cases`构造完整case并作小
-identity shape检查，无模型forward，亦不提供内部operand。extractor实现后需固定
-CPU-only parser/argv、保存capture receipt/source hash；本轮没有执行提取或传输。
+identity shape检查，无模型forward，亦不提供内部operand。当前extractor已固定
+CPU-only parser/argv、保存capture receipt/source hash；初始audit未执行提取或传输。
+当前工作包已执行synthetic capture/probe，仍没有真实提取或传输。
 本地declared shared-root参数/context/TRAIN299 artifact/prepared manifest/原manifest
 均缺，且无runtime junction；已有raw24结果/HLO2 gzip不能反推内部operands。
+后续有界basename查找在root/daily复用的
+`outputs/diagnostics/shared-latent-reader-20261004/` 找到原manifest且SHA匹配；
+其余缺口见当前结果/资产记录。此前字面transfer路径缺失结论不改写为全局不存在。
 
 ## 与现有 harness 完全一致的 NPZ 合同
 
@@ -77,8 +88,9 @@ CPU-only parser/argv、保存capture receipt/source hash；本轮没有执行提
 `prepared_context_sha256=ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026`、
 `artifact_ids=[742,275,482,299]`，且非空 `parameter_path/capture_boundary/
 capture_source_sha256/capture_receipt_sha256/direction_coordinate/mask_meaning`。
-direction_coordinate只能434/2382/2621/200；一个bundle一个方向。保持同一geometry，
-后续方向可复用同一批小executable，但目前CLI一次仅消费一个bundle；
+现有harness合同允许direction_coordinate为434/2382/2621/200；一个bundle一个方向。
+当前extractor仅生成434；其他方向需将来另选并实现/验证。保持同一geometry，
+将来后续方向可复用同一批小executable，但probe CLI一次仅消费一个bundle；
 下一次最小GPU确认优先434，不把四方向变成四轮新compile。
 
 默认synthetic固定为 `(4,128,64) @ (64,64)`，仅验证判别方法。
@@ -106,7 +118,7 @@ JVP/VJP pairing共同校验；不得以B4接近B1替代oracle检查。目标均�
 
 记录CPU affinity/load、OMP4/OpenBLAS1、GPU processes、JAX/CUDA/toolchain、实际
 HLO shape/algorithm、lower/backend/首次有效测量时间及同步热调用中位数。
-harness保存每route untimed cycle0和warm cycles1–3共12轮，加NumPy FP64 oracle，
+未来`--repeats 3`确认才保存每route untimed cycle0和warm cycles1–3共12轮，加NumPy FP64 oracle，
 同一`.results.npz`共91数组；逐轮strict/oracle/isolation/实际JVP-VJP pairing验收，
 共8项cross-route、9项非平凡within-route repeat，后来通过不覆盖中间失败。
 非有限原数组仍写入NPZ；JSON列actual/reference/derived nonfinite计数，不可表示的
@@ -161,4 +173,4 @@ daily root/branch/HEAD/import、入口/schema已核对；CPU证据选`outputs/T7
 synthetic PASS、6项matrix tests PASS（3.80s，含中间轮mutation及nonfinite保存/exit3 guard），input owner
 6项PASS；首版final-only及v2结果保留，以v3为最终method evidence。这些本地证据不归因原模型。
 未运行remote/GPU/真实模型forward、整网tracing/AD或Teacher生成。daily图索引
-excluded/not_tracked，源码精确fallback；thin extraction、wrapper、GPU因果/原集成gate未验证，旧额度关闭。
+excluded/not_tracked，源码精确fallback；真实thin capture、wrapper、GPU因果/原集成gate未验证，旧额度关闭。
