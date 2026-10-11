@@ -1359,6 +1359,52 @@ def test_npp_closed_update_absent_pft_has_finite_zero_maintenance_gradient():
     np.testing.assert_array_equal(np.asarray(gradient), np.zeros_like(resp_maint_part))
 
 
+def test_npp_closed_update_subnormal_active_maintenance_has_finite_gradient():
+    parts = jnp.asarray(
+        [
+            1.1959175918532169e-176,
+            9.470227295278714e-178,
+            6.318572123333474e-178,
+            3.023573544806176e-188,
+            2.8914988965610444e-188,
+            6.142238652329241e-177,
+            9.605021040731308e-180,
+            1.8174336179312717e-188,
+            3.2129167169936666e-178,
+            6.488322052701464e-179,
+            2.920848646739295e-188,
+            3.080744086822504e-188,
+        ],
+        dtype=jnp.float64,
+    )
+    maintenance = jnp.zeros((1, 14, NPARTS), dtype=jnp.float64).at[0, PFT14].set(parts)
+    biomass = jnp.ones((1, 14, NPARTS, 1), dtype=jnp.float64)
+    gpp = jnp.zeros((1, 14), dtype=jnp.float64).at[0, PFT14].set(1.0e-176)
+    pft_present = jnp.zeros((1, 14), dtype=bool).at[0, PFT14].set(True)
+
+    def objective(maintenance_parts):
+        result = npp_closed_update(
+            biomass=biomass,
+            gpp=gpp,
+            f_alloc=jnp.zeros((1, 14, NPARTS), dtype=jnp.float64),
+            resp_maint_part=maintenance_parts,
+            pft_present=pft_present,
+            frac_growthresp=jnp.zeros(14, dtype=jnp.float64),
+        )
+        return jnp.sum(result.biomass)
+
+    error, (loss, gradient) = jax.jit(
+        checkify.checkify(
+            jax.value_and_grad(objective),
+            errors=checkify.float_checks,
+        )
+    )(maintenance)
+
+    assert error.get() is None
+    assert np.isfinite(np.asarray(loss))
+    assert np.all(np.isfinite(np.asarray(gradient)))
+
+
 def test_npp_leaf_age_sla_age_update_matches_source_bookkeeping_for_grass():
     """Fortran: stomate_npp.f90 npp_calc lines 544-672."""
 
