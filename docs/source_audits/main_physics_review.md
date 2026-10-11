@@ -2,12 +2,14 @@
 
 核查日期：2026-10-11。**本轮没有发现已确认的 main 生产物理实现 bug。**
 已有通过结果保留；优先补证据与当前执行版本的关联，并核对命名高风险旧结果的有效范围。
-本页是第一阶段有界盘点，不是全模型重新验收，也不改既有科学合同。
+本页记录第一阶段有界盘点及第二阶段 319 历史身份调查，不是全模型重新验收，也不改既有科学合同。
 
 ## 固定基线和支持范围
 
-- cwd / Git root：`E:/ORCHIDEE-MAN-JAX`；分支 `main`；基线
-  `ee42eb14058a028c697147a5651912d9b8eb75e3`。开始时工作区干净。
+- cwd / Git root：`E:/ORCHIDEE-MAN-JAX`；分支 `main`。第一阶段基线
+  `ee42eb14058a028c697147a5651912d9b8eb75e3`，已接受于
+  `cd9c6b8022061a6e6e480de2e825ab28e72eac68`；第二阶段从该提交开始。
+  两阶段开始时工作区均干净；旧数值产出不赋予这些审查提交的 producer 身份。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -22,7 +24,7 @@
 
 ## 现有覆盖与证据地图
 
-以下区分“档案已证明的范围”与“本轮核实的范围”；旧产出不重新标记为当前基线产出。
+以下地图保留第一阶段结果，区分“档案已证明的范围”与“第一阶段核实的范围”；旧产出不重新标记为当前基线产出。
 完整路径、账本条目和历史源码变更在
 [盘点记录](../../outputs/reviews/main-physics-20261011/evidence-inventory.json)。
 
@@ -64,6 +66,68 @@ rel_error 均为 `8.498008041180061e-5`；`abs_error/abs(reference)` 约为
 | 证据待补 / 尚未判断 | 当前 `hydrol_water_stress_diagnostics` AST 与 5910ba9 一致，与 7333b46 不同。[精确差异](../../outputs/reviews/main-physics-20261011/hydrol-forward-guard-delta.patch) 中，根归一化新增 safe denominator：正和仍是源商，非正和仍保留旧根；不能把 AST 不同等同于前向物理错误。但旧 Oracle JSON 未内嵌 JAX producer commit，本轮没有据此宣称该 JSON 是 ee42eb1 的新执行证据，也没有新验收全部梯度或 root 状态输入域。 |
 | 确认实现不符 | **无。** 本轮没有得到一个经来源、可达输入和现有容差确认的当前 main 物理反例。 |
 
+## 第二阶段：319 两条历史 50 年链的身份和后续证据
+
+本阶段只调查 `319.0-057.0` 的精确命名结果、相邻命令/日志/checkpoint、
+验收目录内同点 JSON、命名 owner/state 记录及必要的 Git 源片段。
+详见 [身份与比较记录](../../outputs/reviews/main-physics-20261011/319-history/receipts.json)
+及 [源码摘录](../../outputs/reviews/main-physics-20261011/319-history/source-excerpts.txt)。
+第一阶段 HYDROL/年边界证据继续复用，未重跑 Oracle、回归或模型。
+
+| 证据项 | A：wetdiaglong_effective_319 | B：12point_wetdiaglong_fix |
+| --- | --- | --- |
+| 原结果 / 实际窗口 | [compiled_1961_2010.json](../../outputs/acceptance/wetdiaglong_effective_319_1961_1981/319.0-057.0/compiled_1961_2010.json)；1961–2010，每年 365 日 | [compiled_1961_2010.json](../../outputs/acceptance/compiled_1961_2010_12point_wetdiaglong_fix/319.0-057.0/compiled_1961_2010.json)；1961–2010，每年 365 日 |
+| 首个原科学超限 | 1961 NPP；JAX `0.3860042396860273`、reference `0.38518497347831726`，abs_error `8.192662077100565e-4` > 原 limit `3.951849734783173e-4` | 1963 NPP；JAX `-0.013051838239321791`、reference `-0.013333331793546677`，abs_error `2.8149355422488545e-4` > 原 limit `2.333333179354668e-5` |
+| 全链原科学门槛 | 失败；48 个年度变量值超限，涉及 30 年；NPP normalized RMSE `0.0020904160262748147` | 失败；128 个年度变量值超限，涉及 45 年；四变量序列统计均未过，NPP normalized RMSE `0.016239404396783952` |
+| 实际接续 / 命令证据 | 明确记录从 1981 年末 checkpoint 恢复；50 年文件前 21 个 year records 与 [21 年文件](../../outputs/acceptance/wetdiaglong_effective_319_1961_1981/319.0-057.0/compiled_1961_1981.json) 及 [1981 summary](../../outputs/acceptance/wetdiaglong_effective_319_1961_1981/319.0-057.0/compiled_checkpoints/multiyear_partial_through_1981.json) 逐记录完全相同，随后列出 29 个新 checkpoint。相邻 worker stdout/stderr 为空，monitor stderr 只有 CLIXML 标头；未找到完整原 argv。 | [workers.json](../../outputs/acceptance/compiled_1961_2010_12point_wetdiaglong_fix/workers.json) 留存四分片请求：cold-start、1961 起 50 年、`--strict-on-failure off --force` 和匹配输出目录；319 在 selection 的零基位置 7，按所核对 runner 的取模规则属于 shard 3。这是相邻命令记录，尚非文件级 PID/source receipt。 |
+| producer / 有效版本结论 | **精确 producer 未核定**；prefix 与 continuation 均无 Git/source 身份，不能据恢复运行推断源码改变或不变。 | **精确 producer 未核定**；命令未记录源码 SHA、源码 overlay 或 Python 环境，不能把 worker PID 当成生产版本。 |
+
+两条 `compiled.stdout.log` 的末年记录均与各自原 JSON 完全一致；ready 只证明
+窗口完成，不是科学通过。它们共享记录的 config 和 materialized `run.def` 路径，
+点位为 `I5/S26_69.834_0.0019_0.3980_97.918`，CSV target 为 2005。
+两条保存的 50 年 reference modelout 值全部相同；本阶段另读当前本地点位
+1961、1963、2005、2010 NetCDF，四变量均与保存 reference 精确一致，当前
+reference PFT index 为 13。当前 materialized 内容与当前纯物化结果相同，
+`OK_WETDIAGLONG=FALSE`、`dyn_nroot_larix=TRUE`、`NEW_WATSTRESS=FALSE`。
+这些是当前输入/参考的核对结果：旧 JSON 只保存路径，未冻结当时 forcing、
+配置内容或环境身份，不能由目录中的 `fix/effective` 名称确认当时有效开关。
+
+Git 的初始快照 `7333b46` 已无条件输出 `compiled_day_block_size`，当前 runner
+还输出稳定 PFT 元数据；两条旧 JSON 均缺这些字段。它们的格式不吻合所核对的
+这两个未修改 runner，不能直接归到任一提交，也没有足够本地记录给出一个确定
+的候选提交集合。已核对源码中 `_evaluate`、`_delta`、物化 helper 和 acceptance
+命令构造从 `7333b46` 到第二阶段基线 AST 相同；annual reference reader 的
+稳定 PFT 选择改动有明确源提交 `87f1f50`，当前仍解析到历史 PFT14 的 index 13。
+这些源提交身份不是旧产出的 producer 身份，源码相同或年度数字相同也不能代替它。
+
+有界目录调查共找到三条同点、cold-start、1961–2010 的完整候选链；除 A/B 外的
+[local_50year_pilot](../../outputs/acceptance/local_50year_pilot_20260713/319.0-057.0/319.0-057.0/compiled_1961_2010.json)
+也失败，127 个年度变量值超限，首个为 1961 NPP。日期目录不能证明执行先后。
+在列明的本地证据集合内，**未找到可确认替代 A 或 B 的同点、同科学合同、完整
+50 年实际通过结果**；这不是对全部项目、服务器或用户档案的不存在断言。
+
+反证和范围限制一并保留：
+
+- [wetdiaglong_fix_319 的 1961 单年](../../outputs/acceptance/wetdiaglong_fix_319/319.0-057.0/compiled_1961_1961.json)
+  及同名 12 点单年结果通过，且年度记录与 B 的 1961 相同；B 的全链仍在 1963
+  首次超限。单年改进不能关闭长链，也不能凭相同数字认定生产源码相同。
+- [2010 Fortran restart 单年](../../outputs/acceptance/pilot_2010_restart_2points/319.0-057.0/compiled_2010_2010.json)
+  通过，但它从下载的 Fortran state 起跑；三点矩阵的 1961 全年及 1962
+  两日 direct/split restart 通过也保留。它们均未证明 cold-start 50 年链。
+- 旧 stage6 / local 1961 的 strict 与 compiled 均科学失败，且 compiled 年度记录
+  与 A 的 1961 相同；这是保存单年 counterevidence，不能扩写为两条 50 年链的
+  strict 分类。B 的相邻命令明确关闭 strict-on-failure，未找到匹配全窗口 strict 结果。
+- [2009 state 比较](../../outputs/reference_mode/diagnose_069_319_2009_checkpoint_vs_fortran_start.json)
+  直接命名 B 的 2009 checkpoint；旧 maintenance 记录在 `1e-10` / `1e-6`
+  诊断容差下分别报 day 173 / 200 首偏差，但没有连到 A/B 的源码身份。
+  这些 owner/state 线索不是当前 main 反例或完整修复证据；七个新点也不包含 319。
+
+本阶段没有确认当前 main 物理 bug，也没有确认这两条旧失败已被有效替代。
+最小后续步骤是取得命名原执行的 source/manifest；若无法恢复，才以明确当前 SHA
+和输入身份做 319 cold-start 首年、必要时 carried 1961–1963 的有界比较，复用
+对应 owner/state 线索且保留原门槛。最终声称长链关闭仍需有身份的 1961–2010
+完整实际通过记录。本阶段没有启动这些运行。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -86,18 +150,15 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    小型 Oracle/回归；相同代码复用证据。尚未核定这些档案的完整当前版本桥，
    这不撤销原通过结果，也不要求首轮穷尽 producer 历史或重跑长序列。
 
-2. **319 高风险历史长序列的有效版本及首个科学偏差（尚未判断当前实现）。**
-   [命名历史复核](../../outputs/reviews/main-physics-20261011/named-high-risk-history.json)
-   中 069 的保存 50 年链通过；两个 319 保存 50 年链未过原科学门槛。
-   `wetdiaglong_effective_319...` 首个超限为 1961 NPP：abs_error
-   `8.192662077100565e-4`，原 limit `3.951849734783173e-4`；
-   `compiled_1961_2010_12point_wetdiaglong_fix` 首个为 1963 NPP。
-   两条旧链的 producer/阶段关联未核定，而三点矩阵的 319 单年科学门槛通过，
-   七个新点属于另一明确集合，不能互相覆盖。入口是精确链接的 JSON、
-   `hydrol_water_stress_diagnostics` / `hydrol_module_diagnostics`、年接续函数及
-   Fortran `hydrol_soil` 6584–6685、`hydrol_var_init` 4097–4137（本轮已核实）。
-   最小办法先判定旧链是否已被后续修复/执行替代，再复用第一超限年的 owner/state
-   记录；有独立反例才定位物理缺陷。不从两个历史差异直接修改 root 或科学阈值。
+2. **319 高风险历史长序列的有效版本及首个科学偏差（第二阶段已做有界调查，身份仍待补）。**
+   [第一阶段失败值](../../outputs/reviews/main-physics-20261011/named-high-risk-history.json)
+   和 [第二阶段 receipts](../../outputs/reviews/main-physics-20261011/319-history/receipts.json)
+   保留第一阶段 069 保存 50 年链通过的结论，以及两个 319 失败和反证：
+   A 为已验证的 21+29 年恢复链、首超限 1961 NPP；
+   B 有匹配的相邻四分片命令、首超限 1963 NPP。两条 producer 均未核定，
+   本地三条完整同点候选均未过原门槛，未建立有效替代；单年通过及七个其他点
+   不能关闭它们。具体输入、源码、owner/state 范围和最小后续步骤见上节。
+   当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
 3. **当前三文件 restart 与年接续的完整状态合同（有通过证据，待版本关联）。**
    入口为 `_paper_day_end_state_packet`、`paper_1961_driver_restart_year_start_day_result`、
@@ -125,9 +186,9 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 
 ## 本轮执行记录
 
-[命令和结果](../../outputs/reviews/main-physics-20261011/commands.md) 记录实际本地读取、
+[第一阶段命令和结果](../../outputs/reviews/main-physics-20261011/commands.md) 记录实际本地读取、
 保存值科学门槛复核、Git/AST/Fortran 身份核对以及辅助脚本首次导入失败后的修正。
-本轮新增本页和 `outputs/reviews/main-physics-20261011/` 辅助证据，并更新
+第一阶段新增本页和 `outputs/reviews/main-physics-20261011/` 辅助证据，并更新
 `docs/RESEARCH_WORKFLOW.md` 导航。未修改生产源码、测试、科学阈值或旧产出。
 未执行 pytest/GPU/长模型运行、训练、服务器作业、Teacher/prepared 生成或数据重标。
 
@@ -139,3 +200,13 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 不把旧图当当前完整性证明。采用 Verify 层级，不作全项目不存在/完整覆盖断言。
 最终 `git diff --check`、新报告空白/相对链接检查及证据引用存在性检查见
 [verification.json](../../outputs/reviews/main-physics-20261011/verification.json)。
+
+第二阶段只更新本页和 `outputs/reviews/main-physics-20261011/319-history/`。
+[第二阶段命令](../../outputs/reviews/main-physics-20261011/319-history/commands.md)
+记录保存值读取和辅助脚本的 scalar/list checkpoint 天数兼容修正；
+[图记录](../../outputs/reviews/main-physics-20261011/319-history/graph-receipt.json)
+仍为 Verify，generation 相同、源码 metadata_changed、产出目录 excluded，
+关键身份结论直接核对当前源码和 Git 片段。
+[第二阶段 verification](../../outputs/reviews/main-physics-20261011/319-history/verification.json)
+记录链接、证据引用、原产出身份、基线、修改范围及 `git diff --check`。
+未改生产源码、测试、科学阈值或原产出，未执行长模型/GPU/训练/服务器工作。
