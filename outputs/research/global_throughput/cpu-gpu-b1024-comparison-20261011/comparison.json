@@ -1,0 +1,236 @@
+{
+  "schema": "global-cpu-gpu-b1024-normalized-comparison-v1",
+  "comparison_kind": "normalized exploratory throughput magnitude and warm price scenarios; not a strict same-workload CPU/GPU speed ratio",
+  "next_comparison_direction": {
+    "priority": "CPU4/B64 versus the already accepted GPU B64 stage",
+    "workload": "same 896 point-days",
+    "alignment_requirements": ["same point inputs", "same window", "same validation contract"],
+    "role_of_current_B1024_result": "normalized cross-collection reference only",
+    "selected_gpu_batch_shape": "B1024",
+    "full2048_cpu_workload_adapter": "optional; not a prerequisite for the same-workload comparison",
+    "accepted_gpu_B64": {
+      "authority": "../cpu-performance-results-15591356/server-cost-results.json accepted_stages[stage=B64_candidate_first_v1]",
+      "job_id": "15579869",
+      "code_pin": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "unique_full64_points": 64,
+      "point_days": 896,
+      "wrapper_seconds": 6.222332641482353,
+      "wrapper_point_days_per_second": 143.99744462818447,
+      "comparison_authority": "../gpu-capacity-2048-preparation-20261009/collected-fixed2048.json valid_exploratory_stages[0].identity.lanes",
+      "ordered_point_ids_and_input_sha256_match_count": 64,
+      "ordered_point_ids_and_input_sha256_comparison": "native_input_lanes64 versus B1024 identity.lanes; all 64 match",
+      "scientific_source_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "canonical_prepared_file_matches": true,
+      "cpu_candidate_and_cpu4_measurement": "pending"
+    }
+  },
+  "source_evidence": {
+    "cpu_current_result": "../cpu-performance-results-15591356/CURRENT_RESULT.md",
+    "cpu_terminal_measurements": "../cpu-performance-results-15591356/terminal-measurements.json",
+    "cpu_server_cost_results": "../cpu-performance-results-15591356/server-cost-results.json",
+    "gpu_current_result": "../gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md",
+    "gpu_terminal_summary": "../gpu-capacity-2048-preparation-20261009/terminal-summary.json",
+    "gpu_collected_fixed2048": "../gpu-capacity-2048-preparation-20261009/collected-fixed2048.json"
+  },
+  "shared_identity": {
+    "scientific_source_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+    "numerical_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "execution_pins_match": false,
+    "common_window_days": [[2, 8], [9, 15]],
+    "half_hours_per_day": 48,
+    "days_per_point_or_lane": 14,
+    "warm_reset": "each repeat uses the same frozen Day 1 end state",
+    "native_dtype_policy": "x64 enabled; baseline native dtypes retained; CPU geographic payload and solar subcalculation include FP32",
+    "full_outputs": true,
+    "discrete_schema_and_dtype": "exact",
+    "atol": 1e-8,
+    "rtol": 1e-10,
+    "allowed_nonfinite_mask": "only declared source-backed bare-soil roughheight NaN coordinates"
+  },
+  "cpu": {
+    "job_id": "15591356",
+    "execution_pin": "4bc82a0747c2fd156430956e41ba426271a88b20",
+    "stage": "B16_server_scalar_v1",
+    "validation_class": "exploratory_performance",
+    "scientific_acceptance": false,
+    "accepted_cpu_stage_count": 0,
+    "gate_count": 17,
+    "gates_passed": 15,
+    "gates_failed": 2,
+    "failed_gate_paths": ["[0][0][0][7]", "[1][0][0][7]"],
+    "allocation": {"cpu_count": 1, "gpu_count": 0},
+    "point_set": {
+      "unique_points": 16,
+      "points_once": true,
+      "point_days": 224,
+      "point_ids_sha256_match_gpu_set": 16,
+      "point_ids_in_gpu_set": 16
+    },
+    "warm_timer_definition": {
+      "core": "B16_warm_frozen_state_core",
+      "wrapper": "B16_preprepared_wrapper_stack_transfer_materialize",
+      "cold_lower_compile_and_first_call_included": false
+    },
+    "warm_medians_seconds": {
+      "core": 31.45850300230086,
+      "wrapper": 31.76035375893116
+    },
+    "warm_samples_seconds": {
+      "core": [31.737742664292455, 31.45850300230086, 31.55779244378209, 31.187333753332496, 30.855936288833618],
+      "wrapper": [32.6488896086812, 31.887541642412543, 31.76035375893116, 31.238337852060795, 30.915467992424965]
+    },
+    "warm_throughput_point_days_per_second": {
+      "core": 7.120491397305738,
+      "wrapper": 7.052818167587637
+    },
+    "cold_timing_seconds": {
+      "lower": 56.317166497930884,
+      "compile": 688.3784436620772,
+      "first_B16_call": 32.158282455056906
+    },
+    "memory": {
+      "peak_rss_bytes": 21393784832,
+      "peak_rss_source": "terminal-measurements.json:linux_ru_maxrss_peak_bytes",
+      "peak_rss_gib": 19.924514770507812,
+      "instrumented_peak_rss_bytes": 21389783040,
+      "instrumented_peak_rss_source": "peak_rss_bytes from terminal-measurements.json",
+      "compile_end_rss_bytes": 5127684096,
+      "compile_end_rss_gib": 4.7755279541015625,
+      "48_independent_processes_naive_compile_end_rss_gib": 229.225341796875,
+      "node_documented_capacity": "192GB",
+      "node_os_visible_capacity_approximately_gib": 187,
+      "48_process_estimate_scope": "naive resident-process multiplication from compile-end RSS, not measured steady-state memory or a proposed execution plan"
+    },
+    "whole_job": {
+      "terminal_state": "COMPLETED",
+      "elapsed_seconds": 1176,
+      "allocated_cpu_count": 1,
+      "primary_cost_cny_estimate": 0.016333333333333335,
+      "conservative_cost_cny_estimate": 0.022866666666666667,
+      "cost_scope": "whole parent CPU1 job including startup, compile, gates, repeats and IO; not divided by 224 point-days",
+      "billing_verified": false
+    }
+  },
+  "gpu": {
+    "job_id": "15671732",
+    "execution_pin": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+    "stage": "capacity_B1024_fixed2048_fresh_v1",
+    "stage_terminal_status": "strict_capacity_stage_passed",
+    "stage_scientific_acceptance": false,
+    "gates_passed": 2051,
+    "native_output_leaves": 760,
+    "saved_output_full64_comparisons_passed": 2048,
+    "allocation": {"gpu_count": 1, "gpu_type": "V100 32GB", "allocated_cpu_count": 4},
+    "point_set": {
+      "unique_real_points": 64,
+      "repeat_count_per_point": 32,
+      "lane_count": 2048,
+      "lane_days": 28672,
+      "cpu_unique_points_overlap": 16,
+      "cpu_points_are_subset_with_matching_input_sha256": true
+    },
+    "warm_timer_definition": {
+      "core": "fixed2048 stage recorded core timer",
+      "wrapper": "fixed2048 stage recorded wrapper timer",
+      "cold_lower_compile_validation_and_checkpoint_io_included": false
+    },
+    "warm_medians_seconds": {
+      "core": 81.77291877008975,
+      "wrapper": 95.8481539208442
+    },
+    "warm_samples_seconds": {
+      "core": [81.78785334713757, 81.76531629636884, 81.77291877008975, 81.77044777199626, 81.77365431934595],
+      "wrapper": [95.64514034986496, 95.92778546735644, 96.19554238393903, 95.80751875042915, 95.8481539208442]
+    },
+    "warm_throughput_lane_days_per_second": {
+      "core": 350.6295290817896,
+      "wrapper": 299.1398250995909
+    },
+    "cold_timing_seconds": {
+      "lower": 99.94253262132406,
+      "compile": 970.4302640799433,
+      "first_full2048_call": 81.97876997478306
+    },
+    "child_job_elapsed_seconds": 2287,
+    "whole_job": {
+      "terminal_state": "FAILED",
+      "failure": "B2048 wrapper OOM after B1024 child completed",
+      "elapsed_seconds": 3800,
+      "allocated_cpu_count": 4,
+      "allocated_gpu_count": 1,
+      "primary_cost_cny_estimate": 2.5333333333333337,
+      "conservative_cost_cny_estimate": 2.6177777777777784,
+      "cost_scope": "whole parent job includes B1024 and failed B2048; not a pure B1024 cost",
+      "billing_verified": false
+    }
+  },
+  "pricing": {
+    "primary": {
+      "cpu_cny_per_allocated_cpu_hour": 0.05,
+      "gpu_cny_per_card_hour": 2.2,
+      "gpu_auxiliary_cpu_count": 4,
+      "gpu_allocation_cny_per_hour": 2.4,
+      "equal_cost_cpu_count_per_gpu_allocation_hour": 48
+    },
+    "conservative": {
+      "cpu_cny_per_allocated_cpu_hour": 0.07,
+      "gpu_cny_per_card_hour": 2.2,
+      "gpu_auxiliary_cpu_count": 4,
+      "gpu_allocation_cny_per_hour": 2.48,
+      "equal_cost_cpu_count_per_gpu_allocation_hour": 35.42857142857143,
+      "cost_of_48_cpu_per_hour": 3.36,
+      "48_cpu_is_same_price_as_gpu_allocation": false
+    },
+    "billing_verified": false,
+    "source_rate_conflict": {
+      "observed_ratio_based_primary_cpu_rate": 0.05,
+      "deployment_conservative_cpu_rate": 0.07,
+      "ratio_44_implied_by_primary_rate": 44,
+      "gpu_to_cpu_ratio_implied_by_conservative_rate": 31.428571428571427,
+      "resolved": false
+    }
+  },
+  "derived": {
+    "throughput_magnitude_only_gpu_over_cpu1": {
+      "core": 49.24232184515542,
+      "wrapper": 42.41422619887411,
+      "strict_same_workload_speed_ratio": false,
+      "wrapper_ratio_description": "GPU allocation throughput divided by the exploratory serial CPU1 rate; GPU allocation includes four auxiliary CPUs."
+    },
+    "warm_cny_per_million_normalized_point_or_lane_days": {
+      "formula": "allocation_CNY_per_hour * median_seconds / (3600 * measured_point_or_lane_days) * 1000000",
+      "cpu_core": {"primary": 1.9505520214720278, "conservative": 2.730772830060839},
+      "cpu_wrapper": {"primary": 1.969267966203569, "conservative": 2.7569751526849964},
+      "gpu_core": {"primary": 1.9013420472956137, "conservative": 1.9647201155388008},
+      "gpu_wrapper": {"primary": 2.228612209841057, "conservative": 2.3028992835024256}
+    },
+    "idealized_same_price_cpu_wrapper_projection": {
+      "primary_equivalent_cpu_count": 48,
+      "linear_wrapper_throughput_lane_days_per_second": 338.5352720442065,
+      "efficiency_to_match_gpu_wrapper_percent": 88.36297124765443,
+      "measured_parallel_cpu_result": false
+    },
+    "conservative_same_price_cpu_wrapper_projection": {
+      "equivalent_cpu_count": 35.42857142857143,
+      "linear_wrapper_throughput_lane_days_per_second": 249.87127222310482,
+      "efficiency_to_match_gpu_wrapper_percent": 119.71757394843502,
+      "48_cpu_cost_cny_per_hour": 3.36,
+      "measured_parallel_cpu_result": false
+    },
+    "formula_definitions": {
+      "throughput_ratio": "GPU measured lane-days/s divided by CPU1 measured point-days/s; descriptive normalization only because total work and execution configuration differ.",
+      "same_price_cpu_count": "GPU total allocation CNY/hour divided by CPU CNY/allocated-count-hour.",
+      "break_even_efficiency_percent": "GPU wrapper lane-days/s divided by (same-price CPU count * CPU1 wrapper point-days/s) * 100."
+    }
+  },
+  "limitations": [
+    "CPU and GPU total measured work differs: CPU 16 points once (224 point-days); GPU 64 points repeated 32 times (28,672 lane-days).",
+    "The point ID sets overlap 16/16 CPU points with matching input hashes, but repetition/layout, total volume, execution pins, and device allocations differ.",
+    "CPU stage remains exploratory with two failed tolerance gates and zero accepted CPU stages.",
+    "GPU B1024 is a strict capacity-stage pass only; the parent job failed on B2048 OOM and overall scientific acceptance is false.",
+    "The 48-CPU projection assumes linear scaling, is not measured, and the naive 48-process compile-end RSS multiplication exceeds the node's approximately 187 GiB OS-visible capacity.",
+    "Whole-job costs include different cold stages and failures; they are listed separately and are not comparable as pure B1024 versus CPU1 workload costs.",
+    "No 669 heterogeneous points, annual simulation, Fortran speedup, general scientific acceptance, or 10x achievement is established."
+  ]
+}

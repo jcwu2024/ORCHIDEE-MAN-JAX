@@ -1,8 +1,12 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-11。先读本页、[B1024双臂获批执行](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)，
-及[B1024双臂本地准备](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)，
-再按需读[碳核心本地同步结果](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)、生命周期实现及两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
+更新：2026-10-11。先读本页、[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
+及[最小CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
+用户已选择接受的B1024作为当前单卡工程选择，主问题转为CPU/GPU速度与单位成本；
+不把1280/1536探索、显存优化或跨版本小容差失败作为前置。
+旧[B1024双臂获批执行](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)、
+[本地准备](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)
+及[碳核心同步结果](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)按问题查阅，原pin和证据保留。
 job15769234已终态FAILED1:0/1140s，追加保存数组CPU/NumPy只读定位已获主管接受；
 本轮科学执行关闭，原因未归属；
 **不恢复任何 GPU 诊断、付费作业或旧额度**。
@@ -64,7 +68,7 @@ Days2–8及9–15、全部 native outputs/masks。JAX x64开启，但原地理p
 不得以改精度、放宽容差、省略过程或削减科学有效输出提速。
 AD/校准价值另论；当前没有梯度/训练、匹配Fortran加速比或普遍科学验收。
 
-## 3. 最新结果：1024最佳已测，2048执行OOM
+## 3. 当前单卡工程选择：接受的B1024；B2048执行OOM
 
 本节性能与科学验收只属于第6节的历史执行pin；不能转授已同步的新碳核心。
 
@@ -96,11 +100,30 @@ prepared-wrapper/热费用不含完整年度/50年运行、生产IO、启动/编
 2.40元/hour；保守CPU0.07则2.48元/hour。账单未核实。
 
 [CPU1已存结果](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md)
-wrapper为7.052818 point-days/s，仍有两项cross-GPU严格容差失败，CPU48未测。
-同价48核理想线性外推338.5353、对旧GPU1024的302.4092，打平需89.33%并行效率，
-只是费用/缩放假设，不能宣布CPU/GPU最终赢家。GPU甜点优先，更多CPU测试非前置。
+wrapper为7.052818167587637 point-days/s。对最新接受的B1024×2
+299.1398250995909 lane-days/s，归一化比例42.414226；CPU串行的16真实点是GPU FULL64的前缀，GPU为64点×32重复，
+不是严格同工作量加速比。CPU仍有两项cross-GPU严格容差失败，accepted CPU stage count为0。
+主情景热wrapper每百万点日/lane-days为CPU1 CNY1.969268、GPU CNY2.228612；
+CPU单价0.07的保守情景变为2.756975/2.302899，初步费用方向反转，均非核实账单。
+主情景GPU加4辅助CPU共2.40元/小时，假设同价48CPU线性吞吐338.5353，打平需88.362971%并行效率；
+CPU4/48实际性能均未测。48核只是算术假设，不能作为48独立进程单节点方案：
+CPU compile-end RSS约4.776GiB，按此作48份常驻进程的朴素外推约229GiB，超过192GB节点；单进程峰值约19.925GiB。
+原始样本、版本/输入边界、冷热费用与缺口见[本轮比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
 
 ## 4. 当前阶段与下一步供主管审阅
+
+当前只完成本地证据比较和有界提案；没有新runner实现或新科学执行。
+下一步优先复用既有JAX CPU-backend的4核pool/B64，与已接受GPU B64（job15579869、
+FULL64 unique64、896 point-days）作同工作量对照，同时补CPU并行证据。
+GPU B64与计划复用的canonical FULL64保存metadata的64点序/input digests和science已核对一致；
+保持连续窗口、760完整native leaves/masks及原容差，性能探索与科学接受分列。
+CPU4/B64尚未执行；优先在一个有界4CPU作业内完成同版本scalar reference准入及B64计时。
+实际CPU reference、step资源admission、wall、cwd和具体命令仍缺，不以vmap lane数替代CPU核数。
+B1024大批量结果保留，与B64归一化吞吐不能冒称严格同总量端到端比；完整2048适配只在需要该级别对照时再选。
+详见[CPU计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
+Fortran匹配基准另缺；不强制GPU重跑或大规模CPU核数网格。本轮不授权新免费/付费作业、远端改动或自动任务。
+
+以下保留已完成的生命周期、碳核心同步和失败定位证据，不作为CPU/GPU比较前置。
 
 [保存证据与生命周期审计](../../../outputs/research/global_throughput/memory-lifecycle-audit-20261011/CURRENT_RESULT.md)
 已接受：wrapper重建输入时整份core resident输入仍有持有者；约7.87GB是逻辑payload，

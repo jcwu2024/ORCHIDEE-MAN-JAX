@@ -1,14 +1,17 @@
 # 全球物理模型吞吐研究
 
-新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)和
-[可复制开场指令](NEW_PROJECT_PROMPT.md)。交接按最新 B1024/B2048 终态定序；
-最新job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
+新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
+[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
+及[最小CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
+用户已选接受的B1024作为当前单卡工程选择，下一主问题是CPU/GPU速度与单位成本；
+1280/1536探索、显存优化及小容差失败不作为前置，B1024不称已证明全局最优。
+旧job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
 283.0-091.0、Day8末rveget/PFT14，32重复一致；原因未归属，本轮科学执行关闭。详见
 [B1024双臂执行结果](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)。
-当前本地准备见[B1024双臂生命周期诊断](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)。
+历史本地准备见[B1024双臂生命周期诊断](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)。
 下面保留历史实验上下文，旧“下一步”及额度不自动恢复为新授权。
 
-更新：2026-10-09。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-11。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 
@@ -91,6 +94,29 @@ GPU 两个原始 JSON 本次已核读：原工作区
 基线测量中由启动、IO、年份差异等实际记录解释。
 
 ## 当前工作单
+
+本轮从CPU1 job15591356与最新接受的GPU B1024×2 job15671732原始记录做本地比较。
+CPU wrapper为7.052818167587637 point-days/s，GPU为299.1398250995909 lane-days/s，
+归一化比例42.414226只作量级参考：CPU串行的16真实点是GPU FULL64的前缀，GPU为64点×32重复，尚非严格同工作量对照。
+当前比较不用旧302.409157替代最新GPU速率；原生dtype、全部输出/masks和科学接受边界保留。
+
+| 热wrapper费用情景，CNY/百万点日或lane-days | CPU1 | GPU B1024×2（含4辅助CPU） |
+| --- | ---: | ---: |
+| CPU 0.05元/核小时，GPU 2.20元/卡小时 | 1.969268 | 2.228612 |
+| CPU 0.07元/核小时，GPU 2.20元/卡小时 | 2.756975 | 2.302899 |
+
+单价情景使初步费用方向反转，账单未核实；冷编译、启动及全作业费用另列，不把失败B2048费用归给B1024。
+主情景同价48CPU的打平效率为88.362971%，只是线性假设；按compile-end RSS作48份常驻scalar的朴素外推约229GiB，
+超过192GB CPU节点。CPU4/48无实际性能结果，不提48独立进程方案。
+下一步优先复用既有CPU4 pool/B64入口，与已接受GPU B64（FULL64 unique64、896 point-days）
+作同工作量对照并补CPU并行证据；GPU B64与计划复用的canonical FULL64保存metadata的64点序、
+完整input digests及science已核对一致。CPU4/B64尚未执行；未来优先在一个有界4CPU作业内
+完成同版本scalar reference准入与B64计时，实际reference、step资源admission及提交参数仍缺。
+B1024是当前GPU工程选择，其大批量吞吐与B64仅作注明不同collection总量的归一化参考；
+完整2048负载适配只在需要该级别端到端对照时再选。详见上方比较和CPU计划。
+本轮只维护本地文档与算术产物，未实现新runner、启动模型作业或改科学合同；原作业预算关闭。
+
+以下为已保存的CPU1和GPU阶段证据，历史工作安排按其当时范围理解。
 
 CPU1 B16 resident-scalar终态已经完成，状态为**性能已测；跨后端科学一致性未接受**。作业15591356在Explore1000节点n04以1 CPU、0 GPU运行1176秒，完成16个固定真实点、两块连续7日、每天48步的224 point-days，并保存五次同步core和wrapper样本。完整终态证据见[CPU结果](../../../outputs/research/global_throughput/cpu-performance-results-15591356/CURRENT_RESULT.md)、[原始测量](../../../outputs/research/global_throughput/cpu-performance-results-15591356/terminal-measurements.json)、[费用情景](../../../outputs/research/global_throughput/cpu-performance-results-15591356/server-cost-results.json)及[CPU-internal reader admission](../../../outputs/research/global_throughput/cpu-performance-results-15591356/cpu-internal-reader-admission.json)。
 

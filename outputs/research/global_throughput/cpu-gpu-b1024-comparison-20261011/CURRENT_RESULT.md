@@ -1,0 +1,31 @@
+# CPU1 and GPU B1024 Warm Comparison
+
+This is a normalized throughput and price-scenario comparison, not a strict same-workload CPU/GPU speed ratio or scientific-equivalence result. The CPU1 exploratory stage ran 16 points once for 224 point-days; GPU job `15671732` measured B1024 x 2 using 64 genuine FULL64 points repeated 32 times for 28,672 lane-days. The CPU points and input digests match 16 of the GPU's 64 unique points, but the repetition count, total work, execution pins, and allocated devices differ.
+
+For a direct next comparison, prioritize CPU4/B64 against the accepted GPU B64 stage at the same 896 point-days, with aligned inputs, window, and validation contract; a CPU comparison over the full 2048 repeated lanes remains optional. The present B1024 result remains the selected GPU batch shape and a normalized cross-collection reference. The accepted GPU B64 record is job `15579869` (`2b14506992e9c9c7c851cef7b905606e55ac4e04`): 64 FULL64 points / 896 point-days, 6.2223326415 s wrapper (143.997444628 point-days/s), with all 64 ordered point IDs and input digests matching the B1024 record.
+
+| Warm timer | CPU1 median | CPU throughput | GPU B1024 x 2 median | GPU throughput | GPU / CPU1 normalized ratio |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Resident core | 31.4585030023 s | 7.12049139731 point-days/s | 81.7729187701 s | 350.629529082 lane-days/s | 49.2423218452 |
+| Prepared wrapper | 31.7603537589 s | 7.05281816759 point-days/s | 95.8481539208 s | 299.139825100 lane-days/s | 42.4142261989 |
+
+The two rows are independently timed warm boundaries. The CPU wrapper field is `B16_preprepared_wrapper_stack_transfer_materialize`; neither row includes the separate cold lower/compile costs below. The GPU wrapper uses the fixed2048 stage's recorded wrapper median. `point-days` and repeated `lane-days` are used as a common normalization unit for scale context, not as proof that these runs performed identical work.
+
+| Warm CNY per million normalized point/lane-days | Primary rates | Conservative rates |
+| --- | ---: | ---: |
+| CPU1 resident core | 1.95055202147 | 2.73077283006 |
+| CPU1 prepared wrapper | 1.96926796620 | 2.75697515268 |
+| GPU B1024 x 2 resident core | 1.90134204730 | 1.96472011554 |
+| GPU B1024 x 2 wrapper | 2.22861220984 | 2.30289928350 |
+
+The primary scenario prices one CPU count at CNY 0.05/hour and a GPU card at CNY 2.20/hour; the GPU allocation includes four auxiliary CPUs, for CNY 2.40/hour total. The conservative scenario uses CNY 0.07 per CPU count-hour and the same card rate, for CNY 2.48/hour total. The source records retain an unresolved price-ratio provenance discrepancy (44 versus 31.4286 implied); neither scenario is a verified bill. At these rates, the normalized warm-cost ordering changes between scenarios for the wrapper row.
+
+At primary rates, one GPU allocation-hour equals 48 CPU-count-hours. Linear scaling from the measured CPU1 wrapper rate would yield 338.535272044 normalized days/s, and would need 88.362971% efficiency to match the GPU wrapper rate. This is an idealized 48-CPU assumption, not a measured parallel CPU result. At conservative rates, the GPU's CNY 2.48/hour equals 35.428571 CPU-count-hours; 48 CPUs would cost CNY 3.36/hour, so they are not same-price. Linear scaling of the conservative equal-cost CPU count yields 249.871272223 days/s and would require 119.717574% efficiency to match the GPU. The CPU host peak is 19.9245147705 GiB from Linux `ru_maxrss` (21,393,784,832 bytes); the separate instrumented peak is 21,389,783,040 bytes. The 48-process naive estimate is 229.225 GiB from 48 times compile-end RSS, above the documented 192GB node (approximately 187GiB OS-visible); it is not a measured steady-state memory result or a proposed single-node execution plan.
+
+Cold and whole-job costs are separate from warm unit costs. CPU job `15591356` used one CPU for 1,176 seconds; its estimated whole-job cost is CNY 0.016333333 primary / 0.022866667 conservative and includes startup, compilation, gates, repeats, and IO. CPU lower and compile were 56.317166498 s and 688.378443662 s; first B16 call was 32.158282455 s. GPU B1024 lower and compile were 99.942532621 s and 970.430264080 s. GPU job `15671732` used one V100 plus four CPUs for 3,800 seconds; its whole-job estimate is CNY 2.533333333 / 2.617777778, but includes the completed B1024 child (2,287 s) and the failed B2048 child. The parent total is not a pure B1024 cost, and the child boundary is not a pure steady-state cost. Complete startup and per-phase validation accounting are unavailable, so cold unit cost and reuse-count amortization remain unmeasured. Billing is unverified.
+
+The B1024 GPU stage strictly passed 2,051 gates, 760 native output leaves, and 2,048 saved-output/FULL64 comparisons. Its parent GPU job failed when B2048 ran out of memory; the overall GPU result has `scientific_acceptance=false`. The CPU1 exploratory stage has 17 recorded gates (15 passed, 2 tolerance failures) and zero accepted CPU stages. Do not read the normalized ratios as strict same-workload acceleration, scientific acceptance, a 669-point or annual result, or measured 48-CPU throughput.
+
+Both records use the same scientific source SHA `11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5` and baseline ref `133e35aec7b83b9d79888c46092f64d518e97299`; their immutable execution pins differ: CPU `4bc82a0747c2fd156430956e41ba426271a88b20`, GPU `8aa2e05aa24b65dc4d30a27d4ee857bba6312221`. Both use the Days 2-8 then 9-15 window, 48 half-hours/day, frozen Day 1 reset, full outputs, native baseline dtypes with x64 enabled, exact discrete schema/dtype checks, `atol=1e-8`, `rtol=1e-10`, and only the declared bare-soil roughheight NaN mask.
+
+Inputs and exact derivations are in [comparison.json](comparison.json). Source authorities: [CPU result](../cpu-performance-results-15591356/CURRENT_RESULT.md), [CPU timing records](../cpu-performance-results-15591356/terminal-measurements.json), [CPU cost scenarios](../cpu-performance-results-15591356/server-cost-results.json), [GPU B1024 result](../gpu-capacity-2048-preparation-20261009/CURRENT_RESULT.md), [GPU terminal summary](../gpu-capacity-2048-preparation-20261009/terminal-summary.json), and [GPU collected stages](../gpu-capacity-2048-preparation-20261009/collected-fixed2048.json).
