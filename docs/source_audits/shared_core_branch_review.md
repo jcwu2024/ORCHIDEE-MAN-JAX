@@ -1,8 +1,9 @@
 # 共享物理核心与研究分支核查
 
 核查日期：2026-10-11。当前结论：共同物理模型只需维护一套；研究中的共享代码
-差异可以拆成三个通用修复候选、一个可选 Teacher 接口和两项批处理运行能力。
-本轮完成分类、证据复核与轻量测试，没有把研究源码合入主分支。
+差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
+初始核查完成分类、证据复核与轻量测试。随后 C1 已以独立提交 `db4dd8f` 接入
+主分支并通过正式回归；其余项目仍按下述范围分别评估。
 
 ## 核查基线
 
@@ -33,20 +34,20 @@ main 最近的物理源码提交为 `5910ba9`，其后至本次基线的提交�
 
 | 编号 | 改动 | 应归属 | 本轮结论 |
 | --- | --- | --- | --- |
-| C1 | DIFFUCO PFT 掩码改为缓存不可变 NumPy 数组 | 通用执行正确性修复 | 优先单独接入 main；补丁和有针对性的回归已准备 |
+| C1 | DIFFUCO PFT 掩码改为缓存不可变 NumPy 数组 | 通用执行正确性修复 | 已独立接入 main：`db4dd8f`，正式回归 14 项通过；日尺度待同步 |
 | C2 | NPP 维持呼吸份额使用已有稳定比值原语 | 通用物理核 AD 修复 | 可作为独立候选；必须同时记录极小分母区域的导数策略 |
 | C3 | 叶龄周转份额消去共同叶质量因子 | 通用物理核数值修复 | 有独立接受证据；携带原测试、适用范围和源身份单独接入 |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
 
-这些是接入建议，不是已经完成的源码同步。不要为获取一个通用修复而整体合并
+除 C1 已接入 main 外，其余仍是接入建议。不要为获取一个通用修复而整体合并
 研究检查点；C3 所在的 `5fb886c` 包含大量其他研究改动。C1 原提交 `ad6c0e1`
 也应按具体源码和回归拆出，避免连带引入容量实验准备材料。
 
 ### C1：与 GPU 批处理无关的缓存缺陷
 
-main 的 `_diffuco_pft_column_mask` 在 `lru_cache` 内创建 JAX 数组。若首次调用
+核查基线 main 的 `_diffuco_pft_column_mask` 在 `lru_cache` 内创建 JAX 数组。若首次调用
 发生在追踪中，缓存会保留该次 `DynamicJaxprTracer`。全球分支仅改为创建相同
 布尔值的只读 NumPy 数组，由消费处在各自追踪中转换；没有改变物理公式或掩码值。
 
@@ -55,9 +56,23 @@ main 在 `jax.checking_leaks` 下 14 项全部复现泄漏；在同一 main 模�
 精确候选实现后 14 项全部通过，包括列替换结果、dtype、掩码内容与只读属性。
 这不是“所有正常主模型运行都会失败”的断言。
 
-候选[补丁](../../outputs/reviews/shared-core-20261011/global/diffuco-mask-host-cache.patch)
-已通过 `git apply --check`，尚未应用；集成时应同时携带正式回归测试。
-详细证据见 [global-evidence.md](../../outputs/reviews/shared-core-20261011/global/global-evidence.md)。
+源码及正式回归已作为独立提交
+`db4dd8f1cc86a33dc8e343725fda2803f63fb358` 接入 main。该提交只包含
+`jax_orchidee/sechiba/diffuco.py` 和 `tests/unit/test_diffuco_mask_cache.py`，
+便于日尺度分支单独同步。修复后的 DIFFUCO 文件与全球分支 `52326bd` 完全一致。
+
+在实际修复后的 main 上执行
+`conda run -n ORCJAX python -B -m pytest -q -p no:cacheprovider tests/unit/test_diffuco_mask_cache.py`，
+14 项全部通过；测试文件 Ruff 检查和 `git diff --check` 通过。
+测试使用 `PYTHONDONTWRITEBYTECODE=1`；关闭 cacheprovider 产生的 `cache_dir`
+配置警告不影响结果。记录见
+[主分支回归日志](../../outputs/reviews/shared-core-20261011/main-diffuco-fix-pytest.log)。
+预审[补丁](../../outputs/reviews/shared-core-20261011/global/diffuco-mask-host-cache.patch)
+和 [global-evidence.md](../../outputs/reviews/shared-core-20261011/global/global-evidence.md)
+保留初始复现过程。
+
+日尺度工作树由该线在适合的阶段同步上述独立提交，并运行同一回归；本次没有
+替它修改工作树或执行版本。全球分支已有同等修复，无需重复修改。
 
 ### C2、C3：共同修复，不依赖神经网络架构
 
@@ -136,7 +151,7 @@ Teacher 生成版本、prepared 对象构建版本、当前执行版本可以不
 核定当前活动 prepared 包的完整生产清单。既有 v6 / prepared 复用工作单、类和
 模块序列化身份继续保留；不要改写历史 producer 标签。
 
-建议接续顺序：C1 独立修复；C2、C3 分开整理通用回归与导数 / 数值边界；随后
+接续顺序：C1 已在 main 完成，由日尺度同步；C2、C3 分开整理通用回归与导数 / 数值边界；随后
 处理 I1 / R1 的兼容接口；R2 按全球线支持范围完善后再集成。共同修复进入 main
 后，研究线在阶段边界按具体提交同步，对其实际依赖补验。正在执行、排队或用于
 历史对照的代码和可执行文件继续保留原版本，不在原地替换。
