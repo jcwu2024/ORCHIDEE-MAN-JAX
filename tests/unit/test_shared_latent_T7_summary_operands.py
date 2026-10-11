@@ -4,6 +4,8 @@ from __future__ import annotations
 import copy
 import json
 import os
+import pickle
+from pathlib import PosixPath, PurePosixPath
 import subprocess
 import sys
 
@@ -144,7 +146,7 @@ def test_projection_layout_normalization_and_template_rejections(assets):
 def test_missing_and_wrong_identity_rejected_before_pickle(tmp_path, monkeypatch):
     def forbidden(*args, **kwargs):
         raise AssertionError("unverified saved source must not be deserialized")
-    monkeypatch.setattr(capture.pickle, "load", forbidden)
+    monkeypatch.setattr(capture.HistoricalAssetUnpickler, "load", forbidden)
     path = tmp_path / "source.pkl"
     with pytest.raises(FileNotFoundError, match="required saved source unavailable"):
         capture.read_verified_pickle(path, probe.PARAMETERS_SHA256)
@@ -154,6 +156,21 @@ def test_missing_and_wrong_identity_rejected_before_pickle(tmp_path, monkeypatch
     paths = capture.AssetPaths(path, path, path, path, path)
     with pytest.raises(ValueError, match="identity differs"):
         capture.load_real_assets(paths)
+
+
+def test_verified_linux_path_pickle_preserves_lexical_path_and_numeric_values(tmp_path):
+    class SavedLinuxPath:
+        def __reduce__(self):
+            return PosixPath, ("/WORK/liwei_work/jcwu/historical/context",)
+    path = tmp_path / "historical.pkl"
+    raw = np.asarray([1., -2., 3.], dtype=np.float64)
+    path.write_bytes(pickle.dumps({"path": SavedLinuxPath(), "array": raw}))
+    restored, identity = capture.read_verified_pickle(path, capture.sha256(path))
+    assert isinstance(restored["path"], PurePosixPath)
+    assert restored["path"].as_posix() == "/WORK/liwei_work/jcwu/historical/context"
+    np.testing.assert_array_equal(restored["array"], raw)
+    assert capture.array_identity(restored["array"]) == capture.array_identity(raw)
+    assert identity["sha256"] == capture.sha256(path)
 
 
 @pytest.mark.parametrize("name,index,value", [

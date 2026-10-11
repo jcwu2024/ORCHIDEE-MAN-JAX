@@ -1,15 +1,18 @@
 # T7 early summary_input：本地提取与验证
 
-2026-10-11。主管已接受本包的本地提取方法、fixture 接入与失败保存，授权提交/推送
-七个任务文件。**真实捕获尚未执行；这不是 CPU 未复现原问题的结果。**
-参数、context 和 prepared 数据缺失，不以 synthetic 或已保存导数替代原 initial state。
+2026-10-11。前包的本地方法、fixture 接入与失败保存已获主管接受并提交。
+**本次后续授权的八文件获取、真实薄 CPU capture 和三轮 affine probe 已完成，通过。**
+真实 summary 为 `(4,257,4)`；12测量/91数组的独立 oracle、AD、cross/repeat/isolation
+全部通过。此早期 projection 在本机 CPU 上未复现超出 strict gate 的差异。
 没有选择生产修复，不排除 later64→64/attention 原因，不构成原 T7 或完整训练提速验收。
 
 ## 身份和有界资产定位
 
 固定 cwd 为 `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/daily-coarse-graining`，branch 为
-`research/daily-coarse-graining`，本轮起始 HEAD 为
-`120c6378966b060f4da6c6763250e43f2d26e2e4`。ORCJAX 解释器实际为
+`research/daily-coarse-graining`。前 fixture 包起始 HEAD 为
+`120c6378966b060f4da6c6763250e43f2d26e2e4`；本次真实获取/执行 HEAD 为
+`9de13774df05ddf015557daee3b8540a07ddb497`，执行时包含下述局部路径兼容改动。
+ORCJAX 解释器实际为
 `C:/Users/admin/.conda/envs/ORCJAX/python.exe`，`jax_orchidee` import 来自本 daily
 checkout。历史执行仍是 `c599236bcf57b745e9bafed678298010f4c3b58f` 加 declared overlays，
 不改写历史报告、manifest、source overlays、HLO、checkpoint 或数据身份。
@@ -21,9 +24,10 @@ checkout。历史执行仍是 `c599236bcf57b745e9bafed678298010f4c3b58f` 加 dec
 原 `latent-reader-T7-20261005.manifest.json` 在 root 与 daily 的
 `outputs/diagnostics/shared-latent-reader-20261004/` 找到，两者 SHA 均为
 `252d610a8df4b78963111244edf7ef3414471883bdfe126f436275beaef57bc4`。
-之前六条 runtime 字面路径的缺失记录仍成立；它不是穷尽不存在证明。
+前包六条 runtime 字面路径的缺失记录保留为当时历史；本次八文件已获取，
+该历史查询不是当前缺失结论或穷尽不存在证明。
 
-最小未来获取清单：
+前包确定的八文件获取清单已全部完成，身份不变：
 
 | 资产 | 需要的身份 |
 | --- | --- |
@@ -58,7 +62,7 @@ SHA 单独记录，不能用当前 HEAD 替换旧实验 identity。
 图工具本轮 Transport closed；此前 generation `2026-10-10T08:46:50Z` 对 daily
 subtree 为 excluded/not_tracked，使用上列精确 source fallback，不重索引 main。
 
-## 实现与验证记录
+## 前包实现与 fixture 验证记录
 
 实现入口为 `scripts/hpc/capture_shared_latent_T7_summary_operands.py`。真实模式仅需
 显式传入 parameters、context、T7 manifest、prepared manifest、dataset manifest
@@ -119,10 +123,10 @@ conda run -n ORCJAX python -B scripts/hpc/capture_shared_latent_T7_summary_opera
 
 fixture summary/direction 是 FP32 `(4,21,4)`，kernel/bias 是 FP32 `(4,384)`/
 `(384,)`；Boolean mask 和诊断 cotangent 是 `(4,21,384)`，每个 sample 的21个
-field 中20个有效。21是这组 synthetic contract 的 field 数，未宣称是缺失真实
-context 的布局。原 raw states/direction 保持 FP64 `(4,3854)`。
+field 中20个有效。21是这组 synthetic contract 的 field 数；本次真实field数为257。
+两者 raw states/direction 均保持 FP64 `(4,3854)`。
 
-本次接入只用 `--repeats 1`：三 routes 各一 baseline 和一 warm cycle，共6测量，
+前 fixture 包接入只用 `--repeats 1`：三 routes 各一 baseline 和一 warm cycle，共6测量，
 不是前包三 warm cycles 的12测量。4次小编译包括3个 affine graphs 和 serial
 merge；6个 oracle comparison、4个 cross-route、3个非平凡 repeat、6个独立
 AD pairing/direction 以及6个其他 sample 精确零检查全部通过，保留49数组。
@@ -130,7 +134,7 @@ AD pairing/direction 以及6个其他 sample 精确零检查全部通过，保�
 与实际最终 NPZ 一致。此小型接入证明提取产物能进入已接受的判别器，未提供
 原数据复现、GPU 因果或训练速度结果。
 
-最终捕获脚本/current fixture source SHA 是
+前包最终捕获脚本/fixture source SHA 是
 `f4136665209844236c7168c40be8d486e3ff164ddb63cef30677f8f85bc2d920`，父级已核对
 与 v3 capture receipt 一致。AD helper whole-file SHA 是
 `b6e07de35e555befd77e2c536e68b786496d80e7bb1a0a7bce54377e1c2e98f4`；其余
@@ -141,16 +145,99 @@ source/array identities 见 receipt。缺失路径 CLI receipt 的实际脚本 S
 早期 fixture.v1 的 Windows source-path key `KeyError/exit1` 实现错误日志保留，
 后续用 `as_posix()` 修正；这不是科学数值失败。
 
-主管已直接核对实现、10项测试与实际日志、v3 capture/source、fixture probe 与
-真实源缺失 receipt，接受范围仅本地方法与失败保存。仅提交/推送指定七个任务
-文件到 daily research branch；本轮 outputs 证据不加入 Git。起始/执行 HEAD 和
-历史身份保持上述原值，交付提交不替代旧实验执行版本。
+前包主管已直接核对实现、10项测试与实际日志、v3 capture/source、fixture probe 与
+真实源缺失 receipt，接受范围仅本地方法与失败保存。前包指定七个任务文件已提交/
+推送到 daily research branch；前包 outputs 证据未加入 Git。该前包起始/执行 HEAD
+和历史身份保持上述原值，前包交付提交不替代旧实验执行版本。本次八文件/真实
+capture后续包也已获主管验收，授权按七文件范围提交推送。
+
+## 本次真实获取与捕获
+
+本次只读获取授权仅含八个既有文件。当前 TAP 接口 `192.168.111.108` Up、
+`192.168.11.0/24` route，以及正常 host-key verification/既有 `train` 身份的
+cln01 authenticated metadata read 共同验证连接；cln01成功，未追加cln02尝试。
+远端仅执行 `stat` 和 SCP读取，未执行 remote hash/Python/反序列化/计算/调度。
+未下载原 input_bundle/profile、Teacher shards 或 GPU assets；原T7 manifest复用
+已匹配的本地文件，不是第九个传输文件。
+
+[八文件 ledger](../../../outputs/T7-summary-real-20261011/retrieval.20261011T074542Z.json)
+保存逐条 source/target、remote bytes/mtime、local SHA、完整 argv、stdout/stderr、
+exit/timing。全部经 unique `.part` 下载、本地验证后落位，没有冲突覆盖或清理。
+local mirror 根为 `E:/ORCHIDEE-MAN-JAX/runtime/`，表内均为其 relative path；
+远端根是 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/`。
+
+| 文件 | bytes | 本地 SHA256 | SCP wall秒 / exit |
+| --- | ---: | --- | --- |
+| `outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json` | 350163 | `8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31` | 0.390351 / 0 |
+| `outputs/training/pft14-daily-teacher-v6/dataset_manifest.json` | 60610898 | `5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99` | 8.031424 / 0 |
+| `outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl` | 264518171 | `4f95d18d97d2feb4dcab8e1dda6caeb242a4869f044a00b6a7ae6bc689806c14` | 27.260246 / 0 |
+| `outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl` | 14465399 | `ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026` | 1.876545 / 0 |
+| `outputs/training/target-oriented-prepared-1000-a243029/chunks/627-813/update-0742.pkl.gz` | 3332079 | `61747a584c11186a7016ef010199997949de733db2c0030a197e097e1fe0fda5` | 1.024944 / 0 |
+| `outputs/training/target-oriented-prepared-1000-a243029/chunks/251-438/update-0275.pkl.gz` | 3366175 | `03faafa481d0d63b913efa3eaaa649fa8bfa689ddf01d97c95ec403006128610` | 0.697049 / 0 |
+| `outputs/training/target-oriented-prepared-1000-a243029/chunks/439-626/update-0482.pkl.gz` | 3371650 | `db06c10eb82864021c3313a17727ccea1d16f52e3da5f661196f14dd4b9cbf39` | 0.899106 / 0 |
+| `outputs/training/target-oriented-prepared-1000-a243029/chunks/251-438/update-0299.pkl.gz` | 3391246 | `ee7fa6e0f537fcd75dc8d02bbf4aa4f0438119f1ca73368e8f7f9d64af1f18aa` | 0.762374 / 0 |
+
+共353405781 bytes，八次传输全部exit0；prepared identity的dataset/schedule/source/
+contract四值与前包声明完全一致。四artifact路径和SHA实际从该manifest解析。
+TRAIN/train四首窗口互不重叠：742=`171.0-095.0/1991/start225`，
+275=`293.0-093.0/1970/start178`，482=`297.0-081.0/1971/start105`，
+299=`345.0-069.0/1967/start202`；各窗口7天、window0/day0，sample299原state SHA
+仍为 `54d01d0f376b0ceed8a843740328dba9d61d2a8989507436bda1a0d16c624f5d`。
+
+首次 `summary-real.v1` 在context反序列化时因Windows不能实例化Linux `PosixPath`
+退出1/wall5.490513s，尚未进入preprocessing；[完整receipt/log](../../../outputs/T7-summary-real-20261011/summary-real.v1.launch.json)
+保留，实际source仍是前包 `f413666...2d920`。局部 `HistoricalAssetUnpickler` 仅在
+Windows把该class恢复为 `PurePosixPath`，保留historical lexical path且不把remote
+path重绑定为本机文件。仍先验证文件SHA，再读取pickle；数字、掩码和gate不改。
+针对性Linux-path pickle roundtrip/数值bytes测试加入后，
+[完整11项测试](../../../outputs/T7-summary-real-20261011/summary-tests.v4.stdout.txt)
+PASS/16.16s；[launch](../../../outputs/T7-summary-real-20261011/summary-tests.v4.launch.json)
+exit0/wall19.840629s。相同cache_dir warning不影响检查。
+
+真实capture仍用前述五条路径，只将output改为
+`outputs/T7-summary-real-20261011/summary-real.v2`；
+[capture receipt](../../../outputs/T7-summary-real-20261011/summary-real.v2.capture.json)、
+[NPZ](../../../outputs/T7-summary-real-20261011/summary-real.v2.operands.npz)、
+[完整CLI/日志](../../../outputs/T7-summary-real-20261011/summary-real.v2.launch.json)
+为exit0/wall21.786731s，origin=`captured_component_operands`。
+实际capture source SHA为
+`70619b0a6445cde87eccaeb31feac46bbb34cdc0d7a6f68c68938c4d09901072`；
+NPZ SHA为 `7af399244e7ae864cb666fdf942705bb2d1b5854cec17e8e41572a770360d1df`。
+真实x/direction为FP32 `(4,257,4)`，saved kernel/bias为FP32 `(4,384)`/`(384,)`，
+mask/cotangent为 `(4,257,384)`。四sample有效field数为250/251/251/251；mask保留。
+normalization文件保存的mean/scale本身为FP64，canonical neural计算转换为FP32；
+未重建统计或改变precision。raw434 sample3-only JVP与其他sample精确零成立。
+
+```powershell
+conda run -n ORCJAX python -B scripts/hpc/probe_shared_latent_T7_batch_numerics.py --backend cpu --operands outputs/T7-summary-real-20261011/summary-real.v2.operands.npz --output outputs/T7-summary-real-20261011/summary-real-probe.v1.json --repeats 3
+```
+
+[真实probe结果](../../../outputs/T7-summary-real-20261011/summary-real-probe.v1.json)、
+[91原数组](../../../outputs/T7-summary-real-20261011/summary-real-probe.v1.results.npz)、
+[CLI/日志](../../../outputs/T7-summary-real-20261011/summary-real-probe.v1.launch.json)
+为PASS/exit0/wall7.638124s，CPU0/JAX0.10.1。probe未改，source SHA
+`c175841fcf9131122adebebc683cf33ca6f980e145cdecfdff0cd77e1bf2e2e8`。
+三routes各baseline加三warm cycles，共12测量；12oracle/12isolation/12实际AD
+pairing与oracle方向检查、24 FP64 FD、8cross/9repeat全部通过。四次小compile
+为三个operators加serial merge，三个optimized HLO gzip均保存。
+cross primal/tangent/input-gradient精确一致；loss和parameter gradients有微小
+route差别，均在strict内，cross最大allowance ratio为0.004743；所有repeat精确。
+独立FP64 oracle最大ratio为0.102922。人工diagnostic cotangent仍不是T7 loss。
+
+[saved-only NumPy复核](../../../outputs/T7-summary-real-20261011/summary-real-review.v1.json)
+重新从91数组验算既有判别器，15项身份/数组/完整cycle/receipt对应检查全部通过；
+未重跑JAX、compile或模型。warm median为B1 0.003302s、vmap 0.002439s、map
+0.003863s，仅小算子本机诊断记录，不是训练吞吐或原GPU结论。
+旧包的 `not_executed` 缺失源receipt保持历史身份；当前真实状态是captured/CPU passed。
+主管已最终验收本次七个源码/测试/文档改动，授权按此范围提交推送；outputs/
+八源资产留在Git外。验收仅覆盖真实薄capture和这个early CPU边界，无原模型修复/
+完整提速验收或新GPU诊断授权。
 
 ## 后续决定
 
-取得最小缺失资产后，仅运行同一薄 CPU capture 和既有三 routes/三 warm cycles
-affine probe；每轮原数组与失败保存，`rtol=1e-5, atol=1e-6` 不变。资产未取得时
-只交付方法/拒绝路径验证，真实状态为 `not_executed`，不追加后层或大图。
+八文件与真实薄capture/CPU判别已完成；不重复下载或重跑已通过的相同检查。
+本包授权止于此边界，没有GPU、后层、prefix、T7/T30、训练或paid操作。
+`rtol=1e-5, atol=1e-6`、原数据/权重/历史overlays保持，未选生产修复。
 本机 CPU JAX0.10.1 不代替 deployed GPU0.4.38；GPU wrapper/bootstrap 是另一包。
 原 strict state 失败、roughness state20 NaN、2.55× 仅组件证据与完整梯度/物理/
 精度/数据边界全部保持。先提高日尺度训练执行速度，用固定 Teacher/prepared 版本

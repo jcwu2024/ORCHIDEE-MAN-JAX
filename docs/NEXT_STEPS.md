@@ -56,27 +56,31 @@ unselected. A precision/reference change is not selected by the JVP result.
 ## Current action and next gate
 
 The current [early summary_input capture package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
-has implemented the thin CPU extractor: 10 fixture tests pass and the captured
-synthetic NPZ passes the unchanged affine discriminator (6 measurements/49
-arrays, one warm cycle). The supervisor has accepted local methods and failure
-preservation and authorized committing/pushing the seven task files. Asset lookup is closed: the original
-T7 manifest is found and SHA-matched, while required parameters/context and
-prepared data remain unavailable. Real capture is `not_executed`, not CPU
-non-reproduction. Preserve the fixed Teacher/prepared version and original
-experiment identities; no later-layer graph, GPU wrapper/bootstrap, remote
-execution, training or automatic repair is part of this package.
+now completes the authorized eight-file read-only retrieval, real thin capture
+and unchanged CPU affine probe. Exact TRAIN742/275/482/299 window0/day0 inputs
+produce FP32 summary `(4,257,4)`; raw434 sample3-only preprocessing JVP is
+admitted. CPU JAX0.10.1 passes12 measurements/91 saved arrays, all independent
+oracle/AD/isolation, eight cross and nine repeat checks. Eleven focused tests
+pass after a Windows historical-PosixPath deserialization compatibility fix;
+the first platform exception and prior missing-source `not_executed` receipts
+remain historical evidence. Current capture source is `70619b0a...901072`,
+execution HEAD `9de13774...b497`; source/old fixture identities stay separate.
+The supervisor accepted this follow-up and authorized commit/push of its seven
+source/test/document files; outputs and eight historical assets remain outside Git.
+Preserve retrieved assets and strict gates; no later-layer graph, GPU wrapper/
+bootstrap, remote computation, training or automatic repair is part of it.
 
 The separately authorized [local numerical preparation](research/daily_coarse_graining/T7_batch_numerics_local_preparation_20261011.md)
 is accepted by the supervisor as completed local methods and preparation:
 bounded input source audit, independent affine method/identity admission and
 retained nonfinite rejection evidence.
-Input6/matrix6 local tests pass; real operands remain unavailable. No production
+Input6/matrix6 local method tests pass; the later real capture above is now available. No production
 repair is selected. The [GPU discrimination plan](research/daily_coarse_graining/T7_batch_numerics_GPU_confirmation_plan_20261011.md)
-still needs missing original assets/real thin capture, bounded wrapper and deployed bootstrap
-verification; it is not GPU ready. The accepted stage may be committed and
-pushed on this research branch; acceptance grants no remote/GPU run, training
-or reopening of the closed scopes, and establishes no original-model repair,
-complete-update speedup or long-term scientific acceptance.
+still needs a bounded wrapper and deployed bootstrap verification; real thin
+capture/CPU admission are complete, but it is not GPU ready. The earlier local
+method stage was accepted/committed; this completed follow-up grants no new
+GPU run, training or reopening of closed scopes, and establishes no original-
+model repair, complete-update speedup or long-term scientific acceptance.
 
 The [accepted result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
 reproduces active differences in the separately compiled canonical neural prefix,

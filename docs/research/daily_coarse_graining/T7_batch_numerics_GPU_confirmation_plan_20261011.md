@@ -1,10 +1,12 @@
 # T7 合批数值：最小目标 GPU 确认与原集成回归
 
 2026-10-11。**没有选定生产修复；当前不采用 whole-prefix scalar mapping。**
-主管已接受本轮作为本地验证方法和后续准备；真实操作数/部署仍待完成。
+前本地方法包已接受；后续授权的八文件只读获取、真实操作数capture/CPU验证完成。
+主管已验收本次后续包，授权按七文件范围提交推送；outputs/八源资产留Git外。
+GPU wrapper/部署验证仍待完成。
 这不是原模型数值修复、GPU readiness、完整训练提速或长期科学验收。
-本轮只准备本地方法与计划，没有新GPU授权。先取得early tokenizer真实operands，
-再做一次bounded V100确认；局部修复有因果/AD证据才另行决定原T7验证，不自动追加整prefix图。
+本轮没有新GPU授权。真实early tokenizer operands已CPU准入；未来bounded V100确认
+仍须独立选择。局部修复有因果/AD证据才另行决定原T7验证，不自动追加整prefix图。
 
 ## 证据与假设
 
@@ -20,23 +22,29 @@ attention contraction差别，只支持“batch lowering改变FP32舍入/归约�
 `5.025831s → 1.967053s`、`2.555005×`，但state AD gate失败，未采用。
 B1不是真值；NumPy FP64小算子oracle是独立诊断，不改变生产reference/precision。
 
-## 真实输入：当前提取器与未完成捕获
+## 真实输入：已完成薄 CPU 捕获
 
 64→64 reader的内部x/direction未保存；不为获取它构造shared-backbone大图。
-推荐先提取最早的tokenizer state-field `summary_input` projection：
+当前已提取最早的tokenizer state-field `summary_input` projection：
 原day0 state3854 → `standardize_continuous` → `_mask_inactive_pft_elements` →
 `_masked_summary`，得到 `x[4,Nfield,4]`、原kernel `[4,384]`、bias `[384]`。
 边界是 `strong_baseline_architecture.py:1111–1128`，helpers分别位于
 `input_conditioning.py:12`、`strong_baseline_architecture.py:984/957`，
-参数初始化来源 `shared_transformer.py:177`，实际saved parameter leaf path须核验。
+参数初始化来源 `shared_transformer.py:177`，实际saved leaf已核验为
+`parameters["tokenizer"]["summary_input"]` 的FP32 kernel/bias。
 这是early projection干预；通过或未复现均不能排除later64→64/attention原因。
 
 当前薄CPU extractor/fixture工作包与证据见
-[early summary_input结果](T7_summary_capture_results_20261011.md)：已实现且10项fixture
-tests通过；synthetic NPZ接入既有probe的6测量/49数组通过（`--repeats 1`，一次
-warm cycle）。主管已接受本地方法与失败保存，授权提交/推送。
-**真实捕获因必要资产
-缺失为not_executed，不是CPU未复现，真实输入仍未到位。**只反序列化
+[early summary_input结果](T7_summary_capture_results_20261011.md)：前fixture包通过且已提交，
+本次八文件身份匹配的真实capture成功，summary为FP32 `(4,257,4)`，valid fields
+250/251/251/251，source SHA `70619b0a6445cde87eccaeb31feac46bbb34cdc0d7a6f68c68938c4d09901072`，
+execution HEAD `9de13774df05ddf015557daee3b8540a07ddb497`。11项focused tests通过，
+包括Windows将历史PosixPath恢复为lexical PurePosixPath的兼容性检查。
+**当前为captured/CPU passed；旧缺失源not_executed与首次平台异常receipt保留为历史。**
+CPU JAX0.10.1既有probe `--repeats 3` 通过12测量/91数组、12oracle/12AD/12isolation、
+8cross/9repeat及24 FP64 FD；四个小compile/三HLO均保存。
+此早期CPU边界未复现strict失败，不排除历史GPU/later contractions。
+捕获只反序列化
 原context的head/contract/layout、参数与TRAIN742/275/482/299四个首T7窗口day0，
 复用canonical rebuild/assembler的state定义和PFT mask。保留原
 `head.input_normalization` mean/scale/tail threshold/tail mask、state-field pool、
@@ -62,13 +70,12 @@ parameters/context交叉核验method，不依赖这两个独立文件。四个ar
 还会绑定overlays并检查profile/reference/admission/head/source，不能直接当thin loader；
 `shared_latent_T7_batch_assets.py:114 load_training_T7_cases`构造完整case并作小
 identity shape检查，无模型forward，亦不提供内部operand。当前extractor已固定
-CPU-only parser/argv、保存capture receipt/source hash；初始audit未执行提取或传输。
-当前工作包已执行synthetic capture/probe，仍没有真实提取或传输。
-本地declared shared-root参数/context/TRAIN299 artifact/prepared manifest/原manifest
-均缺，且无runtime junction；已有raw24结果/HLO2 gzip不能反推内部operands。
-后续有界basename查找在root/daily复用的
-`outputs/diagnostics/shared-latent-reader-20261004/` 找到原manifest且SHA匹配；
-其余缺口见当前结果/资产记录。此前字面transfer路径缺失结论不改写为全局不存在。
+CPU-only parser/argv、保存capture receipt/source hash。最新读取通过cln01正常SSH身份/
+host-key验证，仅metadata/SCP八文件至 `E:/ORCHIDEE-MAN-JAX/runtime/outputs/`，
+保留relative路径。原manifest复用root/daily outputs既有SHA匹配版本，未下载第九文件。
+四artifact路径/SHA从prepared manifest解析；sample299 window0/day0原state SHA一致。
+未下载input_bundle/profile/Teacher shards；八文件完整ledger见当前结果。
+runtime未建junction；新operands为实际canonical preprocessing捕获，不从raw24结果反推。
 
 ## 与现有 harness 完全一致的 NPZ 合同
 
@@ -94,7 +101,7 @@ capture_source_sha256/capture_receipt_sha256/direction_coordinate/mask_meaning`�
 下一次最小GPU确认优先434，不把四方向变成四轮新compile。
 
 默认synthetic固定为 `(4,128,64) @ (64,64)`，仅验证判别方法。
-捕获真实包后先CPU验证，再冻结未来GPU命令：
+真实包已完成CPU验证；未来GPU命令仍待wrapper/部署验证后冻结：
 `<canonical-GPU-python> -B <declared-checkout>/scripts/hpc/probe_shared_latent_T7_batch_numerics.py
 --backend gpu --operands <identity-bound.npz> --output <unique.json>
 --seed 20261011 --repeats 3`。这是参数主体，尚非已验证GPU launcher；不覆盖旧证据。
@@ -130,7 +137,7 @@ loss/sampling、public native-checkpointed AD及完整跨日梯度边界全部�
 须在`jax.numpy`/模型import前注册PJRT，复用accepted bootstrap及canonical launcher
 动态`readlink -f` driver-library binds；此入口接入和deployed验证尚未完成，本地
 CPU JAX0.10.1通过不替代它。任选可用cln01/cln02作jump，冻结argv须CPU参数校验/
-目标shell `--dry-run`；真实提取、deadline/NVML wrapper及bootstrap验证到位前不称GPU ready。
+目标shell `--dry-run`；真实提取已完成，deadline/NVML wrapper及bootstrap验证未到位前不称GPU ready。
 
 ## 结果决定与原集成 T7 回归入口
 
@@ -172,5 +179,6 @@ NaN独立admission失败不能豁免。历史B4 lower435s/backend7595s不适合2
 daily root/branch/HEAD/import、入口/schema已核对；CPU证据选`outputs/T7-batch-numerics-20261011/affine-cpu.v3.json`，
 synthetic PASS、6项matrix tests PASS（3.80s，含中间轮mutation及nonfinite保存/exit3 guard），input owner
 6项PASS；首版final-only及v2结果保留，以v3为最终method evidence。这些本地证据不归因原模型。
-未运行remote/GPU/真实模型forward、整网tracing/AD或Teacher生成。daily图索引
-excluded/not_tracked，源码精确fallback；真实thin capture、wrapper、GPU因果/原集成gate未验证，旧额度关闭。
+后续完成只读remote metadata/SCP和真实thin CPU capture/probe；没有remote计算、GPU、
+真实整网forward/tracing/AD或Teacher生成。daily图索引excluded/not_tracked/transport closed，
+源码精确fallback；wrapper、GPU因果/原集成gate未验证，旧额度关闭。

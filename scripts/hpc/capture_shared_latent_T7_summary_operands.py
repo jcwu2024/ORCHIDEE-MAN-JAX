@@ -13,7 +13,7 @@ import gzip
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import pickle
 import subprocess
 import sys
@@ -56,6 +56,7 @@ HISTORICAL_OVERLAYS = {
 }
 SCHEMA = "T7_summary_input_capture_receipt_v1"
 BOUNDARY = "rollout_input_from_template -> CanonicalDailyOperatorInputAssembler.assemble -> standardize_continuous -> _mask_inactive_pft_elements -> _masked_summary -> tokenizer.summary_input operands"
+PATH_POLICY = "On Windows only, saved pathlib.PosixPath is restored as PurePosixPath; historical lexical paths are preserved without binding remote paths to the host filesystem."
 
 
 def sha256(path):
@@ -86,6 +87,15 @@ def require_file(path, expected_sha=None):
     return {"path": str(path), "sha256": digest, "size_bytes": after.st_size, "mtime_ns": after.st_mtime_ns}
 
 
+class HistoricalAssetUnpickler(pickle.Unpickler):
+    """Keep Linux path metadata lexical when reading unchanged assets on Windows."""
+
+    def find_class(self, module, name):
+        if os.name == "nt" and (module, name) == ("pathlib", "PosixPath"):
+            return PurePosixPath
+        return super().find_class(module, name)
+
+
 def read_verified_pickle(path, expected_sha, *, verified_identity=None):
     # Hash before deserialization; no unverified pickle is opened in real mode.
     identity = verified_identity if verified_identity is not None else require_file(path, expected_sha)
@@ -96,7 +106,7 @@ def read_verified_pickle(path, expected_sha, *, verified_identity=None):
             raise ValueError("verified saved source identity changed before deserialization")
     opener = gzip.open if str(path).endswith(".gz") else open
     with opener(path, "rb") as stream:
-        return pickle.load(stream), identity
+        return HistoricalAssetUnpickler(stream).load(), identity
 
 
 @dataclass(frozen=True)
@@ -225,6 +235,7 @@ def load_real_assets(paths):
         "normalization": head.input_normalization, "layout": head.layout,
         "projection": summary_projection(saved["parameters"]),
         "origin": "captured_component_operands", "provenance": {"files": files,
+            "historical_path_deserialization_policy": PATH_POLICY,
             "historical_source_head": HISTORICAL_HEAD, "historical_overlays": HISTORICAL_OVERLAYS,
             "saved_candidate_identity": saved["identity"], "prepared_context_identity": context["identity"],
             "selection": selection, "original_manifest_declarations": manifest}}
