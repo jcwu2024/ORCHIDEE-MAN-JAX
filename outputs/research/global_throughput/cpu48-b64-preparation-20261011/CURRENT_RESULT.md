@@ -31,13 +31,25 @@
 
 ## 执行版本与科学对照
 
-本阶段提交后由 `prepare_global_cpu48_execution.py` 生成完整执行 SHA、
-[execution-code-pin.json](execution-code-pin.json)、harness patch 与本地 Git
-bundle；最终版本/目标 Bash 展开收据在本页更新。历史 base 固定为
+执行 commit 为 `4f6b2fc906c453b9030acff489637a8f83605dca`，ref
+`codex/global-cpu48-b64-v1`；审核 research source 为
+`2f8544d40cef306c4582f5ed58bd7ab7e6a8905f`。实际封装结果见
+[execution-code-pin.json](execution-code-pin.json)。历史 base 固定为
 `8aa2e05aa24b65dc4d30a27d4ee857bba6312221`，认证 science 为
 `11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5`。
-仅显式审核的 harness/tests 可移入执行版本，整个 `jax_orchidee` 子树必须与
-base 相同；当前 research 分支的碳修复保留。
+仅移入 13 个显式审核的 harness/tests；104 个物理源码文件及整个
+`jax_orchidee` 子树与 base 完全相同，当前 research 分支的碳修复保留。
+本地 incremental bundle `cpu48-b64-4f6b2fc906c4.bundle`（39,681 bytes）已
+通过 Git verify，server bare Git 已有其 prerequisite。原始 harness patch 和
+bundle 保留在本目录且不加入 Git；执行 ref、manifest 和接口收据保留可恢复身份。
+
+[固定版本接口收据](pinned-interface-review.json)记录实际 Git blob 经目标
+GNU Bash4.2.46 stdin `--dry-run` 的完整展开：精确执行 SHA、绝对 code/cwd、
+canonical Python、冻结输入/reference 和 5400/2700/1800 秒窗口均绑定。
+随后本地实际 coordinator→scalar/batch runner CLI dry-run 通过，未导入 JAX、
+未生成 run-root；仅为该本地检查替换 Python/runner 路径。执行 checkout 尚未
+部署；目标 Python/JAX、实际 HEAD/clean 和 Slurm step 清理没有被此验证替代。
+准备验收见 [preparation-acceptance.json](preparation-acceptance.json)。
 
 冻结输入为 canonical `prepared_inputs_remote_64.pkl`，64 unique 点、连续
 Days2–8/9–15、48 半小时步，共 896 point-days；760 完整 native 输出、masks、

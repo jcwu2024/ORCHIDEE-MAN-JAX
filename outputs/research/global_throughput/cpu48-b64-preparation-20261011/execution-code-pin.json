@@ -1,0 +1,112 @@
+{
+  "schema": "cpu48-b64-immutable-execution-v1",
+  "status": "local_preparation_only",
+  "source_research_commit": "2f8544d40cef306c4582f5ed58bd7ab7e6a8905f",
+  "base_execution_commit": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+  "execution_code_commit": "4f6b2fc906c453b9030acff489637a8f83605dca",
+  "execution_ref": "codex/global-cpu48-b64-v1",
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
+  "scientific_source": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "execution_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "every_scientific_blob_identical_to_base": true,
+    "research_science_tree_oid": "62e90547ee8eadab387713397bb111c399c81b6c"
+  },
+  "harness_paths": [
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/collect_global_cpu48_b64.py",
+    "scripts/dev/global_server_reference.py",
+    "scripts/dev/global_server_resources.py",
+    "scripts/dev/prepare_global_cpu48_execution.py",
+    "scripts/hpc/global_cpu48_b64_coordinator.py",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh",
+    "tests/unit/test_collect_global_cpu48_b64_cli.py",
+    "tests/unit/test_global_cpu48_b64_preparation.py",
+    "tests/unit/test_global_cpu48_runtime.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_global_server_reference_metadata.py",
+    "tests/unit/test_prepare_global_cpu48_execution.py"
+  ],
+  "execution_changed_paths": [
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/collect_global_cpu48_b64.py",
+    "scripts/dev/global_server_reference.py",
+    "scripts/dev/global_server_resources.py",
+    "scripts/dev/prepare_global_cpu48_execution.py",
+    "scripts/hpc/global_cpu48_b64_coordinator.py",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh",
+    "tests/unit/test_collect_global_cpu48_b64_cli.py",
+    "tests/unit/test_global_cpu48_b64_preparation.py",
+    "tests/unit/test_global_cpu48_runtime.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_global_server_reference_metadata.py",
+    "tests/unit/test_prepare_global_cpu48_execution.py"
+  ],
+  "harness_blob_sha256": {
+    "scripts/dev/benchmark_global_server_cpu.py": "a773dbe64fc21a93bca4e4fda952c37f97445fc0eaa9eda3b35c93c482aa91dc",
+    "scripts/dev/collect_global_cpu48_b64.py": "6ca9532a22648cafc7fd4083c85139657968bd2c02b9d01a71aa2b204e879f04",
+    "scripts/dev/global_server_reference.py": "e355e0ac36f06bd288b3523e507d0cb91c04d71acaf0a0b002e8e70cac6c70bc",
+    "scripts/dev/global_server_resources.py": "c17f37f4d0acd888a9525154489e1815d3d24ff60c6fac030c73e359284dc271",
+    "scripts/dev/prepare_global_cpu48_execution.py": "5754d62b96507a19330f65c28ce7aec05a68f9628dad81812708538ff7fa4038",
+    "scripts/hpc/global_cpu48_b64_coordinator.py": "5514612efaa72303695f257fda20d7b045e3c35b800390d2a70268db0d4c63b4",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh": "ff8706cdc1c25ec49d20b13370780321586e02e7332fef97064617580e29f77a",
+    "tests/unit/test_collect_global_cpu48_b64_cli.py": "1bffea7f32772b41b27ffaa66dfbf0eb2f3c8f91be052e24a646b960f4333281",
+    "tests/unit/test_global_cpu48_b64_preparation.py": "b5be799f7eca20a73eab6de8fdd468b95b805c500019589dee105df192acf61f",
+    "tests/unit/test_global_cpu48_runtime.py": "89e4fc7c27b60ecad516624f30d44c714baf0ee325e34f27cda55b2f45ca4071",
+    "tests/unit/test_global_server_benchmark.py": "e3c253035e8f24518840acf5dc4965aaed3d41f61d3a76d218d72f22a4622bfc",
+    "tests/unit/test_global_server_reference_metadata.py": "81e31aba32065d5a3ae1cfc89272231fd37ea4c577497dcaaa0fea288d62ba6e",
+    "tests/unit/test_prepare_global_cpu48_execution.py": "93991b5095db3f55075ce05d92301fe63324fa15b0169c63dfae1cdf4f7a826d"
+  },
+  "patch": {
+    "name": "execution-harness.patch",
+    "sha256": "d41f145a4533e6b889e66e794d13b84675a664a9f91380a27a28aef83c4afedb",
+    "bytes": 144797
+  },
+  "bundle": {
+    "name": "cpu48-b64-4f6b2fc906c4.bundle",
+    "sha256": "93b960d602c7e176bdf76af495ae93de7252e3d28c4ad111ea01c07647c6dd9f",
+    "bytes": 39681,
+    "prerequisite": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+    "local_git_bundle_verify": "passed"
+  },
+  "fixed_contract": {
+    "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+    "GPU_FULL64_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "unique_points": 64,
+    "point_days": 896,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "half_hours_per_day": 48,
+    "native_output_leaves": 760,
+    "atol": 1e-08,
+    "rtol": 1e-10
+  },
+  "allocation_plan": {
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_CPUs": 48,
+    "GPUs": 0,
+    "wall_seconds": 5400,
+    "primary_worst_case_CNY": 3.6,
+    "conservative_worst_case_CNY": 5.04,
+    "whole_parent_allocation_billed": true
+  },
+  "working_tree_preserved": {
+    "HEAD": "2f8544d40cef306c4582f5ed58bd7ab7e6a8905f",
+    "branch": "research/global-throughput"
+  },
+  "remote_deployment_or_submission": false,
+  "model_or_GPU_execution": false
+}

@@ -24,6 +24,7 @@
   ],
   "final_static_checks": {
     "scoped_ruff_on_twelve_python_harness_test_files": "passed",
+    "pinned_interface_review_artifact_scoped_ruff": "passed",
     "git_diff_check": "passed",
     "unchanged_dependencies_equal_historical_base": [
       "scripts/dev/benchmark_global_batch.py",
@@ -49,7 +50,20 @@
     "CPU_internal_whole_tree_gates": 1,
     "CPU_internal_compared_leaves": 760
   },
-  "version_packaging_and_pinned_target_bash_expansion": "next local/read-only preparation stage",
+  "version_packaging_and_pinned_target_bash_expansion": {
+    "result": "passed",
+    "source_research_commit": "2f8544d40cef306c4582f5ed58bd7ab7e6a8905f",
+    "execution_code_commit": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "version_manifest": "execution-code-pin.json",
+    "interface_receipt": "pinned-interface-review.json",
+    "exact_historical_scientific_files": 104,
+    "explicit_harness_test_paths": 13,
+    "verified_local_bundle_bytes": 39681,
+    "actual_target_Bash_stdin_dry_run": "passed",
+    "actual_local_coordinator_to_scalar_and_batch_runner_dry_runs": "passed",
+    "target_Python_or_JAX_validation": false,
+    "raw_patch_and_bundle_kept_local_and_ignored": true
+  },
   "scientific_acceptance": false,
   "performance_acceptance": false,
   "physical_model_compilation_or_run": false,

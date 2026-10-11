@@ -4,7 +4,7 @@
 
 ## 固定版本和负载
 
-- execution commit：`__CPU48_EXECUTION_COMMIT__`，ref `codex/global-cpu48-b64-v1`；完整封装证据见 [execution-code-pin.json](execution-code-pin.json)。
+- execution commit：`4f6b2fc906c453b9030acff489637a8f83605dca`，ref `codex/global-cpu48-b64-v1`；审核 source 为 `2f8544d40cef306c4582f5ed58bd7ab7e6a8905f`，完整封装证据见 [execution-code-pin.json](execution-code-pin.json)。
 - base：`8aa2e05aa24b65dc4d30a27d4ee857bba6312221`；science `11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5`；baseline `133e35aec7b83b9d79888c46092f64d518e97299`。
 - 精确 code/cwd：`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1`。
 - Python：`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python`；必须是实际 CPU JAX/jaxlib0.4.38，开启 x64。
@@ -35,9 +35,11 @@
 
 审批对象是以下一个作业命令，cwd已经解析为固定immutable code-dir。输出为全新 `.../server-benchmark/cpu48-b64-v1-${SLURM_JOB_ID}`，含scalar、batch、orchestration和两个step日志；Slurm日志使用绝对路径。
 
+该 SHA 的启动器 Git blob 已经通过目标 GNU Bash4.2.46 stdin `--dry-run` 实际展开；本地实际 coordinator→scalar/batch CLI dry-run 也通过。见 [固定版本接口收据](pinned-interface-review.json)。本地仅替换 Python/runner 路径；没有目标 Python/JAX 测试或部署，真实 code-dir/HEAD、Slurm 资源及物理运行准入仍待未来实测。
+
 ```bash
 cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1
-EXPECTED_CODE_COMMIT=__CPU48_EXECUTION_COMMIT__ \
+EXPECTED_CODE_COMMIT=4f6b2fc906c453b9030acff489637a8f83605dca \
 CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1 \
 /rmprog/slurm/v22.05.7/bin/sbatch \
   --partition=cnall --nodes=1 --ntasks=1 --cpus-per-task=48 \
