@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import os
 import platform
+import re
+import shlex
 from pathlib import Path
 
 
@@ -25,14 +27,29 @@ def admit(mode, budget, *, environ=None, allowed=None, sysfs=Path("/sys/devices/
           partitions=("cnall", "cnmix")):
     env = os.environ if environ is None else environ
     hostname = platform.node() if hostname is None else hostname
-    if mode not in {"scalar", "pool", "batch"} or budget not in {1, 4}:
-        raise ValueError("CPU modes scalar/pool/batch require fixed budgets 1 or 4")
+    if mode not in {"scalar", "pool", "batch"} or budget not in {1, 4, 48}:
+        raise ValueError("CPU modes scalar/pool/batch require budgets 1, 4 or batch48")
     if mode == "scalar" and budget != 1 or mode == "pool" and budget != 4:
         raise ValueError("scalar requires one core; persistent pool requires four cores")
     if not env.get("SLURM_JOB_ID") or env.get("SLURM_JOB_PARTITION") not in partitions:
         raise RuntimeError("physical performance requires an actual declared paid Slurm partition allocation")
     if int(env.get("SLURM_CPUS_PER_TASK", "0")) != budget or int(env.get("SLURM_NTASKS", "1")) != 1:
         raise RuntimeError("Slurm allocation must be one task with exactly the declared CPU budget")
+    parent_text = env.get("ORCHJAX_PARENT_CPU_COUNT")
+    if budget == 48 and parent_text is None:
+        raise RuntimeError("batch48 requires explicit parent allocation CPU count")
+    parent = budget
+    if parent_text is not None:
+        if not re.fullmatch(r"[1-9][0-9]*", parent_text):
+            raise RuntimeError("parent allocation CPU count must be a positive integer")
+        parent = int(parent_text)
+        allocated = allocated_tres_cpu_count(env.get("ORCHJAX_SLURM_ALLOC_TRES", ""))
+        if allocated != parent or parent < budget:
+            raise RuntimeError("parent CPU count must match allocated TRES and enclose the step CPU budget")
+    elif env.get("ORCHJAX_SLURM_ALLOC_TRES"):
+        parent = allocated_tres_cpu_count(env["ORCHJAX_SLURM_ALLOC_TRES"])
+        if parent < budget:
+            raise RuntimeError("parent allocated TRES cannot be smaller than the step CPU budget")
     if hostname.startswith(("cln", "test", "ibtest", "gln")):
         raise RuntimeError("login and diagnostic nodes are prohibited for physical CPU performance")
     if allowed is None:
@@ -49,14 +66,25 @@ def admit(mode, budget, *, environ=None, allowed=None, sysfs=Path("/sys/devices/
     if len(selected) != budget:
         raise RuntimeError("allocation affinity must contain exactly the declared unique physical cores; require Slurm core binding, SMT is not another core")
     return {"mode": mode, "allocated_CPU_cores": budget, "allocated_CPU_request_count": budget,
+            "step_CPU_budget": budget, "parent_allocated_CPU_request_count": parent,
+            "billing_CPU_request_count": parent,
+            "CPU_count_scope": "allocated_CPU_request_count is this step; billing count is the parent allocation",
             "selected_logical_cpus": selected[:budget],
             "original_affinity": list(allowed), "topology": topology, "hostname": hostname,
             "Slurm": {name: env.get(name) for name in (
                 "SLURM_JOB_ID", "SLURM_JOB_PARTITION", "SLURM_CPUS_PER_TASK", "SLURM_NTASKS",
-                "SLURM_JOB_NODELIST", "SLURM_MEM_PER_NODE", "SLURM_MEM_PER_CPU", "ORCHJAX_SLURM_ALLOC_TRES",
+                "SLURM_JOB_NODELIST", "SLURM_MEM_PER_NODE", "SLURM_MEM_PER_CPU", "ORCHJAX_PARENT_CPU_COUNT", "ORCHJAX_SLURM_ALLOC_TRES",
                 "ORCHJAX_SLURM_ALLOC_TRES_SOURCE")},
             "pool_controller_policy": "shares worker0 allocated core; no fifth CPU" if mode == "pool" else None,
             "thread_count_claim": "affinity is a resource bound; vmap is not a thread-count claim"}
+
+
+def allocated_tres_cpu_count(value):
+    """Require one exact parent cpu=N entry, never a substring or a range."""
+    entries = [part for part in value.split(",") if part.split("=", 1)[0] == "cpu"]
+    if len(entries) != 1 or re.fullmatch(r"cpu=[1-9][0-9]*", entries[0]) is None:
+        raise RuntimeError("parent allocated TRES requires one unambiguous cpu=N entry")
+    return int(entries[0].split("=", 1)[1])
 
 
 def admit_gpu(*, environ=None, allowed=None, sysfs=Path("/sys/devices/system/cpu"), hostname=None):
@@ -97,13 +125,27 @@ def bind(cpus, *, one_thread):
     if not one_thread and len(cpus) > 1 and (
             "xla_cpu_multi_thread_eigen=false" in flags or "intra_op_parallelism_threads=1" in flags):
         raise RuntimeError("batch4 cannot inherit pool/global single-thread XLA flags; declare a four-core execution policy")
+    if not one_thread and len(cpus) == 48:
+        tokens = shlex.split(flags)
+        if any(re.fullmatch(r"(?:--)?xla_cpu_multi_thread_eigen=false", token) or
+               re.fullmatch(r"(?:--)?intra_op_parallelism_threads=1", token) for token in tokens):
+            raise RuntimeError("batch48 cannot inherit single-thread XLA flags")
+        for token in tokens:
+            if "xla_force_host_platform_device_count" in token and token != "--xla_force_host_platform_device_count=1":
+                raise RuntimeError("batch48 requires one native CPU device, not logical CPU devices")
+        if os.environ.get("OMP_NUM_THREADS") not in (None, "48"):
+            raise RuntimeError("batch48 cannot inherit a different OMP thread budget")
+        if not any(token == "--xla_cpu_multi_thread_eigen=true" for token in tokens):
+            os.environ["XLA_FLAGS"] = (flags + " --xla_cpu_multi_thread_eigen=true").strip()
     os.sched_setaffinity(0, set(cpus))
     if sorted(os.sched_getaffinity(0)) != sorted(cpus):
         raise RuntimeError("failed to establish exact CPU affinity")
     os.environ["JAX_PLATFORMS"] = "cpu"
     os.environ["JAX_ENABLE_X64"] = "true"
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
-        os.environ[name] = "1" if one_thread else str(len(cpus))
+        os.environ[name] = "1" if one_thread or (len(cpus) == 48 and name != "OMP_NUM_THREADS") else str(len(cpus))
+    if not one_thread and len(cpus) == 48:
+        os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 
 def parse_cpu_list(value):
