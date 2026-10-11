@@ -4001,7 +4001,11 @@ def npp_closed_update(
     bm_pump = jnp.where(over_tax & fortran_pft, resp_maint * dt_days - bm_tax_max, 0.0)
     maintenance_active = resp_maint[:, :, None] != 0.0
     safe_resp_maint = jnp.where(maintenance_active, resp_maint[:, :, None], 1.0)
-    maint_fraction = jnp.where(maintenance_active, resp_maint_part / safe_resp_maint, 0.0)
+    maint_fraction = jnp.where(
+        maintenance_active,
+        _stable_ratio_for_ad(resp_maint_part, safe_resp_maint),
+        0.0,
+    )
     pump_delta = jnp.zeros_like(maint_fraction).at[:, :, jnp.asarray(PUMPED_BIOMASS_PARTS)].set(
         -bm_pump[:, :, None] * maint_fraction[:, :, jnp.asarray(PUMPED_BIOMASS_PARTS)]
     )
