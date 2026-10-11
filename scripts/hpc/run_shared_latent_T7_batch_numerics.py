@@ -442,8 +442,8 @@ def main(argv=None):
         for signum in (signal.SIGTERM, signal.SIGINT):
             signal.signal(signum, lambda number, frame: setattr(supervisor, 'interrupted', number))
         # New free and paid entries cooperate through one persistent atomic
-        # directory lock. The historical b676 entry needs separate quarantine;
-        # this change alone does not govern that earlier executable.
+        # directory lock. The unchanged b676 entry does not use it; exclusion
+        # covers new entries and relies on the declared sole launch owner.
         lock = AffineScopeLock(SCOPE_LOCK, SCOPE_ID).acquire()
         try:
             return supervisor.run()
