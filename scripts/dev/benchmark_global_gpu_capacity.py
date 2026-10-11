@@ -45,6 +45,7 @@ B1024_BYTES = 440822967
 B1024_CODE_SHA = "bd9e4c04af68d77e79b984bfc8aa064977f893d3"
 B1024_PEAK_RSS_BYTES = 27865956352
 LABEL = "capacity performance measured; global scientific consistency not accepted"
+MEASUREMENT_STRATEGIES = ("legacy_interleaved", "phased_resident_control", "phased_release")
 
 
 def parser():
@@ -65,6 +66,8 @@ def parser():
     modes.add_argument("--fixed-1024", action="store_true", help="Measure new same1024-lane B512 then resource-admitted B1024; historical B512 is numerical/memory evidence only.")
     modes.add_argument("--fixed-2048", action="store_true", help="One fresh-process stage of the symmetric2048-lane capacity screen.")
     result.add_argument("--stage-shape", type=int, choices=(1024, 2048))
+    result.add_argument("--measurement-strategy", choices=MEASUREMENT_STRATEGIES, default="legacy_interleaved",
+        help="Opt-in ownership comparison for fixed2048 B1024 only; legacy timings remain interleaved.")
     result.add_argument("--control-stage-dir", type=Path)
     result.add_argument("--b1024-evidence-dir", type=Path)
     result.add_argument("--b512-evidence-dir", type=Path)
@@ -74,6 +77,41 @@ def parser():
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--admit-inputs", action="store_true", help="Read/audit FULL64 and repeated identities only; no process factory or compilation.")
     return result
+
+
+def measurement_contract(args, *, size, total_lanes):
+    strategy = getattr(args, "measurement_strategy", "legacy_interleaved")
+    if strategy not in MEASUREMENT_STRATEGIES:
+        raise ValueError("unknown capacity measurement strategy")
+    if strategy != "legacy_interleaved" and (size != 1024 or total_lanes != 2048):
+        raise ValueError("phased strategies require the fresh fixed2048 B1024 stage")
+    return {"measurement_strategy": strategy,
+        "sampling_order": "interleaved_core_wrapper" if strategy == "legacy_interleaved" else "five_core_then_five_wrapper",
+        "wrapper_resident_input_policy": "release_core_inputs" if strategy == "phased_release" else "retain_core_inputs",
+        "diagnostic_IO_scope": "collection-boundary persistence outside warm timers; no measured VRAM release claim"}
+
+
+def _core_collection(executable, pairs, base):
+    """The caller owns resident inputs; no closure retains them after return."""
+    outputs = [base.run_two(executable, *pair) for pair in pairs]
+    base.sync(outputs)
+    return outputs
+
+
+def _wrapper_collection(executable, chunks, base, jax):
+    """No resident-input argument: every chunk stacks and transfers anew."""
+    outputs = []
+    for first, other in chunks:
+        pair = jax.device_put((base.batch.stack_lanes(first), base.stack_second(first, other)))
+        value = base.run_two(executable, *pair)
+        outputs.append(jax.device_get(value))
+    base.sync(outputs)
+    return outputs
+
+
+def _capacity_phase(recorder, label, phase, **details):
+    recorder.result.setdefault("capacity_diagnostics", {}).setdefault(label, {}).update(phase=phase, **details)
+    recorder.phase(label + "_" + phase, **details)
 
 
 def capacity_layout(lanes, second, total_lanes=TOTAL_LANES):
@@ -364,12 +402,17 @@ def device_screen(size, resident_bytes, output_bytes, memory_records, scale, tot
     return result
 
 
-def fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_records, scale, original, actual):
+def fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_records, scale, original, actual, *, recorder=None):
     """Update the whole-stage bound against its original, untouched free budget."""
     physical = scale.visible_gpu_memory()
     budget = original["physical_gpu"]
     if (actual.get("available") is not True or type(actual.get("temp_size_in_bytes")) is not int
             or actual["temp_size_in_bytes"] < 0):
+        if recorder is not None:
+            _capacity_phase(recorder, f"capacity_B{size}", "postcompile_guard", postcompile_memory_budget_validation={
+                "permitted": False, "actual_executable_memory_analysis": actual,
+                "postcompile_physical_gpu_snapshot": physical, "original_preallocation_physical_gpu_budget": budget,
+                "reason": "actual nonnegative compiler temporary analysis unavailable"})
         raise MemoryError("fixed2048 postcompile requires actual nonnegative compiler temporary analysis")
     estimated = memory_estimate(size, resident_bytes, output_bytes, memory_records)
     result = {"phase": "postcompile_updated_whole_stage_bound_against_preallocation_budget", "shape": size,
@@ -381,6 +424,8 @@ def fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_reco
     result["permitted"] = (physical.get("applicable") is True and physical.get("uuid") == budget["uuid"]
         and physical.get("total_bytes") == budget["total_bytes"] and estimated is not None
         and estimated + 2 * 1024**3 <= budget["free_bytes"])
+    if recorder is not None:
+        _capacity_phase(recorder, f"capacity_B{size}", "postcompile_guard", postcompile_memory_budget_validation=result)
     if not result["permitted"]:
         raise MemoryError(f"fixed2048 updated compiler whole-stage budget denied: {result}")
     return result
@@ -403,6 +448,8 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
         raise ValueError("aligned complete fixed collection required")
     base, jax, np = scale.base, scale.jax, scale.np
     label = f"capacity_B{size}"
+    contract = measurement_contract(args, size=size, total_lanes=total_lanes)
+    strategy = contract["measurement_strategy"]
     gate_start, started = len(recorder.result["gates"]), time.perf_counter()
     rss_before = base.rss_bytes()
     chunks = [(lanes[start:start + size], second[start:start + size]) for start in range(0, total_lanes, size)]
@@ -414,42 +461,44 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
         if total_lanes == 2048 else (fixed1024_host_screen(memory_records[512].get("current_process_peak_RSS_bytes"))
         if total_lanes == 1024 else host_screen(size, memory_records[64]["old_benchmark_peak_RSS_bytes"])))
     preflight = device_screen(size, resident_bytes, output_bytes, memory_records, scale, total_lanes)
+    _capacity_phase(recorder, label, "input_transfer_start", **contract, memory_preflight=preflight)
     started = time.perf_counter()
     pairs = jax.device_put(host)
     base.sync(pairs)
     transfer_seconds = time.perf_counter() - started
     post_transfer = ({"phase": "post_transfer_physical_free_telemetry_only", "physical_gpu": scale.visible_gpu_memory()}
         if total_lanes == 2048 else None)
-    if total_lanes == 2048 and any(post_transfer["physical_gpu"].get(key) != preflight["physical_gpu"].get(key)
-            for key in ("uuid", "total_bytes")):
+    transfer_identity_matches = (post_transfer is None or all(post_transfer["physical_gpu"].get(key) == preflight["physical_gpu"].get(key)
+        for key in ("uuid", "total_bytes")))
+    _capacity_phase(recorder, label, "input_transfer_complete", post_transfer_GPU_memory=post_transfer,
+        post_transfer_identity_matches=transfer_identity_matches)
+    if not transfer_identity_matches:
         raise MemoryError("fixed2048 selected GPU UUID/total changed after input transfer")
     # Pure source-backed factory; no process logic copied or approximated here.
     base.driver._COMPILED_SECHIBA_SCAN_CACHE.clear()
     executable = base.lower_compile(base.batch.make_batch_transition(chunks[0][0]), pairs[0][0], label, recorder)
     memory = scale.executable_memory(executable)
+    # Persist obtained analysis before a guard or execution can raise. The
+    # stage payload is not returned/sealed on those failure paths.
+    _capacity_phase(recorder, label, "analysis_obtained", executable_memory_analysis=memory)
     memory_records[size] = ({**memory, "temp_size_in_bytes": max(memory["temp_size_in_bytes"], memory_records[size]["temp_size_in_bytes"])}
-        if total_lanes in (1024, 2048) and size in memory_records and memory.get("available") is True else memory)
-    postcompile = (fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_records, scale, preflight, memory)
+        if total_lanes in (1024, 2048) and size in memory_records and memory.get("available") is True
+        and type(memory.get("temp_size_in_bytes")) is int and memory["temp_size_in_bytes"] >= 0 else memory)
+    postcompile = (fixed2048_postcompile_screen(size, resident_bytes, output_bytes, memory_records, scale, preflight, memory,
+        recorder=recorder)
         if total_lanes == 2048 else device_screen(size, resident_bytes, output_bytes, memory_records, scale, total_lanes))
-
-    def run_collection(wrapper=False):
-        outputs = []
-        for index, (first, other) in enumerate(chunks):
-            pair = jax.device_put((base.batch.stack_lanes(first), base.stack_second(first, other))) if wrapper else pairs[index]
-            value = base.run_two(executable, *pair)
-            outputs.append(jax.device_get(value) if wrapper else value)
-        base.sync(outputs)
-        return outputs
 
     def collect(outputs):
         return jax.tree_util.tree_map(lambda *parts: np.concatenate(parts, axis=0), *outputs)
 
+    _capacity_phase(recorder, label, "initial_collection_start", boundary="initial", sample_index=None)
     started = time.perf_counter()
-    initial_chunks = run_collection()
+    initial_chunks = _core_collection(executable, pairs, base)
     first_seconds = time.perf_counter() - started
     output = collect(jax.device_get(initial_chunks))
     # Release device copies before the ten warm collections; complete host outputs remain.
     del initial_chunks
+    _capacity_phase(recorder, label, "initial_collection_complete")
     hard = []
     for index in range(total_lanes):
         try:
@@ -461,24 +510,37 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
     if hard:
         raise AssertionError("hard per-lane reference failures; no timings admitted: " + "; ".join(hard))
     core, wrapper = [], []
-    for _ in range(args.warm_repeats):
+    schedule = ([(boundary, index) for index in range(1, args.warm_repeats + 1) for boundary in ("core", "wrapper")]
+        if strategy == "legacy_interleaved" else
+        [(boundary, index) for boundary in ("core", "wrapper") for index in range(1, args.warm_repeats + 1)])
+    for boundary, index in schedule:
+        if boundary == "wrapper" and strategy == "phased_release" and pairs is not None:
+            # Only this scope owns resident roots. Neither collection helper
+            # captures them; initial/core device results have been discarded.
+            pairs = None
+        _capacity_phase(recorder, label, boundary + "_start", boundary=boundary, sample_index=index,
+            core_input_roots_retained=pairs is not None)
         started = time.perf_counter()
-        core_outputs = run_collection()
-        core.append(time.perf_counter() - started)
-        del core_outputs
-        started = time.perf_counter()
-        wrapped_chunks = run_collection(wrapper=True)
-        wrapper.append(time.perf_counter() - started)
+        if boundary == "core":
+            core_outputs = _core_collection(executable, pairs, base)
+            core.append(time.perf_counter() - started)
+            del core_outputs
+        else:
+            wrapped_chunks = _wrapper_collection(executable, chunks, base, jax)
+            wrapper.append(time.perf_counter() - started)
+        _capacity_phase(recorder, label, boundary + "_complete", boundary=boundary, sample_index=index)
     final_output = collect(wrapped_chunks)
     gate(recorder, label + "_frozen_reset_repeat", final_output, output, base.compare)
     # Strict same-backend permutation and replacement preserve every potentially active lane.
     first, other = chunks[0]
     order = list(reversed(range(size)))
+    _capacity_phase(recorder, label, "permutation_start", boundary="gate", sample_index=None)
     permuted = base.run_two(executable, base.batch.stack_lanes([first[i] for i in order]),
         base.stack_second([first[i] for i in order], [other[i] for i in order]))
     gate(recorder, label + "_permutation", jax.device_get(permuted),
         jax.tree_util.tree_map(lambda value: value[np.asarray(order)], output), base.compare)
     changed = first[:-1] + [first[0]]
+    _capacity_phase(recorder, label, "replacement_start", boundary="gate", sample_index=None)
     replaced = base.run_two(executable, base.batch.stack_lanes(changed), base.stack_second(changed, other[:-1] + [other[0]]))
     gate(recorder, label + "_replacement_isolation", jax.device_get(replaced),
         jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], output), base.compare)
@@ -500,6 +562,7 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
             "lower_seconds": recorder.result["timing"][label + "_lower_seconds"],
             "compile_seconds": recorder.result["timing"][label + "_compile_seconds"]},
         "provenance": {"workload_kind": "capacity_screen_repeated_FULL64", "total_lanes": total_lanes,
+            **contract,
             "unique_real_points": UNIQUE_POINTS, "lane_days": total_lanes * 14, "unique_point_days": UNIQUE_POINTS * 14,
             "chunk_size": size, "chunks_per_collection": len(chunks), "blocks": [[2, 8], [9, 15]],
             "half_hours_per_day": 48, "full_outputs": True, "full_two_block_workload": True,
@@ -825,6 +888,7 @@ def benchmark_fixed2048(args, recorder, lanes, second, scale):
     from scripts.hpc.global_gpu_capacity_2048_coordinator import validate_stage_receipt
 
     size, base = args.stage_shape, scale.base
+    contract = measurement_contract(args, size=size, total_lanes=2048)
     worker_start = float(os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START_EPOCH"])
     if not math.isfinite(worker_start) or worker_start <= 0:
         raise ValueError("finite positive GPU-entry worker startup epoch required")
@@ -850,7 +914,9 @@ def benchmark_fixed2048(args, recorder, lanes, second, scale):
         raise ValueError("finite positive shared allocation-window epoch required")
     identity.update(source)
     identity.update(contract=FIXED2048_CONTRACT, process_strategy=PROCESS_STRATEGY_2048, stage_shape=size,
-        total_lanes=2048, lane_origins=origins, unique_real_points=64, candidate_shapes=[1024, 2048],
+        **contract,
+        total_lanes=2048, lane_origins=origins, unique_real_points=64,
+        candidate_shapes=[1024, 2048] if contract["measurement_strategy"] == "legacy_interleaved" else [1024],
         warm_repeats=5, budget_seconds=7200, minimum_remaining_seconds=3600, validation_mode="exploratory",
         workload_kind="capacity_screen_repeated_FULL64", numerical_reference_sha256=reference_origin["sha256"],
         historical_B1024_evidence_sha256=B1024_SHA256,
@@ -901,6 +967,7 @@ def benchmark_fixed2048(args, recorder, lanes, second, scale):
         decision["permitted"] = False
         decision["reasons"].append(str(exc))
     recorder.result.update(fixed2048_stage_decision=decision, imported_B1024_evidence=history,
+        **contract,
         control_stage_origin=control_origin, completed_shapes=[], comparison_shapes=[], reference_origin=reference_origin,
         execution_source_identity=source, process_strategy=PROCESS_STRATEGY_2048,
         process_start_epoch=worker_start, input_reference_reload_seconds=reload, scientific_acceptance=False)
@@ -916,6 +983,7 @@ def benchmark_fixed2048(args, recorder, lanes, second, scale):
         value, record = measure_shape(size, args, recorder, expanded, others, reference, scale, memories, 2048,
             prepared_host=(host, stack_seconds))
         record["provenance"].update(process_strategy=PROCESS_STRATEGY_2048,
+            **contract,
             full_output_native_schema=_native_capacity_schema(value["outputs"], reference, 2048, scale.jax),
             admission_compiler_memory_records={str(key): memory for key, memory in memories.items()})
         record["startup"]["input_reference_reload_seconds"] = reload
@@ -933,6 +1001,9 @@ def benchmark_fixed2048(args, recorder, lanes, second, scale):
 
 def main():
     args = parser().parse_args()
+    if args.measurement_strategy != "legacy_interleaved" and not args.fixed_2048:
+        raise ValueError("phased strategies require the fresh fixed2048 B1024 stage")
+    contract = measurement_contract(args, size=args.stage_shape, total_lanes=2048 if args.fixed_2048 else TOTAL_LANES)
     if args.fixed_2048:
         if args.b1024_evidence_dir is None or args.stage_shape is None:
             raise ValueError("fixed2048 child requires historical B1024 evidence and explicit stage-shape")
@@ -968,8 +1039,10 @@ def main():
         if args.fixed_2048:
             print(json.dumps({"status": "dry_run", "model_execution": False, "JAX_imported": "jax" in sys.modules,
                 "contract": FIXED2048_CONTRACT, "process_strategy": PROCESS_STRATEGY_2048,
+                **contract,
                 "execution_source_identity": source_identity(ROOT), "stage_shape": args.stage_shape,
-                "candidate_shapes": [1024, 2048], "total_lanes": 2048, "unique_real_points": 64,
+                "candidate_shapes": [1024, 2048] if args.measurement_strategy == "legacy_interleaved" else [1024],
+                "total_lanes": 2048, "unique_real_points": 64,
                 "lane_days": 28672, "unique_point_days": 896, "warm_repeats": 5,
                 "budget_seconds": 7200, "minimum_remaining_seconds": 3600,
                 "historical_timing_is_curve_origin": False, "requires_performance_improvement": False,

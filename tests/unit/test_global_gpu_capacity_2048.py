@@ -166,7 +166,8 @@ def test_shape_execution_uses_complete2048_native_outputs_and_only_own_compile(m
         tree_bytes=lambda v: sum(leaf.nbytes for leaf in jax.tree_util.tree_leaves(v)),
         executable_memory=lambda e: {"available": True, "temp_size_in_bytes": 10},
         visible_gpu_memory=lambda: {"applicable": True, "total_bytes": 32 * 1024**3, "free_bytes": 30 * 1024**3, "uuid": "GPU-test"})
-    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}}, sentinel_paths={})
+    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}},
+        sentinel_paths={}, phase=lambda *a, **kw: None)
     monkeypatch.setattr(capacity, "fixed2048_host_screen", lambda *a: {})
     memories = {1024: {"available": True, "temp_size_in_bytes": 15}}
     value, record = capacity.measure_shape(shape, SimpleNamespace(warm_repeats=5), recorder,
@@ -339,6 +340,28 @@ def test_fresh_control_admission_uses_actual_stacks_and_compiles_only_own_stage(
         assert calls == [] and not (args.output_dir / "stage_manifest.json").exists()
 
 
+@pytest.mark.parametrize("strategy", capacity.MEASUREMENT_STRATEGIES)
+def test_strategy_identity_is_added_after_historical_admission(monkeypatch, tmp_path, strategy):
+    args, factory, lanes, second, scale, calls = runner_fixture(monkeypatch, tmp_path)
+    args.measurement_strategy = strategy
+    admitted = []
+
+    def historical(identity, *a):
+        assert "measurement_strategy" not in identity
+        assert "sampling_order" not in identity
+        admitted.append(True)
+        return {"old": "identity"}
+
+    monkeypatch.setattr(capacity, "historical_b1024_identity", historical)
+    capacity.benchmark_fixed2048(args, factory(), lanes, second, scale)
+    manifest = json.loads((args.output_dir / "stage_manifest.json").read_text())
+    assert admitted == [True] and calls == [1024]
+    assert manifest["identity"]["measurement_strategy"] == strategy
+    assert manifest["identity"]["candidate_shapes"] == ([1024, 2048] if strategy == "legacy_interleaved" else [1024])
+    proof = manifest["stages"]["capacity_B1024_fixed2048_fresh_v1"]["provenance"]
+    assert proof["measurement_strategy"] == strategy
+
+
 @pytest.mark.parametrize("failure", [None, "not-exited", "same-pid", "same-start", "proof-drift"])
 def test_candidate_reloads_and_verifies_sealed_control_in_later_worker(monkeypatch, tmp_path, failure):
     args, factory, lanes, second, scale, calls = runner_fixture(monkeypatch, tmp_path)
@@ -402,6 +425,30 @@ def test_child_python_dry_run_immutable_contract_without_JAX_or_inputs(tmp_path,
     assert value["lane_days"] == 28672 and value["minimum_remaining_seconds"] == 3600
     assert value["JAX_imported"] is False and value["model_execution"] is False
     assert value["initial_conservative_host_required_bytes"] == 64321847296
+    assert not (tmp_path / "unused-output").exists()
+
+
+@pytest.mark.parametrize("strategy", ["phased_resident_control", "phased_release"])
+@pytest.mark.parametrize("mode", ["allowed", "candidate", "non-fixed"])
+def test_phased_python_dry_run_and_scope_rejection_before_JAX(tmp_path, strategy, mode):
+    flags = (["--fixed-2048", "--stage-shape", "1024", "--b1024-evidence-dir", "missing-history",
+        "--budget-seconds", "7200"] if mode != "non-fixed" else [])
+    if mode == "candidate":
+        flags[flags.index("1024")] = "2048"
+        flags += ["--control-stage-dir", "missing-control"]
+    command = [sys.executable, "-B", str(Path(capacity.__file__).resolve()), "--prepared-input", "missing-input",
+        "--full-reference-dir", "missing-ref", "--memory-baseline-dir", "unused-B64", "--output-dir", "unused-output",
+        "--measurement-strategy", strategy, "--dry-run", *flags]
+    result = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
+    if mode == "allowed":
+        assert result.returncode == 0, result.stderr
+        value = json.loads(result.stdout)
+        assert value["measurement_strategy"] == strategy and value["candidate_shapes"] == [1024]
+        assert value["sampling_order"] == "five_core_then_five_wrapper"
+        assert value["JAX_imported"] is False and value["model_execution"] is False
+        assert value["lane_days"] == 28672
+    else:
+        assert result.returncode != 0 and "fresh fixed2048 B1024" in result.stderr
     assert not (tmp_path / "unused-output").exists()
 
 

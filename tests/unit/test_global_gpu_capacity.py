@@ -26,7 +26,8 @@ def toy_case(monkeypatch):
     other = [lane.arguments + 1 for lane in lanes]
     expanded, seconds, origins = capacity.capacity_layout(lanes, other)
     events = []
-    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}}, sentinel_paths={})
+    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}},
+        sentinel_paths={}, phase=lambda *a, **kw: None)
     def lower(fn, arguments, name, recorder):
         events.append(("compile", len(arguments)))
         recorder.result["timing"].update({name + "_lower_seconds": 1, name + "_compile_seconds": 2})

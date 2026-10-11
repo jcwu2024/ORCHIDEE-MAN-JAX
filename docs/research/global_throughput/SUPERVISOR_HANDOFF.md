@@ -1,6 +1,6 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-11。先读本页，再读两份 CURRENT_RESULT；历史仅按问题查阅。
+更新：2026-10-11。先读本页、本轮实现报告，再按需读两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
 此交接保存停止点和研究问题，**不恢复任何 GPU 诊断、付费作业或旧额度**。
 可复制[新项目开场指令](NEW_PROJECT_PROMPT.md)。
 
@@ -88,14 +88,28 @@ wrapper为7.052818 point-days/s，仍有两项cross-GPU严格容差失败，CPU4
 同价48核理想线性外推338.5353、对旧GPU1024的302.4092，打平需89.33%并行效率，
 只是费用/缩放假设，不能宣布CPU/GPU最终赢家。GPU甜点优先，更多CPU测试非前置。
 
-## 4. 下一步供主管选择，不是已批准执行方案
+## 4. 当前阶段与下一步供主管审阅
 
-1. 先检查保存的OOM日志、B1024 compiler/telemetry和两块输出生命周期，区分已知
-   allocation、未保存analysis和真实峰值证据缺口；不为补峰值立即重跑B2048。
-2. 讨论中间批量如1280/1536，或保持全部输出/物理合同的执行内存优化。选择前说明
-   比较工作量、科学gate、需要的代码/资源与观测；候选不等于已批准实验。
-3. 后续再验证真实669点+尾批、不同独立集合成员、更长窗口/年和匹配Fortran基准。
-   完成这些之前，不作生产/50年/10×/普遍科学效率结论。
+[保存证据与生命周期审计](../../../outputs/research/global_throughput/memory-lifecycle-audit-20261011/CURRENT_RESULT.md)
+已接受：wrapper重建输入时整份core resident输入仍有持有者；约7.87GB是逻辑payload，
+未保存的历史analysis、postcompile snapshot、失败repeat序号及真实峰值不能还原。
+B2048×1没有前chunk，不能用跨chunk结果重叠解释其OOM。
+
+本地[实现与验收](../../../outputs/research/global_throughput/memory-lifecycle-implementation-20261011/CURRENT_RESULT.md)
+已完成，199项相关轻量测试、Ruff及diff检查通过，工作区尚未commit/push/deploy。
+默认保留legacy交替顺序；新B1024-only `phased_resident_control` / `phased_release`
+均先5次core后5次wrapper，仅后者在wrapper前清空core输入根引用。计时外及时保存
+analysis、guard及collection/sample边界，原物理合同和内存guard未放宽。
+真实GPU数值、allocator回收、显存变化与吞吐收益未验证。
+
+[GPU验证提案](../../../outputs/research/global_throughput/memory-lifecycle-implementation-20261011/GPU_VALIDATION_PROPOSAL.md)
+规划同一新allocation内两个fresh B1024进程，统一phased顺序，不能与历史交替样本混比。
+拟1 V10032GB+4 CPUs、120min，主/保守worst-case CNY4.80/4.96，未获新执行授权。
+执行SHA、专用两组launcher、strategy-aware saved-array验证及目标Bash dry-run仍待准备；
+旧fixed2048 launcher会派B2048，不能直接复用，旧额度保持关闭。
+
+中间批量、真实669点+尾批、独立集合成员、长窗口/年和匹配Fortran基准仍为后续另议。
+完成相应验证前，不作生产/50年/10×/普遍科学效率结论。
 
 旧DIFFUCO `_diffuco_pft_column_mask` 的 `lru_cache` 曾缓存 DynamicJaxprTracer，
 导致顺序shape公共536/内部673输入不匹配；已改为只读NumPy bool，mask/formula未变。
