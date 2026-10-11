@@ -14,6 +14,13 @@ and masks pass. Exit 3/GPU released/scope closed. The
 [handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md) is the stop state.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls action/authority.
 
+The [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md)
+owns the locally prepared bounded affine launcher and fresh recovery input identity.
+An unsafe test deleted the original operand/receipt and changed capture source;
+the source was restored, and one explicitly authorized new thin CPU capture
+matches all six preincident numeric hashes. Original file identities remain lost.
+Local preparation grants no remote deployment, GPU run or training.
+
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing
 weights, GPU count, daily32/eight distinct micro4 plus one T7 and one T30,

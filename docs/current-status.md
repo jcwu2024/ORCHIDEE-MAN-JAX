@@ -25,22 +25,33 @@ checks. This permits the two research lines to progress independently; it
 does not claim new-data acceptance or reopen any closed GPU/training scope.
 See [NEXT_STEPS.md](NEXT_STEPS.md) for the operative boundary.
 
-The [current early summary_input preparation](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
-now completes the authorized eight-file read-only retrieval and real thin CPU
+The [previous accepted early summary_input preparation](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
+completed the authorized eight-file read-only retrieval and real thin CPU
 capture after the accepted fixture/method stage. Exact original sources yield
 FP32 `(4,257,4)` summary, valid fields250/251/251/251 and admitted sample3/raw434
 preprocessing direction. The unchanged CPU JAX0.10.1 affine probe passes12
 measurements/91 retained arrays, 12oracle/12AD/12isolation, eight cross and nine
 repeat checks. Cross primal/tangent/input gradients and all repeats are exact;
 small loss/parameter-gradient differences pass strict tolerances. Eleven focused
-tests pass after a local historical-PosixPath compatibility fix. Current source
+tests passed after a local historical-PosixPath compatibility fix. That source
 `70619b0a...901072`/execution HEAD `9de13774...b497` and prior fixture identities
 are recorded separately; prior `not_executed` missing-source and first-platform-
-exception logs are preserved. The supervisor accepted this follow-up and
-authorized its seven-file commit/push; outputs and source assets stay outside Git.
+exception logs are preserved. That accepted seven-file stage was committed/pushed
+as `048c963...1738`; outputs and source assets stayed outside Git.
 This early CPU result establishes no original
 T7 numerical repair, GPU readiness or complete-update speed/science acceptance.
 The historical state-gradient failures and roughness state20 NaN remain.
+
+The [bounded GPU preparation](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md)
+adds local admission, one-shot deadline/memory/process supervision and the accepted
+GPU bootstrap entry; actual deployed GPU verification is pending. Its negative
+tests mistakenly deleted the original operand/receipt and modified capture source.
+Source was restored from accepted Git; one subsequently authorized new thin CPU
+capture completed in18.670917s and matches all six preincident numeric hashes.
+Fresh NPZ `bf36a098...6129`/receipt `f863a2d9...0e00` replace the planned input
+identity; original file bytes remain unavailable. Old CPU12/91 and historical
+probe source identity remain separate, with no full numerical probe rerun.
+The proposed scope is not authorized; no GPU readiness or scientific repair follows.
 
 | Current evidence | Result and limit |
 |---|---|

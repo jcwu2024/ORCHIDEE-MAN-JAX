@@ -2,8 +2,16 @@
 
 2026-10-11。**没有选定生产修复；当前不采用 whole-prefix scalar mapping。**
 前本地方法包已接受；后续授权的八文件只读获取、真实操作数capture/CPU验证完成。
-主管已验收本次后续包，授权按七文件范围提交推送；outputs/八源资产留Git外。
-GPU wrapper/部署验证仍待完成。
+主管已验收上一阶段七文件包，并提交推送为`048c963...1738`；outputs/八源资产留Git外。
+主管已验收本轮GPU准备包，按13文件范围版本化；实际提交推送身份见
+[postcommit交付receipt](../../../outputs/T7-batch-gpu-preparation-20261011/postcommit-delivery.v1.json)。
+GPU wrapper已作本地准备；实际部署验证仍待完成，入口与新输入身份见
+[preparation report](T7_batch_numerics_GPU_preparation_results_20261011.md)和
+[execution contract](T7_batch_numerics_GPU_execution_contract_20261011.md)。
+本轮负例测试误删原capture NPZ/receipt并改写capture-source；source已从Git恢复。
+随后一次明确授权的全新薄CPU capture六项数值SHA与事故前证据完全一致，
+新NPZ `bf36a098...6129` /receipt `f863a2d9...0e00` 是当前计划身份。
+旧全文件bytes未恢复，旧CPU12/91结果保留为历史、未重跑，不冒充新capture执行结果。
 这不是原模型数值修复、GPU readiness、完整训练提速或长期科学验收。
 本轮没有新GPU授权。真实early tokenizer operands已CPU准入；未来bounded V100确认
 仍须独立选择。局部修复有因果/AD证据才另行决定原T7验证，不自动追加整prefix图。
@@ -34,13 +42,14 @@ B1不是真值；NumPy FP64小算子oracle是独立诊断，不改变生产refer
 `parameters["tokenizer"]["summary_input"]` 的FP32 kernel/bias。
 这是early projection干预；通过或未复现均不能排除later64→64/attention原因。
 
-当前薄CPU extractor/fixture工作包与证据见
+上一阶段薄CPU extractor/fixture工作包与证据见
 [early summary_input结果](T7_summary_capture_results_20261011.md)：前fixture包通过且已提交，
 本次八文件身份匹配的真实capture成功，summary为FP32 `(4,257,4)`，valid fields
 250/251/251/251，source SHA `70619b0a6445cde87eccaeb31feac46bbb34cdc0d7a6f68c68938c4d09901072`，
 execution HEAD `9de13774df05ddf015557daee3b8540a07ddb497`。11项focused tests通过，
 包括Windows将历史PosixPath恢复为lexical PurePosixPath的兼容性检查。
-**当前为captured/CPU passed；旧缺失源not_executed与首次平台异常receipt保留为历史。**
+**上述capture/CPU passed为上一阶段历史；原NPZ/receipt事故后缺失，当前输入改用新recovery身份。**
+旧缺失源not_executed与首次平台异常receipt保留为历史。
 CPU JAX0.10.1既有probe `--repeats 3` 通过12测量/91数组、12oracle/12AD/12isolation、
 8cross/9repeat及24 FP64 FD；四个小compile/三HLO均保存。
 此早期CPU边界未复现strict失败，不排除历史GPU/later contractions。
@@ -101,7 +110,8 @@ capture_source_sha256/capture_receipt_sha256/direction_coordinate/mask_meaning`�
 下一次最小GPU确认优先434，不把四方向变成四轮新compile。
 
 默认synthetic固定为 `(4,128,64) @ (64,64)`，仅验证判别方法。
-真实包已完成CPU验证；未来GPU命令仍待wrapper/部署验证后冻结：
+真实包已完成CPU验证；以下仅是裸probe参数主体，bounded wrapper与提案argv
+已本地准备/冻结，目标环境验证待独立批准：
 `<canonical-GPU-python> -B <declared-checkout>/scripts/hpc/probe_shared_latent_T7_batch_numerics.py
 --backend gpu --operands <identity-bound.npz> --output <unique.json>
 --seed 20261011 --repeats 3`。这是参数主体，尚非已验证GPU launcher；不覆盖旧证据。
@@ -120,8 +130,9 @@ JVP/VJP pairing共同校验；不得以B4接近B1替代oracle检查。目标均�
 （≤0.333334 card-hours，free估计CNY0）：preflight≤240s、小图/calls≤780s、
 保存释放≤180s。**三个operator compile各一次，加一个small serial merge compile**；
 没有retry、algorithm搜索、attention/prefix/T7/T30或paid fallback。
-现有harness无外层deadline/memory sampler；批准执行前须准备并验证bounded wrapper，
-新runtime preflight与24GiB监测/终止规则，不能声称CLI自身已实施这些资源门槛。
+affine probe本体仍无外层deadline/memory sampler；新bounded wrapper已本地实现独立
+deadlines、24GiB监测/终止及runtime preflight入口，见execution contract。
+actual target shell/container/bootstrap/preflight未验证，本地准备不能宣称deployed gate通过。
 
 记录CPU affinity/load、OMP4/OpenBLAS1、GPU processes、JAX/CUDA/toolchain、实际
 HLO shape/algorithm、lower/backend/首次有效测量时间及同步热调用中位数。
@@ -135,9 +146,9 @@ loss/sampling、public native-checkpointed AD及完整跨日梯度边界全部�
 非有限、内存或deadline分别分类并停止，不被其他gate通过豁免。使用canonical
 `.venvs/orcjax_gpu`/`.venvs/orcjax_cpu`与已接受container/toolchain：deployed JAX0.4.38
 须在`jax.numpy`/模型import前注册PJRT，复用accepted bootstrap及canonical launcher
-动态`readlink -f` driver-library binds；此入口接入和deployed验证尚未完成，本地
+动态`readlink -f` driver-library binds；此入口已作本地接入，deployed验证尚未完成；本地
 CPU JAX0.10.1通过不替代它。任选可用cln01/cln02作jump，冻结argv须CPU参数校验/
-目标shell `--dry-run`；真实提取已完成，deadline/NVML wrapper及bootstrap验证未到位前不称GPU ready。
+目标shell `--dry-run`；新recovery输入数值同一性已确认，actual target deadline/NVML/bootstrap验证未到位前不称GPU ready。
 
 ## 结果决定与原集成 T7 回归入口
 
@@ -181,4 +192,4 @@ synthetic PASS、6项matrix tests PASS（3.80s，含中间轮mutation及nonfinit
 6项PASS；首版final-only及v2结果保留，以v3为最终method evidence。这些本地证据不归因原模型。
 后续完成只读remote metadata/SCP和真实thin CPU capture/probe；没有remote计算、GPU、
 真实整网forward/tracing/AD或Teacher生成。daily图索引excluded/not_tracked/transport closed，
-源码精确fallback；wrapper、GPU因果/原集成gate未验证，旧额度关闭。
+源码精确fallback；wrapper仅本地准备，deployed/GPU因果/原集成gate未验证，旧额度关闭。

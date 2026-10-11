@@ -56,6 +56,7 @@ Paths are under `scripts/hpc/`.
 | `shared_latent_T7_raw_neural_jvp.py`, `probe_shared_latent_T7_raw_neural_jvp.py`, `run_shared_latent_T7_raw_neural_jvp.py`, `run_shared_latent_T7_raw_neural_jvp.sh` | Completed canonical neural prefix/all 161 raw fields/exact masks; 24 native JVPs, binaries/HLO; accepted v3-final audit retains active primal/tangent failures, exact repeats/isolation; scope closed/handoff/stop |
 | `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
+| `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Locally prepared NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; clean frozen code manifest, strict idle/release0MiB0%noapps, partial arrays, no remote/GPU validation |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
 | `probe_shared_latent_T7_dispatch.py`, `shared_latent_T7_dispatch_ad.py` | Completed saved-B1 synchronization comparison; cheap device-side merge retained for eventual complete-workload verification |
@@ -72,19 +73,24 @@ The supervisor accepted the [2026-10-11 local preparation](research/daily_coarse
 as local methods/preparation only; it links input6/matrix6 tests, final CPU v3
 evidence and exact missing asset identities.
 Its [GPU plan](research/daily_coarse_graining/T7_batch_numerics_GPU_confirmation_plan_20261011.md)
-now has real thin capture/CPU admission; wrapper/deployed bootstrap remain pending,
+now has fresh recovery input admission and a local bounded wrapper; deployed bootstrap remains pending,
 without a selected repair or new GPU run.
-The [early summary_input package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
-owns the previous extractor/fixture inventory and current eight-file retrieval,
+The [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md)
+owns the current launcher/tests/scope/manifest and three-file test incident.
+Original capture NPZ/receipt remain missing; new `summary-recovery.v1.*` six arrays
+match independent preincident SHA evidence, with fresh complete-file identities.
+The unchanged capture source is restored; no whole affine probe was rerun.
+The [previous early summary_input package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
+owns that extractor/fixture inventory and completed eight-file retrieval,
 real `(4,257,4)` capture and unchanged CPU probe. Its
 `tests/unit/test_shared_latent_T7_summary_operands.py` passes11 cases including
 Windows historical-path deserialization; CPU JAX0.10.1 passes12 measurements/
 91 saved arrays, independent oracle/AD/isolation and all cross/repeat checks.
-The extractor still supports only sample3/raw434. Current source is
+The extractor still supports only sample3/raw434. That capture source was
 `70619b0a...901072`, execution HEAD `9de13774...b497`; the previous fixture and
 missing-source identities remain historical. The earlier method was accepted;
-the supervisor also accepted this follow-up and authorized its seven-file commit/
-push; outputs and historical assets remain outside Git.
+the supervisor accepted that seven-file stage, committed/pushed as `048c963...1738`;
+outputs and historical assets remained outside Git.
 The early CPU pass does not exclude later/GPU kernels or resolve original T7 gates.
 Runtime checkout is c599236 at `runtime/checkouts/shared-split-width-v1`;
 unchanged assets are in `runtime/transfer/shared-latent-reader-20261004`.

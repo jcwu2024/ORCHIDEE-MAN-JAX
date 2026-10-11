@@ -288,6 +288,31 @@ def save_measurement_evidence(path, bundle, measurements):
             "results_container": str(path), "preserved_array_count": len(arrays)}
 
 
+def save_partial_measurements(path, bundle, measurements):
+    """Atomic snapshot of completed calls, retained if a supervisor stops us."""
+    arrays = {f"cycle{row['cycle']}.{row['route']}.{key}": value
+              for row in measurements for key, value in result_arrays(row["result"]).items()}
+    arrays.update({"oracle." + key: value for key, value in result_arrays(affine_oracle(bundle)).items()})
+    temporary = Path(str(path) + ".tmp")
+    with temporary.open("wb") as stream:
+        np.savez_compressed(stream, **arrays)
+    os.replace(temporary, path)
+
+
+def initialize_probe_runtime(backend):
+    """Use the accepted deployed bootstrap before numpy/model JAX imports."""
+    os.environ["JAX_PLATFORMS"] = "cpu" if backend == "cpu" else "cuda"
+    if backend == "gpu":
+        from scripts.hpc.orcjax_gpu_runtime import initialize_gpu_backend
+        jax, devices = initialize_gpu_backend()
+    else:
+        import jax
+        devices = tuple(jax.devices("cpu"))
+    jax.config.update("jax_enable_x64", True)
+    jax.config.update("jax_enable_compilation_cache", False)
+    return jax, devices
+
+
 def hlo_summary(text):
     rows = [line.strip() for line in text.splitlines()
             if "custom-call(" in line and "gemm" in line or " = " in line and " dot(" in line]
@@ -303,7 +328,7 @@ def run(args):
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     companion = lambda suffix: output.with_suffix(suffix)
-    destinations = [output, companion(".results.npz")]
+    destinations = [output, companion(".results.npz"), companion(".partial.npz")]
     destinations += [companion("." + name + ".optimized-hlo.txt.gz") for name in ("b1", "vmap", "map")]
     if not args.operands:
         destinations.append(companion(".operands.npz"))
@@ -315,13 +340,10 @@ def run(args):
     operand_path = Path(args.operands).resolve() if args.operands else companion(".operands.npz")
     if __package__ in (None, ""):
         sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    os.environ["JAX_PLATFORMS"] = "cpu" if args.backend == "cpu" else "cuda"
-    import jax
-    jax.config.update("jax_enable_x64", True)
-    jax.config.update("jax_enable_compilation_cache", False)
+    jax, devices = initialize_probe_runtime(args.backend)
     from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import _linear
 
-    device = jax.devices()[0]
+    device = devices[0]
     if device.platform != args.backend:
         raise RuntimeError("requested execution backend unavailable")
     parameters = jax.device_put({k: bundle[k] for k in ("kernel", "bias")})
@@ -359,6 +381,7 @@ def run(args):
     for name in call:
         measurements.append({"route": name, "cycle": 0,
                              "result": jax.device_get(block(call[name]()))})
+        save_partial_measurements(companion(".partial.npz"), bundle, measurements)
     for cycle in range(args.repeats):
         for name in tuple(call)[cycle % 3:] + tuple(call)[:cycle % 3]:
             start = time.perf_counter()
@@ -366,6 +389,7 @@ def run(args):
             timings[name].append(time.perf_counter() - start)
             measurements.append({"route": name, "cycle": cycle + 1,
                                  "result": jax.device_get(result)})
+            save_partial_measurements(companion(".partial.npz"), bundle, measurements)
     evidence = save_measurement_evidence(companion(".results.npz"), bundle, measurements)
     source = inspect.getsource(_linear)
     report = {"schema_version": "T7_affine_numerics_probe_v1",
