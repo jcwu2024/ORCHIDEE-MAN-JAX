@@ -29,10 +29,11 @@ from scripts.dev.global_server_resources import admit, bind, physical_cores, thr
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument("--mode", choices=["scalar", "pool", "batch"], required=True)
-    result.add_argument("--cpu-budget", type=int, choices=[1, 4], required=True)
+    result.add_argument("--cpu-budget", type=int, choices=[1, 4, 48], required=True)
     result.add_argument("--sizes", type=int, nargs="+", choices=[16, 64], default=[16, 64])
     result.add_argument("--prepared-input", type=Path)
     result.add_argument("--gpu-reference-dir", type=Path)
+    result.add_argument("--expected-gpu-reference-sha256", help="Optional exact sealed GPU reference artifact identity; CPU48 coordinator supplies it.")
     result.add_argument("--cpu-reference-dir", type=Path)
     result.add_argument("--validation-mode", choices=["strict", "exploratory"], default="strict")
     result.add_argument("--cpu-reference-role", choices=["accepted", "cpu-internal"], default="accepted")
@@ -43,7 +44,7 @@ def parser():
     result.add_argument("--warm-repeats", type=int, default=5)
     result.add_argument("--cache-mode", choices=["off", "persistent"], default="off")
     result.add_argument("--cache-root", type=Path)
-    result.add_argument("--memory-guard-gib", type=float, help="Host MemAvailable guard; scalar/batch24GiB, pool96GiB.")
+    result.add_argument("--memory-guard-gib", type=float, help="Host MemAvailable guard; scalar/batch1/4 24GiB, batch48 64GiB, pool96GiB.")
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--synthetic-smoke", action="store_true")
     result.add_argument("--synthetic-stdlib-only", action="store_true", help="Pool protocol smoke without even a toy JAX compile.")
@@ -55,6 +56,8 @@ def validate(args):
         raise ValueError("cpu-internal reference role requires exploratory validation")
     if args.mode == "scalar" and args.cpu_budget != 1 or args.mode == "pool" and args.cpu_budget != 4:
         raise ValueError("scalar requires budget1; pool requires budget4")
+    if args.cpu_budget == 48 and args.sizes != [64]:
+        raise ValueError("batch48 requires native FULL64 unique-point workload, sizes64 only")
     if args.warm_repeats < 5 or args.sizes != sorted(set(args.sizes)):
         raise ValueError("at least five repeats and ascending unique16/64 sizes required")
     if not args.synthetic_smoke and (args.prepared_input is None or args.gpu_reference_dir is None):
@@ -63,6 +66,9 @@ def validate(args):
         raise ValueError("pool/batch acceptance requires --cpu-reference-dir with complete server scalar stages")
     if args.memory_guard_gib is not None and (not math.isfinite(args.memory_guard_gib) or args.memory_guard_gib <= 0):
         raise ValueError("positive host memory guard required")
+    expected = getattr(args, "expected_gpu_reference_sha256", None)
+    if expected is not None and (len(expected) != 64 or any(character not in "0123456789abcdef" for character in expected)):
+        raise ValueError("expected GPU reference SHA256 must be exactly64 lowercase hexadecimal characters")
 
 
 def memory_guard(gib, path=Path("/proc/meminfo")):
@@ -74,6 +80,55 @@ def memory_guard(gib, path=Path("/proc/meminfo")):
     return result
 
 
+def memory_snapshot(label, proc_root=Path("/proc")):
+    """Phase observations only; neither a reservation nor sampled peak proof."""
+    result = {"phase": label, "available": False, "RSS_bytes": None,
+              "peak_RSS_bytes": None, "MemAvailable_bytes": None,
+              "scope": "instantaneous process RSS and host MemAvailable; process HWM when provided by Linux"}
+    try:
+        for path, names in ((proc_root / "self" / "status", {"VmRSS": "RSS_bytes", "VmHWM": "peak_RSS_bytes"}),
+                            (proc_root / "meminfo", {"MemAvailable": "MemAvailable_bytes"})):
+            for line in path.read_text().splitlines():
+                key, _, payload = line.partition(":")
+                if key in names:
+                    parts = payload.split()
+                    if len(parts) != 2 or parts[1] != "kB":
+                        raise ValueError("unexpected Linux memory units")
+                    result[names[key]] = int(parts[0]) * 1024
+        result["available"] = all(result[key] is not None for key in ("RSS_bytes", "peak_RSS_bytes", "MemAvailable_bytes"))
+    except (OSError, ValueError) as exc:
+        result["unavailable_reason"] = str(exc)
+    return result
+
+
+def process_cpu_sample(before, after, wall, step_budget, parent_budget, *, mode):
+    """OS process CPU time includes its threads; a pool controller excludes workers."""
+    user, system = after[0] - before[0], after[1] - before[1]
+    if (not math.isfinite(wall) or wall <= 0 or step_budget <= 0 or parent_budget < step_budget
+            or not all(math.isfinite(value) and value >= 0 for value in (user, system))):
+        raise RuntimeError("invalid process CPU timing observation")
+    busy = (user + system) / wall
+    return {"wall_seconds": wall, "process_CPU_user_seconds_delta": user,
+            "process_CPU_system_seconds_delta": system,
+            "process_CPU_user_system_seconds_delta": user + system,
+            "busy_core_equivalents": busy, "step_CPU_budget": step_budget,
+            "parent_CPU_budget": parent_budget, "step_utilization_fraction": busy / step_budget,
+            "parent_utilization_fraction": busy / parent_budget,
+            "scope": "controller process only; excludes pool worker CPU time" if mode == "pool" else "single process including all backend threads",
+            "claim": "observed CPU-time/wall ratio only; not proof of parallel efficiency or 48 effective threads"}
+
+
+def measured_run(runner, size, resources, mode, *, wrapper=False):
+    before = os.times()
+    started = time.perf_counter()
+    value = runner.run(size, wrapper=wrapper)
+    wall = time.perf_counter() - started
+    sample = process_cpu_sample(before, os.times(), wall,
+        resources.get("step_CPU_budget", resources.get("allocated_CPU_request_count", 1)),
+        resources.get("parent_allocated_CPU_request_count", resources.get("allocated_CPU_request_count", 1)), mode=mode)
+    return value, sample
+
+
 def stack_outputs(values, jax, np):
     return jax.tree_util.tree_map(lambda *parts: np.stack(parts), *values)
 
@@ -83,10 +138,12 @@ class SingleRunner:
         self.args, self.recorder, self.lanes, self.second, self.scale = args, recorder, lanes, second, scale
         self.programs, self.pairs, self.outputs = {}, {}, None
         if args.mode == "scalar":
+            recorder.result.setdefault("runtime_observations", {})["scalar_pre_compile"] = memory_snapshot("scalar_pre_compile")
             self.programs[1] = scale.base.independent_scalar_executable(lanes[0], "server_scalar_once", recorder)
             self.pairs[1] = scale.jax.device_put([(lane.arguments, other) for lane, other in zip(lanes, second, strict=True)])
             scale.base.sync(self.pairs[1])
             recorder.result["thread_affinity_after_compile"] = thread_affinity(scale.base.affinity())
+            recorder.result["runtime_observations"]["scalar_post_compile"] = memory_snapshot("scalar_post_compile")
 
     def prepare(self, size):
         if self.args.mode == "batch" and size not in self.programs:
@@ -268,6 +325,8 @@ def benchmark(args, recorder, lanes, second, scale, resources):
 
     base, jax, np = scale.base, scale.jax, scale.np
     screen = scale.screen_inputs(lanes, second)
+    if args.cpu_budget == 48 and len(lanes) != 64:
+        raise ValueError("batch48 requires exactly64 native unique prepared lanes")
     base.legacy_factory(args.baseline_ref)
     recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
     identity = base.stage_identity(args, lanes, second, recorder.result["environment"])
@@ -278,7 +337,13 @@ def benchmark(args, recorder, lanes, second, scale, resources):
     identity.update(contract="server-CPU-same-workload-v1", precision_policy=scale.PRECISION_POLICY,
                     mode=args.mode, CPU_budget=args.cpu_budget, validation_mode=validation_mode,
                     cpu_reference_role=cpu_reference_role)
+    if "parent_allocated_CPU_request_count" in resources:
+        identity.update(parent_allocated_CPU_request_count=resources["parent_allocated_CPU_request_count"],
+                        billing_CPU_request_count=resources["billing_CPU_request_count"])
     reference, origin = load_reference(args.gpu_reference_dir, identity)
+    expected = getattr(args, "expected_gpu_reference_sha256", None)
+    if expected is not None and origin["sha256"] != expected:
+        raise ValueError("sealed GPU reference SHA256 differs from explicitly expected artifact")
     identity["numerical_reference_sha256"] = origin["sha256"]
     cpu_references = {}
     if args.cpu_reference_dir is not None:
@@ -306,10 +371,14 @@ def benchmark(args, recorder, lanes, second, scale, resources):
             def operation(size=size):
                 gate_start = len(recorder.result["gates"])
                 started = time.perf_counter()
+                observations = {"pre_compile": memory_snapshot("pre_compile")}
                 runner.prepare(size)
-                first_started = time.perf_counter()
-                runner.run(size)
-                recorder.result["timing"][f"B{size}_first_call_seconds"] = time.perf_counter() - first_started
+                observations["post_compile"] = memory_snapshot("post_compile")
+                observations["thread_affinity_after_compile"] = recorder.result.get("thread_affinity_after_compile")
+                _, first_sample = measured_run(runner, size, resources, args.mode)
+                recorder.result["timing"][f"B{size}_first_call_seconds"] = first_sample["wall_seconds"]
+                observations["first_call_process_CPU"] = first_sample
+                observations["first_call_complete"] = memory_snapshot("first_call_complete")
                 output = runner.collect(size)
                 if validation_mode == "exploratory":
                     raw_path = args.output_dir / f"raw_B{size}_{args.mode}_before_parity.pkl"
@@ -349,20 +418,25 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                     recorder.gate(f"B{size}_{args.mode}_cross_mode_server_scalar", output, scalar)
                 else:
                     cpu_origin = None
-                core, wrapper = [], []
+                core, wrapper, core_CPU, wrapper_CPU = [], [], [], []
                 for _ in range(args.warm_repeats):
-                    measured = time.perf_counter()
-                    runner.run(size)
-                    core.append(time.perf_counter() - measured)
-                    measured = time.perf_counter()
-                    materialized = runner.run(size, wrapper=True)
-                    wrapper.append(time.perf_counter() - measured)
+                    _, sample = measured_run(runner, size, resources, args.mode)
+                    core.append(sample["wall_seconds"])
+                    core_CPU.append(sample)
+                    materialized, sample = measured_run(runner, size, resources, args.mode, wrapper=True)
+                    wrapper.append(sample["wall_seconds"])
+                    wrapper_CPU.append(sample)
+                observations["warm_complete"] = memory_snapshot("warm_complete")
                 recorder.gate(f"B{size}_{args.mode}_frozen_reset_repeat", materialized, output)
                 metrics = {f"B{size}_warm_frozen_state_core": base.metrics(core, size * 14),
                            f"B{size}_preprepared_wrapper_stack_transfer_materialize": base.metrics(wrapper, size * 14)}
+                metrics[f"B{size}_warm_frozen_state_core"]["process_CPU_samples"] = core_CPU
+                metrics[f"B{size}_preprepared_wrapper_stack_transfer_materialize"]["process_CPU_samples"] = wrapper_CPU
                 recorder.result["timing"].update(metrics)
                 workers = runner.records()
                 controller_threads = thread_affinity(base.affinity())
+                observations["thread_affinity_after_warm"] = controller_threads
+                recorder.result.setdefault("runtime_observations", {})[f"B{size}"] = observations
                 stage_gates = recorder.result["gates"][gate_start:]
                 return {"outputs": output, "measurements": metrics}, {
                     "measurement_status": "complete",
@@ -376,6 +450,7 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                         "five_or_more_synchronized_repeats": True, "precision_policy": scale.PRECISION_POLICY,
                         "blocks": [[2, 8], [9, 15]], "half_hours_per_day": 48,
                         "server_resources": resources, "GPU_numerical_reference": origin,
+                        "runtime_observations": observations,
                         "CPU_scalar_reference": cpu_origin, "worker_records": workers,
                         "CPU_scalar_reference_role": "cpu_internal_comparison" if cpu_origin is not None and cpu_reference_role == "cpu-internal" else "accepted" if cpu_origin is not None else None,
                         "controller_thread_affinity_after_warm": controller_threads,
@@ -492,14 +567,26 @@ def main():
         result = synthetic_smoke(args) if args.synthetic_smoke else {
             "status": "dry_run", "mode": args.mode, "CPU_budget": args.cpu_budget, "sizes": args.sizes,
             "warm_repeats": args.warm_repeats, "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
-            "model_execution": False, "JAX_imported": "jax" in sys.modules}
-        result.update(validation_mode=args.validation_mode, cpu_reference_role=args.cpu_reference_role)
+            "model_execution": False, "JAX_imported": "jax" in sys.modules,
+            "CPU_process_policy": "one native CPU process/device; lane count is not CPU count" if args.mode == "batch" else args.mode,
+            "parent_CPU_count_declared": os.environ.get("ORCHJAX_PARENT_CPU_COUNT"),
+            "billing_scope": "full parent allocation including scalar step; actual Slurm admission required"}
+        result.update(validation_mode=args.validation_mode, cpu_reference_role=args.cpu_reference_role,
+                      expected_gpu_reference_sha256=args.expected_gpu_reference_sha256)
         print(json.dumps(result, indent=2))
         return 0
     resources = admit(args.mode, args.cpu_budget)
-    resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or (96 if args.mode == "pool" else 24))
+    default_guard = 96 if args.mode == "pool" else 64 if args.cpu_budget == 48 else 24
+    resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or default_guard)
     cpus = resources["selected_logical_cpus"]
     bind(cpus[:1] if args.mode in {"scalar", "pool"} else cpus, one_thread=args.mode != "batch")
+    resources["thread_environment_before_JAX"] = {name: os.environ.get(name) for name in (
+        "XLA_FLAGS", "JAX_PLATFORMS", "JAX_ENABLE_X64", "OMP_NUM_THREADS", "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS")}
+    resources["execution_policy"] = {
+        "native_CPU_device_policy": "single CPU device; no force48 logical devices",
+        "batch48_BLAS_policy": "single-thread BLAS/NUMEXPR; OMP48 and native Eigen multithreading" if args.cpu_budget == 48 else None,
+        "effective_48_thread_claim": False}
     os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START"] = str(PROCESS_STARTED)
     os.environ.setdefault("ORCHIDEE_REPO_ROOT", str(ROOT))
     os.environ.setdefault("ORCHIDEE_DATA_ROOT", str(args.truth_root / "data"))
@@ -529,6 +616,9 @@ def main():
         runtime = recorder.result["environment"]
         if runtime["jax"] != "0.4.38" or runtime["jaxlib"] != "0.4.38" or runtime["gpu_count"]:
             raise RuntimeError("physical server CPU benchmark requires accepted CPU-only JAX/jaxlib0.4.38")
+        if args.cpu_budget == 48 and (len(runtime.get("device_details", [])) != 1 or
+                runtime["device_details"][0].get("platform") != "cpu"):
+            raise RuntimeError("batch48 requires exactly one native CPU device")
         lanes, second = scale.read_prepared(args.prepared_input, args.config)
         benchmark(args, recorder, lanes, second, scale, resources)
         recorder.result["status"] = ("completed_exploratory_server_CPU_bounded_forward"
@@ -543,6 +633,8 @@ def main():
         recorder.result.update(process_CPU_user_system_seconds=sum(os.times()[:2]),
             benchmark_wall_seconds=time.perf_counter() - started,
             allocated_CPU_request_core_hours=args.cpu_budget * (time.perf_counter() - started) / 3600,
+            allocated_parent_CPU_request_core_hours=resources["billing_CPU_request_count"] * (time.perf_counter() - started) / 3600,
+            CPU_core_hours_scope="allocated_CPU_request_core_hours is step-only; allocated_parent_CPU_request_core_hours uses all billable parent CPUs; external full-job accounting remains authoritative",
             process_wall_seconds_including_import_setup=time.perf_counter() - PROCESS_STARTED,
             process_wall_scope="script entry through final report preparation; excludes Slurm startup/final filesystem flush; external job accounting required for actual full-job cost",
             server_resources=resources)

@@ -106,6 +106,8 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
     if envelope["identity"] != origin or envelope["name"] != name or envelope["status"] != "complete":
         raise ValueError("reference envelope identity/status mismatch")
     proof = record.get("provenance", {})
+    if name != "B4_group_references" and "parent_allocated_CPU_request_count" in origin:
+        _validate_scalar_parent_allocation(origin, proof)
     ids = [item["landpoint_id"] for item in selected]
     if proof.get("point_ids", [])[:len(ids)] != ids or not record.get("gates"):
         raise ValueError("reference point provenance/numerical gates mismatch")
@@ -129,6 +131,33 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
                     "backend_conditions": {"source": origin["runtime"], "current": identity["runtime"]},
                     "point_ids": ids, "native_input_identity_verified": True,
                     "fixed_gate": identity["gate"]}
+
+
+def _validate_scalar_parent_allocation(origin, proof):
+    """New scalar steps disclose the whole parent charge; legacy references remain readable."""
+    from scripts.dev.global_server_resources import allocated_tres_cpu_count
+
+    parent = origin["parent_allocated_CPU_request_count"]
+    resources = proof.get("server_resources", {})
+    slurm = resources.get("Slurm", {})
+    if (type(parent) is not int or parent < 1 or origin.get("CPU_budget") != 1
+            or origin.get("billing_CPU_request_count") != parent
+            or resources.get("step_CPU_budget") != 1
+            or resources.get("allocated_CPU_request_count") != 1
+            or resources.get("parent_allocated_CPU_request_count") != parent
+            or resources.get("billing_CPU_request_count") != parent
+            or slurm.get("ORCHJAX_PARENT_CPU_COUNT") not in (None, str(parent))
+            or slurm.get("SLURM_CPUS_PER_TASK") != "1"):
+        raise ValueError("CPU scalar reference step/parent billing identity mismatch")
+    tres = slurm.get("ORCHJAX_SLURM_ALLOC_TRES", "")
+    if not tres and parent == 1 and slurm.get("ORCHJAX_PARENT_CPU_COUNT") is None:
+        return  # Ordinary legacy one-core launch without the new enclosing-allocation interface.
+    try:
+        allocated = allocated_tres_cpu_count(tres)
+    except RuntimeError as exc:
+        raise ValueError("CPU scalar reference parent allocated TRES mismatch") from exc
+    if allocated != parent:
+        raise ValueError("CPU scalar reference parent allocated TRES mismatch")
 
 
 def _validate_cpu_internal(name, origin, identity, record, value, output, ids):

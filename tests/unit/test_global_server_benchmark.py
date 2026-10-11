@@ -134,6 +134,109 @@ def test_CPU_scalar_reuses_one_compile_across_all_unique16_and64(monkeypatch, tm
         assert len(record["timing"][f"B{size}_warm_frozen_state_core"]["samples_seconds"]) == 5
 
 
+def test_expected_GPU_reference_hash_mismatch_stops_before_runner_compile(monkeypatch, tmp_path):
+    import scripts.dev.global_server_reference as refs
+
+    lanes = [SimpleNamespace(landpoint_id=f"point{i}") for i in range(64)]
+    monkeypatch.setattr(scale, "screen_inputs", lambda *args: {})
+    monkeypatch.setattr(scale.base, "legacy_factory", lambda *args: None)
+    monkeypatch.setattr(scale.base, "roughheight_sentinel_contract", lambda *args: {})
+    monkeypatch.setattr(scale.base, "stage_identity", lambda *args: {})
+    monkeypatch.setattr(refs, "load_reference", lambda *args, **kwargs: (None, {"sha256": "b" * 64}))
+    def forbidden(*args, **kwargs):
+        pytest.fail("reference identity mismatch must precede runner construction/compile")
+    monkeypatch.setattr(cpu, "SingleRunner", forbidden)
+    args = SimpleNamespace(mode="batch", cpu_budget=48, sizes=[64], baseline_ref="source",
+        validation_mode="exploratory", cpu_reference_role="cpu-internal",
+        expected_gpu_reference_sha256="a" * 64, gpu_reference_dir=tmp_path,
+        cpu_reference_dir=tmp_path, output_dir=tmp_path / "target")
+    recorder = SimpleNamespace(result={"environment": {}})
+    with pytest.raises(ValueError, match="explicitly expected artifact"):
+        cpu.benchmark(args, recorder, lanes, [None] * 64, scale, {})
+
+
+def test_native_FULL64_batch48_records_process_CPU_and_phase_observations(monkeypatch, tmp_path):
+    """Tiny synthetic arithmetic transition only; no physical-model compile/run."""
+    import scripts.dev.global_server_reference as refs
+
+    lanes, second = toy_prepared(64)
+    reference = mock_toy(monkeypatch, lanes, second)
+    monkeypatch.setattr(refs, "load_reference", lambda *args, **kwargs: (reference, {"sha256": "a" * 64}))
+    monkeypatch.setattr(scale.base, "lower_compile", lambda fn, arguments, name, recorder: jax.jit(fn))
+    monkeypatch.setattr(cpu, "memory_snapshot", lambda phase: {"phase": phase, "available": True,
+        "RSS_bytes": 1024, "peak_RSS_bytes": 2048, "MemAvailable_bytes": 100 * 1024**3})
+    args = SimpleNamespace(mode="batch", sizes=[64], cpu_budget=48, warm_repeats=5,
+        validation_mode="exploratory", cpu_reference_role="cpu-internal", baseline_ref="source",
+        expected_gpu_reference_sha256="a" * 64, gpu_reference_dir=tmp_path / "GPU",
+        cpu_reference_dir=tmp_path / "scalar", output_dir=tmp_path / "target")
+    resources = {"selected_logical_cpus": list(range(48)), "step_CPU_budget": 48,
+        "allocated_CPU_request_count": 48, "parent_allocated_CPU_request_count": 48,
+        "billing_CPU_request_count": 48}
+    recorder = scale.base.Recorder(args.output_dir)
+    recorder.result["environment"] = toy_environment()
+    try:
+        cpu.benchmark(args, recorder, lanes, second, scale, resources)
+    finally:
+        recorder.stop.set()
+        recorder.sampler.join(timeout=1)
+    manifest = json.loads((args.output_dir / "stage_manifest.json").read_text())
+    value, record = StageStore(args.output_dir, manifest["identity"]).load("B64_server_batch_v1")
+    assert value["outputs"][0][0][0]["x"].shape == (64, 1)
+    assert record["evidence_class"] == "exploratory_performance"
+    assert record["provenance"]["batch_permutation_and_replacement"] is True
+    assert record["provenance"]["CPU_scalar_reference_role"] == "cpu_internal_comparison"
+    observations = record["provenance"]["runtime_observations"]
+    assert observations == recorder.result["runtime_observations"]["B64"]
+    for phase in ("pre_compile", "post_compile", "first_call_complete", "warm_complete"):
+        assert observations[phase]["available"] is True
+    for metric in record["timing"].values():
+        assert metric["valid_point_days"] == 896
+        assert len(metric["process_CPU_samples"]) == len(metric["samples_seconds"]) == 5
+        assert [sample["wall_seconds"] for sample in metric["process_CPU_samples"]] == metric["samples_seconds"]
+        assert all(sample["step_CPU_budget"] == sample["parent_CPU_budget"] == 48
+                   for sample in metric["process_CPU_samples"])
+
+
+def test_legacy_CPU1_allocTRES_admission_identity_and_internal_reader_chain(monkeypatch, tmp_path):
+    """Exercise legacy launcher semantics end to end with synthetic FULL64 arrays."""
+    import scripts.dev.global_server_reference as refs
+
+    lanes, second = toy_prepared(64)
+    reference = mock_toy(monkeypatch, lanes, second)
+    topology(tmp_path / "sysfs", [0])
+    legacy_env = {"SLURM_JOB_ID": "123", "SLURM_JOB_PARTITION": "cnall",
+        "SLURM_CPUS_PER_TASK": "1", "SLURM_NTASKS": "1",
+        "ORCHJAX_SLURM_ALLOC_TRES": "cpu=1,mem=1M", "ORCHJAX_SLURM_ALLOC_TRES_SOURCE": "AllocTRES"}
+    admitted = resources.admit("scalar", 1, environ=legacy_env, allowed=[0],
+        sysfs=tmp_path / "sysfs", hostname="ibpaid")
+    assert admitted["parent_allocated_CPU_request_count"] == admitted["billing_CPU_request_count"] == 1
+    assert admitted["Slurm"]["ORCHJAX_PARENT_CPU_COUNT"] is None
+    with monkeypatch.context() as patch:
+        patch.setattr(refs, "load_reference", lambda *args, **kwargs: (reference, {"sha256": "a" * 64}))
+        patch.setattr(scale.base, "lower_compile", lambda fn, arguments, name, recorder: jax.jit(fn))
+        args = SimpleNamespace(mode="scalar", sizes=[64], cpu_budget=1, warm_repeats=5,
+            validation_mode="exploratory", cpu_reference_role="accepted", baseline_ref="source",
+            gpu_reference_dir=tmp_path / "GPU", cpu_reference_dir=None, output_dir=tmp_path / "target")
+        recorder = scale.base.Recorder(args.output_dir)
+        recorder.result["environment"] = toy_environment()
+        try:
+            cpu.benchmark(args, recorder, lanes, second, scale, admitted)
+        finally:
+            recorder.stop.set()
+            recorder.sampler.join(timeout=1)
+    manifest = json.loads((args.output_dir / "stage_manifest.json").read_text())
+    produced = manifest["identity"]
+    assert produced["parent_allocated_CPU_request_count"] == produced["billing_CPU_request_count"] == 1
+    assert produced["CPU_budget"] == 1
+    consumer = {**produced, "mode": "batch", "CPU_budget": 48, "cpu_reference_role": "cpu-internal",
+        "parent_allocated_CPU_request_count": 48, "billing_CPU_request_count": 48}
+    output, proof = refs.load_reference(args.output_dir, consumer, name="B64_server_scalar_v1",
+        points=64, cpu_reference_role="cpu-internal")
+    assert output[0][0][0]["x"].shape == (64, 1)
+    assert proof["source_identity"]["parent_allocated_CPU_request_count"] == 1
+    assert proof["role"] == "cpu_internal_comparison"
+
+
 def toy_cpu_case(monkeypatch, tmp_path, *, validation="exploratory", mode="scalar", gpu_change=None,
                  cpu_directory=None, cpu_role="accepted"):
     lanes, second = toy_prepared(16)

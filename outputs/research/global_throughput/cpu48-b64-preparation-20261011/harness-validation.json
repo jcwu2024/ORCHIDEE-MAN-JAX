@@ -1,0 +1,240 @@
+{
+  "status": "passed_local_CPU48_harness_preparation_only",
+  "workspace": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput",
+  "branch": "research/global-throughput",
+  "scope": "local stdlib admission/protocol and synthetic arrays/arithmetic transition only; no physical model compilation/run, GPU, remote model/toy, SSH, allocation or submission",
+  "files": {
+    "scripts/dev/benchmark_global_server_cpu.py": {
+      "sha256": "a773dbe64fc21a93bca4e4fda952c37f97445fc0eaa9eda3b35c93c482aa91dc"
+    },
+    "scripts/dev/global_server_resources.py": {
+      "sha256": "c17f37f4d0acd888a9525154489e1815d3d24ff60c6fac030c73e359284dc271"
+    },
+    "scripts/dev/global_server_reference.py": {
+      "sha256": "e355e0ac36f06bd288b3523e507d0cb91c04d71acaf0a0b002e8e70cac6c70bc"
+    },
+    "tests/unit/test_global_server_benchmark.py": {
+      "sha256": "e3c253035e8f24518840acf5dc4965aaed3d41f61d3a76d218d72f22a4622bfc"
+    },
+    "tests/unit/test_global_server_reference_metadata.py": {
+      "sha256": "81e31aba32065d5a3ae1cfc89272231fd37ea4c577497dcaaa0fea288d62ba6e"
+    },
+    "tests/unit/test_global_cpu48_runtime.py": {
+      "sha256": "89e4fc7c27b60ecad516624f30d44c714baf0ee325e34f27cda55b2f45ca4071"
+    }
+  },
+  "tests": [
+    {
+      "path": "tests/unit/test_global_server_benchmark.py",
+      "passed": 34,
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_server_benchmark.py -q",
+      "scope": "existing gates/CPUinternal hard stops plus expected GPU hash beforecompile and tiny synthetic FULL64 batch48 telemetry/5+5"
+    },
+    {
+      "path": "tests/unit/test_global_server_reference_metadata.py",
+      "passed": 19,
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_server_reference_metadata.py -q",
+      "scope": "synthetic snapshots including FULL64 scalar parent48 -> batch48, strict identity and discount/TRES corruption rejection, legacy compatibility"
+    },
+    {
+      "path": "tests/unit/test_global_cpu48_runtime.py",
+      "passed": 37,
+      "command": "conda run -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_cpu48_runtime.py",
+      "scope": "mock OS only; no JAX import/model; owner lifecycle_observer reported final run"
+    },
+    {
+      "path": "tests/unit/test_global_server_benchmark.py",
+      "passed": 1,
+      "deselected": 34,
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_server_benchmark.py -k legacy_CPU1_allocTRES_admission_identity_and_internal_reader_chain -q",
+      "scope": "actual admit -> benchmark-produced identity/provenance -> load_reference chain, legacy CPU1 AllocTRES only/no parent env, synthetic FULL64 scalar -> batch48 CPU-internal consumer; no physical model"
+    }
+  ],
+  "effective_focused_test_count": 91,
+  "warning": "Existing pytest Unknown config option: cache_dir warning with cacheprovider disabled; no project pytest cache created",
+  "static_checks": {
+    "ruff_scoped_no_cache": "passed",
+    "git_diff_check_scoped": "passed",
+    "followup_test_ruff_and_diff_check": "passed"
+  },
+  "CLI_checks": [
+    {
+      "command": [
+        "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe",
+        "-B",
+        "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\scripts\\dev\\benchmark_global_server_cpu.py",
+        "--mode",
+        "scalar",
+        "--cpu-budget",
+        "1",
+        "--sizes",
+        "64",
+        "--prepared-input",
+        "metadata-only/prepared.pkl",
+        "--gpu-reference-dir",
+        "metadata-only/gpu",
+        "--validation-mode",
+        "exploratory",
+        "--cpu-reference-role",
+        "cpu-internal",
+        "--expected-gpu-reference-sha256",
+        "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--output-dir",
+        "outputs/research/global_throughput/cpu48-b64-preparation-20261011/dry-run-unused",
+        "--dry-run"
+      ],
+      "exit_code": 0,
+      "stdout": {
+        "status": "dry_run",
+        "mode": "scalar",
+        "CPU_budget": 1,
+        "sizes": [
+          64
+        ],
+        "warm_repeats": 5,
+        "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
+        "model_execution": false,
+        "JAX_imported": false,
+        "CPU_process_policy": "scalar",
+        "parent_CPU_count_declared": "48",
+        "billing_scope": "full parent allocation including scalar step; actual Slurm admission required",
+        "validation_mode": "exploratory",
+        "cpu_reference_role": "cpu-internal",
+        "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "stderr": ""
+    },
+    {
+      "command": [
+        "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe",
+        "-B",
+        "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\scripts\\dev\\benchmark_global_server_cpu.py",
+        "--mode",
+        "batch",
+        "--cpu-budget",
+        "48",
+        "--sizes",
+        "64",
+        "--prepared-input",
+        "metadata-only/prepared.pkl",
+        "--gpu-reference-dir",
+        "metadata-only/gpu",
+        "--validation-mode",
+        "exploratory",
+        "--cpu-reference-role",
+        "cpu-internal",
+        "--expected-gpu-reference-sha256",
+        "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--output-dir",
+        "outputs/research/global_throughput/cpu48-b64-preparation-20261011/dry-run-unused",
+        "--cpu-reference-dir",
+        "metadata-only/scalar",
+        "--dry-run"
+      ],
+      "exit_code": 0,
+      "stdout": {
+        "status": "dry_run",
+        "mode": "batch",
+        "CPU_budget": 48,
+        "sizes": [
+          64
+        ],
+        "warm_repeats": 5,
+        "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
+        "model_execution": false,
+        "JAX_imported": false,
+        "CPU_process_policy": "one native CPU process/device; lane count is not CPU count",
+        "parent_CPU_count_declared": "48",
+        "billing_scope": "full parent allocation including scalar step; actual Slurm admission required",
+        "validation_mode": "exploratory",
+        "cpu_reference_role": "cpu-internal",
+        "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "stderr": ""
+    },
+    {
+      "command": [
+        "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe",
+        "-B",
+        "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\scripts\\dev\\benchmark_global_server_cpu.py",
+        "--mode",
+        "batch",
+        "--cpu-budget",
+        "48",
+        "--sizes",
+        "64",
+        "--prepared-input",
+        "metadata-only/prepared.pkl",
+        "--gpu-reference-dir",
+        "metadata-only/gpu",
+        "--validation-mode",
+        "exploratory",
+        "--cpu-reference-role",
+        "cpu-internal",
+        "--expected-gpu-reference-sha256",
+        "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--output-dir",
+        "outputs/research/global_throughput/cpu48-b64-preparation-20261011/dry-run-unused",
+        "--cpu-reference-dir",
+        "metadata-only/scalar",
+        "--synthetic-smoke",
+        "--synthetic-stdlib-only"
+      ],
+      "exit_code": 0,
+      "stdout": {
+        "status": "synthetic_nonmodel_smoke",
+        "mode": "batch",
+        "CPU_budget": 48,
+        "model_execution": false,
+        "JAX_imported": false,
+        "toy_checksums": {
+          "64": 28224
+        },
+        "worker_records": [],
+        "performance_acceptance": false,
+        "validation_mode": "exploratory",
+        "cpu_reference_role": "cpu-internal",
+        "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "stderr": ""
+    }
+  ],
+  "dry_run_output_directory_created": false,
+  "physical_model_execution": false,
+  "physical_model_compilation": false,
+  "GPU_execution": false,
+  "remote_execution": false,
+  "runtime_performance_acceptance": false,
+  "scientific_acceptance": false,
+  "actual_candidate_runtime_observations": "pending actual admitted single-device CPU48 run",
+  "candidate_contract": {
+    "CPU_mode": "batch",
+    "step_CPU_budget": 48,
+    "parent_billable_CPU_count": 48,
+    "unique_points": 64,
+    "point_days": 896,
+    "expected_GPU_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "fixed_atol": 1e-08,
+    "fixed_rtol": 1e-10,
+    "core_and_wrapper_repeats_each": 5,
+    "thread_policy": "Eigen=true; OMP48; MKL/OPENBLAS/NUMEXPR1; reject inherited forcedsinglethread or forcedmultipleCPUdevices; no promise48effective"
+  },
+  "graph_evidence": "Verify intent; graph transport closed and global worktree outside known main coverage; exact source fallback, no completeness or refreshed index claim",
+  "deployment_and_version": "root owns isolated old-science execution commit; no stage/commit/push/deploy by harness owner",
+  "legacy_CPU1_compatibility_chain": {
+    "result": "passed",
+    "launcher_environment": "step1, parent env absent, AllocTRES cpu=1",
+    "actual_chain": [
+      "global_server_resources.admit",
+      "benchmark_global_server_cpu.benchmark writes identity and provenance",
+      "global_server_reference.load_reference"
+    ],
+    "source_identity_parent_CPU_count": 1,
+    "consumer_parent_CPU_count": 48,
+    "full_native_point_count_in_synthetic_arrays": 64,
+    "reference_role": "cpu_internal_comparison",
+    "real_physics": false,
+    "CPU48_strict_parent_binding_changed": false,
+    "fixed_gates_changed": false
+  }
+}

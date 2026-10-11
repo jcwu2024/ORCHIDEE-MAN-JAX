@@ -1,0 +1,119 @@
+{
+  "schema": "cpu48-b64-readonly-target-preparation-v1",
+  "recorded_utc": "2026-10-11 12:43:12 UTC",
+  "scope": "read-only SSH scheduler metadata, Bash capability and Git object prerequisite; no remote file writes, Python/JAX/model execution or submission",
+  "ssh": {
+    "alias": "cln01",
+    "HostName": "192.168.11.2",
+    "BatchMode": true,
+    "existing_identity_reused": true
+  },
+  "node_overview_with_drained_rows": {
+    "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 -o HostName=192.168.11.2 cln01 \"/rmprog/slurm/v22.05.7/bin/sinfo -p cnall -N -h -t idle -o '%N %t %C %O %e' | head -n 16\"",
+    "utc": "2026-10-11 12:38:20 UTC",
+    "result": {
+      "chunk_id": "40b31c",
+      "wall_time_seconds": 0.6122592,
+      "exit_code": 0,
+      "original_token_count": 160,
+      "output": "ibc11b02n01 drain 0/0/56/56 0.02 177874\nibc11b02n02 drain 0/0/56/56 0.01 166812\nibc11b02n05 idle 0/56/0/56 22.19 99171\nibc11b02n06 idle 0/56/0/56 21.76 142011\nibc11b02n09 drain 0/0/56/56 0.01 166345\nibc11b02n10 drain 0/0/56/56 0.01 174992\nibc11b02n11 drain 0/0/56/56 0.01 175020\nibc11b02n13 drain 0/0/56/56 0.02 171801\nibc11b02n16 drain 0/0/56/56 19.01 183060\nibc11b02n17 drain 0/0/56/56 0.01 170475\nibc11b02n18 drain 0/0/56/56 0.01 152653\nibc11b02n19 drain 0/0/56/56 0.01 137613\nibc11b02n20 drain 0/0/56/56 0.01 147395\nibc11b02n22 drain 0/0/56/56 0.01 141311\nibc11b02n27 idle 0/56/0/56 9.72 165166\nibc11b02n28 drain 0/0/56/56 0.01 174325\n"
+    }
+  },
+  "healthy_idle_low_load_candidates": {
+    "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 -o HostName=192.168.11.2 cln01 \"/rmprog/slurm/v22.05.7/bin/sinfo -p cnall -N -h -o '%N %t %C %O %e'\" | Where-Object { $_ -match ' idle ' } | Sort-Object { [double](($_ -split '\\s+')[3]) } | Select-Object -First 6",
+    "utc": "2026-10-11 12:39:04 UTC",
+    "result": {
+      "chunk_id": "53b4bd",
+      "wall_time_seconds": 0.7773946,
+      "exit_code": 0,
+      "original_token_count": 60,
+      "output": "ibc12b08n35 idle 0/56/0/56 0.01 177971\r\nibc12b08n28 idle 0/56/0/56 0.01 183439\r\nibc13b07n28 idle 0/56/0/56 0.01 182570\r\nibc12b08n36 idle 0/56/0/56 0.01 178735\r\nibc12b08n37 idle 0/56/0/56 0.01 176443\r\nibc12b08n38 idle 0/56/0/56 0.01 176950\r\n"
+    }
+  },
+  "proposed_node": {
+    "utc": "2026-10-11 12:39:28 UTC",
+    "node": "ibc12b08n35",
+    "command": "scontrol show node ibc12b08n35 -o",
+    "result": {
+      "chunk_id": "57df14",
+      "wall_time_seconds": 0.6936082,
+      "exit_code": 0,
+      "original_token_count": 170,
+      "output": "NodeName=ibc12b08n35 Arch=x86_64 CoresPerSocket=28  CPUAlloc=0 CPUEfctv=56 CPUTot=56 CPULoad=0.01 AvailableFeatures=(null) ActiveFeatures=(null) Gres=(null) NodeAddr=ibc12b08n35 NodeHostName=ibc12b08n35 Version=22.05.7 OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022  RealMemory=1 AllocMem=0 FreeMem=177971 Sockets=2 Boards=1 State=IDLE ThreadsPerCore=1 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A Partitions=cnall  BootTime=2026-08-24T11:26:43 SlurmdStartTime=2026-08-24T12:30:25 LastBusyTime=2026-10-11T18:27:26 CfgTRES=cpu=56,mem=1M,billing=56 AllocTRES= CapWatts=n/a CurrentWatts=0 AveWatts=0 ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s\n"
+    }
+  },
+  "interpretation": {
+    "n01_ineligible": "overview reports drain; excluded from node proposal",
+    "eligible_snapshot_node": "ibc12b08n35",
+    "state": "IDLE",
+    "allocated_cpus": 0,
+    "total_cpus": 56,
+    "physical_core_count": 56,
+    "threads_per_core": 1,
+    "load": 0.01,
+    "scheduler_RealMemory_MiB": 1,
+    "reported_FreeMem_MiB": 177971,
+    "snapshot_is_not_reservation": true,
+    "requires_fresh_scheduler_and_load_check_before_submission": true,
+    "memory_policy": "64GiB batch MemAvailable guard; no --mem or whole-node exclusivity; no OOM guarantee"
+  },
+  "target_capability_checks": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "chunk_id": "495634",
+        "wall_time_seconds": 0.5481475,
+        "exit_code": 0,
+        "original_token_count": 16,
+        "output": "GNU bash, version 4.2.46(2)-release (x86_64-redhat-linux-gnu)\n"
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "chunk_id": "7e596b",
+        "wall_time_seconds": 0.7092436,
+        "exit_code": 0,
+        "original_token_count": 2,
+        "output": "commit\n"
+      }
+    }
+  ],
+  "target_bare_repository": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+  "execution_bundle_prerequisite": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+  "graph": {
+    "tier": "Verify intended; exact source fallback used",
+    "project_and_generation": "unavailable",
+    "failure": "list_projects: Transport closed",
+    "completeness_claim": false
+  },
+  "target_path_readonly_checks": {
+    "utc": "2026-10-11 12:57:12 UTC",
+    "checks": [
+      {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "d7e510",
+          "wall_time_seconds": 0.2220264,
+          "exit_code": 0,
+          "original_token_count": 0,
+          "output": ""
+        }
+      },
+      {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "6d8d76",
+          "wall_time_seconds": 0.5498149,
+          "exit_code": 0,
+          "original_token_count": 0,
+          "output": ""
+        }
+      }
+    ],
+    "meaning": [
+      "exit0 verifies proposed immutable code-dir absent",
+      "exit0 verifies absolute Slurm log-dir exists"
+    ]
+  }
+}

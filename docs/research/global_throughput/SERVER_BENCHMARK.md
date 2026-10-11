@@ -1,5 +1,15 @@
 # Explore1000 Server Benchmark Contract
 
+Current preparation (2026-10-11): the main CPU candidate is one native FULL64
+B64 process using 48 distinct physical cores, with a complete scalar reference
+followed by five core and five wrapper samples in one 90-minute parent
+allocation. The local harness and synthetic collector are prepared; real CPU48
+compilation, numerical and throughput validation remain pending. See the
+[CPU48 preparation](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)
+and [concrete proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md).
+This preparation grants no deployment or paid execution; the historical CPU4
+matrix below is not the current primary candidate.
+
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the
 original preallocation memory guard passed; the initial FULL64 comparison stopped

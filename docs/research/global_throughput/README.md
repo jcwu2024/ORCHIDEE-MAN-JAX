@@ -2,8 +2,14 @@
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
 [CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
-及[最小CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
+及[CPU48可执行准备](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、
+[CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
 用户已选接受的B1024作为当前单卡工程选择，下一主问题是CPU/GPU速度与单位成本；
+CPU主候选是单进程native FULL64 B64 batch/vmap、48个不同物理核，CPU4仅为可选短入口检查。
+本地harness/launcher/coordinator/collector及历史科学版本封装用于准备同896 point-days的GPU B64对照；
+具体code pin、90min/48CPU/noGPU命令、CNY3.60/5.04上限及停止规则见
+[运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
+真实CPU48科学/性能、远端部署和付费提交均未执行，不复用旧预算。
 1280/1536探索、显存优化及小容差失败不作为前置，B1024不称已证明全局最优。
 旧job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
 283.0-091.0、Day8末rveget/PFT14，32重复一致；原因未归属，本轮科学执行关闭。详见

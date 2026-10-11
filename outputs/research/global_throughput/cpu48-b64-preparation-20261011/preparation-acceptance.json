@@ -1,0 +1,61 @@
+{
+  "schema": "cpu48-b64-preparation-acceptance-v1",
+  "workspace": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "branch": "research/global-throughput",
+  "status": "local_harness_preparation_accepted",
+  "accepted_evidence": [
+    {
+      "receipt": "harness-validation.json",
+      "effective_focused_checks": 91,
+      "includes_actual_legacy_CPU1_admission_identity_reader_chain": true
+    },
+    {
+      "receipt": "checks.json",
+      "focused_checks": 71,
+      "standalone_collector_cli_checks": 4,
+      "counts_overlap_with_other_receipts": true
+    },
+    {
+      "path": "tests/unit/test_prepare_global_cpu48_execution.py",
+      "passed": 7,
+      "scope": "isolated Git index/ref/bundle tests; scientific subtree and active research checkout preserved; allowlist/base/dirty/ref replacement rejection",
+      "reused_completed_verification": true
+    }
+  ],
+  "final_static_checks": {
+    "scoped_ruff_on_twelve_python_harness_test_files": "passed",
+    "git_diff_check": "passed",
+    "unchanged_dependencies_equal_historical_base": [
+      "scripts/dev/benchmark_global_batch.py",
+      "scripts/dev/benchmark_global_scale.py",
+      "scripts/dev/global_source_compatibility.py",
+      "scripts/dev/summarize_global_server_cost.py",
+      "scripts/dev/probe_global_batch_cache.py",
+      "configs/orchidee_man_250919.yaml"
+    ],
+    "remote_research_head_before_commit": "3d4ed5e385471a2c893024734082c1d4f43fdb62",
+    "remote_execution_ref_before_packaging": "absent"
+  },
+  "fixture_only_change_after_tests": {
+    "change": "scalar wrapper median set to 1.2 to match the existing synthetic samples",
+    "production_code_changed": false,
+    "tests_rerun_after_this_change": false,
+    "final_scoped_ruff": "passed"
+  },
+  "total_test_count": "not summed: suites and owner receipts overlap",
+  "collector_gate_counts": {
+    "saved_leaves": 760,
+    "GPU_reference_gates": 64,
+    "CPU_internal_whole_tree_gates": 1,
+    "CPU_internal_compared_leaves": 760
+  },
+  "version_packaging_and_pinned_target_bash_expansion": "next local/read-only preparation stage",
+  "scientific_acceptance": false,
+  "performance_acceptance": false,
+  "physical_model_compilation_or_run": false,
+  "remote_python_or_JAX_toy": false,
+  "GPU_execution": false,
+  "deployment": false,
+  "submission": false,
+  "new_budget_authorization": false
+}

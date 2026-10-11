@@ -1,7 +1,8 @@
 # 全球 JAX 运行效率：新项目主管交接
 
 更新：2026-10-11。先读本页、[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
-及[最小CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
+及[CPU48可执行准备](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、
+[CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
 用户已选择接受的B1024作为当前单卡工程选择，主问题转为CPU/GPU速度与单位成本；
 不把1280/1536探索、显存优化或跨版本小容差失败作为前置。
 旧[B1024双臂获批执行](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)、
@@ -112,16 +113,26 @@ CPU compile-end RSS约4.776GiB，按此作48份常驻进程的朴素外推约229
 
 ## 4. 当前阶段与下一步供主管审阅
 
-当前只完成本地证据比较和有界提案；没有新runner实现或新科学执行。
-下一步优先复用既有JAX CPU-backend的4核pool/B64，与已接受GPU B64（job15579869、
-FULL64 unique64、896 point-days）作同工作量对照，同时补CPU并行证据。
-GPU B64与计划复用的canonical FULL64保存metadata的64点序/input digests和science已核对一致；
-保持连续窗口、760完整native leaves/masks及原容差，性能探索与科学接受分列。
-CPU4/B64尚未执行；优先在一个有界4CPU作业内完成同版本scalar reference准入及B64计时。
-实际CPU reference、step资源admission、wall、cwd和具体命令仍缺，不以vmap lane数替代CPU核数。
-B1024大批量结果保留，与B64归一化吞吐不能冒称严格同总量端到端比；完整2048适配只在需要该级别对照时再选。
-详见[CPU计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
-Fortran匹配基准另缺；不强制GPU重跑或大规模CPU核数网格。本轮不授权新免费/付费作业、远端改动或自动任务。
+当前已实现CPU48 runner/resource/reference、单allocation启动器/协调器及独立collector，
+并完成本地轻量协议验证。主候选是**单进程native FULL64 B64 batch/vmap、48个不同物理核**；
+CPU4仅为可选短入口检查，不是研究终点、强制前置或48份独立worker方案。
+同一90min/48CPU/noGPU父allocation内，先建立完整FULL64 scalar内部参考（沿用5core+5wrapper），
+再测48核B64（5+5）；剩余候选窗口不足、版本/资源/参考不符、硬数值门失败或超时即停止。
+所有阶段均按父48核计费，最坏情景主CNY3.60、保守CNY5.04；协调器区间费用不冒充完整Slurm Elapsed，
+整作业估算须终态sacct/AllocTRES且父只计一次，实际账单未核实。
+执行封装从历史`8aa2e05aa24b65dc4d30a27d4ee857bba6312221`仅复制审核harness/tests，
+旧science`11b6…`完整物理子树不变；当前研究树的碳修复保留。完整SHA、路径和bundle见
+[execution-code-pin.json](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/execution-code-pin.json)。
+与已接受GPU B64（job15579869、FULL64 unique64、896 point-days）的点序/input digests和science已核对一致，
+连续窗口、760完整native leaves/masks、原dtype和容差保持；性能探索与科学接受分列。
+Linux元数据tuple/list白名单兼容、实际完整合成stage的collector round-trip及旧CPU1 admission→identity→reader兼容检查
+属于准备验证，不认证真实CPU48 runtime、并行效率或物理数值。GPU跨backend有限容差差异仍保留，CPU内部门不放宽。
+具体命令、64GiB/24GiB guards、原生线程策略、健康节点快照和审批边界见
+[准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)及
+[运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
+真实物理编译/运行、CPU48性能、部署与paid submission均未发生；仍需主管取得独立明确授权，不恢复旧额度或自动任务。
+B1024的299.139825大批量结果仅作归一化参考，不冒称与B64严格同总量端到端比；CPU2048适配非前置。
+Fortran匹配基准另缺，不强制GPU重跑或核数网格。
 
 以下保留已完成的生命周期、碳核心同步和失败定位证据，不作为CPU/GPU比较前置。
 

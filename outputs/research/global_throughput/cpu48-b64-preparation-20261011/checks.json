@@ -1,0 +1,63 @@
+{
+  "schema": "cpu48-b64-local-checks-v1",
+  "workspace": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "branch": "research/global-throughput",
+  "commands": [
+    {
+      "command": "conda run -n ORCJAX python -m pytest -q tests/unit/test_collect_global_cpu48_b64_cli.py",
+      "result": "passed",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "command": "conda run -n ORCJAX python -m pytest -q tests/unit/test_global_cpu48_b64_preparation.py tests/unit/test_global_cpu48_runtime.py tests/unit/test_prepare_global_cpu48_execution.py tests/unit/test_global_server_reference_metadata.py tests/unit/test_collect_global_cpu48_b64_cli.py",
+      "result": "passed",
+      "passed": 71,
+      "failed": 0
+    },
+    {
+      "command": "conda run -n ORCJAX ruff check scripts/dev/collect_global_cpu48_b64.py scripts/hpc/global_cpu48_b64_coordinator.py tests/unit/test_global_cpu48_b64_preparation.py tests/unit/test_collect_global_cpu48_b64_cli.py",
+      "result": "passed"
+    }
+  ],
+  "result": "passed",
+  "passed": 71,
+  "failed": 0,
+  "counts_overlap_with_harness_validation_and_version_tool": true,
+  "post_validation_fixture_only_adjustment": "scalar wrapper median corrected from 1.0 to 1.2 to agree with synthetic samples; production code unchanged; no rerun after this fixture-only edit",
+  "scope": "local synthetic metadata/arrays and non-model harness checks",
+  "collector_cli_evidence": {
+    "status": "complete_exploratory_measurement",
+    "unique_points": 64,
+    "point_days": 896,
+    "saved_output_leaves": 760,
+    "gpu_reference_gates_recomputed": 64,
+    "cpu_internal_cross_mode_gate_recomputed_over_full_two_block_tree": true,
+    "cpu_internal_gate_count": 1,
+    "cpu_internal_compared_leaves": 760,
+    "timing_samples_per_metric": 5,
+    "process_cpu_samples_per_metric": 5,
+    "loadavg_checkpoint_tuple_and_json_list": "accepted only with equal finite values",
+    "cpu_internal_array_change": "rejected",
+    "checkpoint_manifest_identity_tamper": "rejected",
+    "canonical_reference_sha_tamper": "rejected",
+    "terminal_accounting": "accepted only when raw parent row, raw-row SHA, parent job ID, Elapsed, wall_seconds, exact cpu=48 AllocTRES, zero GPU, and run directories agree",
+    "accounting_corruptions_rejected": [
+      "changed CPU count",
+      "duplicate CPU TRES",
+      "positive GPU TRES",
+      "different parent job ID",
+      "Elapsed/wall_seconds mismatch"
+    ],
+    "synthetic_reference_sha_override": "test subprocess bootstrap only; production collector requires canonical a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+  },
+  "not_run": [
+    "physical model execution or compilation",
+    "GPU execution",
+    "remote execution or SSH",
+    "Slurm allocation or submission"
+  ],
+  "scientific_acceptance": false,
+  "performance_acceptance": false,
+  "submission_authorized": false
+}
