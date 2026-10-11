@@ -1,6 +1,7 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-11。先读本页、[碳核心本地同步结果](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)，再按需读生命周期实现及两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
+更新：2026-10-11。先读本页、[B1024双臂本地准备](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)，
+再按需读[碳核心本地同步结果](../../../outputs/research/global_throughput/carbon-core-sync-20261011/CURRENT_RESULT.md)、生命周期实现及两份GPU终态 CURRENT_RESULT；历史仅按问题查阅。
 此交接保存停止点和研究问题，**不恢复任何 GPU 诊断、付费作业或旧额度**。
 可复制[新项目开场指令](NEW_PROJECT_PROMPT.md)。
 
@@ -122,18 +123,33 @@ analysis、guard及collection/sample边界，原物理合同和内存guard未放
 JAX0.10.1；未运行外层全球driver、完整物理图、FULL64、两块连续窗口或GPU。
 调用来源、实际命令、逐叶指标及图工具Transport closed的源码回退限制均在同步报告。
 
-当前新核心被旧source_identity guard预期拒绝：`science source changed outside
+新核心被旧source_identity guard预期拒绝：`science source changed outside
 certified execution-only cache repair`。这是版本隔离拒绝，与数值结果分开。
 旧DIFFUCO-only execution certificate及helper原样保留，碳过程修复不归入旧execution-only
-equivalence。后续须准备独立新科学核心identity及对旧冻结FULL64的显式严格comparison
-admission；旧goldens、历史pin/终态不改。新完整全球runner与GPU准入尚未完成。
+equivalence。专用新科学identity与显式旧冻结FULL64严格comparison admission在本轮独立准备，
+旧goldens、历史pin/终态不改。新核心的完整全球/GPU数值验收仍待执行。
 
 [GPU验证提案](../../../outputs/research/global_throughput/memory-lifecycle-implementation-20261011/GPU_VALIDATION_PROPOSAL.md)
-规划同一新allocation内两个fresh B1024进程，统一phased顺序，不能与历史交替样本混比。
-拟1 V10032GB+4 CPUs、120min，主/保守worst-case CNY4.80/4.96，未获新执行授权。
-本地核心同步已验收；新科学来源准入、未来执行SHA、专用两组launcher、
-strategy-aware saved-array验证及目标Bash dry-run仍待准备，提案未就绪；
-旧fixed2048 launcher会派B2048，不能直接复用，旧额度保持关闭。
+规划同一新allocation内两个fresh B1024进程，均先五次core后五次wrapper，不能与历史交替样本混比。
+本轮[B1024双臂本地准备](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)
+已完成本地准备：独立新科学source guard、B1024-only runner、保存数组validator、
+串行fresh-process coordinator、专用canonical launcher及实际Bash展开→真实coordinator dry-run。
+common identity只排除strategy和wrapper根持有策略，保留sampling_order。新runner初始FULL64
+有限数值超容差即停，不沿用旧capacity的exploratory continuation。实际初始/reset/置换/替换
+数组及两个chunk的连续state handoff存证，封存后由CPU/NumPy独立重查2051 gates/760 leaves/2048 comparisons。
+首臂exit0、seal、独立通过后才派第二臂；紧邻派发要求至少剩3600s；仅双臂通过发布同job比值。
+本地检查实际结果及完整候选SHA见本轮报告/提交后收据，不把fake/Bash/旧参考格式检查当GPU验收。
+source/runner/validator/observer有效43项（最新30项重跑，复用未变化13项），
+真实旧FULL64格式与原生NamedTuple容器贯通均通过；coordinator/launcher最新14项通过，
+本轮有效57项，不是单批重跑。最终code SHA/远端一致性见提交后候选回执。
+Slurm日志固定到共享绝对 `runtime/logs/global_gpu_lifecycle_%j.txt`，提交前核查父目录存在且可写；
+该检查须在脚本执行之前完成。Windows Bash路径/token映射与目标runtime验证的边界在本轮报告中保留。
+
+拟1 V10032GB+4 CPUs、120min、no-requeue、非exclusive，主/保守worst-case
+CNY4.80/4.96，未获新执行授权。未来固定cwd为
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1`，
+未创建或部署；canonical JAX0.4.38/CUDA、新核心FULL64、allocator回收、显存/吞吐收益仍未验证。
+旧fixed2048 launcher会派B2048，不能复用；旧额度保持关闭，失败不自动重试或扩大batch。
 
 中间批量、真实669点+尾批、独立集合成员、长窗口/年和匹配Fortran基准仍为后续另议。
 完成相应验证前，不作生产/50年/10×/普遍科学效率结论。
@@ -150,7 +166,10 @@ strategy-aware saved-array验证及目标Bash dry-run仍待准备，提案未就
 | --- | --- |
 | [global_batch.py](../../../jax_orchidee/driver/global_batch.py) | 批处理完整物理transition入口 |
 | [benchmark_global_gpu_capacity.py](../../../scripts/dev/benchmark_global_gpu_capacity.py) | capacity合同、计时及结果存证入口 |
-| [2048 coordinator](../../../scripts/hpc/global_gpu_capacity_2048_coordinator.py) | 两shape独立进程顺序调度 |
+| [生命周期科学身份](../../../scripts/dev/global_lifecycle_science.py)、[专用runner](../../../scripts/dev/benchmark_global_gpu_lifecycle.py) | 新科学严格准入、B1024双臂实际数组存证 |
+| [生命周期validator](../../../scripts/dev/validate_global_gpu_lifecycle.py) | CPU/NumPy独立保存数组重查 |
+| [生命周期coordinator](../../../scripts/hpc/global_gpu_lifecycle_coordinator.py)、[专用launcher](../../../scripts/hpc/slurm_global_gpu_lifecycle.sh) | 两strategy全新进程顺序调度，未来执行待批准 |
+| [2048 coordinator](../../../scripts/hpc/global_gpu_capacity_2048_coordinator.py) | 历史两shape独立进程调度 |
 | [2048 launcher](../../../scripts/hpc/slurm_global_gpu_capacity_2048.sh) | 已完成付费job的launcher，不是重提指令 |
 | [SERVER_BENCHMARK.md](SERVER_BENCHMARK.md)、[PRECISION_BOUNDARY.md](PRECISION_BOUNDARY.md) | 运行合同与native dtype边界 |
 

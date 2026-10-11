@@ -1,0 +1,32 @@
+[
+  {
+    "source": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\__pycache__",
+    "destination": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-lifecycle-preparation-20261011\\local-cache-quarantine\\__pycache__",
+    "file_count": 4
+  },
+  {
+    "source": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\driver\\__pycache__",
+    "destination": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-lifecycle-preparation-20261011\\local-cache-quarantine\\driver\\__pycache__",
+    "file_count": 19
+  },
+  {
+    "source": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\parameters\\__pycache__",
+    "destination": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-lifecycle-preparation-20261011\\local-cache-quarantine\\parameters\\__pycache__",
+    "file_count": 3
+  },
+  {
+    "source": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\sechiba\\__pycache__",
+    "destination": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-lifecycle-preparation-20261011\\local-cache-quarantine\\sechiba\\__pycache__",
+    "file_count": 17
+  },
+  {
+    "source": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\stomate\\__pycache__",
+    "destination": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-lifecycle-preparation-20261011\\local-cache-quarantine\\stomate\\__pycache__",
+    "file_count": 14
+  },
+  {
+    "source": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\trace\\__pycache__",
+    "destination": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-lifecycle-preparation-20261011\\local-cache-quarantine\\trace\\__pycache__",
+    "file_count": 3
+  }
+]

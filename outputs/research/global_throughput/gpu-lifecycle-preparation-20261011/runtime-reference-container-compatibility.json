@@ -1,0 +1,158 @@
+{
+  "status": "passed_real_frozen_reference_runtime_container_bridge_only",
+  "reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+  "reference_bytes": 27587892,
+  "reference_lanes": 64,
+  "native_leaves": 760,
+  "native_ModeloutResult_containers": 2,
+  "native_container_class": "jax_orchidee.stomate.modelout.ModeloutResult",
+  "exact_fields": [
+    "AGB_model",
+    "BGB_model",
+    "GPP_model",
+    "NPP_model"
+  ],
+  "array_objects_unchanged": true,
+  "paths_shapes_dtypes_unchanged": true,
+  "actual_base_compare": {
+    "passed": true,
+    "compared_leaves": 760,
+    "max_abs": 0.0,
+    "max_bound_ratio": 0.0,
+    "failures": [],
+    "atol": 1e-08,
+    "rtol": 1e-10,
+    "nonfinite_policy": "fail_except_exact_source_backed_bare_soil_roughheight_nan_mask",
+    "allowed_sentinels": [
+      {
+        "path": "[0][0][0][13]",
+        "count": 64,
+        "contract": {
+          "component": "diffuco_previous_step_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[0][0][5][18]",
+        "count": 64,
+        "contract": {
+          "component": "sechiba_finalize_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[1][0][0][13]",
+        "count": 64,
+        "contract": {
+          "component": "diffuco_previous_step_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[1][0][5][18]",
+        "count": 64,
+        "contract": {
+          "component": "sechiba_finalize_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      }
+    ]
+  },
+  "independent_compare": {
+    "passed": true,
+    "compared_leaves": 760,
+    "max_abs": 0.0,
+    "max_bound_ratio": 0.0,
+    "failures": [],
+    "atol": 1e-08,
+    "rtol": 1e-10,
+    "nonfinite_policy": "fail_except_exact_source_backed_bare_soil_roughheight_nan_mask",
+    "allowed_sentinels": [
+      {
+        "path": "[0][0][0][13]",
+        "count": 64,
+        "contract": {
+          "component": "diffuco_previous_step_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[0][0][5][18]",
+        "count": 64,
+        "contract": {
+          "component": "sechiba_finalize_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[1][0][0][13]",
+        "count": 64,
+        "contract": {
+          "component": "diffuco_previous_step_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[1][0][5][18]",
+        "count": 64,
+        "contract": {
+          "component": "sechiba_finalize_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      }
+    ]
+  },
+  "JAX_imported": true,
+  "model_execution": false,
+  "JIT_execution": false,
+  "GPU_initialization": false,
+  "claim": "runtime container identity compatibility only; no new-core or GPU numerical/scientific acceptance"
+}

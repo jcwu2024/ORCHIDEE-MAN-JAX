@@ -1,0 +1,68 @@
+{
+  "schema": "global-gpu-lifecycle-local-integration-review-v1",
+  "date": "2026-10-11",
+  "status": "local_preparation_reviewed",
+  "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "branch": "research/global-throughput",
+  "science_source_pin": "1fdacde59d86f696f384b56d69292c8f6fa8d30b",
+  "executable_pin": "Read post-commit EXECUTION_CANDIDATE.json; no self-referential pin in this tracked review.",
+  "effective_current_tests": {
+    "source_science": 10,
+    "runner": 7,
+    "validator": 23,
+    "observer": 3,
+    "coordinator_launcher": 14,
+    "total": 57,
+    "latest_source_batch": "runner7 + validator23: 30 passed in 28.35s; reuse unchanged science10 + observer3 from prior 42-passed batch",
+    "latest_coordinator_batch": "14 passed in 1.84s after POSIX-planning and Slurm-log fixes",
+    "warnings": "one existing pytest cache_dir configuration warning in each recorded batch",
+    "not_a_single_new_batch": true
+  },
+  "accepted_evidence": [
+    "source-runner-validation.json",
+    "runtime-container-pytest.txt",
+    "coordinator-launcher-validation.json",
+    "coordinator-launcher-tests.log",
+    "reference-format-compatibility.json",
+    "runtime-reference-container-compatibility.json",
+    "observer-validation.json"
+  ],
+  "parent_review": [
+    "Actual runner initial strict finite mismatch abort before warm samples and sealed timing",
+    "Exact production/inert ModeloutResult container compatibility in successful runner-to-validator fixture and existing real frozen FULL64 asset",
+    "Unchanged scientific processes, old execution-only certificate and run_two binding",
+    "Exact common identity excludes only strategy and resident-input policy; sampling order retained",
+    "Serial fresh processes, first-arm seal and independent acceptance, journal-IO-aware immediate 3600-second second-dispatch guard",
+    "Same-workload core/wrapper ratios only after both independently accepted arms",
+    "Supervisor-requested absolute shared Slurm stdout/stderr path aligned across launcher, proposal and candidate receipt",
+    "Windows pure coordinator dry-run preserves canonical future POSIX output roots"
+  ],
+  "routine_checks": {
+    "owners": "Ruff, source formatter check, Bash syntax, actual Git Bash expansion, diff checks passed; detailed commands in owner receipts",
+    "candidate_helper": "ORCJAX python -B -m ruff check and ruff format --check execution-candidate-check.py passed",
+    "markdown_targets": "92 local Markdown targets passed in the four current preparation/entry/proposal documents",
+    "unchanged_scientific_and_certificate_diff": "git diff --cached --name-only -- jax_orchidee scripts/dev/global_source_compatibility.py scripts/dev/benchmark_global_batch.py returned no paths",
+    "staged_scope": "36 declared files, under 1 MiB total; maximum individual file 85353 bytes; all 11 JSON files parsed",
+    "staged_diff": "git diff --cached --check passed; no remaining unstaged edits",
+    "credential_scan": "No obvious private-key, GitHub/OpenAI access-token or AWS access-key patterns in staged text"
+  },
+  "packaging": {
+    "include": "Dedicated code, six focused test files, current docs, compact JSON/Markdown/logs and reproducible format/container/candidate helpers",
+    "exclude": "Prepared/reference/checkpoint arrays and pickles, scientific cache directories, compiler/HLO/binaries and environments",
+    "existing_cache_preserved": "60 existing .pyc files in six directories moved intact under local-cache-quarantine; exact mapping in local-cache-quarantine.json",
+    "console_whitespace": "Five committed console logs have only trailing whitespace and excess final blank lines removed for Git diff checks. Original byte copies remain locally under ignored raw-console/ with the same filenames; test outcomes, commands and token values are unchanged."
+  },
+  "reused_prior_evidence": {"core_regressions": 37, "bounded_forward_return_records": 354, "prior_lifecycle_checks": 199},
+  "graph": {"tier": "Verify with exact source fallback", "service": "Transport closed", "known_project": "E-ORCHIDEE-MAN-JAX", "known_main_generation": "2026-10-10T08:46:50Z", "worktree": "excluded/not_tracked", "completeness_claim": false},
+  "limitations": [
+    "Local Git Bash tests map Windows project paths and the mocked container Python token; not target Linux Bash/Slurm/CUDA driver verification.",
+    "Real frozen-reference self-comparison and native-container bridge verify format/container/schema/dtype/sentinel compatibility, not new-core FULL64 values.",
+    "No peak VRAM sampler or allocator live/reserved proof; snapshots are boundary observations.",
+    "No SSH, transfer, deployment, server changes, GPU or full physical graph execution, paid jobs or main merge.",
+    "Shared absolute Slurm log parent must be verified to exist and be writable on the target before sbatch; this has not been checked remotely."
+  ],
+  "future_allocation": {"approved": false, "V100_32GB_count": 1, "Slurm_CPUs": 4, "wall_minutes": 120, "no_requeue": true, "exclusive": false, "primary_worst_case_CNY": 4.80, "conservative_worst_case_CNY": 4.96},
+  "scientific_acceptance": false,
+  "GPU_acceptance": false,
+  "performance_acceptance": false
+}

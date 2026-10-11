@@ -20,7 +20,8 @@ def main() -> None:
     os.environ["ORCHJAX_GLOBAL_BATCH_PROCESS_START_EPOCH"] = str(time.time())
     candidate_first = "--execution-order=candidate-first" in sys.argv or any(
         left == "--execution-order" and right == "candidate-first" for left, right in zip(sys.argv, sys.argv[1:]))
-    capacity = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY") == "benchmark_global_gpu_capacity.py"
+    capacity_entry = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY")
+    capacity = capacity_entry in {"benchmark_global_gpu_capacity.py", "benchmark_global_gpu_lifecycle.py"}
     if candidate_first or capacity:
         import json
 
@@ -54,7 +55,7 @@ def main() -> None:
         resources["thread_affinity_after_backend"] = thread_affinity(resources["original_affinity"])
         os.environ["ORCHJAX_SERVER_RESOURCE_PLAN"] = json.dumps(resources)
     entry = os.environ.get("ORCHJAX_GLOBAL_BATCH_ENTRY", "benchmark_global_batch.py")
-    if entry not in {"benchmark_global_batch.py", "benchmark_global_scale.py", "benchmark_global_gpu_capacity.py", "probe_global_batch_cache.py"}:
+    if entry not in {"benchmark_global_batch.py", "benchmark_global_scale.py", "benchmark_global_gpu_capacity.py", "benchmark_global_gpu_lifecycle.py", "probe_global_batch_cache.py"}:
         raise ValueError(f"unsupported diagnostic entry: {entry}")
     runpy.run_path(
         str(Path(__file__).resolve().parents[1] / "dev" / entry),

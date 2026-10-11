@@ -1,0 +1,6157 @@
+{
+  "status": "passed_real_frozen_reference_format_compatibility_only",
+  "reference_path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\gpu-round4\\model\\stage_B4_group_references.pkl",
+  "reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+  "reference_bytes": 27587892,
+  "manifest_sha256": "cce5ed91f94c19cd576856b223e63830f91e3e0fa6def046d786e013317f8319",
+  "source_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+  "new_declared_science_sha256": "8c8b1dfd0b207e96bbb81c2d3eb85ae6edccb9ed3c6b77fb470dabc58c5fa77d",
+  "array_outer_lanes": 64,
+  "native_leaves": 760,
+  "dtype_leaf_counts": {
+    "float64": 744,
+    "int32": 4,
+    "bool": 8,
+    "int64": 4
+  },
+  "native_schema": [
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        6,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "int32"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2,
+        14,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2,
+        14,
+        32,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        101,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        10,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        100,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3,
+        14,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        32,
+        2,
+        7,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64
+      ],
+      "dtype": "int64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "int32"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "int64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        20
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        6,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        6,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "int32"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2,
+        14,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2,
+        14,
+        32,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        101,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        10,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        100,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        2,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3,
+        14,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        32,
+        2,
+        7,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "bool"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        12,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64
+      ],
+      "dtype": "int64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        4
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "int32"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "int64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        3
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        11,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        31,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        20
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14,
+        6,
+        11
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        32,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        6
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1,
+        2
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        1
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    },
+    {
+      "shape": [
+        64,
+        7,
+        1,
+        14
+      ],
+      "dtype": "float64"
+    }
+  ],
+  "sentinel_paths": {
+    "[0][0][0][13]": {
+      "component": "diffuco_previous_step_state",
+      "field": "roughheight_pft",
+      "bare_soil_index": 0,
+      "inner_shape": [
+        1,
+        14
+      ],
+      "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+    },
+    "[0][0][5][18]": {
+      "component": "sechiba_finalize_state",
+      "field": "roughheight_pft",
+      "bare_soil_index": 0,
+      "inner_shape": [
+        1,
+        14
+      ],
+      "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+    },
+    "[1][0][0][13]": {
+      "component": "diffuco_previous_step_state",
+      "field": "roughheight_pft",
+      "bare_soil_index": 0,
+      "inner_shape": [
+        1,
+        14
+      ],
+      "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+    },
+    "[1][0][5][18]": {
+      "component": "sechiba_finalize_state",
+      "field": "roughheight_pft",
+      "bare_soil_index": 0,
+      "inner_shape": [
+        1,
+        14
+      ],
+      "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+    }
+  },
+  "self_comparison": {
+    "passed": true,
+    "compared_leaves": 760,
+    "max_abs": 0.0,
+    "max_bound_ratio": 0.0,
+    "failures": [],
+    "atol": 1e-08,
+    "rtol": 1e-10,
+    "nonfinite_policy": "fail_except_exact_source_backed_bare_soil_roughheight_nan_mask",
+    "allowed_sentinels": [
+      {
+        "path": "[0][0][0][13]",
+        "count": 64,
+        "contract": {
+          "component": "diffuco_previous_step_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[0][0][5][18]",
+        "count": 64,
+        "contract": {
+          "component": "sechiba_finalize_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[1][0][0][13]",
+        "count": 64,
+        "contract": {
+          "component": "diffuco_previous_step_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      },
+      {
+        "path": "[1][0][5][18]",
+        "count": 64,
+        "contract": {
+          "component": "sechiba_finalize_state",
+          "field": "roughheight_pft",
+          "bare_soil_index": 0,
+          "inner_shape": [
+            1,
+            14
+          ],
+          "provenance": "condveg.f90::condveg_z0cdrag 1325-1474 / condveg_z0cdrag_dyn 1578-1718; JAX condveg.py NaN initialization and vegetation loop starting at index1; tests/unit/test_condveg.py bare-soil NaN assertions; diffuco.py:4166-4169 masks bare-soil roughheight before arithmetic"
+        }
+      }
+    ]
+  },
+  "JAX_imported": false,
+  "model_execution": false,
+  "GPU_initialization": false,
+  "claim": "restricted NumPy-only unpickler and comparator support the frozen real reference format/dtype/schema/declared NaN masks; no new-core/GPU numerical acceptance"
+}

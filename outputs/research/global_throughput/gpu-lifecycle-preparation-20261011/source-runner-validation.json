@@ -1,0 +1,113 @@
+{
+  "status": "passed_local_preparation_only",
+  "code_head_at_checks": "1fdacde59d86f696f384b56d69292c8f6fa8d30b",
+  "branch": "research/global-throughput",
+  "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "actual_module_import_path": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/jax_orchidee/__init__.py",
+  "contract": "GPU-B1024-phased-memory-lifecycle-new-science-v1",
+  "science_source_pin": "1fdacde59d86f696f384b56d69292c8f6fa8d30b",
+  "science_sha256": "8c8b1dfd0b207e96bbb81c2d3eb85ae6edccb9ed3c6b77fb470dabc58c5fa77d",
+  "source_files": 104,
+  "execution_requires_clean_final_pinned_checkout": true,
+  "checks": {
+    "pytest": {
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_gpu_lifecycle_science.py tests/unit/test_global_gpu_lifecycle_runner.py tests/unit/test_global_gpu_lifecycle_validation.py tests/unit/test_global_gpu_lifecycle_observer.py --tb=short",
+      "environment": {"PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true"},
+      "result": "42 passed, 1 warning in 28.20s",
+      "counts": {"science": 10, "runner": 6, "validation": 23, "observer": 3},
+      "log": "source-runner-pytest.txt",
+      "warning": "existing unknown pyproject cache_dir option because pytest cacheprovider is disabled",
+      "scope": "42 focused checks before parent-discovered native/inert NamedTuple JAX treedef mismatch; source10 and observer3 unchanged and reused after runtime bridge correction"
+    },
+    "runtime_container_regressions": {
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_gpu_lifecycle_runner.py tests/unit/test_global_gpu_lifecycle_validation.py --tb=short",
+      "result": "30 passed, 1 warning in 28.35s",
+      "counts": {"runner": 7, "validation": 23},
+      "log": "runtime-container-pytest.txt",
+      "current_effective_focused_checks": "43: rerun runner7+validation23, reuse unchanged source10+observer3"
+    },
+    "ruff": {
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m ruff check scripts/dev/global_lifecycle_science.py scripts/dev/benchmark_global_gpu_lifecycle.py scripts/dev/validate_global_gpu_lifecycle.py scripts/dev/benchmark_global_gpu_capacity.py tests/unit/test_global_gpu_lifecycle_science.py tests/unit/test_global_gpu_lifecycle_runner.py tests/unit/test_global_gpu_lifecycle_validation.py tests/unit/test_global_gpu_lifecycle_observer.py",
+      "result": "All checks passed"
+    },
+    "format": {
+      "command": "conda run --no-capture-output -n ORCJAX python -B -m ruff format --check scripts/dev/global_lifecycle_science.py scripts/dev/benchmark_global_gpu_lifecycle.py scripts/dev/validate_global_gpu_lifecycle.py tests/unit/test_global_gpu_lifecycle_science.py tests/unit/test_global_gpu_lifecycle_runner.py tests/unit/test_global_gpu_lifecycle_validation.py",
+      "result": "6 files already formatted"
+    },
+    "diff": {"command": "git diff --check", "result": "passed; CRLF representation notices only"},
+    "dry_run": {
+      "strategies": ["phased_resident_control", "phased_release"],
+      "arguments": "--prepared-input runtime/fixtures/lifecycle-prepared/input.pkl --full-reference-dir runtime/fixtures/lifecycle-reference --memory-baseline-dir runtime/fixtures/lifecycle-memory --b1024-evidence-dir runtime/fixtures/lifecycle-b1024 --output-dir outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/dry-run/<strategy> --stage-shape 1024 --measurement-strategy <strategy> --expected-code-sha 1fdacde59d86f696f384b56d69292c8f6fa8d30b --dry-run",
+      "result": "both actual CLI invocations passed after preservation of existing source caches",
+      "JAX_imported": false,
+      "model_execution": false,
+      "receipts": ["runner-dry-run-phased_resident_control.json", "runner-dry-run-phased_release.json"]
+    }
+  },
+  "verified_local_interfaces": [
+    "independent exact science path/blob declaration, uniform CRLF-only representation, dirty code refusal for execution, undeclared source/extension refusal",
+    "new CLI explicit B1024 only and required shape; 1280/1536/B2048 excluded",
+    "both synthetic strategies containing the exact production ModeloutResult NamedTuple run through real execute_stage, actual base.compare initial gate treedefs, StageStore serialization, independent saved-array validator and final-report receipt",
+    "complete synthetic760-leaf native trees,2048 repeated lane comparisons,2051 exact named gates and two actual captured continuous handoffs",
+    "true saved passed booleans cannot conceal finite/mask/sentinel/dtype/reset/permutation/replacement/handoff mutations or source/runtime/order/resource/UUID/guard/report/checksum/source-binding mismatches",
+    "strict actual-helper initial finite mismatch saves failed initial arrays and stops before warm samples or sealed timing; old finite-only exploratory gate is not new admission",
+    "vectorized sentinel records match existing per-lane comparator for mixed sentinel/no-sentinel lanes",
+    "inert ModeloutResult DTO preserves exact four fields and paths without scientific module import in CPU validator; admitted GPU runner lazily restores only the exact production NamedTuple class with every array object unchanged",
+    "observer/capture transfer materialization stays outside warm timers; original AOT warm executable remains unchanged"
+  ],
+  "real_reference_format": {
+    "evidence": "reference-format-compatibility.json",
+    "sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "bytes": 27587892,
+    "lanes": 64,
+    "native_leaves": 760,
+    "dtype_leaves": {"float64": 744, "int32": 4, "bool": 8, "int64": 4},
+    "source_backed_sentinel_paths": 4,
+    "JAX_imported": false,
+    "model_execution": false,
+    "GPU_initialization": false,
+    "scope": "existing frozen reference format/schema/native dtype/trusted sentinel self-comparison only"
+  },
+  "initial_source_admission_refusal": {
+    "reason": "60 pre-existing untracked .pyc files in six scientific __pycache__ directories; strict executable-extra source guard refused before model execution",
+    "resolution": "native PowerShell Move-Item preserved all six directories under named local-cache-quarantine after every absolute source/destination was checked within this global worktree and its bounded destination; no symlinks or existing targets accepted",
+    "map": "local-cache-quarantine.json",
+    "classification": "local source packaging refusal, not numerical or GPU failure",
+    "restoration": "each map entry records its exact original path and preserved destination; move back only when no strict source-admission run is intended"
+  },
+  "runtime_reference_container_bridge": {
+    "evidence": "runtime-reference-container-compatibility.json",
+    "command": "conda run --no-capture-output -n ORCJAX python -B outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/runtime-reference-container-check.py",
+    "environment": {"JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"},
+    "trigger": "parent reproduced JAX treedef schema refusal between identical four-field production and inert ModeloutResult containers",
+    "correction": "restore_runtime_reference_containers runs only after runtime admission, imports exact source ModeloutResult and reconstructs containers without changing fields/tree positions/array objects; unrelated NamedTuple classes rejected",
+    "real_reference_native_leaves": 760,
+    "real_reference_native_ModeloutResult_containers": 2,
+    "native_class": "jax_orchidee.stomate.modelout.ModeloutResult",
+    "array_objects_unchanged": true,
+    "actual_base_compare_passed": true,
+    "independent_compare_passed": true,
+    "JAX_imported": true,
+    "model_execution": false,
+    "JIT_execution": false,
+    "GPU_initialization": false,
+    "classification": "container identity integration correction, not numerical or GPU failure"
+  },
+  "graph": {
+    "tier": "Verify with source fallback",
+    "live_list_projects": "Transport closed",
+    "prior_project_generation": "main:2026-10-10T08:46:50Z",
+    "worktree_coverage": "excluded/not_tracked; exact file source fallback used",
+    "completeness_claim": false
+  },
+  "reused_not_rerun": {
+    "bounded_core_source_audit": "354/354 forward records;348 exact,6 leaf_frac rounding-only differences;14fixtures x3 real entries x eager/JIT/vmap",
+    "source_audit_evidence": "../carbon-core-sync-20261011/source-callchain.json",
+    "focused_core_regressions": 37,
+    "prior_execution_tests": 199
+  },
+  "not_performed": ["SSH", "transfer", "deployment", "GPU initialization", "GPU diagnostics or jobs", "physical-model graph/JIT", "old440MB B1024/B2048 pickle loading or collector", "1280/1536/B2048 dispatch", "science edits", "main merge", "commit or push by this owner"],
+  "scientific_acceptance": false,
+  "performance_acceptance": false,
+  "remaining": "Parent review and final coherent code pin; any real GPU diagnostic requires existing explicit paid resources/time/cwd/command/worst-case-cost approval. No GPU or global-batch numerical/scientific/performance acceptance follows from these local checks."
+}

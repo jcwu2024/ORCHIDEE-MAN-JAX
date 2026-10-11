@@ -19,6 +19,7 @@ import statistics
 import sys
 import time
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -442,7 +443,11 @@ def host_screen(size, old_peak):
     return result
 
 
-def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_records, total_lanes=TOTAL_LANES, prepared_host=None):
+def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_records, total_lanes=TOTAL_LANES,
+                  prepared_host=None,
+                  memory_observer: Callable[[str, dict[str, object]], None] | None = None,
+                  validation_sink: Callable[[str, object], None] | None = None,
+                  validation_executable_factory: Callable[[object], object] | None = None):
     """Compile once, measure the full fixed collection, return atomic-stage payload."""
     if len(lanes) != total_lanes or len(second) != total_lanes or total_lanes % size:
         raise ValueError("aligned complete fixed collection required")
@@ -491,11 +496,25 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
     def collect(outputs):
         return jax.tree_util.tree_map(lambda *parts: np.concatenate(parts, axis=0), *outputs)
 
+    def observe(event_name, *, owned, boundary, sample_index):
+        if memory_observer is not None:
+            memory_observer(event_name, {"logical_root_owned": owned,
+                "logical_root_bytes": resident_bytes if owned else 0,
+                "boundary": boundary, "sample_index": sample_index})
+
+    checked_executable = (validation_executable_factory(executable)
+        if validation_executable_factory is not None else executable)
+
+    def emit_validation(event_name, host_tree):
+        if validation_sink is not None:
+            validation_sink(event_name, host_tree)
+
     _capacity_phase(recorder, label, "initial_collection_start", boundary="initial", sample_index=None)
     started = time.perf_counter()
-    initial_chunks = _core_collection(executable, pairs, base)
+    initial_chunks = _core_collection(checked_executable, pairs, base)
     first_seconds = time.perf_counter() - started
     output = collect(jax.device_get(initial_chunks))
+    emit_validation("initial_output", output)
     # Release device copies before the ten warm collections; complete host outputs remain.
     del initial_chunks
     _capacity_phase(recorder, label, "initial_collection_complete")
@@ -514,10 +533,19 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
         if strategy == "legacy_interleaved" else
         [(boundary, index) for boundary in ("core", "wrapper") for index in range(1, args.warm_repeats + 1)])
     for boundary, index in schedule:
-        if boundary == "wrapper" and strategy == "phased_release" and pairs is not None:
-            # Only this scope owns resident roots. Neither collection helper
-            # captures them; initial/core device results have been discarded.
-            pairs = None
+        if boundary == "wrapper" and index == 1 and strategy != "legacy_interleaved":
+            owned_before_release = pairs is not None
+            observe("core_roots_release_before", owned=owned_before_release,
+                boundary=boundary, sample_index=index)
+            if strategy == "phased_release" and pairs is not None:
+                # Only this scope owns resident roots. Neither collection helper
+                # captures them; initial/core device results have been discarded.
+                pairs = None
+            observe("core_roots_release_after", owned=pairs is not None,
+                boundary=boundary, sample_index=index)
+        if boundary == "wrapper":
+            observe("wrapper_sample_start", owned=pairs is not None,
+                boundary=boundary, sample_index=index)
         _capacity_phase(recorder, label, boundary + "_start", boundary=boundary, sample_index=index,
             core_input_roots_retained=pairs is not None)
         started = time.perf_counter()
@@ -528,21 +556,28 @@ def measure_shape(size, args, recorder, lanes, second, reference, scale, memory_
         else:
             wrapped_chunks = _wrapper_collection(executable, chunks, base, jax)
             wrapper.append(time.perf_counter() - started)
+            observe("wrapper_sample_end", owned=pairs is not None,
+                boundary=boundary, sample_index=index)
         _capacity_phase(recorder, label, boundary + "_complete", boundary=boundary, sample_index=index)
     final_output = collect(wrapped_chunks)
+    emit_validation("frozen_reset_output", final_output)
     gate(recorder, label + "_frozen_reset_repeat", final_output, output, base.compare)
     # Strict same-backend permutation and replacement preserve every potentially active lane.
     first, other = chunks[0]
     order = list(reversed(range(size)))
     _capacity_phase(recorder, label, "permutation_start", boundary="gate", sample_index=None)
-    permuted = base.run_two(executable, base.batch.stack_lanes([first[i] for i in order]),
+    permuted = base.run_two(checked_executable, base.batch.stack_lanes([first[i] for i in order]),
         base.stack_second([first[i] for i in order], [other[i] for i in order]))
-    gate(recorder, label + "_permutation", jax.device_get(permuted),
+    permuted_host = jax.device_get(permuted)
+    emit_validation("permutation_output", permuted_host)
+    gate(recorder, label + "_permutation", permuted_host,
         jax.tree_util.tree_map(lambda value: value[np.asarray(order)], output), base.compare)
     changed = first[:-1] + [first[0]]
     _capacity_phase(recorder, label, "replacement_start", boundary="gate", sample_index=None)
-    replaced = base.run_two(executable, base.batch.stack_lanes(changed), base.stack_second(changed, other[:-1] + [other[0]]))
-    gate(recorder, label + "_replacement_isolation", jax.device_get(replaced),
+    replaced = base.run_two(checked_executable, base.batch.stack_lanes(changed), base.stack_second(changed, other[:-1] + [other[0]]))
+    replaced_host = jax.device_get(replaced)
+    emit_validation("replacement_output", replaced_host)
+    gate(recorder, label + "_replacement_isolation", replaced_host,
         jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], output), base.compare)
     measurements = {"core": lane_metrics(core, total_lanes), "wrapper": lane_metrics(wrapper, total_lanes)}
     for metric in measurements.values():

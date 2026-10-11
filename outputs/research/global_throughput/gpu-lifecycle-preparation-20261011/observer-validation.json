@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "scope": "local fake fixtures only; no SSH, GPU, real model, reference pickle, or compilation",
+  "checks": {
+    "pytest": {
+      "command": "conda run -n ORCJAX python -B -m pytest -p no:cacheprovider tests/unit/test_global_gpu_lifecycle_observer.py",
+      "result": "3 passed"
+    },
+    "ruff": {
+      "command": "conda run -n ORCJAX ruff check scripts/dev/benchmark_global_gpu_capacity.py tests/unit/test_global_gpu_lifecycle_observer.py",
+      "result": "All checks passed"
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  },
+  "verified": [
+    "observer callbacks are outside the five core and five wrapper warm timers",
+    "phased resident control reports owned roots before and after the wrapper transition",
+    "phased release reports owned roots before and released roots after the transition",
+    "same selected-GPU UUID mismatch from the supplied observer fails before wrapper execution",
+    "validation sink receives initial and frozen-reset full host outputs and permutation/replacement outputs",
+    "validation executable wrapper is limited to initial, permutation, and replacement calls",
+    "warm core and wrapper calls retain the original executable and measured durations are unchanged"
+  ],
+  "note": "Pytest emitted the existing unknown pyproject cache_dir option warning; pytest cache was disabled."
+}
