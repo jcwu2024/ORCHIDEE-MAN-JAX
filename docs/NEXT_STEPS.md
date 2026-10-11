@@ -1,6 +1,6 @@
 # Current Work Order
 
-Updated: 2026-10-10. First-day localization completed both graphs/24 JVPs.
+Updated: 2026-10-11. First-day localization completed both graphs/24 JVPs.
 Finite, defined next-state tangents differ for every direction, including control 200;
 raw state coordinate 20 is nonfinite. Numerical exit 3, GPU released, scope
 closed. Raw-neural v3-final saved-evidence audit is accepted with active numerical
@@ -41,6 +41,18 @@ V4/V7 direct substitution stays stopped; T30 chunk-vmap and decoder128 remain
 unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
+
+The separately authorized [local numerical preparation](research/daily_coarse_graining/T7_batch_numerics_local_preparation_20261011.md)
+is accepted by the supervisor as completed local methods and preparation:
+bounded input source audit, independent affine method/identity admission and
+retained nonfinite rejection evidence.
+Input6/matrix6 local tests pass; real operands remain unavailable. No production
+repair is selected. The [GPU discrimination plan](research/daily_coarse_graining/T7_batch_numerics_GPU_confirmation_plan_20261011.md)
+still needs original assets/thin capture, bounded wrapper and deployed bootstrap
+verification; it is not GPU ready. The accepted stage may be committed and
+pushed on this research branch; acceptance grants no remote/GPU run, training
+or reopening of the closed scopes, and establishes no original-model repair,
+complete-update speedup or long-term scientific acceptance.
 
 The [accepted result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
 reproduces active differences in the separately compiled canonical neural prefix,
