@@ -2,9 +2,10 @@
 
 核查日期：2026-10-11。**本轮没有发现已确认的 main 生产物理实现 bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
-第四阶段已定位年度主要分量；当前 day199 土温局部效应与年度主残差异号，尚未确认源级错误。**
+第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差，
+给出历史 NPP 边界候选窗口和最小逐日捕获方案，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
-本页记录有界盘点、319 历史身份、当前首年对照及第四阶段局部来源核查，
+本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
 
 ## 固定基线和支持范围
@@ -22,6 +23,9 @@
   `a8e92e6646a1d6d08f7bcd2beeee080ab88e5a4c` 的干净 main 开始；生产源码与
   第三阶段数值 producer 相同。新的 cold-start day198 前缀与同年 day199 回放
   使用该当前身份；旧 day198 checkpoint 的原 producer 仍未知。
+- 第五阶段从第四阶段接受提交
+  `b7167b72169d39269b43ce8139abb345043817b0` 的干净 main 开始；只读保存值，
+  生产源码仍与第三、四阶段相同，未执行新模型或 trace。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -347,8 +351,57 @@ maintenance 的负残差方向相反**。98.9% 是局部输入效应，不能解
 保留 raw 配置与 HYDROL 局部 SAVE 的区别；319 有效 Fortran 局部值仍未核定，
 未据 case001 False trace 改开关。**本阶段没有确认可达源级物理错误或提出生产修复。**
 分段诊断把优先范围进一步收窄至 **Day199–365 的年度维持呼吸负差贡献**。
-下一步复用保存的日值/分量定位其中的主要时段和输入，并区分日累计与 NPP 修正后的总量；再按命名窗口关联 Fortran
-运行身份和相应输入。现有同输入 Oracle 与当前前缀状态可复用；本阶段不再运行模型窗口。
+保存的晚年日值/分量已在第五阶段盘点；观测缺口和具体后续捕获方案见下节。
+现有同输入 Oracle 与当前前缀状态可复用。
+
+## 第五阶段：晚年保存观测与 NPP 总量边界
+
+**保存证据尚不能把 Day199–365 的 `−0.309144380353 gC/m²` 差分残差
+继续分配给某个当前时段或部件。** 该值仍含第四阶段未量化的 ε，历史 LPJ
+定义/producer/XIOS 发送身份仍属暂定；本阶段没有获得新轨迹或确认物理 bug。
+[保存值分析](../../outputs/reviews/main-physics-20261011/319-late-year/saved-late-year-analysis.json)
+和[字段盘点](../../outputs/reviews/main-physics-20261011/319-late-year/schema-inventory.json)
+限定到两份当前全年结果/partial、当前 day199 回放及命名历史 trace/诊断文件：
+
+- 当前全年 JSON 及 partial 只保存 count/首尾/均值/min/max。首尾日有总量，
+  但没有完整逐日向量或 min/max 所在日。当前 Day365 的 post-NPP 总量为
+  `−1.80427894847e-12 gC/m²/day`，历史 trace 为 `−2.79776202206e-13`，
+  该日有符号差 `−1.52450274626e-12`。独立前缀 Day198 的日差为
+  `+1.54456549217e-8`，仍不能替代原全年 compiled Day198 或给 ε 上界。
+- 当前 day199 回放 JSON 和三份 NPZ 保存维持呼吸输入、48 步 radia/parts
+  与日累积 parts，未保存 post-NPP 总量。五份旧部件诊断只有 Day1–173 或
+  Day1–200；其中 Day199–200 pre-NPP 根差之和 `+1.42136608222e-6 gC/m²`，
+  叶差之和 `+2.00533436800e-8`，符号仍与年度主负差相反。
+- 两份旧 JAX 状态 JSON 均有365行，但没有维持呼吸/GPP/NPP 日通量；bound
+  与 plain 是不同绑定/轨迹，producer 未核定，未合并或重新赋予当前身份。
+
+[边界源码核对](../../outputs/reviews/main-physics-20261011/319-late-year/source-boundary/audit.json)
+明确 Fortran `stomate_npp.f90::npp_calc` 314–322 先按 `PFTpresent` 求部件总和，
+511–515 再扣除 biomass-floor 创建量/dt，530 计算 NPP；JAX
+`npp_closed_update` 与 modelout 总量映射遵循这些边界。叶/根两项之和没有覆盖
+所有部件、PFT 掩码或 floor 修正，不能当作最终 `MAINT_RESP`。
+旧诊断的 `gpp_daily` 也不能直接补成同日总量：Day200 该字段为0，而 NPP
+`0.511728221984`、growth `0.199005419661` 均为正；这是不同时间边界的保存字段，
+不得用它代数构造一条“已测”post-NPP 曲线。
+
+按后续边界诊断价值，最强的**历史候选窗口为 Day336–344**：LPJ trace 的首批
+晚年精确零 GPP 日为 Day338/342/344，对应 post-NPP 总量分别约
+`−1.0e-8`/`−4.82e-12`/`−1.79e-12`，修正前叶/根仍为正。
+窗口内历史 post-NPP 总量累计 `1.88287272475 gC/m²`，仅已观测叶/根两项
+累计 `2.72447291853`；两者之差没有独立测到各部件/floor，不能归为某一修正。
+Day336 的旧 bound 日末土温最大差为 `+0.287143260 K`（第1层）。另一输入候选
+Day199–218 包含 Day215 的 `+2.966994035 K`（第4层）峰值，但仅有日末温度，
+且已测 Day199/200 呼吸差为正。两窗口都是观测优先线索，尚无当前逐日负差
+证明其主贡献；Day336–365 的历史总量 `6.23211106221` 也不是当前残差分段。
+
+直接缺少的观测是**原完整 compiled 轨迹的365个 post-NPP 总量及原前198日
+总和**。进一步归因时才需要定位日的完整 pre-NPP parts/PFT mask、floor 创建量/dt
+与同边界公共 GPP/NPP/growth；若指向输入，再取得48步输入，保留历史 producer 缺口。
+唯一优先后续动作是[最小捕获方案](../../outputs/reviews/main-physics-20261011/319-late-year/future-diagnostic/plan.json)：
+同输入、cold-start 1961、完整365日和原 compiled block=7 路径，在既有 Python
+年度摘要入口保存日 modelout 总量向量，先核对复现的年度摘要，再按日/分段比较
+历史 LPJ，并测量该新完整轨迹与已有独立前缀的 ε；不声称恢复旧运行未保存的日值。
+脚本只捕获已返回的公共输出，不改变物理计算；本阶段只验证 dry-run，未执行模型。
 
 ## 已确认限制与优先检查清单
 
@@ -384,7 +437,9 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    不能关闭它们。第三阶段的当前 identified cold-start 1961 NPP 同样超限；
    第四阶段定位 maintenance 年度负残差及当前 day199 土温输入效应；同输入 Oracle
    通过，局部效应与年度主残差异号；保存值的条件性分段诊断将几乎全部净负差
-   指向 Day199–365，后段为差分推得且尾部执行差异 ε 未量化。年度因果仍未闭合。
+   指向 Day199–365，后段为差分推得且尾部执行差异 ε 未量化。第五阶段保存值不足
+   以继续分配负差；Day336–344 是历史边界候选，优先补完整 compiled 日总量。
+   年度因果仍未闭合。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -468,3 +523,17 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 [补充 verification](../../outputs/reviews/main-physics-20261011/319-npp-local/verification.with-periods.json)
 保留原九组终验并增加分段口径/输入身份、差分来源、舍入与 ε 限制核验；
 原 verification 和日志保留，原科学阈值及年度/局部异号结论不变。
+
+第五阶段只更新本页和 `outputs/reviews/main-physics-20261011/319-late-year/`。
+[命令](../../outputs/reviews/main-physics-20261011/319-late-year/commands.md)
+记录命名保存值读取、字段盘点、晚年历史窗口与源码边界核对；没有新模型积分或 trace。
+复用 Luna/high owner 完成来源摘录和未来捕获脚本；首轮
+[verification](../../outputs/reviews/main-physics-20261011/319-late-year/verification.json)
+八组通过，核对21份读取原证据、303行字面源码和82个当时的报告链接。
+未来脚本补齐源码版本守卫和新旧摘要/ε 记录后，只增加针对性 dry-run/纯计算检查及
+终版链接、范围检查，见
+[终验](../../outputs/reviews/main-physics-20261011/319-late-year/verification.final.json)。
+[图记录](../../outputs/reviews/main-physics-20261011/319-late-year/graph-receipt.json)
+保留 Transport closed 与新增已知来源的 coverage 回退；不声称 fresh/full 图覆盖。
+stage4 的分段/Oracle 通过证据未重跑；生产、测试、科学阈值及所有旧输入/产物保留。
+未执行 GPU/训练/SSH/服务器作业、暂存、提交或推送；交付主控验收后待命。
