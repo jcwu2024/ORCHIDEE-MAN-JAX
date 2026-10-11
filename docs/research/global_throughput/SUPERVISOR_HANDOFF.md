@@ -27,7 +27,7 @@
 ```powershell
 git rev-parse --show-toplevel
 git branch --show-current
-conda run -n ORCJAX python -c "import jax_orchidee; print(jax_orchidee.__file__)"
+conda run -n ORCJAX python -B -c "import jax_orchidee; print(jax_orchidee.__file__)"
 ```
 
 用户指定的协作结构是**两个独立的 Codex 聊天**：主管线程主模型使用 GPT-6 Astra，
