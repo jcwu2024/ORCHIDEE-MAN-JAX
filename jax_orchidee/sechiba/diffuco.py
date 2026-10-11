@@ -3470,7 +3470,13 @@ def _diffuco_pft_column(array, pft_index: int, name: str):
 
 @lru_cache(maxsize=32)
 def _diffuco_pft_column_mask(nvm: int, pft_index: int):
-    return jnp.arange(int(nvm)) == int(pft_index)
+    # This host cache can be first populated inside a JAX trace. Caching a
+    # jnp.arange result would retain that trace's DynamicJaxprTracer and lift
+    # it into later programs as an undeclared AOT input. Cache only the exact
+    # immutable host Boolean mask; JAX converts it in the consuming trace.
+    mask = np.arange(int(nvm)) == int(pft_index)
+    mask.setflags(write=False)
+    return mask
 
 
 def _diffuco_insert_pft_column(background, column, pft_index: int, name: str):
