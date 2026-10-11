@@ -1,10 +1,17 @@
 # 主分支与研究工作流入口
 
-`main` 负责已接受 Teacher 和项目管理；研究科学代码及状态留在各自分支。
+`main` 负责已接受的物理模型 / Teacher、通用运行能力和项目管理；
+研究科学代码及状态留在各自分支。
 本页是主分支导航，不复制日尺度历史或科学结论。
 固定目录、阶段提交/同步、资产与恢复规范见
 [WORKSPACE_MANAGEMENT.md](WORKSPACE_MANAGEMENT.md)；服务器入口见
 [deployment-explore1000.md](deployment-explore1000.md)。
+
+共同代码的现有差异、验证证据和接入顺序见
+[共享核心分支核查](source_audits/shared_core_branch_review.md)。
+目标是一套共同物理过程，支持 CPU / GPU 运行方式及日尺度替代路线。
+通用修复经核查后按独立提交进入 `main`，研究分支在阶段边界同步；
+研究分支暂时存在差异，不意味着要长期维护不同的物理模型。
 
 | 用途 | 本机 cwd | 分支 |
 | --- | --- | --- |

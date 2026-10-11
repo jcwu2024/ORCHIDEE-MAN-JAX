@@ -1,6 +1,6 @@
 # Fixed workspaces and versioned research
 
-Updated: 2026-10-10. This policy manages code and handoff; it grants no scientific
+Updated: 2026-10-11. This policy manages code and handoff; it grants no scientific
 experiment, training, paid allocation, or automatic research merge.
 
 ## Local entry points
@@ -23,6 +23,40 @@ Global onboarding is `docs/research/global_throughput/README.md` in the global
 checkout. Their scientific status and closed grants remain independent.
 Research results are not automatically accepted onto `main`: review the exact
 change, scientific gates and deployment impact before any later merge.
+
+## Shared physical core and research integration
+
+The intended product has one source-backed physical model. CPU single-point,
+CPU parallel and GPU batched execution are runtime modes of that model. Their
+implementation may need common function, cache and compilation interfaces in
+addition to launch scripts. The daily neural route adds networks, training and
+input/output adapters, replacing selected subdaily computations when that route
+is selected; the full physical Teacher remains available.
+
+Research branches may carry provisional changes to shared files. Classify each
+change before integration: a general defect fix, a common runtime interface, or
+research-specific behavior. Promote a reviewed general fix with its relevant
+regression evidence as a small independent commit on `main`. Do not import a
+large research checkpoint merely to obtain one fix. The current inventory and
+admission recommendations are in
+[the shared-core review](source_audits/shared_core_branch_review.md).
+
+After a common fix is accepted, each research line incorporates that exact
+commit at a coherent stage, reviewing its own diff and dependent tests. Choose
+a normal merge or a focused cherry-pick according to the actual history; resolve
+shared-interface overlap explicitly. Copying a whole shared file can discard
+the other line's still-needed changes. A clean textual merge is not numerical
+or interface validation. This policy does not automatically update another
+chat's working tree or running deployment.
+
+Record the producing version of Teacher/prepared data separately from the
+consumer code version. Review compatibility when a fix changes model values,
+gradients or capture schema; do not relabel existing data as newly generated.
+Use the already declared scientific gates for each supported use. Forward-only
+throughput evidence does not establish derivative accuracy, and a neural
+gradient discrepancy does not by itself reject an independently checked core
+fix. Existing job code, saved executables and historical evidence retain their
+original identities.
 
 ## Commit and synchronize
 
