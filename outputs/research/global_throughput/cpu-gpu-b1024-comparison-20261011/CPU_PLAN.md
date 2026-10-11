@@ -1,6 +1,6 @@
-# 下一次 JAX CPU48 / GPU B64 同量对照
+# JAX CPU48 / GPU B64 同量对照合同
 
-更新：2026-10-11。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4 仅是可选短入口检查，不是研究终点或强制前置。当前范围是可审阅的执行准备；尚未部署、提交作业或测量真实 CPU48 性能，旧预算不复用。
+更新：2026-10-11。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4 仅是可选短入口检查，不是研究终点或强制前置。本轮已获得[独立单次授权](../cpu48-b64-execution-20261011/AUTHORIZATION.md)，固定版本已部署并通过canonical CPU runtime、输入/reference及完整目标Bash dry-run。指定n35随后为`IDLE+PLANNED`，有界等待后仍未恢复，本轮停止在提交前：`sbatch`调用0次、无job ID/付费allocation/模型运行，付费作业费用0，CPU48数值与性能未测。详见[部署与未提交结果](../cpu48-b64-execution-20261011/CURRENT_RESULT.md)；后续执行需新的明确派工，旧预算不复用。
 
 实现、封装和检查见 [CPU48 准备结果](../cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、[版本 pin](../cpu48-b64-preparation-20261011/execution-code-pin.json) 和 [具体运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
 
@@ -43,4 +43,4 @@ scalar MemAvailable guard为24GiB，batch48为64GiB；保存compile前后、firs
 
 core/wrapper热单位费用与整作业分列。完整作业估算优先使用终态sacct的Elapsed/AllocTRES；父作业只计一次，失败费用保留。没有终态accounting时，协调器start/end只能生成所覆盖区间的48核费用估算，整作业费用保持pending，不称完整账单或Slurm全部wall。
 
-具体code/cwd、canonical Python、冻结输入/reference、新输出路径、命令、停止规则和费用上限见 [运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。付费提交和远端部署仍须主管取得明确授权；本准备不启动物理编译、GPU或集群计算。源码发现使用Verify意图和限定source fallback，graph transport不可用，不声称完整图覆盖。
+具体code/cwd、canonical Python、冻结输入/reference、新输出路径、命令、停止规则和费用上限见 [运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。本轮独立授权仅覆盖指定n35上的一个固定版本CPU48作业及其终态采集；失败或超时即关闭，无第二作业、换节点/版本、资源扩展或自动任务。源码发现使用Verify意图和限定source fallback，graph transport不可用，不声称完整图覆盖。

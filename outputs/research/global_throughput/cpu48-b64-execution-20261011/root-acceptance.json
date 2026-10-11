@@ -1,0 +1,92 @@
+{
+  "schema": "global_cpu48_b64_root_acceptance_v1",
+  "status": "preflight_and_no_submission_outcome_reviewed",
+  "workspace": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "research_branch": "research/global-throughput",
+  "research_head_before_delivery": "f0a3c8951fe4c7b1bf591c855aa796bf2a73d11f",
+  "execution_commit": "4f6b2fc906c453b9030acff489637a8f83605dca",
+  "execution_ref": "codex/global-cpu48-b64-v1",
+  "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+  "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+  "reviewed_artifacts": [
+    "AUTHORIZATION.md",
+    "CURRENT_RESULT.md",
+    "pre-submit-receipt.json",
+    "submission-attempt.json",
+    "deployment-final-receipt.json"
+  ],
+  "preflight": {
+    "immutable_checkout_clean": true,
+    "python": "3.11.15",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64": true,
+    "actual_import_from_execution_checkout": true,
+    "diagnostic_host": "ibtest03",
+    "target_bash": "4.2.46",
+    "complete_launcher_coordinator_scalar_batch_dry_runs": "passed",
+    "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "gpu_reference_checkpoint_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+  },
+  "submission_disposition": {
+    "target_node": "ibc12b08n35",
+    "last_state": "IDLE+PLANNED",
+    "local_observed_utc": "2026-10-11T14:55:35Z",
+    "remote_observed_utc": "2026-10-11T14:47:15Z",
+    "snapshot_span_local_seconds": 243,
+    "snapshot_span_remote_seconds": 242,
+    "exact_wait_dispatch_time_recorded": false,
+    "exact_300_second_wait_claimed": false,
+    "scheduler_FreeMem_unit": "MB",
+    "scheduler_FreeMem_is_OS_MemAvailable": false,
+    "sbatch_invocation_count": 0,
+    "job_id": null,
+    "paid_allocation_started": false,
+    "parent_accounting": null,
+    "paid_job_cost_cny": 0,
+    "rate_scenarios_are_verified_bill": false,
+    "later_automatic_wait_or_submission_authorized": false
+  },
+  "model_execution": false,
+  "saved_array_collection": false,
+  "performance_acceptance": false,
+  "scientific_acceptance": false,
+  "cpu48_throughput": null,
+  "cpu48_utilization": null,
+  "cpu48_RSS": null,
+  "cpu_gpu_measured_speed_ratio": null,
+  "production_tests_rerun_for_documentation_only_changes": false,
+  "graph_evidence": {
+    "intended_tier": "Verify",
+    "list_projects": "Transport closed",
+    "index_generation": null,
+    "structural_completeness_claimed": false,
+    "fallback": "exact-path artifact and current-document reads"
+  },
+  "cross_receipt_validation": "passed: immutable version, input/reference, proposed resources, zero submission, dual-clock spans, unavailable model metrics",
+  "final_receipt_validation": {
+    "result": "passed",
+    "local_verified_files_match_remote_receipt": [
+      "CURRENT_RESULT.md",
+      "pre-submit-receipt.json",
+      "submission-attempt.json"
+    ],
+    "submission_marker_sha256": "a691af01fa0297e24c86a67d051472cbfb6173ea54e1bdf5c988f491e8bb016a",
+    "deployment_final_receipt_sha256": "ea89dcab6260e323e1eb15b01157cb56331650d705f02b61d91b7ca621e53d8f",
+    "remote_registry_sha256": "de846c1d36334534029c868edc50fe235df8b574fc8547c2e848fa72daa284a0",
+    "remote_registry_entry": "latest_global_cpu48_b64_deployment",
+    "remote_checkout_clean_at_execution_commit": true,
+    "raw_command_stdout_separately_saved": false,
+    "remote_verification_source": "execution-owner final deployment receipt; root matched its recorded file digests against local bytes"
+  },
+  "delivery_review": {
+    "staged_file_count": 11,
+    "new_artifact_count": 6,
+    "new_artifacts_below_20KB_each": true,
+    "markdown_or_json_only": true,
+    "recorded_remote_file_digests_preserved_in_git_index": true,
+    "added_local_markdown_links_checked": 17,
+    "source_or_test_changes_in_delivery": false,
+    "staged_diff_check": "passed"
+  }
+}

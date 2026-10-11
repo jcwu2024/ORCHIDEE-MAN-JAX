@@ -1,0 +1,63 @@
+{
+  "schema": "global_cpu48_b64_final_deployment_receipt_v1",
+  "outcome": "no_submission_target_not_plain_idle",
+  "remote": {
+    "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
+    "execution_sha": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "checkout_clean": true,
+    "alternate_dependency": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git/objects",
+    "deployment_readme_sha256": "5391e87a79d2285fa38dfcd706d7292a03025a0e7486dd3b2335df9534fc3d21",
+    "deployment_registry": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+    "deployment_registry_sha256": "de846c1d36334534029c868edc50fe235df8b574fc8547c2e848fa72daa284a0",
+    "deployment_registry_entry": "latest_global_cpu48_b64_deployment",
+    "registry_previous_sha256": "5f4e8e52fac8617d5aa107370e82084ca7b5165438f2feb5014498d2c539d149"
+  },
+  "verified_files": {
+    "CURRENT_RESULT.md": "3e177be0b93bc9c4db907a9dd304cac8919ff100b0ba570eb3446336c0d7df11",
+    "pre-submit-receipt.json": "97172f555685773d51e0bac7aaf2bc3fd96edd8c58ac111620ebadc3fa69d6f3",
+    "submission-attempt.json": "a691af01fa0297e24c86a67d051472cbfb6173ea54e1bdf5c988f491e8bb016a"
+  },
+  "target_node": {
+    "name": "ibc12b08n35",
+    "final_local_observed_utc": "2026-10-11T14:55:35Z",
+    "final_remote_utc": "2026-10-11T14:47:15Z",
+    "state": "IDLE+PLANNED",
+    "sinfo_state": "plnd",
+    "CPUAlloc": 0,
+    "CPUTot": 56,
+    "CPULoad": 0.01,
+    "scheduler_FreeMem_MB": 177983,
+    "AllocTRES": "",
+    "queued_jobs_targeting_node": 0
+  },
+  "bounded_wait": {
+    "maximum_seconds": 300,
+    "local_observation_span_seconds": 243,
+    "remote_observation_span_seconds": 242,
+    "explicit_sleep_seconds": 180,
+    "snapshot_count": 3,
+    "exact_dispatch_time_recorded": false,
+    "SSH_and_snapshot_overhead_included_in_spans": true
+  },
+  "preflight": {
+    "launcher_dry_run": "passed",
+    "coordinator_and_runner_dry_runs": "passed",
+    "target_bash": "GNU bash 4.2.46",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64": true,
+    "model_execution": false,
+    "jax_imported_by_coordinator_or_runners": false,
+    "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "gpu_reference_checkpoint_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+  },
+  "submission": {
+    "sbatch_calls": 0,
+    "job_id": null,
+    "paid_allocation_started": false,
+    "parent_accounting": "not_applicable_no_job",
+    "collector_run": false,
+    "performance_result": null
+  },
+  "raw_command_output_files": "not separately captured; verified facts and hashes are in the receipts and remote registry"
+}

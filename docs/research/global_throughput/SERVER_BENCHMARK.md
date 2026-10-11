@@ -1,14 +1,26 @@
 # Explore1000 Server Benchmark Contract
 
-Current preparation (2026-10-11): the main CPU candidate is one native FULL64
+Current CPU48 contract (2026-10-11): the main CPU candidate is one native FULL64
 B64 process using 48 distinct physical cores, with a complete scalar reference
 followed by five core and five wrapper samples in one 90-minute parent
-allocation. The local harness and synthetic collector are prepared; real CPU48
-compilation, numerical and throughput validation remain pending. See the
+allocation. The separately authorized execution uses commit
+`4f6b2fc906c453b9030acff489637a8f83605dca` in the new immutable CPU48 checkout.
+Canonical CPU runtime, frozen input/reference identities and actual target Bash
+dry-runs passed. Submission was withheld because the specified n35 changed to
+`IDLE+PLANNED` and did not return to plain IDLE during the bounded wait. There
+were zero sbatch calls, no job ID, paid allocation, model run, parent accounting
+or saved-array collection. This attempt incurred no paid job cost; CPU48
+numerical, throughput, utilization and RSS results are unavailable. See the
+[deployment and no-submission result](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md),
 [CPU48 preparation](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)
 and [concrete proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md).
-This preparation grants no deployment or paid execution; the historical CPU4
-matrix below is not the current primary candidate.
+The [single-job authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/AUTHORIZATION.md)
+fixes cnall/n35, one node/task, 48 CPUs, zero GPUs, 5400 seconds, no requeue,
+exclusivity or new memory reservation. The complete parent, including scalar,
+is billed at 48 CPUs; terminal parent accounting is counted once. Failure or
+timeout closes the attempt. The historical CPU4 matrix below is not the
+current primary candidate. The bounded attempt ended before submission; further
+execution requires a new explicit assignment.
 
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the

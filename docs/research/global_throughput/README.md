@@ -2,14 +2,20 @@
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
 [CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
-及[CPU48可执行准备](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、
+及[CPU48部署与未提交结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)、
 [CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
 用户已选接受的B1024作为当前单卡工程选择，下一主问题是CPU/GPU速度与单位成本；
 CPU主候选是单进程native FULL64 B64 batch/vmap、48个不同物理核，CPU4仅为可选短入口检查。
 本地harness/launcher/coordinator/collector及历史科学版本封装用于准备同896 point-days的GPU B64对照；
 具体code pin、90min/48CPU/noGPU命令、CNY3.60/5.04上限及停止规则见
 [运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
-真实CPU48科学/性能、远端部署和付费提交均未执行，不复用旧预算。
+本轮已获独立明确的一次CPU48授权，执行SHA固定为`4f6b2fc906c453b9030acff489637a8f83605dca`，
+已部署到新immutable checkout，canonical CPU runtime、冻结输入/reference和完整目标Bash dry-run通过。
+提交前指定n35节点变为`IDLE+PLANNED`，限定等待后仍未恢复普通IDLE；本轮停止在提交前。
+`sbatch`调用0次、无job ID、无付费allocation或模型运行；本次付费作业费用为0，CPU48数值/性能未测。
+部署与输入预检保留；未提交结果不是runtime或科学门失败，也不产生CPU/GPU实测比值。后续运行需新的明确派工。
+完整部署登记/镜像标记摘要见[最终收据](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/deployment-final-receipt.json)，
+实际文件核对与接受边界见[执行线程验收](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/root-acceptance.json)。
 1280/1536探索、显存优化及小容差失败不作为前置，B1024不称已证明全局最优。
 旧job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
 283.0-091.0、Day8末rveget/PFT14，32重复一致；原因未归属，本轮科学执行关闭。详见
@@ -114,13 +120,14 @@ CPU wrapper为7.052818167587637 point-days/s，GPU为299.1398250995909 lane-days
 单价情景使初步费用方向反转，账单未核实；冷编译、启动及全作业费用另列，不把失败B2048费用归给B1024。
 主情景同价48CPU的打平效率为88.362971%，只是线性假设；按compile-end RSS作48份常驻scalar的朴素外推约229GiB，
 超过192GB CPU节点。CPU4/48无实际性能结果，不提48独立进程方案。
-下一步优先复用既有CPU4 pool/B64入口，与已接受GPU B64（FULL64 unique64、896 point-days）
-作同工作量对照并补CPU并行证据；GPU B64与计划复用的canonical FULL64保存metadata的64点序、
-完整input digests及science已核对一致。CPU4/B64尚未执行；未来优先在一个有界4CPU作业内
-完成同版本scalar reference准入与B64计时，实际reference、step资源admission及提交参数仍缺。
+已准备的对照合同为单进程CPU48/B64，与已接受GPU B64（job15579869、FULL64 unique64、896 point-days）
+作同工作量对照；GPU B64与canonical FULL64保存metadata的64点序、完整input digests及science一致。
+同一90min/48CPU父allocation先建立完整scalar参考，再测B64；每阶段5 core+5 wrapper，
+scalar最多2700s，候选需至少1800s剩余窗口。整作业含scalar阶段均按48核计费，终态父sacct只计一次。
 B1024是当前GPU工程选择，其大批量吞吐与B64仅作注明不同collection总量的归一化参考；
 完整2048负载适配只在需要该级别端到端对照时再选。详见上方比较和CPU计划。
-本轮只维护本地文档与算术产物，未实现新runner、启动模型作业或改科学合同；原作业预算关闭。
+具体执行授权见上方入口；旧比较的线性48核数值仍仅是历史算术假设，CPU4与48独立进程方案不作为前置。
+旧作业预算均关闭，本次固定科学版本、原生dtype、输出和容差不变。
 
 以下为已保存的CPU1和GPU阶段证据，历史工作安排按其当时范围理解。
 

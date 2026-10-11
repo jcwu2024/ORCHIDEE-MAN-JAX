@@ -1,0 +1,92 @@
+{
+  "schema": "global_cpu48_b64_pre_submit_receipt_v1",
+  "recorded_utc": "2026-10-11T14:40:24Z",
+  "scope": "immutable execution import and bounded diagnostic-node CLI dry-runs; no submission or model execution",
+  "execution": {
+    "commit": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "ref": "codex/global-cpu48-b64-v1",
+    "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
+    "checkout_clean": true,
+    "import_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1/jax_orchidee/__init__.py",
+    "python": "3.11.15",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64": true
+  },
+  "inputs": {
+    "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "gpu_reference_checkpoint_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "gpu_reference_manifest_stage_status": "complete"
+  },
+  "target_shell": {
+    "diagnostic_host": "ibtest03",
+    "gnu_bash": "4.2.46",
+    "launcher_dry_run": "passed",
+    "coordinator_and_scalar_runner_dry_runs": "passed",
+    "batch_runner_dry_run": "passed",
+    "model_execution": false,
+    "jax_imported_by_coordinator_or_runners": false
+  },
+  "allocation_contract": {
+    "partition": "cnall",
+    "node": "ibc12b08n35",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_cpus": 48,
+    "gpus": 0,
+    "wall_seconds": 5400,
+    "no_requeue": true,
+    "exclusive": false,
+    "memory_reservation": null,
+    "primary_worst_case_cny": 3.6,
+    "conservative_worst_case_cny": 5.04
+  },
+  "final_target_check": {
+    "remote_utc": "2026-10-11T14:37:48Z",
+    "state": "IDLE+PLANNED",
+    "sinfo_state": "plnd",
+    "cpu_allocated": 0,
+    "cpu_total": 56,
+    "cpu_load": 0.01,
+    "scheduler_free_memory_mb": 177983,
+    "allocated_tres": "",
+    "gpu_used_count": 0,
+    "reservations": 0,
+    "queue_query_utc": "2026-10-11T14:39:16Z",
+    "queued_jobs_targeting_node": 0,
+    "eligible_for_submission": false
+  },
+  "bounded_wait_final": {
+    "local_observed_utc": "2026-10-11T14:55:35Z",
+    "remote_utc": "2026-10-11T14:47:15Z",
+    "state": "IDLE+PLANNED",
+    "cpu_allocated": 0,
+    "cpu_total": 56,
+    "cpu_load": 0.01,
+    "scheduler_free_memory_mb": 177983,
+    "queued_jobs_targeting_node": 0,
+    "bounded_wait_expired": true
+  },
+  "bounded_wait_observation": {
+    "maximum_seconds": 300,
+    "local_observation_span_start_utc": "2026-10-11T14:51:32Z",
+    "local_observation_span_end_utc": "2026-10-11T14:55:35Z",
+    "local_observation_span_seconds": 243,
+    "remote_observation_span_start_utc": "2026-10-11T14:43:13Z",
+    "remote_observation_span_end_utc": "2026-10-11T14:47:15Z",
+    "remote_observation_span_seconds": 242,
+    "completed_clock_sleep_calls_seconds": [60, 60, 60],
+    "explicit_sleep_seconds": 180,
+    "scheduler_snapshot_count": 3,
+    "ssh_and_snapshot_overhead_included": true,
+    "exact_wait_dispatch_time_recorded": false
+  },
+  "submission": {
+    "attempt_marker_written": true,
+    "submission_withheld": true,
+    "reason": "approved target remained IDLE+PLANNED through the bounded five-minute wait",
+    "submitted": false,
+    "sbatch_invocation_count": 0,
+    "job_id": null
+  }
+}
