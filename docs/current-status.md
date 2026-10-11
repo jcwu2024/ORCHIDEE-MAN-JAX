@@ -1,6 +1,6 @@
 # Current Project Status
 
-Updated: 2026-10-10. First-day localization completed both graphs and 24 JVPs.
+Updated: 2026-10-11. First-day localization completed both graphs and 24 JVPs.
 Finite, defined next-state tangents differ for all directions, including control 200;
 the discrepancy is already within the first daily transition. Raw state 20
 is nonfinite, a separate retained failure. Numerical exit 3/GPU released,
@@ -16,6 +16,14 @@ weights, the same GPU count, daily32/eight distinct micro4 plus one T7 and one
 T30, public losses, complete parameter/initial-state gradients, masks, physics
 and AdamW. State derivatives do not enter AdamW but remain an acceptance gate.
 No complete-update optimization has passed every gate.
+
+User sequencing decision (2026-10-11): prioritize training-throughput work
+using fixed, versioned existing Teacher/prepared data while the main-branch
+Teacher is being finalized. Formal training waits for a stable Teacher and
+the new versioned dataset, followed by compatibility and relevant admission
+checks. This permits the two research lines to progress independently; it
+does not claim new-data acceptance or reopen any closed GPU/training scope.
+See [NEXT_STEPS.md](NEXT_STEPS.md) for the operative boundary.
 
 | Current evidence | Result and limit |
 |---|---|

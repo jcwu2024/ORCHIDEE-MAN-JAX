@@ -21,6 +21,19 @@ masks and AdamW. State derivatives do not enter AdamW but remain a gate.
 Keep strict `rtol=1e-5, atol=1e-6`, finite values and24GiB. No automatic
 candidate adoption, reference/tolerance change or formal training is authorized.
 
+User sequencing decision (2026-10-11): focus daily research on training
+throughput while the main-branch Teacher may still receive small changes.
+Use existing, version-pinned Teacher/prepared assets for performance and
+correctness comparisons; keep their identities fixed within each comparison.
+Main Teacher stabilization and daily execution optimization can proceed in
+parallel. Formal training waits for those Teacher changes to settle and the
+new versioned Teacher dataset to be ready. Before training, check its schema,
+units, masks and prepared-input/normalization compatibility, then perform the
+bounded admission checks appropriate to the changes. Small Teacher changes
+do not automatically invalidate execution work or certify its compatibility.
+This sequencing decision does not reopen closed GPU scopes or authorize a
+new GPU experiment, long training, paid work, or Teacher regeneration here.
+
 ## Effective evidence
 
 | Evidence | Result and limit |
