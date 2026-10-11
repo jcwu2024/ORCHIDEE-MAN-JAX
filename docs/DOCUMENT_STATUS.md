@@ -18,6 +18,12 @@ numerical acceptance. The historical handoff/report collection is not onboarding
 
 ## Active contracts: read by question
 
+For post-maintenance supervisor onboarding, use the
+[handoff](research/daily_coarse_graining/SUPERVISOR_HANDOFF.md) and
+[new-project prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
+They are navigation/coordination aids, subordinate to the authority order above;
+the pre-maintenance Git inventory is historical, not current working-tree status.
+
 | Document | Role / limit |
 |---|---|
 | [Current B1/B4 JVP completion results](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | Current derivative evidence: 32 JVPs/four full VJPs, exact JVP repeats, strict B1/4–B4 failures at 434/2382 plus own JVP/VJP/full-state failures. Primal/parameter self repeats/aux/physics/memory pass. Independent scope closed at 1780.743670s/CNY 0/released; CPU analysis accepted. No derivative reference/adoption. |

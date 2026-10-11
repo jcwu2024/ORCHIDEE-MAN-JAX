@@ -1,5 +1,9 @@
 # Project Start Here
 
+New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_graining/SUPERVISOR_HANDOFF.md)
+and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
+These describe the post-maintenance entry and do not reopen closed GPU scopes.
+
 Updated: 2026-10-10. First-day localization completed both graphs and 24 JVPs.
 Finite, defined next-state tangents differ for all four directions, including control
 200, within the first daily transition. Raw state coordinate 20 is nonfinite,
