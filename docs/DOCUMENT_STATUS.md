@@ -1,6 +1,6 @@
 # Documentation Authority
 
-Updated: 2026-10-10. Current entry pages replace progress chronology. Dated
+Updated: 2026-10-11. Current entry pages replace progress chronology. Dated
 reports retain their experimental scope; old plans grant no execution authority.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns current action and resource boundaries.
 
@@ -26,7 +26,8 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
-| [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md), [execution contract](research/daily_coarse_graining/T7_batch_numerics_GPU_execution_contract_20261011.md) | Current local affine launcher/input authority. Fresh recovery NPZ/receipt have new identities and six preincident numeric SHA matches after a three-file unsafe-test incident. Proposed1200s/oneV100/free scope is false; target deployment/GPU readiness remain unverified. Historical CPU12/91 is separate and was not rerun. |
+| [GPU deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md) | Current execution authority/status: user approved the separate1200s/one idle nonexclusive V100/CNY0 scope; clean b676353 deployment and target CPU shell/private-phase readiness accepted. Both GPUs busy at final refresh; actual container/PJRT/GPU/numerical comparison pending. No launch/preflight/open scope/ledger reservation;0 GPU seconds/card-hours/cost and unconsumed one-shot. `approved_waiting_resources`; approval persists, no automatic polling/monitoring/retry. |
+| [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md), [execution contract](research/daily_coarse_graining/T7_batch_numerics_GPU_execution_contract_20261011.md) | Accepted local affine launcher/input and frozen-method authority. Fresh recovery NPZ/receipt have new identities and six preincident numeric SHA matches after a three-file unsafe-test incident. Its false proposed1200s snapshot is preserved; later approval/deployment status is in the current result above. Historical CPU12/91 is separate and was not rerun. |
 | [Current B1/B4 JVP completion results](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | Current derivative evidence: 32 JVPs/four full VJPs, exact JVP repeats, strict B1/4–B4 failures at 434/2382 plus own JVP/VJP/full-state failures. Primal/parameter self repeats/aux/physics/memory pass. Independent scope closed at 1780.743670s/CNY 0/released; CPU analysis accepted. No derivative reference/adoption. |
 | [First-day localization results](research/daily_coarse_graining/T7_first_day_JVP_localization_results_20261010.md) | Current evidence: both graphs/24 calls complete; defined finite tangents differ before later recurrence/loss. Accepted v3 audit confirms exact repeats/masks and a separate source-undefined raw state-20 NaN; strict admission retained. Closed at 2124.572662/5400 GPU seconds/CNY 0/released, exit 3. No causality/reference/adoption acceptance. |
 | [Raw-neural results/proposal](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md), [executed method](research/daily_coarse_graining/T7_raw_neural_JVP_proposal_20261010.md) | Accepted v3-final saved-evidence audit retains active primal/tangent failures, exact161 masks/16 nontrivial repeats/12 isolation checks. Two graphs/24 JVPs, zero VJPs/updates;2169.713308s/CNY0/exit3/released. Separate-compilation/HLO hypothesis limits apply. |
@@ -70,7 +71,10 @@ and trace buckets do not isolate wall time or certify a launch-bound bottleneck.
 
 ## Current authorization boundary
 
-All previous GPU scopes completed. Original/B4 recovery charged 2809.490106/3600s;
+The current affine scope is approved but waiting for resources and unconsumed;
+see the deployment result above. This task stops without further polling or
+automatic monitoring. No renewed approval is required for that unchanged grant.
+All earlier executed GPU scopes completed. Original/B4 recovery charged 2809.490106/3600s;
 independent B1 completion charged 1780.7436698693782/3600s,
 0.4946510194081606 card-hours/CNY 0/zero updates. Both released. The latter
 ledger is finished within cap, child exit 3/numeric status `numerical_failed`;

@@ -44,14 +44,26 @@ The historical state-gradient failures and roughness state20 NaN remain.
 
 The [bounded GPU preparation](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md)
 adds local admission, one-shot deadline/memory/process supervision and the accepted
-GPU bootstrap entry; actual deployed GPU verification is pending. Its negative
+GPU bootstrap entry. Its negative
 tests mistakenly deleted the original operand/receipt and modified capture source.
 Source was restored from accepted Git; one subsequently authorized new thin CPU
 capture completed in18.670917s and matches all six preincident numeric hashes.
 Fresh NPZ `bf36a098...6129`/receipt `f863a2d9...0e00` replace the planned input
 identity; original file bytes remain unavailable. Old CPU12/91 and historical
 probe source identity remain separate, with no full numerical probe rerun.
-The proposed scope is not authorized; no GPU readiness or scientific repair follows.
+The original false proposal is preserved as a historical snapshot. The later
+[deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md)
+records the user's separate1200s approval and exact clean b676353 target checkout.
+Target CPU Bash→Python dry-run and real owned Linux phase-group termination
+passed and were accepted; raw v1 test-harness failure/v2 correction are retained.
+Actual container/PJRT/GPU runtime and numerical comparison remain unverified.
+The final single resource refresh found both V100s busy at31707MiB/100% with
+external compute processes. Status is `approved_waiting_resources`: no GPU
+launch/preflight/open scope/ledger reservation,0 occupied seconds/0 card-hours/
+CNY0 from no launch/reservation, and the one-shot is unconsumed. Resource
+non-admission is not execution/numerical failure. Approval persists; no further
+polling/automatic monitoring/retry/paid fallback is underway. No repair or
+complete-update speed/science acceptance follows.
 
 | Current evidence | Result and limit |
 |---|---|

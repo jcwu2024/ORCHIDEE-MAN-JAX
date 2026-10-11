@@ -4,7 +4,7 @@ New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
-Updated: 2026-10-10. First-day localization completed both graphs and 24 JVPs.
+Updated: 2026-10-11. First-day localization completed both graphs and 24 JVPs.
 Finite, defined next-state tangents differ for all four directions, including control
 200, within the first daily transition. Raw state coordinate 20 is nonfinite,
 a separate retained failure. Numerical exit 3; that GPU scope is released/closed.
@@ -19,7 +19,13 @@ owns the locally prepared bounded affine launcher and fresh recovery input ident
 An unsafe test deleted the original operand/receipt and changed capture source;
 the source was restored, and one explicitly authorized new thin CPU capture
 matches all six preincident numeric hashes. Original file identities remain lost.
-Local preparation grants no remote deployment, GPU run or training.
+The later [GPU deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md)
+records the user's separate1200s approval, exact b676353 deployment and accepted
+target CPU shell/private-phase readiness. Both V100s were busy at the final
+resource refresh; GPU runtime/numerical validation remains pending. No GPU
+launch, preflight, scope opening or ledger reservation occurred: zero occupied
+GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
+this task stops without further polling, automatic monitoring or training.
 
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing

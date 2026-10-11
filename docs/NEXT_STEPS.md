@@ -76,8 +76,8 @@ bounded input source audit, independent affine method/identity admission and
 retained nonfinite rejection evidence.
 Input6/matrix6 local method tests pass; the historical real capture/CPU result above remains evidence. No production
 repair is selected. The [GPU discrimination plan](research/daily_coarse_graining/T7_batch_numerics_GPU_confirmation_plan_20261011.md)
-now has a locally prepared bounded wrapper; target shell/container/bootstrap
-verification is still pending, and it is not GPU ready. The earlier local
+now has a deployed bounded wrapper; target CPU shell/private-phase checks pass,
+while container/PJRT/GPU verification remains pending. The earlier local
 method stage was accepted/committed; this completed follow-up grants no new
 GPU run, training or reopening of closed scopes, and establishes no original-
 model repair, complete-update speedup or long-term scientific acceptance.
@@ -90,11 +90,27 @@ NPZ `bf36a098...6129`, receipt `f863a2d9...0e00`, unchanged capture source
 and changed source; source restoration and one authorized thin recapture are
 documented separately. All six numeric hashes match independent preincident
 evidence; original NPZ/receipt bytes were not restored. The existing CPU12/91
-result was not rerun. Proposed scope remains `execution_authorized=false`;
-no SSH/transfer/deploy/GPU/neural experiment or training follows. The current
-package is supervisor accepted for versioning its explicit13-file scope. Actual
+result was not rerun. The original proposed scope remains an unchanged historical
+`execution_authorized=false` snapshot. The local package was supervisor accepted
+and versioned in its explicit13-file scope. Actual
 commit/push identity and final scope/deployment v2 are recorded in the
 [postcommit delivery receipt](../outputs/T7-batch-gpu-preparation-20261011/postcommit-delivery.v1.json).
+
+The [current deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md)
+owns the later execution status: the user replied “批准。” on2026-10-11 for
+one nonexclusive idle gln01 V100, CNY0, a separate1200s one-shot
+(preflight240/probe780/release reserve180),24GiB and unchanged strict math.
+Accepted b676353 code and the fresh two-file recovery input were deployed to
+an independent immutable checkout. Actual target Bash→CPU Python dry-run and
+owned Linux CPU phase-group termination pass; the v1 harness parser failure
+and v2 correction are preserved. Actual container/PJRT/GPU readiness remains
+unverified. The single final post-readiness resource refresh found both cards
+at31707MiB/100% with external compute processes. No card was selected and no GPU
+launch/preflight/open scope/ledger reservation occurred; occupation/card-hours/
+cost are0 from no launch/reservation. This is resource non-admission, not an
+execution or numerical failure. Status is `approved_waiting_resources`; approval
+persists and this one-shot is unconsumed. Stop here without further resource
+polling, monitoring, reservation, retry, paid fallback or renewed approval request.
 
 The [accepted result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
 reproduces active differences in the separately compiled canonical neural prefix,
