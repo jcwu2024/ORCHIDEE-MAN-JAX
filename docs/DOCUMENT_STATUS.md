@@ -77,6 +77,11 @@ implementation/integration/tests and a concrete resource/command/cost package.
 The revised preparation binds Slurm spool checkout/cwd, early attempt identity,
 exact job/kernel/UUID and source/HEAD; sole-owner management admission reads
 known free state without changing the old checkout/scope/ledger. Mock/local evidence does not certify actual allocation or GPU runtime.
+The active independent paid v2 revision corrects observed22.05.7 legacy
+`TRES`/allocated `GRES`, default job `OverSubscribe=OK`, and scheduler clock
+fallback when batch time env tokens are absent. Actual CPU-job schema and
+tagged source evidence do not certify GPU allocation or actual batch env.
+Old df8cfac/v5/v1 checkout/scope/receipts remain immutable evidence.
 Final current-code regressions, ordinary commit/push, independent deployment
 and target CPU-only dry-run are authorized. That is not paid-submission approval. The paid proposal above requires
 consolidated artifact acceptance and explicit resource/wall/cwd/command/cost

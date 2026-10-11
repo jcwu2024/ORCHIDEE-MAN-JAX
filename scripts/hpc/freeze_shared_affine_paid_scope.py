@@ -35,7 +35,7 @@ def main(argv=None):
     manifest = dict(actual_base_head=actual_head, source_files=scope['source_files'],
         scope_id=paid.SCOPE_ID, execution_authorized=False, code_git_head=scope['code_git_head'],
         candidate_source_only=args.candidate_source_only,
-        checkout_target=(paid.free.REMOTE / 'checkouts/T7-affine-paid-20261011-v1').as_posix(),
+        checkout_target=paid.CHECKOUT_TARGET.as_posix(),
         inputs=scope['input_sha256'], output_directory=paid.OUTPUT_DIR.as_posix(),
         source_index_scope='Verify; E-ORCHIDEE-MAN-JAX generation2026-10-10T08:46:50Z ready; operated daily paths excluded/not_tracked under runtime/worktrees; exact-source fallback')
     args.output_directory.mkdir(parents=True, exist_ok=True)

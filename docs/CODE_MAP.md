@@ -85,6 +85,10 @@ busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
 The [paid proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
 owns the separate candidate gnall contract/quote and focused CPU/shell evidence.
+Paid v2 `allocation_epochs` and `allocated_tres` admit22.05.7 scheduler time
+and actual allocation detail; `--scheduler-allocation-epochs` is CPU metadata
+only before outer deadlines. `tests/fixtures/slurm22/` records trimmed actual
+CPU-job schema/provenance; synthetic GPU fixtures do not prove GPU allocation.
 New paid tests are `tests/unit/test_shared_latent_T7_batch_numerics_paid.py`
 and `tests/unit/test_shared_latent_T7_batch_numerics_paid_shell.py`; they mutate
 only isolated temporary fixtures. Actual Slurm allocation/device runtime and

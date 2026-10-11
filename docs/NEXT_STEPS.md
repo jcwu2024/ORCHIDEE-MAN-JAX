@@ -80,6 +80,11 @@ migration or automatic paid retry follows. Sol owns continuous implementation,
 integration and focused verification; Astra reviews the actual artifacts at
 the consolidated delivery point, with interim escalation for material scope,
 science or cost changes. The detailed package below preserves earlier evidence.
+The active independent version is paid v2. Slurm22.05.7 compatibility uses
+actual allocated-detail proof with legacy `TRES`/`GRES`, default job sharing
+`OK`, and authoritative scheduler StartTime/EndTime before shell deadlines.
+Original time env variables are optional exact crosschecks. An observed CPU
+job is schema evidence, not GPU/batch-env acceptance. Preserve old df8/v5/v1.
 
 The previous accepted [early summary_input capture package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
 completed the authorized eight-file read-only retrieval, real thin capture

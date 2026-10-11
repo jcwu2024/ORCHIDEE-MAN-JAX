@@ -16,16 +16,16 @@ and restoration machinery have been removed from the accepted preparation.
 | Resources | 1node,1task,4 actual allocated Slurm CPUs,1 V10032GB, nonexclusive |
 | Wall / attempt policy | `00:20:00`, no-requeue, one scheduler attempt, no automatic retry |
 | Caps | 1200s from allocation StartTime; preflight240s/probe780s/release≥180s;24GiB; OMP4/OpenBLAS1 |
-| Frozen cwd | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v1` |
-| Command | `sbatch /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v1/scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh` |
-| Independent output/scope/ledger | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v1/` |
+| Frozen cwd | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v2` |
+| Command | `sbatch /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v2/scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh` |
+| Independent output/scope/ledger | `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v2/` |
 
 Current additive rates: CPU CNY0.07/allocatedCPU-hour, GPU CNY2.20/GPU-hour.
 CPU `4×20/60×0.07=0.0933333`; GPU `20/60×2.20=0.7333333`; total
 `0.8266666667`, rounded upward **CNY0.83**. Proposed approval ceiling **CNY1.00
 is not approved**. No extra resource, whole-node exclusivity or paid fallback.
 CR_CORE with2 threads/core means4 Slurm CPUs are2 physical cores. Do not add
-`--hint=nomultithread`; actual `NumCPUs=4` and `AllocTRES cpu=4/gpu=1` are
+`--hint=nomultithread`; actual `NumCPUs=4` and allocated TRES cpu=4/gpu=1 are
 mandatory, and8 allocated CPUs reject admission.
 
 [Saved scheduler selection](../../../outputs/T7-affine-paid-preparation-20261011/scheduler-selection.v1.json)
@@ -68,8 +68,9 @@ pre-submission receipt and never automatically retry. The job creates no output
 directory. Python records a separate job attempt and independent paid ledger.
 
 Require actual node/partition/one task/4CPU/one GPU/20min/no-requeue, allocation
-StartTime/end/currentclock; late Python startup does not reset the1200s budget.
-`scontrol show job --details -o` supplies GresDetail. Physical Slurm GPU index,
+StartTime/EndTime/currentclock; late Python startup does not reset the1200s budget.
+`scontrol show job --details -o` supplies allocated `GRES` in22.05.7, or
+`GresDetail` in the supported alternate schema. Physical Slurm GPU index,
 NVML UUID/V100/minor_number, actual character-device major/minor and exact
 `job_<SLURM_JOB_ID>` cgroup-v1 membership must agree. Read/write permissions
 must isolate that single GPU data device, excluding observed driver control
@@ -110,7 +111,7 @@ lock-takeover framework or modification of the old entry/scope/ledger.
 
 ## Versioned delivery and next approval
 
-The [final delivery receipt](../../../outputs/T7-affine-paid-preparation-20261011/final-delivery.v1.json)
+The [prior v1 delivery receipt](../../../outputs/T7-affine-paid-preparation-20261011/final-delivery.v1.json)
 records exact final files/diff, current test logs, real local/origin/remote HEAD,
 false scope/manifest and actual test-node Bash→CPU parser/import/argv evidence.
 The final source stage is committed/pushed normally on
@@ -121,11 +122,11 @@ Two existing inputs are reused. New output/log directory and false scope are
 prepared without opening the grant or consuming a job/ledger. Actual target
 CPU dry-run on test01–test04 proves parser/source/import/argv admission only.
 
-Current local regressions include the existing30 launcher and14 shell cases
-against the revised shared code, retained paid admission/mutex/identity tests,
+Prior v1 local regressions include the existing30 launcher and14 shell cases
+against the shared code, retained paid admission/mutex/identity tests,
 and directly related optional public-preflight tests. Actual logs/counts are
 in the delivery receipt; prior candidates/failures remain historical evidence,
-and old44 passes do not substitute for the current regression. Negative tests
+and old44 passes do not substitute for changed paid-code regression. Negative tests
 write temporary fixtures only. Graph Verify/project `E-ORCHIDEE-MAN-JAX`,
 generation `2026-10-10T08:46:50Z`, ready: relevant daily paths are excluded/
 not_tracked under `runtime/worktrees`; exact source fallback was used, with
@@ -137,3 +138,60 @@ those gates or scientific accuracy. No `sbatch`/`salloc`, paid occupation,
 GPU/preflight, training or automatic fallback has occurred. The next human
 decision is the single concrete command/cwd/resources/wall/CNY1.00 approval;
 only then may the approved scope open and one job be submitted.
+
+## Slurm22.05.7 compatibility revision
+
+The active preparation now uses independent `T7-affine-paid-20261011-v2`
+checkout and `T7-summary-affine-paid-gpu-20261011-v2` output identities. The
+old df8cfac/v5 false scope, v1 checkout and receipts remain unchanged.
+
+One actual visible RUNNING CPU job15779975 was read once with installed
+`scontrol --details -o`; the preceding gnall-only selection returned empty and
+was corrected to any visible RUNNING job. This is schema evidence, not a
+GPU allocation or availability check. Public trimmed fields/provenance are
+in `tests/fixtures/slurm22/`; full private metadata and command receipts are
+under `outputs/T7-affine-paid-preparation-20261011/slurm22-compatibility-v1/`.
+The CPU record emits `TRES`, `OverSubscribe=OK`, `Nodes`, `CPU_IDs`, `GRES`
+and scheduler `StartTime`/`EndTime`. It has no allocated GPU detail and proves
+no GPU index/UUID/cgroup or actual batch-environment values.
+
+The installed binary reports22.05.7; its prefix has no manpages. Exact
+[22.05.7 job formatter](https://github.com/SchedMD/slurm/blob/slurm-22-05-7-1/src/api/job_info.c#L696)
+prints `TRES` from allocated TRES, with a requested-TRES fallback when no
+allocation exists. Therefore legacy `TRES` admission additionally requires
+RUNNING, the actual single-node detail, four distinct allocated CPU IDs and
+allocated `GRES` physical index. `ReqTRES` and `JOB_GRES` never prove allocation.
+If both TRES schemas exist they must agree; unknown/conflicting details reject.
+The detailed formatter takes `GRES` from allocated `gres_detail_str`; the
+alternate `GresDetail` field remains supported with the same strict index gate.
+
+[Job sharing strings](https://github.com/SchedMD/slurm/blob/slurm-22-05-7-1/src/common/slurm_protocol_defs.c#L2807)
+map default to `OK`, explicit no-sharing to `NO`, requested oversubscription to
+`YES`. Admission requires `OK` for the declared default nonexclusive job.
+Partition-level `OverSubscribe=NO` is a separate saved policy and is not the
+job flag. `OK` alone does not prove that the partition forbids oversubscription.
+The one necessary pre-submission refresh after specific approval must recheck
+gnall's partition `OverSubscribe=NO` policy. No extra query is performed now.
+Neither exclusivity nor requested oversubscription is introduced.
+
+The tagged `env_array_for_batch_job` and sbatch OUTPUT ENVIRONMENT documentation
+do not promise `SLURM_JOB_START_TIME`/`SLURM_JOB_END_TIME`. A bounded CPU-only
+helper resolves actual scheduler StartTime/EndTime before outer deadlines;
+any original env token, when present, must match exactly. The supervisor reads
+the allocation independently and matches the shell's start epoch. End minus
+start must be exactly1200s; elapsed runtime/current clock and release reserve
+remain strict. Missing/unparseable time fails closed; no shell-clock fallback,
+deadline extension or synthetic replacement env token is allowed.
+
+This revision changes admission only. Resources, costs, scientific inputs,
+precision, numeric gates and phase caps are unchanged. Real paid batch/GPU
+boundaries remain unverified and no paid submission is authorized.
+
+Current affected paid Python/shell verification passes136 distinct cases;
+the independent shell32-case run overlaps and is not counted again. The
+successful combined receipt is `slurm22-compatibility-v2/paid-tests.v2.receipt.json`
+under the preparation output directory; prior failed fixture and shell runs
+remain preserved. The consolidated v2 diff, commit/deployment binding, false
+scope and target CPU argv/import evidence are recorded in
+`slurm22-compatibility-v1/final-delivery.v1.json`. Those CPU checks certify
+preparation only; no actual paid allocation or GPU acceptance is implied.

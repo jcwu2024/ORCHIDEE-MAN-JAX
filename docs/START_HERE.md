@@ -35,6 +35,10 @@ pending; the package requires exact Slurm/cgroup identity, common scope mutex
 and read-only known free-state admission under the sole paid launch owner.
 Free dispatch is temporarily paused; the unchanged b676 entry is untouched.
 The free approval remains valid/unconsumed and is not automatically migrated.
+The active paid v2 revision binds Slurm22.05.7 `TRES`/allocated `GRES`,
+default job `OverSubscribe=OK`, and scheduler StartTime/EndTime. One actual
+CPU job provides schema evidence only; actual GPU allocation remains unverified.
+Old df8cfac/v5/v1 preparation artifacts remain unchanged.
 
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing

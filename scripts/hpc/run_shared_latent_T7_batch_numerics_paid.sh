@@ -14,12 +14,18 @@ if [[ ${1:-} != --runtime-child ]]; then
   DRY=false
   for ARG in "$@"; do [[ $ARG != --dry-run ]] || DRY=true; done
   if [[ $DRY == false ]]; then
-    # Allocation occupancy starts before this shell. The Python supervisor
-    # cross-checks these exact epochs with scontrol before any GPU admission.
-    [[ -n ${SLURM_JOB_ID:-} && ${SLURM_JOB_START_TIME:-} =~ ^[0-9]+$ && ${SLURM_JOB_END_TIME:-} =~ ^[0-9]+$ ]] || exit 2
+    # CPU-only scheduler metadata resolves the true allocation clock before
+    # outer deadlines. 22.05.7 does not promise JOB_START/END_TIME env tokens.
+    # Original tokens are crosschecked when present, never manufactured.
+    [[ ${SLURM_JOB_ID:-} =~ ^[0-9]+$ ]] || exit 2
+    [[ -z ${ORCJAX_NUMERICS_LAUNCHER_PYTHON:-} ]] || exit 2
+    EPOCHS=$(timeout 10s "$CPU_PYTHON" -B "$RUNNER" --scheduler-allocation-epochs) || exit 2
+    [[ $EPOCHS =~ ^[0-9]+[[:blank:]][0-9]+$ ]] || exit 2
+    read -r ALLOCATION_START ALLOCATION_END EXTRA <<< "$EPOCHS"
+    [[ $ALLOCATION_START =~ ^[0-9]+$ && $ALLOCATION_END =~ ^[0-9]+$ && -z $EXTRA ]] || exit 2
     NOW=$(date +%s)
-    ((SLURM_JOB_START_TIME <= NOW && NOW < SLURM_JOB_END_TIME && SLURM_JOB_END_TIME > SLURM_JOB_START_TIME && SLURM_JOB_END_TIME-SLURM_JOB_START_TIME <= 1200)) || exit 2
-    SHELL_STARTED_EPOCH=$SLURM_JOB_START_TIME
+    ((ALLOCATION_START <= NOW && NOW < ALLOCATION_END && ALLOCATION_END-ALLOCATION_START == 1200)) || exit 2
+    SHELL_STARTED_EPOCH=$ALLOCATION_START
   fi
 fi
 main "$@"

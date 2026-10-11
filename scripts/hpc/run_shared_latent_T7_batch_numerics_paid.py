@@ -26,7 +26,8 @@ from scripts.hpc import run_shared_latent_T7_batch_numerics as free
 from scripts.hpc.shared_affine_gpu_admission import (
     AffineScopeLock, SCOPE_LOCK, MANAGEMENT, read_free_admission)
 
-SCOPE_ID = 'T7-summary-affine-paid-gpu-20261011-v1'
+SCOPE_ID = 'T7-summary-affine-paid-gpu-20261011-v2'
+CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-20261011-v2'
 SCHEMA = 'T7_affine_paid_slurm_scope_v1'
 OUTPUT_DIR = free.REMOTE / 'outputs/diagnostics' / SCOPE_ID
 OUTPUT = OUTPUT_DIR / 'result.v1.json'
@@ -82,6 +83,85 @@ def tres(value):
         result[key] = number
     return result
 
+def allocation_epochs(environment, job):
+    """Scheduler clock; 22.05.7 batch env does not supply JOB_START/END_TIME.
+
+    Original env tokens, when present, are additional exact crosschecks.
+    Neither shell/Python startup nor a renewed deadline is an admissible clock.
+    """
+    if (not str(environment.get('SLURM_JOB_ID', '')).isdigit()
+            or job.get('JobId') != environment['SLURM_JOB_ID']
+            or job.get('JobState') != 'RUNNING' or job.get('TimeLimit') != '00:20:00'):
+        raise ValueError('actual running Slurm job and exact wall limit required')
+    epochs = []
+    for field, token in [('StartTime', 'SLURM_JOB_START_TIME'), ('EndTime', 'SLURM_JOB_END_TIME')]:
+        text = job.get(field, '')
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?', text):
+            raise ValueError('invalid scheduler allocation ' + field)
+        epoch = int(datetime.datetime.fromisoformat(text).timestamp())
+        if epoch <= 0:
+            raise ValueError('invalid scheduler allocation epoch')
+        if token in environment:
+            original = environment[token]
+            if not re.fullmatch(r'[0-9]+', original) or int(original) != epoch:
+                raise ValueError('original allocation epoch differs from scheduler ' + field)
+        epochs.append(epoch)
+    start, end = epochs
+    runtime = seconds(job.get('RunTime', ''))
+    now = time.time()
+    if end - start != 1200:
+        raise ValueError('allocation end epoch differs from exact paid wall limit')
+    if start > now or now >= end or runtime >= 1020:
+        raise ValueError('allocation has exhausted protected release time or is not current')
+    if abs(now - start - runtime) > 15:
+        raise ValueError('Slurm allocation start/runtime/current clock binding differs')
+    return start, end
+
+
+def allocated_tres(job):
+    """Allocated fields only, with actual allocation detail for legacy TRES.
+
+    22.05.7 job_info.c:696 emits tres_alloc_str, falling back to tres_req_str
+    without allocation. Nodes/CPU_IDs/GRES at 808/851 are allocated detail from
+    job_resrcs/core_bitmap/gres_detail_str. Require RUNNING and these records;
+    never accept ReqTRES/JOB_GRES as allocation proof.
+    """
+    sources = [key for key in ('AllocTRES', 'TRES') if key in job]
+    if not sources:
+        raise ValueError('actual allocated TRES unavailable')
+    values = [tres(job[key]) for key in sources]
+    if any(value != values[0] for value in values[1:]):
+        raise ValueError('conflicting actual allocated TRES fields')
+    if 'TRES' in sources:
+        if job.get('JobState') != 'RUNNING' or job.get('Nodes') != NODE:
+            raise ValueError('legacy TRES lacks actual single-node allocation detail')
+        ids = set()
+        for item in job.get('CPU_IDs', '').split(','):
+            if not re.fullmatch(r'[0-9]+(?:-[0-9]+)?', item):
+                raise ValueError('actual allocated CPU IDs unavailable')
+            bounds = list(map(int, item.split('-')))
+            lo, hi = bounds[0], bounds[-1]
+            if hi < lo or hi >= 112 or ids.intersection(range(lo, hi + 1)):
+                raise ValueError('invalid actual allocated CPU IDs')
+            ids.update(range(lo, hi + 1))
+        if len(ids) != 4:
+            raise ValueError('actual allocated CPU IDs differ from four Slurm CPUs')
+        if not job.get('GRES'):
+            raise ValueError('legacy TRES lacks actual allocated GPU detail')
+    return values[0], sources
+
+
+def scheduler_allocation_epochs():
+    if not os.environ.get('SLURM_JOB_ID', '').isdigit():
+        raise ValueError('numeric actual Slurm job ID required')
+    result = subprocess.run([SLURM, 'show', 'job', '--details', '-o',
+        os.environ.get('SLURM_JOB_ID', 'missing')], capture_output=True,
+        text=True, timeout=4, check=True)
+    start, end = allocation_epochs(os.environ, parse_job(result.stdout))
+    print(start, end)
+    return 0
+
+
 def validate_allocation(scope, environment, job, hostname):
     """No GPU query: exact paid scheduling/charge admission, never CPU fallback."""
     if scope.get('resources') != RESOURCES or scope.get('rates') != RATES:
@@ -96,29 +176,26 @@ def validate_allocation(scope, environment, job, hostname):
             or environment.get('SLURM_JOB_NUM_NODES') != '1'
             or environment.get('SLURM_JOB_PARTITION') != 'gnall'):
         raise ValueError('actual Slurm job/node/resources differ from paid scope')
-    allocated = tres(job.get('AllocTRES', ''))
+    allocated, allocation_fields = allocated_tres(job)
     if allocated.get('cpu') != '4' or allocated.get('gres/gpu') != '1' or allocated.get('node') != '1':
         raise ValueError('actual allocated TRES CPU/GPU count differs')
-    if any(value != '1' for key, value in allocated.items() if key.startswith('gres/gpu:')):
+    typed_gpus = [value for key, value in allocated.items() if key.startswith('gres/gpu:')]
+    if len(typed_gpus) > 1 or any(value != '1' for value in typed_gpus):
         raise ValueError('typed GPU allocation differs')
-    indices = re.findall(r'IDX:([0-9]+)', job.get('GresDetail', ''))
-    if indices != [environment.get('SLURM_JOB_GPUS')]:
+    details = [job[key] for key in ('GresDetail', 'GRES') if key in job]
+    if not details or len(set(details)) != 1 or any(not re.fullmatch(r'gpu(?::[A-Za-z0-9_.-]+)?:1\(IDX:[0-9]+\)', detail)
+                          or re.findall(r'IDX:([0-9]+)', detail) != [environment.get('SLURM_JOB_GPUS')]
+                          for detail in details):
         raise ValueError('Slurm GresDetail physical allocation differs from environment')
-    if job.get('OverSubscribe') not in ('NO', None):
+    if job.get('OverSubscribe') != 'OK':
         raise ValueError('unexpected job resource sharing policy')
-    if seconds(job['RunTime']) >= 1020:
-        raise ValueError('allocation has exhausted protected release time')
-    start = datetime.datetime.fromisoformat(job['StartTime']).timestamp()
-    if start <= 0 or abs(float(environment.get('SLURM_JOB_START_TIME', '0')) - start) > 1:
-        raise ValueError('allocation start epoch is not independently bound to Slurm StartTime')
-    if float(environment.get('SLURM_JOB_END_TIME', '0')) - start != 1200:
-        raise ValueError('allocation end epoch differs from exact paid wall limit')
-    if abs(time.time() - start - seconds(job['RunTime'])) > 15:
-        raise ValueError('Slurm allocation start/runtime/current clock binding differs')
+    start, end = allocation_epochs(environment, job)
     maximum = Decimal(scope.get('approved_cost_ceiling_cny', '0'))
     if maximum != Decimal('1.00') or Decimal(quote()['total_cny']) > maximum:
         raise ValueError('paid exact quote or approved ceiling differs')
-    return dict(job=job, allocation_start_epoch=start, actual_NumCPUs=4,
+    return dict(job=job, allocation_start_epoch=start, allocation_end_epoch=end,
+                allocation_clock_source='scheduler StartTime/EndTime; optional original env crosschecks',
+                actual_NumCPUs=4, allocation_TRES_fields=allocation_fields,
                 actual_AllocTRES=allocated, quote=quote(), hostname=hostname,
                 original_visible_devices=environment.get('ORCJAX_SLURM_VISIBLE_DEVICES'),
                 cpu_affinity=sorted(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else None)
@@ -273,6 +350,8 @@ def prepare(args):
     job_result = subprocess.run([SLURM, 'show', 'job', '--details', '-o', os.environ.get('SLURM_JOB_ID', 'missing')], capture_output=True, text=True, timeout=4, check=True)
     job = parse_job(job_result.stdout)
     plan['slurm_allocation'] = validate_allocation(scope, os.environ, job, socket.gethostname())
+    if args.shell_started_epoch != plan['slurm_allocation']['allocation_start_epoch']:
+        raise ValueError('outer shell deadline differs from scheduler allocation start')
     launch = json.loads((OUTPUT_DIR / 'slurm-attempt.v1.json').read_text(encoding='utf-8'))
     if (launch.get('scope_id') != SCOPE_ID or launch.get('job_id') != os.environ['SLURM_JOB_ID']
             or launch.get('status') != 'scheduler_started' or launch.get('retry_allowed') is not False):
@@ -361,4 +440,10 @@ def main(argv=None):
         return 2
 
 if __name__ == '__main__':
+    if sys.argv[1:] == ['--scheduler-allocation-epochs']:
+        try:
+            raise SystemExit(scheduler_allocation_epochs())
+        except (ValueError, KeyError, subprocess.SubprocessError) as error:
+            print(str(error), file=sys.stderr)
+            raise SystemExit(2)
     raise SystemExit(main())

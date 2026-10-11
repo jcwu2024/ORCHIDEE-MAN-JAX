@@ -1,0 +1,1 @@
+JobId=15779975 JobState=RUNNING RunTime=00:16:37 TimeLimit=2-00:00:00 StartTime=2026-10-11T22:58:11 EndTime=2026-10-13T22:58:11 Partition=cnall NodeList=ibc11b07n08 NumNodes=1 NumCPUs=48 NumTasks=1 Requeue=1 TRES=cpu=48,node=1,billing=48 OverSubscribe=OK Nodes=ibc11b07n08 CPU_IDs=0-13,16-21,23-24,26-30,35-55 GRES=

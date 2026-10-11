@@ -59,11 +59,13 @@ def allocation_fixture(monkeypatch):
     started = int(time.time()) - 60
     monkeypatch.setattr(paid.time, "time", lambda: started + 60)
     start_text = datetime.datetime.fromtimestamp(started, datetime.timezone.utc).isoformat(timespec="seconds")
+    end_text = datetime.datetime.fromtimestamp(started + 1200, datetime.timezone.utc).isoformat(timespec="seconds")
     job = paid.parse_job(
         "JobId=742001 JobState=RUNNING Partition=gnall NodeList=ibc13b03n01 "
         "NumNodes=1 NumCPUs=4 NumTasks=1 Requeue=0 TimeLimit=00:20:00 "
         "AllocTRES=cpu=4,mem=16G,node=1,gres/gpu=1,gres/gpu:v100=1 "
-        "GresDetail=gpu:1(IDX:3) OverSubscribe=NO RunTime=00:01:00 StartTime=" + start_text
+        "GresDetail=gpu:v100:1(IDX:3) GRES=gpu:v100:1(IDX:3) OverSubscribe=OK "
+        "RunTime=00:01:00 StartTime=" + start_text + " EndTime=" + end_text
     )
     environment = {
         "SLURM_JOB_ID": "742001",
@@ -198,6 +200,8 @@ def test_exact_paid_allocation_and_quote_are_admitted(monkeypatch):
     result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
     assert result["actual_NumCPUs"] == 4
     assert result["actual_AllocTRES"]["gres/gpu:v100"] == "1"
+    assert result["allocation_TRES_fields"] == ["AllocTRES"]
+    assert result["allocation_end_epoch"] - result["allocation_start_epoch"] == 1200
     assert result["original_visible_devices"] == "0"
     assert result["quote"]["display_ceiling_cny"] == "0.83"
     assert result["quote"]["proposed_authorization_ceiling_cny"] == "1.00"
@@ -206,7 +210,10 @@ def test_exact_paid_allocation_and_quote_are_admitted(monkeypatch):
 @pytest.mark.parametrize("change", [
     "job_id", "state", "partition", "node", "cpus", "tasks", "requeue", "wall",
     "tres_gpu", "tres_cpu", "tres_typed_gpu", "hostname", "environment_cpus", "partition_environment",
-    "gresdetail_missing", "runtime_reserve", "start_binding", "end_binding", "cost_ceiling",
+    "tres_multiple_typed_gpu", "gres_fields_missing", "gres_mismatch", "gres_alias_conflict",
+    "gres_alias_type_conflict", "gres_count", "gres_multiple_idx",
+    "sharing_no", "sharing_yes", "runtime_reserve",
+    "start_binding", "end_binding", "cost_ceiling",
 ])
 def test_paid_allocation_rejects_scope_or_live_resource_drift(change, monkeypatch):
     scope, environment, job = allocation_fixture(monkeypatch)
@@ -234,8 +241,28 @@ def test_paid_allocation_rejects_scope_or_live_resource_drift(change, monkeypatc
         job["AllocTRES"] = "cpu=8,mem=16G,node=1,gres/gpu=1"
     elif change == "tres_typed_gpu":
         job["AllocTRES"] = "cpu=4,mem=16G,node=1,gres/gpu=1,gres/gpu:v100=2"
-    elif change == "gresdetail_missing":
+    elif change == "tres_multiple_typed_gpu":
+        job["AllocTRES"] = "cpu=4,mem=16G,node=1,gres/gpu=1,gres/gpu:v100=1,gres/gpu:a100=1"
+    elif change == "gres_fields_missing":
         job.pop("GresDetail")
+        job.pop("GRES")
+    elif change == "gres_mismatch":
+        job["GRES"] = "gpu:v100:1(IDX:4)"
+        job["GresDetail"] = "gpu:v100:1(IDX:4)"
+    elif change == "gres_alias_conflict":
+        job["GRES"] = "gpu:v100:1(IDX:4)"
+    elif change == "gres_alias_type_conflict":
+        job["GRES"] = "gpu:a100:1(IDX:3)"
+    elif change == "gres_count":
+        job["GRES"] = "gpu:v100:2(IDX:3)"
+        job["GresDetail"] = "gpu:v100:2(IDX:3)"
+    elif change == "gres_multiple_idx":
+        job["GRES"] = "gpu:v100:1(IDX:3),gpu:v100:1(IDX:4)"
+        job["GresDetail"] = "gpu:v100:1(IDX:3),gpu:v100:1(IDX:4)"
+    elif change == "sharing_no":
+        job["OverSubscribe"] = "NO"
+    elif change == "sharing_yes":
+        job["OverSubscribe"] = "YES"
     elif change == "hostname":
         host = "ibc13b03n02"
     elif change == "environment_cpus":
@@ -260,6 +287,141 @@ def test_paid_allocation_rejects_scope_or_live_resource_drift(change, monkeypatc
 def test_tres_parser_rejects_duplicate_or_malformed_entries(tres):
     with pytest.raises(ValueError):
         paid.tres(tres)
+
+
+def test_allocated_tres_uses_legacy_tres_only_with_running_resource_records(monkeypatch):
+    scope, environment, job = allocation_fixture(monkeypatch)
+    legacy = dict(job)
+    legacy["TRES"] = legacy.pop("AllocTRES")
+    legacy.update(Nodes=paid.NODE, CPU_IDs="0-3", GRES="gpu:v100:1(IDX:3)")
+    accepted, sources = paid.allocated_tres(legacy)
+    assert accepted["cpu"] == "4" and accepted["gres/gpu"] == "1"
+    assert sources == ["TRES"]
+    validated = paid.validate_allocation(scope, environment, legacy, "ibc13b03n01.cluster")
+    assert validated["allocation_TRES_fields"] == ["TRES"]
+    legacy["JobState"] = "PENDING"
+    with pytest.raises(ValueError, match="legacy TRES lacks actual single-node allocation detail"):
+        paid.allocated_tres(legacy)
+
+
+@pytest.mark.parametrize("fields", [
+    {"ReqTRES": "cpu=4,node=1,gres/gpu=1"},
+    {"AllocTRES": "cpu=4,node=1,gres/gpu=1", "TRES": "cpu=4,node=1,gres/gpu=2"},
+])
+def test_allocated_tres_rejects_missing_or_conflicting_actual_fields(fields):
+    with pytest.raises(ValueError, match="actual allocated TRES|conflicting actual allocated TRES"):
+        paid.allocated_tres(fields)
+
+
+def test_allocated_tres_accepts_identical_aliases_and_arbitrary_gpu_type_in_synthetic_job(monkeypatch):
+    scope, environment, job = allocation_fixture(monkeypatch)
+    job["TRES"] = job["AllocTRES"]
+    job["GresDetail"] = "gpu:synthetic_type-1:1(IDX:3)"
+    job["GRES"] = "gpu:synthetic_type-1:1(IDX:3)"
+    job.update(Nodes=paid.NODE, CPU_IDs="0-3")
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    assert result["allocation_TRES_fields"] == ["AllocTRES", "TRES"]
+
+
+def test_slurm_epoch_helper_queries_numeric_job_and_uses_scheduler_timestamps(monkeypatch, capsys):
+    _, _, job = allocation_fixture(monkeypatch)
+    monkeypatch.setenv("SLURM_JOB_ID", "742001")
+    monkeypatch.delenv("SLURM_JOB_START_TIME", raising=False)
+    monkeypatch.delenv("SLURM_JOB_END_TIME", raising=False)
+    calls = []
+
+    def scheduler(command, **kwargs):
+        calls.append((command, kwargs))
+        return SimpleNamespace(stdout=" ".join(f"{key}={value}" for key, value in job.items()))
+
+    monkeypatch.setattr(paid.subprocess, "run", scheduler)
+    assert paid.scheduler_allocation_epochs() == 0
+    assert calls == [(
+        [paid.SLURM, "show", "job", "--details", "-o", "742001"],
+        {"capture_output": True, "text": True, "timeout": 4, "check": True},
+    )]
+    start, end = map(int, capsys.readouterr().out.split())
+    assert end - start == 1200
+
+
+@pytest.mark.parametrize("job_id", [None, "", "bad-job-id"])
+def test_slurm_epoch_helper_rejects_missing_or_non_numeric_job_id_before_query(monkeypatch, job_id):
+    if job_id is None:
+        monkeypatch.delenv("SLURM_JOB_ID", raising=False)
+    else:
+        monkeypatch.setenv("SLURM_JOB_ID", job_id)
+    monkeypatch.setattr(paid.subprocess, "run", lambda *_args, **_kwargs: pytest.fail("scheduler queried"))
+    with pytest.raises(ValueError, match="numeric actual Slurm job ID"):
+        paid.scheduler_allocation_epochs()
+
+
+def test_scheduler_allocation_timestamps_work_without_22_05_environment_tokens(monkeypatch):
+    scope, environment, job = allocation_fixture(monkeypatch)
+    environment.pop("SLURM_JOB_START_TIME")
+    environment.pop("SLURM_JOB_END_TIME")
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    assert result["allocation_clock_source"].startswith("scheduler StartTime/EndTime")
+
+
+@pytest.mark.parametrize("change", [
+    "bad_start", "missing_end", "bad_end", "wrong_duration", "future", "expired",
+    "bad_original_start", "bad_original_end",
+])
+def test_scheduler_allocation_epochs_reject_malformed_or_unsafe_clocks(monkeypatch, change):
+    _, environment, job = allocation_fixture(monkeypatch)
+    job = dict(job)
+    environment = dict(environment)
+    if change not in ("bad_original_start", "bad_original_end"):
+        environment.pop("SLURM_JOB_START_TIME")
+        environment.pop("SLURM_JOB_END_TIME")
+    if change == "bad_start":
+        job["StartTime"] = "N/A"
+    elif change == "missing_end":
+        job.pop("EndTime")
+    elif change == "bad_end":
+        job["EndTime"] = "2026-99-99T22:58:11"
+    elif change == "wrong_duration":
+        start_epoch = int(datetime.datetime.fromisoformat(job["StartTime"]).timestamp())
+        job["EndTime"] = datetime.datetime.fromtimestamp(start_epoch + 1199, datetime.timezone.utc).isoformat(timespec="seconds")
+    elif change == "future":
+        start_epoch = int(paid.time.time()) + 1
+        job["StartTime"] = datetime.datetime.fromtimestamp(start_epoch, datetime.timezone.utc).isoformat(timespec="seconds")
+        job["EndTime"] = datetime.datetime.fromtimestamp(start_epoch + 1200, datetime.timezone.utc).isoformat(timespec="seconds")
+    elif change == "expired":
+        start_epoch = int(paid.time.time()) - 1200
+        job["StartTime"] = datetime.datetime.fromtimestamp(start_epoch, datetime.timezone.utc).isoformat(timespec="seconds")
+        job["EndTime"] = datetime.datetime.fromtimestamp(start_epoch + 1200, datetime.timezone.utc).isoformat(timespec="seconds")
+    elif change == "bad_original_start":
+        environment["SLURM_JOB_START_TIME"] = "1700000000.5"
+    elif change == "bad_original_end":
+        environment["SLURM_JOB_END_TIME"] = str(int(environment["SLURM_JOB_END_TIME"]) - 1)
+    with pytest.raises(ValueError):
+        paid.allocation_epochs(environment, job)
+
+
+@pytest.mark.parametrize("absent", ["SLURM_JOB_START_TIME", "SLURM_JOB_END_TIME"])
+def test_scheduler_allocation_epoch_environment_crosschecks_are_independently_optional(monkeypatch, absent):
+    scope, environment, job = allocation_fixture(monkeypatch)
+    environment.pop(absent)
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    assert result["allocation_end_epoch"] - result["allocation_start_epoch"] == 1200
+
+
+def test_actual_slurm22_cpu_job_record_parses_and_is_rejected_for_paid_gpu_scope(monkeypatch):
+    fixture = Path(__file__).resolve().parents[1] / "fixtures/slurm22/actual_cpu_job.v1.txt"
+    job = paid.parse_job(fixture.read_text(encoding="ascii"))
+    assert job["JobId"] == "15779975"
+    assert job["JobState"] == "RUNNING"
+    assert job["TRES"] == "cpu=48,node=1,billing=48"
+    assert job["GRES"] == ""
+    assert job["OverSubscribe"] == "OK"
+    scope, environment, _ = allocation_fixture(monkeypatch)
+    environment.update(
+        SLURM_JOB_ID=job["JobId"], SLURM_JOB_PARTITION=job["Partition"],
+        SLURM_JOB_NUM_NODES=job["NumNodes"], SLURM_CPUS_PER_TASK="48",
+    )
+    with pytest.raises(ValueError, match="actual Slurm job/node/resources differ"):
+        paid.validate_allocation(scope, environment, job, job["NodeList"])
 
 
 def test_physical_slurm_gpu_is_not_confused_with_visible_ordinal():
@@ -624,11 +786,13 @@ def test_paid_live_preparation_mocks_exact_scontrol_details_command(tmp_path, mo
         "SLURM_JOB_GPUS": "3", "ORCJAX_SLURM_VISIBLE_DEVICES": "0",
     }
     started = datetime.datetime.fromtimestamp(1700000000, datetime.timezone.utc).isoformat(timespec="seconds")
+    ended = datetime.datetime.fromtimestamp(1700001200, datetime.timezone.utc).isoformat(timespec="seconds")
     job_text = (
         "JobId=742001 JobState=RUNNING Partition=gnall NodeList=ibc13b03n01 "
         "NumNodes=1 NumCPUs=4 NumTasks=1 Requeue=0 TimeLimit=00:20:00 "
         "AllocTRES=cpu=4,mem=16G,node=1,gres/gpu=1,gres/gpu:v100=1 "
-        "GresDetail=gpu:1(IDX:3) OverSubscribe=NO RunTime=00:01:00 StartTime=" + started
+        "GresDetail=gpu:v100:1(IDX:3) GRES=gpu:v100:1(IDX:3) OverSubscribe=OK "
+        "RunTime=00:01:00 StartTime=" + started + " EndTime=" + ended
     )
     scope = paid.proposed_scope()
     fixture_identities = {
@@ -674,14 +838,18 @@ def test_paid_live_preparation_mocks_exact_scontrol_details_command(tmp_path, mo
     args = SimpleNamespace(
         operands=remote / "inputs" / "operands.npz", capture_receipt=remote / "inputs" / "receipt.json",
         capture_source=remote / "inputs" / "capture.py", scope_json=scope_path,
-        output=output, ledger=ledger, dry_run=False, shell_started_epoch=None,
+        output=output, ledger=ledger, dry_run=False, shell_started_epoch=1700000000,
     )
 
     plan = paid.prepare(args)
 
     assert plan["slurm_allocation"]["actual_AllocTRES"]["gres/gpu:v100"] == "1"
     assert commands[-1] == [paid.SLURM, "show", "job", "--details", "-o", "742001"]
-    assert plan["slurm_allocation"]["job"]["GresDetail"] == "gpu:1(IDX:3)"
+    assert plan["slurm_allocation"]["job"]["GresDetail"] == "gpu:v100:1(IDX:3)"
+
+    args.shell_started_epoch += 1
+    with pytest.raises(ValueError, match="outer shell deadline differs"):
+        paid.prepare(args)
 
 
 def test_shared_scope_lock_is_exclusive_and_unverified_release_stays_locked(tmp_path):

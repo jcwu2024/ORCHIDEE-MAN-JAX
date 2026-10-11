@@ -80,6 +80,10 @@ or started, and both the free one-shot and proposed paid attempt are unconsumed.
 Revised local mocks cover spool-copy/early failure, exact actual-job cgroup,
 kernel minor/UUID, source/HEAD and management-chain admission; real target
 isolation and optional CUDA-driver/PJRT binding still await approved execution.
+Active paid v2 corrects observed22.05.7 `TRES`, `GRES` and job sharing `OK`;
+scheduler StartTime/EndTime owns all deadlines with optional original env
+crosschecks. One read-only CPU job confirms that schema, without proving GPU
+allocation or batch environment. Old df8cfac/v5/v1 artifacts stay unchanged.
 
 | Current evidence | Result and limit |
 |---|---|

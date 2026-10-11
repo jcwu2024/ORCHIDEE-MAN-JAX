@@ -64,13 +64,13 @@ def slurm_copy(tmp_path, with_scope):
     target = checkout / "scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh"
     target.parent.mkdir(parents=True)
     runtime = tmp_path / "mock runtime"
-    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v1"
+    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v2"
     target.write_text(SLURM.read_text().replace(
         "ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime", 'ROOT="' + posix(runtime) + '"'
     ).replace("CODE=" + canonical, 'CODE="' + posix(checkout) + '"'
     ).replace("#SBATCH --chdir=" + canonical, "#SBATCH --chdir=" + posix(checkout)), newline="\n")
     target.with_name("run_shared_latent_T7_batch_numerics_paid.py").write_text("# private mock; never run\n")
-    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v1"
+    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v2"
     diag.mkdir(parents=True)
     if with_scope:
         (diag / "scope.v1.json").write_text("{}\n")
@@ -92,7 +92,7 @@ def test_slurm_dry_run_prints_exact_paid_resource_and_downstream_argv(tmp_path):
     args = dict(zip(command[2:-1:2], command[3:-1:2], strict=True))
     assert set(args) == {"--checkout-root", "--operands", "--capture-receipt", "--capture-source", "--output", "--scope-json", "--ledger"}
     assert args["--output"] == posix(diag / "result.v1.json")
-    assert args["--ledger"].endswith("/T7-summary-affine-paid-gpu-20261011-v1.ledger.json")
+    assert args["--ledger"].endswith("/T7-summary-affine-paid-gpu-20261011-v2.ledger.json")
     assert args["--operands"] == posix(runtime / "transfer/T7-summary-recovery-20261011-v1/summary-recovery.v1.operands.npz")
     assert command[-1] == "--dry-run"
     original = SLURM.read_text()
@@ -115,14 +115,97 @@ def test_slurm_live_cannot_run_outside_allocation(tmp_path):
     assert result.returncode == 2
 
 
-@pytest.mark.parametrize("start,end", [("", ""), ("not-epoch", "9999999999"),
-    ("9999999999", "10000000000"), ("1", "1202")])
-def test_paid_live_rejects_missing_or_invalid_allocation_epochs(start, end):
-    env = dict(os.environ, SLURM_JOB_ID="mock-only", SLURM_JOB_START_TIME=start,
-        SLURM_JOB_END_TIME=end)
-    env.pop("ORCJAX_NUMERICS_LAUNCHER_PYTHON", None)
-    result = run(PAID, ["--output", "never-started.json"], env)
+def allocation_copy(tmp_path, epochs="1699999900 1700001100\n", helper_exit=0,
+                    timeout_exit=None):
+    """Real copied paid/shared admission; only scheduler and launch are mocks.
+
+    No real scheduler, process groups, GPU, or batch-environment proof here.
+    The shared main computes deadlines before our guarded launch records them.
+    """
+    project = tmp_path / "private project"
+    target = project / "scripts/hpc" / PAID.name
+    target.parent.mkdir(parents=True)
+    target.write_text(PAID.read_text(), newline="\n")
+    helper = tmp_path / "mock cpu python.sh"
+    helper_log = tmp_path / "helper.argv"
+    helper_output = tmp_path / "helper.stdout"
+    helper_output.write_bytes(epochs.encode())
+    helper.write_text('#!/usr/bin/env bash\nprintf \'%s\\0\' '
+        '"${SLURM_JOB_START_TIME-absent}" "${SLURM_JOB_END_TIME-absent}" "$@" > '
+        + shlex.quote(posix(helper_log)) + '\ncat -- ' + shlex.quote(posix(helper_output))
+        + f'\nexit {helper_exit}\n', newline="\n")
+    helper.chmod(0o755)
+    timeout_log = tmp_path / "timeout.argv"
+    timeout_body = f"return {timeout_exit}" if timeout_exit is not None else 'shift; "$@"'
+    shared = PAID.with_name("run_shared_latent_T7_batch_numerics.sh").read_text()
+    shared = shared.replace("PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+        "PROJECT=" + shlex.quote(posix(project)))
+    shared = shared.replace("CPU_PYTHON=$PROJECT/.venvs/orcjax_cpu/bin/python",
+        "CPU_PYTHON=" + shlex.quote(posix(helper)))
+    shared += '\ndate() { printf \'1700000000\\n\'; }\n'
+    shared += 'timeout() { printf \'%s\\0\' "$@" > ' + shlex.quote(posix(timeout_log)) + '; ' + timeout_body + '; }\n'
+    shared += 'guarded_cpu_launch() { printf \'%s\\0\' "${SLURM_JOB_START_TIME-absent}" "${SLURM_JOB_END_TIME-absent}" "$SHELL_STARTED_EPOCH" "$@"; }\n'
+    target.with_name("run_shared_latent_T7_batch_numerics.sh").write_text(shared, newline="\n")
+    output = project / "runtime/outputs/result.json"
+    output.parent.mkdir(parents=True)
+    env = dict(os.environ, SLURM_JOB_ID="123456")
+    for key in ("SLURM_JOB_START_TIME", "SLURM_JOB_END_TIME",
+                "ORCJAX_NUMERICS_LAUNCHER_PYTHON"):
+        env.pop(key, None)
+    return target, output, helper, helper_log, timeout_log, env
+
+
+@pytest.mark.parametrize("original_epochs", [None, ("1699999900", "1700001100")])
+def test_paid_live_scheduler_epochs_use_true_allocation_start_and_shared_deadlines(tmp_path, original_epochs):
+    target, output, helper, helper_log, timeout_log, env = allocation_copy(tmp_path)
+    if original_epochs is not None:
+        env.update(SLURM_JOB_START_TIME=original_epochs[0], SLURM_JOB_END_TIME=original_epochs[1])
+    result = run(target, ["--output", posix(output)], env)
+    assert result.returncode == 0, result.stderr.decode()
+    runner = posix(target.with_suffix(".py"))
+    expected_helper = ["-B", runner, "--scheduler-allocation-epochs"]
+    assert timeout_log.read_text().split("\0")[:-1] == ["10s", posix(helper), *expected_helper]
+    assert helper_log.read_text().split("\0")[:-1] == [
+        *(original_epochs or ("absent", "absent")), *expected_helper]
+    actual = result.stdout.decode().split("\0")[:-1]
+    # Frozen clock is 100s later than allocation start: deadline origin must
+    # retain those occupied seconds, and the supervisor gets that same origin.
+    assert actual == [*(original_epochs or ("absent", "absent")),
+        "1699999900", "1700000910", "1700001090",
+        posix(output.with_name("result.outer-timeout.json")), posix(helper),
+        "-B", runner, "--shell-started-epoch", "1699999900", "--output", posix(output)]
+
+
+@pytest.mark.parametrize("epochs,helper_exit,timeout_exit", [
+    ("", 0, None), ("not-epoch 1700001100\n", 0, None),
+    ("1699999900\n", 0, None), ("1699999900 1700001100 extra\n", 0, None),
+    ("1699999900 1700001100\n1699999900 1700001100\n", 0, None),
+    ("1699999900 1700001100\nignored\n", 0, None),
+    ("1699999900 1700001099\n", 0, None),
+    ("1699999900 1700001101\n", 0, None),
+    ("1700000001 1700001201\n", 0, None),
+    ("1699998800 1700000000\n", 0, None),
+    ("1699999900 1700001100\n", 7, None),
+    ("1699999900 1700001100\n", 0, 124),
+], ids=["empty", "malformed", "missing-end", "extra-token", "multiple-valid-lines",
+    "extra-line", "short-interval", "long-interval", "future", "expired", "helper-failure", "timeout"])
+def test_paid_live_scheduler_failure_or_bad_epochs_never_launch_main(tmp_path, epochs, helper_exit, timeout_exit):
+    target, output, helper, helper_log, timeout_log, env = allocation_copy(
+        tmp_path, epochs, helper_exit, timeout_exit)
+    result = run(target, ["--output", posix(output)], env)
     assert result.returncode == 2
+    assert result.stdout == b""  # Mock guarded_cpu_launch was never reached.
+    assert timeout_log.read_text().split("\0")[:-1] == ["10s", posix(helper),
+        "-B", posix(target.with_suffix(".py")), "--scheduler-allocation-epochs"]
+    assert helper_log.exists() == (timeout_exit is None)
+
+
+def test_paid_live_override_rejected_before_scheduler_helper(tmp_path):
+    target, output, _, helper_log, timeout_log, env = allocation_copy(tmp_path)
+    env["ORCJAX_NUMERICS_LAUNCHER_PYTHON"] = "must-not-execute"
+    result = run(target, ["--output", posix(output)], env)
+    assert result.returncode == 2 and result.stdout == b""
+    assert not helper_log.exists() and not timeout_log.exists()
 
 
 def test_slurm_start_consumed_before_cpu_admission_and_cannot_retry(tmp_path):
@@ -136,7 +219,7 @@ def test_slurm_start_consumed_before_cpu_admission_and_cannot_retry(tmp_path):
     assert result.returncode == 7
     marker = diag / "slurm-attempt.v1.json"
     original = marker.read_bytes()
-    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-gpu-20261011-v1",
+    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-gpu-20261011-v2",
         job_id="123456", status="scheduler_started", retry_allowed=False)
     assert calls.read_text().splitlines() == ["child-before-python"]
     second = run(target, [], env)
