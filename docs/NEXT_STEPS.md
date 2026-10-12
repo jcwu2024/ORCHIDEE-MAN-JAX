@@ -68,6 +68,14 @@ The [preparation/proposal](research/daily_coarse_graining/T7_paid_single_GPU_pre
 retains historical false scope, exact argv and88 CPU cases; these do not
 establish GPU or scientific acceptance.
 
+The [local v2 identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
+now owns the candidate method: Supervisor-owned original-mask discovery,
+runtime count1/PCI→driver physical UUID, UUID-only NVML and explicit actual-job
+association. Numeric masks with broad device access fail mapping_unknown.
+V2 explicitly separates runtime visibility from total driver enumeration;
+old consumed grants cannot migrate. Local mocks establish no deployed/API,
+allocation, memory, numerical or release acceptance. No new execution is authorized.
+
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns historical paid v3 execution status. Direct human “批准。” authorized the exact58a2d938
 single fixed gnall n01/4actualSlurmCPUs/1V100/20min/nonexclusive/no-requeue job.

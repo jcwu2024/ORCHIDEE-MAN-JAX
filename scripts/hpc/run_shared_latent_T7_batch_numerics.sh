@@ -45,6 +45,7 @@ start_phase_deadman() {
 }
 
 runtime_child() {
+  local runtime_mode=$1
   shift
   [[ $# -ge 2 && $1 == "$GPU_PYTHON" ]] || exit 2
   CHILD_PYTHON=$1
@@ -52,10 +53,15 @@ runtime_child() {
   shift 2
   # Only the deadline-owning Python supervisor supplies this internal mode.
   [[ -z ${ORCJAX_NUMERICS_LAUNCHER_PYTHON:-} ]] || exit 2
-  [[ $ENTRY == "$CODE/scripts/hpc/check_daily_training_runtime.py" || $ENTRY == "$CODE/scripts/hpc/probe_shared_latent_T7_batch_numerics.py" ]] || exit 2
+  if [[ $runtime_mode == --runtime-discovery ]]; then
+    [[ $ENTRY == "$CODE/scripts/hpc/shared_affine_cuda_identity.py" && ${ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT-} == T7_affine_allocated_single_gpu_v2 && -z ${ORCJAX_AFFINE_EXPECTED_GPU_UUID-} ]] || exit 2
+    [[ ${CUDA_VISIBLE_DEVICES-} == "${ORCJAX_SLURM_VISIBLE_DEVICES-}" && ( $CUDA_VISIBLE_DEVICES =~ ^[0-9]+$ || $CUDA_VISIBLE_DEVICES =~ ^GPU-[0-9a-fA-F-]+$ ) ]] || exit 2
+  else
+    [[ $ENTRY == "$CODE/scripts/hpc/check_daily_training_runtime.py" || $ENTRY == "$CODE/scripts/hpc/probe_shared_latent_T7_batch_numerics.py" ]] || exit 2
+    [[ ${CUDA_VISIBLE_DEVICES:-} == GPU-* && $CUDA_VISIBLE_DEVICES != *,* ]] || exit 2
+  fi
   [[ -f $ENTRY ]] || exit 2
   for ARG in "$@"; do [[ $ARG != --dry-run && $ARG != --dry-run=* ]] || exit 2; done
-  [[ ${CUDA_VISIBLE_DEVICES:-} == GPU-* && $CUDA_VISIBLE_DEVICES != *,* ]] || exit 2
   PHASE_EPOCH=${ORCJAX_NUMERICS_SHELL_STARTED_EPOCH:-}
   [[ $PHASE_EPOCH =~ ^[0-9]+([.][0-9]+)?$ ]] || exit 2
   PHASE_START=${PHASE_EPOCH%.*}
@@ -67,6 +73,14 @@ runtime_child() {
   # The paid entry opts in; free callers gain no extra read or output.
   if declare -F paid_startup_shell_evidence >/dev/null; then paid_startup_shell_evidence runtime_driver_bindings; fi
   [[ -f $CUDA_DRIVER && -f $NVML_DRIVER && -d $TOOLCHAIN ]] || exit 2
+  # Numeric scheduler masks must keep the original CUDA ordering in the same
+  # runtime namespace. Never invent PCI_BUS_ID ordering to reinterpret them.
+  if [[ ${ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT-} == T7_affine_allocated_single_gpu_v2 ]]; then
+    if [[ -v CUDA_DEVICE_ORDER ]]; then export SINGULARITYENV_CUDA_DEVICE_ORDER=$CUDA_DEVICE_ORDER
+    else unset SINGULARITYENV_CUDA_DEVICE_ORDER; fi
+    export SINGULARITYENV_ORCJAX_SLURM_VISIBLE_DEVICES=${ORCJAX_SLURM_VISIBLE_DEVICES-}
+    export SINGULARITYENV_SLURM_JOB_GPUS=${SLURM_JOB_GPUS-}
+  fi
   exec env -u LD_LIBRARY_PATH \
     SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
     SINGULARITYENV_CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES" \
@@ -138,7 +152,7 @@ guarded_cpu_launch() {
 }
 
 main() {
-if [[ ${1:-} == --runtime-child ]]; then runtime_child "$@"; fi
+if [[ ${1:-} == --runtime-child || ${1:-} == --runtime-discovery ]]; then runtime_child "$@"; fi
 
 DRY=false
 for ARG in "$@"; do

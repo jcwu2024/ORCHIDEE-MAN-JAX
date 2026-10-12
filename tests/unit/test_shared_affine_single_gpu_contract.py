@@ -9,12 +9,21 @@ from scripts.hpc import run_shared_latent_T7_batch_numerics_paid as paid
 from scripts.hpc import probe_shared_latent_T7_batch_numerics as probe
 from scripts.hpc import shared_affine_cuda_identity as cuda
 from tests.unit.test_shared_latent_T7_batch_numerics_paid import FakeCudaDriver, scope_json
+from tests.unit.test_shared_affine_gpu_discovery import FakeRuntime, FakePhysicalDriver
 from tests.unit.test_shared_latent_T7_batch_numerics_launcher import minimal_plan, FakeMonitor, FakeGroups, gpu_row
 
 UUID='GPU-01234567-89ab-cdef-0123-456789abcdef'
-ENV=dict(SLURM_JOB_GPUS='3', ORCJAX_SLURM_VISIBLE_DEVICES='0')
+ENV=dict(SLURM_JOB_GPUS='3', ORCJAX_SLURM_VISIBLE_DEVICES=UUID)
 ROW=dict(index=3, uuid=UUID, name='Tesla V100', minor_number=5,
-    device_major=195, device_minor=5, control_devices=[dict(major=195,minor=255)])
+    device_major=195, device_minor=5, control_devices=[dict(major=195,minor=255)],
+    slurm_gpu_id='3', discovery_gpu_uuid=UUID,
+    allocation_association='trusted_scheduler_original_CVD_same_runtime_namespace')
+
+
+@pytest.fixture(autouse=True)
+def mocked_cuda_runtime(monkeypatch):
+    original = cuda.runtime_identity
+    monkeypatch.setattr(cuda, 'runtime_identity', lambda **kwargs: original(FakeRuntime(), **kwargs))
 
 
 @pytest.mark.parametrize('rules,broad', [
@@ -34,12 +43,12 @@ def test_new_contract_retains_rules_and_correct_driver_pjrt_without_claiming_os_
     monkeypatch.setenv(cuda.CONTRACT_ENVIRONMENT_KEY,paid.GPU_EXECUTION_CONTRACT)
     monkeypatch.setenv(cuda.ENVIRONMENT_KEY,mapping['gpu_uuid'])
     monkeypatch.setenv('CUDA_VISIBLE_DEVICES',mapping['gpu_uuid'])
-    monkeypatch.setattr(cuda.ctypes,'CDLL',lambda _name:FakeCudaDriver())
+    monkeypatch.setattr(cuda.ctypes,'CDLL',lambda _name:FakePhysicalDriver())
     binding=probe.verify_probe_gpu_binding('gpu',[SimpleNamespace(platform='gpu',local_hardware_id=0)],tmp_path/'result.json')
-    assert binding['passed'] and binding['driver_device_count']==1 and binding['driver_gpu_uuid']==UUID
+    assert binding['passed'] and binding['driver_device_count']==8 and binding['runtime_device_count']==1 and binding['driver_gpu_uuid']==UUID
     evidence=json.loads((tmp_path/'result.startup-identity.json').read_text())
     assert evidence['status']=='passed' and evidence['affine_science_executed'] is False
-    assert [row['api'] for row in evidence['driver']['calls']]==['cuInit','cuDeviceGetCount','cuDeviceGet','cuDeviceGetUuid_v2']
+    assert [row['api'] for row in evidence['driver']['calls']]==['cuInit','cuDeviceGetCount','cuDeviceGetByPCIBusId','cuDeviceGetPCIBusId','cuDeviceGetUuid_v2']
 
 
 @pytest.mark.parametrize('rules',['c 195:* rw\n','a *:* rwm\n','c 195:5 rw\nc *:255 rw\n'])
@@ -68,13 +77,15 @@ def test_scope_never_silently_migrates_old_contract(tmp_path,monkeypatch,change)
     with pytest.raises(ValueError,match='contract differs'):paid.prepare(args)
 
 
-@pytest.mark.parametrize('failure',['second_pjrt','second_driver','wrong_uuid','wrong_cvd'])
+@pytest.mark.parametrize('failure',['second_pjrt','second_runtime','wrong_uuid','wrong_cvd'])
 def test_actual_affine_child_rejects_before_upload_or_science_and_saves_identity(tmp_path,monkeypatch,failure):
     monkeypatch.setenv(cuda.CONTRACT_ENVIRONMENT_KEY,paid.GPU_EXECUTION_CONTRACT)
     monkeypatch.setenv(cuda.ENVIRONMENT_KEY,UUID)
     monkeypatch.setenv('CUDA_VISIBLE_DEVICES','GPU-wrong' if failure=='wrong_cvd' else UUID)
-    driver=FakeCudaDriver(count=2 if failure=='second_driver' else 1,
-        uuid_bytes=bytes.fromhex('f'*32) if failure=='wrong_uuid' else None)
+    driver=FakePhysicalDriver(
+        uuid_bytes=bytes.fromhex('f'*32) if failure=='wrong_uuid' else bytes.fromhex('0123456789abcdef0123456789abcdef'))
+    if failure=='second_runtime':
+        monkeypatch.setattr(cuda, 'runtime_identity', lambda **_: dict(runtime_device_count=2, runtime_visible_ordinal=0, runtime_pci_bus_id='0000:65:00.0'))
     monkeypatch.setattr(cuda.ctypes,'CDLL',lambda _name:driver)
     devices=[SimpleNamespace(platform='gpu',local_hardware_id=0)]*(2 if failure=='second_pjrt' else 1)
     jax=SimpleNamespace(device_put=lambda *_:pytest.fail('identity rejection must precede upload/affine'))

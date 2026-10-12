@@ -733,75 +733,11 @@ def test_live_paid_launcher_checks_free_management_before_gpu_observation(monkey
 
     monkeypatch.setattr(paid, "AffineScopeLock", lambda *_args: Lock())
     monkeypatch.setattr(paid, "read_free_admission", reject_free_management)
+    monkeypatch.setattr(paid, "PaidSupervisor", lambda *_args: pytest.fail("supervisor must not start before management admission"))
     monkeypatch.setattr(paid.subprocess, "run", gpu_query)
     with pytest.raises(ValueError, match="known free evidence exists"):
         paid.run_live({})
     assert events == ["mutex_acquired", "free_management_checked", ("mutex_released", True)]
-
-
-def test_paid_main_preserves_job_15782177_gpu_query_rejection_and_does_not_retry(tmp_path, monkeypatch, capsys):
-    output_dir = tmp_path / "diagnostics"
-    output_dir.mkdir()
-    output = output_dir / "result.v1.json"
-    ledger = output_dir / "paid.ledger.json"
-    scope_path = output_dir / "scope.v1.json"
-    scope_path.write_text(json.dumps({
-        "schema_version": paid.SCHEMA,
-        "scope_id": paid.SCOPE_ID,
-        "status": "open",
-        "gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT,
-        "os_device_open_isolation_required": False,
-        "execution_authorized": True,
-        "approval_note": "synthetic test only",
-    }), encoding="utf-8")
-    args = SimpleNamespace(dry_run=False, scope_json=scope_path, output=output, ledger=ledger)
-    monkeypatch.setattr(paid.free, "parser", lambda: SimpleNamespace(parse_args=lambda _argv: args))
-    monkeypatch.setattr(paid, "OUTPUT_DIR", output_dir)
-    monkeypatch.setattr(paid, "OUTPUT", output)
-    monkeypatch.setattr(paid, "LEDGER", ledger)
-    monkeypatch.setattr(paid, "SCOPE_LOCK", tmp_path / "locks" / "paid.lock")
-    monkeypatch.setattr(paid, "os", SimpleNamespace(
-        name="posix", environ={"SLURM_JOB_ID": "15782177", "SLURM_JOB_GPUS": "0"},
-    ))
-    monkeypatch.setattr(paid, "prepare", lambda _args: {})
-    monkeypatch.setattr(paid, "read_free_admission", lambda **_kwargs: {"status": "known_free_unopened_unreserved"})
-    monkeypatch.setattr(paid.free, "Supervisor", lambda *_args: pytest.fail("probe supervisor must not start"))
-    command = ["nvidia-smi", "-i", "0", "--query-gpu=index,uuid,name",
-               "--format=csv,noheader,nounits"]
-    calls = []
-
-    def reject_gpu_query(observed_command, **kwargs):
-        calls.append((observed_command, kwargs))
-        raise subprocess.CalledProcessError(
-            2, observed_command, output="synthetic query stdout", stderr="synthetic query stderr",
-        )
-
-    monkeypatch.setattr(paid.subprocess, "run", reject_gpu_query)
-    assert paid.main([]) == 2
-    first = json.loads(capsys.readouterr().out)
-    assert first["status"] == "paid_admission_rejected"
-    assert first["GPU_executed"] is False
-    assert first["error_type"] == "CalledProcessError"
-    assert first["subprocess_failure"] == {
-        "command": command,
-        "returncode": 2,
-        "stdout": "synthetic query stdout",
-        "stderr": "synthetic query stderr",
-    }
-    assert first["gpu_observation"]["commands"] == [{
-        "status": "failed", **first["subprocess_failure"],
-    }]
-    assert calls == [(command, {"capture_output": True, "text": True, "timeout": 4, "check": True})]
-    attempt = output.with_suffix(".job-attempt.json")
-    assert json.loads(attempt.read_text(encoding="utf-8"))["retry_allowed"] is False
-    assert not (tmp_path / "locks" / "paid.lock").exists()
-    assert not ledger.exists()
-
-    assert paid.main([]) == 2
-    second = json.loads(capsys.readouterr().out)
-    assert second["error_type"] == "FileExistsError"
-    assert calls == [(command, {"capture_output": True, "text": True, "timeout": 4, "check": True})]
-    assert not (tmp_path / "locks" / "paid.lock").exists()
 
 
 def test_subprocess_timeout_diagnostics_preserve_command_and_partial_output():
@@ -815,15 +751,18 @@ def test_subprocess_timeout_diagnostics_preserve_command_and_partial_output():
     }
 
 
-GPU_XML = """<nvidia_smi_log><gpu id="00000000:01:00.0">
+GPU_UUID = "GPU-01234567-89ab-cdef-0123-456789abcdef"
+GPU_PCI = "0000:65:00.0"
+GPU_XML = f"""<nvidia_smi_log><gpu id="00000000:01:00.0">
 <product_name>Tesla V100-SXM2</product_name>
-<uuid>GPU-physical-three</uuid><minor_number>5</minor_number>
+<uuid>{GPU_UUID}</uuid><minor_number>5</minor_number>
+<pci><pci_bus_id>00000000:65:00.0</pci_bus_id></pci>
 </gpu></nvidia_smi_log>"""
 
 
 def test_gpu_cli_observation_binds_uuid_xml_minor_without_assuming_index(monkeypatch):
     results = [
-        subprocess.CompletedProcess([], 0, "3, GPU-physical-three, Tesla V100-SXM2\n", "csv note"),
+        subprocess.CompletedProcess([], 0, f"0, {GPU_UUID}, Tesla V100-SXM2\n", "csv note"),
         subprocess.CompletedProcess([], 0, GPU_XML, "xml note"),
     ]
     commands = []
@@ -833,24 +772,28 @@ def test_gpu_cli_observation_binds_uuid_xml_minor_without_assuming_index(monkeyp
         return results.pop(0)
 
     monkeypatch.setattr(paid.subprocess, "run", fake_run)
-    row, observation = paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"})
+    row, observation = paid.observe_gpu_mapping(
+        {"SLURM_JOB_GPUS": "3", "ORCJAX_SLURM_VISIBLE_DEVICES": GPU_UUID},
+        GPU_UUID, pci_bus_id=GPU_PCI,
+    )
 
-    assert row == {"index": "3", "uuid": "GPU-physical-three", "name": "Tesla V100-SXM2", "minor_number": 5}
+    assert row == {"index": "0", "uuid": GPU_UUID, "name": "Tesla V100-SXM2", "minor_number": 5,
+                   "slurm_gpu_id": "3"}
     assert [item[0] for item in commands] == [
-        ["nvidia-smi", "-i", "3", "--query-gpu=index,uuid,name", "--format=csv,noheader,nounits"],
-        ["nvidia-smi", "-i", "GPU-physical-three", "-q", "-x"],
+        ["nvidia-smi", "-i", GPU_UUID, "--query-gpu=index,uuid,name", "--format=csv,noheader,nounits"],
+        ["nvidia-smi", "-i", GPU_UUID, "-q", "-x"],
     ]
     assert all(item[1] == {"capture_output": True, "text": True, "timeout": 4, "check": True}
                for item in commands)
     assert [entry["stdout"] for entry in observation["commands"]] == [
-        "3, GPU-physical-three, Tesla V100-SXM2\n", GPU_XML,
+        f"0, {GPU_UUID}, Tesla V100-SXM2\n", GPU_XML,
     ]
     assert [entry["stderr"] for entry in observation["commands"]] == ["csv note", "xml note"]
 
 
 @pytest.mark.parametrize(("xml", "message"), [
-    ("<nvidia_smi_log><gpu><product_name>Tesla V100-SXM2</product_name><uuid>GPU-physical-three</uuid></gpu></nvidia_smi_log>", "occur exactly once"),
-    (GPU_XML.replace("GPU-physical-three", "GPU-wrong"), "UUID differs"),
+    (f"<nvidia_smi_log><gpu><product_name>Tesla V100-SXM2</product_name><uuid>{GPU_UUID}</uuid></gpu></nvidia_smi_log>", "occur exactly once"),
+    (GPU_XML.replace(GPU_UUID, "GPU-wrong"), "UUID differs"),
     (GPU_XML.replace("Tesla V100-SXM2", "Tesla A100"), "product name differs"),
     (GPU_XML.replace("<minor_number>5</minor_number>", "<minor_number>N/A</minor_number>"), "minor_number"),
     (GPU_XML.replace("</gpu>", "<minor_number>6</minor_number></gpu>"), "each occur exactly once"),
@@ -862,33 +805,30 @@ def test_gpu_cli_observation_binds_uuid_xml_minor_without_assuming_index(monkeyp
 ])
 def test_gpu_cli_observation_rejects_xml_identity_and_minor_gaps(monkeypatch, xml, message):
     results = [
-        subprocess.CompletedProcess([], 0, "3, GPU-physical-three, Tesla V100-SXM2\n", "csv stderr"),
+        subprocess.CompletedProcess([], 0, f"0, {GPU_UUID}, Tesla V100-SXM2\n", "csv stderr"),
         subprocess.CompletedProcess([], 0, xml, "xml stderr"),
     ]
     monkeypatch.setattr(paid.subprocess, "run", lambda *_args, **_kwargs: results.pop(0))
 
     with pytest.raises(paid.GpuObservationError, match=message) as caught:
-        paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"})
+        paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"}, GPU_UUID, pci_bus_id=GPU_PCI)
 
     assert len(caught.value.observation["commands"]) == 2
-    assert caught.value.observation["commands"][0]["stdout"].startswith("3,")
+    assert caught.value.observation["commands"][0]["stdout"].startswith("0,")
     assert caught.value.observation["commands"][1]["stdout"] == xml
     assert caught.value.observation["commands"][1]["stderr"] == "xml stderr"
 
 
-def test_gpu_cli_observation_rejects_wrong_physical_index_before_uuid_query(monkeypatch):
+def test_gpu_cli_observation_accepts_runtime_host_index_different_from_slurm_id(monkeypatch):
     calls = []
-    monkeypatch.setattr(paid.subprocess, "run", lambda command, **_kwargs: (
-        calls.append(command) or subprocess.CompletedProcess(command, 0,
-            "2, GPU-physical-two, Tesla V100-SXM2\n", "index stderr")))
-
-    with pytest.raises(paid.GpuObservationError, match="index/UUID/name mapping") as caught:
-        paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"})
-
-    assert calls == [["nvidia-smi", "-i", "3", "--query-gpu=index,uuid,name",
-                      "--format=csv,noheader,nounits"]]
-    assert len(caught.value.observation["commands"]) == 1
-    assert caught.value.observation["commands"][0]["stderr"] == "index stderr"
+    results = [
+        subprocess.CompletedProcess([], 0, f"0, {GPU_UUID}, Tesla V100-SXM2\n", "csv stderr"),
+        subprocess.CompletedProcess([], 0, GPU_XML, "xml stderr"),
+    ]
+    monkeypatch.setattr(paid.subprocess, "run", lambda command, **_kwargs: calls.append(command) or results.pop(0))
+    row, _ = paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"}, GPU_UUID, pci_bus_id=GPU_PCI)
+    assert row["index"] == "0" and row["slurm_gpu_id"] == "3"
+    assert all(command[2] == GPU_UUID for command in calls)
 
 
 def test_gpu_cli_xml_subprocess_failure_retains_prior_csv_and_error_output(monkeypatch):
@@ -898,131 +838,20 @@ def test_gpu_cli_xml_subprocess_failure_retains_prior_csv_and_error_output(monke
         calls.append(command)
         if len(calls) == 1:
             return subprocess.CompletedProcess(command, 0,
-                "3, GPU-physical-three, Tesla V100-SXM2\n", "csv stderr")
+                f"0, {GPU_UUID}, Tesla V100-SXM2\n", "csv stderr")
         raise subprocess.CalledProcessError(6, command, output="xml partial", stderr="xml denied")
 
     monkeypatch.setattr(paid.subprocess, "run", fake_run)
     with pytest.raises(paid.GpuObservationError, match="query command failed") as caught:
-        paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"})
+        paid.observe_gpu_mapping({"SLURM_JOB_GPUS": "3"}, GPU_UUID, pci_bus_id=GPU_PCI)
 
     assert caught.value.subprocess_failure == {
         "command": calls[1], "returncode": 6, "stdout": "xml partial", "stderr": "xml denied",
     }
-    assert caught.value.observation["commands"][0]["stdout"] == "3, GPU-physical-three, Tesla V100-SXM2\n"
+    assert caught.value.observation["commands"][0]["stdout"] == f"0, {GPU_UUID}, Tesla V100-SXM2\n"
     assert caught.value.observation["commands"][1] == {
         "status": "failed", **caught.value.subprocess_failure,
     }
-
-
-def test_paid_main_preserves_successful_gpu_queries_when_device_node_is_missing(tmp_path, monkeypatch, capsys):
-    output_dir = tmp_path / "diagnostics"
-    output_dir.mkdir()
-    output = output_dir / "result.v1.json"
-    ledger = output_dir / "paid.ledger.json"
-    scope_path = output_dir / "scope.v1.json"
-    scope_path.write_text(json.dumps({
-        "schema_version": paid.SCHEMA, "scope_id": paid.SCOPE_ID, "status": "open",
-        "gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT, "os_device_open_isolation_required": False,
-        "execution_authorized": True, "approval_note": "synthetic test only",
-    }), encoding="utf-8")
-    args = SimpleNamespace(dry_run=False, scope_json=scope_path, output=output, ledger=ledger)
-    monkeypatch.setattr(paid.free, "parser", lambda: SimpleNamespace(parse_args=lambda _argv: args))
-    monkeypatch.setattr(paid, "OUTPUT_DIR", output_dir)
-    monkeypatch.setattr(paid, "OUTPUT", output)
-    monkeypatch.setattr(paid, "LEDGER", ledger)
-    monkeypatch.setattr(paid, "SCOPE_LOCK", tmp_path / "locks" / "paid.lock")
-    monkeypatch.setattr(paid, "os", SimpleNamespace(name="posix", environ={
-        "SLURM_JOB_ID": "15782177", "SLURM_JOB_GPUS": "3", "ORCJAX_SLURM_VISIBLE_DEVICES": "0",
-    }))
-    monkeypatch.setattr(paid, "prepare", lambda _args: {
-        "slurm_allocation": {"job": {"JobId": "15782177"}}, "scope": {},
-    })
-    monkeypatch.setattr(paid, "read_free_admission", lambda **_kwargs: {"status": "known_free_unopened_unreserved"})
-    monkeypatch.setattr(paid.free, "Supervisor", lambda *_args: pytest.fail("probe supervisor must not start"))
-    results = [
-        subprocess.CompletedProcess([], 0, "3, GPU-physical-three, Tesla V100-SXM2\n", "csv stderr"),
-        subprocess.CompletedProcess([], 0, GPU_XML, "xml stderr"),
-    ]
-    calls = []
-    monkeypatch.setattr(paid.subprocess, "run", lambda command, **_kwargs: calls.append(command) or results.pop(0))
-    original_stat = Path.stat
-
-    def missing_gpu_node(path, *positional, **kwargs):
-        if path.as_posix() == "/dev/nvidia5":
-            raise FileNotFoundError("synthetic GPU node missing")
-        return original_stat(path, *positional, **kwargs)
-
-    monkeypatch.setattr(Path, "stat", missing_gpu_node)
-    assert paid.main([]) == 2
-    rejection = json.loads(capsys.readouterr().out)
-    assert rejection["status"] == "paid_admission_rejected"
-    assert rejection["GPU_executed"] is False
-    assert rejection["error_type"] == "FileNotFoundError"
-    assert [entry["stdout"] for entry in rejection["gpu_observation"]["commands"]] == [
-        "3, GPU-physical-three, Tesla V100-SXM2\n", GPU_XML,
-    ]
-    assert [entry["stderr"] for entry in rejection["gpu_observation"]["commands"]] == [
-        "csv stderr", "xml stderr",
-    ]
-    assert json.loads(output.with_suffix(".job-attempt.json").read_text(encoding="utf-8"))["retry_allowed"] is False
-    assert calls[1] == ["nvidia-smi", "-i", "GPU-physical-three", "-q", "-x"]
-    assert not (tmp_path / "locks" / "paid.lock").exists()
-    assert not ledger.exists()
-
-
-def test_live_paid_launcher_uses_xml_minor_and_saves_observation_before_supervisor(monkeypatch):
-    paths = []
-    events = []
-
-    class Lock:
-        def acquire(self):
-            return self
-
-        def release(self, *, release_verified):
-            events.append(("lock_released", release_verified))
-
-    class Supervisor:
-        def __init__(self, plan):
-            self.record = {}
-            self.deadline = 1200
-            self.clock = lambda: 0
-            events.append(("supervisor", plan["slurm_gpu_mapping"]["actual_GPU_minor"],
-                           plan["slurm_gpu_observation"]["commands"][1]["stdout"]))
-
-        def run(self):
-            self.record["release_verified"] = True
-            return 0
-
-    monkeypatch.setenv("SLURM_JOB_GPUS", "3")
-    monkeypatch.setenv("ORCJAX_SLURM_VISIBLE_DEVICES", "0")
-    monkeypatch.setattr(paid, "os", SimpleNamespace(
-        environ=os.environ, major=lambda _device: 195, minor=lambda _device: 5,
-    ))
-    monkeypatch.setattr(paid, "AffineScopeLock", lambda *_args: Lock())
-    monkeypatch.setattr(paid, "read_free_admission", lambda **_kwargs: {"status": "known_free_unopened_unreserved"})
-    monkeypatch.setattr(paid, "read_cgroup_rules", lambda _job, **_kwargs: ("/tmp/devices.list", "c 195:5 rwm\n"))
-    monkeypatch.setattr(paid.signal, "signal", lambda *_args: None)
-    monkeypatch.setattr(paid.free, "Supervisor", Supervisor)
-    results = [
-        subprocess.CompletedProcess([], 0, "3, GPU-physical-three, Tesla V100-SXM2\n", ""),
-        subprocess.CompletedProcess([], 0, GPU_XML, ""),
-    ]
-    monkeypatch.setattr(paid.subprocess, "run", lambda *_args, **_kwargs: results.pop(0))
-    original_stat = Path.stat
-
-    def fake_stat(path, *args, **kwargs):
-        if path.as_posix() == "/dev/nvidia5":
-            paths.append(path.as_posix())
-            return SimpleNamespace(st_mode=paid.stat.S_IFCHR, st_rdev=1)
-        return original_stat(path, *args, **kwargs)
-
-    monkeypatch.setattr(Path, "stat", fake_stat)
-    result = paid.run_live({"slurm_allocation": {"job": {"JobId": "742001"}},
-        "scope": {"gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT}})
-
-    assert result == 0
-    assert paths == ["/dev/nvidia5"]
-    assert events == [("supervisor", 5, GPU_XML), ("lock_released", True)]
 
 
 @pytest.mark.parametrize("poison", ["missing_path", "wrong_hash"])

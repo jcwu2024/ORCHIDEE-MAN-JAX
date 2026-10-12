@@ -25,14 +25,15 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from scripts.hpc import run_shared_latent_T7_batch_numerics as free
+from scripts.hpc import shared_affine_cuda_identity as cuda_identity
 from scripts.hpc.shared_affine_gpu_admission import (
     AffineScopeLock, SCOPE_LOCK, MANAGEMENT, read_free_admission)
 
-SCOPE_ID = 'T7-summary-affine-paid-single-gpu-20261012-v1'
-CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-single-gpu-20261012-v1'
+SCOPE_ID = 'T7-summary-affine-paid-single-gpu-20261012-v2'
+CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-single-gpu-20261012-v2'
 SCHEMA = 'T7_affine_paid_slurm_scope_v1'
 STRICT_GPU_CONTRACT = 'T7_affine_strict_device_isolation_v1'
-GPU_EXECUTION_CONTRACT = 'T7_affine_allocated_single_gpu_v1'
+GPU_EXECUTION_CONTRACT = cuda_identity.DISCOVERY_GPU_CONTRACT
 OUTPUT_DIR = free.REMOTE / 'outputs/diagnostics' / SCOPE_ID
 OUTPUT = OUTPUT_DIR / 'result.v1.json'
 LEDGER = OUTPUT_DIR / (SCOPE_ID + '.ledger.json')
@@ -51,7 +52,7 @@ EVIDENCE_ENVIRONMENT = (
     'SLURM_JOB_ID', 'SLURM_JOB_GPUS', 'SLURM_STEP_GPUS', 'SLURM_CPUS_PER_TASK',
     'SLURM_NTASKS', 'SLURM_JOB_NUM_NODES', 'SLURM_JOB_PARTITION',
     'SLURM_JOB_START_TIME', 'SLURM_JOB_END_TIME', 'ORCJAX_SLURM_VISIBLE_DEVICES',
-    'CUDA_VISIBLE_DEVICES', 'ORCJAX_AFFINE_EXPECTED_GPU_UUID', 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT',
+    'CUDA_VISIBLE_DEVICES', 'CUDA_DEVICE_ORDER', 'ORCJAX_AFFINE_EXPECTED_GPU_UUID', 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT',
     'OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'JAX_PLATFORMS')
 
 
@@ -281,9 +282,11 @@ class GpuObservationError(ValueError):
         self.subprocess_failure = subprocess_failure
         self.cause = cause
 
-def _gpu_query(command, observation):
+def _gpu_query(command, observation, timeout_seconds=4):
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=4, check=True)
+        if timeout_seconds <= 0:
+            raise subprocess.TimeoutExpired(command, timeout_seconds)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout_seconds, check=True)
     except (subprocess.SubprocessError, OSError) as error:
         failure = subprocess_failure_detail(error)
         if failure is None:
@@ -296,24 +299,31 @@ def _gpu_query(command, observation):
     observation['commands'].append(completed)
     return completed
 
-def observe_gpu_mapping(environment):
-    """Capture CLI evidence, then bind the reported UUID to its XML minor."""
+def observe_gpu_mapping(environment, expected_uuid=None, *, pci_bus_id=None, deadline=None, clock=time.monotonic):
+    """Query the runtime-discovered UUID; Slurm GRES is never an NVML selector."""
     observation = dict(schema_version='T7_paid_gpu_observation_v1', commands=[])
-    index = environment.get('SLURM_JOB_GPUS', '')
-    if not index.isdigit():
+    slurm_id = environment.get('SLURM_JOB_GPUS', '')
+    if not slurm_id.isdigit():
         raise GpuObservationError('single physical SLURM_JOB_GPUS required before observation', observation)
+    if expected_uuid is None:
+        expected_uuid = environment.get('ORCJAX_SLURM_VISIBLE_DEVICES', '')
+    if not str(expected_uuid).startswith('GPU-') or ',' in expected_uuid:
+        raise GpuObservationError('runtime-discovered GPU UUID required; allocation association unknown', observation)
+    observation.update(slurm_gpu_id=slurm_id, selector_uuid=expected_uuid)
+    def remaining():
+        return 4 if deadline is None else min(4, deadline-clock())
     try:
-        csv_result = _gpu_query(['nvidia-smi', '-i', index, '--query-gpu=index,uuid,name',
-            '--format=csv,noheader,nounits'], observation)
+        csv_result = _gpu_query(['nvidia-smi', '-i', expected_uuid, '--query-gpu=index,uuid,name',
+            '--format=csv,noheader,nounits'], observation, remaining())
         rows = list(csv.reader(csv_result['stdout'].splitlines()))
         if len(rows) != 1 or len(rows[0]) != 3:
             raise ValueError('nvidia-smi CSV did not return exactly one index/UUID/name row')
         host_index, gpu_uuid, gpu_name = (field.strip() for field in rows[0])
-        if (not host_index.isdigit() or host_index != index or not gpu_uuid.startswith('GPU-')
+        if (not host_index.isdigit() or gpu_uuid != expected_uuid
                 or not gpu_name):
-            raise ValueError('Slurm physical GPU/index/UUID/name mapping differs')
+            raise ValueError('discovered GPU UUID/NVML index/name mapping differs')
 
-        xml_result = _gpu_query(['nvidia-smi', '-i', gpu_uuid, '-q', '-x'], observation)
+        xml_result = _gpu_query(['nvidia-smi', '-i', gpu_uuid, '-q', '-x'], observation, remaining())
         root = ET.fromstring(xml_result['stdout'])
         if root.tag != 'nvidia_smi_log':
             raise ValueError('nvidia-smi XML root is not nvidia_smi_log')
@@ -335,7 +345,13 @@ def observe_gpu_mapping(environment):
             raise ValueError('nvidia-smi XML product name differs from CSV-selected GPU')
         if not re.fullmatch(r'[0-9]+', minor_text):
             raise ValueError('nvidia-smi XML Linux minor_number is unavailable or invalid')
-        return dict(index=host_index, uuid=gpu_uuid, name=gpu_name, minor_number=int(minor_text)), observation
+        if pci_bus_id is not None:
+            pci_fields = gpu.findall('pci/pci_bus_id')
+            if (len(pci_fields) != 1 or
+                    cuda_identity.pci_address((pci_fields[0].text or '').strip()) != cuda_identity.pci_address(pci_bus_id)):
+                raise ValueError('NVML XML physical PCI address differs from runtime-selected device')
+        return dict(index=host_index, uuid=gpu_uuid, name=gpu_name, minor_number=int(minor_text),
+                    slurm_gpu_id=slurm_id), observation
     except GpuObservationError:
         raise
     except (ValueError, ET.ParseError) as error:
@@ -359,10 +375,10 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None,
     if not selected.isdigit() or not visible or ',' in visible or len(gpu_rows) != 1:
         raise ValueError('single Slurm physical GPU and original visible mapping required')
     row = gpu_rows[0]
-    host_index = int(selected)
+    host_index = int(row['index'])
     minor = int(row['minor_number'])
     device_pair = (int(row['device_major']), int(row['device_minor']))
-    if (int(row['index']) != host_index or not str(row['uuid']).startswith('GPU-')
+    if (host_index < 0 or not str(row['uuid']).startswith('GPU-')
             or 'V100' not in row['name']):
         raise ValueError('Slurm physical GPU/UUID/V100 mapping differs')
     if minor < 0 or device_pair[1] != minor:
@@ -376,18 +392,38 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None,
     if device_pair in controls:
         raise ValueError('GPU data device cannot be a driver control device')
     if contract == GPU_EXECUTION_CONTRACT:
+        association = row.get('allocation_association')
+        if (row.get('slurm_gpu_id') != selected
+                or association != 'trusted_scheduler_original_CVD_same_runtime_namespace'
+                or row.get('discovery_gpu_uuid') != row['uuid']):
+            raise ValueError('allocated GPU association is unknown or conflicts with discovery')
         assessment = assess_device_rules(devices_rules, device_pair, controls)
         if observation is not None:
             observation['os_device_access_assessment'] = assessment
         if not assessment['selected_device_read_write_permitted']:
             raise ValueError('cgroup does not permit allocated GPU read/write access')
+        if cuda_identity.valid_uuid(visible):
+            basis = 'scheduler_original_UUID_matches_runtime_driver_NVML_kernel'
+        elif assessment['broader_or_ambiguous_access_rules']:
+            if observation is not None:
+                observation['allocation_association'] = dict(status='physical_allocation_mapping_unknown',
+                    reason='numeric original CVD with broader/ambiguous actual-job device access',
+                    independent_GRES_index_to_UUID_verified=False)
+            raise ValueError('physical_allocation_mapping_unknown: numeric scheduler CVD lacks unique job-device association')
+        else:
+            basis = 'numeric_scheduler_CVD_and_unique_actual_job_data_device_pair'
         return dict(gpu_execution_contract=contract, gpu_host_index=host_index,
             gpu_uuid=row['uuid'], gpu_name=row['name'],
+            slurm_gpu_id=selected, allocation_association=association,
+            independent_GRES_index_to_UUID_verified=False,
+            allocation_association_basis=basis,
             original_CUDA_VISIBLE_DEVICES=visible, child_CUDA_VISIBLE_DEVICES=row['uuid'],
             child_visible_ordinal=0, actual_GPU_major=device_pair[0], actual_GPU_minor=device_pair[1],
             cgroup_devices_rules=devices_rules, os_device_access_assessment=assessment)
     if contract != STRICT_GPU_CONTRACT:
         raise ValueError('unknown GPU execution contract; no automatic fallback')
+    if host_index != int(selected):
+        raise ValueError('legacy strict Slurm/NVML index contract differs')
     for number, line in enumerate(devices_rules.splitlines(), 1):
         if observation is not None:
             observation['current_device_rule'] = dict(line_number=number, raw=line,
@@ -529,6 +565,7 @@ def prepare(args):
     destinations = [args.ledger, output, *[output.with_suffix(suffix) for suffix in
         ('.results.npz', '.partial.npz', '.supervisor.json', '.runtime-preflight.json', '.outer-timeout.json')]]
     destinations.append(output.with_suffix('.startup-identity.json'))
+    destinations.append(output.with_suffix('.discovery.json'))
     destinations += [output.with_suffix('.' + route + '.optimized-hlo.txt.gz') for route in ('b1', 'vmap', 'map')]
     observation['destination_checks'] = []
     def destination_exists(path):
@@ -554,7 +591,10 @@ def prepare(args):
         captured_execution_head=capture['current_execution']['git_head'], GPU_executed=False,
         readiness='paid CPU preparation only; actual allocation/cgroup/container/PJRT/GPU unverified',
         management_admission=MANAGEMENT,
-        commands={'preflight': child('check_daily_training_runtime.py', ['--backend', 'gpu', '--output', str(output.with_suffix('.runtime-preflight.json'))]),
+        discovery_output=str(output.with_suffix('.discovery.json')),
+        commands={'discovery': ['bash', str(shell), '--runtime-discovery', gpu_python,
+                      str(ROOT/'scripts/hpc/shared_affine_cuda_identity.py'), '--discover-output', str(output.with_suffix('.discovery.json'))],
+                  'preflight': child('check_daily_training_runtime.py', ['--backend', 'gpu', '--output', str(output.with_suffix('.runtime-preflight.json'))]),
                   'probe': child('probe_shared_latent_T7_batch_numerics.py', ['--backend', 'gpu', '--operands', str(args.operands.resolve()), '--output', str(output), '--repeats', '3', '--seed', '20261011'])})
     observation.update(actual_source_files=plan['source_files'], expected_caps=free.CAPS,
                        child_commands=plan['commands'])
@@ -615,6 +655,7 @@ class PaidNvidiaMonitor(free.NvidiaMonitor):
     def __init__(self, *args, observation, **kwargs):
         super().__init__(*args, **kwargs)
         self.observation = observation
+        self.select_by_uuid = True
 
     def command(self, argv):
         remaining = self.deadline - self.clock()
@@ -647,6 +688,99 @@ class PaidNvidiaMonitor(free.NvidiaMonitor):
         else:
             row['stdout'] = stdout
 
+class IdentityPendingMonitor:
+    def sample(self):
+        raise ValueError('discovery UUID unknown; live GPU release cannot be verified')
+
+
+class PaidSupervisor(free.Supervisor):
+    """One existing reservation owns discovery, preflight, probe and release."""
+    def __init__(self, plan, **kwargs):
+        super().__init__(plan, monitor=IdentityPendingMonitor(), **kwargs)
+        self.startup_preflight_deadline = min(self.work_deadline,
+            self.started + max(0., plan['scope']['caps']['preflight_seconds'] - self.shell_elapsed))
+
+    def phase(self, name, seconds, **kwargs):
+        if name in ('discovery', 'preflight'):
+            seconds = min(seconds, self.startup_preflight_deadline-self.clock())
+            if seconds <= 0:
+                return 'deadline_exceeded', 124
+        return super().phase(name, seconds, **kwargs)
+
+    def startup(self):
+        startup = self.plan['paid_startup_observation']
+        visible = os.environ['ORCJAX_SLURM_VISIBLE_DEVICES']
+        startup['stage'] = 'owned_runtime_discovery'
+        result = self.phase('discovery', self.plan['scope']['caps']['preflight_seconds'],
+            environment={'CUDA_VISIBLE_DEVICES': visible, 'ORCJAX_AFFINE_EXPECTED_GPU_UUID': None,
+                'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT': GPU_EXECUTION_CONTRACT}, monitor=False)
+        # Preserve completed child failures. A valid measured runtime UUID may
+        # select cleanup observations, but is not permission to run science.
+        try:
+            discovery = self.read_report(self.plan['discovery_output'], 'discovery_result_admission')
+        except (OSError, ValueError):
+            if result[1]:
+                return result
+            raise
+        startup['discovery'] = discovery
+        identity = discovery.get('identity', {})
+        observed_uuid = discovery.get('driver_identity', {}).get('driver_gpu_uuid')
+        if cuda_identity.valid_uuid(observed_uuid):
+            self.monitor = PaidNvidiaMonitor(None, observed_uuid, self.deadline, self.clock, observation=startup)
+        if result[1]:
+            return result
+        runtime = discovery.get('runtime_identity', {})
+        driver = discovery.get('driver_identity', {})
+        if (discovery.get('status') != 'passed' or identity.get('passed') is not True
+                or identity.get('original_CUDA_VISIBLE_DEVICES') != visible
+                or identity.get('CUDA_DEVICE_ORDER') != os.environ.get('CUDA_DEVICE_ORDER')
+                or identity.get('slurm_gpu_id') != os.environ.get('SLURM_JOB_GPUS')
+                or identity.get('allocation_association') != 'trusted_scheduler_original_CVD_same_runtime_namespace'
+                or runtime.get('runtime_device_count') != 1 or runtime.get('runtime_visible_ordinal') != 0
+                or not cuda_identity.valid_uuid(observed_uuid) or identity.get('gpu_uuid') != observed_uuid
+                or driver.get('driver_device_count', 0) < 1
+                or str(driver.get('driver_gpu_uuid', '')).lower() != observed_uuid.lower()
+                or cuda_identity.pci_address(driver.get('driver_pci_bus_id')) != cuda_identity.pci_address(runtime.get('runtime_pci_bus_id'))):
+            raise ValueError('runtime discovery identity/environment association unknown or conflicting')
+        startup['stage'] = 'GPU_UUID_CSV_XML'
+        try:
+            row, observation = observe_gpu_mapping(os.environ, observed_uuid,
+                pci_bus_id=runtime['runtime_pci_bus_id'], deadline=self.startup_preflight_deadline, clock=self.clock)
+        except GpuObservationError as error:
+            startup['gpu_observation'] = error.observation
+            raise
+        startup['gpu_observation'] = observation
+        row.update(discovery_gpu_uuid=observed_uuid,
+            allocation_association=identity['allocation_association'])
+        startup['stage'] = 'kernel_device_mapping'
+        device = _kernel_stat(Path('/dev/nvidia' + str(row['minor_number'])), startup)
+        if not stat.S_ISCHR(device.st_mode):
+            raise ValueError('XML-selected GPU kernel node is not a character device')
+        row.update(device_major=os.major(device.st_rdev), device_minor=os.minor(device.st_rdev), control_devices=[])
+        for name in ('/dev/nvidiactl', '/dev/nvidia-modeset'):
+            node = Path(name)
+            exists = node.exists()
+            startup['files'].append(dict(path=name, operation='exists', exists=exists))
+            if exists:
+                control = _kernel_stat(node, startup)
+                if not stat.S_ISCHR(control.st_mode):
+                    raise ValueError('GPU driver control path is not a character device')
+                row['control_devices'].append(dict(name=name, major=os.major(control.st_rdev), minor=os.minor(control.st_rdev)))
+        startup['stage'] = 'job_device_cgroup'
+        cgroup_path, rules = read_cgroup_rules(self.plan['slurm_allocation']['job']['JobId'], observation=startup)
+        startup['stage'] = 'cgroup_access_assessment_and_GPU_binding'
+        mapping = admit_gpu_mapping(os.environ, [row], rules, observation=startup, contract=GPU_EXECUTION_CONTRACT)
+        mapping['cgroup_devices_path'] = cgroup_path
+        self.plan.update(slurm_gpu_mapping=mapping, slurm_gpu_observation=observation,
+            phase_environment={'ORCJAX_AFFINE_EXPECTED_GPU_UUID': mapping['gpu_uuid'],
+                'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT': GPU_EXECUTION_CONTRACT})
+        self.plan['scope'].update(gpu_host_index=mapping['gpu_host_index'], gpu_uuid=mapping['gpu_uuid'])
+        self.monitor = PaidNvidiaMonitor(mapping['gpu_host_index'], mapping['gpu_uuid'], self.deadline, self.clock, observation=startup)
+        self.record.update(paid_gpu_mapping=mapping, paid_gpu_observation=observation)
+        startup['stage'] = 'discovery_admitted'
+        return None
+
+
 def run_live(plan):
     # Cooperative exclusion and bounded read-only management admission precede
     # GPU observation/ledger/preflight. They do not constrain old b676 copies.
@@ -660,59 +794,25 @@ def run_live(plan):
         observation['stage'] = 'free_management'
         plan['free_management_state'] = read_free_admission(observation=observation)
         observation['free_management_state'] = plan['free_management_state']
-        observation['stage'] = 'GPU_CSV_XML'
-        row, observation = observe_gpu_mapping(os.environ)
-        startup = plan['paid_startup_observation']
-        startup['gpu_observation'] = observation
-        try:
-            startup['stage'] = 'kernel_device_mapping'
-            rows = [row]
-            for row in rows:
-                device = _kernel_stat(Path('/dev/nvidia' + str(row['minor_number'])), startup)
-                if not stat.S_ISCHR(device.st_mode):
-                    raise ValueError('XML-selected GPU kernel node is not a character device')
-                row.update(device_major=os.major(device.st_rdev), device_minor=os.minor(device.st_rdev), control_devices=[])
-                for name in ('/dev/nvidiactl', '/dev/nvidia-modeset'):
-                    node = Path(name)
-                    exists = node.exists()
-                    startup['files'].append(dict(path=name, operation='exists', exists=exists))
-                    if exists:
-                        control = _kernel_stat(node, startup)
-                        if not stat.S_ISCHR(control.st_mode):
-                            raise ValueError('GPU driver control path is not a character device')
-                        row['control_devices'].append(dict(name=name, major=os.major(control.st_rdev), minor=os.minor(control.st_rdev)))
-            startup['stage'] = 'job_device_cgroup'
-            cgroup_path, rules = read_cgroup_rules(plan['slurm_allocation']['job']['JobId'], observation=startup)
-            startup['stage'] = 'cgroup_access_assessment_and_GPU_binding'
-            mapping = admit_gpu_mapping(os.environ, rows, rules, observation=startup,
-                contract=plan['scope']['gpu_execution_contract'])
-        except (OSError, ValueError) as error:
-            if isinstance(error, GpuObservationError):
-                raise
-            cause = error.cause if isinstance(error, PaidStartupError) and error.cause else error
-            raise GpuObservationError(str(cause), observation, cause=cause) from error
-        mapping['cgroup_devices_path'] = cgroup_path
-        plan['slurm_gpu_mapping'] = mapping
-        plan['slurm_gpu_observation'] = observation
-        plan['phase_environment'] = {'ORCJAX_AFFINE_EXPECTED_GPU_UUID': mapping['gpu_uuid'],
-            'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT': GPU_EXECUTION_CONTRACT}
-        plan['scope'] = dict(plan['scope'], gpu_host_index=mapping['gpu_host_index'], gpu_uuid=mapping['gpu_uuid'])
-        startup['stage'] = 'supervisor'
+        visible = os.environ.get('ORCJAX_SLURM_VISIBLE_DEVICES', '')
+        if not (visible.isdigit() or cuda_identity.valid_uuid(visible)):
+            raise ValueError('single original scheduler CVD required; physical_allocation_mapping_unknown')
+        plan['scope'] = dict(plan['scope'], gpu_host_index=None, gpu_uuid='')
+        observation['stage'] = 'supervisor'
         # Use the same clock/deadline origin as Supervisor's existing monitor.
-        supervisor = free.Supervisor(plan)
-        startup['supervisor_limits'] = dict(total_deadline=supervisor.deadline,
+        supervisor = PaidSupervisor(plan)
+        observation['supervisor_limits'] = dict(total_deadline=supervisor.deadline,
             work_deadline=getattr(supervisor, 'work_deadline', None),
             shell_elapsed_seconds=getattr(supervisor, 'shell_elapsed', None), caps=plan['scope'].get('caps'))
-        supervisor.monitor = PaidNvidiaMonitor(mapping['gpu_host_index'], mapping['gpu_uuid'],
-            supervisor.deadline, supervisor.clock, observation=startup)
         supervisor.record['paid_allocation'] = plan['slurm_allocation']
-        supervisor.record['paid_gpu_mapping'] = mapping
-        supervisor.record['paid_gpu_observation'] = observation
         supervisor.record['actual_cost_upper_bound_cny'] = quote()['total_cny']
         for signum in (signal.SIGTERM, signal.SIGINT):
             signal.signal(signum, lambda number, frame: setattr(supervisor, 'interrupted', number))
         result = supervisor.run()
-        startup['stage'] = 'supervisor_finished'
+        observation['stage'] = 'supervisor_finished'
+        supervisor.record['numerical_status'] = ('executed' if any(
+            phase['name'] == 'probe' for phase in supervisor.record.get('phases', [])) else 'not_executed')
+        supervisor.snapshot()
         release_safe = supervisor.record.get('release_verified') is True
         return result
     except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:

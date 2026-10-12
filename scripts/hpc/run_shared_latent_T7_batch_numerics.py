@@ -227,12 +227,13 @@ class NvidiaMonitor:
         return result.stdout
 
     def sample(self):
-        gpu = self.command(['nvidia-smi', '-i', str(self.index), '--query-gpu=index,uuid,name,memory.used,utilization.gpu', '--format=csv,noheader,nounits'])
+        selector = self.uuid if getattr(self, 'select_by_uuid', False) else str(self.index)
+        gpu = self.command(['nvidia-smi', '-i', selector, '--query-gpu=index,uuid,name,memory.used,utilization.gpu', '--format=csv,noheader,nounits'])
         rows = list(csv.reader(gpu.strip().splitlines()))
         if len(rows) != 1 or len(rows[0]) != 5:
             raise ValueError('ambiguous host GPU observation')
         index, uuid, name, memory, utilization = [value.strip() for value in rows[0]]
-        if int(index) != self.index or uuid != self.uuid or 'V100' not in name:
+        if (self.index is not None and int(index) != self.index) or uuid != self.uuid or 'V100' not in name:
             raise ValueError('host index/UUID/V100 identity differs')
         apps = self.command(['nvidia-smi', '-i', uuid, '--query-compute-apps=gpu_uuid,pid,used_gpu_memory,process_name', '--format=csv,noheader,nounits'])
         processes = []
@@ -334,7 +335,11 @@ class Supervisor:
         self.record['released_group_history'] = list(self.group_history)
         return not self.owned
 
-    def phase(self, name, seconds):
+    def startup(self):
+        """Optional paid identity discovery, under this supervisor's ownership."""
+        return None
+
+    def phase(self, name, seconds, *, environment=None, monitor=True):
         if self.clock() >= self.work_deadline:
             return 'deadline_exceeded', 124
         env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', ORCHIDEE_REPO_ROOT=self.plan['checkout'],
@@ -342,9 +347,15 @@ class Supervisor:
             XLA_PYTHON_CLIENT_PREALLOCATE='false', OMP_NUM_THREADS='4', OPENBLAS_NUM_THREADS='1')
         env['ORCJAX_NUMERICS_SHELL_STARTED_EPOCH'] = str(self.plan.get('shell_started_epoch') or time.time())
         env.update(self.plan.get('phase_environment', {}))
+        for key, value in (environment or {}).items():
+            if value is None:
+                env.pop(key, None)
+            else:
+                env[key] = value
         stem = Path(self.plan['output']).with_suffix('.' + name)
         row = dict(name=name, argv=self.plan['commands'][name], started_epoch=time.time(),
-                   cap_seconds=seconds, stdout=str(stem)+'.stdout.txt', stderr=str(stem)+'.stderr.txt')
+                   cap_seconds=seconds, GPU_memory_sampled=monitor,
+                   stdout=str(stem)+'.stdout.txt', stderr=str(stem)+'.stderr.txt')
         self.record['phases'].append(row)
         started = self.clock()
         end = min(started + seconds, self.work_deadline)
@@ -364,7 +375,7 @@ class Supervisor:
                 if self.clock() >= end:
                     status = ('deadline_exceeded', 124)
                     break
-                status = self.sample()
+                status = self.sample() if monitor else None
                 if status:
                     break
                 self.sleep(min(.5, max(.01, end - self.clock())))
@@ -396,7 +407,9 @@ class Supervisor:
             if self.clock() >= self.work_deadline:
                 primary = ('deadline_exceeded', 124)
             else:
-                primary = self.sample(initial=True) or self.phase('preflight', self.plan['scope']['caps']['preflight_seconds'])
+                primary = self.startup()
+                if primary is None:
+                    primary = self.sample(initial=True) or self.phase('preflight', self.plan['scope']['caps']['preflight_seconds'])
                 if primary[1] == 0:
                     preflight = self.read_report(self.plan['preflight_output'], 'preflight_result_admission')
                     if (preflight.get('passed') is not True or preflight.get('actual_backend') != 'gpu'
@@ -405,9 +418,9 @@ class Supervisor:
                     expected_uuid = self.plan.get('phase_environment', {}).get('ORCJAX_AFFINE_EXPECTED_GPU_UUID')
                     if expected_uuid is not None:
                         binding = preflight.get('affine_gpu_identity', {})
-                        if (binding.get('passed') is not True or binding.get('expected_gpu_uuid') != expected_uuid
-                                or binding.get('driver_gpu_uuid', '').lower() != expected_uuid.lower()
-                                or binding.get('driver_device_count') != 1 or binding.get('pjrt_local_hardware_id') != 0):
+                        from scripts.hpc.shared_affine_cuda_identity import binding_report_passes
+                        if not binding_report_passes(binding, expected_uuid,
+                                self.plan.get('phase_environment', {}).get('ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT')):
                             raise ValueError('paid CUDA-driver/PJRT UUID binding preflight gate failed')
                     primary = self.phase('probe', self.plan['scope']['caps']['probe_seconds'])
                     if primary[1] == 0:
@@ -422,9 +435,8 @@ class Supervisor:
                             raise ValueError('target affine result/count/identity admission failed')
                         if expected_uuid is not None:
                             binding = report.get('affine_gpu_identity', {})
-                            if (binding.get('passed') is not True or binding.get('expected_gpu_uuid') != expected_uuid
-                                    or binding.get('driver_gpu_uuid', '').lower() != expected_uuid.lower()
-                                    or binding.get('driver_device_count') != 1 or binding.get('pjrt_local_hardware_id') != 0):
+                            if not binding_report_passes(binding, expected_uuid,
+                                    self.plan.get('phase_environment', {}).get('ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT')):
                                 raise ValueError('actual affine child CUDA-driver/PJRT UUID binding gate failed')
         except (TimeoutError, subprocess.TimeoutExpired) as error:
             primary = ('deadline_exceeded', 124)

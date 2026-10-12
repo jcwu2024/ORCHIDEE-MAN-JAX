@@ -52,7 +52,7 @@ def test_paid_entry_rejects_live_override_and_epoch_spoof(args):
 
 def test_paid_runtime_child_reuses_strict_free_allowlist():
     env = dict(os.environ, CUDA_VISIBLE_DEVICES="GPU-mock", ORCJAX_AFFINE_EXPECTED_GPU_UUID="GPU-mock",
-        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT="T7_affine_allocated_single_gpu_v1")
+        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT="T7_affine_allocated_single_gpu_v2")
     env.pop("ORCJAX_NUMERICS_LAUNCHER_PYTHON", None)
     result = run(PAID, ["--runtime-child",
         "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python",
@@ -63,7 +63,7 @@ def test_paid_runtime_child_reuses_strict_free_allowlist():
 @pytest.mark.parametrize('missing',['uuid','contract'])
 def test_paid_runtime_child_requires_explicit_contract_and_uuid_before_container(missing):
     env=dict(os.environ, ORCJAX_AFFINE_EXPECTED_GPU_UUID='GPU-mock',
-        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT='T7_affine_allocated_single_gpu_v1')
+        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT='T7_affine_allocated_single_gpu_v2')
     env.pop('ORCJAX_AFFINE_EXPECTED_GPU_UUID' if missing=='uuid' else 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT')
     result=run(PAID,['--runtime-child','must-not-execute','must-not-execute'],env)
     assert result.returncode==2
@@ -75,9 +75,9 @@ def test_paid_runtime_child_explicitly_exports_container_contract_and_uuid(tmp_p
     shared=target.with_name('run_shared_latent_T7_batch_numerics.sh')
     shared.write_text('CODE=/unused\nmain() { printf "%s\\n" "$SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID" "$SINGULARITYENV_ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT"; }\n',newline='\n')
     env=dict(os.environ, ORCJAX_AFFINE_EXPECTED_GPU_UUID='GPU-mock',
-        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT='T7_affine_allocated_single_gpu_v1')
+        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT='T7_affine_allocated_single_gpu_v2')
     result=run(target,['--runtime-child','unused','unused'],env)
-    assert result.returncode==0 and result.stdout.decode().splitlines()==['GPU-mock','T7_affine_allocated_single_gpu_v1']
+    assert result.returncode==0 and result.stdout.decode().splitlines()==['GPU-mock','T7_affine_allocated_single_gpu_v2']
 
 
 def slurm_copy(tmp_path, with_scope):
@@ -85,13 +85,13 @@ def slurm_copy(tmp_path, with_scope):
     target = checkout / "scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh"
     target.parent.mkdir(parents=True)
     runtime = tmp_path / "mock runtime"
-    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1"
+    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v2"
     target.write_text(SLURM.read_text().replace(
         "ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime", 'ROOT="' + posix(runtime) + '"'
     ).replace("CODE=" + canonical, 'CODE="' + posix(checkout) + '"'
     ).replace("#SBATCH --chdir=" + canonical, "#SBATCH --chdir=" + posix(checkout)), newline="\n")
     target.with_name("run_shared_latent_T7_batch_numerics_paid.py").write_text("# private mock; never run\n")
-    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1"
+    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v2"
     diag.mkdir(parents=True)
     if with_scope:
         (diag / "scope.v1.json").write_text("{}\n")
@@ -113,7 +113,7 @@ def test_slurm_dry_run_prints_exact_paid_resource_and_downstream_argv(tmp_path):
     args = dict(zip(command[2:-1:2], command[3:-1:2], strict=True))
     assert set(args) == {"--checkout-root", "--operands", "--capture-receipt", "--capture-source", "--output", "--scope-json", "--ledger"}
     assert args["--output"] == posix(diag / "result.v1.json")
-    assert args["--ledger"].endswith("/T7-summary-affine-paid-single-gpu-20261012-v1.ledger.json")
+    assert args["--ledger"].endswith("/T7-summary-affine-paid-single-gpu-20261012-v2.ledger.json")
     assert args["--operands"] == posix(runtime / "transfer/T7-summary-recovery-20261011-v1/summary-recovery.v1.operands.npz")
     assert command[-1] == "--dry-run"
     original = SLURM.read_text()
@@ -257,7 +257,7 @@ def test_slurm_start_consumed_before_cpu_admission_and_cannot_retry(tmp_path):
     assert result.returncode == 7
     marker = diag / "slurm-attempt.v1.json"
     original = marker.read_bytes()
-    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-single-gpu-20261012-v1",
+    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-single-gpu-20261012-v2",
         job_id="123456", status="scheduler_started", retry_allowed=False)
     assert calls.read_text().splitlines() == ["child-before-python"]
     second = run(target, [], env)
@@ -338,7 +338,7 @@ def test_paid_runtime_required_expected_uuid_passthrough(tmp_path, runtime, pres
     env = dict(os.environ)
     env.pop("SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID", None)
     env.pop("ORCJAX_AFFINE_EXPECTED_GPU_UUID", None)
-    env['ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT']='T7_affine_allocated_single_gpu_v1'
+    env['ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT']='T7_affine_allocated_single_gpu_v2'
     if present:
         env["ORCJAX_AFFINE_EXPECTED_GPU_UUID"] = "GPU-allocated-exact"
     argv = ["--runtime-child", "python-not-executed", "entry-not-executed"] if runtime else ["--dry-run"]
@@ -349,3 +349,110 @@ def test_paid_runtime_required_expected_uuid_passthrough(tmp_path, runtime, pres
     assert result.returncode == 0, result.stderr.decode()
     actual = result.stdout.decode().split("\0")[:-1]
     assert actual == [expected, *argv]
+
+
+def discovery_copy(tmp_path):
+    """Exercise real paid/shared runtime wiring with inert private tools only."""
+    project = tmp_path / "mock project space"
+    code = project / "runtime/checkouts/mock"
+    target = code / "scripts/hpc" / PAID.name
+    target.parent.mkdir(parents=True)
+    target.write_text(PAID.read_text(), newline="\n")
+    shared = PAID.with_name("run_shared_latent_T7_batch_numerics.sh")
+    target.with_name(shared.name).write_text(shared.read_text().replace(
+        "PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+        "PROJECT=" + shlex.quote(posix(project))), newline="\n")
+    entry = target.with_name("shared_affine_cuda_identity.py")
+    entry.write_text("# Private placeholder; never imported or executed.\n")
+    toolchain = project / "runtime/toolchains/cuda-nvlink-12.6.85"
+    toolchain.mkdir(parents=True)
+    cuda = tmp_path / "mock cuda driver.so"
+    nvml = tmp_path / "mock nvml driver.so"
+    cuda.write_text("inert CUDA fixture")
+    nvml.write_text("inert NVML fixture")
+    bin_dir = tmp_path / "mock bin"
+    bin_dir.mkdir()
+    def script(name, body):
+        path = bin_dir / name
+        path.write_text("#!/usr/bin/env bash\nset -eu\n" + body, newline="\n")
+        path.chmod(0o755)
+    script("readlink", 'case "$2" in /usr/lib64/libcuda.so.1) printf \'%s\\n\' '
+        + shlex.quote(posix(cuda)) + ';; /usr/lib64/libnvidia-ml.so.1) printf \'%s\\n\' '
+        + shlex.quote(posix(nvml)) + ';; *) exit 2;; esac\n')
+    # Actual phase function runs, but the timer's own PID deliberately differs
+    # from the mocked leader PGID, so it exits before any real signal or wait.
+    script("ps", 'printf \'%s\\n\' "$4"\n')
+    script("date", "printf '1700000000\\n'\n")
+    script("singularity", 'printf \'%s\\0\' "$SINGULARITYENV_CUDA_VISIBLE_DEVICES" '
+        '"${SINGULARITYENV_CUDA_DEVICE_ORDER-unset}" "${SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID-unset}" '
+        '"$SINGULARITYENV_ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT" "$SINGULARITYENV_ORCJAX_SLURM_VISIBLE_DEVICES" '
+        '"$SINGULARITYENV_SLURM_JOB_GPUS" "${LD_LIBRARY_PATH-unset}" "$@"\n')
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES="2", ORCJAX_SLURM_VISIBLE_DEVICES="2",
+        SLURM_JOB_GPUS="3", ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT="T7_affine_allocated_single_gpu_v2",
+        ORCJAX_NUMERICS_SHELL_STARTED_EPOCH="1699999900", LD_LIBRARY_PATH="stale-host-driver",
+        SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID="stale-uuid",
+        SINGULARITYENV_CUDA_DEVICE_ORDER="stale-inherited-order")
+    for key in ("ORCJAX_NUMERICS_LAUNCHER_PYTHON", "ORCJAX_AFFINE_EXPECTED_GPU_UUID", "CUDA_DEVICE_ORDER"):
+        env.pop(key, None)
+    python = posix(project / ".venvs/orcjax_gpu/bin/python")
+    def invoke(extra=(), mode="--runtime-discovery", entry_path=None):
+        return subprocess.run([BASH, "-c", 'export PATH="$1:$PATH"; shift; exec bash "$@"',
+            "private-runtime", posix(bin_dir), posix(target), mode, python,
+            posix(entry_path or entry), *extra], env=env, capture_output=True, timeout=10)
+    return invoke, env, project, code, entry, python, cuda, nvml, toolchain
+
+
+@pytest.mark.parametrize("order", [None, "PCI_BUS_ID", "FASTEST_FIRST", ""])
+def test_paid_discovery_actual_runtime_container_bindings_preserve_original_mask_and_order(tmp_path, order):
+    invoke, env, _, code, entry, python, cuda, nvml, toolchain = discovery_copy(tmp_path)
+    if order is not None:
+        env["CUDA_DEVICE_ORDER"] = order
+    result = invoke(["--runtime-discover", "--output", "result space.json"])
+    assert result.returncode == 0, result.stderr.decode()[-2500:]
+    actual = result.stdout.decode().split("\0")[:-1]
+    assert actual[:7] == ["2", "unset" if order is None else order, "unset",
+        "T7_affine_allocated_single_gpu_v2", "2", "3", "unset"]
+    assert actual[7:] == ["exec", "--nv", "--bind",
+        "/WORK:/WORK," + posix(cuda) + ":/usr/lib/x86_64-linux-gnu/libcuda.so.1,"
+        + posix(nvml) + ":/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1,"
+        + posix(toolchain) + ":" + posix(toolchain) + ":ro",
+        "--pwd", posix(code), "/apps/soft/sif/foundationpose", python, "-B", posix(entry),
+        "--runtime-discover", "--output", "result space.json"]
+    # This proves the host exports/removal only. Image-added order is checked
+    # separately by Python admission; the mock never starts a container.
+
+
+@pytest.mark.parametrize("invalid", ["mask", "contract", "expected-uuid", "entry", "dry-run"])
+def test_paid_discovery_bad_contract_or_mask_never_enters_mock_container(tmp_path, invalid):
+    invoke, env, _, _, entry, _, _, _, _ = discovery_copy(tmp_path)
+    extra = []
+    if invalid == "mask":
+        env["CUDA_VISIBLE_DEVICES"] = "1"
+    elif invalid == "contract":
+        env["ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT"] = "T7_affine_allocated_single_gpu_v1"
+    elif invalid == "expected-uuid":
+        env["ORCJAX_AFFINE_EXPECTED_GPU_UUID"] = "GPU-must-not-select"
+    elif invalid == "entry":
+        wrong_entry = entry.with_name("probe_shared_latent_T7_batch_numerics.py")
+        wrong_entry.write_text("# Wrong entry for discovery; never executed.\n")
+        result = invoke(entry_path=wrong_entry)
+        assert result.returncode == 2 and not result.stdout
+        return
+    else:
+        extra = ["--dry-run"]
+    result = invoke(extra)
+    assert result.returncode == 2 and not result.stdout
+
+
+def test_paid_normal_child_actual_runtime_exports_expected_uuid_and_contract(tmp_path):
+    invoke, env, _, _, entry, _, _, _, _ = discovery_copy(tmp_path)
+    env["CUDA_VISIBLE_DEVICES"] = "GPU-allocated-exact"
+    env["ORCJAX_AFFINE_EXPECTED_GPU_UUID"] = "GPU-allocated-exact"
+    probe = entry.with_name("probe_shared_latent_T7_batch_numerics.py")
+    probe.write_text("# Mock probe; never imported or executed.\n")
+    result = invoke(mode="--runtime-child", entry_path=probe)
+    assert result.returncode == 0, result.stderr.decode()[-2500:]
+    actual = result.stdout.decode().split("\0")[:-1]
+    assert actual[:7] == ["GPU-allocated-exact", "unset", "GPU-allocated-exact",
+        "T7_affine_allocated_single_gpu_v2", "2", "3", "unset"]
+    assert actual[-1] == posix(probe)

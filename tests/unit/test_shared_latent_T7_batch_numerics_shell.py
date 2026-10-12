@@ -188,30 +188,57 @@ def test_phase_deadman_enforces_own_group_without_cpu_supervision(tmp_path, scen
 source "$1"
 signals=$2
 scenario=$3
+leader_ready=${signals}.leader-ready
+descendant_ready=${signals}.descendant-ready
+timer_ready=${signals}.timer-ready
+clock=${signals}.clock
+signal_epochs=${signals}.epochs
 sleep 20 & cpu_supervisor=$!
 if [[ $scenario == leader_exit ]]; then
   sleep 0.2 & phase_leader=$!
 else
-  bash -c 'trap "" TERM; exec sleep 20' & phase_leader=$!
+  bash -c 'trap "" TERM; printf ready > "$1"; exec sleep 20' mock-leader "$leader_ready" & phase_leader=$!
 fi
-bash -c 'trap "" TERM; exec sleep 20' & descendant=$!
-ps() { printf '%s\n' "$phase_leader"; }
+bash -c 'trap "" TERM; printf ready > "$1"; exec sleep 20' mock-descendant "$descendant_ready" & descendant=$!
+wait_ready() {
+  local i
+  for ((i=0; i<200; i++)); do [[ ! -f $1 ]] || return 0; sleep 0.01; done
+  return 97
+}
+if [[ $scenario != leader_exit ]]; then wait_ready "$leader_ready"; fi
+wait_ready "$descendant_ready"
+ps() {
+  # The production timer calls ps only after installing its ignored TERM trap.
+  if [[ $4 != "$phase_leader" ]]; then printf ready > "$timer_ready"; fi
+  printf '%s\n' "$phase_leader"
+}
 kill() {
   target=${@: -1}
   if [[ $target == -* ]]; then
     [[ $target == "-$phase_leader" ]] || exit 98
     printf '%s\n' "$*" >> "$signals"
+    printf '%s\n' "$now:$*" >> "$signal_epochs"
     builtin kill "$1" "$phase_leader" "$descendant" "$BASHPID" 2>/dev/null || true
   else
     builtin kill "$@"
   fi
 }
-now=$(date +%s)
+# Integer wall-clock + a one-second deadline gap can legitimately jump straight
+# to KILL after Git Bash startup/scheduling. Test the two distinct boundaries
+# with declared monotone epochs, retaining real sleeps and child signals.
+printf '1700000000\n' > "$clock"
+date() {
+  local tick
+  read -r tick < "$clock"
+  printf '%s\n' "$((tick+1))" > "$clock"
+  printf '%s\n' "$tick"
+}
+now=1700000000
 start_phase_deadman "$phase_leader" "$((now+1))" "$((now+2))"
 timer=$PHASE_TIMER_PID
+wait_ready "$timer_ready"
 if [[ $scenario == leader_exit ]]; then wait "$phase_leader"; fi
 if [[ $scenario == caller_term ]]; then
-  sleep 0.3
   builtin kill -TERM "$phase_leader" "$descendant" "$timer"
 fi
 wait "$timer" 2>/dev/null || true
@@ -231,6 +258,9 @@ wait "$cpu_supervisor" 2>/dev/null || true
     if scenario != "leader_exit":
         assert requested[0].startswith("-TERM -- -")
         assert requested[0].split()[-1] == requested[-1].split()[-1]
+        assert len(requested) == 2
+        epochs = Path(str(signals) + ".epochs").read_text().splitlines()
+        assert epochs == ["1700000001:" + requested[0], "1700000002:" + requested[1]]
 
 
 def test_phase_deadman_rejects_non_session_leader():

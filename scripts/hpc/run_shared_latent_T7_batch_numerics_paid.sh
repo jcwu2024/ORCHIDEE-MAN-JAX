@@ -18,20 +18,29 @@ paid_startup_shell_exit() {
   if ((code != 0)); then paid_startup_shell_evidence "${PAID_STARTUP_STAGE:-entry}_rejected" "$code"; fi
 }
 PAID_STARTUP_STAGE=entry
-if [[ ${1:-} == --runtime-child ]]; then
+if [[ ${1:-} == --runtime-child || ${1:-} == --runtime-discovery ]]; then
   PAID_STARTUP_STAGE=runtime_child
   PAID_CHILD_PYTHON=${2-}
   PAID_CHILD_ENTRY=${3-}
 fi
 trap paid_startup_shell_exit EXIT
 paid_startup_shell_evidence "$PAID_STARTUP_STAGE"
-if [[ ${1:-} == --runtime-child ]]; then
-  [[ ${ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT-} == T7_affine_allocated_single_gpu_v1 && -n ${ORCJAX_AFFINE_EXPECTED_GPU_UUID-} ]] || exit 2
+if [[ ${1:-} == --runtime-child || ${1:-} == --runtime-discovery ]]; then
+  [[ ${ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT-} == T7_affine_allocated_single_gpu_v2 ]] || exit 2
+  if [[ ${1:-} == --runtime-child ]]; then
+    [[ -n ${ORCJAX_AFFINE_EXPECTED_GPU_UUID-} ]] || exit 2
+  else
+    [[ -z ${ORCJAX_AFFINE_EXPECTED_GPU_UUID-} ]] || exit 2
+  fi
   # The paid supervisor supplies this only after exact allocation mapping.
-  export SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID=$ORCJAX_AFFINE_EXPECTED_GPU_UUID
+  if [[ ${1:-} == --runtime-child ]]; then
+    export SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID=$ORCJAX_AFFINE_EXPECTED_GPU_UUID
+  else
+    unset SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID
+  fi
   export SINGULARITYENV_ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT=$ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT
 fi
-if [[ ${1:-} != --runtime-child ]]; then
+if [[ ${1:-} != --runtime-child && ${1:-} != --runtime-discovery ]]; then
   # Preserve scheduler-visible tokens before the CPU-only main clears CUDA.
   export ORCJAX_SLURM_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
   DRY=false

@@ -12,7 +12,8 @@ from scripts.hpc import shared_affine_cuda_identity as cuda
 from scripts.hpc import check_daily_training_runtime as runtime
 
 UUID = 'GPU-01234567-89ab-cdef-0123-456789abcdef'
-XML = f'<nvidia_smi_log><gpu><uuid>{UUID}</uuid><product_name>Tesla V100</product_name><minor_number>5</minor_number></gpu></nvidia_smi_log>'
+PCI = '0000:65:00.0'
+XML = f'<nvidia_smi_log><gpu><uuid>{UUID}</uuid><product_name>Tesla V100</product_name><minor_number>5</minor_number><pci><pci_bus_id>{PCI}</pci_bus_id></pci></gpu></nvidia_smi_log>'
 
 
 def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
@@ -31,13 +32,30 @@ def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
                        ('SCOPE_LOCK', tmp_path / 'locks' / 'scope.lock')]:
         monkeypatch.setattr(paid, key, value)
     monkeypatch.setattr(paid.free, 'parser', lambda: SimpleNamespace(parse_args=lambda _argv: args))
+    discovery = dict(status='passed', identity=dict(passed=True, gpu_uuid=UUID,
+        original_CUDA_VISIBLE_DEVICES='0', CUDA_DEVICE_ORDER=None, slurm_gpu_id='3',
+        allocation_association='trusted_scheduler_original_CVD_same_runtime_namespace'),
+        runtime_identity=dict(runtime_device_count=1, runtime_visible_ordinal=0, runtime_pci_bus_id=PCI),
+        driver_identity=dict(driver_device_count=1, driver_gpu_uuid=UUID, driver_pci_bus_id=PCI))
     def prepare(_args):
         _args._paid_startup_observation['slurm_job'] = dict(JobId='123456', NumCPUs='4', GRES='gpu:v100:1(IDX:3)')
         return dict(slurm_allocation=dict(job=dict(JobId='123456')),
-            scope=dict(paid.RESOURCES, gpu_execution_contract=paid.STRICT_GPU_CONTRACT))
+            scope=dict(paid.RESOURCES, caps=dict(paid.free.CAPS), gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT),
+            output=str(output), ledger=str(ledger), checkout=str(tmp_path), shell_started_epoch=paid.time.time(),
+            discovery_output=str(output.with_suffix('.discovery.json')),
+            preflight_output=str(output.with_suffix('.runtime-preflight.json')),
+            commands=dict(discovery=['fixture-discovery'], preflight=['fixture-preflight'], probe=['fixture-probe']))
     monkeypatch.setattr(paid, 'prepare', prepare)
     monkeypatch.setattr(paid, 'read_free_admission', lambda **_kwargs: dict(status='known_free_unopened_unreserved'))
-    monkeypatch.setattr(paid.free, 'Supervisor', lambda *_args: pytest.fail('Supervisor must not start before admission'))
+    constructor = paid.PaidSupervisor
+    def phase(self, name, seconds, **kwargs):
+        if name == 'discovery':
+            Path(self.plan['discovery_output']).write_text(json.dumps(discovery))
+        return 'passed', 0
+    monkeypatch.setattr(constructor, 'phase', phase)
+    monkeypatch.setattr(paid, 'PaidSupervisor', lambda plan: constructor(plan, watchdog=False))
+    monkeypatch.setattr(paid.PaidNvidiaMonitor, 'sample', lambda _self: dict(
+        processes=[], memory_mib=0, utilization_percent=0))
     original_stat = Path.stat
     def stat(path, *args, **kwargs):
         if path.as_posix() in ('/dev/nvidia5', '/dev/nvidiactl'):
@@ -58,25 +76,29 @@ def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
         queries.append(command)
         assert command[0] == 'nvidia-smi', 'no scheduler/retry/compute subprocess allowed'
         return subprocess.CompletedProcess(command, 0,
-            f'3, {UUID}, Tesla V100\n' if len(queries) == 1 else XML,
+            f'0, {UUID}, Tesla V100\n' if len(queries) == 1 else XML,
             'fixture CSV stderr' if len(queries) == 1 else 'fixture XML stderr')
     monkeypatch.setattr(paid.subprocess, 'run', query)
     return SimpleNamespace(args=args, diag=diag, output=output, ledger=ledger, proc=proc,
-                           devices=devices, queries=queries, env=env)
+                           devices=devices, queries=queries, env=env, discovery=discovery,
+                           supervisor_class=constructor)
 
 
-@pytest.mark.parametrize('rules', ['a *:* rwm\n', 'c *:255 rw\n'])
+@pytest.mark.parametrize('rules', [
+    'a *:* rwm\nc 195:5 rw\n',
+    'c 195:5 rw\nc *:255 rw\n',
+])
 def test_startup_wildcard_rejection_retains_rule_kernel_cgroup_and_prior_stages(tmp_path, monkeypatch, capsys, rules):
     fixture = main_fixture(tmp_path, monkeypatch, rules=rules)
-    assert paid.main([]) == 2
-    result = json.loads(capsys.readouterr().out)
-    evidence = result['paid_startup_observation']
-    assert result['error'] == 'wildcard GPU access does not prove Slurm device isolation'
-    assert result['GPU_executed'] is False
+    assert paid.main([]) == 1
+    report = json.loads(fixture.output.with_suffix('.supervisor.json').read_text())
+    evidence = report['plan']['paid_startup_observation']
+    assert report['error'] == ('physical_allocation_mapping_unknown: numeric scheduler CVD lacks unique job-device association')
+    assert report['GPU_executed'] is False
     assert evidence['slurm_job']['NumCPUs'] == '4'
     assert evidence['environment']['SLURM_JOB_GPUS'] == '3'
     assert 'SECRET_TOKEN' not in evidence['environment']
-    assert 'must-not-be-saved' not in json.dumps(result)
+    assert 'must-not-be-saved' not in json.dumps(report)
     reads = {row['label']: row for row in evidence['files'] if 'label' in row}
     assert reads['authorization_scope']['text'] == fixture.args.scope_json.read_text()
     assert reads['proc_self_cgroup']['text'] == fixture.proc.read_text()
@@ -85,12 +107,14 @@ def test_startup_wildcard_rejection_retains_rule_kernel_cgroup_and_prior_stages(
     assert evidence['cgroup']['controllers'][0]['membership'].endswith('job_123456/step_batch')
     kernel = next(row for row in evidence['files'] if row['path'] == str(Path('/dev/nvidia5')))
     assert kernel['is_character_device'] and (kernel['major'], kernel['minor']) == (195, 5)
-    rule = evidence['current_device_rule']
-    assert rule['raw'] == rules.rstrip('\n') and rule['line_number'] == 1
-    assert rule['selected_kernel_pair'] == [195, 5]
-    assert [195, 255] in rule['control_pairs']
-    assert [command['stdout'] for command in result['gpu_observation']['commands']] == [f'3, {UUID}, Tesla V100\n', XML]
-    assert not fixture.ledger.exists() and not paid.SCOPE_LOCK.exists()
+    assessment = evidence['os_device_access_assessment']
+    assert assessment['selected_kernel_pair'] == [195, 5]
+    assert assessment['selected_device_read_write_permitted']
+    assert assessment['broader_or_ambiguous_access_rules']
+    assert assessment['raw_devices_rules'] == rules
+    assert [command['stdout'] for command in evidence['gpu_observation']['commands']] == [f'0, {UUID}, Tesla V100\n', XML]
+    assert json.loads(fixture.ledger.read_text())['status'] == 'closed'
+    assert not paid.SCOPE_LOCK.exists()
     attempt = fixture.output.with_suffix('.job-attempt.json').read_bytes()
     assert json.loads(attempt)['retry_allowed'] is False
     assert paid.main([]) == 2
@@ -114,14 +138,16 @@ def test_startup_file_failure_preserves_path_errno_and_completed_queries(tmp_pat
         return original_stat(path, *args, **kwargs)
     monkeypatch.setattr(Path, 'read_text', read)
     monkeypatch.setattr(Path, 'stat', stat)
-    assert paid.main([]) == 2
-    result = json.loads(capsys.readouterr().out)
-    assert result['error_type'] == 'PermissionError'
-    failed = [row for row in result['paid_startup_observation']['files'] if row.get('status') == 'failed']
+    assert paid.main([]) == 1
+    report = json.loads(fixture.output.with_suffix('.supervisor.json').read_text())
+    assert report['error_type'] == 'PaidStartupError'
+    assert 'fixture permission denied' in report['error'] or 'fixture stat denied' in report['error']
+    failed = [row for row in report['plan']['paid_startup_observation']['files'] if row.get('status') == 'failed']
     assert len(failed) == 1 and failed[0]['errno'] == 13
     assert failed[0]['path'] == (str(Path('/dev/nvidia5')) if failure == 'kernel_stat' else str(denied.resolve()))
-    assert len(result['gpu_observation']['commands']) == 2
-    assert not fixture.ledger.exists() and not paid.SCOPE_LOCK.exists()
+    assert len(report['plan']['paid_startup_observation']['gpu_observation']['commands']) == 2
+    assert json.loads(fixture.ledger.read_text())['status'] == 'closed'
+    assert not paid.SCOPE_LOCK.exists()
 
 
 def test_scheduler_clock_failure_keeps_raw_command_environment_and_count(monkeypatch, capsys):
@@ -196,28 +222,34 @@ def test_preflight_driver_count_failure_preserves_pjrt_and_driver_without_scienc
 
 @pytest.mark.parametrize('release_ok', [True, False])
 def test_supervisor_later_preflight_rejection_preserves_raw_report_and_release_semantics(tmp_path, monkeypatch, capsys, release_ok):
-    real_supervisor = paid.free.Supervisor
     fixture = main_fixture(tmp_path, monkeypatch, rules='c 195:* m\nc 195:5 rw\nc 195:255 rw\n')
     raw = '{"passed":true,"actual_backend":"gpu","jax_version":"wrong-version","devices":["fixture-GPU"]}'
     preflight = fixture.output.with_suffix('.runtime-preflight.json')
     def prepare(args):
         return dict(slurm_allocation=dict(job=dict(JobId='123456')),
-            scope=dict(caps=dict(paid.free.CAPS), gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT),
+            scope=dict(caps=dict(paid.free.CAPS), gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT,
+                       scope_id=paid.SCOPE_ID),
             output=str(fixture.output), ledger=str(fixture.ledger), checkout=str(tmp_path),
-            shell_started_epoch=paid.time.time(), preflight_output=str(preflight), commands={})
+            shell_started_epoch=paid.time.time(), preflight_output=str(preflight),
+            discovery_output=str(fixture.output.with_suffix('.discovery.json')),
+            commands=dict(discovery=['fixture-discovery'], preflight=['fixture-preflight'], probe=['fixture-probe']))
     monkeypatch.setattr(paid, 'prepare', prepare)
-    monkeypatch.setattr(paid.free, 'Supervisor', lambda plan: real_supervisor(plan, watchdog=False))
+    supervisor_class = fixture.supervisor_class
+    monkeypatch.setattr(paid, 'PaidSupervisor', lambda plan: supervisor_class(plan, watchdog=False))
     samples = []
     def sample(_self):
         samples.append(1)
         return dict(processes=[], memory_mib=0 if release_ok or len(samples) == 1 else 1, utilization_percent=0)
     monkeypatch.setattr(paid.PaidNvidiaMonitor, 'sample', sample)
     phases = []
-    def phase(_self, name, seconds):
+    def phase(_self, name, seconds, **kwargs):
         phases.append((name, seconds))
-        preflight.write_text(raw)
+        if name == 'discovery':
+            Path(_self.plan['discovery_output']).write_text(json.dumps(fixture.discovery))
+        elif name == 'preflight':
+            preflight.write_text(raw)
         return 'passed', 0
-    monkeypatch.setattr(real_supervisor, 'phase', phase)
+    monkeypatch.setattr(supervisor_class, 'phase', phase)
     monkeypatch.setattr(paid.signal, 'signal', lambda *_: None)
     assert paid.main([]) == 1
     report = json.loads(fixture.output.with_suffix('.supervisor.json').read_text())
@@ -225,7 +257,7 @@ def test_supervisor_later_preflight_rejection_preserves_raw_report_and_release_s
     read = next(row for row in report['plan']['paid_startup_observation']['files'] if row.get('label') == 'preflight_result_admission')
     assert read['text'] == raw
     assert report['release_verified'] is release_ok and paid.SCOPE_LOCK.exists() is not release_ok
-    assert phases == [('preflight', 240)]
+    assert phases == [('discovery', 240), ('preflight', 240)]
     assert json.loads(fixture.ledger.read_text())['status'] == ('closed' if release_ok else 'closed_release_unverified')
     assert fixture.output.with_suffix('.job-attempt.json').exists()
     assert not fixture.output.exists() and len(fixture.queries) == 2
