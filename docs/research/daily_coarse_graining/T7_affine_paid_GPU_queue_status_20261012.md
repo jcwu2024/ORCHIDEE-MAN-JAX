@@ -1,4 +1,10 @@
-# Paid affine v2: submitted, pending — 2026-10-12
+# Paid affine v2: historical submission snapshot — 2026-10-12
+
+Superseded current status: [terminal failure result](T7_affine_paid_GPU_failure_results_20261012.md).
+Job15782177 later FAILED/2:0 after8s allocation at startup metadata admission.
+The predictions and zero cost below describe only the first saved PENDING
+snapshot. The consumed attempt grants no resubmission; all original evidence
+remains preserved.
 
 The one approved unchanged job was submitted once and accepted as **15782177**.
 Its first snapshot is **PENDING / Resources**. Slurm estimates StartTime

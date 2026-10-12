@@ -1,15 +1,23 @@
 # Single paid affine GPU preparation — 2026-10-11
 
+Current execution outcome: [terminal failure result](T7_affine_paid_GPU_failure_results_20261012.md).
+Sole job15782177 FAILED/2:0 after8 allocated seconds at GPU metadata admission,
+before Supervisor/preflight/probe. The unique attempt is consumed. Root cause
+remains unknown because child stderr was discarded; local logging repair only.
+Historical preparation/queue statements below apply to their dated stages,
+not current pending status or a fresh executable grant. No resubmission.
+
 The supervisor initially authorized preparation, local regressions, ordinary
 commit/push, an independent frozen checkout and target CPU-only dry-run.
 The later human specifically approved the exact paid-v2 job/CNY1.00 contract.
 The [earlier resource result](T7_affine_paid_GPU_execution_results_20261012.md)
 remains accepted historical no-submission/CNY0 evidence. Later explicit steering
 authorized the unchanged single queue submission without waiting for a free GPU.
-The [current queue status](T7_affine_paid_GPU_queue_status_20261012.md) records
+The [historical queue status](T7_affine_paid_GPU_queue_status_20261012.md) records
 accepted job15782177, first snapshot PENDING/Resources, scope open and sole
 scheduler attempt used. Predictions do not prove allocation/start. Stop LLM
-monitoring; Slurm continues queueing. Future retrieval uses this same job,
+monitoring. At that snapshot Slurm continued queueing; later retrieval used
+this same job,
 never another sbatch. Execution remains immutable f4ae942, independently of
 accepted historical-docs77afd803. Original false scope bytes remain preserved.
 
@@ -149,11 +157,13 @@ numerical comparison remain unverified. Target CPU readiness does not certify
 those gates or scientific accuracy. The unchanged command/cwd/resources/wall/
 CNY1.00 contract was submitted exactly once as15782177 under later explicit
 queue steering. The scope is open; the sole scheduler attempt is consumed.
-The first snapshot is PENDING/Resources with13 runtime paths absent. No paid
-allocation/preflight/GPU/numeric execution is evidenced as of that snapshot;
-cost/card-hours0 are snapshot-only. No terminal/release claim follows. Original
-false scope bytes and earlier no-submission report remain preserved history.
-Stop LLM monitoring; future retrieval must use the same job, never resubmit.
+The first PENDING snapshot remains historical evidence. The later terminal
+result records FAILED/2:0 after8s allocation, metadata-command exit2 and no
+Supervisor/preflight/probe. The underlying cause is unproved, because captured
+stderr was discarded. Scheduler allocation ended; no GPU cleanup observation
+exists. The preserved approval scope stays open as bytes, but attempts consume
+the grant. Original false scope and earlier0-run/queue evidence remain history.
+Local diagnostic preservation is the only repair; no resubmission is allowed.
 
 ## Slurm22.05.7 compatibility revision
 

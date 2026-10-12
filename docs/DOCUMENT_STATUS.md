@@ -26,9 +26,10 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
-| [Paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md) | Current submitted state: sole unchanged sbatch accepted as15782177; first snapshot PENDING/Resources, predicted start not actual/guaranteed, scope open and scheduler attempt used.13 runtime paths absent; allocation/card-hours/cost0 only as of snapshot. Stop LLM monitoring; future retrieval uses same job, never resubmit. |
-| [Paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md) | Unchanged accepted historical no-submission/resource-nonadmission stage,0 allocation/card-hours/CNY. Raw refresh and false-scope identities preserved; later queue status above owns current execution. |
-| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Accepted immutable f4ae942/v2 contract and136 CPU/shell cases: fixed gnall n01,4 actual Slurm CPUs/1V100/nonexclusive/20min/no-requeue; maximum0.8266667 CNY/upward0.83/ceiling1.00. Sole queued submission15782177; actual GPU/runtime gates unverified. Original false proposal and old df8/v5/v1 preserved. |
+| [Paid v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md) | Current FAILED/2:0 startup admission outcome for15782177:8s/4CPUs/1GPU; metadata command exit2, underlying cause unknown because child stderr discarded. Attempts consumed, ledger/results/lock absent; scheduler allocation ended, GPU cleanup unobserved. Estimated CNY0.0055111111; no retry. Local diagnostic-preservation repair only. |
+| [Paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md) | Accepted historical queue stage: exactly one submission, PENDING/Resources prediction and0 as-of snapshot. Terminal result above supersedes current status; raw queue evidence retained. |
+| [Paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md) | Unchanged accepted historical0-submission resource non-admission/CNY0 stage. |
+| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Immutable f4ae942 method/approved contract and prior136 CPU/shell cases. Sole job15782177 failed at metadata admission; mapping/runtime/science not accepted. Original scopes and old df8/v5/v1 preserved. |
 | [GPU deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md) | Current execution authority/status: user approved the separate1200s/one idle nonexclusive V100/CNY0 scope; clean b676353 deployment and target CPU shell/private-phase readiness accepted. Both GPUs busy at final refresh; actual container/PJRT/GPU/numerical comparison pending. No launch/preflight/open scope/ledger reservation;0 GPU seconds/card-hours/cost and unconsumed one-shot. `approved_waiting_resources`; approval persists, no automatic polling/monitoring/retry. |
 | [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md), [execution contract](research/daily_coarse_graining/T7_batch_numerics_GPU_execution_contract_20261011.md) | Accepted local affine launcher/input and frozen-method authority. Fresh recovery NPZ/receipt have new identities and six preincident numeric SHA matches after a three-file unsafe-test incident. Its false proposed1200s snapshot is preserved; later approval/deployment status is in the current result above. Historical CPU12/91 is separate and was not rerun. |
 | [Current B1/B4 JVP completion results](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | Current derivative evidence: 32 JVPs/four full VJPs, exact JVP repeats, strict B1/4–B4 failures at 434/2382 plus own JVP/VJP/full-state failures. Primal/parameter self repeats/aux/physics/memory pass. Independent scope closed at 1780.743670s/CNY 0/released; CPU analysis accepted. No derivative reference/adoption. |
@@ -74,19 +75,19 @@ and trace buckets do not isolate wall time or certify a launch-bound bottleneck.
 
 ## Current authorization boundary
 
-Human approved the exact paid-v2 resource/cost contract; the supervisor
-subsequently directed queue submission within that unchanged approval.
-That unchanged sbatch was accepted as15782177; the first and only snapshot is
-PENDING/Resources. The scope is open and unique scheduler attempt used. Stop
-LLM monitoring; Slurm queues autonomously. Future retrieval uses this same job:
-no second sbatch, node change, fallback, retry, extra diagnostics or training.
-Pending start/end/TRES are predictions/request evidence, not allocation.
-Thirteen runtime paths were absent and cost/card-hours were0 only as of that
-snapshot; the approved future paid ceiling remains CNY1.00. Actual allocation,
-GPU/cgroup/CUDA/PJRT/numeric/release gates remain unverified. Execution f4ae942
-was not refrozen from accepted historical-docs77afd803. Original false scope,
-earlier resource report/raw evidence, recovery inputs and df8/v5/v1 stay
-preserved. Free b676 approval remains valid/unconsumed and dispatch paused.
+The sole approved paid-v2 job15782177 is terminal FAILED/2:0 after8s allocation;
+both scheduler/Python attempts are consumed. Preserve the open approval JSON
+as historical bytes; do not reset the grant, attempts or mutex. Scheduler
+allocation ended; absent lock and no Supervisor do not constitute a GPU cleanup
+observation. Root cause of metadata-command exit2 remains unproved. Only
+read-only saved-evidence retrieval, static source analysis, a small local logging
+repair and CPU/mock checks are in this failure follow-up. No new sbatch,
+allocation/GPU observation/diagnostic/preflight/probe, card change, isolation or
+tolerance relaxation, training or frozen remote-checkout change is authorized.
+Estimated actual CPU+GPU charge is CNY0.0055111111; invoice rounding unverified.
+Queue predictions/0-as-of-snapshot are history. Actual execution is f4ae942;
+accepted queue docs6886d26f and earlier77afd803 remain separate. Recovery inputs,
+original false scope, old df8/v5/v1 and free b676 approval stay preserved.
 
 The separate free affine scope is approved but waiting for resources and unconsumed;
 see the deployment result above. This task stops without further polling or

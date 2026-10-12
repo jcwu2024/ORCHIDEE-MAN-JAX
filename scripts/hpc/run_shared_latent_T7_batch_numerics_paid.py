@@ -408,6 +408,24 @@ def run_live(plan):
             release_safe = True
         lock.release(release_verified=release_safe)
 
+def _diagnostic_text(value):
+    if value is None:
+        return None
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')
+    return str(value)
+
+def subprocess_failure_detail(error):
+    if isinstance(error, subprocess.CalledProcessError):
+        return dict(command=error.cmd, returncode=error.returncode,
+            stdout=_diagnostic_text(error.stdout if error.stdout is not None else error.output),
+            stderr=_diagnostic_text(error.stderr))
+    if isinstance(error, subprocess.TimeoutExpired):
+        return dict(command=error.cmd, timeout_seconds=error.timeout,
+            stdout=_diagnostic_text(error.stdout if error.stdout is not None else error.output),
+            stderr=_diagnostic_text(error.stderr))
+    return None
+
 def main(argv=None):
     args = free.parser().parse_args(argv)
     attempt = None
@@ -434,9 +452,13 @@ def main(argv=None):
             return 0
         return run_live(plan)
     except (ValueError, FileNotFoundError, FileExistsError, KeyError, subprocess.SubprocessError) as error:
-        print(json.dumps(dict(status='paid_admission_rejected', GPU_executed=False,
-                              scheduler_attempt_receipt=str(attempt) if attempt else None,
-                              error_type=type(error).__name__, error=str(error))))
+        rejection = dict(status='paid_admission_rejected', GPU_executed=False,
+            scheduler_attempt_receipt=str(attempt) if attempt else None,
+            error_type=type(error).__name__, error=str(error))
+        subprocess_detail = subprocess_failure_detail(error)
+        if subprocess_detail is not None:
+            rejection['subprocess_failure'] = subprocess_detail
+        print(json.dumps(rejection))
         return 2
 
 if __name__ == '__main__':

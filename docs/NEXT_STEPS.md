@@ -55,33 +55,37 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-The [paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
-owns the current `submitted_pending` state. Subsequent explicit steering
-authorized queue submission without waiting for a free card. The unchanged
-sbatch was submitted exactly once and accepted as **15782177**; the first and
-only snapshot is PENDING/Resources, with predicted StartTime
-2026-10-12T14:41:06/EndTime15:01:06, not an actual allocation or guarantee.
-The scope is open and the unique scheduler submission attempt is consumed.
-Slurm continues queueing autonomously; stop LLM monitoring immediately.
-Future retrieval must use job15782177: no second sbatch, availability loop,
-automatic monitor, node change, retry, recapture, extra diagnosis or training.
+The [paid v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
+owns the current `paid_admission_rejected` outcome: sole job **15782177** is
+FAILED/2:0, allocated10:11:21–10:11:29 on2026-10-12 at fixed gnall n01,
+8s/4Slurm CPUs/1GPU. Those scheduler times came from supervisor-supplied sacct,
+with no fresh scheduler query or invented command receipt. Estimated additive
+charge is CNY0.0055111111; invoice rounding is unknown. Historical PENDING
+predictions and zero-as-of-snapshot accounting are no longer current status.
 
-Approval remains specific to gnall/fixed `ibc13b03n01`,1node/1task/4 actual
-Slurm CPUs/1 V100/nonexclusive/20min/no-requeue, unchanged f4ae942 cwd/command
-and CNY1.00 ceiling (maximum0.8266667/upward0.83). Thirteen runtime artifacts
-were absent at the snapshot, including runtime attempt/ledger/preflight/results/
-HLO/job logs. Allocation seconds/card-hours/estimated charge were0 only as of
-that snapshot; the queued future job remains paid. Actual allocation/runtime/
-numeric boundaries are unverified. Accepted historical docs were committed/
-pushed at77afd803, independently of unchanged execution f4ae942. Preserve the
-earlier resource report, original false scope and previous df8/v5/v1 artifacts.
+The nvidia-smi index0/index,uuid,name,minor_number metadata command returned2
+before Supervisor/preflight/probe. Existing stdout records only CalledProcessError;
+stderr is empty, so unsupported field, index, permissions, device or contention
+are not established causes. Read-only retrieval preserved10 known files and
+their hashes. Both attempt receipts exist; ledger/preflight/results/HLO and
+shared lock are absent. Scheduler resources ended; GPU cleanup was not observed.
+Scope bytes still say open/authorized, but the sole attempt is consumed and may
+not be reset. The only code change is local diagnostic preservation, tested
+with CPU mocks; the immutable remote f4ae942 checkout remains unchanged.
+
+Stop after this evidence handoff. No new sbatch/allocation/GPU command/preflight/
+probe, card change, admission relaxation or training is authorized. The smallest
+future diagnostic would retain exact metadata-command stderr under a separately
+authorized allocation; it is a recommendation, not a dispatch or renewal.
+Keep recovery inputs, earlier0-run and queue evidence, old df8/v5/v1 and free
+b676 approval unchanged; free dispatch remains paused/unconsumed.
 
 The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
 retains scheduler allocation-clock1200s/preflight240s/probe780s/release≥180s/
 24GiB, exact actual Slurm/cgroup/kernel/UUID and CUDA/PJRT gates, physical
 constraints and strict numerical comparisons. Prior136 compatibility cases
-and historical CPU12/91 are not this dispatch's GPU acceptance. Real paid
-allocation/runtime/numeric boundaries remain unverified. Free b676 approval
+and historical CPU12/91 are not this dispatch's GPU acceptance. Actual device-isolation/
+runtime/numeric gates remain unverified. Free b676 approval
 is preserved/unconsumed and dispatch stays paused. Cooperative mutex/read-only
 management admission does not mechanically constrain legacy arbitrary copies.
 

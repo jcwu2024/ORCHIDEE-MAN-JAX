@@ -57,7 +57,7 @@ Paths are under `scripts/hpc/`.
 | `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
 | `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Deployed b676353 NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; target CPU shell/private-phase checks accepted, container/PJRT/GPU pending; both cards busy, no GPU/preflight/open scope/ledger reservation |
-| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Candidate independent gnall paid admission/one-shot: exact job/node/NumCPUs/AllocTRES/StartTime, actual-job cgroup/NVML minor/kernel device mapping and optional CUDA-driver/PJRT UUID binding,20min/4CPU/1GPU/24GiB/quote caps; shared unchanged capture admission and Supervisor, fixed affine probe; one accepted queued job15782177, actual allocation/GPU validation pending |
+| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Candidate independent gnall paid admission/one-shot: exact job/node/NumCPUs/AllocTRES/StartTime, actual-job cgroup/NVML minor/kernel device mapping and optional CUDA-driver/PJRT UUID binding,20min/4CPU/1GPU/24GiB/quote caps; shared unchanged capture admission and Supervisor, fixed affine probe; sole job15782177 terminal admission rejection; local diagnostic logging repaired, deployed mapping/GPU validation unverified |
 | `shared_affine_gpu_admission.py`, `shared_affine_cuda_identity.py`, `freeze_shared_affine_paid_scope.py` | Candidate persistent atomic cross-scope mutex, bounded read-only known free-state admission under the sole paid launch owner; old b676 remains untouched, actual accepted-commit→false scope/source manifest generation; no automatic free-approval migration or stale-lock takeover |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
@@ -83,19 +83,20 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
-The [paid queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
-owns current job15782177: exactly one unchanged sbatch accepted, scope open,
-first snapshot PENDING/Resources, scheduler attempt used. Predicted start is
-not an allocation/guarantee;13 runtime paths were absent and cost/card-hours
-were0 only as of the snapshot. Stop LLM monitoring and retrieve this same job
-later, never resubmit. Raw submission, first snapshot, scope bindings and
-accepted-docs77afd803 receipt are in `outputs/T7-affine-paid-queue-20261012/`.
-The [earlier paid resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
-remains unchanged no-submission/CNY0 historical evidence, with its raw one-time
-refresh in `outputs/T7-affine-paid-execution-20261012/`.
+The [paid terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
+owns job15782177 FAILED/2:0 after8 allocated seconds: GPU metadata subprocess
+returned2 before Supervisor/preflight/affine probe. Underlying stderr was not
+saved, so root cause remains unproved. Ten retrieved artifacts, absence records,
+supervisor terminal provenance and focused logging-repair checks are under
+`outputs/T7-affine-paid-failure-20261012/`. Both attempts exist, ledger/results
+and shared lock absent; scheduler allocation ended without GPU cleanup evidence.
+The sole attempt is consumed; no retry or further GPU commands. The local paid
+main preserves future subprocess diagnostics; deployed execution stays f4ae942.
+The [queue report](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
+retains historical PENDING predictions and snapshot-only0 cost; its accepted
+docs commit is6886d26f. The earlier resource report remains unchanged0-run history.
 The [paid proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
-retains the unchanged approved gnall quote/runtime gates and CPU/shell evidence.
-Actual execution remains frozen f4ae942, independently of later docs commits.
+retains the approved contract, source identities and prior CPU/shell evidence.
 
 Paid v2 `allocation_epochs` and `allocated_tres` admit22.05.7 scheduler time
 and actual allocation detail; `--scheduler-allocation-epochs` is CPU metadata

@@ -65,30 +65,30 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
-The [paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
-is `submitted_pending`: the unchanged approved sbatch was accepted exactly once
-as **15782177**. The first and only snapshot shows PENDING/Resources,
-RunTime00:00:00, ReqNodeList `ibc13b03n01` and no allocated NodeList. Pending
-TRES/NumCPUs describe the request, not an actual allocation. Predicted
-StartTime2026-10-12T14:41:06/EndTime15:01:06 is neither actual nor guaranteed.
-Cluster stdout date2026-10-12T01:41:30Z and local receipt start
-2026-10-12T01:49:51.006197+00:00 remain separate clock sources.
-The scope is open and the sole scheduler submission attempt is used, even
-while pending. Thirteen runtime paths were absent, including runtime attempt,
-ledger/preflight/results/arrays/HLO and own job logs. Allocation seconds,
-card-hours and estimated CNY were0 only as of that snapshot. No terminal or
-release evidence yet exists; the future job retains its approved ceiling.
+The [paid v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
+is `paid_admission_rejected`, not a numerical failure. Supervisor-supplied sacct
+records job15782177 FAILED/2:0, fixed n01,2026-10-12T10:11:21–10:11:29,
+8 allocated seconds/4CPUs/1GPU. No fresh scheduler query was made. Estimated
+CPU charge0.0006222222 + GPU0.0048888889 = CNY0.0055111111;1/450 card-hours.
+Invoice rounding is unverified. Earlier queue predictions and zero cost were
+only historical snapshot facts. The unique scheduler attempt is consumed.
 
-The exact gnall/fixed n01 contract remains4 actual Slurm CPUs/1 V100/
-nonexclusive/20min/no-requeue, maximum0.8266667 CNY/upward0.83/ceiling1.00.
-Execution stays frozen at f4ae942; accepted earlier docs were committed/pushed
-as77afd803, with no remote refreeze. The earlier resource non-admission report
-and raw evidence remain unchanged history. Original false scope bytes and old
-df8/v5/v1 artifacts are preserved. Actual GPU/cgroup/CUDA/PJRT/numeric gates
-remain unverified; CPU12/91 and136 mocks are separate evidence. Stop LLM
-monitoring; Slurm queues autonomously. Future retrieval uses this same job,
-never a new sbatch. Free b676 approval remains valid/unconsumed and dispatch
-paused; cooperative mutex limits remain unchanged.
+The first GPU metadata command returned2 before mapping/Supervisor/preflight/
+probe. Its captured stderr was discarded by the historical exception handler;
+retrieved Slurm stderr is0bytes and stdout420bytes contains only the rejection.
+The underlying cause is unknown; no unsupported-field/index/permission/device/
+contention claim follows from exit2. Ten known files were retrieved unchanged.
+Slurm and Python attempts exist; ledger/supervisor/preflight/results/HLO and
+shared lock are absent. Frozen finally releases its own lock before a Supervisor
+exists, consistent with the observed absence. Scheduler allocation ended, but
+there is no successful GPU mapping or GPU cleanup observation. Scope JSON is
+still open/authorized as preserved bytes; it grants no retry after consumption.
+
+Execution remains f4ae942; accepted queue docs are6886d26f. A small local logging
+repair retains future failed-process command/code/stdout/stderr with CPU mock
+evidence; no runtime or neural repair is selected/verified. Strict science,
+isolation, source/input identity and paid limits remain. No further GPU command,
+allocation, submission or training runs. Free b676 stays paused/unconsumed.
 
 | Current evidence | Result and limit |
 |---|---|

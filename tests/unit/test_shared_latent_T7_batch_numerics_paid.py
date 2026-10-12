@@ -737,6 +737,77 @@ def test_live_paid_launcher_checks_free_management_before_gpu_observation(monkey
     assert events == ["mutex_acquired", "free_management_checked", ("mutex_released", True)]
 
 
+def test_paid_main_preserves_job_15782177_gpu_query_rejection_and_does_not_retry(tmp_path, monkeypatch, capsys):
+    output_dir = tmp_path / "diagnostics"
+    output_dir.mkdir()
+    output = output_dir / "result.v1.json"
+    ledger = output_dir / "paid.ledger.json"
+    scope_path = output_dir / "scope.v1.json"
+    scope_path.write_text(json.dumps({
+        "schema_version": paid.SCHEMA,
+        "scope_id": paid.SCOPE_ID,
+        "status": "open",
+        "execution_authorized": True,
+        "approval_note": "synthetic test only",
+    }), encoding="utf-8")
+    args = SimpleNamespace(dry_run=False, scope_json=scope_path, output=output, ledger=ledger)
+    monkeypatch.setattr(paid.free, "parser", lambda: SimpleNamespace(parse_args=lambda _argv: args))
+    monkeypatch.setattr(paid, "OUTPUT_DIR", output_dir)
+    monkeypatch.setattr(paid, "OUTPUT", output)
+    monkeypatch.setattr(paid, "LEDGER", ledger)
+    monkeypatch.setattr(paid, "SCOPE_LOCK", tmp_path / "locks" / "paid.lock")
+    monkeypatch.setattr(paid, "os", SimpleNamespace(
+        name="posix", environ={"SLURM_JOB_ID": "15782177", "SLURM_JOB_GPUS": "0"},
+    ))
+    monkeypatch.setattr(paid, "prepare", lambda _args: {})
+    monkeypatch.setattr(paid, "read_free_admission", lambda: {"status": "known_free_unopened_unreserved"})
+    monkeypatch.setattr(paid.free, "Supervisor", lambda *_args: pytest.fail("probe supervisor must not start"))
+    command = ["nvidia-smi", "-i", "0", "--query-gpu=index,uuid,name,minor_number",
+               "--format=csv,noheader,nounits"]
+    calls = []
+
+    def reject_gpu_query(observed_command, **kwargs):
+        calls.append((observed_command, kwargs))
+        raise subprocess.CalledProcessError(
+            2, observed_command, output="synthetic query stdout", stderr="synthetic query stderr",
+        )
+
+    monkeypatch.setattr(paid.subprocess, "run", reject_gpu_query)
+    assert paid.main([]) == 2
+    first = json.loads(capsys.readouterr().out)
+    assert first["status"] == "paid_admission_rejected"
+    assert first["GPU_executed"] is False
+    assert first["error_type"] == "CalledProcessError"
+    assert first["subprocess_failure"] == {
+        "command": command,
+        "returncode": 2,
+        "stdout": "synthetic query stdout",
+        "stderr": "synthetic query stderr",
+    }
+    assert calls == [(command, {"capture_output": True, "text": True, "timeout": 4, "check": True})]
+    attempt = output.with_suffix(".job-attempt.json")
+    assert json.loads(attempt.read_text(encoding="utf-8"))["retry_allowed"] is False
+    assert not (tmp_path / "locks" / "paid.lock").exists()
+    assert not ledger.exists()
+
+    assert paid.main([]) == 2
+    second = json.loads(capsys.readouterr().out)
+    assert second["error_type"] == "FileExistsError"
+    assert calls == [(command, {"capture_output": True, "text": True, "timeout": 4, "check": True})]
+    assert not (tmp_path / "locks" / "paid.lock").exists()
+
+
+def test_subprocess_timeout_diagnostics_preserve_command_and_partial_output():
+    command = ["nvidia-smi", "--query-gpu=index"]
+    error = subprocess.TimeoutExpired(command, 4, output=b"partial stdout", stderr=b"partial stderr")
+    assert paid.subprocess_failure_detail(error) == {
+        "command": command,
+        "timeout_seconds": 4,
+        "stdout": "partial stdout",
+        "stderr": "partial stderr",
+    }
+
+
 @pytest.mark.parametrize("poison", ["missing_path", "wrong_hash"])
 def test_paid_prepare_rejects_source_manifest_poison(tmp_path, monkeypatch, poison):
     args, scope, scope_path, _, _ = scope_json(tmp_path, monkeypatch)
