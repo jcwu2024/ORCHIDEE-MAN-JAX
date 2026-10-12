@@ -62,6 +62,25 @@ The single-run grant is consumed; no automatic resubmission is permitted.
 CPU48 performance, numerical acceptance and same-workload CPU/GPU ratios remain
 unavailable. See the [v2 terminal result](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md).
 
+The unpaid AOT repair identified the frozen payload's first failing leaf,
+`.values_by_component[4][67]`, as a Python float. The shared helper now uses
+JAX `shaped_abstractify`; construction admission stays strict on tree, shape,
+dtype and weak type. The exact candidate passed small native checks and actual
+SingleRunner scalar/B2 core-wrapper comparisons for both blocks on ibtest01,
+JAX/jaxlib 0.4.38 with x64. Only physical transition factories were stubbed,
+retaining the full carry tree. Both groups of 64 input trees passed all 536
+leaves' metadata checks; only raw scalars were device-put for that traversal.
+Lanes 0/4 share shape/dtype but differ at 42 weak
+leaves; native weak-only acceptance is recorded and unchanged. The four new
+regressions passed, the AOT subset passed 6/6, and Ruff passed. The full module
+had 50 passes and 10 failures
+at its existing science-source identity guard before AOT. See the
+[repair report](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)
+and [exact-candidate evidence](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/linux-jax-0.4.38-candidate-full-metadata.json).
+Full physical lowering/compilation, GPU, new sbatch and production deployment
+remain unrun and unauthorized. The prior launcher fixtures do not certify the
+scalar signature path, and neither repair nor toy checks renew a paid grant.
+
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the
 original preallocation memory guard passed; the initial FULL64 comparison stopped

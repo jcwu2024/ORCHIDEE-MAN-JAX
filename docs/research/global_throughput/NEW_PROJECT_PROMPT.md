@@ -21,6 +21,11 @@
 新科学pin的双臂job15769234已FAILED1:0/1140s，首臂初始FULL64容差失败，release未派发，无warm样本或双臂比值；不能转授旧pin验收。
 保存数组CPU/NumPy定位已获主管接受：仅点283.0-091.0、Day8末rveget/PFT14 float64超原界1.4223666641536081倍，32重复一致；其余63点无失败。
 本轮科学执行关闭，该数值字段差异不是旧ABI故障证据，原因未归属；不自动修科学代码、调容差、重跑或扩大溯因。
+CPU48 v2的job15805735已FAILED1:0/109s：真实allocation通过，scalar lower后签名helper对Python float读取.shape失败；compile及B64未运行，单次付费授权已消耗。
+无付费AOT签名修复已交付：真实首个失败叶子.values_by_component[4][67]为Python float；共享helper改用JAX shaped_abstractify。
+本地4项新增回归、AOT筛选6项及Ruff通过；Linux JAX0.4.38上确切候选通过实际scalar/B2连续两块core/wrapper替身接口，完整carry保留。
+构造审计仍严格保留weak_type，native call原生接受weak-only差异；整模块50通过/10项既有science-source身份门失败，未到AOT。
+先读handoff链接的修复报告与原始目标证据并验收实际交付；小函数/替身接口不能冒充完整物理或科学接受，不自动完整lower/compile、GPU、sbatch或生产部署。
 repeat64容量负载不是真669异质点/独立member验收，最新与旧job的1024样本不能混合。
 保持原物理/时间递推、native dtypes、full outputs/masks和固定严格容差；x64不等于全算术FP64。
 先用中文确认你理解目标、已知证据/限制、固定版本和资源停止边界。

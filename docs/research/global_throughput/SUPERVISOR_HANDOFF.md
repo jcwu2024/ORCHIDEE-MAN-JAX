@@ -1,6 +1,7 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-12。先读本页、[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
+更新：2026-10-12。先读本页、[AOT签名修复报告](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)、
+[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
 及[CPU48 v2修复与单次重跑授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)、
 [前次启动失败](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md)、
 [CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
@@ -154,6 +155,18 @@ immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2`已部署，104个物理�
 scalar lower为54.8616s；未完成stage、科学gate或热样本，B64/48核step未运行。
 完整48核父作业只计一次，109s费用情景CNY0.072666667/0.101733333，非核实账单；本次单次授权已消耗。
 见[v2执行结果](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。CPU48性能、数值接受及同量CPU/GPU比仍不可用；不自动重提。
+主管另派的无付费签名修复已交付：首个实际失败叶子为`.values_by_component[4][67]`的Python float，
+共享helper用JAX `shaped_abstractify`修复原始scalar叶子的元数据读取；科学源码与native call未改。
+确切候选在ibtest01/JAX+jaxlib0.4.38/x64通过小函数以及实际SingleRunner scalar/B2
+连续两块core/wrapper等价检查，完整carry保留、仅物理transition替身；不构成完整物理/科学验收。
+两段各64点、每点536叶的完整树/元数据一致；元数据遍历仅转换原始标量，不搬运数组叶子。
+lane0/4有42处weak_type差异：构造审计仍严格拒绝weak-only不符，native call接受，记录原生行为。
+本地4项新增回归通过、AOT筛选6通过、Ruff通过；整模块50通过/10项既有science-source身份门失败，未到AOT。
+见[修复报告](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)
+与[原始目标证据](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/linux-jax-0.4.38-candidate-full-metadata.json)。
+旧v1/v2失败证据及science pin保留。完整物理lower/compile、GPU、新sbatch、长运行、环境安装或
+生产执行树部署均未执行/未授权；此前launcher模拟不证明此次scalar流，旧付费授权已关闭。
+主管验收实际文件后再讨论新的付费运行；本次未自动联系或轮询主管线程。
 B1024的299.139825大批量结果仅作归一化参考，不冒称与B64严格同总量端到端比；CPU2048适配非前置。
 Fortran匹配基准另缺，不强制GPU重跑或核数网格。
 

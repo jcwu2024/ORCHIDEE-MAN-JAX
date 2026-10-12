@@ -24,6 +24,18 @@ immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2`已部署，104个物理�
 scalar lower为54.8616s；未完成stage、科学gate或热样本，B64/48核step未运行。
 完整48核父作业只计一次，109s费用情景为CNY0.072666667/0.101733333，费率未核实；本次单次授权已消耗。
 CPU48性能、数值接受和同量CPU/GPU比仍不可用，不自动重提。终态入口见[v2执行结果](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。
+本次**无付费AOT签名修复**已定位同一冻结payload的首个失败叶子
+`.values_by_component[4][67]`：Python float没有`.shape`，旧helper在元数据记录阶段失败。
+共享helper改用JAX `shaped_abstractify`，保留tree/shape/dtype/weak_type构造审计和原native call。
+字节一致的候选在ibtest01/JAX+jaxlib0.4.38/x64通过小函数与实际SingleRunner
+scalar/B2、连续两块、core/wrapper检查；完整carry保留，仅物理transition替换为小函数。
+两段各64点、每点536叶的完整树/元数据一致；该遍历仅device-put原始标量，不搬运数组叶子。
+lane0/4的shape/dtype相同但42处weak_type不同；严格审计拒绝weak-only差异，native call接受，行为未改。
+本地4项新增回归通过，AOT筛选6通过，Ruff通过；整模块50通过/10失败于既有science-source身份门，未到AOT。
+见[修复报告](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)
+及[原始Linux证据](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/linux-jax-0.4.38-candidate-full-metadata.json)。
+这只验证元数据与替身接口；完整物理lower/compile、GPU、新sbatch和生产执行树部署均未执行/未授权。
+此前launcher模拟不作为此次签名修复证据；主管仍须验收实际交付，旧付费额度不恢复。
 严格检查真实allocation及48不同物理核，不默认48、不使用ReqTRES绕过；旧科学与测量合同不变。
 本次授权允许实查同规格健康低负载CPU节点和正常排队，不锁n35；已完成唯一提交和终态监测。
 前次job**15782454**在`ibc12b07n02`获48CPU/0GPU后启动FAILED2:0/1s，模型未运行；

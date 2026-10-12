@@ -1,0 +1,945 @@
+{
+  "batch_interface": {
+    "input_signature_leaves": 536,
+    "output_leaf_count": 350,
+    "passed": true
+  },
+  "environment": {
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "module_import": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/dev/benchmark_global_batch.py",
+    "python": "3.11.15",
+    "x64_enabled": true
+  },
+  "old_raw_float_helper": {
+    "first_raw_float_path": ".values_by_component[4][67]",
+    "old_failure_without_physical_lower": {
+      "message": "'float' object has no attribute 'shape'",
+      "type": "AttributeError"
+    },
+    "present_in_payload": true
+  },
+  "payload": {
+    "lane_count": 64,
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+    "second_block_count": 64,
+    "sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7"
+  },
+  "payload_metadata": {
+    "device_put_signature_leaf_count": 536,
+    "device_put_signature_weak_count": 42,
+    "leaf_type_counts": {
+      "builtins.float": 312,
+      "builtins.int": 8,
+      "jaxlib.xla_extension.ArrayImpl": 2536,
+      "numpy.ndarray": 65752
+    },
+    "non_array_leaf_count_per_prepared_group": 40,
+    "non_array_leaves": [
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['a1']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['alpha_ll']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['arjv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['asj']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['asv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['b1']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['brjv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['bsj']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['bsv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['d_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['d_jmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['d_vcmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_gamma_star']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_jmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_kmc']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_kmo']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_rd']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_sco']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_vcmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['ext_coeff']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['g0']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['gamma_star25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['gm25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['kmc25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['kmo25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['rstruct_const']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['rveg_pft']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['s_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['sco25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['stress_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['stress_gs']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['stress_vcmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['theta']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['tphoto_max']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['tphoto_min']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".stomate_season_values['date']",
+        "python_type": "builtins.int",
+        "value_signature": [
+          [],
+          "int64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".stomate_season_values['dt_days_read']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".stomate_season_values['tau_longterm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "scalar",
+        "occurrences": 4,
+        "path": ".values_by_component[4][67]",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['a1']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['alpha_ll']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['arjv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['asj']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['asv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['b1']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['brjv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['bsj']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['bsv']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['d_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['d_jmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['d_vcmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_gamma_star']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_jmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_kmc']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_kmo']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_rd']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_sco']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['e_vcmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['ext_coeff']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['g0']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['gamma_star25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['gm25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['kmc25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['kmo25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['rstruct_const']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['rveg_pft']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['s_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['sco25']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['stress_gm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['stress_gs']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['stress_vcmax']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['theta']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['tphoto_max']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".diffuco_parameter_values.trans_co2['tphoto_min']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".stomate_season_values['date']",
+        "python_type": "builtins.int",
+        "value_signature": [
+          [],
+          "int64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".stomate_season_values['dt_days_read']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".stomate_season_values['tau_longterm']",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      },
+      {
+        "group": "second",
+        "occurrences": 4,
+        "path": ".values_by_component[4][67]",
+        "python_type": "builtins.float",
+        "value_signature": [
+          [],
+          "float64",
+          true
+        ]
+      }
+    ],
+    "scalar_signature_leaf_count": 536,
+    "scalar_signature_weak_count": 42,
+    "stacked_two_lane_signature_leaf_count": 536
+  },
+  "scalar_interface": {
+    "device_put_float_result": 5.75,
+    "lowered_leaf_count": 1,
+    "passed": true,
+    "raw_float_result": 3.75,
+    "standard_rejections": {
+      "wrong_dtype": true,
+      "wrong_shape": true,
+      "wrong_tree": true
+    }
+  },
+  "schema": "global_cpu_aot_signature_diagnostic_v1",
+  "scope": "metadata inspection and toy AOT interface checks only; no physical model lowering or compile",
+  "weak_type": {
+    "native_compiled_call_with_weak_only_difference": {
+      "accepted": true,
+      "value": 2
+    },
+    "strict_audit_passed_for_weak_input": true,
+    "strict_audit_rejected_same_shape_dtype_strong_input": true
+  }
+}

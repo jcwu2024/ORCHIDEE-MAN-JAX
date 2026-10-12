@@ -86,3 +86,7 @@ outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/15805735/** -
 outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/package/execution-code-pin.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/package/execution-harness.patch -text whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/target-validation/** -text whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve raw native-JAX signature diagnostic and validation evidence bytes.
+outputs/research/global_throughput/cpu-aot-signature-repair-20261012/*.json -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu-aot-signature-repair-20261012/*.txt -text whitespace=-blank-at-eol,-blank-at-eof

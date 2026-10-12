@@ -32,6 +32,11 @@ import jaxlib
 import numpy as np
 
 try:
+    from jax._src.api_util import shaped_abstractify as _shaped_abstractify
+except ImportError:  # JAX 0.10 moved this internal helper to core.
+    from jax._src.core import shaped_abstractify as _shaped_abstractify
+
+try:
     import psutil
 except ModuleNotFoundError:
     psutil = None
@@ -428,13 +433,18 @@ def prepare(args, recorder):
     return lanes, second
 
 
+def _signature_leaf(value):
+    aval = _shaped_abstractify(value)
+    return tuple(aval.shape), str(aval.dtype), bool(getattr(aval, "weak_type", False))
+
+
 def _argument_signature(arguments):
     leaves, tree = jax.tree_util.tree_flatten((tuple(arguments), {}))
-    return tree, tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in leaves)
+    return tree, tuple(_signature_leaf(value) for value in leaves)
 
 
 def _aval_signature(avals):
-    return tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in avals)
+    return tuple(_signature_leaf(value) for value in avals)
 
 
 def describe_aot_signature(stage, arguments, *, lowered=False):
