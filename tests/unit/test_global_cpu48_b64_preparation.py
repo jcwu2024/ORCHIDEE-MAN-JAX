@@ -15,6 +15,9 @@ LAUNCHER = ROOT / "scripts/hpc/slurm_global_server_cpu_48core.sh"
 RUNNER = ROOT / "scripts/dev/benchmark_global_server_cpu.py"
 EXPECTED_REF = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
 EXPECTED_SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+EXPECTED_CODE_COMMIT = "1" * 40
+EXPECTED_CODE_DIR = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3"
+EXPECTED_RUN_ROOT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"
 
 
 def write_scontrol_evidence(tmp_path, record=None, *, stderr="", exitcode="0"):
@@ -134,14 +137,14 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
     if not bash:
         pytest.skip("GNU Bash is required for launcher expansion")
     env = os.environ.copy()
-    env.update({"EXPECTED_CODE_COMMIT": "1" * 40,
-        "CODE_DIR": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+    env.update({"EXPECTED_CODE_COMMIT": EXPECTED_CODE_COMMIT,
+        "CODE_DIR": EXPECTED_CODE_DIR,
         "PYTHON": sys.executable, "ENTRY": str(RUNNER).replace("\\", "/"),
         "COORDINATOR": str(COORDINATOR).replace("\\", "/"),
         "SLURM_BIN": "/synthetic/slurm/bin",
         "PREPARED_INPUT": "/synthetic/prepared.pkl", "GPU_REFERENCE_DIR": "/synthetic/gpu-reference",
         "CONFIG": "/synthetic/config.yaml",
-        "RUN_ROOT": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/dry"})
+        "RUN_ROOT": EXPECTED_RUN_ROOT + "/dry"})
     shell = subprocess.run([bash, str(LAUNCHER).replace("\\", "/"), "--dry-run"],
         env=env, text=True, capture_output=True, check=False)
     assert shell.returncode == 0, shell.stderr
@@ -152,6 +155,12 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
         text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
     dry = json.loads(result.stdout)
+    assert dry["contract"] == "CPU48_SINGLE_PROCESS_FULL64_B64_v3"
+    assert dry["expected_execution_commit"] == EXPECTED_CODE_COMMIT
+    scalar_argv = dry["commands"]["scalar"]["argv"]
+    batch_argv = dry["commands"]["batch"]["argv"]
+    assert scalar_argv[scalar_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/scalar"
+    assert batch_argv[batch_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/batch"
     assert dry["model_execution"] is False and dry["JAX_imported"] is False
     assert dry["expected_gpu_reference_sha256"] == EXPECTED_REF
     assert set(dry["runner_cli_dry_runs"]) == {"scalar", "batch"}
@@ -167,7 +176,7 @@ def test_candidate_is_skipped_when_less_than_1800_seconds_remain(tmp_path, monke
 
     project = tmp_path / "project"
     code_dir = project / "runtime/worktrees/cpu48"
-    output = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/run"
+    output = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/run"
     code_dir.mkdir(parents=True)
     subprocess.run(["git", "init", "-q", str(code_dir)], check=True)
     subprocess.run(["git", "config", "user.email", "codex@example.invalid"], cwd=code_dir, check=True)
