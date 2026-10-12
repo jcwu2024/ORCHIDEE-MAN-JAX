@@ -1,85 +1,78 @@
 # Explore1000 Server Benchmark Contract
 
-Current CPU48 contract (2026-10-12): the main CPU candidate is one native FULL64
-B64 process using 48 distinct physical cores, with a complete scalar reference
-followed by five core and five wrapper samples in one 90-minute parent
-allocation. The prior separately authorized execution used commit
-`4f6b2fc906c453b9030acff489637a8f83605dca` in the new immutable CPU48 checkout.
-Canonical CPU runtime, frozen input/reference identities and actual target Bash
-dry-runs passed and are reused. The user explicitly renewed this assignment on
-2026-10-12, allowing a verified matching healthy CPU node and normal queueing.
-`IDLE+PLANNED` and ordinary PENDING are permitted. Node selection is made via
-sbatch arguments so the old launcher default cannot select n04 inadvertently.
-The [previous no-submission result](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)
-remains unchanged: zero sbatch calls, no job or paid allocation, zero paid job
-cost. Its n35-only/closed-session conditions do not constrain this continuation.
-See the
-[CPU48 preparation](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)
-and [concrete proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md).
-The [current single-job authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/AUTHORIZATION.md)
-fixes cnall, one matching healthy node/task, 48 CPUs, zero GPUs, 5400 seconds, no requeue,
-exclusivity or new memory reservation. The complete parent, including scalar,
-is billed at 48 CPUs; terminal parent accounting is counted once. Failure or
-timeout closes the attempt. The historical CPU4 matrix below is not the
-current primary candidate. The existing execution chat completed the unique
-submission and preserved terminal accounting and the startup log.
-The unique submitted job is **15782454**, allocated 48 CPUs on matching node
-`ibc12b07n02` with zero GPUs, then FAILED / ExitCode 2:0 / Elapsed 00:00:01.
-The pinned launcher parsed an empty `AllocTRES` value and emitted
-`Slurm did not report AllocTRES`. The original scontrol output was not saved,
-so the specific reason it could not read that field is unknown. No run root,
-model execution or stage output exists; the collector is inapplicable.
-The exact parent row reports `billing=48,cpu=48,node=1`, counted once:
-CNY0.000666667 primary / CNY0.000933333 conservative planning cost, not a
-verified bill. CPU48 throughput, utilization, RSS, numerical acceptance and
-CPU/GPU measured ratios are unavailable. See the [terminal evidence](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md).
-That one-job authorization is consumed. A new [v2 repair and single-run authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)
-was explicitly granted on 2026-10-12: diagnose and repair resource reading,
-preserve raw stdout/stderr/status, validate the real launcher allocation branch
-(the old dry-run returned before that branch),
-then run one new same-resource job. The v2 version is based on the previous
-execution SHA with an identical physical subtree; only reviewed startup/resource
-changes are included. A new immutable checkout and output namespace preserve v1.
-The ceilings remain CNY3.60/5.04 at the unverified rates, with all scalar time
-charged at 48 parent CPUs. No second submission under the v2 grant is allowed.
-The repair passed independent source review and 22 focused local tests; see the
-[repair evidence](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md).
-Immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2` is deployed with all
-104 physical-source files identical to v1. Target GNU Bash4.2.46 on ibtest01
-completed six fixture cases: valid legacy TRES reached the controlled srun
-stub; five command/record/resource errors were rejected before dispatch.
-The [deployment receipt](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/deployment-receipt.json)
-and raw evidence passed actual-artifact acceptance. This was synthetic, with no
-allocation/model run. The unique paid v2 job **15805735** ran on `ibc12b08n35`
-with 48 CPUs and zero GPUs, then ended `FAILED / ExitCode 1:0 / Elapsed 00:01:49`.
-Real allocation validation passed and the one-CPU scalar step was dispatched.
-After scalar lowering (54.8616 seconds), `_aval_signature` read `.shape` on a
-Python `float`, raising `AttributeError`. No stage, scientific gate or warm
-sample completed, and the B64/48-core batch step did not run.
-The complete 109-second parent is counted once at 48 CPUs:
-CNY0.072666667 primary / CNY0.101733333 conservative, at unverified rates.
-The single-run grant is consumed; no automatic resubmission is permitted.
-CPU48 performance, numerical acceptance and same-workload CPU/GPU ratios remain
-unavailable. See the [v2 terminal result](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md).
+Current status (2026-10-13): unpaid CPU48 v3 preparation for supervisor review.
+The [preparation result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)
+and [new single-job proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
+are the current entry points. No v3 production checkout or paid submission has
+been made; fresh approval is required for one new job. The v1/v2 grants are consumed.
 
-The unpaid AOT repair identified the frozen payload's first failing leaf,
-`.values_by_component[4][67]`, as a Python float. The shared helper now uses
-JAX `shaped_abstractify`; construction admission stays strict on tree, shape,
-dtype and weak type. The exact candidate passed small native checks and actual
-SingleRunner scalar/B2 core-wrapper comparisons for both blocks on ibtest01,
-JAX/jaxlib 0.4.38 with x64. Only physical transition factories were stubbed,
-retaining the full carry tree. Both groups of 64 input trees passed all 536
-leaves' metadata checks; only raw scalars were device-put for that traversal.
-Lanes 0/4 share shape/dtype but differ at 42 weak
-leaves; native weak-only acceptance is recorded and unchanged. The four new
-regressions passed, the AOT subset passed 6/6, and Ruff passed. The full module
-had 50 passes and 10 failures
-at its existing science-source identity guard before AOT. See the
-[repair report](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)
-and [exact-candidate evidence](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/linux-jax-0.4.38-candidate-full-metadata.json).
-Full physical lowering/compilation, GPU, new sbatch and production deployment
-remain unrun and unauthorized. The prior launcher fixtures do not certify the
-scalar signature path, and neither repair nor toy checks renew a paid grant.
+The supervisor accepted the bounded AOT repair at research commit
+`d33fa65bb263b1564ca98f72b81a69e93aabc33f` for metadata and interfaces only.
+The first failing leaf `.values_by_component[4][67]` was a Python float;
+the helper now uses JAX `shaped_abstractify`. Tree/shape/dtype/weak-type
+construction admission and native call behavior are unchanged. Reuse the
+[exact Linux evidence](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/linux-jax-0.4.38-candidate-full-metadata.json):
+both 64-point groups with 536 leaves passed metadata checks on JAX/jaxlib0.4.38
+with x64; actual SingleRunner scalar/B2 core-wrapper checks used stub physical
+factories while preserving the full carry. This is not full physical compilation
+or scientific acceptance. No repeated physical compile is authorized by this preparation.
+
+Execution SHA `03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8`, ref
+`codex/global-cpu48-b64-v3`, has v2
+`b1b5cf0835da298bddb388e61d754feeb6c14cf2` as its parent. Only six reviewed
+harness/test files come from research checkpoint
+`8a860c144f6263fed5b9bf246a88f6d83d36797f`. All 104 physical files and the
+entire `jax_orchidee` tree match v2, with tree OID
+`75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba`, science certificate `11b6…`
+and actual source hash `b334…` unchanged. The research branch's carbon fixes
+remain there. The AOT file SHA is
+`bc8ce1d62f6947228c8c8438344987345bf18095f307c90a2f45dc4655c6891e`.
+The [pin manifest](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/execution-code-pin.json)
+records the verified bundle, patch, identities and v2 prerequisite. Preparation
+tests passed 15/15; source_identity and the exact ten previously failing capacity
+protocol/launcher node IDs passed on the detached v3 checkout under local
+ORCJAX/JAX0.10.1/x64. A separate supplemental AOT/source-certificate selection
+passed 10 cases with 50 deselected. The raw regression receipt distinguishes
+both sets; this is not a new 60-case full-module pass or target-runtime acceptance. The original research
+50-pass/10-science-guard-failure record is preserved; its carbon-source identity
+difference is resolved by the historical-science execution pin without relaxing guards.
+
+Let `P=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. The future immutable code path is
+`P/runtime/worktrees/global-throughput-cpu48-b64-v3`; output is
+`P/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/${SLURM_JOB_ID}`.
+Use canonical `P/.venvs/orcjax_cpu/bin/python`, frozen FULL64 payload and GPU B64
+reference. Their full identities and concrete commands are in the new proposal.
+Target ibtest01 checks used only four exact pinned files in a temporary staging
+directory: Bash launcher expansion and coordinator-to-scalar/batch CLI dry-runs,
+with `model_execution=false` and `JAX_imported=false`. No srun/sbatch was invoked;
+staging was removed and the v3 production path remains absent. The prior accepted
+Linux AOT evidence is reused, not replaced by these entry checks.
+
+The proposed allocation remains cnall, one node/task, 48 distinct physical cores,
+zero GPUs, 5400 seconds, nonexclusive, no requeue and no new memory reservation.
+Let Slurm choose a matching healthy CPU node and queue normally; do not pin n35.
+Clear inherited SBATCH placement, exclusivity and memory settings before the
+future command. The complete parent, including its one-CPU scalar step, is billed
+at 48 CPUs: 48×1.5×CNY0.05=CNY3.60, or CNY5.04 at CNY0.07. Rates are unverified.
+Run the full scalar reference then B64, each with five core and five wrapper
+samples; scalar cap is 2700 seconds and candidate admission requires at least
+1800 seconds remaining. Preserve 64 unique FULL64 points, Days2–8 then9–15,
+48 half-hours/day, 896 point-days, all 760 native output leaves/masks, x64 and
+original dtypes, atol1e-8/rtol1e-10 and existing hard gates. GPU B64 is the
+same-workload comparator; B1024's299.139825 is only a different-workload normalized reference.
+Version/resource/reference errors, hard-gate failure, insufficient remaining
+window or timeout stop the single attempt. Keep raw scontrol stdout/stderr/status
+and count terminal parent accounting once. Full physical lower/compile, numerical
+acceptance, CPU48 warm throughput/RSS and CPU/GPU ratios remain unverified.
+
+Historical v2 job **15805735** ended FAILED1:0 after109 seconds on `ibc12b08n35`
+with48 CPUs/0 GPUs. Real allocation validation passed; scalar lower54.8616 seconds
+was followed by the raw-float signature failure. Compile and B64 were not reached.
+The consumed single-run grant and parent cost scenarios CNY0.072666667/0.101733333
+remain unchanged; see the [v2 terminal result](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md).
+Earlier job15782454 ended FAILED2:0/1 second before model execution; original
+scontrol output was not saved and its AllocTRES read failure remains unassigned.
+That result and the prior n35-only no-submission evidence are historical, not renewed grants.
 
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the

@@ -1,0 +1,293 @@
+diff --git a/scripts/dev/benchmark_global_batch.py b/scripts/dev/benchmark_global_batch.py
+index c6dabc2..569b17c 100644
+--- a/scripts/dev/benchmark_global_batch.py
++++ b/scripts/dev/benchmark_global_batch.py
+@@ -31,6 +31,11 @@ import jax
+ import jaxlib
+ import numpy as np
+ 
++try:
++    from jax._src.api_util import shaped_abstractify as _shaped_abstractify
++except ImportError:  # JAX 0.10 moved this internal helper to core.
++    from jax._src.core import shaped_abstractify as _shaped_abstractify
++
+ try:
+     import psutil
+ except ModuleNotFoundError:
+@@ -428,13 +433,18 @@ def prepare(args, recorder):
+     return lanes, second
+ 
+ 
++def _signature_leaf(value):
++    aval = _shaped_abstractify(value)
++    return tuple(aval.shape), str(aval.dtype), bool(getattr(aval, "weak_type", False))
++
++
+ def _argument_signature(arguments):
+     leaves, tree = jax.tree_util.tree_flatten((tuple(arguments), {}))
+-    return tree, tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in leaves)
++    return tree, tuple(_signature_leaf(value) for value in leaves)
+ 
+ 
+ def _aval_signature(avals):
+-    return tuple((tuple(value.shape), str(value.dtype), bool(getattr(value, "weak_type", False))) for value in avals)
++    return tuple(_signature_leaf(value) for value in avals)
+ 
+ 
+ def describe_aot_signature(stage, arguments, *, lowered=False):
+diff --git a/scripts/dev/prepare_global_cpu48_execution.py b/scripts/dev/prepare_global_cpu48_execution.py
+index 69229fe..348291b 100644
+--- a/scripts/dev/prepare_global_cpu48_execution.py
++++ b/scripts/dev/prepare_global_cpu48_execution.py
+@@ -18,11 +18,13 @@ from pathlib import Path, PurePosixPath
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path.insert(0, str(ROOT))
+ 
+-BASE = "4f6b2fc906c453b9030acff489637a8f83605dca"
++BASE = "b1b5cf0835da298bddb388e61d754feeb6c14cf2"
+ SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+ BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
+ REFERENCE = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+-TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2"
++TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3"
++EXECUTION_REF = "codex/global-cpu48-b64-v3"
++PIN_SCHEMA = "cpu48-b64-immutable-execution-v3"
+ 
+ 
+ def git(repository, *arguments, env=None, data=None):
+@@ -129,7 +131,7 @@ def build(repository, output, *, source, base, ref, harness_paths, expected_scie
+     git(repository, "bundle", "create", str(bundle), full_ref, "^" + base)
+     git(repository, "bundle", "verify", str(bundle))
+     manifest = {
+-        "schema": "cpu48-b64-immutable-execution-v1", "status": "local_preparation_only",
++        "schema": PIN_SCHEMA, "status": "local_preparation_only",
+         "source_research_commit": source, "base_execution_commit": base,
+         "execution_code_commit": execution, "execution_ref": ref, "target_checkout": TARGET,
+         "scientific_source": {**identity, "execution_science_tree_oid": execution_tree,
+@@ -161,7 +163,7 @@ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--source-ref", default="HEAD")
+     parser.add_argument("--base-ref", default=BASE)
+-    parser.add_argument("--execution-ref", default="codex/global-cpu48-b64-v2")
++    parser.add_argument("--execution-ref", default=EXECUTION_REF)
+     parser.add_argument("--harness-path", action="append", required=True)
+     parser.add_argument("--output-dir", type=Path, required=True)
+     args = parser.parse_args()
+diff --git a/scripts/hpc/global_cpu48_b64_coordinator.py b/scripts/hpc/global_cpu48_b64_coordinator.py
+index bdcdd63..3fc82f3 100644
+--- a/scripts/hpc/global_cpu48_b64_coordinator.py
++++ b/scripts/hpc/global_cpu48_b64_coordinator.py
+@@ -285,7 +285,7 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot)
+         for mode in ("scalar", "batch")}
+     if args.dry_run:
+         checks = {mode: runner_dry_run(args, mode) for mode in ("scalar", "batch")}
+-        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2",
++        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3",
+             "expected_execution_commit": args.expected_code_commit, "expected_science_sha256": DEFAULT_SCIENCE_SHA,
+             "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
+             "allocation": {"partition": args.partition, "parent_cpu_count": 48,
+@@ -294,13 +294,13 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot)
+             "runner_cli_dry_runs": checks, "model_execution": False, "JAX_imported": "jax" in sys.modules}
+     allocation = validate_allocation()
+     output = Path(args.output_dir).resolve()
+-    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012"):
+-        raise ValueError("RUN_ROOT must remain in CPU48/B64 v2 outputs")
++    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"):
++        raise ValueError("RUN_ROOT must remain in CPU48/B64 v3 outputs")
+     if output.exists() and any(output.iterdir()):
+         raise ValueError("single-use output directory must be new and empty")
+     output.mkdir(parents=True, exist_ok=True)
+     start = clock()
+-    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2", "status": "running",
++    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3", "status": "running",
+         "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": 5400,
+         "reference_cap_seconds": 2700, "minimum_candidate_seconds": 1800,
+         "allocation": allocation, "host_start_snapshot": snapshot(), "expected_execution_commit": args.expected_code_commit,
+diff --git a/scripts/hpc/slurm_global_server_cpu_48core.sh b/scripts/hpc/slurm_global_server_cpu_48core.sh
+index 99f0781..90a7ac4 100644
+--- a/scripts/hpc/slurm_global_server_cpu_48core.sh
++++ b/scripts/hpc/slurm_global_server_cpu_48core.sh
+@@ -1,21 +1,21 @@
+ #!/usr/bin/env bash
+ # One native FULL64 B64 workload in one 48-CPU parent allocation.
+ # Preparation script only; paid submission requires separate explicit approval.
+-#SBATCH -J orchjax-cpu48-b64-v2
++#SBATCH -J orchjax-cpu48-b64-v3
+ #SBATCH -p cnall
+ #SBATCH --nodes=1
+ #SBATCH --ntasks=1
+ #SBATCH --cpus-per-task=48
+ #SBATCH --time=01:30:00
+-#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt
+-#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt
++#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_%j.txt
++#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_%j.txt
+ #SBATCH --no-requeue
+ 
+ set -euo pipefail
+ 
+ PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+ SLURM_BIN=${SLURM_BIN:-/rmprog/slurm/v22.05.7/bin}
+-CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v2}
++CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v3}
+ CODE_DIR=$(realpath -m "$CODE_DIR")
+ case "$CODE_DIR" in
+   "$PROJECT"/runtime/worktrees/*) ;;
+@@ -27,13 +27,13 @@ COORDINATOR=${COORDINATOR:-$CODE_DIR/scripts/hpc/global_cpu48_b64_coordinator.py
+ PREPARED_INPUT=${PREPARED_INPUT:-$PROJECT/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl}
+ GPU_REFERENCE_DIR=${GPU_REFERENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/gpu-round4/model}
+ CONFIG=${CONFIG:-$CODE_DIR/configs/orchidee_man_250919.yaml}
+-RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/${SLURM_JOB_ID:-dry-run}}
++RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/${SLURM_JOB_ID:-dry-run}}
+ RUN_ROOT=$(realpath -m "$RUN_ROOT")
+ EXPECTED_CODE_COMMIT=${EXPECTED_CODE_COMMIT:?set EXPECTED_CODE_COMMIT to the reviewed execution-only commit}
+ 
+ case "$RUN_ROOT" in
+-  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*) ;;
+-  *) echo "RUN_ROOT must stay under project CPU48/B64 v2 outputs" >&2; exit 2 ;;
++  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/*) ;;
++  *) echo "RUN_ROOT must stay under project CPU48/B64 v3 outputs" >&2; exit 2 ;;
+ esac
+ [[ ${SLURM_CPUS_PER_TASK:-48} == 48 ]] || { echo "requires one 48-CPU parent allocation" >&2; exit 2; }
+ 
+@@ -90,11 +90,11 @@ if [[ $DRY_RUN -eq 1 ]]; then
+ fi
+ 
+ mkdir -p "$PROJECT/runtime/logs"
+-EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012}
++EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012}
+ EVIDENCE_DIR=$(realpath -m "$EVIDENCE_DIR")
+ case "$EVIDENCE_DIR" in
+-  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012) ;;
+-  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v2 output namespace" >&2; exit 2 ;;
++  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012) ;;
++  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v3 output namespace" >&2; exit 2 ;;
+ esac
+ mkdir -p "$EVIDENCE_DIR"
+ export ORCHJAX_SLURM_JOB_RECORD_STDOUT=$EVIDENCE_DIR/scontrol-job-${SLURM_JOB_ID}.stdout
+diff --git a/tests/unit/test_global_cpu48_b64_preparation.py b/tests/unit/test_global_cpu48_b64_preparation.py
+index 3281f93..72fc56c 100644
+--- a/tests/unit/test_global_cpu48_b64_preparation.py
++++ b/tests/unit/test_global_cpu48_b64_preparation.py
+@@ -15,6 +15,9 @@ LAUNCHER = ROOT / "scripts/hpc/slurm_global_server_cpu_48core.sh"
+ RUNNER = ROOT / "scripts/dev/benchmark_global_server_cpu.py"
+ EXPECTED_REF = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+ EXPECTED_SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
++EXPECTED_CODE_COMMIT = "1" * 40
++EXPECTED_CODE_DIR = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3"
++EXPECTED_RUN_ROOT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"
+ 
+ 
+ def write_scontrol_evidence(tmp_path, record=None, *, stderr="", exitcode="0"):
+@@ -134,14 +137,14 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
+     if not bash:
+         pytest.skip("GNU Bash is required for launcher expansion")
+     env = os.environ.copy()
+-    env.update({"EXPECTED_CODE_COMMIT": "1" * 40,
+-        "CODE_DIR": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
++    env.update({"EXPECTED_CODE_COMMIT": EXPECTED_CODE_COMMIT,
++        "CODE_DIR": EXPECTED_CODE_DIR,
+         "PYTHON": sys.executable, "ENTRY": str(RUNNER).replace("\\", "/"),
+         "COORDINATOR": str(COORDINATOR).replace("\\", "/"),
+         "SLURM_BIN": "/synthetic/slurm/bin",
+         "PREPARED_INPUT": "/synthetic/prepared.pkl", "GPU_REFERENCE_DIR": "/synthetic/gpu-reference",
+         "CONFIG": "/synthetic/config.yaml",
+-        "RUN_ROOT": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/dry"})
++        "RUN_ROOT": EXPECTED_RUN_ROOT + "/dry"})
+     shell = subprocess.run([bash, str(LAUNCHER).replace("\\", "/"), "--dry-run"],
+         env=env, text=True, capture_output=True, check=False)
+     assert shell.returncode == 0, shell.stderr
+@@ -152,6 +155,12 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
+         text=True, capture_output=True, check=False)
+     assert result.returncode == 0, result.stderr
+     dry = json.loads(result.stdout)
++    assert dry["contract"] == "CPU48_SINGLE_PROCESS_FULL64_B64_v3"
++    assert dry["expected_execution_commit"] == EXPECTED_CODE_COMMIT
++    scalar_argv = dry["commands"]["scalar"]["argv"]
++    batch_argv = dry["commands"]["batch"]["argv"]
++    assert scalar_argv[scalar_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/scalar"
++    assert batch_argv[batch_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/batch"
+     assert dry["model_execution"] is False and dry["JAX_imported"] is False
+     assert dry["expected_gpu_reference_sha256"] == EXPECTED_REF
+     assert set(dry["runner_cli_dry_runs"]) == {"scalar", "batch"}
+@@ -167,7 +176,7 @@ def test_candidate_is_skipped_when_less_than_1800_seconds_remain(tmp_path, monke
+ 
+     project = tmp_path / "project"
+     code_dir = project / "runtime/worktrees/cpu48"
+-    output = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/run"
++    output = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/run"
+     code_dir.mkdir(parents=True)
+     subprocess.run(["git", "init", "-q", str(code_dir)], check=True)
+     subprocess.run(["git", "config", "user.email", "codex@example.invalid"], cwd=code_dir, check=True)
+diff --git a/tests/unit/test_global_gpu_capacity.py b/tests/unit/test_global_gpu_capacity.py
+index cc8bdbf..23677cd 100644
+--- a/tests/unit/test_global_gpu_capacity.py
++++ b/tests/unit/test_global_gpu_capacity.py
+@@ -26,7 +26,8 @@ def toy_case(monkeypatch):
+     other = [lane.arguments + 1 for lane in lanes]
+     expanded, seconds, origins = capacity.capacity_layout(lanes, other)
+     events = []
+-    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}}, sentinel_paths={})
++    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}},
++        sentinel_paths={}, phase=lambda *a, **kw: None)
+     def lower(fn, arguments, name, recorder):
+         events.append(("compile", len(arguments)))
+         recorder.result["timing"].update({name + "_lower_seconds": 1, name + "_compile_seconds": 2})
+@@ -349,6 +350,57 @@ def test_actual_scalar_AOT_adapter_preserves_native_dtype_and_standard_rejection
+         executable(*first._replace(forcing_days=np.ones((2,),dtype=np.float32)))
+ 
+ 
++def test_aot_signature_abstractifies_python_numpy_jax_and_aval_leaves():
++    values = (1, np.float32(2), jax.numpy.asarray(3, dtype=np.int32),
++              np.ones((2,), dtype=np.float32), jax.ShapeDtypeStruct((3,), np.float64))
++    _, signature = actual_base._argument_signature(values)
++    python_int_dtype = "int64" if jax.config.x64_enabled else "int32"
++    assert signature == (
++        ((), python_int_dtype, True), ((), "float32", False), ((), "int32", False),
++        ((2,), "float32", False), ((3,), "float64", False),
++    )
++    aval = jax.core.ShapedArray((4,), np.dtype("float32"))
++    assert actual_base._aval_signature((aval,)) == (((4,), "float32", False),)
++
++
++def test_raw_python_scalar_lower_compile_and_bound_call_interfaces():
++    recorder = SimpleNamespace(result={"timing": {}}, phase=lambda name: None)
++    executable = actual_base.lower_compile(lambda value: value + 1.25, (2.5,), "python_float", recorder)
++    assert recorder.result["compilations"]["python_float"]["lowered_input_signature"]["caller_leaves"] == 1
++    assert float(executable(2.5)) == 3.75
++    assert float(executable(jax.device_put(4.5))) == 5.75
++
++
++def test_aot_audit_keeps_weak_type_strict():
++    lowered = jax.jit(lambda value: value).lower(1)
++    assert actual_base.audit_aot_signature(lowered, (1,), lowered=True)["public_tree_shape_dtype_weak_type_equal"]
++    strong_same_dtype = np.asarray(1, dtype=np.dtype(actual_base._shaped_abstractify(1).dtype))
++    assert actual_base._signature_leaf(strong_same_dtype)[:2] == actual_base._signature_leaf(1)[:2]
++    assert actual_base._signature_leaf(strong_same_dtype)[2] is False
++    with pytest.raises(TypeError, match="tree/shape/dtype/weak-type"):
++        actual_base.audit_aot_signature(lowered, (strong_same_dtype,), lowered=True)
++
++
++def test_scale_compile_batch_uses_shared_raw_leaf_safe_aot_path(monkeypatch):
++    from jax_orchidee.driver.global_batch import BlockArguments, PreparedLane
++    from scripts.dev import benchmark_global_scale as scale
++
++    lanes, second = [], []
++    for index in range(2):
++        groups = ({"x": np.asarray([index], dtype=np.float64), "optional": None},)
++        arguments = BlockArguments(groups, np.full((7, 48, 1), index, dtype=np.float64),
++            np.arange(2, 9, dtype=np.int32), *({"x": np.asarray(index, dtype=np.float64)} for _ in range(6)))
++        lanes.append(PreparedLane(str(index), None, None, None, None, arguments, (("science", 1),)))
++        second.append(arguments._replace(forcing_days=arguments.forcing_days + 1))
++
++    monkeypatch.setattr(scale.base.batch, "make_batch_transition", lambda selected: lambda *args: args[0])
++    recorder = SimpleNamespace(result={"timing": {}}, phase=lambda name: None)
++    executable, inputs = scale.compile_batch(lanes, second, "stubbed_physics", recorder)
++    assert inputs[0].forcing_days.shape == (2, 7, 48, 1)
++    assert executable(*inputs[0])[0]["x"].shape == (2, 1)
++    assert recorder.result["compilations"]["stubbed_physics"]["lowered_input_signature"]["caller_leaves"] > 0
++
++
+ def sealed_capacity_fixture(tmp_path):
+     """Tiny full-schema envelope exercises admission without a JIT or GPU."""
+     source = tmp_path / "sealed"

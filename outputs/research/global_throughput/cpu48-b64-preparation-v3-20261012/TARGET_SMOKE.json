@@ -1,0 +1,100 @@
+{
+  "schema": "cpu48-b64-v3-test01-dry-run",
+  "status": "passed",
+  "target": "test01 (ibtest01)",
+  "python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+  "python_version": "3.11.15",
+  "target_runtime_contract_from_existing_deployment_evidence": {
+    "python": "3.11.15",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "requested_x64": true,
+    "test01_smoke_imported_jax": false,
+    "version_and_active_x64_verification_in_this_smoke": false
+  },
+  "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+  "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+  "production_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3",
+  "production_checkout_present_at_test": false,
+  "staging_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run",
+  "staged_files": {
+    "scripts/dev/benchmark_global_server_cpu.py": "a773dbe64fc21a93bca4e4fda952c37f97445fc0eaa9eda3b35c93c482aa91dc",
+    "scripts/dev/global_server_resources.py": "c17f37f4d0acd888a9525154489e1815d3d24ff60c6fac030c73e359284dc271",
+    "scripts/hpc/global_cpu48_b64_coordinator.py": "95bc4b4d98609b134492489501763489a2c783c79713a0a83334a4d9d79af816",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh": "577d5d08cc4e7862390661f02cbc38a9b9f247410c8db162ceb5e1b121e96349"
+  },
+  "readonly_target_inspections": [
+    {
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 hostname",
+      "stdout": "ibtest01\n",
+      "exit_code": 0
+    },
+    {
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'test -d /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput'",
+      "stdout": "",
+      "exit_code": 0
+    },
+    {
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'test ! -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run'",
+      "stdout": "",
+      "exit_code": 0
+    },
+    {
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python --version'",
+      "stdout": "Python 3.11.15\n",
+      "exit_code": 0
+    },
+    {
+      "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'test ! -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3'",
+      "stdout": "",
+      "exit_code": 0
+    }
+  ],
+  "staging_operations": {
+    "mkdir": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'mkdir -p /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/dev /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/hpc'",
+    "copy_method": "Four scp -q calls from the detached local v3 verification checkout to the matching scripts/dev and scripts/hpc paths beneath staging_root.",
+    "post_copy_inventory": [
+      "scripts/hpc/global_cpu48_b64_coordinator.py",
+      "scripts/hpc/slurm_global_server_cpu_48core.sh",
+      "scripts/dev/benchmark_global_server_cpu.py",
+      "scripts/dev/global_server_resources.py"
+    ],
+    "cleanup_command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'rm -r -- /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run'",
+    "cleanup_exit_code": 0,
+    "absence_check_command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'test ! -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run'",
+    "absence_check_exit_code": 0,
+    "cleanup_status": "completed_and_verified"
+  },
+  "launcher": {
+    "exit_code": 0,
+    "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 'env CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3 EXPECTED_CODE_COMMIT=03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 SLURM_CPUS_PER_TASK=48 bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/hpc/slurm_global_server_cpu_48core.sh --dry-run'",
+    "stdout_file": "target-launcher.stdout.txt",
+    "allocation_contract": "cnall, 1 node, 1 task, 48 CPUs, 0 GPUs, 5400 seconds, no memory reservation",
+    "primary_worst_case_cny": 3.6,
+    "conservative_worst_case_cny": 5.04,
+    "expanded_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3",
+    "expected_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8"
+  },
+  "coordinator": {
+    "exit_code": 0,
+    "command": "ssh -o BatchMode=yes -o ConnectTimeout=12 test01 '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/hpc/global_cpu48_b64_coordinator.py --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output --project-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX --code-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3 --python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python --entry /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/dev/benchmark_global_server_cpu.py --expected-code-commit 03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --gpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml --dry-run'",
+    "stdout_file": "target-coordinator.stdout.json",
+    "status": "dry_run",
+    "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3",
+    "scalar_runner_cli": "passed",
+    "batch_runner_cli": "passed",
+    "model_execution": false,
+    "JAX_imported": false,
+    "scalar_cpu_budget": 1,
+    "batch_cpu_budget": 48,
+    "sizes": [64],
+    "warm_repeats": 5,
+    "minimum_candidate_seconds": 1800,
+    "wall_seconds": 5400,
+    "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+  },
+  "remote_write_scope": "Only four harness copies under staging_root; no source checkout or scientific data modified.",
+  "scheduler_submission": false,
+  "srun_invoked": false,
+  "cleanup": "Completed; staging_root absence verified after local receipts were written."
+}

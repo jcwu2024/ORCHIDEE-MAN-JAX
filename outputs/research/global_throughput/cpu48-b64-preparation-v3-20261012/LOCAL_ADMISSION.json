@@ -1,0 +1,82 @@
+{
+  "schema": "cpu48-b64-v3-local-admission",
+  "status": "passed",
+  "checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification",
+  "git": {
+    "commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "state": "detached",
+    "clean": true
+  },
+  "python": {
+    "environment": "ORCJAX",
+    "version": "3.11.15",
+    "module": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification/jax_orchidee/__init__.py"
+  },
+  "captured_metadata_commands": [
+    {
+      "command": "git status --short --branch; git rev-parse HEAD; git branch --show-current",
+      "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification",
+      "stdout": "## HEAD (no branch)\n03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8\n",
+      "exit_code": 0
+    },
+    {
+      "command": "conda run -n ORCJAX python -c \"import pathlib,sys,jax_orchidee; print({'python':sys.version.split()[0],'executable':sys.executable,'module':str(pathlib.Path(jax_orchidee.__file__).resolve())})\"",
+      "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification",
+      "stdout": "{'python': '3.11.15', 'executable': 'C:\\\\Users\\\\admin\\\\.conda\\\\envs\\\\ORCJAX\\\\python.exe', 'module': 'E:\\\\ORCHIDEE-MAN-JAX\\\\runtime\\\\worktrees\\\\global-throughput-cpu48-b64-v3-local-verification\\\\jax_orchidee\\\\__init__.py'}\n",
+      "exit_code": 0
+    },
+    {
+      "command": "conda run -n ORCJAX python -c \"import jax,jaxlib; print({'jax':jax.__version__,'jaxlib':jaxlib.__version__,'x64':jax.config.read('jax_enable_x64')})\"",
+      "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification",
+      "stdout": "{'jax': '0.10.1', 'jaxlib': '0.10.1', 'x64': False}\n",
+      "exit_code": 0
+    }
+  ],
+  "source_identity": {
+    "certified_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "execution_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "research_science_tree_oid": "62e90547ee8eadab387713397bb111c399c81b6c",
+    "every_scientific_blob_identical_to_base": true
+  },
+  "focused_rechecks": {
+    "checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification",
+    "commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "git_state": "clean_detached",
+    "python": "3.11.15",
+    "jax": "0.10.1",
+    "jaxlib": "0.10.1",
+    "jax_enable_x64": true,
+    "preparation_suite": {
+      "test_file": "tests/unit/test_global_cpu48_b64_preparation.py",
+      "passed": 15,
+      "total": 15,
+      "evidence_directory": "regression-recheck-20261013"
+    },
+    "original_capacity_protocol_cases": {
+      "test_file": "tests/unit/test_global_gpu_capacity.py",
+      "passed": 10,
+      "total": 10,
+      "selector": "The ten previously failing protocol/launcher node IDs, recorded in original-capacity-protocol-tests.json and REGRESSION_RECEIPT.md.",
+      "stdout": "regression-recheck-20261013/original-capacity-protocol-tests.stdout.txt",
+      "stderr": "regression-recheck-20261013/original-capacity-protocol-tests.stderr.txt",
+      "exit_code": 0
+    },
+    "additional_aot_source_certificate_selection": {
+      "test_file": "tests/unit/test_global_gpu_capacity.py",
+      "passed": 10,
+      "total": 10,
+      "selector_scope": "Four AOT interface tests and six source-certificate parameter cases; supplemental to, not a replacement for, the original capacity protocol cases.",
+      "stdout": "regression-recheck-20261013/capacity-source-guard-tests.stdout.txt",
+      "stderr": "regression-recheck-20261013/capacity-source-guard-tests.stderr.txt",
+      "exit_code": 0
+    },
+    "ruff_python": "passed",
+    "bash_syntax": "passed",
+    "pytest_warning": "Unknown config option: cache_dir when the pytest cache provider is disabled."
+  },
+  "remote_canonical_pytest": "unavailable; no installation attempted",
+  "source_admission_scope": "Local detached source/module/path and identity check only; no model or remote physical execution. Current local ORCJAX is JAX/JAXLIB 0.10.1 with x64 false by default and must not be represented as the target 0.4.38 runtime."
+}

@@ -90,3 +90,13 @@ outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/target-validatio
 # Preserve raw native-JAX signature diagnostic and validation evidence bytes.
 outputs/research/global_throughput/cpu-aot-signature-repair-20261012/*.json -text whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/cpu-aot-signature-repair-20261012/*.txt -text whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve CPU48 v3 pin, patch and captured preparation evidence byte-for-byte.
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/*.json -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/*.patch -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/*.txt -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/*.stdout -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/*.stderr -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/*.exitcode -text
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/regression-recheck-20261013/*.json -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/regression-recheck-20261013/*.txt -text whitespace=-blank-at-eol,-blank-at-eof

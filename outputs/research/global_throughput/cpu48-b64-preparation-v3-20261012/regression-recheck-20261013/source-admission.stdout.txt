@@ -1,0 +1,19 @@
+{
+  "commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+  "cwd": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput-cpu48-b64-v3-local-verification",
+  "executable": "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe",
+  "jax": "0.10.1",
+  "jax_enable_x64": true,
+  "jax_orchidee_init_sha256": "5a1cad2cec1fe45a37d9c5714e65b07b8e1ab78b09985996636a1ab40f27f51a",
+  "jax_orchidee_module": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput-cpu48-b64-v3-local-verification\\jax_orchidee\\__init__.py",
+  "jaxlib": "0.10.1",
+  "python": "3.11.15",
+  "source_identity": {
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba"
+  },
+  "status": ""
+}
+

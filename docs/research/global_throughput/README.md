@@ -1,55 +1,47 @@
 # 全球物理模型吞吐研究
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
-[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
-及[CPU48 v2修复与单次重跑授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)、
-[前次启动失败](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md)、
-[CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
-用户已选接受的B1024作为当前单卡工程选择，下一主问题是CPU/GPU速度与单位成本；
-CPU主候选是单进程native FULL64 B64 batch/vmap、48个不同物理核，CPU4仅为可选短入口检查。
-本地harness/launcher/coordinator/collector及历史科学版本封装用于准备同896 point-days的GPU B64对照；
-具体code pin、90min/48CPU/noGPU命令、CNY3.60/5.04上限及停止规则见
-[运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
-用户于2026-10-12再次明确“好的，继续”，批准定位并修复资源字段读取、保存原始命令错误、
-验证真实启动分支，然后新增一次同规格作业：cnall/1node/1task/48CPU/0GPU/5400s，
-CNY3.60/5.04上限、非exclusive/no-requeue/无新增memory reservation。此次为新授权，非旧额度恢复。
-v2从旧执行SHA `4f6b2fc906c453b9030acff489637a8f83605dca`仅加入经验证的启动/资源修复，
-证明物理子树不变，部署到新的immutable v2路径；当前研究树碳修复不混入历史CPU/GPU对照。
-启动/资源修复已通过独立源码审查和22项本地针对性测试，见[修复证据](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md)。
-immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2`已部署，104个物理源码文件与v1 base完全相同。
-目标GNU Bash4.2.46在ibtest01完成六类模拟检查：有效TRES到达受控srun停止点，五类错误派发前拒绝；原始记录已验收。
-这些模拟检查没有真实allocation或模型运行；[部署回执](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/deployment-receipt.json)记录固定版本和边界。
-唯一v2付费job**15805735**已在`ibc12b08n35`结束：`FAILED / ExitCode 1:0 / Elapsed 00:01:49`，实际48CPU/0GPU。
-真实allocation校验通过，scalar单核step已派发；lower后`_aval_signature`对Python `float`读取`.shape`触发`AttributeError`。
-scalar lower为54.8616s；未完成stage、科学gate或热样本，B64/48核step未运行。
-完整48核父作业只计一次，109s费用情景为CNY0.072666667/0.101733333，费率未核实；本次单次授权已消耗。
-CPU48性能、数值接受和同量CPU/GPU比仍不可用，不自动重提。终态入口见[v2执行结果](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。
-本次**无付费AOT签名修复**已定位同一冻结payload的首个失败叶子
-`.values_by_component[4][67]`：Python float没有`.shape`，旧helper在元数据记录阶段失败。
-共享helper改用JAX `shaped_abstractify`，保留tree/shape/dtype/weak_type构造审计和原native call。
-字节一致的候选在ibtest01/JAX+jaxlib0.4.38/x64通过小函数与实际SingleRunner
-scalar/B2、连续两块、core/wrapper检查；完整carry保留，仅物理transition替换为小函数。
-两段各64点、每点536叶的完整树/元数据一致；该遍历仅device-put原始标量，不搬运数组叶子。
-lane0/4的shape/dtype相同但42处weak_type不同；严格审计拒绝weak-only差异，native call接受，行为未改。
-本地4项新增回归通过，AOT筛选6通过，Ruff通过；整模块50通过/10失败于既有science-source身份门，未到AOT。
-见[修复报告](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)
-及[原始Linux证据](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/linux-jax-0.4.38-candidate-full-metadata.json)。
-这只验证元数据与替身接口；完整物理lower/compile、GPU、新sbatch和生产执行树部署均未执行/未授权。
-此前launcher模拟不作为此次签名修复证据；主管仍须验收实际交付，旧付费额度不恢复。
-严格检查真实allocation及48不同物理核，不默认48、不使用ReqTRES绕过；旧科学与测量合同不变。
-本次授权允许实查同规格健康低负载CPU节点和正常排队，不锁n35；已完成唯一提交和终态监测。
-前次job**15782454**在`ibc12b07n02`获48CPU/0GPU后启动FAILED2:0/1s，模型未运行；
-`AllocTRES`读取失败的底层原因仍未知，旧证据及CNY0.000666667/0.000933333费用情景保留不动。
-前次n35-only[未提交结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)同样保留；
-此前两次状态不产生CPU48吞吐、RSS、数值接受或CPU/GPU实测比，均不复用旧授权。
-1280/1536探索、显存优化及小容差失败不作为前置，B1024不称已证明全局最优。
-旧job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
-283.0-091.0、Day8末rveget/PFT14，32重复一致；原因未归属，本轮科学执行关闭。详见
-[B1024双臂执行结果](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)。
-历史本地准备见[B1024双臂生命周期诊断](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)。
+[CPU48 v3准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)、
+[新的单次运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
+及[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
+当前授权仅为未付费准备；v3尚未生产部署或提交，后续由主管审阅并取得新的单次作业批准。
+用户已选接受的B1024作为当前单卡工程选择，主问题是CPU/GPU速度与单位成本；
+CPU主候选为单进程native FULL64 B64 batch/vmap、48个不同物理核，CPU4不是强制前置。
+
+主管已接受研究提交`d33fa65bb263b1564ca98f72b81a69e93aabc33f`的有界AOT修复：
+首个实际失败叶子`.values_by_component[4][67]`为Python float，共享helper改用JAX `shaped_abstractify`；
+tree/shape/dtype/weak_type构造审计及native call行为保留。Linux JAX0.4.38/x64的两组64点、每点536叶元数据
+和实际scalar/B2连续两块替身接口证据复用，不重复编译。该接受仅限元数据/接口，见
+[修复报告](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)。
+
+新执行pin为`03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8`，ref `codex/global-cpu48-b64-v3`，
+直接基于v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2`，从研究检查点`8a860c1…`只移入审核harness/tests。
+全部104个物理文件、整个`jax_orchidee`子树和旧science证书`11b6…`与v2一致；研究树两项碳修复保留。
+AOT文件精确SHA为`bc8ce1d62f6947228c8c8438344987345bf18095f307c90a2f45dc4655c6891e`。
+[pin清单](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/execution-code-pin.json)
+绑定完整SHA、独立v3代码/输出路径、patch及已验证bundle（依赖v2 base）。
+ORCJAX/JAX0.10.1/x64本地准备测试15通过；新执行版本source_identity通过，原10项容量protocol/launcher失败按具体ID全部通过。
+另10项AOT/source-certificate筛选通过（50未选）；[原始回归记录](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/regression-recheck-20261013/REGRESSION_RECEIPT.md)
+区分两组选例。这不是整容量模块60项重跑或目标JAX0.4.38 runtime接受；原研究50通过/10失败记录不回写，不放宽guard或回退碳修复。
+
+拟议资源为cnall/1node/1task/48CPU/0GPU/5400s、非exclusive/no-requeue/无新增`--mem`；
+全父allocation含scalar都按48核计费，未核实费率的worst-case为CNY3.60/5.04。
+64 unique FULL64点、Days2–8和9–15、48半小时步/天、896 point-days，与已接受GPU B64作同量比较；
+每阶段5 core+5 wrapper，scalar cap2700s，候选须至少剩1800s。760完整native outputs/masks、x64、
+原生dtype、`atol=1e-8/rtol=1e-10`及原硬门保持。健康匹配节点可正常排队，不锁n35；新提案清除继承的提交限制。
+B1024的299.139825只作不同工作量归一化参考。
+完整物理lower/compile、科学gate、CPU48热吞吐/RSS及同量CPU/GPU比仍未验证；本次未运行模型、GPU或sbatch。
+
+旧v2 job**15805735**终态FAILED1:0/109s：真实allocation通过，scalar lower54.8616s后在上述签名helper失败；
+compile和B64未运行。其单次付费授权已消耗，48核父一次费用情景CNY0.072666667/0.101733333，见
+[v2终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。
+更早job15782454的启动失败及n35-only零提交证据原样保留，旧额度均不恢复。
+旧GPU job15769234保存数组定位已接受：仅点283.0-091.0、Day8末rveget/PFT14超界，32重复一致；
+原因未归属，本轮科学执行关闭，见[B1024双臂终态](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)。
+1280/1536探索、显存优化及小容差溯因不是本轮前置；B1024不称已证明全局最优。
 下面保留历史实验上下文，旧“下一步”及额度不自动恢复为新授权。
 
-更新：2026-10-12。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-13。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 
@@ -152,7 +144,7 @@ CPU wrapper为7.052818167587637 point-days/s，GPU为299.1398250995909 lane-days
 scalar最多2700s，候选需至少1800s剩余窗口。整作业含scalar阶段均按48核计费，终态父sacct只计一次。
 B1024是当前GPU工程选择，其大批量吞吐与B64仅作注明不同collection总量的归一化参考；
 完整2048负载适配只在需要该级别端到端对照时再选。详见上方比较和CPU计划。
-具体执行授权见上方入口；旧比较的线性48核数值仍仅是历史算术假设，CPU4与48独立进程方案不作为前置。
+当前仅获上方v3未付费准备授权；新提案待主管审阅和新的单次作业批准。旧比较的线性48核数值仍仅是历史算术假设，CPU4与48独立进程方案不作为前置。
 旧作业预算均关闭，本次固定科学版本、原生dtype、输出和容差不变。
 
 以下为已保存的CPU1和GPU阶段证据，历史工作安排按其当时范围理解。

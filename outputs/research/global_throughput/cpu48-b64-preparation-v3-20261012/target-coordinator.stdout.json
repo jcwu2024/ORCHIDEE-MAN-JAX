@@ -1,0 +1,117 @@
+{
+  "status": "dry_run",
+  "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3",
+  "expected_execution_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+  "expected_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+  "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+  "allocation": {
+    "partition": "cnall",
+    "parent_cpu_count": 48,
+    "wall_seconds": 5400,
+    "primary_worst_case_cny": 3.6,
+    "conservative_worst_case_cny": 5.04
+  },
+  "minimum_candidate_seconds": 1800,
+  "commands": {
+    "scalar": {
+      "argv": [
+        "/rmprog/slurm/v22.05.7/bin/srun",
+        "--ntasks=1",
+        "--cpus-per-task=1",
+        "--cpu-bind=cores",
+        "--export=ALL,OMP_NUM_THREADS=1,MKL_NUM_THREADS=1,OPENBLAS_NUM_THREADS=1,NUMEXPR_NUM_THREADS=1,JAX_PLATFORMS=cpu,JAX_ENABLE_X64=true",
+        "/usr/bin/time",
+        "-v",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/dev/benchmark_global_server_cpu.py",
+        "--mode", "scalar", "--cpu-budget", "1", "--sizes", "64",
+        "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+        "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+        "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml",
+        "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal",
+        "--memory-guard-gib", "24",
+        "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output/scalar"
+      ],
+      "environment": {
+        "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true"
+      }
+    },
+    "batch": {
+      "argv": [
+        "/rmprog/slurm/v22.05.7/bin/srun", "--ntasks=1", "--cpus-per-task=48", "--cpu-bind=cores",
+        "--export=ALL,OMP_NUM_THREADS=48,MKL_NUM_THREADS=1,OPENBLAS_NUM_THREADS=1,NUMEXPR_NUM_THREADS=1,JAX_PLATFORMS=cpu,JAX_ENABLE_X64=true,XLA_FLAGS=--xla_cpu_multi_thread_eigen=true",
+        "/usr/bin/time", "-v", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/dev/benchmark_global_server_cpu.py",
+        "--mode", "batch", "--cpu-budget", "48", "--sizes", "64",
+        "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+        "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+        "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml",
+        "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal",
+        "--memory-guard-gib", "64",
+        "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output/batch",
+        "--cpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output/scalar"
+      ],
+      "environment": {
+        "OMP_NUM_THREADS": "48", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true",
+        "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"
+      }
+    }
+  },
+  "runner_cli_dry_runs": {
+    "scalar": {
+      "command": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/dev/benchmark_global_server_cpu.py",
+        "--mode", "scalar", "--cpu-budget", "1", "--sizes", "64",
+        "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+        "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+        "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml",
+        "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal",
+        "--memory-guard-gib", "24",
+        "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output/scalar",
+        "--dry-run"
+      ],
+      "runner_result": {
+        "status": "dry_run", "mode": "scalar", "CPU_budget": 1, "sizes": [64], "warm_repeats": 5,
+        "physical_performance_requires": "bound cnall/cnmix Slurm allocation", "model_execution": false,
+        "JAX_imported": false, "CPU_process_policy": "scalar", "parent_CPU_count_declared": null,
+        "billing_scope": "full parent allocation including scalar step; actual Slurm admission required",
+        "validation_mode": "exploratory", "cpu_reference_role": "cpu-internal",
+        "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      }
+    },
+    "batch": {
+      "command": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/scripts/dev/benchmark_global_server_cpu.py",
+        "--mode", "batch", "--cpu-budget", "48", "--sizes", "64",
+        "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+        "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+        "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml",
+        "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal",
+        "--memory-guard-gib", "64",
+        "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output/batch",
+        "--cpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/test01-dry-run/coordinator-output/scalar",
+        "--dry-run"
+      ],
+      "runner_result": {
+        "status": "dry_run", "mode": "batch", "CPU_budget": 48, "sizes": [64], "warm_repeats": 5,
+        "physical_performance_requires": "bound cnall/cnmix Slurm allocation", "model_execution": false,
+        "JAX_imported": false,
+        "CPU_process_policy": "one native CPU process/device; lane count is not CPU count",
+        "parent_CPU_count_declared": null,
+        "billing_scope": "full parent allocation including scalar step; actual Slurm admission required",
+        "validation_mode": "exploratory", "cpu_reference_role": "cpu-internal",
+        "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      }
+    }
+  },
+  "model_execution": false,
+  "JAX_imported": false
+}

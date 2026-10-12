@@ -1,0 +1,47 @@
+{
+  "schema": "cpu48-b64-v3-original-capacity-protocol-recheck",
+  "status": "passed",
+  "checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3-local-verification",
+  "git": {
+    "commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "detached": true,
+    "clean": true
+  },
+  "runtime": {
+    "environment": "ORCJAX",
+    "python": "3.11.15",
+    "jax": "0.10.1",
+    "jaxlib": "0.10.1",
+    "JAX_ENABLE_X64": true,
+    "PYTHONDONTWRITEBYTECODE": true,
+    "pytest_cache_provider": false
+  },
+  "command": "conda run -n ORCJAX python -B -m pytest -q -p no:cacheprovider <10 exact node IDs below>",
+  "test_file": "tests/unit/test_global_gpu_capacity.py",
+  "node_ids": [
+    "test_real_Bash_and_Python_capacity_dryrun_without_GPU_initialization",
+    "test_benchmark_seals_each_candidate_before_next_then_conditional_and_baseline[False]",
+    "test_benchmark_seals_each_candidate_before_next_then_conditional_and_baseline[True]",
+    "test_continuation_measures_only256_then512_and_seals_first",
+    "test_continuation_launcher_actual_Bash_expansion[False]",
+    "test_continuation_launcher_actual_Bash_expansion[True]",
+    "test_B512_only_imports_origins_reuses_B256_memory_and_never_measures_baselines[True]",
+    "test_B512_only_imports_origins_reuses_B256_memory_and_never_measures_baselines[False]",
+    "test_B512_launcher_actual_Bash_and_Python_dryrun_from_declared_checkout[False]",
+    "test_B512_launcher_actual_Bash_and_Python_dryrun_from_declared_checkout[True]"
+  ],
+  "result": {
+    "passed": 10,
+    "failed": 0,
+    "warnings": 1,
+    "warning": "Unknown config option: cache_dir when the pytest cache provider is disabled.",
+    "duration_seconds": 5.68,
+    "exit_code": 0
+  },
+  "logs": {
+    "stdout": "original-capacity-protocol-tests.stdout.txt",
+    "stderr": "original-capacity-protocol-tests.stderr.txt",
+    "exit_code": "original-capacity-protocol-tests.exitcode.txt"
+  },
+  "limitations": "Local pinned regression only; not remote JAX 0.4.38 runtime or scientific acceptance."
+}

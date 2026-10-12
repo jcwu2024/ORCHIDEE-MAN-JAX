@@ -1,0 +1,135 @@
+
+# >>>>>>>>>>>>>>>>>>>>>> ERROR REPORT <<<<<<<<<<<<<<<<<<<<<<
+
+    Traceback (most recent call last):
+      File "C:\ProgramData\anaconda3\Lib\site-packages\conda\exception_handler.py", line 18, in __call__
+        return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+      File "C:\ProgramData\anaconda3\Lib\site-packages\conda\cli\main.py", line 84, in main_subshell
+        exit_code = do_call(args, parser)
+                    ^^^^^^^^^^^^^^^^^^^^^
+      File "C:\ProgramData\anaconda3\Lib\site-packages\conda\cli\conda_argparse.py", line 200, in do_call
+        result = getattr(module, func_name)(args, parser)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "C:\ProgramData\anaconda3\Lib\site-packages\conda\cli\main_run.py", line 118, in execute
+        print(response.stdout, file=sys.stdout)
+    UnicodeEncodeError: 'gbk' codec can't encode character '\ufffd' in position 15514: illegal multibyte sequence
+
+`$ C:\ProgramData\anaconda3\Scripts\conda-script.py run -n ORCJAX ruff check scripts/dev/benchmark_global_batch.py scripts/dev/prepare_global_cpu48_execution.py scripts/hpc/global_cpu48_b64_coordinator.py scripts/hpc/slurm_global_server_cpu_48core.sh tests/unit/test_global_cpu48_b64_preparation.py tests/unit/test_global_gpu_capacity.py`
+
+  environment variables:
+                 CIO_TEST=<not set>
+CLAUDE_CODE_GIT_BASH_PATH=C:\Program Files\Git\bin\bash.exe
+CODEX_APP_TOOLS_PIPE_PATH=\\.\pipe\codex-browser-use-ae715ee0-ef5c-410c-accf-dd637a5ec42c
+           CODEX_CLI_PATH=C:\Users\admin\AppData\Local\OpenAI\Codex\bin\2e5e00daee91c61d\codex.e
+                          xe
+      CODEX_MCP_NODE_PATH=C:\Users\admin\AppData\Local\OpenAI\Codex\runtimes\cua_node\cfb32733c8
+                          77621e\bin\node.exe
+      CODEX_TECTONIC_PATH=C:\Program Files\WindowsApps\OpenAI.Codex_26.1007.2314.0_x64__2p2nqsd0
+                          c76g0\app\resources\tectonic\tectonic.exe
+    CONDA_ALLOW_SOFTLINKS=false
+                CONDA_EXE=C:\ProgramData\anaconda3\condabin\..\Scripts\conda.exe
+               CONDA_EXES="C:\ProgramData\anaconda3\condabin\..\Scripts\conda.exe"
+               CONDA_ROOT=C:\ProgramData\anaconda3
+           CURL_CA_BUNDLE=<not set>
+                 HOMEPATH=\Users\admin
+          HYOFFICEAI_PATH=C:\Users\admin\AppData\Local\Programs\HaiYingSoft\OfficeAI
+   HYOFFICEAI_SERVER_PATH=C:\Users\admin\AppData\Local\Programs\HaiYingSoft\OfficeAI_Server
+               LD_PRELOAD=<not set>
+                     PATH=C:\Users\admin\.cache\codex-runtimes\codex-primary-runtime\dependencie
+                          s\native\powershell;C:\Users\admin\.codex\tmp\arg0\codex-
+                          arg0p2Tlf4;C:\Users\admin\.cache\codex-runtimes\codex-primary-runtime\
+                          dependencies\native\libheif\libheif\bin;C:\Users\admin\.cache\codex-
+                          runtimes\codex-primary-runtime\dependencies\native\jxrlib\jxrlib\bin;C
+                          :\Users\admin\.cache\codex-runtimes\codex-primary-runtime\dependencies
+                          \native\poppler\Library\bin;C:\Users\admin\.cache\codex-
+                          runtimes\codex-primary-runtime\dependencies\bin\override;C:\Program Fi
+                          les\Git\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:
+                          \Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
+                          ;C:\Program Files\dotnet\;C:\Program Files (x86)\NVIDIA
+                          Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA
+                          NvDLISR;C:\Program Files\MATLAB\R2024a\runtime\win64;C:\Program Files\
+                          MATLAB\R2024a\bin;C:\Windows\System32;C:\ProgramData\anaconda3\Library
+                          \bin;C:\ProgramData\anaconda3\Scripts;C:\ProgramData\anaconda3;c:\User
+                          s\admin\AppData\Local\Programs\cursor\resources\app\bin;C:\Program
+                          Files\Git\cmd;C:\Program Files (x86)\Pulse
+                          Secure\VC142.CRT\X64\;C:\Program Files (x86)\Pulse
+                          Secure\VC142.CRT\X86\;C:\Program Files (x86)\Common Files\Pulse
+                          Secure\TNC Client Plugin\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\Sy
+                          stem32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\Sys
+                          tem32\OpenSSH\;C:\Program Files\Microsoft VS Code\bin;C:\Program Files
+                          \Docker\Docker\resources\bin;C:\Users\admin\AppData\Local\nvm;C:\nvm4w
+                          \nodejs;C:\Program Files\LibreOffice\program;C:\poppler-
+                          26.02.0\Library\bin;C:\Users\admin\.cache\codex-runtimes\codex-
+                          primary-runtime\dependencies\native\powershell;C:\Users\admin\AppData\
+                          Local\Microsoft\WindowsApps;C:\msys64\ucrt64\bin;C:\Users\admin\AppDat
+                          a\Local\Programs\Ollama;C:\Users\admin\AppData\Roaming\npm;C:\Users\ad
+                          min\AppData\Local\GitHubDesktop\bin;C:\Users\admin\.cherrystudio\bin;C
+                          :\Users\admin\.local\bin;C:/Users/admin/.local/bin;C:\Users\admin\.cac
+                          he\codex-runtimes\codex-primary-
+                          runtime\dependencies\bin\fallback;C:\Users\admin\.cache\codex-
+                          runtimes\codex-primary-
+                          runtime\dependencies\node\bin;C:\Users\admin\.cache\codex-
+                          runtimes\codex-primary-runtime\dependencies\native\git\cmd;C:\Users\ad
+                          min\AppData\Local\OpenAI\Codex\bin\9a7ba4b9ea0c44a3;C:\Users\admin\App
+                          Data\Local\OpenAI\Codex\bin\2e5e00daee91c61d
+             PSMODULEPATH=C:\Users\admin\Documents\PowerShell\Modules;C:\Program
+                          Files\PowerShell\Modules;c:\users\admin\.cache\codex-runtimes\codex-
+                          primary-runtime\dependencies\native\powershell\Modules;C:\Users\admin\
+                          Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell
+                          \Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
+  PYTHONDONTWRITEBYTECODE=1
+       REQUESTS_CA_BUNDLE=<not set>
+            SSL_CERT_FILE=<not set>
+
+     active environment : None
+       user config file : C:\Users\admin\.condarc
+ populated config files : C:\Users\admin\.condarc
+          conda version : 24.5.0
+    conda-build version : 24.5.1
+         python version : 3.12.4.final.0
+                 solver : libmamba (default)
+       virtual packages : __archspec=1=skylake
+                          __conda=24.5.0=0
+                          __cuda=13.1=0
+                          __win=0=0
+       base environment : C:\ProgramData\anaconda3  (read only)
+      conda av data dir : C:\ProgramData\anaconda3\etc\conda
+  conda av metadata url : None
+           channel URLs : https://conda.anaconda.org/conda-forge/win-64
+                          https://conda.anaconda.org/conda-forge/noarch
+                          https://repo.anaconda.com/pkgs/main/win-64
+                          https://repo.anaconda.com/pkgs/main/noarch
+                          https://repo.anaconda.com/pkgs/r/win-64
+                          https://repo.anaconda.com/pkgs/r/noarch
+                          https://repo.anaconda.com/pkgs/msys2/win-64
+                          https://repo.anaconda.com/pkgs/msys2/noarch
+          package cache : C:\ProgramData\anaconda3\pkgs
+                          C:\Users\admin\.conda\pkgs
+                          C:\Users\admin\AppData\Local\conda\conda\pkgs
+       envs directories : C:\Users\admin\.conda\envs
+                          C:\ProgramData\anaconda3\envs
+                          C:\Users\admin\AppData\Local\conda\conda\envs
+               platform : win-64
+             user-agent : conda/24.5.0 requests/2.32.2 CPython/3.12.4 Windows/11 Windows/10.0.26200 solver/libmamba conda-libmamba-solver/24.1.0 libmambapy/1.5.8
+          administrator : False
+             netrc file : None
+           offline mode : False
+
+
+An unexpected error has occurred. Conda has prepared the above report.
+If you suspect this error is being caused by a malfunctioning plugin,
+consider using the --no-plugins option to turn off plugins.
+
+Example: conda --no-plugins install <package>
+
+Alternatively, you can set the CONDA_NO_PLUGINS environment variable on
+the command line to run the command without plugins enabled.
+
+Example: CONDA_NO_PLUGINS=true conda install <package>
+
+
+No report sent. To permanently opt-out, use
+
+    $ conda config --set report_errors false
+
