@@ -6,6 +6,7 @@ paid-only launch management chain and a cooperative shared mutex.
 """
 from __future__ import annotations
 import datetime
+import csv
 from decimal import Decimal, ROUND_CEILING
 import json
 import os
@@ -18,6 +19,7 @@ import stat
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -26,8 +28,8 @@ from scripts.hpc import run_shared_latent_T7_batch_numerics as free
 from scripts.hpc.shared_affine_gpu_admission import (
     AffineScopeLock, SCOPE_LOCK, MANAGEMENT, read_free_admission)
 
-SCOPE_ID = 'T7-summary-affine-paid-gpu-20261011-v2'
-CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-20261011-v2'
+SCOPE_ID = 'T7-summary-affine-paid-recovery-gpu-20261012-v3'
+CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-recovery-20261012-v3'
 SCHEMA = 'T7_affine_paid_slurm_scope_v1'
 OUTPUT_DIR = free.REMOTE / 'outputs/diagnostics' / SCOPE_ID
 OUTPUT = OUTPUT_DIR / 'result.v1.json'
@@ -200,6 +202,73 @@ def validate_allocation(scope, environment, job, hostname):
                 original_visible_devices=environment.get('ORCJAX_SLURM_VISIBLE_DEVICES'),
                 cpu_affinity=sorted(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else None)
 
+class GpuObservationError(ValueError):
+    def __init__(self, message, observation, subprocess_failure=None, cause=None):
+        super().__init__(message)
+        self.observation = observation
+        self.subprocess_failure = subprocess_failure
+        self.cause = cause
+
+def _gpu_query(command, observation):
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=4, check=True)
+    except (subprocess.SubprocessError, OSError) as error:
+        failure = subprocess_failure_detail(error)
+        if failure is None:
+            failure = dict(command=command, stdout=None, stderr=None,
+                           error_type=type(error).__name__, error=str(error))
+        observation['commands'].append(dict(status='failed', **failure))
+        raise GpuObservationError('GPU identity query command failed', observation, failure, error) from error
+    completed = dict(command=command, returncode=result.returncode,
+                     stdout=result.stdout, stderr=result.stderr, status='completed')
+    observation['commands'].append(completed)
+    return completed
+
+def observe_gpu_mapping(environment):
+    """Capture CLI evidence, then bind the reported UUID to its XML minor."""
+    observation = dict(schema_version='T7_paid_gpu_observation_v1', commands=[])
+    index = environment.get('SLURM_JOB_GPUS', '')
+    if not index.isdigit():
+        raise GpuObservationError('single physical SLURM_JOB_GPUS required before observation', observation)
+    try:
+        csv_result = _gpu_query(['nvidia-smi', '-i', index, '--query-gpu=index,uuid,name',
+            '--format=csv,noheader,nounits'], observation)
+        rows = list(csv.reader(csv_result['stdout'].splitlines()))
+        if len(rows) != 1 or len(rows[0]) != 3:
+            raise ValueError('nvidia-smi CSV did not return exactly one index/UUID/name row')
+        host_index, gpu_uuid, gpu_name = (field.strip() for field in rows[0])
+        if (not host_index.isdigit() or host_index != index or not gpu_uuid.startswith('GPU-')
+                or not gpu_name):
+            raise ValueError('Slurm physical GPU/index/UUID/name mapping differs')
+
+        xml_result = _gpu_query(['nvidia-smi', '-i', gpu_uuid, '-q', '-x'], observation)
+        root = ET.fromstring(xml_result['stdout'])
+        if root.tag != 'nvidia_smi_log':
+            raise ValueError('nvidia-smi XML root is not nvidia_smi_log')
+        gpus = root.findall('gpu')
+        if len(gpus) != 1 or len(root.findall('.//gpu')) != 1:
+            raise ValueError('nvidia-smi XML did not return exactly one GPU')
+        gpu = gpus[0]
+        uuids = gpu.findall('uuid')
+        names = gpu.findall('product_name')
+        minors = gpu.findall('minor_number')
+        if len(uuids) != 1 or len(names) != 1 or len(minors) != 1:
+            raise ValueError('nvidia-smi XML UUID/name/minor fields must each occur exactly once')
+        xml_uuid = (uuids[0].text or '').strip()
+        xml_name = (names[0].text or '').strip()
+        minor_text = (minors[0].text or '').strip()
+        if xml_uuid != gpu_uuid:
+            raise ValueError('nvidia-smi XML UUID differs from CSV-selected GPU')
+        if not xml_name or xml_name != gpu_name:
+            raise ValueError('nvidia-smi XML product name differs from CSV-selected GPU')
+        if not re.fullmatch(r'[0-9]+', minor_text):
+            raise ValueError('nvidia-smi XML Linux minor_number is unavailable or invalid')
+        return dict(index=host_index, uuid=gpu_uuid, name=gpu_name, minor_number=int(minor_text)), observation
+    except GpuObservationError:
+        raise
+    except (ValueError, ET.ParseError) as error:
+        raise GpuObservationError(str(error), observation) from error
+
 def admit_gpu_mapping(environment, gpu_rows, devices_rules):
     """Bind Slurm physical GPU ID, UUID and cgroup minor, separately from CVD.
 
@@ -219,7 +288,7 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules):
             or 'V100' not in row['name']):
         raise ValueError('Slurm physical GPU/UUID/V100 mapping differs')
     if minor < 0 or device_pair[1] != minor:
-        raise ValueError('NVML minor_number and actual kernel GPU device minor differ')
+        raise ValueError('XML minor_number and actual kernel GPU device minor differ')
     if visible.startswith('GPU-') and visible != row['uuid']:
         raise ValueError('visible GPU UUID differs')
     if not visible.isdigit() and not visible.startswith('GPU-'):
@@ -368,33 +437,36 @@ def run_live(plan):
     release_safe = False
     try:
         plan['free_management_state'] = read_free_admission()
-        index = os.environ.get('SLURM_JOB_GPUS', '')
-        if not index.isdigit():
-            raise ValueError('single physical SLURM_JOB_GPUS required before observation')
-        observed = subprocess.run(['nvidia-smi', '-i', index, '--query-gpu=index,uuid,name,minor_number', '--format=csv,noheader,nounits'], capture_output=True, text=True, timeout=4, check=True)
-        import csv
-        rows = [dict(zip(('index', 'uuid', 'name', 'minor_number'), [part.strip() for part in row], strict=True)) for row in csv.reader(observed.stdout.strip().splitlines())]
-        for row in rows:
-            device = Path('/dev/nvidia' + str(int(row['minor_number']))).stat()
-            if not stat.S_ISCHR(device.st_mode):
-                raise ValueError('NVML-selected GPU kernel node is not a character device')
-            row.update(device_major=os.major(device.st_rdev), device_minor=os.minor(device.st_rdev), control_devices=[])
-            for name in ('/dev/nvidiactl', '/dev/nvidia-modeset'):
-                node = Path(name)
-                if node.exists():
-                    control = node.stat()
-                    if not stat.S_ISCHR(control.st_mode):
-                        raise ValueError('GPU driver control path is not a character device')
-                    row['control_devices'].append(dict(name=name, major=os.major(control.st_rdev), minor=os.minor(control.st_rdev)))
-        cgroup_path, rules = read_cgroup_rules(plan['slurm_allocation']['job']['JobId'])
-        mapping = admit_gpu_mapping(os.environ, rows, rules)
+        row, observation = observe_gpu_mapping(os.environ)
+        try:
+            rows = [row]
+            for row in rows:
+                device = Path('/dev/nvidia' + str(row['minor_number'])).stat()
+                if not stat.S_ISCHR(device.st_mode):
+                    raise ValueError('XML-selected GPU kernel node is not a character device')
+                row.update(device_major=os.major(device.st_rdev), device_minor=os.minor(device.st_rdev), control_devices=[])
+                for name in ('/dev/nvidiactl', '/dev/nvidia-modeset'):
+                    node = Path(name)
+                    if node.exists():
+                        control = node.stat()
+                        if not stat.S_ISCHR(control.st_mode):
+                            raise ValueError('GPU driver control path is not a character device')
+                        row['control_devices'].append(dict(name=name, major=os.major(control.st_rdev), minor=os.minor(control.st_rdev)))
+            cgroup_path, rules = read_cgroup_rules(plan['slurm_allocation']['job']['JobId'])
+            mapping = admit_gpu_mapping(os.environ, rows, rules)
+        except (OSError, ValueError) as error:
+            if isinstance(error, GpuObservationError):
+                raise
+            raise GpuObservationError(str(error), observation, cause=error) from error
         mapping['cgroup_devices_path'] = cgroup_path
         plan['slurm_gpu_mapping'] = mapping
+        plan['slurm_gpu_observation'] = observation
         plan['phase_environment'] = {'ORCJAX_AFFINE_EXPECTED_GPU_UUID': mapping['gpu_uuid']}
         plan['scope'] = dict(plan['scope'], gpu_host_index=mapping['gpu_host_index'], gpu_uuid=mapping['gpu_uuid'])
         supervisor = free.Supervisor(plan)
         supervisor.record['paid_allocation'] = plan['slurm_allocation']
         supervisor.record['paid_gpu_mapping'] = mapping
+        supervisor.record['paid_gpu_observation'] = observation
         supervisor.record['actual_cost_upper_bound_cny'] = quote()['total_cny']
         for signum in (signal.SIGTERM, signal.SIGINT):
             signal.signal(signum, lambda number, frame: setattr(supervisor, 'interrupted', number))
@@ -452,10 +524,14 @@ def main(argv=None):
             return 0
         return run_live(plan)
     except (ValueError, FileNotFoundError, FileExistsError, KeyError, subprocess.SubprocessError) as error:
+        cause = error.cause if isinstance(error, GpuObservationError) and error.cause is not None else error
         rejection = dict(status='paid_admission_rejected', GPU_executed=False,
             scheduler_attempt_receipt=str(attempt) if attempt else None,
-            error_type=type(error).__name__, error=str(error))
-        subprocess_detail = subprocess_failure_detail(error)
+            error_type=type(cause).__name__, error=str(cause))
+        if isinstance(error, GpuObservationError):
+            rejection['gpu_observation'] = error.observation
+        subprocess_detail = (error.subprocess_failure if isinstance(error, GpuObservationError)
+                             and error.subprocess_failure is not None else subprocess_failure_detail(cause))
         if subprocess_detail is not None:
             rejection['subprocess_failure'] = subprocess_detail
         print(json.dumps(rejection))

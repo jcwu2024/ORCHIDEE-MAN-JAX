@@ -64,13 +64,13 @@ def slurm_copy(tmp_path, with_scope):
     target = checkout / "scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh"
     target.parent.mkdir(parents=True)
     runtime = tmp_path / "mock runtime"
-    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v2"
+    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-recovery-20261012-v3"
     target.write_text(SLURM.read_text().replace(
         "ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime", 'ROOT="' + posix(runtime) + '"'
     ).replace("CODE=" + canonical, 'CODE="' + posix(checkout) + '"'
     ).replace("#SBATCH --chdir=" + canonical, "#SBATCH --chdir=" + posix(checkout)), newline="\n")
     target.with_name("run_shared_latent_T7_batch_numerics_paid.py").write_text("# private mock; never run\n")
-    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v2"
+    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-recovery-gpu-20261012-v3"
     diag.mkdir(parents=True)
     if with_scope:
         (diag / "scope.v1.json").write_text("{}\n")
@@ -92,7 +92,7 @@ def test_slurm_dry_run_prints_exact_paid_resource_and_downstream_argv(tmp_path):
     args = dict(zip(command[2:-1:2], command[3:-1:2], strict=True))
     assert set(args) == {"--checkout-root", "--operands", "--capture-receipt", "--capture-source", "--output", "--scope-json", "--ledger"}
     assert args["--output"] == posix(diag / "result.v1.json")
-    assert args["--ledger"].endswith("/T7-summary-affine-paid-gpu-20261011-v2.ledger.json")
+    assert args["--ledger"].endswith("/T7-summary-affine-paid-recovery-gpu-20261012-v3.ledger.json")
     assert args["--operands"] == posix(runtime / "transfer/T7-summary-recovery-20261011-v1/summary-recovery.v1.operands.npz")
     assert command[-1] == "--dry-run"
     original = SLURM.read_text()
@@ -219,7 +219,7 @@ def test_slurm_start_consumed_before_cpu_admission_and_cannot_retry(tmp_path):
     assert result.returncode == 7
     marker = diag / "slurm-attempt.v1.json"
     original = marker.read_bytes()
-    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-gpu-20261011-v2",
+    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-recovery-gpu-20261012-v3",
         job_id="123456", status="scheduler_started", retry_allowed=False)
     assert calls.read_text().splitlines() == ["child-before-python"]
     second = run(target, [], env)

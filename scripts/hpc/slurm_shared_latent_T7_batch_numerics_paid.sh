@@ -8,14 +8,14 @@
 #SBATCH --nodelist=ibc13b03n01
 #SBATCH --time=00:20:00
 #SBATCH --no-requeue
-#SBATCH --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v2
-#SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v2/slurm-%j.stdout.txt
-#SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-gpu-20261011-v2/slurm-%j.stderr.txt
+#SBATCH --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-recovery-20261012-v3
+#SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-recovery-gpu-20261012-v3/slurm-%j.stdout.txt
+#SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-recovery-gpu-20261012-v3/slurm-%j.stderr.txt
 # Nonexclusive, bounded affine diagnostic; no training or paid submission here.
 set -euo pipefail
-CODE=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-20261011-v2
+CODE=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-recovery-20261012-v3
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime
-ID=T7-summary-affine-paid-gpu-20261011-v2
+ID=T7-summary-affine-paid-recovery-gpu-20261012-v3
 DIAG=$ROOT/outputs/diagnostics/$ID
 INPUT=$ROOT/transfer/T7-summary-recovery-20261011-v1
 SCOPE=$DIAG/scope.v1.json
