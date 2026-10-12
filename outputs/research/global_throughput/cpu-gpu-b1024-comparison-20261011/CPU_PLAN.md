@@ -1,6 +1,6 @@
 # JAX CPU48 / GPU B64 同量对照合同
 
-更新：2026-10-12。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4仅是可选短入口检查。用户已明确[本次续派授权](../cpu48-b64-execution-20261012/AUTHORIZATION.md)：保持原资源、费用上限、科学/测量合同和单次作业，允许选择同规格健康低负载CPU节点并正常排队，解除n35-only限制；`IDLE+PLANNED`和正常PENDING不拒绝提交或关闭。固定执行版本、canonical runtime及完成预检复用。前次[未提交结果](../cpu48-b64-execution-20261011/CURRENT_RESULT.md)0次sbatch/无job/费用0保留，不关闭本次授权。
+更新：2026-10-12。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4仅是可选短入口检查。用户已明确[本次v2授权](../cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)：修复资源读取并验证后，以原资源、费用上限及科学/测量合同新增一次作业。允许同规格健康低负载CPU节点和正常排队，不锁n35；`IDLE+PLANNED`和正常PENDING不拒绝提交或关闭。canonical runtime及未变科学预检复用，新执行版本单独审核部署。前次[未提交结果](../cpu48-b64-execution-20261011/CURRENT_RESULT.md)0次sbatch/无job/费用0保留，不复用旧授权。
 
 实现、封装和检查见 [CPU48 准备结果](../cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、[版本 pin](../cpu48-b64-preparation-20261011/execution-code-pin.json) 和 [具体运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
 本次唯一job**15782454**在`ibc12b07n02`获得48CPU/0GPU后启动失败，
@@ -8,7 +8,10 @@
 原始scontrol输出未保存，字段为何不可读未知。无run root、模型执行、stage或性能/数值测量。
 完整父计费`billing=48,cpu=48,node=1`只计一次，费用情景CNY0.000666667/0.000933333，非核实账单。
 [本次终态证据](../cpu48-b64-execution-20261012/CURRENT_RESULT.md)已保存；单次授权耗尽、不重提。
-下列协议保留为本次不可变合同，后续执行须新派工和对应运行授权。
+用户随后明确“好的，继续”，批准[新v2修复与单次重跑](../cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)：
+先定位资源读取、保存原始错误并验证真实启动分支，再以相同资源/费用上限新增一次作业，不恢复旧额度。
+新版本基于旧执行SHA、物理子树不变，仅纳入验证修复，使用全新immutable checkout和run root。
+下列科学/测量协议继续不变。[修复](../cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md)已通过独立源码审查和22项本地针对性测试；immutable v2部署和目标真实启动验证仍待完成，尚无v2数值或性能测量。
 
 ## 比较对象和不可变科学合同
 
@@ -22,7 +25,7 @@ GPU B64的64条 `native_input_lanes` 与既有FULL64 collector的 `landpoint_id`
 
 执行保持原science `11b6…`、baseline `133e35aec7b83b9d79888c46092f64d518e97299`、64真实独立点、连续Days2–8 / 9–15、48半小时步/天、760完整native输出叶及masks。开启JAX x64，保留原dtype，包括地理payload和solar子计算的FP32。固定 `atol=1e-8, rtol=1e-10`，离散字段精确相同；不改物理核心、序列或容差。
 
-当前研究树已有碳过程修复，不能冒充旧科学身份。执行版本从历史 `8aa2e05aa24b65dc4d30a27d4ee857bba6312221` 创建，只加入明确审核的harness/tests；整个 `jax_orchidee` 子树与base完全相同，当前研究分支及碳修复保留。确切执行SHA、patch/bundle摘要和路径以版本pin为准。
+当前研究树已有碳过程修复，不能冒充旧科学身份。v1从历史 `8aa2e05aa24b65dc4d30a27d4ee857bba6312221` 创建；v2以v1执行SHA `4f6b2fc906c453b9030acff489637a8f83605dca`为base，仅加入审核的启动/资源修复及必要helper/tests。整个 `jax_orchidee` 子树须与base完全相同，当前研究分支及碳修复保留。确切执行SHA、patch/bundle摘要和路径以新版本pin为准。
 
 ## 一个父 allocation 内的协议
 
@@ -49,4 +52,4 @@ scalar MemAvailable guard为24GiB，batch48为64GiB；保存compile前后、firs
 
 core/wrapper热单位费用与整作业分列。完整作业估算优先使用终态sacct的Elapsed/AllocTRES；父作业只计一次，失败费用保留。没有终态accounting时，协调器start/end只能生成所覆盖区间的48核费用估算，整作业费用保持pending，不称完整账单或Slurm全部wall。
 
-具体code/cwd、canonical Python、冻结输入/reference、新输出路径、命令、停止规则和费用上限见 [运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)，本次节点限制按续派授权调整。唯一提交已失败关闭，无第二作业、换执行版本、资源扩展或自动任务。源码核对使用Verify意图和限定source fallback：当前可用图索引属于根main且排除本研究worktree，执行launcher直接按固定SHA核读，不声称完整图覆盖。
+canonical Python、冻结输入/reference、科学协议、停止规则和费用上限见 [运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)；v2使用新审核版本/路径及单次授权，节点按实查健康同规格选择。旧提交已关闭，v2失败/超时也不自动补交或扩大资源。源码核对使用Verify意图和限定source fallback：可用图索引属于根main且排除本研究worktree，不声称完整图覆盖。

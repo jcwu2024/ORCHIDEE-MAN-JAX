@@ -3,7 +3,7 @@
 Current CPU48 contract (2026-10-12): the main CPU candidate is one native FULL64
 B64 process using 48 distinct physical cores, with a complete scalar reference
 followed by five core and five wrapper samples in one 90-minute parent
-allocation. The separately authorized execution uses commit
+allocation. The prior separately authorized execution used commit
 `4f6b2fc906c453b9030acff489637a8f83605dca` in the new immutable CPU48 checkout.
 Canonical CPU runtime, frozen input/reference identities and actual target Bash
 dry-runs passed and are reused. The user explicitly renewed this assignment on
@@ -33,7 +33,19 @@ The exact parent row reports `billing=48,cpu=48,node=1`, counted once:
 CNY0.000666667 primary / CNY0.000933333 conservative planning cost, not a
 verified bill. CPU48 throughput, utilization, RSS, numerical acceptance and
 CPU/GPU measured ratios are unavailable. See the [terminal evidence](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md).
-The one-job authorization is consumed; no second submission is authorized.
+That one-job authorization is consumed. A new [v2 repair and single-run authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)
+was explicitly granted on 2026-10-12: diagnose and repair resource reading,
+preserve raw stdout/stderr/status, validate the real launcher allocation branch
+(the old dry-run returned before that branch),
+then run one new same-resource job. The v2 version is based on the previous
+execution SHA with an identical physical subtree; only reviewed startup/resource
+changes are included. A new immutable checkout and output namespace preserve v1.
+The ceilings remain CNY3.60/5.04 at the unverified rates, with all scalar time
+charged at 48 parent CPUs. No second submission under the v2 grant is allowed.
+The repair passed independent source review and 22 focused local tests; see the
+[repair evidence](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md).
+Immutable v2 deployment and target non-dry startup validation remain pending;
+there are no v2 model or performance results yet.
 
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the

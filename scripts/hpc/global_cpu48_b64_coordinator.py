@@ -26,6 +26,63 @@ def allocated_tres_cpu_count(value: str) -> int:
     return int(entries[0].split("=", 1)[1])
 
 
+def parse_tres(value: str) -> dict[str, str]:
+    if not value:
+        raise ValueError("Slurm allocation TRES is empty")
+    result = {}
+    for item in value.split(","):
+        key, separator, resource_value = item.partition("=")
+        if not separator or not key or not resource_value or key in result:
+            raise ValueError("Slurm allocation TRES contains malformed or duplicate fields")
+        result[key] = resource_value
+    allocated_tres_cpu_count(value)
+    for key, resource_value in result.items():
+        if key.startswith("gres/gpu") and resource_value != "0":
+            raise ValueError("CPU48 allocation TRES contains a GPU")
+    return result
+
+
+def parse_scontrol_job_record(stdout: str) -> dict[str, str]:
+    lines = stdout.splitlines()
+    if len(lines) != 1 or not lines[0].strip():
+        raise ValueError("scontrol must return exactly one nonempty job record")
+    required = {"JobId", "JobState", "Partition", "NodeList", "NumNodes", "NumTasks", "CPUs/Task", "NumCPUs"}
+    tracked = required | {"AllocTRES", "TRES"}
+    values = {}
+    for token in lines[0].split():
+        key, separator, value = token.partition("=")
+        if not separator or key not in tracked:
+            continue
+        if key in values:
+            raise ValueError(f"scontrol job record contains duplicate {key} fields")
+        values[key] = value
+    missing = sorted(required - values.keys())
+    if missing or any(not values[name] for name in required):
+        raise ValueError("scontrol job record is missing required allocation fields: " + ", ".join(missing))
+    return values
+
+
+def _read_scontrol_evidence(env) -> tuple[str, str, dict[str, str]]:
+    paths = {
+        "stdout": env.get("ORCHJAX_SLURM_JOB_RECORD_STDOUT"),
+        "stderr": env.get("ORCHJAX_SLURM_JOB_RECORD_STDERR"),
+        "exitcode": env.get("ORCHJAX_SLURM_JOB_RECORD_EXITCODE"),
+    }
+    if any(not value for value in paths.values()):
+        raise ValueError("saved scontrol stdout/stderr/exitcode paths are required")
+    try:
+        stdout = Path(paths["stdout"]).read_text(encoding="utf-8")
+        stderr = Path(paths["stderr"]).read_text(encoding="utf-8")
+        exitcode_text = Path(paths["exitcode"]).read_text(encoding="ascii").strip()
+    except OSError as exc:
+        raise ValueError(f"saved scontrol evidence could not be read: {exc}") from exc
+    if exitcode_text != "0":
+        raise ValueError("scontrol show job command did not exit successfully")
+    if stderr:
+        raise ValueError("scontrol show job wrote stderr; refusing ambiguous allocation evidence")
+    return stdout, stderr, parse_scontrol_job_record(stdout)
+
+
 def validate_allocation(environ=None) -> dict:
     env = os.environ if environ is None else environ
     if (not env.get("SLURM_JOB_ID") or env.get("SLURM_JOB_PARTITION") != "cnall"
@@ -37,16 +94,54 @@ def validate_allocation(environ=None) -> dict:
         raise ValueError("requires exactly one allocated Slurm node")
     if env.get("ORCHJAX_PARENT_CPU_COUNT") != "48":
         raise ValueError("ORCHJAX_PARENT_CPU_COUNT must bind the full 48-CPU parent allocation")
-    tres = env.get("ORCHJAX_SLURM_ALLOC_TRES", "")
-    if allocated_tres_cpu_count(tres) != 48:
-        raise ValueError("Slurm AllocTRES must account exactly 48 parent CPUs")
-    gpu_entries = [item for item in tres.split(",") if item.split("=", 1)[0].startswith("gres/gpu")]
-    if any(item.split("=", 1)[1] != "0" for item in gpu_entries) or env.get("SLURM_JOB_GPUS"):
+    _, _, record = _read_scontrol_evidence(env)
+    expected = {
+        "JobId": env["SLURM_JOB_ID"],
+        "JobState": "RUNNING",
+        "Partition": "cnall",
+        "NodeList": env.get("SLURM_JOB_NODELIST", ""),
+        "NumNodes": "1",
+        "NumTasks": "1",
+        "CPUs/Task": "48",
+        "NumCPUs": "48",
+    }
+    for field, expected_value in expected.items():
+        if not expected_value or record[field] != expected_value:
+            raise ValueError(f"scontrol {field} does not match the active 48-CPU job environment")
+    if env.get("SLURM_JOB_NUM_NODES", "1") != "1":
+        raise ValueError("SLURM_JOB_NUM_NODES must report exactly one allocated node")
+
+    alloc_tres = record.get("AllocTRES")
+    legacy_tres = record.get("TRES")
+    if alloc_tres:
+        tres, source = alloc_tres, "AllocTRES"
+        selected = parse_tres(tres)
+        if legacy_tres:
+            legacy = parse_tres(legacy_tres)
+            for key in selected.keys() & legacy.keys():
+                if selected[key] != legacy[key]:
+                    raise ValueError(f"AllocTRES and TRES disagree on shared {key} allocation")
+    elif legacy_tres:
+        if record["JobState"] != "RUNNING":
+            raise ValueError("legacy TRES fallback is accepted only for a RUNNING job")
+        tres, source = legacy_tres, "TRES"
+        selected = parse_tres(tres)
+    else:
+        raise ValueError("scontrol job record has neither AllocTRES nor usable TRES")
+    if selected.get("cpu") != "48" or selected.get("node", "1") != "1":
+        raise ValueError("Slurm allocation TRES must report exactly cpu=48 and node=1")
+    if env.get("SLURM_JOB_GPUS"):
         raise ValueError("CPU48 contract prohibits any allocated GPU")
-    if env.get("ORCHJAX_SLURM_ALLOC_TRES_SOURCE") != "AllocTRES":
-        raise ValueError("actual Slurm AllocTRES source must be recorded")
+    exported_tres = env.get("ORCHJAX_SLURM_ALLOC_TRES")
+    exported_source = env.get("ORCHJAX_SLURM_ALLOC_TRES_SOURCE")
+    if exported_tres is not None and exported_tres != tres:
+        raise ValueError("exported allocation TRES differs from saved scontrol evidence")
+    if exported_source is not None and exported_source != source:
+        raise ValueError("exported allocation source differs from saved scontrol evidence")
     return {"job_id": env["SLURM_JOB_ID"], "partition": env["SLURM_JOB_PARTITION"],
-            "nodes": 1, "tasks": 1, "parent_cpu_count": 48, "allocated_tres": tres}
+            "nodes": 1, "tasks": 1, "parent_cpu_count": 48, "allocated_tres": tres,
+            "allocated_tres_source": source, "job_state": record["JobState"],
+            "scontrol_job_record": {key: record[key] for key in expected}}
 
 
 def child_arguments(args, mode: str, output: Path) -> list[str]:
@@ -190,7 +285,7 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) 
         for mode in ("scalar", "batch")}
     if args.dry_run:
         checks = {mode: runner_dry_run(args, mode) for mode in ("scalar", "batch")}
-        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v1",
+        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2",
             "expected_execution_commit": args.expected_code_commit, "expected_science_sha256": DEFAULT_SCIENCE_SHA,
             "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
             "allocation": {"partition": args.partition, "parent_cpu_count": 48,
@@ -199,13 +294,13 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) 
             "runner_cli_dry_runs": checks, "model_execution": False, "JAX_imported": "jax" in sys.modules}
     allocation = validate_allocation()
     output = Path(args.output_dir).resolve()
-    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/server-benchmark"):
-        raise ValueError("RUN_ROOT must remain in project server-benchmark outputs")
+    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012"):
+        raise ValueError("RUN_ROOT must remain in CPU48/B64 v2 outputs")
     if output.exists() and any(output.iterdir()):
         raise ValueError("single-use output directory must be new and empty")
     output.mkdir(parents=True, exist_ok=True)
     start = clock()
-    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v1", "status": "running",
+    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2", "status": "running",
         "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": 5400,
         "reference_cap_seconds": 2700, "minimum_candidate_seconds": 1800,
         "allocation": allocation, "host_start_snapshot": snapshot(), "expected_execution_commit": args.expected_code_commit,

@@ -1,0 +1,86 @@
+{
+  "schema": "cpu48-b64-repair-focused-checks-v1",
+  "captured_date": "2026-10-12",
+  "candidate_files": [
+    "scripts/dev/prepare_global_cpu48_execution.py",
+    "scripts/hpc/global_cpu48_b64_coordinator.py",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh",
+    "tests/unit/test_global_cpu48_b64_preparation.py"
+  ],
+  "local_checks": [
+    {
+      "command": "conda run -n ORCJAX python -m pytest tests/unit/test_global_cpu48_b64_preparation.py tests/unit/test_prepare_global_cpu48_execution.py -q",
+      "exit_code": 0,
+      "result": "22 passed in 9.94s",
+      "scope": "Local unit tests; includes saved-record parser cases, shared billing-conflict rejection, and Bash-to-coordinator-to-runner dry-run expansion."
+    },
+    {
+      "command": "bash -n scripts/hpc/slurm_global_server_cpu_48core.sh",
+      "exit_code": 0,
+      "result": "passed",
+      "scope": "Local Bash syntax only."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "passed; Git printed line-ending notices for unrelated modified .gitattributes and docs files",
+      "scope": "Whitespace check for current working-tree diff."
+    }
+  ],
+  "read_only_scheduler_evidence": {
+    "directory": "outputs/research/global_throughput/cpu48-b64-repair-v2-20261012",
+    "observed_date": "2026-10-12",
+    "purged_failed_job": {
+      "job_id": "15782454",
+      "query_type": "later read-only scontrol re-query after the job was purged; not the original v1 startup command",
+      "original_v1_scontrol_stdout_stderr_exit_status_retained": false,
+      "files": [
+        "scontrol-job-15782454.stdout",
+        "scontrol-job-15782454.stderr",
+        "scontrol-job-15782454.exitcode"
+      ],
+      "requery_stdout_bytes": 0,
+      "requery_stderr": "slurm_load_jobs error: Invalid job id specified",
+      "requery_exit_code": 1,
+      "limitation": "Slurm reports Invalid job id specified on the later query; the original scontrol job record is no longer available. This cannot establish why the v1 launcher did not obtain AllocTRES."
+    },
+    "current_user_queue_snapshot": {
+      "files": ["squeue-current.stdout", "squeue-current.stderr", "squeue-current.exitcode"],
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "exit_code": 0,
+      "interpretation": "No current-user job was listed in this snapshot; this is not a reservation."
+    },
+    "other_running_cnall_job": {
+      "job_id": "15795486",
+      "files": [
+        "scontrol-job-15795486.stdout",
+        "scontrol-job-15795486.stderr",
+        "scontrol-job-15795486.exitcode",
+        "sacct-job-15795486.stdout",
+        "sacct-job-15795486.stderr",
+        "sacct-job-15795486.exitcode"
+      ],
+      "actual_scontrol_state": "RUNNING",
+      "actual_scontrol_tres": "cpu=200,node=40,billing=200",
+      "actual_sacct_row": "15795486|RUNNING|billing=200,cpu=200,node=40|billing=200,cpu=200,mem=40M,node=40|00:04:01|40|200",
+      "interpretation": "The observed AllocTRES matches the active allocation while ReqTRES differs. This unrelated job validates record shape only and says nothing about the failed job or future CPU48 allocation."
+    },
+    "cnall_queue_snapshot": {
+      "files": ["squeue-cnall-active.stdout", "squeue-cnall-active.stderr", "squeue-cnall-active.exitcode"],
+      "actual_stdout": "15795486|liwei|200|ibc13b04n[01-40]",
+      "interpretation": "Point-in-time occupancy evidence only; not an idle-node guarantee or reservation."
+    }
+  },
+  "synthetic_record_fixtures": {
+    "used_in_tests": true,
+    "represent_new_allocation": false,
+    "purpose": "Exercise malformed, missing, duplicate, conflicting (including billing), state-mismatched, and CPU/node-mismatched saved scontrol fields without submitting a job."
+  },
+  "verification_boundary": {
+    "local": "Unit tests, launcher argument expansion, runner CLI dry-runs, and Bash syntax passed. No model execution or JAX import occurred in launcher dry-run checks.",
+    "target_pending": "After immutable pin deployment, run the actual non-dry launcher on a restricted test node through saved scontrol capture and real coordinator --validate-allocation, with a controlled stub that prevents srun and model execution.",
+    "paid_submission": "Not attempted. The target-side validation must pass before the single authorized sbatch submission.",
+    "deployment_or_submission_performed": false
+  }
+}

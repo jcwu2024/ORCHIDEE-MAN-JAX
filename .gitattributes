@@ -71,3 +71,13 @@ outputs/research/global_throughput/gpu-lifecycle-execution-20261011/saved-array-
 # Preserve CPU48 startup and terminal parent accounting bytes on Windows.
 outputs/research/global_throughput/cpu48-b64-execution-20261012/slurm-15782454.log -text
 outputs/research/global_throughput/cpu48-b64-execution-20261012/terminal-parent.sacct.raw -text
+
+# Preserve observed Slurm records and CPU48 v2 startup/accounting evidence.
+outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/*.stdout -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/*.stderr -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/*.exitcode -text
+outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*.log -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*.raw -text
+outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*.stdout -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*.stderr -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*.exitcode -text
