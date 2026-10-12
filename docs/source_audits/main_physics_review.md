@@ -5,9 +5,11 @@
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
 第七阶段恢复候选日志字段/位置并核对零 GPP 分支；第八阶段完成匹配捕获的
-本地观测脚本和轻量预检；原 key 的本地 ACL 阻塞已修复，但服务端仍拒绝
-现有身份认证，尚未执行真实配对捕获。
-实际历史 producer 和 floor 因果仍未核定，尚未确认源级错误。**
+本地观测脚本和轻量预检；随后用用户提供的新身份恢复认证，取得命名历史
+source/executable/build/run/有效 XML 身份，并按实际源码生成日志副本。
+当前可用计算分配及计费/额度条件待核实，真实配对捕获仍未执行。
+命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和 floor 因果
+仍未全部核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
@@ -40,6 +42,10 @@
   均与第六阶段匹配，见
   [jax-plan.json](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-plan.json)。
   本阶段有两组人工 kernel 预检，没有新增真实模型轨迹。
+- 本次恢复执行从已接受的本地准备/认证阻塞进度提交
+  `9c6ef25a1d4c9179541398108815190f44033a55` 的干净 main 开始；cwd、分支和
+  实际 module 导入路径再次确认。本轮新增认证后的有界只读取证及实际源码
+  日志副本；未重跑原16项准备、9项收尾核验或第4–7阶段调查/模型。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -547,11 +553,11 @@ GPP、完整parts/PFTmask、allocation后biomass/f_alloc、tax/floor参数及决
 首个受影响日补48步assimilation/vegetation门槛/累积记录。新的参考必须声明自己的
 producer，不能补称旧历史producer。本轮只写需求，未执行新捕获或申请作业。
 
-## 第八阶段：匹配捕获本地准备完成，远端访问阻塞
+## 第八阶段：新身份恢复连接，真实匹配捕获待计算条件核实
 
 本阶段已获准为 319/1961/PFT14 cold-start 做实际匹配边界捕获，覆盖
 Day337–343、Day359/364。第七阶段的“只写需求”限制不再阻止本阶段执行；
-当前阻塞是本地 ACL 修复后，服务端仍拒绝既有 Cancon 身份认证，见
+前一个进度 checkpoint 的阻塞是本地 ACL 修复后服务端拒绝旧身份，见历史
 [访问回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/access-receipt.json)。
 最初原身份因权限过宽被 OpenSSH 忽略，专用身份本地读取报 Permission denied，
 这些是修复前历史。临时复制 key、收紧副本 ACL 并连接的命令曾被自动审批拒绝，
@@ -567,9 +573,42 @@ Day337–343、Day359/364。第七阶段的“只写需求”限制不再阻止�
 [认证日志](../../outputs/reviews/main-physics-20261012/319-matched-capture/ssh-auth-diagnostic.txt)。
 连接建立、既有 ED25519 主机指纹匹配，server-sig-algs 支持 rsa-sha2-256/512；
 Trying private key 后服务端继续要求认证，不再出现本地 bad-permissions/load-key
-错误。**当前真正阻塞是服务端拒绝现有身份，原因未由日志确定**，不能仅凭
-文件名断言到期。无认证成功、远端命令执行/数据读取、构建或作业；历史
-producer/有效 XML/run.def、计算节点及其资源许可仍待核定。
+错误。**旧身份被服务端拒绝，原因未由日志确定**，不能仅凭文件名断言到期。
+该旧身份阶段没有认证成功、远端数据读取、构建或作业；上述回执保留为历史。
+
+用户随后明确授权新的本机身份（文件名日期为2026-12-24）。首次直连仍被本地
+OpenSSH ACL 拦住；确认 owner 为当前账户后，按授权仅在原文件上收紧 ACL，
+保留原/新 SDDL，未复制、读出或替换密钥。**新身份实际认证成功，连接至 login01。**
+新旧结果分别记录在[新访问回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/access-new-identity.json)与旧回执中。
+原只读 wrapper 主体完成后因末尾 Windows stdin CR 返回127，认证并未失败；
+后续 LF 字节输入的[详细检查](../../outputs/reviews/main-physics-20261012/319-matched-capture/legacy-319-details-new-identity.txt.receipt.json)
+完整 exit0。只读入口补充新日志名及末尾换行处理，所有失败/成功原日志保留。
+
+[身份分析](../../outputs/reviews/main-physics-20261012/319-matched-capture/restored-identity-analysis.json)及
+[取回回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/identified-319-provenance-receipt.json)
+记录实际命名根 `orchidee_jax_319_dayend_20260718` 的31份有界文件（tar 2,170,880 bytes）：
+
+- model/run 两处 `orchidee_ol` 同为55,659,600 bytes，SHA256
+  `c65dc5ecb24c1544cf3aecfb65e30af416f03a34ee7d9c8778649c87346ada58`。
+  最初 build.log 是失败记录；实际后续 `build_v3_link.log` 记录成功链接并在
+  2026-07-18 11:38:34 结束，与二进制 mtime 一致。不能以最初失败日志否定后续构建。
+- 实际 NPP 源 SHA 为 `74d1a77b…03aef`，与本地来源一致；实际 LPJ 为
+  `e4f0ad12…648045`，与先前本地准备底本不同，实际 stomate 为 `1caf1e4a…41be22e`。
+  完整 SHA、路径和出处均在身份分析中；这不是全源码 immutable snapshot 的证明。
+- 实际 used_run.def 为1961/1Y、CO2 317.27、NVM14、三个 restart 输入 NONE、
+  DT_SECHIBA1800/DT_STOMATE86400、PFT14 ok_LAIdev FALSE、tax .8。
+  实际 `PEAT_HYDRO=TRUE`，不能把 case001 的 False 直接扩写为319；全局开关值
+  本身仍不能证明具体 peat mask 支路活跃。本轮不扩展为新的水文调查或 bug 声明。
+- 取回的 LPJ/accumulator/维持呼吸三份原始日值与此前本地分析文件**字节完全相同**。
+  先前已完成的 logger clock 和脉冲定位可通过该文件桥复用。实际有效 XIOS
+  context/field/file XML 已识别：stomate1 启用、1d，四字段 average/1ts/prec4。
+  这补足具体配置/文件身份，仍没有完整 NPP entry 或真正 send 四通量/时钟 tuple。
+
+原 Fortran logger 没有新增捕获所需的完整内部值，因此仍需新的参考 producer。
+已对**取回的实际源码**生成
+[实际来源 patch 审计](../../outputs/reviews/main-physics-20261012/319-matched-capture/actual-source-observers/patch-audit.json)：
+剥离日志恢复实际 npp/lpj 原字节，保留旧 logger 和原算术次序；不会用本地不同
+版本 LPJ 覆盖远端。新副本仅在本轮输出目录，未在远端构建或运行。
 
 本地完成的可审查准备见
 [README](../../outputs/reviews/main-physics-20261012/319-matched-capture/README.md)：
@@ -608,19 +647,22 @@ Fortran 捕获回执缺失时，先于创建 run 目录拒绝；缺回执守卫�
 `0.0003951849734783173`；本阶段没有新科学通过结论，没有确认翻译 bug 或
 floor 因果，也没有重做已完成的舍入排除或 Day199 Oracle。
 
-**唯一立即下一步是等待用户提供可直接使用的当前 Cancon 配置名/本机密钥路径，
-以恢复授权连接；主控已询问，尚未获得可用连接信息。**
-随后用已准备的[只读入口](../../outputs/reviews/main-physics-20261012/319-matched-capture/inspect_legacy_319.ps1)
-和[远端只读脚本](../../outputs/reviews/main-physics-20261012/319-matched-capture/inspect_legacy_319.sh)
-核查命名历史根 `orchidee_jax_319_dayend_20260718` 的身份及实际计算节点许可，
-再决定能否取原内部状态或在 jcwu 新隔离目录生成有自身身份的参考。
-远端脚本本地 bash 语法检查通过，实际目标 shell 执行仍待连接。
-本轮收尾只核对主控新增事实、路径和文档一致性；原16项本地准备核验保留为
-修复前记录，当前访问/文档状态见
-[收尾核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.access-closeout.json)。
-没有重新调用模型、SSH、callback、Fortran 语法或算术 AST 检查；本阶段不据访问
-失败扩大平台/资源授权，也未申请付费作业。这是未完成捕获的进度 checkpoint，
-不代表完整第八阶段科学完成。
+**唯一优先下一步是核实可用计算节点/分配及计费或已有额度条件，形成具体执行方案。**
+认证已恢复，不再等待密钥。Slurm 可见 kshcnormal，账户 qhcess 被允许、QoS
+user_qhcess2，当前账户没有运行作业；分区记录 billing TRES。billing TRES 本身
+不能证明本次运行会产生额外费用，当前无运行作业也不能证明缺少执行权限。
+实际计费、已有额度及可用分配尚未核实。本轮未提交 sbatch/srun，也不在
+login01 编译或运行模型。若确认需要新增付费资源，须先列明资源、时间、目录、
+命令和最坏费用并取得明确批准。本轮不自动改用其他平台。
+现有 Intel 原环境已恢复，ifort 19.1 20200306 的 version 查询 exit0；最初未加载
+环境的 license 错误和 vendor setup 的 unset-variable 失败均保留，不能当作正确
+环境下的当前编译失败。该版本查询仍不替代实际计算节点上的完整编译 admission。
+1961 forcing 实际存在（851,746,768 bytes），只读 size/mtime，未重算整个文件哈希。
+后续新参考仅能在 jcwu 新隔离根进行；当前该根未创建，远端写入/构建/模型均为0。
+原16项和9项记录仍是历史资料；本次新增身份/文件桥/实际源补丁/引用核验见
+[恢复执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.restored-access.json)。
+没有重新调用 callback、旧 Fortran 语法/算术 AST 或 Day199 Oracle；这是未完成
+捕获的进度记录，不代表完整第八阶段科学完成。
 
 ## 已确认限制与优先检查清单
 
@@ -657,15 +699,16 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    第四阶段定位 maintenance 年度负残差及当前 day199 土温输入效应；同输入 Oracle
    通过，局部效应与年度主残差异号。第六阶段已捕获当前完整 compiled 日总量；
    相对历史 trace 的全年净差约 `−0.30914416 gC/m²`，Day337–343 为主脉冲窗，
-   但 trace producer、定义及发送日边界未核定，逐日差仍是暂定定位。日末归约/输出
+   当时 trace producer、定义及发送日边界未核定，逐日差是暂定定位。日末归约/输出
    舍入远不足以解释该差，但没有界定内部轨迹误差。年度因果仍未闭合。
    第七阶段恢复候选logger字段/位置，9天原始累积与LPJ GPP/名义步号一致；
    严格零GPP、泵取和floor的成对源条件已核对，但实际历史producer/XIOS身份、
    完整NPP输入及创建量仍缺失，不能确认具体翻译错误。第八阶段已获准实际
-   匹配捕获并完成本地脚本/轻量预检。原 key 的本地 ACL 阻塞已由主控修复，
-   服务端仍拒绝现有身份，真实配对捕获尚未发生。当前等待用户回复主控已询问的
-   可用 Cancon 配置名/本机密钥路径以恢复授权连接，继而核定历史身份及
-   计算节点许可；不以未配对 JAX 全年运行替代缺失的参考。
+   匹配捕获并完成本地脚本/轻量预检。新身份已认证成功，实际历史源码、二进制、
+   后续成功构建和有效 XML 已识别，三份保存 trace 与命名旧运行字节相同。
+   完整 NPP entry/创建量及真实 send tuple 仍缺失；实际来源的日志副本已准备，
+   可用计算分配及计费/额度条件待核实，真实配对捕获尚未发生。后续先核实这些条件；
+   不以未配对 JAX 全年运行替代缺失的参考。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -796,7 +839,7 @@ metadata_changed、Fortran/历史记录excluded、新产物not_tracked；均以�
 [verification.json](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.json)
 记录实际本地预检、观测撤除/原字节恢复、冻结输入/生产源码保留及最初访问阻塞；
 原16项资料核验未重跑。主控新增 ACL 修复和两次 exit255 认证日志保持原样，
-新增访问事实、文档一致性及路径的9项轻量核验通过；当前服务端认证拒绝记录另见
+新增访问事实、文档一致性及路径的9项轻量核验通过；旧身份服务端认证拒绝记录另见
 [收尾核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.access-closeout.json)。
 [图记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/graph-receipt.json)
 采用 Verify，沿用同一 generation；JAX metadata_changed、Fortran excluded、
@@ -804,5 +847,17 @@ metadata_changed、Fortran/历史记录excluded、新产物not_tracked；均以�
 真实匹配采集及全年等价/科学验收尚未执行。没有生产源码、测试、容差修改或
 新年/点位、GPU、训练、付费工作；执行线程交付时未暂存、提交或推送。
 主控已集中验收本地准备及当前认证阻塞的报告和回执，复用原16项准备核验
-和9项收尾核验，作为进度检查点保存。完整第八阶段捕获仍未完成，等待可用
-连接信息后继续；本次验收不增加科学通过或因果归属结论。
+和9项收尾核验，作为进度检查点保存。当时完整第八阶段捕获仍未完成，等待可用
+连接信息；该验收不增加科学通过或因果归属结论。
+
+随后用户提供新身份，本轮恢复执行从 `9c6ef25a` 开始。新认证成功后的实际只读
+身份恢复、原环境 version admission 和实际源码日志副本见
+[本次命令](../../outputs/reviews/main-physics-20261012/319-matched-capture/commands.new-identity.md)、
+[身份分析](../../outputs/reviews/main-physics-20261012/319-matched-capture/restored-identity-analysis.json)与
+[恢复执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.restored-access.json)。
+新增12项证据/文档核验通过；[本次图记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/graph-receipt.new-identity.json)
+仍为同一 generation 的 Verify，相关产物 not_tracked，以直接来源/产物补足。
+旧记录均保留；可用计算分配及计费/额度条件待核实，未提交作业，未构建/运行真实
+Fortran 或新 JAX 年，没有科学通过/bug 归属。主控已核对本轮报告差异与实际新增
+身份恢复证据，复用上述12项核验，接受历史来源恢复及本地准备的进度检查点。
+本次验收仅涉及这些资料；真实匹配捕获仍未完成，不自动进入其他阶段。
