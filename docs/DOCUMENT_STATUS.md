@@ -83,7 +83,7 @@ wildcard-cgroup isolation gate; no Supervisor/preflight/affine ran. The v3 scope
 is closed/exhausted and attempt consumed. Stop without retry, automatic monitor,
 card change, free fallback, tolerance relaxation or training. Actual CSV/XML works
 for this dispatch, but devices.list/configuration cause and CUDA/PJRT/science remain
-unverified. No source change or adoption follows; new work needs its own grant.
+unverified. No source change or adoption follows; new live GPU/paid execution needs its own grant.
 Old v2 evidence and original false/open snapshots remain; free b676 approval
 stays preserved/paused/unconsumed. The result distinguishes estimated allocation
 cost from absent GPU-child computation and unknown live post-exit cleanup.

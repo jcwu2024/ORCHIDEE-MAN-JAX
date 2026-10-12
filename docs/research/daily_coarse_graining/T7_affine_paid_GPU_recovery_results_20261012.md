@@ -153,5 +153,7 @@ The preparation's Python30/shell10 and actual test01 Bash/parser evidence remain
 valid for unchanged source. Six documentation files constitute this result stage;
 commit/push/clean receipts and final artifact package reside beside the summary.
 
-Stop after this terminal result. Any future isolation investigation or paid run
-requires its own bounded authorization; unused time/ceiling grants no run.
+Stop after this terminal result. A new live runtime isolation experiment or GPU
+allocation requires its own bounded authorization; this consumed grant and its
+unused time/ceiling authorize no new allocation or GPU execution. Saved-evidence
+and CPU static review remain distinct from a new live run.
