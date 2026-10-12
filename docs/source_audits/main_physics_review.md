@@ -4,7 +4,8 @@
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
-尚未确认源级错误。**
+第七阶段恢复候选日志字段/位置并核对零 GPP 分支，实际历史 producer 和
+floor 因果仍未核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
@@ -27,6 +28,10 @@
 - 第五阶段从第四阶段接受提交
   `b7167b72169d39269b43ce8139abb345043817b0` 的干净 main 开始；只读保存值，
   生产源码仍与第三、四阶段相同，未执行新模型或 trace。
+- 第六阶段数值捕获 producer 为
+  `c7110e030bae21512538b1ae45add8d0317ce0d7`；第七阶段从已接受报告提交
+  `103ce03887924eec7ae8e5500b454353016df95a` 的干净 main 开始。
+  两提交之间仅报告改变；本阶段只分析保存值和源码，未生成新模型轨迹。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -453,6 +458,87 @@ XLA simplifier 循环提示；没有致命错误，runner 正常结束并核验�
 核查已有历史 trace 的 producer 身份、发送日边界和相关分支可达性；本阶段证据
 不授权新的实验或轨迹，也不支持物理代码修改。
 
+## 第七阶段：脉冲窗口的日志日界和成对源分支
+
+只对 Day339–343 及 Day337–338、Day359/364 做离线核对，复用第六阶段完整
+捕获和舍入结论，不重跑年度统计、模型或 Oracle。实际分析见
+[analysis.json](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/analysis.json)，
+来源审计见[provenance-audit.json](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/provenance-audit.json)，
+成对出处及观测强度见[分支账本](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/branch-ledger.json)；
+所有本地源码行号有[字面摘录](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/source-excerpts.txt)。
+年度 NPP 原科学失败保持不变：绝对差 `0.0008192662350707` 大于原限值
+`0.0003951849734783 gC/m²/day`。
+
+**恢复的是候选日志定义及生成配方，尚非实际运行身份。**
+`outputs/server_trace_patch/apply_319_dayend_state_trace.py` 91–106 明确写出
+`itime,GPP,NPP,LAI,leaf,root,resp_maint,resp_growth,PFTpresent,age`；锚点为
+`stomate_lpj.f90` 1133–1135，紧接 1118–1131 的 `npp_calc`，位于后续
+kill/gap/turnover 之前。63–89 的另两组日志分别在 GPP 日累积及部件呼吸累积之后，
+以 `MOD(kjit,48)==0` 采样。候选配方
+`outputs/server_trace_patch/run_319_dayend_state_trace.sh` 25–42 指定复制
+`modipsl_250919_dev`、应用补丁、Intel2020 编译并复制 paper XML；47–61
+指定 1961、1Y、cold-start、CO2 317.27。但命名本地 trace 目录保留的8个文件中
+没有实际 patch/build/run 日志、源码 revision/hash、可执行文件身份或当次
+`used_run.def`/有效 XML。目录名及配方不能补成这些身份。调查止于命名记录和
+相关本地字面引用，没有追查无关源码档案或访问服务器。
+
+9天的原始三组日志步号均为 `48*day`，对应当前捕获的零基 `end_tstep+1`；
+`do_slow` 全为 T，累积日志 GPP 与同一步 LPJ GPP 全部一致，LPJ 四通量也与
+第六阶段保存的历史字段一致。这支持候选定义下的**名义时钟及 pre/post-LPJ
+GPP 对齐**，不能证明实际 XIOS 日界。候选 paper XML 的
+`field_def_orchidee.xml` 6 默认 `prec=4, operation=average, freq_op=1ts`，
+697–698 定义维持/生长呼吸；`file_def_orchidee.xml` 726 为1日输出。
+它们没有当次有效 XML 的身份桥。并且日志与发送本来就不在同一源边界：
+`stomate_lpj.f90` 1359–1380 调用 cover/peat cover，3081 的
+`delta_veg>min_stomate` 可在3094–3097修改通量；GPP/NPP 到1677–1678、
+维持/生长呼吸到1702–1703才发送。实际 cover guards/发送值未保存，不能用
+年度匹配或通量恒等式宣称 logger 就是 XIOS 当日输入。
+
+下表都是已保存值，单位 `gC/m²/day`；历史身份仍为暂定。
+
+| Day | JAX GPP | 历史 GPP | JAX 维持呼吸 | 历史维持呼吸 | JAX−历史维持呼吸 |
+| --- | --- | --- | --- | --- | --- |
+| 337 | 0 | `7.40095e-7` | `−1.00000e-8` | `0.3165561771` | `−0.3165561871` |
+| 338 | `1.22414e-6` | 0 | `0.3155357983` | `−1.00000e-8` | `+0.3155358083` |
+| 339 | 0 | `3.32747e-5` | `−1.80167e-12` | `0.3142041233` | `−0.3142041233` |
+| 340 | `2.85359e-5` | `8.17118e-6` | `0.3129171364` | `0.3124278545` | `+0.0004892819` |
+| 341 | 0 | `3.56189e-6` | `−1.78796e-12` | `0.3123610020` | `−0.3123610020` |
+| 342 | `1.95550e-7` | 0 | `0.3120243992` | `−4.81520e-12` | `+0.3120243992` |
+| 343 | `3.44648e-5` | `2.10580e-6` | `0.3119514698` | `0.3114617296` | `+0.0004897401` |
+| 359 | 0 | `9.60326e-7` | `−1.80467e-12` | `0.3096890049` | `−0.3096890049` |
+| 364 | `1.69141e-6` | 0 | `0.3099832018` | `−2.79776e-13` | `+0.3099832018` |
+
+主窗维持呼吸净差为 `−0.3135617040582 gC/m²`。历史零 GPP 的338/342/364日，
+pre-NPP 叶、根两项均为正，和分别为 `0.3042648657`、`0.3003972277`、
+`0.2985995740 gC/m²/day`；这些是直接观测的两项，不能代替全部件/PFT掩码
+下的总量。当前 lite 捕获没有完整 pre-NPP 部件、掩码、储备或 floor 创建量。
+
+| 核对条件 | Fortran 出处 | JAX 出处 | 当前可支持的结论 |
+| --- | --- | --- | --- |
+| PFT 掩码和严格正 GPP / tax | `stomate_npp.f90` 307–357 | `carbon_kernels.py` 3984–4001 | 同样排除 bare、按 present 求和、用 `GPP*dt>0` 和严格 tax 比较。保存 GPP 支持名义 sign 路径；没有完整输入或 tax 决策观测。 |
+| 超 tax 泵取 / 非正 GPP 扣储备 | `stomate_npp.f90` 359–387 | `carbon_kernels.py` 96–105、4001–4014 | 两侧都是相同8部件比例泵取；非正 GPP 则只从碳水储备扣除、令可分配碳为零。实际泵取和储备未知。 |
+| 非 crop 分配 / 正分配才有生长呼吸 | `stomate_npp.f90` 397–491 | `integration.py` 3339–3355、`carbon_kernels.py` 4016–4031 | 当前配置 PFT14 `ok_LAIdev=FALSE`、growth fraction `.28`，按 upstream allocation 传入；具体 f_alloc 未保存。没有扩大为 crop 等价证明。 |
+| 负碳池创建 / 维持呼吸修正 / NPP | `stomate_npp.f90` 505–530 | `carbon_kernels.py` 4033–4049 | 两侧创建 `min_stomate−negative_pool` 并从维持呼吸扣除创建量/dt。JAX精确钉住floor，Fortran顺序加回；没有 bitwise 或所有输入域等价声明。 |
+| 参数绑定和输出映射 | `constantes_var.f90` 177、1263；`stomate_lpj.f90` 1118–1131、1677–1703 | `coupled.py` 39、3013–3080；`integration.py` 2425–2443、3510–3557、5130–5143 | 当前 paper bundle 显式传 `min_stomate=1e-8`，tax默认`.8`与当前saved run.def一致；底层min默认0不是此生产绑定。历史实际参数及发送身份仍未知。 |
+
+**源码支持一种条件机制，尚未证明本窗经过了该floor路径。** 对非crop、
+有限正 pre-maintenance `M`、`dt>0`、GPP=0，若输入储备为`R`且
+`R−M*dt<0`，又没有其他负池/分配，扣储备再做floor会得到 corrected maintenance
+`(R−min_stomate)/dt`；相同上游状态的微小正GPP若走超tax、各部件库存充足，
+可通过分散泵取保留接近`M`的总量。两份源码本身都允许这一零值边界不连续。
+这是带假设的代数分析，没有代入不存在的`R`、完整`M`或创建量观测，
+没有运行合成kernel实验。因而必须分开三件事：源码确有该条件；日值与名义
+sign路径相符；内部浮点/状态扰动是否实际触发了tax/floor及该量级差异。
+第三件事现有证据未测到。第六阶段输出舍入排除结论不界定内部轨迹敏感性。
+
+本阶段**没有确认具体翻译错误**，也没有确定历史参考日界错误或内部浮点成因。
+唯一优先下一步为[最小匹配边界捕获需求](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/minimal-future-capture.json)：
+取得可识别的Fortran/JAX producer、有效输入/日界，在主窗和对照日保存同边界
+GPP、完整parts/PFTmask、allocation后biomass/f_alloc、tax/floor参数及决策/创建量，
+并保存 post-NPP 与真实发送/当前摘要边界四通量及时间；若差异先进入GPP，才对
+首个受影响日补48步assimilation/vegetation门槛/累积记录。新的参考必须声明自己的
+producer，不能补称旧历史producer。本轮只写需求，未执行新捕获或申请作业。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -490,8 +576,10 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    相对历史 trace 的全年净差约 `−0.30914416 gC/m²`，Day337–343 为主脉冲窗，
    但 trace producer、定义及发送日边界未核定，逐日差仍是暂定定位。日末归约/输出
    舍入远不足以解释该差，但没有界定内部轨迹误差。年度因果仍未闭合。
-   下一步仅核对 Day339–343 及 Day337–338、Day359/364 边界对应的既有 trace
-   producer、发送日边界和相关分支可达性；不启动新实验，不据此改物理代码。
+   第七阶段恢复候选logger字段/位置，9天原始累积与LPJ GPP/名义步号一致；
+   严格零GPP、泵取和floor的成对源条件已核对，但实际历史producer/XIOS身份、
+   完整NPP输入及创建量仍缺失，不能确认具体翻译错误。当前唯一优先后续是上节
+   的identified匹配边界最小捕获需求；本阶段只写方案，没有新执行授权。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -598,3 +686,19 @@ stage4 的分段/Oracle 通过证据未重跑；生产、测试、科学阈值�
 `conda run -n ORCJAX python -B outputs/reviews/main-physics-20261012/319-daily-capture/analyze_daily_capture.py --run-dir outputs/reviews/main-physics-20261011/319-late-year/future-diagnostic/runs/capture-20261012T012052Z`。
 终验记录见[verification.final.json](../../outputs/reviews/main-physics-20261012/319-daily-capture/verification.final.json)。
 捕获脚本与物理源码未改；不重跑模型，不暂存、提交或推送。
+
+第七阶段只更新本页和
+`outputs/reviews/main-physics-20261012/319-pulse-boundaries/`。
+[命令记录](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/commands.md)和
+[verification.json](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/verification.json)
+记录实际9天边界核对、逐行源摘录/账本/链接检查、原输入保留及修改范围。
+离线分析可用
+`conda run -n ORCJAX python -B outputs/reviews/main-physics-20261012/319-pulse-boundaries/analyze_pulse_boundaries.py`
+复核。[图记录](../../outputs/reviews/main-physics-20261012/319-pulse-boundaries/graph-receipt.json)
+为可用MCP的Verify：generation仍为`2026-10-10T08:46:50Z`，相关JAX
+metadata_changed、Fortran/历史记录excluded、新产物not_tracked；均以当前精确源码
+和直接记录补足，不声称fresh/full图覆盖。没有重跑第4–6阶段验证，没有生产/测试/
+容差修改、模型/Oracle/Fortran新trace、SSH/服务器/GPU/训练/付费工作；执行线程
+交付时未暂存、提交或推送。主控已核对新增报告、实际产物和关键成对源码，
+复用上述17项通过的轻量核验。本轮有界证据验收通过，不代表年度科学验收
+通过或因果归属已经确认；下一阶段尚未启动。
