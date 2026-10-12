@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # One native FULL64 B64 workload in one 48-CPU parent allocation.
 # Preparation script only; paid submission requires separate explicit approval.
-#SBATCH -J orchjax-cpu48-b64-v2
+#SBATCH -J orchjax-cpu48-b64-v3
 #SBATCH -p cnall
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --time=01:30:00
-#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt
-#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt
+#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_%j.txt
+#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_%j.txt
 #SBATCH --no-requeue
 
 set -euo pipefail
 
 PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 SLURM_BIN=${SLURM_BIN:-/rmprog/slurm/v22.05.7/bin}
-CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v2}
+CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v3}
 CODE_DIR=$(realpath -m "$CODE_DIR")
 case "$CODE_DIR" in
   "$PROJECT"/runtime/worktrees/*) ;;
@@ -27,13 +27,13 @@ COORDINATOR=${COORDINATOR:-$CODE_DIR/scripts/hpc/global_cpu48_b64_coordinator.py
 PREPARED_INPUT=${PREPARED_INPUT:-$PROJECT/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl}
 GPU_REFERENCE_DIR=${GPU_REFERENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/gpu-round4/model}
 CONFIG=${CONFIG:-$CODE_DIR/configs/orchidee_man_250919.yaml}
-RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/${SLURM_JOB_ID:-dry-run}}
+RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/${SLURM_JOB_ID:-dry-run}}
 RUN_ROOT=$(realpath -m "$RUN_ROOT")
 EXPECTED_CODE_COMMIT=${EXPECTED_CODE_COMMIT:?set EXPECTED_CODE_COMMIT to the reviewed execution-only commit}
 
 case "$RUN_ROOT" in
-  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*) ;;
-  *) echo "RUN_ROOT must stay under project CPU48/B64 v2 outputs" >&2; exit 2 ;;
+  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/*) ;;
+  *) echo "RUN_ROOT must stay under project CPU48/B64 v3 outputs" >&2; exit 2 ;;
 esac
 [[ ${SLURM_CPUS_PER_TASK:-48} == 48 ]] || { echo "requires one 48-CPU parent allocation" >&2; exit 2; }
 
@@ -90,11 +90,11 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 mkdir -p "$PROJECT/runtime/logs"
-EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012}
+EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012}
 EVIDENCE_DIR=$(realpath -m "$EVIDENCE_DIR")
 case "$EVIDENCE_DIR" in
-  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012) ;;
-  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v2 output namespace" >&2; exit 2 ;;
+  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012) ;;
+  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v3 output namespace" >&2; exit 2 ;;
 esac
 mkdir -p "$EVIDENCE_DIR"
 export ORCHJAX_SLURM_JOB_RECORD_STDOUT=$EVIDENCE_DIR/scontrol-job-${SLURM_JOB_ID}.stdout

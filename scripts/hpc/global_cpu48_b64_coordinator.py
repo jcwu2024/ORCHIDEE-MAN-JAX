@@ -285,7 +285,7 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) 
         for mode in ("scalar", "batch")}
     if args.dry_run:
         checks = {mode: runner_dry_run(args, mode) for mode in ("scalar", "batch")}
-        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2",
+        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3",
             "expected_execution_commit": args.expected_code_commit, "expected_science_sha256": DEFAULT_SCIENCE_SHA,
             "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
             "allocation": {"partition": args.partition, "parent_cpu_count": 48,
@@ -294,13 +294,13 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) 
             "runner_cli_dry_runs": checks, "model_execution": False, "JAX_imported": "jax" in sys.modules}
     allocation = validate_allocation()
     output = Path(args.output_dir).resolve()
-    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012"):
-        raise ValueError("RUN_ROOT must remain in CPU48/B64 v2 outputs")
+    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"):
+        raise ValueError("RUN_ROOT must remain in CPU48/B64 v3 outputs")
     if output.exists() and any(output.iterdir()):
         raise ValueError("single-use output directory must be new and empty")
     output.mkdir(parents=True, exist_ok=True)
     start = clock()
-    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2", "status": "running",
+    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3", "status": "running",
         "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": 5400,
         "reference_cap_seconds": 2700, "minimum_candidate_seconds": 1800,
         "allocation": allocation, "host_start_snapshot": snapshot(), "expected_execution_commit": args.expected_code_commit,

@@ -26,7 +26,8 @@ def toy_case(monkeypatch):
     other = [lane.arguments + 1 for lane in lanes]
     expanded, seconds, origins = capacity.capacity_layout(lanes, other)
     events = []
-    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}}, sentinel_paths={})
+    recorder = SimpleNamespace(result={"gates": [], "timing": {}, "server_resources": {}, "environment": {}},
+        sentinel_paths={}, phase=lambda *a, **kw: None)
     def lower(fn, arguments, name, recorder):
         events.append(("compile", len(arguments)))
         recorder.result["timing"].update({name + "_lower_seconds": 1, name + "_compile_seconds": 2})
@@ -347,6 +348,57 @@ def test_actual_scalar_AOT_adapter_preserves_native_dtype_and_standard_rejection
     np.testing.assert_array_equal(b[0][0],np.array([6],dtype=np.float32))
     with pytest.raises(TypeError):
         executable(*first._replace(forcing_days=np.ones((2,),dtype=np.float32)))
+
+
+def test_aot_signature_abstractifies_python_numpy_jax_and_aval_leaves():
+    values = (1, np.float32(2), jax.numpy.asarray(3, dtype=np.int32),
+              np.ones((2,), dtype=np.float32), jax.ShapeDtypeStruct((3,), np.float64))
+    _, signature = actual_base._argument_signature(values)
+    python_int_dtype = "int64" if jax.config.x64_enabled else "int32"
+    assert signature == (
+        ((), python_int_dtype, True), ((), "float32", False), ((), "int32", False),
+        ((2,), "float32", False), ((3,), "float64", False),
+    )
+    aval = jax.core.ShapedArray((4,), np.dtype("float32"))
+    assert actual_base._aval_signature((aval,)) == (((4,), "float32", False),)
+
+
+def test_raw_python_scalar_lower_compile_and_bound_call_interfaces():
+    recorder = SimpleNamespace(result={"timing": {}}, phase=lambda name: None)
+    executable = actual_base.lower_compile(lambda value: value + 1.25, (2.5,), "python_float", recorder)
+    assert recorder.result["compilations"]["python_float"]["lowered_input_signature"]["caller_leaves"] == 1
+    assert float(executable(2.5)) == 3.75
+    assert float(executable(jax.device_put(4.5))) == 5.75
+
+
+def test_aot_audit_keeps_weak_type_strict():
+    lowered = jax.jit(lambda value: value).lower(1)
+    assert actual_base.audit_aot_signature(lowered, (1,), lowered=True)["public_tree_shape_dtype_weak_type_equal"]
+    strong_same_dtype = np.asarray(1, dtype=np.dtype(actual_base._shaped_abstractify(1).dtype))
+    assert actual_base._signature_leaf(strong_same_dtype)[:2] == actual_base._signature_leaf(1)[:2]
+    assert actual_base._signature_leaf(strong_same_dtype)[2] is False
+    with pytest.raises(TypeError, match="tree/shape/dtype/weak-type"):
+        actual_base.audit_aot_signature(lowered, (strong_same_dtype,), lowered=True)
+
+
+def test_scale_compile_batch_uses_shared_raw_leaf_safe_aot_path(monkeypatch):
+    from jax_orchidee.driver.global_batch import BlockArguments, PreparedLane
+    from scripts.dev import benchmark_global_scale as scale
+
+    lanes, second = [], []
+    for index in range(2):
+        groups = ({"x": np.asarray([index], dtype=np.float64), "optional": None},)
+        arguments = BlockArguments(groups, np.full((7, 48, 1), index, dtype=np.float64),
+            np.arange(2, 9, dtype=np.int32), *({"x": np.asarray(index, dtype=np.float64)} for _ in range(6)))
+        lanes.append(PreparedLane(str(index), None, None, None, None, arguments, (("science", 1),)))
+        second.append(arguments._replace(forcing_days=arguments.forcing_days + 1))
+
+    monkeypatch.setattr(scale.base.batch, "make_batch_transition", lambda selected: lambda *args: args[0])
+    recorder = SimpleNamespace(result={"timing": {}}, phase=lambda name: None)
+    executable, inputs = scale.compile_batch(lanes, second, "stubbed_physics", recorder)
+    assert inputs[0].forcing_days.shape == (2, 7, 48, 1)
+    assert executable(*inputs[0])[0]["x"].shape == (2, 1)
+    assert recorder.result["compilations"]["stubbed_physics"]["lowered_input_signature"]["caller_leaves"] > 0
 
 
 def sealed_capacity_fixture(tmp_path):
