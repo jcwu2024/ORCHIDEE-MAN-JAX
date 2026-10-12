@@ -57,7 +57,7 @@ Paths are under `scripts/hpc/`.
 | `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
 | `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Deployed b676353 NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; target CPU shell/private-phase checks accepted, container/PJRT/GPU pending; both cards busy, no GPU/preflight/open scope/ledger reservation |
-| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Candidate independent gnall paid admission/one-shot: exact job/node/NumCPUs/AllocTRES/StartTime, actual-job cgroup/UUID-bound XML minor/kernel device mapping and optional CUDA-driver/PJRT UUID binding,20min/4CPU/1GPU/24GiB/quote caps; shared unchanged capture admission and Supervisor, fixed affine probe; v3 CSV/XML route succeeds on actual n01 at58a2d938; sole job15806646 FAILED2:0/7s at wildcard-cgroup isolation gate before Supervisor/preflight/probe; scope closed/consumed |
+| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | New explicit allocated single-GPU scope: exact allocation/clock/cost, CSV/XML/kernel and actual-job cgroup evidence, separately reported OS permission isolation, mandatory container UUID/contract and actual preflight+affine CUDA/PJRT identity. Strict helper default remains; original math/count/memory/release gates unchanged. Independent c8a44c3/test01 CPU deployment admitted; scope false, no GPU/submission. |
 | `shared_affine_gpu_admission.py`, `shared_affine_cuda_identity.py`, `freeze_shared_affine_paid_scope.py` | Candidate persistent atomic cross-scope mutex, bounded read-only known free-state admission under the sole paid launch owner; old b676 remains untouched, actual accepted-commit→false scope/source manifest generation; no automatic free-approval migration or stale-lock takeover |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
@@ -83,11 +83,12 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
-The [local startup evidence remediation](research/daily_coarse_graining/T7_paid_startup_evidence_remediation_20261012.md)
-adds local CPU-tested observations across paid startup without changing hard gates.
-The candidate is not frozen/deployed or covered by a live GPU authorization;
-job15806646 remains closed/consumed and free b676 paused/unconsumed.
-Current work is evidence review/versioning only; no remote action or retry.
+The [single-GPU contract and concrete proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md)
+is ready for new live review: explicit allocated-GPU execution contract,
+independent frozen c8a44c3 deployment and actual test01 CPU dry-run;88 local
+cases pass. The new n04/4CPU/1V100/20min/ceilingCNY1 scope remains false.
+OS device-open isolation is reported separately as unverified. No GPU
+command, preflight, affine probe or paid submission occurred; stop for review.
 
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns latest approval/execution: sole fixed n01 job15806646 at58a2d938 ended

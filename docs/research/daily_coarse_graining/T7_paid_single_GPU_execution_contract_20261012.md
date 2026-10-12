@@ -4,7 +4,7 @@
 scope `T7-summary-affine-paid-single-gpu-20261012-v1`. Preparation is authorized;
 live execution is not. The proposed scope must remain `status=proposed`,
 `execution_authorized=false`. The [preparation result/proposal](T7_paid_single_GPU_preparation_results_20261012.md)
-will bind the actual immutable commit, target CPU evidence and concrete request.
+binds the actual immutable commit, target CPU evidence and concrete request.
 
 ## Deliberate boundary
 

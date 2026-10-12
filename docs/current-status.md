@@ -65,11 +65,12 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
-The [local startup evidence remediation](research/daily_coarse_graining/T7_paid_startup_evidence_remediation_20261012.md)
-adds local CPU-tested observations across paid startup without changing hard gates.
-The candidate is not frozen/deployed or covered by a live GPU authorization;
-job15806646 remains closed/consumed and free b676 paused/unconsumed.
-Current work is evidence review/versioning only; no remote action or retry.
+The [single-GPU contract and concrete proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md)
+is ready for new live review: explicit allocated-GPU execution contract,
+independent frozen c8a44c3 deployment and actual test01 CPU dry-run;88 local
+cases pass. The new n04/4CPU/1V100/20min/ceilingCNY1 scope remains false.
+OS device-open isolation is reported separately as unverified. No GPU
+command, preflight, affine probe or paid submission occurred; stop for review.
 
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns paid execution status. Direct human “批准。” authorized the exact58a2d938
@@ -80,7 +81,7 @@ single-device-isolation gate. Exact devices.list/configuration cause was not
 retained; no Supervisor/preflight/CUDA-PJRT/affine12/91 ran. Numerical status is
 not_executed, not a numerical failure. Allocation0.0019444444card-hours,
 estimated additive CNY0.0048222222; actual bill unknown. Scope closed and consumed,
-mutex absent; no live post-exit GPU cleanup observation. Stop: no repair-and-rerun,
+mutex absent; no live post-exit GPU cleanup observation. That old scope grants no repair-and-rerun,
 replacement, monitoring, card change, tolerance relaxation, free fallback or training.
 Old v2/f4ae evidence remains; free b676 stays paused/approved/unconsumed.
 
