@@ -19,6 +19,14 @@ ID=T7-summary-affine-paid-recovery-gpu-20261012-v3
 DIAG=$ROOT/outputs/diagnostics/$ID
 INPUT=$ROOT/transfer/T7-summary-recovery-20261011-v1
 SCOPE=$DIAG/scope.v1.json
+paid_slurm_exit_evidence() {
+  local code=$?
+  if ((code != 0)); then
+    printf 'PAID_SLURM_STARTUP exit_code=%q SLURM_JOB_ID=%q checkout=%q scope=%q output_directory=%q attempt=%q argument_count=%q retry_allowed=false\n' \
+      "$code" "${SLURM_JOB_ID-}" "$CODE" "$SCOPE" "$DIAG" "${ATTEMPT-}" "$#" >&2
+  fi
+}
+trap 'paid_slurm_exit_evidence "$@"' EXIT
 if [[ ${1:-} != --dry-run ]]; then
   [[ ${SLURM_JOB_ID:-} =~ ^[0-9]+$ ]] || { printf '%s\n' 'Scheduler attempt state unknown; no automatic retry; operator must retain pre-submission receipt' >&2; exit 2; }
   # This is the first filesystem operation of a live launch, even when the

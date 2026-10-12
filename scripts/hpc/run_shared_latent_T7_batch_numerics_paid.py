@@ -44,6 +44,51 @@ RESOURCES = dict(partition='gnall', node=NODE, nodes=1, tasks=1,
                  allocated_slurm_cpus=4, gpus=1, wall_seconds=1200,
                  nonexclusive=True, requeue=False)
 RATES = dict(cpu_cny_per_allocated_cpu_hour='0.07', gpu_cny_per_gpu_hour='2.20')
+EVIDENCE_ENVIRONMENT = (
+    'SLURM_JOB_ID', 'SLURM_JOB_GPUS', 'SLURM_STEP_GPUS', 'SLURM_CPUS_PER_TASK',
+    'SLURM_NTASKS', 'SLURM_JOB_NUM_NODES', 'SLURM_JOB_PARTITION',
+    'SLURM_JOB_START_TIME', 'SLURM_JOB_END_TIME', 'ORCJAX_SLURM_VISIBLE_DEVICES',
+    'CUDA_VISIBLE_DEVICES', 'ORCJAX_AFFINE_EXPECTED_GPU_UUID',
+    'OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'JAX_PLATFORMS')
+
+
+def startup_observation(environment):
+    return dict(schema_version='T7_paid_startup_observation_v1', stage='scope',
+                environment={key: environment.get(key) for key in EVIDENCE_ENVIRONMENT},
+                files=[], commands=[])
+
+
+class PaidStartupError(ValueError):
+    def __init__(self, message, observation, cause=None):
+        super().__init__(message)
+        self.observation, self.cause = observation, cause
+
+
+def _read_text(path, observation, label):
+    row = dict(label=label, path=str(path), operation='read_text')
+    observation['files'].append(row)
+    try:
+        row['text'] = Path(path).read_text(encoding='utf-8')
+        row['status'] = 'read'
+        return row['text']
+    except OSError as error:
+        row.update(status='failed', error_type=type(error).__name__, error=str(error),
+                   errno=error.errno)
+        raise PaidStartupError(str(error), observation, error) from error
+
+
+def _record_command(command, observation):
+    row = dict(command=command, status='started')
+    observation['commands'].append(row)
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=4, check=True)
+    except (subprocess.SubprocessError, OSError) as error:
+        row.update(status='failed', **(subprocess_failure_detail(error) or
+            dict(error_type=type(error).__name__, error=str(error))))
+        raise PaidStartupError(str(error), observation, error) from error
+    row.update(status='completed', returncode=getattr(result, 'returncode', 0),
+               stdout=result.stdout, stderr=getattr(result, 'stderr', ''))
+    return result
 
 def quote():
     cpu = Decimal('4') * Decimal('1200') / Decimal('3600') * Decimal('0.07')
@@ -85,12 +130,16 @@ def tres(value):
         result[key] = number
     return result
 
-def allocation_epochs(environment, job):
+def allocation_epochs(environment, job, *, observation=None):
     """Scheduler clock; 22.05.7 batch env does not supply JOB_START/END_TIME.
 
     Original env tokens, when present, are additional exact crosschecks.
     Neither shell/Python startup nor a renewed deadline is an admissible clock.
     """
+    if observation is not None:
+        observation['allocation_clock'] = dict(job=job,
+            original_start=environment.get('SLURM_JOB_START_TIME'),
+            original_end=environment.get('SLURM_JOB_END_TIME'), protected_release_seconds=180)
     if (not str(environment.get('SLURM_JOB_ID', '')).isdigit()
             or job.get('JobId') != environment['SLURM_JOB_ID']
             or job.get('JobState') != 'RUNNING' or job.get('TimeLimit') != '00:20:00'):
@@ -111,6 +160,8 @@ def allocation_epochs(environment, job):
     start, end = epochs
     runtime = seconds(job.get('RunTime', ''))
     now = time.time()
+    if observation is not None:
+        observation['allocation_clock']['observed_epoch'] = now
     if end - start != 1200:
         raise ValueError('allocation end epoch differs from exact paid wall limit')
     if start > now or now >= end or runtime >= 1020:
@@ -154,18 +205,36 @@ def allocated_tres(job):
 
 
 def scheduler_allocation_epochs():
+    observation = startup_observation(os.environ)
+    observation['stage'] = 'scheduler_allocation_clock'
+    try:
+        return _scheduler_allocation_epochs(observation)
+    except (ValueError, KeyError, OSError, subprocess.SubprocessError) as error:
+        cause = error.cause if isinstance(error, PaidStartupError) and error.cause else error
+        observation['error'] = dict(type=type(cause).__name__, message=str(cause))
+        raise PaidStartupError(str(cause), observation, cause) from error
+    finally:
+        # stdout remains the exact two-token shell protocol; stderr is evidence.
+        print(json.dumps(dict(paid_startup_observation=observation)), file=sys.stderr)
+
+
+def _scheduler_allocation_epochs(observation):
     if not os.environ.get('SLURM_JOB_ID', '').isdigit():
         raise ValueError('numeric actual Slurm job ID required')
-    result = subprocess.run([SLURM, 'show', 'job', '--details', '-o',
-        os.environ.get('SLURM_JOB_ID', 'missing')], capture_output=True,
-        text=True, timeout=4, check=True)
-    start, end = allocation_epochs(os.environ, parse_job(result.stdout))
+    result = _record_command([SLURM, 'show', 'job', '--details', '-o',
+        os.environ.get('SLURM_JOB_ID', 'missing')], observation)
+    job = parse_job(result.stdout)
+    observation['slurm_job'] = job
+    start, end = allocation_epochs(os.environ, job, observation=observation)
     print(start, end)
     return 0
 
 
-def validate_allocation(scope, environment, job, hostname):
+def validate_allocation(scope, environment, job, hostname, *, observation=None):
     """No GPU query: exact paid scheduling/charge admission, never CPU fallback."""
+    if observation is not None:
+        observation.update(slurm_job=job, hostname=hostname,
+            expected_resources=RESOURCES, expected_rates=RATES, expected_quote=quote())
     if scope.get('resources') != RESOURCES or scope.get('rates') != RATES:
         raise ValueError('paid resource/rate contract differs')
     required = dict(JobId=environment.get('SLURM_JOB_ID'), JobState='RUNNING',
@@ -191,7 +260,7 @@ def validate_allocation(scope, environment, job, hostname):
         raise ValueError('Slurm GresDetail physical allocation differs from environment')
     if job.get('OverSubscribe') != 'OK':
         raise ValueError('unexpected job resource sharing policy')
-    start, end = allocation_epochs(environment, job)
+    start, end = allocation_epochs(environment, job, observation=observation)
     maximum = Decimal(scope.get('approved_cost_ceiling_cny', '0'))
     if maximum != Decimal('1.00') or Decimal(quote()['total_cny']) > maximum:
         raise ValueError('paid exact quote or approved ceiling differs')
@@ -269,13 +338,17 @@ def observe_gpu_mapping(environment):
     except (ValueError, ET.ParseError) as error:
         raise GpuObservationError(str(error), observation) from error
 
-def admit_gpu_mapping(environment, gpu_rows, devices_rules):
+def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None):
     """Bind Slurm physical GPU ID, UUID and cgroup minor, separately from CVD.
 
     The original visible ordinal is retained as evidence, never used as a host
     index. The child selects the admitted UUID inside the Slurm device cgroup.
     Unsupported cgroup-v2 or wildcard GPU access is a failed admission.
     """
+    if observation is not None:
+        observation['mapping_inputs'] = dict(gpu_rows=gpu_rows, devices_rules=devices_rules,
+            SLURM_JOB_GPUS=environment.get('SLURM_JOB_GPUS'),
+            ORCJAX_SLURM_VISIBLE_DEVICES=environment.get('ORCJAX_SLURM_VISIBLE_DEVICES'))
     selected = environment.get('SLURM_JOB_GPUS', '')
     visible = environment.get('ORCJAX_SLURM_VISIBLE_DEVICES', '')
     if not selected.isdigit() or not visible or ',' in visible or len(gpu_rows) != 1:
@@ -297,12 +370,17 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules):
     controls = {(int(item['major']), int(item['minor'])) for item in row.get('control_devices', [])}
     if device_pair in controls:
         raise ValueError('GPU data device cannot be a driver control device')
-    for line in devices_rules.splitlines():
+    for number, line in enumerate(devices_rules.splitlines(), 1):
+        if observation is not None:
+            observation['current_device_rule'] = dict(line_number=number, raw=line,
+                selected_kernel_pair=list(device_pair), control_pairs=[list(pair) for pair in sorted(controls)])
         parts = line.split()
         if len(parts) != 3:
             raise ValueError('invalid cgroup devices rule')
         kind, device, permissions = parts
         major, sep, minor = device.partition(':')
+        if observation is not None:
+            observation['current_device_rule'].update(kind=kind, major=major, minor=minor, permissions=permissions)
         if (not sep or kind not in ('a', 'b', 'c') or not set(permissions) <= set('rwm')
                 or not permissions or any(value != '*' and not value.isdigit() for value in (major, minor))):
             raise ValueError('invalid cgroup device permission rule')
@@ -311,6 +389,8 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules):
         # allocated single-device boundary, including c *:N.
         access = bool(set(permissions) & set('rw'))
         if access and (kind == 'a' or (kind == 'c' and major in ('*', str(device_pair[0])) and (major == '*' or minor == '*'))):
+            if observation is not None:
+                observation['current_device_rule']['rejection_rationale'] = 'unchanged conservative wildcard read/write predicate; not evidence of another GPU computation'
             raise ValueError('wildcard GPU access does not prove Slurm device isolation')
         if access and kind == 'c' and major == str(device_pair[0]):
             pair = (int(major), int(minor))
@@ -326,12 +406,15 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules):
                 cgroup_GPU_minors=[pair[1] for pair in sorted(permitted)],
                 cgroup_devices_rules=devices_rules)
 
-def read_cgroup_rules(job_id, *, proc_path=Path('/proc/self/cgroup'), cgroup_base=Path('/sys/fs/cgroup/devices')):
+def read_cgroup_rules(job_id, *, proc_path=Path('/proc/self/cgroup'), cgroup_base=Path('/sys/fs/cgroup/devices'), observation=None):
+    observation = observation if observation is not None else startup_observation({})
+    observation['cgroup'] = dict(job_id=str(job_id), proc_path=str(proc_path), devices_base=str(cgroup_base), controllers=[])
     if not str(job_id).isdigit():
         raise ValueError('numeric actual Slurm job ID required for cgroup binding')
     memberships = []
-    for line in proc_path.read_text().splitlines():
+    for line in _read_text(proc_path, observation, 'proc_self_cgroup').splitlines():
         _, controllers, member = line.split(':', 2)
+        observation['cgroup']['controllers'].append(dict(controllers=controllers.split(','), membership=member))
         if 'devices' in controllers.split(','):
             memberships.append(member)
     if len(memberships) != 1:
@@ -341,11 +424,12 @@ def read_cgroup_rules(job_id, *, proc_path=Path('/proc/self/cgroup'), cgroup_bas
         raise ValueError('device cgroup belongs to a different actual Slurm job')
     base = cgroup_base.resolve()
     path = (base / memberships[0].lstrip('/') / 'devices.list').resolve()
+    observation['cgroup'].update(resolved_base=str(base), devices_list_path=str(path))
     path.relative_to(base)
-    return str(path), path.read_text()
+    return str(path), _read_text(path, observation, 'job_devices_list')
 
-def source_manifest():
-    return {path: free.small_sha(ROOT / path, 1000000) for path in SOURCE_PATHS}
+def source_manifest(*, observation=None):
+    return {path: free.small_sha(ROOT / path, 1000000, observation=observation) for path in SOURCE_PATHS}
 
 def proposed_scope():
     """Preparation snapshot. No invented candidate-commit identity."""
@@ -360,8 +444,17 @@ def proposed_scope():
         identity_status='candidate source hashes only; code_git_head binds real accepted commit after versioning')
 
 def prepare(args):
+    observation = getattr(args, '_paid_startup_observation', None)
+    observation = observation if observation is not None else startup_observation(os.environ)
+    observation['stage'] = 'capture_identity'
+    observation['arguments'] = {key: str(getattr(args, key, None)) for key in
+        ('checkout_root', 'operands', 'capture_receipt', 'capture_source', 'scope_json', 'output', 'ledger', 'shell_started_epoch', 'dry_run')}
+    args._paid_startup_observation = observation
     identities, capture = free.admit_capture(args)
-    scope = json.loads(args.scope_json.read_text(encoding='utf-8'))
+    observation['capture_identities'] = identities
+    observation['stage'] = 'scope_contract'
+    scope = json.loads(_read_text(args.scope_json, observation, 'prepared_scope'))
+    observation['scope'] = scope
     if (scope.get('schema_version') != SCHEMA or scope.get('scope_id') != SCOPE_ID
             or scope.get('status') not in ('proposed', 'open') or scope.get('caps') != free.CAPS
             or scope.get('resources') != RESOURCES or scope.get('rates') != RATES
@@ -378,7 +471,13 @@ def prepare(args):
     destinations = [args.ledger, output, *[output.with_suffix(suffix) for suffix in
         ('.results.npz', '.partial.npz', '.supervisor.json', '.runtime-preflight.json', '.outer-timeout.json')]]
     destinations += [output.with_suffix('.' + route + '.optimized-hlo.txt.gz') for route in ('b1', 'vmap', 'map')]
-    if any(Path(path).exists() for path in destinations):
+    observation['destination_checks'] = []
+    def destination_exists(path):
+        row = dict(path=str(path), operation='exists')
+        observation['destination_checks'].append(row)
+        row['exists'] = Path(path).exists()
+        return row['exists']
+    if any(destination_exists(path) for path in destinations):
         raise FileExistsError('paid one-shot already consumed or evidence exists; no retry')
     if args.dry_run and output.with_suffix('.job-attempt.json').exists():
         raise FileExistsError('paid scheduler attempt already consumed; no retry')
@@ -387,7 +486,7 @@ def prepare(args):
     shell = ROOT / 'scripts/hpc/run_shared_latent_T7_batch_numerics_paid.sh'
     gpu_python = '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python'
     child = lambda name, argv: ['bash', str(shell), '--runtime-child', gpu_python, str(ROOT / 'scripts/hpc' / name), *argv]
-    plan = dict(scope=scope, identities=identities, source_files=source_manifest(),
+    plan = dict(scope=scope, identities=identities, source_files=source_manifest(observation=observation),
         checkout=str(ROOT), output=str(output), ledger=str(args.ledger.resolve()),
         scope_path=str(args.scope_json.resolve()), shell_started_epoch=args.shell_started_epoch,
         preflight_output=str(output.with_suffix('.runtime-preflight.json')),
@@ -398,11 +497,15 @@ def prepare(args):
         management_admission=MANAGEMENT,
         commands={'preflight': child('check_daily_training_runtime.py', ['--backend', 'gpu', '--output', str(output.with_suffix('.runtime-preflight.json'))]),
                   'probe': child('probe_shared_latent_T7_batch_numerics.py', ['--backend', 'gpu', '--operands', str(args.operands.resolve()), '--output', str(output), '--repeats', '3', '--seed', '20261011'])})
+    observation.update(actual_source_files=plan['source_files'], expected_caps=free.CAPS,
+                       child_commands=plan['commands'])
+    plan['paid_startup_observation'] = observation
     if scope.get('source_files') != plan['source_files']:
         raise ValueError('paid source manifest differs from actual execution sources')
     actual_head = None
     if scope.get('code_git_head') is not None or not args.dry_run:
         actual_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, timeout=4, text=True).strip()
+        observation['actual_git_head'] = actual_head
         if actual_head != scope.get('code_git_head'):
             raise ValueError('paid exact accepted commit binding differs')
     if args.dry_run:
@@ -414,14 +517,19 @@ def prepare(args):
         raise ValueError('paid live paths differ from one unique independent scope')
     for path in (ROOT, args.operands.resolve(), args.capture_receipt.resolve(), args.capture_source.resolve(), output, args.scope_json.resolve(), args.ledger.resolve()):
         path.relative_to(free.REMOTE)
-    if subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=ROOT, timeout=4, text=True).strip():
+    dirty = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=ROOT, timeout=4, text=True)
+    observation['git_status_porcelain'] = dirty
+    if dirty.strip():
         raise ValueError('paid checkout must be clean and immutable')
-    job_result = subprocess.run([SLURM, 'show', 'job', '--details', '-o', os.environ.get('SLURM_JOB_ID', 'missing')], capture_output=True, text=True, timeout=4, check=True)
+    observation['stage'] = 'slurm_allocation'
+    job_result = _record_command([SLURM, 'show', 'job', '--details', '-o', os.environ.get('SLURM_JOB_ID', 'missing')], observation)
     job = parse_job(job_result.stdout)
-    plan['slurm_allocation'] = validate_allocation(scope, os.environ, job, socket.gethostname())
+    plan['slurm_allocation'] = validate_allocation(scope, os.environ, job, socket.gethostname(), observation=observation)
+    observation['slurm_allocation'] = plan['slurm_allocation']
     if args.shell_started_epoch != plan['slurm_allocation']['allocation_start_epoch']:
         raise ValueError('outer shell deadline differs from scheduler allocation start')
-    launch = json.loads((OUTPUT_DIR / 'slurm-attempt.v1.json').read_text(encoding='utf-8'))
+    observation['stage'] = 'scheduler_attempt_binding'
+    launch = json.loads(_read_text(OUTPUT_DIR / 'slurm-attempt.v1.json', observation, 'slurm_attempt'))
     if (launch.get('scope_id') != SCOPE_ID or launch.get('job_id') != os.environ['SLURM_JOB_ID']
             or launch.get('status') != 'scheduler_started' or launch.get('retry_allowed') is not False):
         raise ValueError('one-shot Slurm launch receipt differs from actual job')
@@ -429,41 +537,113 @@ def prepare(args):
     plan['shell_started_epoch'] = plan['slurm_allocation']['allocation_start_epoch']
     return plan
 
+
+def _kernel_stat(path, observation):
+    row = dict(path=str(path), operation='stat')
+    observation['files'].append(row)
+    try:
+        node = Path(path).stat()
+        row.update(status='stat', mode=node.st_mode, is_character_device=stat.S_ISCHR(node.st_mode),
+                   rdev=node.st_rdev, major=os.major(node.st_rdev), minor=os.minor(node.st_rdev))
+        return node
+    except OSError as error:
+        row.update(status='failed', error_type=type(error).__name__, error=str(error), errno=error.errno)
+        raise PaidStartupError(str(error), observation, error) from error
+
+
+class PaidNvidiaMonitor(free.NvidiaMonitor):
+    """Retain the existing monitor calls; no additional GPU observation."""
+    def __init__(self, *args, observation, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.observation = observation
+
+    def command(self, argv):
+        remaining = self.deadline - self.clock()
+        row = dict(command=argv, remaining_seconds=remaining, status='started')
+        self.observation.setdefault('monitor_commands', []).append(row)
+        if remaining <= 0:
+            row['status'] = 'deadline_exhausted'
+            raise TimeoutError('total GPU occupation deadline reached')
+        try:
+            result = subprocess.run(argv, capture_output=True, text=True, timeout=min(4., remaining))
+        except (OSError, subprocess.SubprocessError) as error:
+            row.update(status='failed', error_type=type(error).__name__, error=str(error),
+                **(subprocess_failure_detail(error) or {}))
+            self.retain_stdout(row, argv, row.get('stdout'))
+            raise
+        row.update(status='completed', returncode=result.returncode, stderr=result.stderr)
+        self.retain_stdout(row, argv, result.stdout)
+        if result.returncode:
+            raise RuntimeError('nvidia-smi failed: ' + result.stderr.strip())
+        return result.stdout
+
+    def retain_stdout(self, row, argv, stdout):
+        if any(argument.startswith('--query-compute-apps=') for argument in argv):
+            # Existing sample/gates still receive the complete response. The new
+            # evidence container does not duplicate foreign PIDs/process names.
+            row.update(stdout=None, stdout_retention='process identifiers redacted',
+                process_rows=[dict(field_count=len(fields),
+                    gpu_uuid_matches_expected=bool(fields and fields[0].strip() == self.uuid))
+                    for fields in csv.reader((_diagnostic_text(stdout) or '').strip().splitlines())])
+        else:
+            row['stdout'] = stdout
+
 def run_live(plan):
     # Cooperative exclusion and bounded read-only management admission precede
     # GPU observation/ledger/preflight. They do not constrain old b676 copies.
+    observation = plan.setdefault('paid_startup_observation', startup_observation(os.environ))
+    observation.update(stage='mutex', mutex_path=str(SCOPE_LOCK), management_contract=MANAGEMENT)
     lock = AffineScopeLock(SCOPE_LOCK, SCOPE_ID).acquire()
+    observation['mutex_acquired'] = True
     supervisor = None
     release_safe = False
     try:
-        plan['free_management_state'] = read_free_admission()
+        observation['stage'] = 'free_management'
+        plan['free_management_state'] = read_free_admission(observation=observation)
+        observation['free_management_state'] = plan['free_management_state']
+        observation['stage'] = 'GPU_CSV_XML'
         row, observation = observe_gpu_mapping(os.environ)
+        startup = plan['paid_startup_observation']
+        startup['gpu_observation'] = observation
         try:
+            startup['stage'] = 'kernel_device_mapping'
             rows = [row]
             for row in rows:
-                device = Path('/dev/nvidia' + str(row['minor_number'])).stat()
+                device = _kernel_stat(Path('/dev/nvidia' + str(row['minor_number'])), startup)
                 if not stat.S_ISCHR(device.st_mode):
                     raise ValueError('XML-selected GPU kernel node is not a character device')
                 row.update(device_major=os.major(device.st_rdev), device_minor=os.minor(device.st_rdev), control_devices=[])
                 for name in ('/dev/nvidiactl', '/dev/nvidia-modeset'):
                     node = Path(name)
-                    if node.exists():
-                        control = node.stat()
+                    exists = node.exists()
+                    startup['files'].append(dict(path=name, operation='exists', exists=exists))
+                    if exists:
+                        control = _kernel_stat(node, startup)
                         if not stat.S_ISCHR(control.st_mode):
                             raise ValueError('GPU driver control path is not a character device')
                         row['control_devices'].append(dict(name=name, major=os.major(control.st_rdev), minor=os.minor(control.st_rdev)))
-            cgroup_path, rules = read_cgroup_rules(plan['slurm_allocation']['job']['JobId'])
-            mapping = admit_gpu_mapping(os.environ, rows, rules)
+            startup['stage'] = 'job_device_cgroup'
+            cgroup_path, rules = read_cgroup_rules(plan['slurm_allocation']['job']['JobId'], observation=startup)
+            startup['stage'] = 'cgroup_GPU_isolation'
+            mapping = admit_gpu_mapping(os.environ, rows, rules, observation=startup)
         except (OSError, ValueError) as error:
             if isinstance(error, GpuObservationError):
                 raise
-            raise GpuObservationError(str(error), observation, cause=error) from error
+            cause = error.cause if isinstance(error, PaidStartupError) and error.cause else error
+            raise GpuObservationError(str(cause), observation, cause=cause) from error
         mapping['cgroup_devices_path'] = cgroup_path
         plan['slurm_gpu_mapping'] = mapping
         plan['slurm_gpu_observation'] = observation
         plan['phase_environment'] = {'ORCJAX_AFFINE_EXPECTED_GPU_UUID': mapping['gpu_uuid']}
         plan['scope'] = dict(plan['scope'], gpu_host_index=mapping['gpu_host_index'], gpu_uuid=mapping['gpu_uuid'])
+        startup['stage'] = 'supervisor'
+        # Use the same clock/deadline origin as Supervisor's existing monitor.
         supervisor = free.Supervisor(plan)
+        startup['supervisor_limits'] = dict(total_deadline=supervisor.deadline,
+            work_deadline=getattr(supervisor, 'work_deadline', None),
+            shell_elapsed_seconds=getattr(supervisor, 'shell_elapsed', None), caps=plan['scope'].get('caps'))
+        supervisor.monitor = PaidNvidiaMonitor(mapping['gpu_host_index'], mapping['gpu_uuid'],
+            supervisor.deadline, supervisor.clock, observation=startup)
         supervisor.record['paid_allocation'] = plan['slurm_allocation']
         supervisor.record['paid_gpu_mapping'] = mapping
         supervisor.record['paid_gpu_observation'] = observation
@@ -471,14 +651,24 @@ def run_live(plan):
         for signum in (signal.SIGTERM, signal.SIGINT):
             signal.signal(signum, lambda number, frame: setattr(supervisor, 'interrupted', number))
         result = supervisor.run()
+        startup['stage'] = 'supervisor_finished'
         release_safe = supervisor.record.get('release_verified') is True
         return result
+    except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
+        startup = plan['paid_startup_observation']
+        if isinstance(error, GpuObservationError):
+            error.startup_observation = startup
+            raise
+        if isinstance(error, PaidStartupError):
+            raise
+        raise PaidStartupError(str(error), startup, error) from error
     finally:
         # Admission before any GPU child safely releases mutual exclusion.
         # Any uncertain child cleanup retains it persistently for manual audit.
         if supervisor is None:
             release_safe = True
-        lock.release(release_verified=release_safe)
+        plan['paid_startup_observation']['mutex_release_verified'] = release_safe
+        plan['paid_startup_observation']['mutex_released'] = lock.release(release_verified=release_safe)
 
 def _diagnostic_text(value):
     if value is None:
@@ -500,12 +690,15 @@ def subprocess_failure_detail(error):
 
 def main(argv=None):
     args = free.parser().parse_args(argv)
+    observation = startup_observation(os.environ)
+    args._paid_startup_observation = observation
     attempt = None
     try:
         if not args.dry_run:
             # A paid scheduler launch is consumed even if CPU admission fails.
             # Never silently resubmit after a rejected allocation or bootstrap.
-            scope = json.loads(args.scope_json.read_text(encoding='utf-8'))
+            scope = json.loads(_read_text(args.scope_json, observation, 'authorization_scope'))
+            observation['scope'] = scope
             if (os.name != 'posix' or not os.environ.get('SLURM_JOB_ID')
                     or args.scope_json.resolve() != OUTPUT_DIR / 'scope.v1.json'
                     or args.output.resolve() != OUTPUT or args.ledger.resolve() != LEDGER
@@ -514,20 +707,22 @@ def main(argv=None):
                     or not str(scope.get('approval_note', '')).strip()):
                 raise ValueError('specific approved paid scope and Slurm launch required')
             attempt = OUTPUT.with_suffix('.job-attempt.json')
+            observation.update(stage='consume_attempt', attempt_path=str(attempt))
             with attempt.open('x', encoding='utf-8') as stream:
                 json.dump(dict(scope_id=SCOPE_ID, status='scheduler_attempt_consumed',
                     job_id=os.environ['SLURM_JOB_ID'], recorded_epoch=time.time(),
                     retry_allowed=False, GPU_executed=False), stream, indent=2)
         plan = prepare(args)
+        plan['paid_startup_observation'] = observation
         if args.dry_run:
             print(json.dumps(plan, indent=2))
             return 0
         return run_live(plan)
-    except (ValueError, FileNotFoundError, FileExistsError, KeyError, subprocess.SubprocessError) as error:
-        cause = error.cause if isinstance(error, GpuObservationError) and error.cause is not None else error
+    except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
+        cause = error.cause if isinstance(error, (GpuObservationError, PaidStartupError)) and error.cause is not None else error
         rejection = dict(status='paid_admission_rejected', GPU_executed=False,
             scheduler_attempt_receipt=str(attempt) if attempt else None,
-            error_type=type(cause).__name__, error=str(cause))
+            error_type=type(cause).__name__, error=str(cause), paid_startup_observation=observation)
         if isinstance(error, GpuObservationError):
             rejection['gpu_observation'] = error.observation
         subprocess_detail = (error.subprocess_failure if isinstance(error, GpuObservationError)

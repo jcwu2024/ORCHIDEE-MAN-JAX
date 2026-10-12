@@ -50,11 +50,22 @@ def atomic_json(path, value):
     os.replace(temporary, path)
 
 
-def small_sha(path, maximum):
+def small_sha(path, maximum, *, observation=None):
     path = Path(path).resolve()
-    if not path.is_file() or path.stat().st_size > maximum:
-        raise ValueError('missing or oversized bounded input: ' + str(path))
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    row = dict(path=str(path), operation='bounded_sha256', maximum_bytes=maximum)
+    if observation is not None:
+        observation.setdefault('files', []).append(row)
+    try:
+        row['is_file'] = path.is_file()
+        if row['is_file']:
+            row['size_bytes'] = path.stat().st_size
+        if not row['is_file'] or row['size_bytes'] > maximum:
+            raise ValueError('missing or oversized bounded input: ' + str(path))
+        row['sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError as error:
+        row.update(error_type=type(error).__name__, error=str(error), errno=error.errno)
+        raise
+    return row['sha256']
 
 
 def parser():
@@ -81,14 +92,23 @@ def admit_capture(args):
     code = args.checkout_root.resolve()
     if code != ROOT or not code.is_dir():
         raise ValueError('launcher must resolve from its own declared checkout')
-    identities = {'operand': small_sha(args.operands, 100000),
-                  'receipt': small_sha(args.capture_receipt, 100000),
-                  'capture_source': small_sha(args.capture_source, 100000)}
+    observation = getattr(args, '_paid_startup_observation', None)
+    identities = {'operand': small_sha(args.operands, 100000, observation=observation),
+                  'receipt': small_sha(args.capture_receipt, 100000, observation=observation),
+                  'capture_source': small_sha(args.capture_source, 100000, observation=observation)}
+    if observation is not None:
+        observation['capture_file_identities'] = identities
     if identities != {'operand': OPERAND_SHA, 'receipt': RECEIPT_SHA, 'capture_source': CAPTURE_SHA}:
         raise ValueError('original NPZ/receipt/capture-source identity differs')
-    capture = json.loads(args.capture_receipt.read_text(encoding='utf-8'))
+    capture_text = args.capture_receipt.read_text(encoding='utf-8')
+    if observation is not None:
+        observation['capture_receipt_text'] = capture_text
+    capture = json.loads(capture_text)
     bundle = probe.load_operands(args.operands)
     meta = bundle['metadata']
+    if observation is not None:
+        observation['capture_boundary'] = dict(metadata=meta,
+            x_shape=list(bundle['x'].shape), kernel_shape=list(bundle['kernel'].shape), array_identities={})
     if (meta['origin'] != 'captured_component_operands' or meta['capture_receipt_sha256'] != RECEIPT_SHA
             or meta['capture_source_sha256'] != CAPTURE_SHA or meta['direction_coordinate'] != 434
             or meta['direction_sample'] != 3 or meta['window_index'] != 0 or meta['day_index'] != 0
@@ -103,6 +123,8 @@ def admit_capture(args):
         value = bundle[key]
         identity = {'shape': list(value.shape), 'dtype': str(value.dtype),
                     'sha256_bytes_C_order': hashlib.sha256(value.tobytes(order='C')).hexdigest()}
+        if observation is not None:
+            observation['capture_boundary']['array_identities'][key] = identity
         if identity != capture['array_identities'][key]:
             raise ValueError('numeric operand/receipt binding differs: ' + key)
     return identities, capture
@@ -253,6 +275,21 @@ class Supervisor:
         self.record['peak_memory_mib'] = max((row['memory_mib'] for row in self.record['samples']), default=None)
         atomic_json(self.out, self.record)
 
+    def read_report(self, path, label):
+        """Retain already-read startup inputs for the opt-in paid observer."""
+        observation = self.plan.get('paid_startup_observation')
+        row = dict(label=label, path=str(path), operation='read_text')
+        if observation is not None:
+            observation['stage'] = label
+            observation['files'].append(row)
+        try:
+            row['text'] = Path(path).read_text(encoding='utf-8')
+            row['status'] = 'read'
+        except OSError as error:
+            row.update(status='failed', error_type=type(error).__name__, error=str(error), errno=error.errno)
+            raise
+        return json.loads(row['text'])
+
     def watchdog(self):
         if not self.done.wait(max(0., self.deadline - self.clock() - 8.)):
             self.interrupted = 'hard_deadline'
@@ -361,7 +398,7 @@ class Supervisor:
             else:
                 primary = self.sample(initial=True) or self.phase('preflight', self.plan['scope']['caps']['preflight_seconds'])
                 if primary[1] == 0:
-                    preflight = json.loads(Path(self.plan['preflight_output']).read_text(encoding='utf-8'))
+                    preflight = self.read_report(self.plan['preflight_output'], 'preflight_result_admission')
                     if (preflight.get('passed') is not True or preflight.get('actual_backend') != 'gpu'
                             or preflight.get('jax_version') != '0.4.38' or len(preflight.get('devices', [])) != 1):
                         raise ValueError('actual target JAX0.4.38/single-GPU preflight gate failed')
@@ -374,7 +411,7 @@ class Supervisor:
                             raise ValueError('paid CUDA-driver/PJRT UUID binding preflight gate failed')
                     primary = self.phase('probe', self.plan['scope']['caps']['probe_seconds'])
                     if primary[1] == 0:
-                        report = json.loads(Path(self.plan['output']).read_text(encoding='utf-8'))
+                        report = self.read_report(self.plan['output'], 'affine_result_admission')
                         if (report.get('status') != 'passed' or report.get('passed') is not True
                                 or report.get('backend') != 'gpu' or report.get('jax_version') != '0.4.38'
                                 or report.get('operand_sha256') != OPERAND_SHA

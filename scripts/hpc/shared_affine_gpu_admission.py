@@ -57,7 +57,7 @@ class AffineScopeLock:
         return True
 
 def read_free_admission(*, checkout=FREE_CHECKOUT, output=FREE_OUTPUT,
-                        scope_path=FREE_SCOPE, ledger_path=FREE_LEDGER):
+                        scope_path=FREE_SCOPE, ledger_path=FREE_LEDGER, observation=None):
     """Read only the declared entry and its bounded evidence paths.
 
     The approved free grant was never opened/reserved. Any newly present scope,
@@ -66,13 +66,25 @@ def read_free_admission(*, checkout=FREE_CHECKOUT, output=FREE_OUTPUT,
     """
     checkout, output = Path(checkout), Path(output)
     scope_path, ledger_path = Path(scope_path), Path(ledger_path)
+    record = dict(checkout=str(checkout), output=str(output), scope_path=str(scope_path),
+                  ledger_path=str(ledger_path), expected_head=FREE_HEAD, paths=[])
+    if observation is not None:
+        observation['free_management_inputs'] = record
     if scope_path.parent != output or ledger_path.parent != output:
         raise ValueError('known free scope/ledger paths differ from declared output')
     for path in (checkout, output):
-        observed = path.lstat()
+        row = dict(path=str(path), operation='lstat')
+        record['paths'].append(row)
+        try:
+            observed = path.lstat()
+        except OSError as error:
+            row.update(error_type=type(error).__name__, error=str(error), errno=error.errno)
+            raise
+        row['mode'] = observed.st_mode
         if not stat.S_ISDIR(observed.st_mode) or path.is_symlink():
             raise ValueError('known free entry/output unavailable; state unknown')
     head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=checkout, timeout=4, text=True).strip()
+    record['actual_head'] = head
     if head != FREE_HEAD:
         raise ValueError('known free deployed entry HEAD differs; state unknown')
     evidence = [scope_path, ledger_path, output / 'result.v1.json',
@@ -80,11 +92,18 @@ def read_free_admission(*, checkout=FREE_CHECKOUT, output=FREE_OUTPUT,
         output / 'result.v1.supervisor.json', output / 'result.v1.results.npz', output / 'result.v1.partial.npz']
     absent = []
     for path in evidence:
+        row = dict(path=str(path), operation='lstat')
+        record['paths'].append(row)
         try:
-            path.lstat()
+            row['mode'] = path.lstat().st_mode
         except FileNotFoundError:
+            row['exists'] = False
             absent.append(path.as_posix())
+        except OSError as error:
+            row.update(error_type=type(error).__name__, error=str(error), errno=error.errno)
+            raise
         else:
+            row['exists'] = True
             raise ValueError('known free scope/ledger/execution evidence exists; paid dispatch stopped')
     return dict(status='known_free_unopened_unreserved', read_only=True,
         known_free_head=head, absent_evidence_paths=absent,

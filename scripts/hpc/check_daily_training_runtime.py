@@ -467,15 +467,27 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     arguments, _ = parser.parse_known_args(argv)
     started = time.perf_counter()
+    paid_observation = None
+    expected_uuid = os.environ.get('ORCJAX_AFFINE_EXPECTED_GPU_UUID')
+    if expected_uuid is not None:
+        paid_observation = dict(requested_backend=arguments.backend, expected_gpu_uuid=expected_uuid,
+            environment={key: os.environ.get(key) for key in
+                ('ORCJAX_AFFINE_EXPECTED_GPU_UUID', 'CUDA_VISIBLE_DEVICES', 'JAX_PLATFORMS',
+                 'JAX_ENABLE_X64', 'XLA_PYTHON_CLIENT_PREALLOCATE', 'OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS')})
     try:
         jax, jnp, devices = _initialize_runtime(arguments.backend)
         binding = None
-        expected_uuid = os.environ.get('ORCJAX_AFFINE_EXPECTED_GPU_UUID')
         if expected_uuid is not None:
             from scripts.hpc.shared_affine_cuda_identity import verify_expected_gpu
             if arguments.backend != 'gpu':
                 raise ValueError('paid physical GPU binding requires GPU backend')
-            binding = verify_expected_gpu(devices, expected_uuid)
+            paid_observation.update(jax_version=str(jax.__version__),
+                actual_backend=str(jax.default_backend()),
+                devices=[dict(device=str(device), platform=getattr(device, 'platform', None),
+                    local_hardware_id=getattr(device, 'local_hardware_id', None)) for device in devices],
+                affine_gpu_identity={})
+            binding = verify_expected_gpu(devices, expected_uuid,
+                observation=paid_observation['affine_gpu_identity'])
         report = check_runtime(jax, jnp)
         if binding is not None:
             report['affine_gpu_identity'] = binding
@@ -487,14 +499,17 @@ def main(argv: list[str] | None = None) -> int:
         )
         result = 0
     except Exception as error:  # Write a machine-readable failure before exiting.
+        cause = getattr(error, 'cause', error)
         report = {
             **_base_report("failed", False),
             "requested_backend": arguments.backend,
-            "error_type": type(error).__name__,
-            "error": str(error),
+            "error_type": type(cause).__name__,
+            "error": str(cause),
             "elapsed_seconds": time.perf_counter() - started,
         }
         result = 1
+    if paid_observation is not None:
+        report['paid_startup_observation'] = paid_observation
     _atomic_json(arguments.output, report)
     print(json.dumps(report, sort_keys=True), flush=True)
     return result

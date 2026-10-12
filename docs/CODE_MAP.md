@@ -83,6 +83,12 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
+The [local startup evidence remediation](research/daily_coarse_graining/T7_paid_startup_evidence_remediation_20261012.md)
+adds local CPU-tested observations across paid startup without changing hard gates.
+The candidate is not frozen/deployed or covered by a live GPU authorization;
+job15806646 remains closed/consumed and free b676 paused/unconsumed.
+Current work is evidence review/versioning only; no remote action or retry.
+
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns latest approval/execution: sole fixed n01 job15806646 at58a2d938 ended
 FAILED2:0/7s. CSV/UUID XML succeeds (driver525.85.12/minor0); unchanged wildcard

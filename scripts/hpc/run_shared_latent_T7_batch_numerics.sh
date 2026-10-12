@@ -15,7 +15,10 @@ RUNNER=$CODE/scripts/hpc/run_shared_latent_T7_batch_numerics.py
 # supervisor is stalled. No Python cleanup is needed to enforce this deadline.
 start_phase_deadman() {
   local phase_leader=$1 work_deadline=$2 hard_deadline=$3
-  [[ $(ps -o pgid= -p "$phase_leader" | tr -d ' ') == "$phase_leader" ]] || return 2
+  local PHASE_LEADER_PGID
+  PHASE_LEADER_PGID=$(ps -o pgid= -p "$phase_leader" | tr -d ' ') || true
+  if declare -F paid_startup_shell_evidence >/dev/null; then paid_startup_shell_evidence phase_group_binding; fi
+  [[ $PHASE_LEADER_PGID == "$phase_leader" ]] || return 2
   (
     trap '' TERM INT
     local now term_sent=false
@@ -61,6 +64,8 @@ runtime_child() {
   start_phase_deadman "$$" "$((PHASE_START+1010))" "$((PHASE_START+1180))" || exit 2
   CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
   NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
+  # The paid entry opts in; free callers gain no extra read or output.
+  if declare -F paid_startup_shell_evidence >/dev/null; then paid_startup_shell_evidence runtime_driver_bindings; fi
   [[ -f $CUDA_DRIVER && -f $NVML_DRIVER && -d $TOOLCHAIN ]] || exit 2
   exec env -u LD_LIBRARY_PATH \
     SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \

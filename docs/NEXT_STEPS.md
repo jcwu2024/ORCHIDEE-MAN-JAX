@@ -55,8 +55,14 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
+The [local startup evidence remediation](research/daily_coarse_graining/T7_paid_startup_evidence_remediation_20261012.md)
+adds local CPU-tested observations across paid startup without changing hard gates.
+The candidate is not frozen/deployed or covered by a live GPU authorization;
+job15806646 remains closed/consumed and free b676 paused/unconsumed.
+Current work is evidence review/versioning only; no remote action or retry.
+
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
-owns current operation. Direct human “批准。” authorized the exact58a2d938
+owns paid execution status. Direct human “批准。” authorized the exact58a2d938
 single fixed gnall n01/4actualSlurmCPUs/1V100/20min/nonexclusive/no-requeue job.
 Sole job15806646 ended FAILED2:0 after7s. CSV→UUID XML succeeds on n01
 (driver525.85.12/minor0); actual-job cgroup wildcard GPU access fails the unchanged

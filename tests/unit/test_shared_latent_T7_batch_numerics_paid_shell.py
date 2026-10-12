@@ -208,6 +208,23 @@ def test_paid_live_override_rejected_before_scheduler_helper(tmp_path):
     assert not helper_log.exists() and not timeout_log.exists()
 
 
+@pytest.mark.parametrize('epochs,helper_exit', [('bad-clock 1700001100\n', 0), ('1699999900 1700001100\n', 7)])
+def test_paid_startup_evidence_keeps_clock_reply_on_rejection_without_launch(tmp_path, epochs, helper_exit):
+    target, output, _, helper_log, _, env = allocation_copy(tmp_path, epochs=epochs, helper_exit=helper_exit)
+    env['CUDA_VISIBLE_DEVICES'] = '0'
+    env['SLURM_JOB_GPUS'] = '3'
+    env['SECRET_TOKEN'] = 'must-not-be-saved'
+    result = run(target, ['--output', posix(output)], env)
+    assert result.returncode == 2 and result.stdout == b''
+    text = result.stderr.decode()
+    assert 'PAID_STARTUP_SHELL stage=scheduler_allocation_clock_rejected exit_code=2' in text
+    assert 'SLURM_JOB_ID=123456' in text and 'SLURM_JOB_GPUS=3' in text
+    assert 'CUDA_VISIBLE_DEVICES=0 ORCJAX_SLURM_VISIBLE_DEVICES=0' in text
+    assert epochs.rstrip().split()[0] in text and '1700001100' in text
+    assert 'SECRET_TOKEN' not in text and 'must-not-be-saved' not in text
+    assert helper_log.exists()
+
+
 def test_slurm_start_consumed_before_cpu_admission_and_cannot_retry(tmp_path):
     target, diag, _ = slurm_copy(tmp_path, with_scope=True)
     child = target.with_name("run_shared_latent_T7_batch_numerics_paid.sh")

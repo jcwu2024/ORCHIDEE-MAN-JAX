@@ -119,7 +119,7 @@ def scope_json(tmp_path, monkeypatch, *, status="proposed"):
     monkeypatch.setattr(paid.free, "admit_capture", lambda args: (identities, {
         "current_execution": {"git_head": "fixture-head"},
     }))
-    monkeypatch.setattr(paid, "source_manifest", lambda: dict(source_manifest_snapshot))
+    monkeypatch.setattr(paid, "source_manifest", lambda **_kwargs: dict(source_manifest_snapshot))
     args = SimpleNamespace(
         operands=tmp_path / "operands.npz", capture_receipt=tmp_path / "capture.json",
         capture_source=tmp_path / "capture-source.py", scope_json=path,
@@ -549,12 +549,12 @@ def test_runtime_preflight_optional_cuda_identity_hook(tmp_path, monkeypatch):
     expected = "GPU-01234567-89ab-cdef-0123-456789abcdef"
     output = tmp_path / "runtime-check.json"
     devices = [SimpleNamespace(platform="gpu", local_hardware_id=0)]
-    jax = SimpleNamespace(default_backend=lambda: "gpu")
+    jax = SimpleNamespace(default_backend=lambda: "gpu", __version__="0.4.38")
     monkeypatch.setattr(runtime_check, "_initialize_runtime", lambda _backend: (jax, object(), devices))
     monkeypatch.setattr(runtime_check, "check_runtime", lambda _jax, _jnp: {"status": "passed"})
     calls = []
 
-    def verify(observed_devices, expected_uuid):
+    def verify(observed_devices, expected_uuid, **_kwargs):
         calls.append((observed_devices, expected_uuid))
         return {"passed": True, "expected_gpu_uuid": expected_uuid}
 
@@ -721,7 +721,7 @@ def test_live_paid_launcher_checks_free_management_before_gpu_observation(monkey
         def release(self, *, release_verified):
             events.append(("mutex_released", release_verified))
 
-    def reject_free_management():
+    def reject_free_management(**_kwargs):
         events.append("free_management_checked")
         raise ValueError("known free evidence exists")
 
@@ -760,7 +760,7 @@ def test_paid_main_preserves_job_15782177_gpu_query_rejection_and_does_not_retry
         name="posix", environ={"SLURM_JOB_ID": "15782177", "SLURM_JOB_GPUS": "0"},
     ))
     monkeypatch.setattr(paid, "prepare", lambda _args: {})
-    monkeypatch.setattr(paid, "read_free_admission", lambda: {"status": "known_free_unopened_unreserved"})
+    monkeypatch.setattr(paid, "read_free_admission", lambda **_kwargs: {"status": "known_free_unopened_unreserved"})
     monkeypatch.setattr(paid.free, "Supervisor", lambda *_args: pytest.fail("probe supervisor must not start"))
     command = ["nvidia-smi", "-i", "0", "--query-gpu=index,uuid,name",
                "--format=csv,noheader,nounits"]
@@ -932,7 +932,7 @@ def test_paid_main_preserves_successful_gpu_queries_when_device_node_is_missing(
     monkeypatch.setattr(paid, "prepare", lambda _args: {
         "slurm_allocation": {"job": {"JobId": "15782177"}}, "scope": {},
     })
-    monkeypatch.setattr(paid, "read_free_admission", lambda: {"status": "known_free_unopened_unreserved"})
+    monkeypatch.setattr(paid, "read_free_admission", lambda **_kwargs: {"status": "known_free_unopened_unreserved"})
     monkeypatch.setattr(paid.free, "Supervisor", lambda *_args: pytest.fail("probe supervisor must not start"))
     results = [
         subprocess.CompletedProcess([], 0, "3, GPU-physical-three, Tesla V100-SXM2\n", "csv stderr"),
@@ -979,6 +979,8 @@ def test_live_paid_launcher_uses_xml_minor_and_saves_observation_before_supervis
     class Supervisor:
         def __init__(self, plan):
             self.record = {}
+            self.deadline = 1200
+            self.clock = lambda: 0
             events.append(("supervisor", plan["slurm_gpu_mapping"]["actual_GPU_minor"],
                            plan["slurm_gpu_observation"]["commands"][1]["stdout"]))
 
@@ -992,8 +994,8 @@ def test_live_paid_launcher_uses_xml_minor_and_saves_observation_before_supervis
         environ=os.environ, major=lambda _device: 195, minor=lambda _device: 5,
     ))
     monkeypatch.setattr(paid, "AffineScopeLock", lambda *_args: Lock())
-    monkeypatch.setattr(paid, "read_free_admission", lambda: {"status": "known_free_unopened_unreserved"})
-    monkeypatch.setattr(paid, "read_cgroup_rules", lambda _job: ("/tmp/devices.list", "c 195:5 rwm\n"))
+    monkeypatch.setattr(paid, "read_free_admission", lambda **_kwargs: {"status": "known_free_unopened_unreserved"})
+    monkeypatch.setattr(paid, "read_cgroup_rules", lambda _job, **_kwargs: ("/tmp/devices.list", "c 195:5 rwm\n"))
     monkeypatch.setattr(paid.signal, "signal", lambda *_args: None)
     monkeypatch.setattr(paid.free, "Supervisor", Supervisor)
     results = [
@@ -1095,7 +1097,7 @@ def test_paid_live_preparation_mocks_exact_scontrol_details_command(tmp_path, mo
     monkeypatch.setattr(paid.free, "admit_capture", lambda args: (
         dict(fixture_identities), {"current_execution": {"git_head": "fixture-head"}},
     ))
-    monkeypatch.setattr(paid, "source_manifest", lambda: dict(scope["source_files"]))
+    monkeypatch.setattr(paid, "source_manifest", lambda **_kwargs: dict(scope["source_files"]))
     monkeypatch.setattr(paid, "os", SimpleNamespace(name="posix", environ=environment))
     monkeypatch.setattr(paid.time, "time", lambda: 1700000060)
     monkeypatch.setattr(paid.socket, "gethostname", lambda: "ibc13b03n01.cluster")
