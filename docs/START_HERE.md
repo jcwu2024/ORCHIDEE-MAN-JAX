@@ -27,17 +27,19 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
-records specific approval of4 Slurm CPUs/1 V100/20min/nonexclusive/no-requeue,
-fixed gnall node `ibc13b03n01`, maximum CNY0.83/approved ceiling CNY1.00.
-The single required refresh found gnall UP/OverSubscribe=NO but all8 node GPUs
-allocated. No scope opening, sbatch, attempt/ledger, preflight or GPU execution
-followed:0 allocation seconds/card-hours/CNY0. Approval remains valid and
-unconsumed; this dispatch stops without polling or automatic monitoring.
-The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
-retains exact f4ae942 source and CPU readiness; real GPU gates remain unverified.
-Free dispatch remains paused and b676 approval unchanged/unconsumed. Old
-df8cfac/v5/v1 and frozen false proposal artifacts remain unchanged.
+The [paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
+records the sole unchanged sbatch accepted as **15782177**. Its first snapshot
+is PENDING/Resources on fixed gnall node `ibc13b03n01`; predicted StartTime
+2026-10-12T14:41:06 is not an allocation or guaranteed start. The scope is open
+and the single scheduler attempt is used. Stop LLM monitoring; Slurm keeps it
+queued. Future retrieval uses this same job, never another sbatch.
+The approved4 Slurm CPUs/1 V100/20min/nonexclusive/no-requeue contract remains
+maximum CNY0.83/ceiling CNY1.00. Allocation/card-hours/estimated cost were0 only
+as of that snapshot; real runtime/numeric gates remain unverified. Execution
+stays frozen at f4ae942; accepted historical docs were committed/pushed as
+77afd803. The earlier resource non-admission report remains unchanged history.
+Free b676 dispatch stays paused, its approval unchanged/unconsumed; original
+false-scope bytes and old df8/v5/v1 artifacts remain preserved.
 
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing

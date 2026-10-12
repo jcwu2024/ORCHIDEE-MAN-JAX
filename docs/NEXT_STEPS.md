@@ -55,17 +55,26 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-The [approved paid v2 dispatch](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
-stops at resource non-admission. Approval is specific to gnall/fixed
-`ibc13b03n01`,1node/1task/4 actual Slurm CPUs/1 V100/nonexclusive/20min/
-no-requeue/one scheduler attempt, unchanged f4ae942 cwd/command and CNY1.00
-ceiling (maximum0.8266667/upward0.83). The single required refresh confirmed
-gnall UP/OverSubscribe=NO but all8 fixed-node GPUs allocated. No scope opening,
-sbatch, attempt/ledger, preflight/GPU or numerical probe occurred. Approval
-remains valid/unconsumed; no automatic polling, monitor, node change or retry.
-Await explicit steering for a future dispatch; unchanged approval needs no
-renewal. Do not run an unattended resource loop, recapture, diagnose further
-or train. Source/input/false scope and previous df8/v5/v1 remain unchanged.
+The [paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
+owns the current `submitted_pending` state. Subsequent explicit steering
+authorized queue submission without waiting for a free card. The unchanged
+sbatch was submitted exactly once and accepted as **15782177**; the first and
+only snapshot is PENDING/Resources, with predicted StartTime
+2026-10-12T14:41:06/EndTime15:01:06, not an actual allocation or guarantee.
+The scope is open and the unique scheduler submission attempt is consumed.
+Slurm continues queueing autonomously; stop LLM monitoring immediately.
+Future retrieval must use job15782177: no second sbatch, availability loop,
+automatic monitor, node change, retry, recapture, extra diagnosis or training.
+
+Approval remains specific to gnall/fixed `ibc13b03n01`,1node/1task/4 actual
+Slurm CPUs/1 V100/nonexclusive/20min/no-requeue, unchanged f4ae942 cwd/command
+and CNY1.00 ceiling (maximum0.8266667/upward0.83). Thirteen runtime artifacts
+were absent at the snapshot, including runtime attempt/ledger/preflight/results/
+HLO/job logs. Allocation seconds/card-hours/estimated charge were0 only as of
+that snapshot; the queued future job remains paid. Actual allocation/runtime/
+numeric boundaries are unverified. Accepted historical docs were committed/
+pushed at77afd803, independently of unchanged execution f4ae942. Preserve the
+earlier resource report, original false scope and previous df8/v5/v1 artifacts.
 
 The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
 retains scheduler allocation-clock1200s/preflight240s/probe780s/release≥180s/

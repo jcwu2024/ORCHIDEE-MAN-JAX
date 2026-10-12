@@ -3,10 +3,16 @@
 The supervisor initially authorized preparation, local regressions, ordinary
 commit/push, an independent frozen checkout and target CPU-only dry-run.
 The later human specifically approved the exact paid-v2 job/CNY1.00 contract.
-The [2026-10-12 resource result](T7_affine_paid_GPU_execution_results_20261012.md)
-records one required refresh: fixed n01 GPUs8/8 allocated, so no scope opening,
-submission/job/attempt/ledger/preflight/GPU followed. Approval remains valid and
-unconsumed; dispatch stops without polling, automatic monitoring or node change.
+The [earlier resource result](T7_affine_paid_GPU_execution_results_20261012.md)
+remains accepted historical no-submission/CNY0 evidence. Later explicit steering
+authorized the unchanged single queue submission without waiting for a free GPU.
+The [current queue status](T7_affine_paid_GPU_queue_status_20261012.md) records
+accepted job15782177, first snapshot PENDING/Resources, scope open and sole
+scheduler attempt used. Predictions do not prove allocation/start. Stop LLM
+monitoring; Slurm continues queueing. Future retrieval uses this same job,
+never another sbatch. Execution remains immutable f4ae942, independently of
+accepted historical-docs77afd803. Original false scope bytes remain preserved.
+
 The free b676 one-shot remains approved/unconsumed, but this execution owner
 temporarily dispatches paid only. Old code, scope, ledger and approval remain
 untouched. Earlier candidate diffs/logs remain historical; directory isolation
@@ -36,8 +42,10 @@ mandatory, and8 allocated CPUs reject admission.
 records server UTC `2026-10-11T12:43:36Z`, gnall UP, cons_tres/CR_CORE,
 cgroup plugins,56physical/112Slurm CPUs and8V100s/node; n01 was IDLE with
 CPUAlloc0/GPUAlloc0/load0.01. It is a selection snapshot, not a reservation.
-No additional scheduler/free-card polling occurs in this preparation. One
-submission-time refresh is a future step after specific human paid approval.
+The later single resource refresh passed gnall policy but found all8 GPUs
+allocated. Subsequent explicit queue steering authorized submission without
+waiting for availability; job15782177 is accepted. No availability loop or
+further monitoring follows the first saved job snapshot.
 
 ## Scientific scope and execution admission
 
@@ -138,12 +146,14 @@ no reindex or completeness claim.
 
 Actual paid Slurm allocation, device isolation, container/PJRT/GPU runtime and
 numerical comparison remain unverified. Target CPU readiness does not certify
-those gates or scientific accuracy. No `sbatch`/`salloc`, paid occupation,
-GPU/preflight, training or automatic fallback has occurred. The unchanged
-command/cwd/resources/wall/CNY1.00 contract is now specifically approved, but
-the fixed node failed resource admission at the one required refresh. This
-dispatch stops; human approval remains valid and unconsumed. The target scope
-remains false/proposed and its original bytes are saved in the resource result.
+those gates or scientific accuracy. The unchanged command/cwd/resources/wall/
+CNY1.00 contract was submitted exactly once as15782177 under later explicit
+queue steering. The scope is open; the sole scheduler attempt is consumed.
+The first snapshot is PENDING/Resources with13 runtime paths absent. No paid
+allocation/preflight/GPU/numeric execution is evidenced as of that snapshot;
+cost/card-hours0 are snapshot-only. No terminal/release claim follows. Original
+false scope bytes and earlier no-submission report remain preserved history.
+Stop LLM monitoring; future retrieval must use the same job, never resubmit.
 
 ## Slurm22.05.7 compatibility revision
 
@@ -192,8 +202,8 @@ deadline extension or synthetic replacement env token is allowed.
 
 This revision changes admission only. Resources, costs, scientific inputs,
 precision, numeric gates and phase caps are unchanged. Real paid batch/GPU
-boundaries remain unverified; approved dispatch stopped before submission
-because the fixed node lacked an unallocated GPU.
+boundaries remain unverified; later explicit queue steering submitted the
+unchanged job once as15782177, first snapshot PENDING/Resources.
 
 Current affected paid Python/shell verification passes136 distinct cases;
 the independent shell32-case run overlaps and is not counted again. The

@@ -65,22 +65,30 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
-The [paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
-is `approved_waiting_resources`: the human specifically approved gnall/fixed
-`ibc13b03n01`,4 actual Slurm CPUs/1 V100/nonexclusive/20min/no-requeue/one
-attempt, maximum0.8266667 CNY/upward0.83/ceiling1.00. At the one required
-refresh, partition UP/OverSubscribe=NO passed, but node MIXED/CPUAlloc8 of112/
-CPULoad8.02 and8 of8 GPUs allocated left no admissible GPU. Cluster stdout
-date01:06:20Z and local receipt01:14:40Z are separate2026-10-12 clock sources.
-No submission/job/allocation, scope opening, attempt/ledger/mutex, preflight,
-GPU, arrays or HLO occurred; allocation seconds/card-hours/estimated CNY all0.
-This is resource non-admission, not runtime/numerical failure. Approval remains
-valid/unconsumed; dispatch stops without resource polling or automatic monitor.
-Accepted f4ae942 source and recovery identities, target false scope and old
-df8/v5/v1 artifacts remain unchanged. Actual GPU/cgroup/CUDA/PJRT/numeric
-gates remain unverified; prior CPU12/91 and136 mocks are separate evidence.
-Free b676 approval remains valid/unconsumed, with dispatch paused. The mutex
-still covers cooperative new entries only, not b676/arbitrary old copies.
+The [paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md)
+is `submitted_pending`: the unchanged approved sbatch was accepted exactly once
+as **15782177**. The first and only snapshot shows PENDING/Resources,
+RunTime00:00:00, ReqNodeList `ibc13b03n01` and no allocated NodeList. Pending
+TRES/NumCPUs describe the request, not an actual allocation. Predicted
+StartTime2026-10-12T14:41:06/EndTime15:01:06 is neither actual nor guaranteed.
+Cluster stdout date2026-10-12T01:41:30Z and local receipt start
+2026-10-12T01:49:51.006197+00:00 remain separate clock sources.
+The scope is open and the sole scheduler submission attempt is used, even
+while pending. Thirteen runtime paths were absent, including runtime attempt,
+ledger/preflight/results/arrays/HLO and own job logs. Allocation seconds,
+card-hours and estimated CNY were0 only as of that snapshot. No terminal or
+release evidence yet exists; the future job retains its approved ceiling.
+
+The exact gnall/fixed n01 contract remains4 actual Slurm CPUs/1 V100/
+nonexclusive/20min/no-requeue, maximum0.8266667 CNY/upward0.83/ceiling1.00.
+Execution stays frozen at f4ae942; accepted earlier docs were committed/pushed
+as77afd803, with no remote refreeze. The earlier resource non-admission report
+and raw evidence remain unchanged history. Original false scope bytes and old
+df8/v5/v1 artifacts are preserved. Actual GPU/cgroup/CUDA/PJRT/numeric gates
+remain unverified; CPU12/91 and136 mocks are separate evidence. Stop LLM
+monitoring; Slurm queues autonomously. Future retrieval uses this same job,
+never a new sbatch. Free b676 approval remains valid/unconsumed and dispatch
+paused; cooperative mutex limits remain unchanged.
 
 | Current evidence | Result and limit |
 |---|---|

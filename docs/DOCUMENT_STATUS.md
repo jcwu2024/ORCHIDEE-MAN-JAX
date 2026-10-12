@@ -26,8 +26,9 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
-| [Paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md) | Current approved paid dispatch outcome: one required refresh confirmed gnall UP/OverSubscribe=NO but fixed n01 GPUs8/8 allocated. Resource non-admission; no submission/scope opening/attempt/ledger/GPU/preflight/numerical results;0 allocation seconds/card-hours/estimated CNY. Explicit CNY1.00 approval remains valid/unconsumed, dispatch stopped without polling/monitoring. Separate cluster/local clocks and source/input/false-scope identities retained. |
-| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Accepted f4ae942/v2 contract and prior136 CPU/shell cases: fixed gnall ibc13b03n01,4 actual Slurm CPUs/1V100/nonexclusive/20min/no-requeue; maximum0.8266667 CNY/upward0.83, approved ceiling1.00. Actual GPU/runtime boundaries remain unverified; current dispatch status is in the result above. False proposal and old df8/v5/v1 remain preserved. |
+| [Paid v2 queue status](research/daily_coarse_graining/T7_affine_paid_GPU_queue_status_20261012.md) | Current submitted state: sole unchanged sbatch accepted as15782177; first snapshot PENDING/Resources, predicted start not actual/guaranteed, scope open and scheduler attempt used.13 runtime paths absent; allocation/card-hours/cost0 only as of snapshot. Stop LLM monitoring; future retrieval uses same job, never resubmit. |
+| [Paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md) | Unchanged accepted historical no-submission/resource-nonadmission stage,0 allocation/card-hours/CNY. Raw refresh and false-scope identities preserved; later queue status above owns current execution. |
+| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Accepted immutable f4ae942/v2 contract and136 CPU/shell cases: fixed gnall n01,4 actual Slurm CPUs/1V100/nonexclusive/20min/no-requeue; maximum0.8266667 CNY/upward0.83/ceiling1.00. Sole queued submission15782177; actual GPU/runtime gates unverified. Original false proposal and old df8/v5/v1 preserved. |
 | [GPU deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md) | Current execution authority/status: user approved the separate1200s/one idle nonexclusive V100/CNY0 scope; clean b676353 deployment and target CPU shell/private-phase readiness accepted. Both GPUs busy at final refresh; actual container/PJRT/GPU/numerical comparison pending. No launch/preflight/open scope/ledger reservation;0 GPU seconds/card-hours/cost and unconsumed one-shot. `approved_waiting_resources`; approval persists, no automatic polling/monitoring/retry. |
 | [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md), [execution contract](research/daily_coarse_graining/T7_batch_numerics_GPU_execution_contract_20261011.md) | Accepted local affine launcher/input and frozen-method authority. Fresh recovery NPZ/receipt have new identities and six preincident numeric SHA matches after a three-file unsafe-test incident. Its false proposed1200s snapshot is preserved; later approval/deployment status is in the current result above. Historical CPU12/91 is separate and was not rerun. |
 | [Current B1/B4 JVP completion results](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | Current derivative evidence: 32 JVPs/four full VJPs, exact JVP repeats, strict B1/4–B4 failures at 434/2382 plus own JVP/VJP/full-state failures. Primal/parameter self repeats/aux/physics/memory pass. Independent scope closed at 1780.743670s/CNY 0/released; CPU analysis accepted. No derivative reference/adoption. |
@@ -73,17 +74,21 @@ and trace buckets do not isolate wall time or certify a launch-bound bottleneck.
 
 ## Current authorization boundary
 
-The human specifically approved one paid-v2 job under the exact f4ae942 fixed
-node/resource/wall/cwd/command/CNY1.00 contract. The one necessary partition/
-node refresh passed gnall policy but found0 unallocated GPUs at fixed n01.
-This dispatch stops as resource non-admission, with no submission/job/attempt/
-ledger/preflight/GPU/numerical result. Approval remains valid and unconsumed;
-no polling, monitoring, node change, fallback, extra diagnostics or training.
-Actual GPU/cgroup/CUDA/PJRT gates remain unverified. Source, recovery identities,
-target false scope, prior CPU evidence and df8/v5/v1 artifacts stay unchanged.
-The free b676 approval remains valid/unconsumed and free dispatch paused.
+Human approved the exact paid-v2 resource/cost contract; the supervisor
+subsequently directed queue submission within that unchanged approval.
+That unchanged sbatch was accepted as15782177; the first and only snapshot is
+PENDING/Resources. The scope is open and unique scheduler attempt used. Stop
+LLM monitoring; Slurm queues autonomously. Future retrieval uses this same job:
+no second sbatch, node change, fallback, retry, extra diagnostics or training.
+Pending start/end/TRES are predictions/request evidence, not allocation.
+Thirteen runtime paths were absent and cost/card-hours were0 only as of that
+snapshot; the approved future paid ceiling remains CNY1.00. Actual allocation,
+GPU/cgroup/CUDA/PJRT/numeric/release gates remain unverified. Execution f4ae942
+was not refrozen from accepted historical-docs77afd803. Original false scope,
+earlier resource report/raw evidence, recovery inputs and df8/v5/v1 stay
+preserved. Free b676 approval remains valid/unconsumed and dispatch paused.
 
-The current affine scope is approved but waiting for resources and unconsumed;
+The separate free affine scope is approved but waiting for resources and unconsumed;
 see the deployment result above. This task stops without further polling or
 automatic monitoring. No renewed approval is required for that unchanged grant.
 All earlier executed GPU scopes completed. Original/B4 recovery charged 2809.490106/3600s;
