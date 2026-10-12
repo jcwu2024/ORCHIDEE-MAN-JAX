@@ -1,0 +1,13 @@
+{
+  "schema": "global_cpu48_b64_v2_git_artifact_verification_v1",
+  "job_id": "15805735",
+  "execution_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+  "raw_manifest_files": 18,
+  "remote_receipt_files": 5,
+  "unique_working_and_staged_sha256_matches": 22,
+  "evidence_staged_files_at_verification": 87,
+  "raw_hash_mismatches": 0,
+  "terminal_resource_and_cost_consistency": "passed",
+  "staged_json_and_scope_checks": "passed",
+  "scope": "saved evidence and Git index verification; no model execution or scientific acceptance"
+}

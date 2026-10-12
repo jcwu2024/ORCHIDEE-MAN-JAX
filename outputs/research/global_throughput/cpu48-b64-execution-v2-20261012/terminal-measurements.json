@@ -1,0 +1,94 @@
+{
+  "schema": "global_cpu48_b64_v2_terminal_measurements_v1",
+  "execution_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+  "job_id": "15805735",
+  "authorization_status": "closed_after_single_terminal_allocation_no_retry",
+  "parent_allocation": {
+    "JobIDRaw": "15805735",
+    "State": "FAILED",
+    "ExitCode": "1:0",
+    "ElapsedRaw": "109",
+    "Elapsed": "00:01:49",
+    "AllocCPUS": "48",
+    "AllocTRES": "billing=48,cpu=48,node=1",
+    "NodeList": "ibc12b08n35",
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "gpus": 0,
+    "MaxRSS": ""
+  },
+  "orchestration_status": "scalar_failed_before_compile",
+  "pre_submit_node_snapshot": {
+    "observed_utc": "2026-10-12T08:36:12Z",
+    "node": "ibc12b08n35",
+    "state": "IDLE",
+    "cpu_load": 0.01,
+    "cpu_allocated": 0,
+    "cpu_total": 56,
+    "source": "saved node-snapshot.txt; candidate_snapshot.cpu_load reconciled to this value"
+  },
+  "scalar_startup_context": {
+    "hostname": "ibc12b08n35",
+    "cpu_affinity": [0],
+    "load_average": [0.04, 0.03, 0.05],
+    "allocated_step_cpus": 1,
+    "parent_allocated_cpus": 48
+  },
+  "failure": {
+    "phase": "AOT input metadata inspection before compile",
+    "message": "AttributeError: 'float' object has no attribute 'shape'",
+    "location": "scripts/dev/benchmark_global_batch.py::_aval_signature, called by describe_aot_signature from lower_compile",
+    "offending_argument_leaf": null,
+    "lower_called": true,
+    "compile_called": false,
+    "scientific_gate_completed": false,
+    "batch_step_dispatched": false
+  },
+  "timing": {
+    "scalar_lower_seconds": 54.8616076009348,
+    "benchmark_process_seconds": 63.17527768295258,
+    "child_gnu_time_wall": "1:44.86",
+    "parent_scheduler_elapsed_seconds": 109,
+    "scope_note": "Scalar benchmark and process timing are nested within the 109-second parent allocation; the full parent is billed once."
+  },
+  "memory": {
+    "peak_process_rss_bytes": 1791643648,
+    "gnu_time_ru_maxrss_bytes": 1811177472,
+    "physical_gpu_peak_bytes": null,
+    "b64_cpu48_candidate_peak_rss_bytes": null,
+    "scope_note": "Host scalar-process RSS only; the B64/48-core candidate was never dispatched, so its memory and CPU utilization are unavailable. No GPU was allocated."
+  },
+  "b64_cpu48_candidate_cpu_utilization": null,
+  "completed_work": {
+    "stage_count": 0,
+    "scientific_gate_count": 0,
+    "warm_core_samples": [],
+    "warm_wrapper_samples": [],
+    "batch_samples": [],
+    "throughput": null,
+    "collector_ran": false,
+    "scientific_acceptance": false
+  },
+  "whole_parent_allocation_cost": {
+    "allocated_cpu_count_seconds": 5232,
+    "primary_rate_cny_per_cpu_hour": 0.05,
+    "primary_cost_cny": 0.072666667,
+    "conservative_rate_cny_per_cpu_hour": 0.07,
+    "conservative_cost_cny": 0.101733333,
+    "actual_bill_verified": false,
+    "basis": "single terminal parent Slurm elapsed row; 48 allocated CPUs; no batch/extern/srun double counting"
+  },
+  "coordinator_scope_cost_estimates": {
+    "primary_cny": 0.07032488934199015,
+    "conservative_cny": 0.09845484507878621,
+    "limitation": "excludes Slurm submission/startup and final scheduler accounting"
+  },
+  "performance_measurements": null,
+  "evidence": {
+    "execution_result": "execution-result.json",
+    "raw_manifest": "terminal-evidence-manifest.json",
+    "raw_root": ".",
+    "v1_record_preserved": "../cpu48-b64-execution-20261012/"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "global_cpu48_b64_v2_target_deployment_v1",
+  "target_validation": "synthetic_fixture_backed_launcher_check",
+  "target_host": "ibtest01",
+  "target_route": "test01",
+  "target_bash": "GNU bash 4.2.46",
+  "target_python": "Python 3.11.15",
+  "module_import": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/jax_orchidee/__init__.py",
+  "execution_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+  "execution_ref": "codex/global-cpu48-b64-v2",
+  "base_sha": "4f6b2fc906c453b9030acff489637a8f83605dca",
+  "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+  "checkout_state": "detached_clean",
+  "alternate_dependencies": [],
+  "mirror_ref": "refs/heads/codex/global-cpu48-b64-v2",
+  "mirror_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+  "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/cpu48-b64-b1b5cf0835da.bundle",
+  "bundle_bytes": 5091,
+  "bundle_sha256": "42de12b0262eb721666ce7d5da9fb493c832eaa20a1cea0124c03a3a2162e2f9",
+  "server_registry": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+  "server_registry_previous_sha256": "228ae50a7e2dd2a0986e83404324c3827fba89118318f5439936b614f4e5bfbb",
+  "server_registry_current_sha256": "1df09665e383b9a4ecacd9d3b7a8262d0f54b7a28458632823af257b421a9bb4",
+  "science_file_count": 104,
+  "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+  "science_identical_to_base": true,
+  "target_invocation_summary": {
+    "unique_cases": 6,
+    "launcher_invocations": 7,
+    "valid_tres_fallback_invocations": 2,
+    "valid_fallback_launcher_exit_status": 1,
+    "valid_fallback_stub_exit_status": 97,
+    "rejected_cases": {
+      "command_failure": 2,
+      "missing_fields": 2,
+      "duplicate_fields": 2,
+      "cpu_mismatch": 2,
+      "tres_conflict": 2
+    },
+    "srun_stub_invocations": 2,
+    "model_or_jax_execution": false,
+    "real_slurm_allocation": false,
+    "sbatch_invocation": false
+  },
+  "output_paths": {
+    "target_launcher_captures": "target-validation/results/",
+    "target_scontrol_evidence": "target-validation/scontrol-evidence/",
+    "target_coordinator_runs": "target-validation/coordinator-runs/"
+  },
+  "paid_allocation": {
+    "authorized_submissions": 1,
+    "submission_made": false,
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "cpus": 48,
+    "gpus": 0,
+    "wall_seconds": 5400,
+    "primary_worst_case_cny": 3.6,
+    "conservative_worst_case_cny": 5.04
+  }
+}

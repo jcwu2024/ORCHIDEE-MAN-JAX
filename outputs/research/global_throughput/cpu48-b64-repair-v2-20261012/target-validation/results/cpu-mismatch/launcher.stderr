@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 407, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 391, in main
+    print(json.dumps(validate_allocation(), allow_nan=False))
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 132, in validate_allocation
+    raise ValueError("Slurm allocation TRES must report exactly cpu=48 and node=1")
+ValueError: Slurm allocation TRES must report exactly cpu=48 and node=1
+saved scontrol allocation evidence failed the CPU48 contract

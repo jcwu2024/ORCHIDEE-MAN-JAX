@@ -1,0 +1,412 @@
+diff --git a/scripts/dev/prepare_global_cpu48_execution.py b/scripts/dev/prepare_global_cpu48_execution.py
+index aec187b..69229fe 100644
+--- a/scripts/dev/prepare_global_cpu48_execution.py
++++ b/scripts/dev/prepare_global_cpu48_execution.py
+@@ -18,11 +18,11 @@ from pathlib import Path, PurePosixPath
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path.insert(0, str(ROOT))
+ 
+-BASE = "8aa2e05aa24b65dc4d30a27d4ee857bba6312221"
++BASE = "4f6b2fc906c453b9030acff489637a8f83605dca"
+ SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+ BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
+ REFERENCE = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+-TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1"
++TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2"
+ 
+ 
+ def git(repository, *arguments, env=None, data=None):
+@@ -161,7 +161,7 @@ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--source-ref", default="HEAD")
+     parser.add_argument("--base-ref", default=BASE)
+-    parser.add_argument("--execution-ref", default="codex/global-cpu48-b64-v1")
++    parser.add_argument("--execution-ref", default="codex/global-cpu48-b64-v2")
+     parser.add_argument("--harness-path", action="append", required=True)
+     parser.add_argument("--output-dir", type=Path, required=True)
+     args = parser.parse_args()
+diff --git a/scripts/hpc/global_cpu48_b64_coordinator.py b/scripts/hpc/global_cpu48_b64_coordinator.py
+index a445ff9..bdcdd63 100644
+--- a/scripts/hpc/global_cpu48_b64_coordinator.py
++++ b/scripts/hpc/global_cpu48_b64_coordinator.py
+@@ -26,6 +26,63 @@ def allocated_tres_cpu_count(value: str) -> int:
+     return int(entries[0].split("=", 1)[1])
+ 
+ 
++def parse_tres(value: str) -> dict[str, str]:
++    if not value:
++        raise ValueError("Slurm allocation TRES is empty")
++    result = {}
++    for item in value.split(","):
++        key, separator, resource_value = item.partition("=")
++        if not separator or not key or not resource_value or key in result:
++            raise ValueError("Slurm allocation TRES contains malformed or duplicate fields")
++        result[key] = resource_value
++    allocated_tres_cpu_count(value)
++    for key, resource_value in result.items():
++        if key.startswith("gres/gpu") and resource_value != "0":
++            raise ValueError("CPU48 allocation TRES contains a GPU")
++    return result
++
++
++def parse_scontrol_job_record(stdout: str) -> dict[str, str]:
++    lines = stdout.splitlines()
++    if len(lines) != 1 or not lines[0].strip():
++        raise ValueError("scontrol must return exactly one nonempty job record")
++    required = {"JobId", "JobState", "Partition", "NodeList", "NumNodes", "NumTasks", "CPUs/Task", "NumCPUs"}
++    tracked = required | {"AllocTRES", "TRES"}
++    values = {}
++    for token in lines[0].split():
++        key, separator, value = token.partition("=")
++        if not separator or key not in tracked:
++            continue
++        if key in values:
++            raise ValueError(f"scontrol job record contains duplicate {key} fields")
++        values[key] = value
++    missing = sorted(required - values.keys())
++    if missing or any(not values[name] for name in required):
++        raise ValueError("scontrol job record is missing required allocation fields: " + ", ".join(missing))
++    return values
++
++
++def _read_scontrol_evidence(env) -> tuple[str, str, dict[str, str]]:
++    paths = {
++        "stdout": env.get("ORCHJAX_SLURM_JOB_RECORD_STDOUT"),
++        "stderr": env.get("ORCHJAX_SLURM_JOB_RECORD_STDERR"),
++        "exitcode": env.get("ORCHJAX_SLURM_JOB_RECORD_EXITCODE"),
++    }
++    if any(not value for value in paths.values()):
++        raise ValueError("saved scontrol stdout/stderr/exitcode paths are required")
++    try:
++        stdout = Path(paths["stdout"]).read_text(encoding="utf-8")
++        stderr = Path(paths["stderr"]).read_text(encoding="utf-8")
++        exitcode_text = Path(paths["exitcode"]).read_text(encoding="ascii").strip()
++    except OSError as exc:
++        raise ValueError(f"saved scontrol evidence could not be read: {exc}") from exc
++    if exitcode_text != "0":
++        raise ValueError("scontrol show job command did not exit successfully")
++    if stderr:
++        raise ValueError("scontrol show job wrote stderr; refusing ambiguous allocation evidence")
++    return stdout, stderr, parse_scontrol_job_record(stdout)
++
++
+ def validate_allocation(environ=None) -> dict:
+     env = os.environ if environ is None else environ
+     if (not env.get("SLURM_JOB_ID") or env.get("SLURM_JOB_PARTITION") != "cnall"
+@@ -37,16 +94,54 @@ def validate_allocation(environ=None) -> dict:
+         raise ValueError("requires exactly one allocated Slurm node")
+     if env.get("ORCHJAX_PARENT_CPU_COUNT") != "48":
+         raise ValueError("ORCHJAX_PARENT_CPU_COUNT must bind the full 48-CPU parent allocation")
+-    tres = env.get("ORCHJAX_SLURM_ALLOC_TRES", "")
+-    if allocated_tres_cpu_count(tres) != 48:
+-        raise ValueError("Slurm AllocTRES must account exactly 48 parent CPUs")
+-    gpu_entries = [item for item in tres.split(",") if item.split("=", 1)[0].startswith("gres/gpu")]
+-    if any(item.split("=", 1)[1] != "0" for item in gpu_entries) or env.get("SLURM_JOB_GPUS"):
++    _, _, record = _read_scontrol_evidence(env)
++    expected = {
++        "JobId": env["SLURM_JOB_ID"],
++        "JobState": "RUNNING",
++        "Partition": "cnall",
++        "NodeList": env.get("SLURM_JOB_NODELIST", ""),
++        "NumNodes": "1",
++        "NumTasks": "1",
++        "CPUs/Task": "48",
++        "NumCPUs": "48",
++    }
++    for field, expected_value in expected.items():
++        if not expected_value or record[field] != expected_value:
++            raise ValueError(f"scontrol {field} does not match the active 48-CPU job environment")
++    if env.get("SLURM_JOB_NUM_NODES", "1") != "1":
++        raise ValueError("SLURM_JOB_NUM_NODES must report exactly one allocated node")
++
++    alloc_tres = record.get("AllocTRES")
++    legacy_tres = record.get("TRES")
++    if alloc_tres:
++        tres, source = alloc_tres, "AllocTRES"
++        selected = parse_tres(tres)
++        if legacy_tres:
++            legacy = parse_tres(legacy_tres)
++            for key in selected.keys() & legacy.keys():
++                if selected[key] != legacy[key]:
++                    raise ValueError(f"AllocTRES and TRES disagree on shared {key} allocation")
++    elif legacy_tres:
++        if record["JobState"] != "RUNNING":
++            raise ValueError("legacy TRES fallback is accepted only for a RUNNING job")
++        tres, source = legacy_tres, "TRES"
++        selected = parse_tres(tres)
++    else:
++        raise ValueError("scontrol job record has neither AllocTRES nor usable TRES")
++    if selected.get("cpu") != "48" or selected.get("node", "1") != "1":
++        raise ValueError("Slurm allocation TRES must report exactly cpu=48 and node=1")
++    if env.get("SLURM_JOB_GPUS"):
+         raise ValueError("CPU48 contract prohibits any allocated GPU")
+-    if env.get("ORCHJAX_SLURM_ALLOC_TRES_SOURCE") != "AllocTRES":
+-        raise ValueError("actual Slurm AllocTRES source must be recorded")
++    exported_tres = env.get("ORCHJAX_SLURM_ALLOC_TRES")
++    exported_source = env.get("ORCHJAX_SLURM_ALLOC_TRES_SOURCE")
++    if exported_tres is not None and exported_tres != tres:
++        raise ValueError("exported allocation TRES differs from saved scontrol evidence")
++    if exported_source is not None and exported_source != source:
++        raise ValueError("exported allocation source differs from saved scontrol evidence")
+     return {"job_id": env["SLURM_JOB_ID"], "partition": env["SLURM_JOB_PARTITION"],
+-            "nodes": 1, "tasks": 1, "parent_cpu_count": 48, "allocated_tres": tres}
++            "nodes": 1, "tasks": 1, "parent_cpu_count": 48, "allocated_tres": tres,
++            "allocated_tres_source": source, "job_state": record["JobState"],
++            "scontrol_job_record": {key: record[key] for key in expected}}
+ 
+ 
+ def child_arguments(args, mode: str, output: Path) -> list[str]:
+@@ -190,7 +285,7 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot)
+         for mode in ("scalar", "batch")}
+     if args.dry_run:
+         checks = {mode: runner_dry_run(args, mode) for mode in ("scalar", "batch")}
+-        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v1",
++        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2",
+             "expected_execution_commit": args.expected_code_commit, "expected_science_sha256": DEFAULT_SCIENCE_SHA,
+             "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
+             "allocation": {"partition": args.partition, "parent_cpu_count": 48,
+@@ -199,13 +294,13 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot)
+             "runner_cli_dry_runs": checks, "model_execution": False, "JAX_imported": "jax" in sys.modules}
+     allocation = validate_allocation()
+     output = Path(args.output_dir).resolve()
+-    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/server-benchmark"):
+-        raise ValueError("RUN_ROOT must remain in project server-benchmark outputs")
++    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012"):
++        raise ValueError("RUN_ROOT must remain in CPU48/B64 v2 outputs")
+     if output.exists() and any(output.iterdir()):
+         raise ValueError("single-use output directory must be new and empty")
+     output.mkdir(parents=True, exist_ok=True)
+     start = clock()
+-    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v1", "status": "running",
++    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v2", "status": "running",
+         "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": 5400,
+         "reference_cap_seconds": 2700, "minimum_candidate_seconds": 1800,
+         "allocation": allocation, "host_start_snapshot": snapshot(), "expected_execution_commit": args.expected_code_commit,
+diff --git a/scripts/hpc/slurm_global_server_cpu_48core.sh b/scripts/hpc/slurm_global_server_cpu_48core.sh
+index 89e78d9..99f0781 100644
+--- a/scripts/hpc/slurm_global_server_cpu_48core.sh
++++ b/scripts/hpc/slurm_global_server_cpu_48core.sh
+@@ -1,21 +1,21 @@
+ #!/usr/bin/env bash
+ # One native FULL64 B64 workload in one 48-CPU parent allocation.
+ # Preparation script only; paid submission requires separate explicit approval.
+-#SBATCH -J orchjax-cpu48-b64
++#SBATCH -J orchjax-cpu48-b64-v2
+ #SBATCH -p cnall
+ #SBATCH --nodes=1
+ #SBATCH --ntasks=1
+ #SBATCH --cpus-per-task=48
+ #SBATCH --time=01:30:00
+-#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_%j.txt
+-#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_%j.txt
++#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt
++#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt
+ #SBATCH --no-requeue
+ 
+ set -euo pipefail
+ 
+ PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+ SLURM_BIN=${SLURM_BIN:-/rmprog/slurm/v22.05.7/bin}
+-CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v1}
++CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v2}
+ CODE_DIR=$(realpath -m "$CODE_DIR")
+ case "$CODE_DIR" in
+   "$PROJECT"/runtime/worktrees/*) ;;
+@@ -27,13 +27,13 @@ COORDINATOR=${COORDINATOR:-$CODE_DIR/scripts/hpc/global_cpu48_b64_coordinator.py
+ PREPARED_INPUT=${PREPARED_INPUT:-$PROJECT/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl}
+ GPU_REFERENCE_DIR=${GPU_REFERENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/gpu-round4/model}
+ CONFIG=${CONFIG:-$CODE_DIR/configs/orchidee_man_250919.yaml}
+-RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/server-benchmark/cpu48-b64-v1-${SLURM_JOB_ID:-dry-run}}
++RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/${SLURM_JOB_ID:-dry-run}}
+ RUN_ROOT=$(realpath -m "$RUN_ROOT")
+ EXPECTED_CODE_COMMIT=${EXPECTED_CODE_COMMIT:?set EXPECTED_CODE_COMMIT to the reviewed execution-only commit}
+ 
+ case "$RUN_ROOT" in
+-  "$PROJECT"/runtime/outputs/research/global_throughput/server-benchmark/*) ;;
+-  *) echo "RUN_ROOT must stay under project server-benchmark outputs" >&2; exit 2 ;;
++  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/*) ;;
++  *) echo "RUN_ROOT must stay under project CPU48/B64 v2 outputs" >&2; exit 2 ;;
+ esac
+ [[ ${SLURM_CPUS_PER_TASK:-48} == 48 ]] || { echo "requires one 48-CPU parent allocation" >&2; exit 2; }
+ 
+@@ -90,15 +90,29 @@ if [[ $DRY_RUN -eq 1 ]]; then
+ fi
+ 
+ mkdir -p "$PROJECT/runtime/logs"
+-ALLOC_TRES_RECORD=$("$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" | awk '{
+-  for (i = 1; i <= NF; i++) if ($i ~ /^AllocTRES=/) allocated = substr($i, 11)
+-} END { if (allocated != "") print allocated }')
+-[[ -n $ALLOC_TRES_RECORD ]] || { echo "Slurm did not report AllocTRES" >&2; exit 2; }
+-export ORCHJAX_SLURM_ALLOC_TRES=$ALLOC_TRES_RECORD
+-export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=AllocTRES
+-if ! "$PYTHON" "$COORDINATOR" --validate-allocation; then
+-  echo "parent allocation must report one unambiguous cpu=48 TRES entry" >&2
++EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012}
++EVIDENCE_DIR=$(realpath -m "$EVIDENCE_DIR")
++case "$EVIDENCE_DIR" in
++  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012) ;;
++  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v2 output namespace" >&2; exit 2 ;;
++esac
++mkdir -p "$EVIDENCE_DIR"
++export ORCHJAX_SLURM_JOB_RECORD_STDOUT=$EVIDENCE_DIR/scontrol-job-${SLURM_JOB_ID}.stdout
++export ORCHJAX_SLURM_JOB_RECORD_STDERR=$EVIDENCE_DIR/scontrol-job-${SLURM_JOB_ID}.stderr
++export ORCHJAX_SLURM_JOB_RECORD_EXITCODE=$EVIDENCE_DIR/scontrol-job-${SLURM_JOB_ID}.exitcode
++for path in "$ORCHJAX_SLURM_JOB_RECORD_STDOUT" "$ORCHJAX_SLURM_JOB_RECORD_STDERR" "$ORCHJAX_SLURM_JOB_RECORD_EXITCODE"; do
++  [[ ! -e $path ]] || { echo "scontrol evidence path already exists: $path" >&2; exit 2; }
++done
++set +e
++"$SLURM_BIN/scontrol" show job -o "$SLURM_JOB_ID" >"$ORCHJAX_SLURM_JOB_RECORD_STDOUT" 2>"$ORCHJAX_SLURM_JOB_RECORD_STDERR"
++SCONTROL_EXITCODE=$?
++set -e
++printf '%s\n' "$SCONTROL_EXITCODE" >"$ORCHJAX_SLURM_JOB_RECORD_EXITCODE"
++VALIDATED_ALLOCATION=$("$PYTHON" "$COORDINATOR" --validate-allocation) || {
++  echo "saved scontrol allocation evidence failed the CPU48 contract" >&2
+   exit 2
+-fi
++}
++export ORCHJAX_SLURM_ALLOC_TRES=$(printf '%s' "$VALIDATED_ALLOCATION" | "$PYTHON" -c 'import json,sys; print(json.load(sys.stdin)["allocated_tres"])')
++export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$(printf '%s' "$VALIDATED_ALLOCATION" | "$PYTHON" -c 'import json,sys; print(json.load(sys.stdin)["allocated_tres_source"])')
+ cd "$CODE_DIR"
+ exec "$PYTHON" "$COORDINATOR" "${args[@]}"
+diff --git a/tests/unit/test_global_cpu48_b64_preparation.py b/tests/unit/test_global_cpu48_b64_preparation.py
+index 064908e..3281f93 100644
+--- a/tests/unit/test_global_cpu48_b64_preparation.py
++++ b/tests/unit/test_global_cpu48_b64_preparation.py
+@@ -17,27 +17,91 @@ EXPECTED_REF = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6
+ EXPECTED_SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+ 
+ 
+-def allocation_env(**changes):
++def write_scontrol_evidence(tmp_path, record=None, *, stderr="", exitcode="0"):
++    evidence = tmp_path / "scontrol-evidence"
++    evidence.mkdir(exist_ok=True)
++    fields = {"JobId": "synthetic-job", "JobState": "RUNNING", "Partition": "cnall",
++        "NodeList": "test01", "NumNodes": "1", "NumTasks": "1", "CPUs/Task": "48",
++        "NumCPUs": "48", "AllocTRES": "cpu=48,node=1,mem=192G"}
++    fields.update(record or {})
++    stdout_path = evidence / "stdout"
++    stderr_path = evidence / "stderr"
++    exitcode_path = evidence / "exitcode"
++    stdout_path.write_text(" ".join(f"{key}={value}" for key, value in fields.items()) + "\n", encoding="utf-8")
++    stderr_path.write_text(stderr, encoding="utf-8")
++    exitcode_path.write_text(exitcode + "\n", encoding="ascii")
++    return {"ORCHJAX_SLURM_JOB_RECORD_STDOUT": str(stdout_path),
++        "ORCHJAX_SLURM_JOB_RECORD_STDERR": str(stderr_path),
++        "ORCHJAX_SLURM_JOB_RECORD_EXITCODE": str(exitcode_path)}
++
++
++def allocation_env(tmp_path, *, record=None, stderr="", exitcode="0", **changes):
+     env = os.environ.copy()
+     env.update({"SLURM_JOB_ID": "synthetic-job", "SLURM_JOB_PARTITION": "cnall",
++        "SLURM_JOB_NODELIST": "test01", "SLURM_JOB_NUM_NODES": "1",
+         "SLURM_CPUS_PER_TASK": "48", "SLURM_NTASKS": "1", "SLURM_NNODES": "1",
+         "ORCHJAX_PARENT_CPU_COUNT": "48",
+-        "ORCHJAX_SLURM_ALLOC_TRES": "cpu=48,mem=192G", "ORCHJAX_SLURM_ALLOC_TRES_SOURCE": "AllocTRES"})
++        "ORCHJAX_SLURM_ALLOC_TRES": "cpu=48,node=1,mem=192G", "ORCHJAX_SLURM_ALLOC_TRES_SOURCE": "AllocTRES"})
++    env.update(write_scontrol_evidence(tmp_path, record, stderr=stderr, exitcode=exitcode))
+     env.update(changes)
+     return env
+ 
+ 
+-def test_validate_allocation_is_a_standalone_subprocess_branch():
++def test_validate_allocation_is_a_standalone_subprocess_branch(tmp_path):
+     result = subprocess.run([sys.executable, str(COORDINATOR), "--validate-allocation"],
+-        env=allocation_env(), text=True, capture_output=True, check=False)
++        env=allocation_env(tmp_path), text=True, capture_output=True, check=False)
+     assert result.returncode == 0, result.stderr
+-    assert json.loads(result.stdout)["parent_cpu_count"] == 48
++    allocation = json.loads(result.stdout)
++    assert allocation["parent_cpu_count"] == 48
++    assert allocation["allocated_tres_source"] == "AllocTRES"
+     invalid = subprocess.run([sys.executable, str(COORDINATOR), "--validate-allocation"],
+-        env=allocation_env(ORCHJAX_SLURM_ALLOC_TRES="cpu=48,cpu=48"), text=True,
++        env=allocation_env(tmp_path, ORCHJAX_SLURM_ALLOC_TRES="cpu=48,cpu=48"), text=True,
+         capture_output=True, check=False)
+     assert invalid.returncode != 0
+ 
+ 
++@pytest.mark.parametrize(("record", "stderr", "exitcode", "message"), [
++    ({}, "", "1", "did not exit successfully"),
++    ({"JobState": "PENDING"}, "", "0", "JobState"),
++    ({"AllocTRES": "cpu=47,node=1,mem=192G"}, "", "0", "exactly cpu=48"),
++    ({"AllocTRES": "cpu=48,node=2,mem=192G"}, "", "0", "exactly cpu=48 and node=1"),
++    ({"NumCPUs": "47"}, "", "0", "NumCPUs"),
++    ({"NumTasks": "2"}, "", "0", "NumTasks"),
++    ({"AllocTRES": "cpu=48,node=1", "TRES": "cpu=47,node=1"}, "", "0", "disagree"),
++    ({"AllocTRES": "cpu=48,node=1,billing=48", "TRES": "cpu=48,node=1,billing=96"}, "", "0", "disagree on shared billing"),
++    ({}, "scontrol warning\n", "0", "wrote stderr"),
++])
++def test_validate_allocation_rejects_bad_saved_scontrol_evidence(tmp_path, record, stderr, exitcode, message):
++    from scripts.hpc.global_cpu48_b64_coordinator import validate_allocation
++
++    with pytest.raises(ValueError, match=message):
++        validate_allocation(allocation_env(tmp_path, record=record, stderr=stderr, exitcode=exitcode))
++
++
++def test_validate_allocation_rejects_missing_and_duplicate_record_fields(tmp_path):
++    from scripts.hpc.global_cpu48_b64_coordinator import validate_allocation
++
++    env = allocation_env(tmp_path)
++    Path(env["ORCHJAX_SLURM_JOB_RECORD_STDOUT"]).write_text("JobId=synthetic-job\n", encoding="utf-8")
++    with pytest.raises(ValueError, match="missing required"):
++        validate_allocation(env)
++    Path(env["ORCHJAX_SLURM_JOB_RECORD_STDOUT"]).write_text(
++        "JobId=synthetic-job JobId=synthetic-job JobState=RUNNING Partition=cnall "
++        "NodeList=test01 NumNodes=1 NumTasks=1 CPUs/Task=48 NumCPUs=48 AllocTRES=cpu=48,node=1\n",
++        encoding="utf-8")
++    with pytest.raises(ValueError, match="duplicate JobId"):
++        validate_allocation(env)
++
++
++def test_validate_allocation_accepts_legacy_tres_only_for_running_record(tmp_path):
++    from scripts.hpc.global_cpu48_b64_coordinator import validate_allocation
++
++    allocation = validate_allocation(allocation_env(tmp_path,
++        record={"AllocTRES": "", "TRES": "cpu=48,node=1,mem=192G"},
++        ORCHJAX_SLURM_ALLOC_TRES="cpu=48,node=1,mem=192G", ORCHJAX_SLURM_ALLOC_TRES_SOURCE="TRES"))
++    assert allocation["allocated_tres_source"] == "TRES"
++
++
+ def args(tmp_path, *, dry_run=False):
+     return SimpleNamespace(
+         budget_seconds=5400, reference_cap_seconds=2700, minimum_candidate_seconds=1800,
+@@ -71,13 +135,13 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
+         pytest.skip("GNU Bash is required for launcher expansion")
+     env = os.environ.copy()
+     env.update({"EXPECTED_CODE_COMMIT": "1" * 40,
+-        "CODE_DIR": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
++        "CODE_DIR": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+         "PYTHON": sys.executable, "ENTRY": str(RUNNER).replace("\\", "/"),
+         "COORDINATOR": str(COORDINATOR).replace("\\", "/"),
+         "SLURM_BIN": "/synthetic/slurm/bin",
+         "PREPARED_INPUT": "/synthetic/prepared.pkl", "GPU_REFERENCE_DIR": "/synthetic/gpu-reference",
+         "CONFIG": "/synthetic/config.yaml",
+-        "RUN_ROOT": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu48-b64-dry"})
++        "RUN_ROOT": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/dry"})
+     shell = subprocess.run([bash, str(LAUNCHER).replace("\\", "/"), "--dry-run"],
+         env=env, text=True, capture_output=True, check=False)
+     assert shell.returncode == 0, shell.stderr
+@@ -103,7 +167,7 @@ def test_candidate_is_skipped_when_less_than_1800_seconds_remain(tmp_path, monke
+ 
+     project = tmp_path / "project"
+     code_dir = project / "runtime/worktrees/cpu48"
+-    output = project / "runtime/outputs/research/global_throughput/server-benchmark/run"
++    output = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/run"
+     code_dir.mkdir(parents=True)
+     subprocess.run(["git", "init", "-q", str(code_dir)], check=True)
+     subprocess.run(["git", "config", "user.email", "codex@example.invalid"], cwd=code_dir, check=True)
+@@ -123,9 +187,13 @@ def test_candidate_is_skipped_when_less_than_1800_seconds_remain(tmp_path, monke
+     monkeypatch.setenv("SLURM_CPUS_PER_TASK", "48")
+     monkeypatch.setenv("SLURM_NTASKS", "1")
+     monkeypatch.setenv("SLURM_NNODES", "1")
++    monkeypatch.setenv("SLURM_JOB_NODELIST", "test01")
++    monkeypatch.setenv("SLURM_JOB_NUM_NODES", "1")
+     monkeypatch.setenv("ORCHJAX_PARENT_CPU_COUNT", "48")
+-    monkeypatch.setenv("ORCHJAX_SLURM_ALLOC_TRES", "cpu=48,mem=192G")
++    monkeypatch.setenv("ORCHJAX_SLURM_ALLOC_TRES", "cpu=48,node=1,mem=192G")
+     monkeypatch.setenv("ORCHJAX_SLURM_ALLOC_TRES_SOURCE", "AllocTRES")
++    for name, value in write_scontrol_evidence(tmp_path).items():
++        monkeypatch.setenv(name, value)
+     value = coordinator.coordinate(run_args, run_step=lambda command, log, timeout: (
+         calls.append((command, timeout)) or {"returncode": 0, "timed_out": False, "wall_seconds": 10,
+             "start_epoch": 100.0, "end_epoch": 110.0, "log": str(log)}),

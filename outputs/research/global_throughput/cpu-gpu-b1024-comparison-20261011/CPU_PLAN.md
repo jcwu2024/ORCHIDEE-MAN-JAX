@@ -3,15 +3,16 @@
 更新：2026-10-12。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4仅是可选短入口检查。用户已明确[本次v2授权](../cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)：修复资源读取并验证后，以原资源、费用上限及科学/测量合同新增一次作业。允许同规格健康低负载CPU节点和正常排队，不锁n35；`IDLE+PLANNED`和正常PENDING不拒绝提交或关闭。canonical runtime及未变科学预检复用，新执行版本单独审核部署。前次[未提交结果](../cpu48-b64-execution-20261011/CURRENT_RESULT.md)0次sbatch/无job/费用0保留，不复用旧授权。
 
 实现、封装和检查见 [CPU48 准备结果](../cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、[版本 pin](../cpu48-b64-preparation-20261011/execution-code-pin.json) 和 [具体运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
-本次唯一job**15782454**在`ibc12b07n02`获得48CPU/0GPU后启动失败，
+前次唯一job**15782454**在`ibc12b07n02`获得48CPU/0GPU后启动失败，
 `FAILED / ExitCode 2:0 / Elapsed 00:00:01`。launcher读取`AllocTRES`为空并退出；
 原始scontrol输出未保存，字段为何不可读未知。无run root、模型执行、stage或性能/数值测量。
 完整父计费`billing=48,cpu=48,node=1`只计一次，费用情景CNY0.000666667/0.000933333，非核实账单。
-[本次终态证据](../cpu48-b64-execution-20261012/CURRENT_RESULT.md)已保存；单次授权耗尽、不重提。
+[前次终态证据](../cpu48-b64-execution-20261012/CURRENT_RESULT.md)已保存；旧单次授权耗尽、不重提。
 用户随后明确“好的，继续”，批准[新v2修复与单次重跑](../cpu48-b64-execution-v2-20261012/AUTHORIZATION.md)：
 先定位资源读取、保存原始错误并验证真实启动分支，再以相同资源/费用上限新增一次作业，不恢复旧额度。
 新版本基于旧执行SHA、物理子树不变，仅纳入验证修复，使用全新immutable checkout和run root。
-下列科学/测量协议继续不变。[修复](../cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md)已通过独立源码审查和22项本地针对性测试；immutable v2部署和目标真实启动验证仍待完成，尚无v2数值或性能测量。
+下列科学/测量协议继续不变。[修复](../cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md)已通过独立源码审查和22项本地针对性测试。immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2`已部署，104个物理源码文件与v1 base完全相同；目标ibtest01/GNU Bash4.2.46六类模拟检查及原始记录已验收，模拟本身未运行真实allocation或模型。见[部署回执](../cpu48-b64-repair-v2-20261012/deployment-receipt.json)。
+唯一v2付费job**15805735**在`ibc12b08n35`终态`FAILED / ExitCode 1:0 / Elapsed 00:01:49`，实际48CPU/0GPU。真实allocation校验通过、scalar单核step已派发；lower后`_aval_signature`对Python `float`读取`.shape`触发`AttributeError`。scalar lower为54.8616s，未完成stage、科学gate或热样本，B64/48核step未运行。完整48核父作业109s只计一次，费用情景CNY0.072666667/0.101733333，非核实账单。见[v2终态结果](../cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。本次授权已消耗，无自动重提；CPU48性能、数值接受和同量CPU/GPU比仍不可用。
 
 ## 比较对象和不可变科学合同
 
@@ -44,7 +45,7 @@ CPU48在JAX导入前建立48个不同物理核的精确affinity：`XLA_FLAGS=--x
 
 scalar MemAvailable guard为24GiB，batch48为64GiB；保存compile前后、first/warm后RSS/HWM和MemAvailable。guard不是内存reservation或OOM保证。历史单进程峰值约19.925GiB、compile-end约4.776GiB；48份独立进程朴素常驻外推约229GiB，超过节点192GB / 约187GiB可见量，因此主候选采用单进程vmap。Slurm RealMemory=1失真，不编造 `--mem` 或申请whole-node exclusive。
 
-准备期只读快照找到健康 `IDLE` 的 `ibc12b08n35`：56物理核、CPUAlloc=0、load=0.01；旧n04已满、n01为DRAIN，不采用。见 [只读准备收据](../cpu48-b64-preparation-20261011/target-readonly-preparation.json)。本次续派最终实查并选择`ibc12b07n02`，提交前56物理核、CPUAlloc=0、load=0.03；该快照不预留节点，启动阶段没有生成进程运行观测。
+准备期只读快照找到健康 `IDLE` 的 `ibc12b08n35`：56物理核、CPUAlloc=0、load=0.01；旧n04已满、n01为DRAIN，不采用。见 [只读准备收据](../cpu48-b64-preparation-20261011/target-readonly-preparation.json)。前次v1实查选择`ibc12b07n02`，提交前56物理核、CPUAlloc=0、load=0.03；其启动失败未生成进程运行观测。v2实查后选择健康低负载`ibc12b08n35`，job15805735也实际运行在该节点；这些快照均不预留节点，B64/48核进程未运行。
 
 ## 成本和审批边界
 

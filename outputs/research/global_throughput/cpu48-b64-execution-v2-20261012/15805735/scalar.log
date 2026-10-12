@@ -1,0 +1,29 @@
+{"command": ["/rmprog/slurm/v22.05.7/bin/srun", "--ntasks=1", "--cpus-per-task=1", "--cpu-bind=cores", "--export=ALL,OMP_NUM_THREADS=1,MKL_NUM_THREADS=1,OPENBLAS_NUM_THREADS=1,NUMEXPR_NUM_THREADS=1,JAX_PLATFORMS=cpu,JAX_ENABLE_X64=true", "/usr/bin/time", "-v", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/dev/benchmark_global_server_cpu.py", "--mode", "scalar", "--cpu-budget", "1", "--sizes", "64", "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl", "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model", "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6", "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/configs/orchidee_man_250919.yaml", "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal", "--memory-guard-gib", "24", "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/15805735/scalar"], "start_epoch": 1791794465.8059673}
+{"phase": "independent_scalar_nested_cache_cleared", "elapsed_seconds": 8.25607905164361, "rss_bytes": 745480192, "landpoint_id": "001.0-071.0", "entries_before": 0, "entries_after": 0}
+{"phase": "server_scalar_once_lower_start", "elapsed_seconds": 8.269128575921059, "rss_bytes": 745938944}
+Command exited with non-zero status 1
+	Command being timed: "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/dev/benchmark_global_server_cpu.py --mode scalar --cpu-budget 1 --sizes 64 --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --gpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --expected-gpu-reference-sha256 a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6 --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/configs/orchidee_man_250919.yaml --warm-repeats 5 --validation-mode exploratory --cpu-reference-role cpu-internal --memory-guard-gib 24 --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/15805735/scalar"
+	User time (seconds): 39.45
+	System time (seconds): 27.01
+	Percent of CPU this job got: 63%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:44.86
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1768728
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 8403
+	Minor (reclaiming a frame) page faults: 795486
+	Voluntary context switches: 19653
+	Involuntary context switches: 2285
+	Swaps: 0
+	File system inputs: 2652080
+	File system outputs: 584
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+srun: error: ibc12b08n35: task 0: Exited with exit code 1
+{"returncode": 1, "timed_out": false, "end_epoch": 1791794571.1938493, "wall_seconds": 105.38788199424744}

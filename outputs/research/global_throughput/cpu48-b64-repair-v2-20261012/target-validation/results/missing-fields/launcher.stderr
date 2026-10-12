@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 407, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 391, in main
+    print(json.dumps(validate_allocation(), allow_nan=False))
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 97, in validate_allocation
+    _, _, record = _read_scontrol_evidence(env)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 83, in _read_scontrol_evidence
+    return stdout, stderr, parse_scontrol_job_record(stdout)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 61, in parse_scontrol_job_record
+    raise ValueError("scontrol job record is missing required allocation fields: " + ", ".join(missing))
+ValueError: scontrol job record is missing required allocation fields: CPUs/Task, NodeList, NumCPUs, NumNodes, NumTasks, Partition
+saved scontrol allocation evidence failed the CPU48 contract

@@ -1,0 +1,27 @@
+{
+  "schema": "global_cpu48_b64_v2_registry_update_receipt_v1",
+  "registry_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+  "registry_sha256_before_terminal_update": "1df09665e383b9a4ecacd9d3b7a8262d0f54b7a28458632823af257b421a9bb4",
+  "registry_sha256_after_terminal_entry_added": "45eb6b9bf11719d88c7d7fbadc9774277d4a0d42aef4f05a6f240f1300c3405e",
+  "registry_sha256_after_final_hash_refresh": "c83ed058fe526a65ad2568bad219d0f08378a0471d4fb619e9a7c3ffd2dfd698",
+  "terminal_entry_key": "latest_global_cpu48_b64_v2_execution",
+  "terminal_job_id": "15805735",
+  "execution_ref": "codex/global-cpu48-b64-v2",
+  "readback": {
+    "registry_json_parsed": true,
+    "v2_terminal_entry_present": true,
+    "v2_ref_and_job_id_verified": true,
+    "remote_result_hashes_match_files": true,
+    "v1_terminal_entry_preserved": true,
+    "v2_deployment_entry_preserved": true,
+    "other_prior_entries_preserved_by_scoped_update": true
+  },
+  "remote_result_hashes_verified": {
+    "CURRENT_RESULT.md": "ee4749beb27ad63621e4a431c044c3d24082b5a5cd9168702ebe942674cd9481",
+    "execution-result.json": "15a93ff78c5fca1bab22373c9ecf3f7f9f3a6c4d2bf9676f6a5c55075bee3bca",
+    "terminal-measurements.json": "77fa2ca7f252b28145b21151452c438b8d475758886165037c4f147f615f4059",
+    "terminal-evidence-manifest.json": "d7cfab758d43b58058ec7333fb9245ff07f646a8b4a55f41dd597c3b22a4ab04",
+    "pre-submit-receipt.json": "1a2af0f1034cb1f2eddb25b50d20a3d1c7830a0d0ad08d7774a018702f2ee7e5"
+  },
+  "verification_note": "The terminal record was added under a v2-specific key, preserving the prior v1 terminal and deployment records. A later read-only registry/file-hash readback verified the final registry and copied artifacts."
+}

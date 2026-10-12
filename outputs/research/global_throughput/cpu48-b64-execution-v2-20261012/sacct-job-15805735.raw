@@ -1,0 +1,4 @@
+15805735|FAILED|00:01:49|billing=48,cpu=48,node=1|ibc12b08n35|1:0
+15805735.batch|FAILED|00:01:49|cpu=48,mem=0,node=1|ibc12b08n35|1:0
+15805735.extern|COMPLETED|00:01:49|billing=48,cpu=48,node=1|ibc12b08n35|0:0
+15805735.0|FAILED|00:01:46|cpu=1,mem=0,node=1|ibc12b08n35|1:0

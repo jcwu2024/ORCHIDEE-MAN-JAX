@@ -1,0 +1,31 @@
+{
+  "schema": "global_cpu48_b64_v2_terminal_evidence_manifest_v1",
+  "job_id": "15805735",
+  "hash_algorithm": "SHA-256",
+  "files": [
+    {"path": "AUTHORIZATION.md", "sha256": "3aca5e612650d8f474febd57bff72ad2dca419b81a0ba2ede609daf2cbb0e7e7"},
+    {"path": "node-snapshot.txt", "sha256": "9d75b71973720c94b5ea083f96a6507f71ae9c27401a09f81452ba294adbf968"},
+    {"path": "pre-submit-receipt.json", "sha256": "1a2af0f1034cb1f2eddb25b50d20a3d1c7830a0d0ad08d7774a018702f2ee7e5"},
+    {"path": "submission-attempt.json", "sha256": "70542ef71251c891781e2bccb839d3ca3a0d823c8cff8dc927aed08c91127469"},
+    {"path": "submission.stdout", "sha256": "747c5ba190ae3aa482b74b746f314c31c2c7cbf4dd07bbff2acb971bd919acaa"},
+    {"path": "submission.stderr", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"path": "submission.exitcode", "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"},
+    {"path": "scontrol-job-15805735.stdout", "sha256": "321c700ea76143e6c178e044f0beeb30acaa8f6179047cc4dcb76cd2bae00d9e"},
+    {"path": "scontrol-job-15805735.stderr", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"path": "scontrol-job-15805735.exitcode", "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"},
+    {"path": "sacct-job-15805735.raw", "sha256": "19f421e6e8c8cf3c05bb7855d6e505c4dc559e5ccfbb744de5eb9ea37f532dc8"},
+    {"path": "terminal-parent.sacct.raw", "sha256": "b1adac477661bdaeae9cf35de9ddb89136c9bc7d4b81815ba59b2fa95343f371"},
+    {"path": "global_cpu48_b64_v2_15805735.txt", "sha256": "c76b8ea4253799ea431f962561dc36ecdf8f645133e0fa8f81255c87f90e1822"},
+    {"path": "15805735/orchestration.json", "sha256": "c76b8ea4253799ea431f962561dc36ecdf8f645133e0fa8f81255c87f90e1822"},
+    {"path": "15805735/scalar.log", "sha256": "0db8bf9dbdfa5ef943022505178ccf2838c904bcd711454c42bd83dbb4acee86"},
+    {"path": "15805735/scalar/events.jsonl", "sha256": "7db40933f17ea17a109ceff5a4b5b62804329a47510d082f971b95d08e48089a"},
+    {"path": "15805735/scalar/report.json", "sha256": "6fda8498c82d9256d8528fd5d2aea066f4c1f32a03801c3fc74ad5a8f3330b85"},
+    {"path": "15805735/scalar/stage_manifest.json", "sha256": "e9fa654e75b5130f5676e670e9d44590d1b0ecfd8233581b53811ced4f4bb2b3"}
+  ],
+  "verification": {
+    "all_listed_hashes_recomputed_locally": true,
+    "sacct_parent_row_exact": "15805735|FAILED|00:01:49|billing=48,cpu=48,node=1|ibc12b08n35|1:0",
+    "scontrol_stdout_stderr_exitcode_captured": true,
+    "submission_stdout_stderr_exitcode_captured": true
+  }
+}

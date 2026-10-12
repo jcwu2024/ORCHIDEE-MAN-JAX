@@ -44,8 +44,23 @@ The ceilings remain CNY3.60/5.04 at the unverified rates, with all scalar time
 charged at 48 parent CPUs. No second submission under the v2 grant is allowed.
 The repair passed independent source review and 22 focused local tests; see the
 [repair evidence](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md).
-Immutable v2 deployment and target non-dry startup validation remain pending;
-there are no v2 model or performance results yet.
+Immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2` is deployed with all
+104 physical-source files identical to v1. Target GNU Bash4.2.46 on ibtest01
+completed six fixture cases: valid legacy TRES reached the controlled srun
+stub; five command/record/resource errors were rejected before dispatch.
+The [deployment receipt](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/deployment-receipt.json)
+and raw evidence passed actual-artifact acceptance. This was synthetic, with no
+allocation/model run. The unique paid v2 job **15805735** ran on `ibc12b08n35`
+with 48 CPUs and zero GPUs, then ended `FAILED / ExitCode 1:0 / Elapsed 00:01:49`.
+Real allocation validation passed and the one-CPU scalar step was dispatched.
+After scalar lowering (54.8616 seconds), `_aval_signature` read `.shape` on a
+Python `float`, raising `AttributeError`. No stage, scientific gate or warm
+sample completed, and the B64/48-core batch step did not run.
+The complete 109-second parent is counted once at 48 CPUs:
+CNY0.072666667 primary / CNY0.101733333 conservative, at unverified rates.
+The single-run grant is consumed; no automatic resubmission is permitted.
+CPU48 performance, numerical acceptance and same-workload CPU/GPU ratios remain
+unavailable. See the [v2 terminal result](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md).
 
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the

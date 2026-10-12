@@ -1,0 +1,73 @@
+{
+  "schema": "global_cpu48_b64_v2_pre_submit_receipt_v1",
+  "observed_utc": "2026-10-12T08:36:12Z",
+  "scheduler_login_endpoint": "cln01",
+  "scheduler_login_host": "ibcln01",
+  "candidate_node": "ibc12b08n35",
+  "candidate_snapshot": {
+    "partition": "cnall",
+    "state": "IDLE",
+    "cpu_alloc": 0,
+    "cpu_effective": 56,
+    "cpu_total": 56,
+    "cpu_load": 0.01,
+    "sockets": 2,
+    "cores_per_socket": 28,
+    "threads_per_core": 1,
+      "free_memory_mb_reported": 177975,
+    "real_memory_mb_configured": 1,
+    "node_targeted_queue": [],
+    "node_reservations": [],
+    "slurm_version": "22.05.7"
+  },
+  "cluster_queue_snapshot": [
+    {
+      "job_id": "15804746",
+      "state": "RUNNING",
+      "node_list": "ibc13b04n[01-40]",
+      "cpus": 200
+    }
+  ],
+  "candidate_selection_reason": "Healthy IDLE cnall node, 0/56 CPUs allocated, 56 physical cores (ThreadsPerCore=1), load 0.01, no node-targeted queued/running job or reservation. The reported RealMemory=1 is known invalid cluster metadata; no memory reservation is requested, and target FreeMem is separately reported.",
+  "final_environment_check": {
+    "inherited_conflicting_variables": [],
+    "checked_patterns": ["SBATCH_*", "SLURM_BIN", "ORCHJAX_TEST_*", "ORCHJAX_CONTROLLED_SRUN_LOG", "RUN_ROOT", "CODE_DIR", "EXPECTED_CODE_COMMIT", "EVIDENCE_DIR"]
+  },
+  "execution": {
+    "sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+    "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+    "expected_code_commit": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "run_root_pattern": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/${SLURM_JOB_ID}"
+  },
+  "exact_submission_command": "cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2 && EXPECTED_CODE_COMMIT=b1b5cf0835da298bddb388e61d754feeb6c14cf2 CODE_DIR=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2 /rmprog/slurm/v22.05.7/bin/sbatch --partition=cnall --nodes=1 --ntasks=1 --cpus-per-task=48 --time=01:30:00 --nodelist=ibc12b08n35 --no-requeue --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2 --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_%j.txt scripts/hpc/slurm_global_server_cpu_48core.sh",
+  "resources": {
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "cpus": 48,
+    "gpus": 0,
+    "wall_seconds": 5400,
+    "requeue": false,
+    "exclusive": false,
+    "new_memory_reservation": null
+  },
+  "cost_scenarios_cny": {
+    "primary_worst_case": 3.6,
+    "conservative_worst_case": 5.04,
+    "rates_verified_as_billed": false
+  },
+  "attempt": {
+    "authorized_sbatch_invocations": 1,
+    "marker_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/submission-attempt.json",
+    "marker_written": false,
+    "sbatch_invocations_so_far": 0,
+    "submission_authorization_received_from_lead": false
+  },
+  "server_registry": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+    "previous_sha256": "228ae50a7e2dd2a0986e83404324c3827fba89118318f5439936b614f4e5bfbb",
+    "current_sha256": "1df09665e383b9a4ecacd9d3b7a8262d0f54b7a28458632823af257b421a9bb4"
+  },
+  "node_snapshot_artifact": "node-snapshot.txt"
+}

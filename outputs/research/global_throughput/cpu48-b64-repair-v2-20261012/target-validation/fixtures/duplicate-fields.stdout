@@ -1,0 +1,1 @@
+JobId=v2-target-validation-20261012-duplicate-fields JobId=v2-target-validation-20261012-duplicate-fields JobState=RUNNING Partition=cnall NodeList=ibtest01 NumNodes=1 NumCPUs=48 NumTasks=1 CPUs/Task=48 TRES=cpu=48,node=1,billing=48

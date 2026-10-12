@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "$ORCHJAX_CONTROLLED_SRUN_LOG"
+echo "controlled target-validation stub blocked srun/model dispatch" >&2
+exit 97

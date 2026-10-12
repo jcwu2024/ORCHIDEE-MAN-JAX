@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 407, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 391, in main
+    print(json.dumps(validate_allocation(), allow_nan=False))
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 97, in validate_allocation
+    _, _, record = _read_scontrol_evidence(env)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/scripts/hpc/global_cpu48_b64_coordinator.py", line 80, in _read_scontrol_evidence
+    raise ValueError("scontrol show job command did not exit successfully")
+ValueError: scontrol show job command did not exit successfully
+saved scontrol allocation evidence failed the CPU48 contract

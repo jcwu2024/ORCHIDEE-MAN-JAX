@@ -1,0 +1,14 @@
+Observed UTC: 2026-10-12T08:36:12Z (final pre-submit refresh)
+Queried through cln01 (remote login hostname ibcln01). All commands were read-only.
+
+sinfo:
+ibc12b08n35|idle|0/56/0/56|0.01
+
+scontrol node:
+NodeName=ibc12b08n35 Arch=x86_64 CoresPerSocket=28 CPUAlloc=0 CPUEfctv=56 CPUTot=56 CPULoad=0.01 AvailableFeatures=(null) ActiveFeatures=(null) Gres=(null) NodeAddr=ibc12b08n35 NodeHostName=ibc12b08n35 Version=22.05.7 OS=Linux 3.10.0-1160.el7.nosig.x86_64 RealMemory=1 AllocMem=0 FreeMem=177975 Sockets=2 Boards=1 State=IDLE ThreadsPerCore=1 TmpDisk=0 Partitions=cnall BootTime=2026-08-24T11:26:43 SlurmdStartTime=2026-08-24T12:30:25 LastBusyTime=2026-10-12T07:09:30 CfgTRES=cpu=56,mem=1M,billing=56 AllocTRES=
+
+Node-specific queue: empty.
+Node reservation match: empty.
+cnall queue: job 15804746 RUNNING on ibc13b04n[01-40], 200 CPUs; no queued job targeted to ibc12b08n35.
+
+The node is a current healthy IDLE match with 56 effective CPUs and one thread per core. Slurm's RealMemory metadata is 1 MiB; the separately reported FreeMem is 177976 MiB. No memory reservation or whole-node exclusivity is requested.

@@ -1,0 +1,2 @@
+{"phase": "independent_scalar_nested_cache_cleared", "elapsed_seconds": 8.25607905164361, "rss_bytes": 745480192, "landpoint_id": "001.0-071.0", "entries_before": 0, "entries_after": 0}
+{"phase": "server_scalar_once_lower_start", "elapsed_seconds": 8.269128575921059, "rss_bytes": 745938944}

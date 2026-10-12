@@ -16,9 +16,16 @@ CNY3.60/5.04上限、非exclusive/no-requeue/无新增memory reservation。此�
 v2从旧执行SHA `4f6b2fc906c453b9030acff489637a8f83605dca`仅加入经验证的启动/资源修复，
 证明物理子树不变，部署到新的immutable v2路径；当前研究树碳修复不混入历史CPU/GPU对照。
 启动/资源修复已通过独立源码审查和22项本地针对性测试，见[修复证据](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/REPAIR_REPORT.md)。
-下一步为immutable v2部署和目标GNU Bash真实启动分支检查；提前返回的`--dry-run`不代替资源读取路径检查。
+immutable v2 `b1b5cf0835da298bddb388e61d754feeb6c14cf2`已部署，104个物理源码文件与v1 base完全相同。
+目标GNU Bash4.2.46在ibtest01完成六类模拟检查：有效TRES到达受控srun停止点，五类错误派发前拒绝；原始记录已验收。
+这些模拟检查没有真实allocation或模型运行；[部署回执](../../../outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/deployment-receipt.json)记录固定版本和边界。
+唯一v2付费job**15805735**已在`ibc12b08n35`结束：`FAILED / ExitCode 1:0 / Elapsed 00:01:49`，实际48CPU/0GPU。
+真实allocation校验通过，scalar单核step已派发；lower后`_aval_signature`对Python `float`读取`.shape`触发`AttributeError`。
+scalar lower为54.8616s；未完成stage、科学gate或热样本，B64/48核step未运行。
+完整48核父作业只计一次，109s费用情景为CNY0.072666667/0.101733333，费率未核实；本次单次授权已消耗。
+CPU48性能、数值接受和同量CPU/GPU比仍不可用，不自动重提。终态入口见[v2执行结果](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。
 严格检查真实allocation及48不同物理核，不默认48、不使用ReqTRES绕过；旧科学与测量合同不变。
-允许实查同规格健康低负载CPU节点和正常排队，不锁n35；修复验证通过后自主完成一次提交至终态交付。
+本次授权允许实查同规格健康低负载CPU节点和正常排队，不锁n35；已完成唯一提交和终态监测。
 前次job**15782454**在`ibc12b07n02`获48CPU/0GPU后启动FAILED2:0/1s，模型未运行；
 `AllocTRES`读取失败的底层原因仍未知，旧证据及CNY0.000666667/0.000933333费用情景保留不动。
 前次n35-only[未提交结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)同样保留；

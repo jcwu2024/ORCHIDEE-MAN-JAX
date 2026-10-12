@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$#" -eq 4 && "$1" == show && "$2" == job && "$3" == -o && "$4" == "$SLURM_JOB_ID" ]] || {
+  echo "unexpected scontrol arguments: $*" >&2
+  exit 64
+}
+cat "$ORCHJAX_TEST_SCONTROL_FIXTURE"
+if [[ -n ${ORCHJAX_TEST_SCONTROL_STDERR:-} ]]; then
+  printf '%s\n' "$ORCHJAX_TEST_SCONTROL_STDERR" >&2
+fi
+exit "${ORCHJAX_TEST_SCONTROL_EXITCODE:-0}"
