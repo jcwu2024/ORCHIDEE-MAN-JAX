@@ -18,11 +18,11 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-BASE = "8aa2e05aa24b65dc4d30a27d4ee857bba6312221"
+BASE = "4f6b2fc906c453b9030acff489637a8f83605dca"
 SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
 BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
 REFERENCE = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
-TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1"
+TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2"
 
 
 def git(repository, *arguments, env=None, data=None):
@@ -161,7 +161,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-ref", default="HEAD")
     parser.add_argument("--base-ref", default=BASE)
-    parser.add_argument("--execution-ref", default="codex/global-cpu48-b64-v1")
+    parser.add_argument("--execution-ref", default="codex/global-cpu48-b64-v2")
     parser.add_argument("--harness-path", action="append", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
