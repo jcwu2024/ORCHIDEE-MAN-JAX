@@ -59,8 +59,15 @@ Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-
 Submission command, only after a new explicit approval:
 
 ```bash
-sbatch /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1/scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh
+sbatch --partition gnall --nodes 1 --ntasks 1 --cpus-per-task 4 --gres gpu:1 --time 00:20:00 --no-requeue --nodelist ibc13b03n04 --chdir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1 --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1/slurm-%j.stdout.txt --error /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1/slurm-%j.stderr.txt /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1/scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh
 ```
+
+The command above is the exact tested expansion with explicit resource,
+time, node, cwd and output/error flags. Review inherited `SBATCH_*` settings
+immediately before any approved submission and remove unintended overrides
+(including arrays or extra resources); an inherited environment must not
+expand this single-job cost envelope before launcher admission. That review
+has not been performed for a new live submission; no new remote check ran.
 
 Stdout/stderr: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1/slurm-%j.stdout.txt` and `slurm-%j.stderr.txt`;
 result `result.v1.json`,91-array container `result.v1.results.npz`, own ledger
