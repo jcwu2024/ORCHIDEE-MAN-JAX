@@ -1,9 +1,10 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-11。**本轮没有发现已确认的 main 生产物理实现 bug；
+核查日期：2026-10-12。**本轮没有发现已确认的 main 生产物理实现 bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
-第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差，
-给出历史 NPP 边界候选窗口和最小逐日捕获方案，尚未确认源级错误。**
+第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
+第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
+尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
@@ -403,6 +404,55 @@ Day199–218 包含 Day215 的 `+2.966994035 K`（第4层）峰值，但仅有�
 历史 LPJ，并测量该新完整轨迹与已有独立前缀的 ε；不声称恢复旧运行未保存的日值。
 脚本只捕获已返回的公共输出，不改变物理计算；本阶段只验证 dry-run，未执行模型。
 
+## 第六阶段：当前完整日值与历史 trace 对照
+
+仅执行获准的一次本地 ORCJAX 捕获：319.0-057.0、1961 cold-start、365 日、
+compiled block=7。runner code=0，实际设备 `cpu:0`，耗时 `353.10 s`；
+捕获日值有序且完整，四字段均有限。输入签名和生产源码树运行后未变，
+未自动重试或启动第二条轨迹。执行身份为
+`c7110e030bae21512538b1ae45add8d0317ce0d7`，Python 3.11.15、JAX 0.10.1，
+实际导入 `E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`。
+逐日捕获运行目录为
+`outputs/reviews/main-physics-20261011/319-late-year/future-diagnostic/runs/capture-20261012T012052Z/`；
+本阶段核验材料、命令和日志摘要在
+[分析目录](../../outputs/reviews/main-physics-20261012/319-daily-capture/)。
+
+四字段新日向量的算术均值复现 runner 年度摘要，最大差约 `1.11e-16`；
+与已保存年度均值比较的 `365*mean` 差最多 `2.84e-14 gC/m²`（NPP）。
+新运行 Day1–198 与独立前缀按其保存均值构造的积分差为 GPP/NPP/维持呼吸
+`0`、growth respiration `−7.11e-15 gC/m²`。这只是本次运行和序列化旧均值的
+比较，不是旧全年执行未保存的 endpoint ε 上界。
+
+NPP 科学合同仍失败：新 JAX `0.386004239713388`，reference
+`0.38518497347831726 gC/m²/day`，绝对差 `0.0008192662350707`，高于原限值
+`0.0003951849734783`；近零分母解释不适用。年度维持呼吸 JAX−历史 trace
+净差为 `−0.3091441597415 gC/m²`。新日值显示 Day1–198 为 `+2.2061e-7`，
+Day199–365 为 `−0.3091443803535 gC/m²`。负向贡献集中在交替大脉冲：
+Day337、339、341、359 的维持呼吸差分别约为 `−0.316556`、`−0.314204`、
+`−0.312361`、`−0.309689 gC/m²/day`；这些日 JAX GPP 为零，历史 trace GPP
+为小正值。Day338、342、364 出现相反方向的大值，其中 Day338/342 是 JAX 有小
+正 GPP 而 trace 为零，Day364 则是 JAX 大负 NPP/正维持呼吸而 trace 接近零。
+Day337–343 净差 `−0.3145820828 gC/m²`，Day339–343 净差约
+`−0.3135617041 gC/m²`；Day359–365 净差仅 `+0.000294197`。覆盖全年80%负向
+绝对贡献的最短连续窗为 Day337–359。这些交替值只是 producer、分支可达性或
+日/发送边界的核查线索，不能单独判定错位。该窗描述的是与命名历史 trace 的数值差，
+trace 的 producer、变量定义和 XIOS 发送日边界仍未核定，因此逐日定位仍属暂定，
+不能据此判断错位或确认 Fortran/JAX 源码错误。
+
+维持呼吸日值采用不同 binary64 求和方式时，年度累计最大差为
+`7.11e-14 gC/m²`；日值转 float32
+后再以 binary64 求和与原 binary64 日值求和差约 `4.23e-8 gC/m²`，若转 float32
+后继续以 float32 累加，差约 `2.47e-6 gC/m²`。trace 与 float32 NetCDF 的累计
+差约 `1.96e-7 gC/m²`。这些远小于约 `0.309 gC/m²` 的日值净差，但只描述
+日末归约和序列化，不是模型内部轨迹浮点误差上界。历史近零维持呼吸日没有
+实质负向贡献，合计净差反而为正。
+
+stderr 有一条 persistent compilation cache 写入 `FileNotFoundError` 警告及两条
+XLA simplifier 循环提示；没有致命错误，runner 正常结束并核验全部365日，故未重跑。
+唯一下一步是围绕 Day339–343 主净差窗及 Day337–338、Day359/364 抵消边界，
+核查已有历史 trace 的 producer 身份、发送日边界和相关分支可达性；本阶段证据
+不授权新的实验或轨迹，也不支持物理代码修改。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -436,10 +486,12 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    本地三条完整同点候选均未过原门槛，未建立有效替代；单年通过及七个其他点
    不能关闭它们。第三阶段的当前 identified cold-start 1961 NPP 同样超限；
    第四阶段定位 maintenance 年度负残差及当前 day199 土温输入效应；同输入 Oracle
-   通过，局部效应与年度主残差异号；保存值的条件性分段诊断将几乎全部净负差
-   指向 Day199–365，后段为差分推得且尾部执行差异 ε 未量化。第五阶段保存值不足
-   以继续分配负差；Day336–344 是历史边界候选，优先补完整 compiled 日总量。
-   年度因果仍未闭合。
+   通过，局部效应与年度主残差异号。第六阶段已捕获当前完整 compiled 日总量；
+   相对历史 trace 的全年净差约 `−0.30914416 gC/m²`，Day337–343 为主脉冲窗，
+   但 trace producer、定义及发送日边界未核定，逐日差仍是暂定定位。日末归约/输出
+   舍入远不足以解释该差，但没有界定内部轨迹误差。年度因果仍未闭合。
+   下一步仅核对 Day339–343 及 Day337–338、Day359/364 边界对应的既有 trace
+   producer、发送日边界和相关分支可达性；不启动新实验，不据此改物理代码。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -537,3 +589,12 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 保留 Transport closed 与新增已知来源的 coverage 回退；不声称 fresh/full 图覆盖。
 stage4 的分段/Oracle 通过证据未重跑；生产、测试、科学阈值及所有旧输入/产物保留。
 未执行 GPU/训练/SSH/服务器作业、暂存、提交或推送；交付主控验收后待命。
+
+第六阶段只更新本页；一次获准的本地全年捕获和逐日分析记录在
+[执行回执](../../outputs/reviews/main-physics-20261012/319-daily-capture/execution-receipt.json)、
+[分析](../../outputs/reviews/main-physics-20261012/319-daily-capture/analysis.json)
+及同目录命令、preflight 和 stdout/stderr。可用[分析脚本](../../outputs/reviews/main-physics-20261012/319-daily-capture/analyze_daily_capture.py)
+对已有运行目录复核，不会重新积分模型：
+`conda run -n ORCJAX python -B outputs/reviews/main-physics-20261012/319-daily-capture/analyze_daily_capture.py --run-dir outputs/reviews/main-physics-20261011/319-late-year/future-diagnostic/runs/capture-20261012T012052Z`。
+终验记录见[verification.final.json](../../outputs/reviews/main-physics-20261012/319-daily-capture/verification.final.json)。
+捕获脚本与物理源码未改；不重跑模型，不暂存、提交或推送。
