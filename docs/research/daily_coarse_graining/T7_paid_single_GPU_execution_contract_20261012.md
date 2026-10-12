@@ -1,5 +1,7 @@
 # Allocated single-GPU affine execution contract
 
+Current execution status: the [terminal result](T7_paid_single_GPU_execution_results_20261012.md) records the later independent human approval, sole job15812634 FAILED2:0/6s and closed/consumed scope. No retry is authorized. The preparation-stage snapshot below remains historical; its original false scope is preserved.
+
 2026-10-12. New preparation contract `T7_affine_allocated_single_gpu_v1`,
 scope `T7-summary-affine-paid-single-gpu-20261012-v1`. Preparation is authorized;
 live execution is not. The proposed scope must remain `status=proposed`,

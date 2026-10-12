@@ -27,15 +27,21 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [single-GPU contract and concrete proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md)
-is ready for new live review: explicit allocated-GPU execution contract,
-independent frozen c8a44c3 deployment and actual test01 CPU dry-run;88 local
-cases pass. The new n04/4CPU/1V100/20min/ceilingCNY1 scope remains false.
-OS device-open isolation is reported separately as unverified. No GPU
-command, preflight, affine probe or paid submission occurred; stop for review.
+The [single-GPU terminal result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md)
+owns the latest paid status: sole approved n04/4CPU/1V100 job15812634 at
+frozen c8a44c3 ended FAILED2:0 after6 allocated seconds. The first
+`nvidia-smi -i 5` CSV query returned6/“No devices were found”; no XML,
+actual-job cgroup, Supervisor, preflight, CUDA/PJRT or affine12/91 ran.
+Numerical status is not_executed; OS opening denial is not assessed.
+Scope closed/consumed, mutex absent; live GPU cleanup/peak memory unobserved.
+Allocation0.0016666667card-hours, additive estimate CNY0.0041333333; bill unknown.
+No retry, mapping query, repair/redeploy, free fallback, monitoring or training.
+The [preparation/proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md)
+retains historical false scope, exact argv and88 CPU cases; these do not
+establish GPU or scientific acceptance.
 
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
-owns paid execution status. Direct human “批准。” authorized the exact58a2d938
+owns historical paid v3 execution status. Direct human “批准。” authorized the exact58a2d938
 single fixed gnall n01/4actualSlurmCPUs/1V100/20min/nonexclusive/no-requeue job.
 Sole job15806646 ended FAILED2:0 after7s. CSV→UUID XML succeeds on n01
 (driver525.85.12/minor0); actual-job cgroup wildcard GPU access fails the unchanged
