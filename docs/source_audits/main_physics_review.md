@@ -4,8 +4,10 @@
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
-第七阶段恢复候选日志字段/位置并核对零 GPP 分支，实际历史 producer 和
-floor 因果仍未核定，尚未确认源级错误。**
+第七阶段恢复候选日志字段/位置并核对零 GPP 分支；第八阶段完成匹配捕获的
+本地观测脚本和轻量预检；原 key 的本地 ACL 阻塞已修复，但服务端仍拒绝
+现有身份认证，尚未执行真实配对捕获。
+实际历史 producer 和 floor 因果仍未核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
@@ -32,6 +34,12 @@ floor 因果仍未核定，尚未确认源级错误。**
   `c7110e030bae21512538b1ae45add8d0317ce0d7`；第七阶段从已接受报告提交
   `103ce03887924eec7ae8e5500b454353016df95a` 的干净 main 开始。
   两提交之间仅报告改变；本阶段只分析保存值和源码，未生成新模型轨迹。
+- 第八阶段从第七阶段接受提交
+  `eb8659e2c1bf3b8244a6a31a78d996d826c2a312` 的干净 main 开始；实际导入仍在
+  此 checkout。四份生产源码 SHA、36 份冻结输入 size/mtime 和 run.def SHA
+  均与第六阶段匹配，见
+  [jax-plan.json](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-plan.json)。
+  本阶段有两组人工 kernel 预检，没有新增真实模型轨迹。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -539,6 +547,81 @@ GPP、完整parts/PFTmask、allocation后biomass/f_alloc、tax/floor参数及决
 首个受影响日补48步assimilation/vegetation门槛/累积记录。新的参考必须声明自己的
 producer，不能补称旧历史producer。本轮只写需求，未执行新捕获或申请作业。
 
+## 第八阶段：匹配捕获本地准备完成，远端访问阻塞
+
+本阶段已获准为 319/1961/PFT14 cold-start 做实际匹配边界捕获，覆盖
+Day337–343、Day359/364。第七阶段的“只写需求”限制不再阻止本阶段执行；
+当前阻塞是本地 ACL 修复后，服务端仍拒绝既有 Cancon 身份认证，见
+[访问回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/access-receipt.json)。
+最初原身份因权限过宽被 OpenSSH 忽略，专用身份本地读取报 Permission denied，
+这些是修复前历史。临时复制 key、收紧副本 ACL 并连接的命令曾被自动审批拒绝，
+返回仅为 `blocked by policy`，该命令未执行，也未创建临时 key。
+
+主控随后成功在原 key 上直接收紧 ACL，关闭继承，仅保留当前账户
+`DESKTOP-84EB591/admin`、Administrators 和 SYSTEM；当前账户与原 owner 相同，
+无可用 SSH agent。原/新 SDDL 及 applied 状态保存在主控的
+[ACL 回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/ssh-acl-repair.json)。
+**原文件权限已修改，本地原 key 的 ACL 阻塞已修复**；凭据内容未读出、复制、
+修改或替换。主控原 key 直接只读 hostname/id 检查及一次认证诊断均 exit255，
+见[登录日志](../../outputs/reviews/main-physics-20261012/319-matched-capture/ssh-direct-login-check.txt)及
+[认证日志](../../outputs/reviews/main-physics-20261012/319-matched-capture/ssh-auth-diagnostic.txt)。
+连接建立、既有 ED25519 主机指纹匹配，server-sig-algs 支持 rsa-sha2-256/512；
+Trying private key 后服务端继续要求认证，不再出现本地 bad-permissions/load-key
+错误。**当前真正阻塞是服务端拒绝现有身份，原因未由日志确定**，不能仅凭
+文件名断言到期。无认证成功、远端命令执行/数据读取、构建或作业；历史
+producer/有效 XML/run.def、计算节点及其资源许可仍待核定。
+
+本地完成的可审查准备见
+[README](../../outputs/reviews/main-physics-20261012/319-matched-capture/README.md)：
+
+- [JAX 捕获脚本](../../outputs/reviews/main-physics-20261012/319-matched-capture/capture_jax_npp.py)
+  复用第六阶段冻结输入、参数和 block=7 协议，在内存中观测原 NPP locals：
+  完整输入、实际 sign/tax masks、泵取、floor 前 biomass、负池 mask/创建量、
+  原 floor sum/dt 操作数和 post-NPP 输出；动态模型日由原 day wrapper 传入，
+  仅保留指定9天。[AST 审计](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-overlay-audit.json)
+  确认撤去观测及还原提取的操作数后，原算术 AST/运算次序精确恢复。
+  [预检](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-preflight.json)
+  仅用 GPP=0 和 `1e-6` 两组人工非 crop tuple，在 CPU 收到两次 callback；
+  返回值最大差为0及 `6.617444900424222e-24`。人工 payload 已清空，
+  不作为实际窗口数据。观测可能影响编译器融合；以上不是全年轨迹等价证明。
+- [Fortran 准备脚本](../../outputs/reviews/main-physics-20261012/319-matched-capture/prepare_fortran_observers.py)
+  只在新输出目录生成 npp/lpj 两份隔离副本，观测完整 entry、实际分支、泵取、
+  floor 前值、原 WHERE 创建量、逐部件维持呼吸更新、post-NPP 和真实 XIOS
+  send 前四通量/时钟，并记录 pre-cover flags/vegetation。
+  [patch 审计](../../outputs/reviews/main-physics-20261012/319-matched-capture/isolated-fortran-source/patch-audit.json)
+  确认剥离所有日志块后恢复原文件字节及算术顺序，原顺序 floor 未改。
+  ES25.17E3 输出带 shape，展开数组按 Fortran 顺序解释。后续从创建量算出的
+  sum/dt 必须标为离线派生，不能冒称原 reduction 的直接观测。
+- [Fortran 日志语法检查](../../outputs/reviews/main-physics-20261012/319-matched-capture/fortran-observer-syntax.json)
+  已在有类型的 dummy context 用既有 gfortran 16.1 通过；新增行最长102。
+  这不是 ORCHIDEE 完整构建，也不是远端 Intel 编译或真实参考执行。
+
+按“两侧均能形成有意义比较后再积分”的顺序，本阶段真实 Fortran/JAX 全年
+轨迹均为0，没有先跑未配对 JAX。JAX `--execute` 在真实 identified、完整
+Fortran 捕获回执缺失时，先于创建 run 目录拒绝；缺回执守卫已实际检查。
+持真实回执的完整执行分支尚未验证，不能称为全年 runtime 已验收。
+未来真实运行还须用原严格限 `1e-8 + 1e-10*abs(ref)` 核对第六阶段年度及
+指定日四通量；若观测改变轨迹，则停止等价声明，不自动重跑或改门槛。
+
+第六阶段原 NPP 科学失败保留：JAX 年均 `0.386004239713388`，参考
+`0.38518497347831726`，绝对差 `0.0008192662350707258` 超过原限
+`0.0003951849734783173`；本阶段没有新科学通过结论，没有确认翻译 bug 或
+floor 因果，也没有重做已完成的舍入排除或 Day199 Oracle。
+
+**唯一立即下一步是等待用户提供可直接使用的当前 Cancon 配置名/本机密钥路径，
+以恢复授权连接；主控已询问，尚未获得可用连接信息。**
+随后用已准备的[只读入口](../../outputs/reviews/main-physics-20261012/319-matched-capture/inspect_legacy_319.ps1)
+和[远端只读脚本](../../outputs/reviews/main-physics-20261012/319-matched-capture/inspect_legacy_319.sh)
+核查命名历史根 `orchidee_jax_319_dayend_20260718` 的身份及实际计算节点许可，
+再决定能否取原内部状态或在 jcwu 新隔离目录生成有自身身份的参考。
+远端脚本本地 bash 语法检查通过，实际目标 shell 执行仍待连接。
+本轮收尾只核对主控新增事实、路径和文档一致性；原16项本地准备核验保留为
+修复前记录，当前访问/文档状态见
+[收尾核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.access-closeout.json)。
+没有重新调用模型、SSH、callback、Fortran 语法或算术 AST 检查；本阶段不据访问
+失败扩大平台/资源授权，也未申请付费作业。这是未完成捕获的进度 checkpoint，
+不代表完整第八阶段科学完成。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -578,8 +661,11 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    舍入远不足以解释该差，但没有界定内部轨迹误差。年度因果仍未闭合。
    第七阶段恢复候选logger字段/位置，9天原始累积与LPJ GPP/名义步号一致；
    严格零GPP、泵取和floor的成对源条件已核对，但实际历史producer/XIOS身份、
-   完整NPP输入及创建量仍缺失，不能确认具体翻译错误。当前唯一优先后续是上节
-   的identified匹配边界最小捕获需求；本阶段只写方案，没有新执行授权。
+   完整NPP输入及创建量仍缺失，不能确认具体翻译错误。第八阶段已获准实际
+   匹配捕获并完成本地脚本/轻量预检。原 key 的本地 ACL 阻塞已由主控修复，
+   服务端仍拒绝现有身份，真实配对捕获尚未发生。当前等待用户回复主控已询问的
+   可用 Cancon 配置名/本机密钥路径以恢复授权连接，继而核定历史身份及
+   计算节点许可；不以未配对 JAX 全年运行替代缺失的参考。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -702,3 +788,21 @@ metadata_changed、Fortran/历史记录excluded、新产物not_tracked；均以�
 交付时未暂存、提交或推送。主控已核对新增报告、实际产物和关键成对源码，
 复用上述17项通过的轻量核验。本轮有界证据验收通过，不代表年度科学验收
 通过或因果归属已经确认；下一阶段尚未启动。
+
+第八阶段只更新本页；新脚本、隔离 Fortran 副本和回执均在
+`outputs/reviews/main-physics-20261012/319-matched-capture/`。
+[命令记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/commands.md)、
+[访问回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/access-receipt.json)与
+[verification.json](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.json)
+记录实际本地预检、观测撤除/原字节恢复、冻结输入/生产源码保留及最初访问阻塞；
+原16项资料核验未重跑。主控新增 ACL 修复和两次 exit255 认证日志保持原样，
+新增访问事实、文档一致性及路径的9项轻量核验通过；当前服务端认证拒绝记录另见
+[收尾核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.access-closeout.json)。
+[图记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/graph-receipt.json)
+采用 Verify，沿用同一 generation；JAX metadata_changed、Fortran excluded、
+新产物 not_tracked，以当前精确源码和直接产物检查补足，不作 fresh/full 图声明。
+真实匹配采集及全年等价/科学验收尚未执行。没有生产源码、测试、容差修改或
+新年/点位、GPU、训练、付费工作；执行线程交付时未暂存、提交或推送。
+主控已集中验收本地准备及当前认证阻塞的报告和回执，复用原16项准备核验
+和9项收尾核验，作为进度检查点保存。完整第八阶段捕获仍未完成，等待可用
+连接信息后继续；本次验收不增加科学通过或因果归属结论。
