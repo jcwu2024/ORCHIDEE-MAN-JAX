@@ -61,7 +61,7 @@ def allocation_fixture(monkeypatch):
     start_text = datetime.datetime.fromtimestamp(started, datetime.timezone.utc).isoformat(timespec="seconds")
     end_text = datetime.datetime.fromtimestamp(started + 1200, datetime.timezone.utc).isoformat(timespec="seconds")
     job = paid.parse_job(
-        "JobId=742001 JobState=RUNNING Partition=gnall NodeList=ibc13b03n01 "
+        "JobId=742001 JobState=RUNNING Partition=gnall NodeList=ibc13b03n04 "
         "NumNodes=1 NumCPUs=4 NumTasks=1 Requeue=0 TimeLimit=00:20:00 "
         "AllocTRES=cpu=4,mem=16G,node=1,gres/gpu=1,gres/gpu:v100=1 "
         "GresDetail=gpu:v100:1(IDX:3) GRES=gpu:v100:1(IDX:3) OverSubscribe=OK "
@@ -94,6 +94,8 @@ def scope_json(tmp_path, monkeypatch, *, status="proposed"):
     scope = {
         "schema_version": paid.SCHEMA,
         "scope_id": paid.SCOPE_ID,
+        "gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT,
+        "os_device_open_isolation_required": False,
         "status": status,
         "execution_authorized": False,
         "approval_note": "",
@@ -197,7 +199,7 @@ def test_slurm_duration_parser_rejects_unbounded_or_malformed_values(duration):
 
 def test_exact_paid_allocation_and_quote_are_admitted(monkeypatch):
     scope, environment, job = allocation_fixture(monkeypatch)
-    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n04.cluster")
     assert result["actual_NumCPUs"] == 4
     assert result["actual_AllocTRES"]["gres/gpu:v100"] == "1"
     assert result["allocation_TRES_fields"] == ["AllocTRES"]
@@ -278,7 +280,7 @@ def test_paid_allocation_rejects_scope_or_live_resource_drift(change, monkeypatc
     elif change == "cost_ceiling":
         scope["approved_cost_ceiling_cny"] = "0.50"
     if change != "hostname":
-        host = "ibc13b03n01"
+        host = "ibc13b03n04"
     with pytest.raises(ValueError):
         paid.validate_allocation(scope, environment, job, host)
 
@@ -297,7 +299,7 @@ def test_allocated_tres_uses_legacy_tres_only_with_running_resource_records(monk
     accepted, sources = paid.allocated_tres(legacy)
     assert accepted["cpu"] == "4" and accepted["gres/gpu"] == "1"
     assert sources == ["TRES"]
-    validated = paid.validate_allocation(scope, environment, legacy, "ibc13b03n01.cluster")
+    validated = paid.validate_allocation(scope, environment, legacy, "ibc13b03n04.cluster")
     assert validated["allocation_TRES_fields"] == ["TRES"]
     legacy["JobState"] = "PENDING"
     with pytest.raises(ValueError, match="legacy TRES lacks actual single-node allocation detail"):
@@ -319,7 +321,7 @@ def test_allocated_tres_accepts_identical_aliases_and_arbitrary_gpu_type_in_synt
     job["GresDetail"] = "gpu:synthetic_type-1:1(IDX:3)"
     job["GRES"] = "gpu:synthetic_type-1:1(IDX:3)"
     job.update(Nodes=paid.NODE, CPU_IDs="0-3")
-    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n04.cluster")
     assert result["allocation_TRES_fields"] == ["AllocTRES", "TRES"]
 
 
@@ -359,7 +361,7 @@ def test_scheduler_allocation_timestamps_work_without_22_05_environment_tokens(m
     scope, environment, job = allocation_fixture(monkeypatch)
     environment.pop("SLURM_JOB_START_TIME")
     environment.pop("SLURM_JOB_END_TIME")
-    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n04.cluster")
     assert result["allocation_clock_source"].startswith("scheduler StartTime/EndTime")
 
 
@@ -403,7 +405,7 @@ def test_scheduler_allocation_epochs_reject_malformed_or_unsafe_clocks(monkeypat
 def test_scheduler_allocation_epoch_environment_crosschecks_are_independently_optional(monkeypatch, absent):
     scope, environment, job = allocation_fixture(monkeypatch)
     environment.pop(absent)
-    result = paid.validate_allocation(scope, environment, job, "ibc13b03n01.cluster")
+    result = paid.validate_allocation(scope, environment, job, "ibc13b03n04.cluster")
     assert result["allocation_end_epoch"] - result["allocation_start_epoch"] == 1200
 
 
@@ -747,6 +749,8 @@ def test_paid_main_preserves_job_15782177_gpu_query_rejection_and_does_not_retry
         "schema_version": paid.SCHEMA,
         "scope_id": paid.SCOPE_ID,
         "status": "open",
+        "gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT,
+        "os_device_open_isolation_required": False,
         "execution_authorized": True,
         "approval_note": "synthetic test only",
     }), encoding="utf-8")
@@ -918,6 +922,7 @@ def test_paid_main_preserves_successful_gpu_queries_when_device_node_is_missing(
     scope_path = output_dir / "scope.v1.json"
     scope_path.write_text(json.dumps({
         "schema_version": paid.SCHEMA, "scope_id": paid.SCOPE_ID, "status": "open",
+        "gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT, "os_device_open_isolation_required": False,
         "execution_authorized": True, "approval_note": "synthetic test only",
     }), encoding="utf-8")
     args = SimpleNamespace(dry_run=False, scope_json=scope_path, output=output, ledger=ledger)
@@ -1012,7 +1017,8 @@ def test_live_paid_launcher_uses_xml_minor_and_saves_observation_before_supervis
         return original_stat(path, *args, **kwargs)
 
     monkeypatch.setattr(Path, "stat", fake_stat)
-    result = paid.run_live({"slurm_allocation": {"job": {"JobId": "742001"}}, "scope": {}})
+    result = paid.run_live({"slurm_allocation": {"job": {"JobId": "742001"}},
+        "scope": {"gpu_execution_contract": paid.GPU_EXECUTION_CONTRACT}})
 
     assert result == 0
     assert paths == ["/dev/nvidia5"]
@@ -1070,7 +1076,7 @@ def test_paid_live_preparation_mocks_exact_scontrol_details_command(tmp_path, mo
     started = datetime.datetime.fromtimestamp(1700000000, datetime.timezone.utc).isoformat(timespec="seconds")
     ended = datetime.datetime.fromtimestamp(1700001200, datetime.timezone.utc).isoformat(timespec="seconds")
     job_text = (
-        "JobId=742001 JobState=RUNNING Partition=gnall NodeList=ibc13b03n01 "
+        "JobId=742001 JobState=RUNNING Partition=gnall NodeList=ibc13b03n04 "
         "NumNodes=1 NumCPUs=4 NumTasks=1 Requeue=0 TimeLimit=00:20:00 "
         "AllocTRES=cpu=4,mem=16G,node=1,gres/gpu=1,gres/gpu:v100=1 "
         "GresDetail=gpu:v100:1(IDX:3) GRES=gpu:v100:1(IDX:3) OverSubscribe=OK "
@@ -1100,7 +1106,7 @@ def test_paid_live_preparation_mocks_exact_scontrol_details_command(tmp_path, mo
     monkeypatch.setattr(paid, "source_manifest", lambda **_kwargs: dict(scope["source_files"]))
     monkeypatch.setattr(paid, "os", SimpleNamespace(name="posix", environ=environment))
     monkeypatch.setattr(paid.time, "time", lambda: 1700000060)
-    monkeypatch.setattr(paid.socket, "gethostname", lambda: "ibc13b03n01.cluster")
+    monkeypatch.setattr(paid.socket, "gethostname", lambda: "ibc13b03n04.cluster")
     commands = []
 
     def check_output(command, **kwargs):

@@ -51,7 +51,8 @@ def test_paid_entry_rejects_live_override_and_epoch_spoof(args):
 
 
 def test_paid_runtime_child_reuses_strict_free_allowlist():
-    env = dict(os.environ, CUDA_VISIBLE_DEVICES="GPU-mock")
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES="GPU-mock", ORCJAX_AFFINE_EXPECTED_GPU_UUID="GPU-mock",
+        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT="T7_affine_allocated_single_gpu_v1")
     env.pop("ORCJAX_NUMERICS_LAUNCHER_PYTHON", None)
     result = run(PAID, ["--runtime-child",
         "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python",
@@ -59,18 +60,38 @@ def test_paid_runtime_child_reuses_strict_free_allowlist():
     assert result.returncode == 2
 
 
+@pytest.mark.parametrize('missing',['uuid','contract'])
+def test_paid_runtime_child_requires_explicit_contract_and_uuid_before_container(missing):
+    env=dict(os.environ, ORCJAX_AFFINE_EXPECTED_GPU_UUID='GPU-mock',
+        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT='T7_affine_allocated_single_gpu_v1')
+    env.pop('ORCJAX_AFFINE_EXPECTED_GPU_UUID' if missing=='uuid' else 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT')
+    result=run(PAID,['--runtime-child','must-not-execute','must-not-execute'],env)
+    assert result.returncode==2
+
+
+def test_paid_runtime_child_explicitly_exports_container_contract_and_uuid(tmp_path):
+    target=tmp_path/'paid.sh'
+    target.write_text(PAID.read_text(),newline='\n')
+    shared=target.with_name('run_shared_latent_T7_batch_numerics.sh')
+    shared.write_text('CODE=/unused\nmain() { printf "%s\\n" "$SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID" "$SINGULARITYENV_ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT"; }\n',newline='\n')
+    env=dict(os.environ, ORCJAX_AFFINE_EXPECTED_GPU_UUID='GPU-mock',
+        ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT='T7_affine_allocated_single_gpu_v1')
+    result=run(target,['--runtime-child','unused','unused'],env)
+    assert result.returncode==0 and result.stdout.decode().splitlines()==['GPU-mock','T7_affine_allocated_single_gpu_v1']
+
+
 def slurm_copy(tmp_path, with_scope):
     checkout = tmp_path / "immutable checkout space"
     target = checkout / "scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh"
     target.parent.mkdir(parents=True)
     runtime = tmp_path / "mock runtime"
-    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-recovery-20261012-v3"
+    canonical = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1"
     target.write_text(SLURM.read_text().replace(
         "ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime", 'ROOT="' + posix(runtime) + '"'
     ).replace("CODE=" + canonical, 'CODE="' + posix(checkout) + '"'
     ).replace("#SBATCH --chdir=" + canonical, "#SBATCH --chdir=" + posix(checkout)), newline="\n")
     target.with_name("run_shared_latent_T7_batch_numerics_paid.py").write_text("# private mock; never run\n")
-    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-recovery-gpu-20261012-v3"
+    diag = runtime / "outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1"
     diag.mkdir(parents=True)
     if with_scope:
         (diag / "scope.v1.json").write_text("{}\n")
@@ -84,7 +105,7 @@ def test_slurm_dry_run_prints_exact_paid_resource_and_downstream_argv(tmp_path):
     resources, command = map(shlex.split, result.stdout.decode().splitlines())
     assert resources[:14] == ["sbatch", "--partition", "gnall", "--nodes", "1", "--ntasks", "1",
         "--cpus-per-task", "4", "--gres", "gpu:1", "--time", "00:20:00", "--no-requeue"]
-    assert resources[14:16] == ["--nodelist", "ibc13b03n01"]
+    assert resources[14:16] == ["--nodelist", "ibc13b03n04"]
     assert resources[16:18] == ["--chdir", posix(target.parents[2])]
     assert resources[18:22] == ["--output", posix(diag / "slurm-%j.stdout.txt"), "--error", posix(diag / "slurm-%j.stderr.txt")]
     assert resources[-1].endswith("/slurm_shared_latent_T7_batch_numerics_paid.sh")
@@ -92,7 +113,7 @@ def test_slurm_dry_run_prints_exact_paid_resource_and_downstream_argv(tmp_path):
     args = dict(zip(command[2:-1:2], command[3:-1:2], strict=True))
     assert set(args) == {"--checkout-root", "--operands", "--capture-receipt", "--capture-source", "--output", "--scope-json", "--ledger"}
     assert args["--output"] == posix(diag / "result.v1.json")
-    assert args["--ledger"].endswith("/T7-summary-affine-paid-recovery-gpu-20261012-v3.ledger.json")
+    assert args["--ledger"].endswith("/T7-summary-affine-paid-single-gpu-20261012-v1.ledger.json")
     assert args["--operands"] == posix(runtime / "transfer/T7-summary-recovery-20261011-v1/summary-recovery.v1.operands.npz")
     assert command[-1] == "--dry-run"
     original = SLURM.read_text()
@@ -236,7 +257,7 @@ def test_slurm_start_consumed_before_cpu_admission_and_cannot_retry(tmp_path):
     assert result.returncode == 7
     marker = diag / "slurm-attempt.v1.json"
     original = marker.read_bytes()
-    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-recovery-gpu-20261012-v3",
+    assert json.loads(original) == dict(scope_id="T7-summary-affine-paid-single-gpu-20261012-v1",
         job_id="123456", status="scheduler_started", retry_allowed=False)
     assert calls.read_text().splitlines() == ["child-before-python"]
     second = run(target, [], env)
@@ -306,7 +327,7 @@ def test_slurm_marker_write_failure_is_unknown_not_retryable(tmp_path, unavailab
     (True, True, "GPU-allocated-exact"), (True, False, "unset"),
     (False, True, "unset"),
 ])
-def test_paid_runtime_optional_expected_uuid_passthrough(tmp_path, runtime, present, expected):
+def test_paid_runtime_required_expected_uuid_passthrough(tmp_path, runtime, present, expected):
     # Mock only the source helper's main. The real paid source is copied into
     # tmp_path and executes its environment branch; no driver/runtime is entered.
     target = tmp_path / "private paid helper" / PAID.name
@@ -317,10 +338,14 @@ def test_paid_runtime_optional_expected_uuid_passthrough(tmp_path, runtime, pres
     env = dict(os.environ)
     env.pop("SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID", None)
     env.pop("ORCJAX_AFFINE_EXPECTED_GPU_UUID", None)
+    env['ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT']='T7_affine_allocated_single_gpu_v1'
     if present:
         env["ORCJAX_AFFINE_EXPECTED_GPU_UUID"] = "GPU-allocated-exact"
     argv = ["--runtime-child", "python-not-executed", "entry-not-executed"] if runtime else ["--dry-run"]
     result = run(target, argv, env)
+    if runtime and not present:
+        assert result.returncode == 2 and not result.stdout
+        return
     assert result.returncode == 0, result.stderr.decode()
     actual = result.stdout.decode().split("\0")[:-1]
     assert actual == [expected, *argv]

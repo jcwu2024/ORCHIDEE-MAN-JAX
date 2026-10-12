@@ -313,6 +313,46 @@ def initialize_probe_runtime(backend):
     return jax, devices
 
 
+def validate_probe_contract(output):
+    from scripts.hpc.shared_affine_cuda_identity import validate_contract_environment
+    try:
+        return validate_contract_environment()
+    except ValueError as error:
+        with Path(output).with_suffix('.startup-identity.json').open('x', encoding='utf-8') as stream:
+            json.dump(dict(status='failed', stage='affine_child_contract_before_runtime',
+                contract=os.environ.get('ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT'),
+                expected_gpu_uuid=os.environ.get('ORCJAX_AFFINE_EXPECTED_GPU_UUID'),
+                affine_science_executed=False, error_type=type(error).__name__, error=str(error)),stream,indent=2)
+            stream.write('\n')
+        raise
+
+
+def verify_probe_gpu_binding(backend, devices, output):
+    """Opt-in identity gate in the actual affine process before device_put/AD."""
+    from scripts.hpc.shared_affine_cuda_identity import verify_expected_gpu
+    expected = validate_probe_contract(output)
+    if expected is None:
+        return None
+    observation = dict(expected_gpu_uuid=expected, requested_backend=backend,
+        contract=os.environ.get('ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT'),
+        stage='affine_child_identity_before_science', affine_science_executed=False)
+    evidence = Path(output).with_suffix('.startup-identity.json')
+    try:
+        if backend != 'gpu':
+            raise ValueError('paid physical GPU binding requires GPU backend')
+        binding = verify_expected_gpu(devices, expected, observation=observation)
+        observation.update(status='passed', affine_gpu_identity=binding)
+        return binding
+    except Exception as error:
+        cause = getattr(error, 'cause', error)
+        observation.update(status='failed', error_type=type(cause).__name__, error=str(cause))
+        raise
+    finally:
+        with evidence.open('x', encoding='utf-8') as stream:
+            json.dump(observation, stream, indent=2, allow_nan=False)
+            stream.write('\n')
+
+
 def hlo_summary(text):
     rows = [line.strip() for line in text.splitlines()
             if "custom-call(" in line and "gemm" in line or " = " in line and " dot(" in line]
@@ -340,7 +380,10 @@ def run(args):
     operand_path = Path(args.operands).resolve() if args.operands else companion(".operands.npz")
     if __package__ in (None, ""):
         sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    # Reject a missing mandatory contract UUID before initializing any backend.
+    validate_probe_contract(output)
     jax, devices = initialize_probe_runtime(args.backend)
+    binding = verify_probe_gpu_binding(args.backend, devices, output)
     from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import _linear
 
     device = devices[0]
@@ -411,6 +454,8 @@ def run(args):
               "inference_limit": "One affine component, with masks retained. Artificial operands verify the discriminator only; "
               "CPU parity cannot exclude a GPU kernel issue. Captured operand provenance and original T7 gates remain separate. "
               "No B1 truth, production repair, physics, recurrence, optimizer update or training speed acceptance follows."}
+    if binding is not None:
+        report['affine_gpu_identity'] = binding
     output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return report
 

@@ -25,9 +25,11 @@ if [[ ${1:-} == --runtime-child ]]; then
 fi
 trap paid_startup_shell_exit EXIT
 paid_startup_shell_evidence "$PAID_STARTUP_STAGE"
-if [[ ${1:-} == --runtime-child && ${ORCJAX_AFFINE_EXPECTED_GPU_UUID+x} == x ]]; then
+if [[ ${1:-} == --runtime-child ]]; then
+  [[ ${ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT-} == T7_affine_allocated_single_gpu_v1 && -n ${ORCJAX_AFFINE_EXPECTED_GPU_UUID-} ]] || exit 2
   # The paid supervisor supplies this only after exact allocation mapping.
   export SINGULARITYENV_ORCJAX_AFFINE_EXPECTED_GPU_UUID=$ORCJAX_AFFINE_EXPECTED_GPU_UUID
+  export SINGULARITYENV_ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT=$ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT
 fi
 if [[ ${1:-} != --runtime-child ]]; then
   # Preserve scheduler-visible tokens before the CPU-only main clears CUDA.

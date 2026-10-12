@@ -469,12 +469,14 @@ def main(argv: list[str] | None = None) -> int:
     started = time.perf_counter()
     paid_observation = None
     expected_uuid = os.environ.get('ORCJAX_AFFINE_EXPECTED_GPU_UUID')
-    if expected_uuid is not None:
+    if expected_uuid is not None or os.environ.get('ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT') is not None:
         paid_observation = dict(requested_backend=arguments.backend, expected_gpu_uuid=expected_uuid,
             environment={key: os.environ.get(key) for key in
-                ('ORCJAX_AFFINE_EXPECTED_GPU_UUID', 'CUDA_VISIBLE_DEVICES', 'JAX_PLATFORMS',
+                ('ORCJAX_AFFINE_EXPECTED_GPU_UUID', 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT', 'CUDA_VISIBLE_DEVICES', 'JAX_PLATFORMS',
                  'JAX_ENABLE_X64', 'XLA_PYTHON_CLIENT_PREALLOCATE', 'OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS')})
     try:
+        from scripts.hpc.shared_affine_cuda_identity import validate_contract_environment
+        validate_contract_environment()
         jax, jnp, devices = _initialize_runtime(arguments.backend)
         binding = None
         if expected_uuid is not None:

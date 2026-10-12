@@ -5,17 +5,17 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH --nodelist=ibc13b03n01
+#SBATCH --nodelist=ibc13b03n04
 #SBATCH --time=00:20:00
 #SBATCH --no-requeue
-#SBATCH --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-recovery-20261012-v3
-#SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-recovery-gpu-20261012-v3/slurm-%j.stdout.txt
-#SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-recovery-gpu-20261012-v3/slurm-%j.stderr.txt
+#SBATCH --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1
+#SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1/slurm-%j.stdout.txt
+#SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-summary-affine-paid-single-gpu-20261012-v1/slurm-%j.stderr.txt
 # Nonexclusive, bounded affine diagnostic; no training or paid submission here.
 set -euo pipefail
-CODE=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-recovery-20261012-v3
+CODE=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-affine-paid-single-gpu-20261012-v1
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime
-ID=T7-summary-affine-paid-recovery-gpu-20261012-v3
+ID=T7-summary-affine-paid-single-gpu-20261012-v1
 DIAG=$ROOT/outputs/diagnostics/$ID
 INPUT=$ROOT/transfer/T7-summary-recovery-20261011-v1
 SCOPE=$DIAG/scope.v1.json
@@ -50,7 +50,7 @@ COMMAND=(bash "$CODE/scripts/hpc/run_shared_latent_T7_batch_numerics_paid.sh"
   --scope-json "$SCOPE"
   --ledger "$DIAG/$ID.ledger.json")
 if [[ ${1:-} == --dry-run ]]; then
-  printf '%q ' sbatch --partition gnall --nodes 1 --ntasks 1 --cpus-per-task 4 --gres gpu:1 --time 00:20:00 --no-requeue --nodelist ibc13b03n01 \
+  printf '%q ' sbatch --partition gnall --nodes 1 --ntasks 1 --cpus-per-task 4 --gres gpu:1 --time 00:20:00 --no-requeue --nodelist ibc13b03n04 \
     --chdir "$CODE" \
     --output "$DIAG/slurm-%j.stdout.txt" --error "$DIAG/slurm-%j.stderr.txt" "$CODE/scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh"
   printf '\n'

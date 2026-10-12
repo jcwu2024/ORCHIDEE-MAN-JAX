@@ -28,15 +28,18 @@ from scripts.hpc import run_shared_latent_T7_batch_numerics as free
 from scripts.hpc.shared_affine_gpu_admission import (
     AffineScopeLock, SCOPE_LOCK, MANAGEMENT, read_free_admission)
 
-SCOPE_ID = 'T7-summary-affine-paid-recovery-gpu-20261012-v3'
-CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-recovery-20261012-v3'
+SCOPE_ID = 'T7-summary-affine-paid-single-gpu-20261012-v1'
+CHECKOUT_TARGET = free.REMOTE / 'checkouts/T7-affine-paid-single-gpu-20261012-v1'
 SCHEMA = 'T7_affine_paid_slurm_scope_v1'
+STRICT_GPU_CONTRACT = 'T7_affine_strict_device_isolation_v1'
+GPU_EXECUTION_CONTRACT = 'T7_affine_allocated_single_gpu_v1'
 OUTPUT_DIR = free.REMOTE / 'outputs/diagnostics' / SCOPE_ID
 OUTPUT = OUTPUT_DIR / 'result.v1.json'
 LEDGER = OUTPUT_DIR / (SCOPE_ID + '.ledger.json')
 SLURM = '/rmprog/slurm/v22.05.7/bin/scontrol'
-NODE = 'ibc13b03n01'
+NODE = 'ibc13b03n04'
 SOURCE_PATHS = (*free.SOURCE_PATHS,
+    'scripts/hpc/freeze_shared_affine_paid_scope.py',
     'scripts/hpc/run_shared_latent_T7_batch_numerics_paid.py',
     'scripts/hpc/run_shared_latent_T7_batch_numerics_paid.sh',
     'scripts/hpc/slurm_shared_latent_T7_batch_numerics_paid.sh')
@@ -48,7 +51,7 @@ EVIDENCE_ENVIRONMENT = (
     'SLURM_JOB_ID', 'SLURM_JOB_GPUS', 'SLURM_STEP_GPUS', 'SLURM_CPUS_PER_TASK',
     'SLURM_NTASKS', 'SLURM_JOB_NUM_NODES', 'SLURM_JOB_PARTITION',
     'SLURM_JOB_START_TIME', 'SLURM_JOB_END_TIME', 'ORCJAX_SLURM_VISIBLE_DEVICES',
-    'CUDA_VISIBLE_DEVICES', 'ORCJAX_AFFINE_EXPECTED_GPU_UUID',
+    'CUDA_VISIBLE_DEVICES', 'ORCJAX_AFFINE_EXPECTED_GPU_UUID', 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT',
     'OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'JAX_PLATFORMS')
 
 
@@ -338,12 +341,14 @@ def observe_gpu_mapping(environment):
     except (ValueError, ET.ParseError) as error:
         raise GpuObservationError(str(error), observation) from error
 
-def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None):
+def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None,
+                      contract=STRICT_GPU_CONTRACT):
     """Bind Slurm physical GPU ID, UUID and cgroup minor, separately from CVD.
 
     The original visible ordinal is retained as evidence, never used as a host
     index. The child selects the admitted UUID inside the Slurm device cgroup.
-    Unsupported cgroup-v2 or wildcard GPU access is a failed admission.
+    The strict default rejects wildcard access. The explicitly selected new
+    contract retains permission assessment separately from execution binding.
     """
     if observation is not None:
         observation['mapping_inputs'] = dict(gpu_rows=gpu_rows, devices_rules=devices_rules,
@@ -370,6 +375,19 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None)
     controls = {(int(item['major']), int(item['minor'])) for item in row.get('control_devices', [])}
     if device_pair in controls:
         raise ValueError('GPU data device cannot be a driver control device')
+    if contract == GPU_EXECUTION_CONTRACT:
+        assessment = assess_device_rules(devices_rules, device_pair, controls)
+        if observation is not None:
+            observation['os_device_access_assessment'] = assessment
+        if not assessment['selected_device_read_write_permitted']:
+            raise ValueError('cgroup does not permit allocated GPU read/write access')
+        return dict(gpu_execution_contract=contract, gpu_host_index=host_index,
+            gpu_uuid=row['uuid'], gpu_name=row['name'],
+            original_CUDA_VISIBLE_DEVICES=visible, child_CUDA_VISIBLE_DEVICES=row['uuid'],
+            child_visible_ordinal=0, actual_GPU_major=device_pair[0], actual_GPU_minor=device_pair[1],
+            cgroup_devices_rules=devices_rules, os_device_access_assessment=assessment)
+    if contract != STRICT_GPU_CONTRACT:
+        raise ValueError('unknown GPU execution contract; no automatic fallback')
     for number, line in enumerate(devices_rules.splitlines(), 1):
         if observation is not None:
             observation['current_device_rule'] = dict(line_number=number, raw=line,
@@ -406,6 +424,43 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None)
                 cgroup_GPU_minors=[pair[1] for pair in sorted(permitted)],
                 cgroup_devices_rules=devices_rules)
 
+
+def assess_device_rules(raw_rules, selected_pair, controls):
+    """Bounded permission evidence, never a full hardware-isolation claim.
+
+    Does not open any GPU device or enumerate other hardware. Control wildcards
+    can be ambiguous; a broad permission does not show another GPU computation.
+    """
+    rules, selected_permissions, broader = [], set(), []
+    for number, line in enumerate(raw_rules.splitlines(), 1):
+        parts = line.split()
+        if len(parts) != 3:
+            raise ValueError('invalid cgroup devices rule')
+        kind, device, permissions = parts
+        major, sep, minor = device.partition(':')
+        if (not sep or kind not in ('a', 'b', 'c') or not permissions
+                or not set(permissions) <= set('rwm')
+                or any(value != '*' and not value.isdigit() for value in (major, minor))):
+            raise ValueError('invalid cgroup device permission rule')
+        row = dict(line_number=number, raw=line, kind=kind, major=major,
+                   minor=minor, permissions=permissions)
+        rules.append(row)
+        matching = kind in ('a', 'c') and major in ('*', str(selected_pair[0]))
+        if matching and minor in ('*', str(selected_pair[1])):
+            selected_permissions.update(permissions)
+        if matching and set(permissions) & set('rw'):
+            if major == '*' or minor == '*':
+                broader.append(dict(line_number=number, reason='wildcard device access; hardware inventory not established'))
+            elif (int(major), int(minor)) not in {selected_pair, *controls}:
+                broader.append(dict(line_number=number, reason='additional same-major device permission; hardware role not established'))
+    return dict(raw_devices_rules=raw_rules, parsed_rules=rules,
+        selected_kernel_pair=list(selected_pair), control_pairs=[list(pair) for pair in sorted(controls)],
+        selected_device_read_write_permitted=set('rw') <= selected_permissions,
+        broader_or_ambiguous_access_rules=broader,
+        observed_data_major_access='broader_or_ambiguous' if broader else 'selected_and_recorded_controls_only',
+        os_other_gpu_open_denial='not_verified', os_isolation_required=False,
+        limitation='rule analysis only; no complete device inventory/open test; not evidence of computation on another GPU')
+
 def read_cgroup_rules(job_id, *, proc_path=Path('/proc/self/cgroup'), cgroup_base=Path('/sys/fs/cgroup/devices'), observation=None):
     observation = observation if observation is not None else startup_observation({})
     observation['cgroup'] = dict(job_id=str(job_id), proc_path=str(proc_path), devices_base=str(cgroup_base), controllers=[])
@@ -435,6 +490,7 @@ def proposed_scope():
     """Preparation snapshot. No invented candidate-commit identity."""
     return dict(schema_version=SCHEMA, scope_id=SCOPE_ID, status='proposed',
         execution_authorized=False, approval_note='', code_git_head=None,
+        gpu_execution_contract=GPU_EXECUTION_CONTRACT, os_device_open_isolation_required=False,
         source_files=source_manifest(), caps=free.CAPS, resources=RESOURCES, rates=RATES,
         quote=quote(), approved_cost_ceiling_cny='1.00', repeats=3,
         cards=1, nonexclusive=True, output=OUTPUT.as_posix(), ledger=LEDGER.as_posix(),
@@ -456,6 +512,8 @@ def prepare(args):
     scope = json.loads(_read_text(args.scope_json, observation, 'prepared_scope'))
     observation['scope'] = scope
     if (scope.get('schema_version') != SCHEMA or scope.get('scope_id') != SCOPE_ID
+            or scope.get('gpu_execution_contract') != GPU_EXECUTION_CONTRACT
+            or scope.get('os_device_open_isolation_required') is not False
             or scope.get('status') not in ('proposed', 'open') or scope.get('caps') != free.CAPS
             or scope.get('resources') != RESOURCES or scope.get('rates') != RATES
             or scope.get('quote') != quote() or scope.get('approved_cost_ceiling_cny') != '1.00'
@@ -470,6 +528,7 @@ def prepare(args):
     output = args.output.resolve()
     destinations = [args.ledger, output, *[output.with_suffix(suffix) for suffix in
         ('.results.npz', '.partial.npz', '.supervisor.json', '.runtime-preflight.json', '.outer-timeout.json')]]
+    destinations.append(output.with_suffix('.startup-identity.json'))
     destinations += [output.with_suffix('.' + route + '.optimized-hlo.txt.gz') for route in ('b1', 'vmap', 'map')]
     observation['destination_checks'] = []
     def destination_exists(path):
@@ -624,8 +683,9 @@ def run_live(plan):
                         row['control_devices'].append(dict(name=name, major=os.major(control.st_rdev), minor=os.minor(control.st_rdev)))
             startup['stage'] = 'job_device_cgroup'
             cgroup_path, rules = read_cgroup_rules(plan['slurm_allocation']['job']['JobId'], observation=startup)
-            startup['stage'] = 'cgroup_GPU_isolation'
-            mapping = admit_gpu_mapping(os.environ, rows, rules, observation=startup)
+            startup['stage'] = 'cgroup_access_assessment_and_GPU_binding'
+            mapping = admit_gpu_mapping(os.environ, rows, rules, observation=startup,
+                contract=plan['scope']['gpu_execution_contract'])
         except (OSError, ValueError) as error:
             if isinstance(error, GpuObservationError):
                 raise
@@ -634,7 +694,8 @@ def run_live(plan):
         mapping['cgroup_devices_path'] = cgroup_path
         plan['slurm_gpu_mapping'] = mapping
         plan['slurm_gpu_observation'] = observation
-        plan['phase_environment'] = {'ORCJAX_AFFINE_EXPECTED_GPU_UUID': mapping['gpu_uuid']}
+        plan['phase_environment'] = {'ORCJAX_AFFINE_EXPECTED_GPU_UUID': mapping['gpu_uuid'],
+            'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT': GPU_EXECUTION_CONTRACT}
         plan['scope'] = dict(plan['scope'], gpu_host_index=mapping['gpu_host_index'], gpu_uuid=mapping['gpu_uuid'])
         startup['stage'] = 'supervisor'
         # Use the same clock/deadline origin as Supervisor's existing monitor.
@@ -703,6 +764,8 @@ def main(argv=None):
                     or args.scope_json.resolve() != OUTPUT_DIR / 'scope.v1.json'
                     or args.output.resolve() != OUTPUT or args.ledger.resolve() != LEDGER
                     or scope.get('schema_version') != SCHEMA or scope.get('scope_id') != SCOPE_ID
+                    or scope.get('gpu_execution_contract') != GPU_EXECUTION_CONTRACT
+                    or scope.get('os_device_open_isolation_required') is not False
                     or scope.get('status') != 'open' or scope.get('execution_authorized') is not True
                     or not str(scope.get('approval_note', '')).strip()):
                 raise ValueError('specific approved paid scope and Slurm launch required')

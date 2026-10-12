@@ -5,6 +5,19 @@ import os
 import re
 
 ENVIRONMENT_KEY = 'ORCJAX_AFFINE_EXPECTED_GPU_UUID'
+CONTRACT_ENVIRONMENT_KEY = 'ORCJAX_AFFINE_GPU_EXECUTION_CONTRACT'
+GPU_EXECUTION_CONTRACT = 'T7_affine_allocated_single_gpu_v1'
+
+
+def validate_contract_environment():
+    contract = os.environ.get(CONTRACT_ENVIRONMENT_KEY)
+    expected = os.environ.get(ENVIRONMENT_KEY)
+    if contract is not None:
+        if contract != GPU_EXECUTION_CONTRACT:
+            raise ValueError('unknown child GPU execution contract')
+        if not expected:
+            raise ValueError('single-GPU child contract requires expected physical UUID')
+    return expected
 
 class CudaIdentityError(ValueError):
     def __init__(self, cause, observation):

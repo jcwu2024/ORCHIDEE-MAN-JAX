@@ -20,6 +20,7 @@ def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
     diag.mkdir()
     output, ledger, scope = diag / 'result.v1.json', diag / 'ledger.json', diag / 'scope.v1.json'
     scope.write_text(json.dumps(dict(schema_version=paid.SCHEMA, scope_id=paid.SCOPE_ID,
+        gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT, os_device_open_isolation_required=False,
         status='open', execution_authorized=True, approval_note='private CPU fixture only')))
     args = SimpleNamespace(dry_run=False, scope_json=scope, output=output, ledger=ledger)
     env = dict(SLURM_JOB_ID='123456', SLURM_JOB_GPUS='3', ORCJAX_SLURM_VISIBLE_DEVICES='0',
@@ -32,7 +33,8 @@ def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
     monkeypatch.setattr(paid.free, 'parser', lambda: SimpleNamespace(parse_args=lambda _argv: args))
     def prepare(_args):
         _args._paid_startup_observation['slurm_job'] = dict(JobId='123456', NumCPUs='4', GRES='gpu:v100:1(IDX:3)')
-        return dict(slurm_allocation=dict(job=dict(JobId='123456')), scope=dict(paid.RESOURCES))
+        return dict(slurm_allocation=dict(job=dict(JobId='123456')),
+            scope=dict(paid.RESOURCES, gpu_execution_contract=paid.STRICT_GPU_CONTRACT))
     monkeypatch.setattr(paid, 'prepare', prepare)
     monkeypatch.setattr(paid, 'read_free_admission', lambda **_kwargs: dict(status='known_free_unopened_unreserved'))
     monkeypatch.setattr(paid.free, 'Supervisor', lambda *_args: pytest.fail('Supervisor must not start before admission'))
@@ -141,7 +143,7 @@ def test_scheduler_clock_failure_keeps_raw_command_environment_and_count(monkeyp
 def test_main_allocation_rejection_keeps_actual_request_before_gpu_or_supervisor(tmp_path, monkeypatch, capsys):
     fixture = main_fixture(tmp_path, monkeypatch)
     calls = []
-    raw = 'JobId=123456 JobState=RUNNING Partition=gnall NodeList=ibc13b03n01 NumNodes=1 NumTasks=1 NumCPUs=8 Requeue=0 TimeLimit=00:20:00'
+    raw = 'JobId=123456 JobState=RUNNING Partition=gnall NodeList=ibc13b03n04 NumNodes=1 NumTasks=1 NumCPUs=8 Requeue=0 TimeLimit=00:20:00'
     def scheduler(command, **_kwargs):
         calls.append(command)
         assert command[0] == paid.SLURM
@@ -151,7 +153,7 @@ def test_main_allocation_rejection_keeps_actual_request_before_gpu_or_supervisor
         observation = args._paid_startup_observation
         result = paid._record_command([paid.SLURM, 'show', 'job', '--details', '-o', '123456'], observation)
         return paid.validate_allocation(dict(resources=paid.RESOURCES, rates=paid.RATES), fixture.env,
-            paid.parse_job(result.stdout), 'ibc13b03n01', observation=observation)
+            paid.parse_job(result.stdout), 'ibc13b03n04', observation=observation)
     monkeypatch.setattr(paid, 'prepare', prepare)
     assert paid.main([]) == 2
     report = json.loads(capsys.readouterr().out)
@@ -199,7 +201,8 @@ def test_supervisor_later_preflight_rejection_preserves_raw_report_and_release_s
     raw = '{"passed":true,"actual_backend":"gpu","jax_version":"wrong-version","devices":["fixture-GPU"]}'
     preflight = fixture.output.with_suffix('.runtime-preflight.json')
     def prepare(args):
-        return dict(slurm_allocation=dict(job=dict(JobId='123456')), scope=dict(caps=dict(paid.free.CAPS)),
+        return dict(slurm_allocation=dict(job=dict(JobId='123456')),
+            scope=dict(caps=dict(paid.free.CAPS), gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT),
             output=str(fixture.output), ledger=str(fixture.ledger), checkout=str(tmp_path),
             shell_started_epoch=paid.time.time(), preflight_output=str(preflight), commands={})
     monkeypatch.setattr(paid, 'prepare', prepare)

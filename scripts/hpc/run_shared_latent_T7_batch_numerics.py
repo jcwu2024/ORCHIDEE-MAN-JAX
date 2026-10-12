@@ -420,6 +420,12 @@ class Supervisor:
                                 or report.get('tolerances') != {'rtol':1e-5, 'atol':1e-6}
                                 or not Path(report['results_container']).is_file()):
                             raise ValueError('target affine result/count/identity admission failed')
+                        if expected_uuid is not None:
+                            binding = report.get('affine_gpu_identity', {})
+                            if (binding.get('passed') is not True or binding.get('expected_gpu_uuid') != expected_uuid
+                                    or binding.get('driver_gpu_uuid', '').lower() != expected_uuid.lower()
+                                    or binding.get('driver_device_count') != 1 or binding.get('pjrt_local_hardware_id') != 0):
+                                raise ValueError('actual affine child CUDA-driver/PJRT UUID binding gate failed')
         except (TimeoutError, subprocess.TimeoutExpired) as error:
             primary = ('deadline_exceeded', 124)
             self.record['error'] = str(error)

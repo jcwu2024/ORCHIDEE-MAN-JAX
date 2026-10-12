@@ -34,6 +34,8 @@ def main(argv=None):
         scope['identity_status'] = 'actual clean committed code; proposed false, not approval'
     manifest = dict(actual_base_head=actual_head, source_files=scope['source_files'],
         scope_id=paid.SCOPE_ID, execution_authorized=False, code_git_head=scope['code_git_head'],
+        gpu_execution_contract=scope['gpu_execution_contract'],
+        os_device_open_isolation_required=scope['os_device_open_isolation_required'],
         candidate_source_only=args.candidate_source_only,
         checkout_target=paid.CHECKOUT_TARGET.as_posix(),
         inputs=scope['input_sha256'], output_directory=paid.OUTPUT_DIR.as_posix(),
