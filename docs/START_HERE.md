@@ -4,7 +4,7 @@ New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
-Updated: 2026-10-11. First-day localization completed both graphs and 24 JVPs.
+Updated: 2026-10-12. First-day localization completed both graphs and 24 JVPs.
 Finite, defined next-state tangents differ for all four directions, including control
 200, within the first daily transition. Raw state coordinate 20 is nonfinite,
 a separate retained failure. Numerical exit 3; that GPU scope is released/closed.
@@ -27,18 +27,17 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [paid affine preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
-prepares one separate gnall job:4 allocated Slurm CPUs,1 V100,20 minutes,
-estimated maximum CNY0.83 and proposed approval ceiling CNY1.00. No specific
-paid submission is approved or started. Actual allocation/GPU validation remains
-pending; the package requires exact Slurm/cgroup identity, common scope mutex
-and read-only known free-state admission under the sole paid launch owner.
-Free dispatch is temporarily paused; the unchanged b676 entry is untouched.
-The free approval remains valid/unconsumed and is not automatically migrated.
-The active paid v2 revision binds Slurm22.05.7 `TRES`/allocated `GRES`,
-default job `OverSubscribe=OK`, and scheduler StartTime/EndTime. One actual
-CPU job provides schema evidence only; actual GPU allocation remains unverified.
-Old df8cfac/v5/v1 preparation artifacts remain unchanged.
+The [paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
+records specific approval of4 Slurm CPUs/1 V100/20min/nonexclusive/no-requeue,
+fixed gnall node `ibc13b03n01`, maximum CNY0.83/approved ceiling CNY1.00.
+The single required refresh found gnall UP/OverSubscribe=NO but all8 node GPUs
+allocated. No scope opening, sbatch, attempt/ledger, preflight or GPU execution
+followed:0 allocation seconds/card-hours/CNY0. Approval remains valid and
+unconsumed; this dispatch stops without polling or automatic monitoring.
+The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
+retains exact f4ae942 source and CPU readiness; real GPU gates remain unverified.
+Free dispatch remains paused and b676 approval unchanged/unconsumed. Old
+df8cfac/v5/v1 and frozen false proposal artifacts remain unchanged.
 
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing

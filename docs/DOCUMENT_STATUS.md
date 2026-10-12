@@ -1,6 +1,6 @@
 # Documentation Authority
 
-Updated: 2026-10-11. Current entry pages replace progress chronology. Dated
+Updated: 2026-10-12. Current entry pages replace progress chronology. Dated
 reports retain their experimental scope; old plans grant no execution authority.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns current action and resource boundaries.
 
@@ -26,7 +26,8 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
-| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Current paid preparation contract/quote: one gnall job, preferred ibc13b03n01,4 actual Slurm CPUs/1V100/nonexclusive/20min/no-requeue; worst-case0.8266667 CNY/upward0.83, proposed1.00 ceiling awaiting specific approval. Separate false scope/output/ledger/job-attempt, cooperative mutex plus read-only known free admission; sole owner dispatches paid while free is paused. No paid submission/allocation/GPU/preflight/training; free approval preserved and not migrated. |
+| [Paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md) | Current approved paid dispatch outcome: one required refresh confirmed gnall UP/OverSubscribe=NO but fixed n01 GPUs8/8 allocated. Resource non-admission; no submission/scope opening/attempt/ledger/GPU/preflight/numerical results;0 allocation seconds/card-hours/estimated CNY. Explicit CNY1.00 approval remains valid/unconsumed, dispatch stopped without polling/monitoring. Separate cluster/local clocks and source/input/false-scope identities retained. |
+| [Paid affine execution proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md) | Accepted f4ae942/v2 contract and prior136 CPU/shell cases: fixed gnall ibc13b03n01,4 actual Slurm CPUs/1V100/nonexclusive/20min/no-requeue; maximum0.8266667 CNY/upward0.83, approved ceiling1.00. Actual GPU/runtime boundaries remain unverified; current dispatch status is in the result above. False proposal and old df8/v5/v1 remain preserved. |
 | [GPU deployment result](research/daily_coarse_graining/T7_batch_numerics_GPU_deployment_results_20261011.md) | Current execution authority/status: user approved the separate1200s/one idle nonexclusive V100/CNY0 scope; clean b676353 deployment and target CPU shell/private-phase readiness accepted. Both GPUs busy at final refresh; actual container/PJRT/GPU/numerical comparison pending. No launch/preflight/open scope/ledger reservation;0 GPU seconds/card-hours/cost and unconsumed one-shot. `approved_waiting_resources`; approval persists, no automatic polling/monitoring/retry. |
 | [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md), [execution contract](research/daily_coarse_graining/T7_batch_numerics_GPU_execution_contract_20261011.md) | Accepted local affine launcher/input and frozen-method authority. Fresh recovery NPZ/receipt have new identities and six preincident numeric SHA matches after a three-file unsafe-test incident. Its false proposed1200s snapshot is preserved; later approval/deployment status is in the current result above. Historical CPU12/91 is separate and was not rerun. |
 | [Current B1/B4 JVP completion results](research/daily_coarse_graining/T7_B1_state_JVP_completion_results_20261009.md) | Current derivative evidence: 32 JVPs/four full VJPs, exact JVP repeats, strict B1/4–B4 failures at 434/2382 plus own JVP/VJP/full-state failures. Primal/parameter self repeats/aux/physics/memory pass. Independent scope closed at 1780.743670s/CNY 0/released; CPU analysis accepted. No derivative reference/adoption. |
@@ -72,20 +73,15 @@ and trace buckets do not isolate wall time or certify a launch-bound bottleneck.
 
 ## Current authorization boundary
 
-User authorized preparation of a single paid affine route, including necessary
-implementation/integration/tests and a concrete resource/command/cost package.
-The revised preparation binds Slurm spool checkout/cwd, early attempt identity,
-exact job/kernel/UUID and source/HEAD; sole-owner management admission reads
-known free state without changing the old checkout/scope/ledger. Mock/local evidence does not certify actual allocation or GPU runtime.
-The active independent paid v2 revision corrects observed22.05.7 legacy
-`TRES`/allocated `GRES`, default job `OverSubscribe=OK`, and scheduler clock
-fallback when batch time env tokens are absent. Actual CPU-job schema and
-tagged source evidence do not certify GPU allocation or actual batch env.
-Old df8cfac/v5/v1 checkout/scope/receipts remain immutable evidence.
-Final current-code regressions, ordinary commit/push, independent deployment
-and target CPU-only dry-run are authorized. That is not paid-submission approval. The paid proposal above requires
-consolidated artifact acceptance and explicit resource/wall/cwd/command/cost
-approval before one `sbatch`; no `salloc`, GPU startup or paid fallback here.
+The human specifically approved one paid-v2 job under the exact f4ae942 fixed
+node/resource/wall/cwd/command/CNY1.00 contract. The one necessary partition/
+node refresh passed gnall policy but found0 unallocated GPUs at fixed n01.
+This dispatch stops as resource non-admission, with no submission/job/attempt/
+ledger/preflight/GPU/numerical result. Approval remains valid and unconsumed;
+no polling, monitoring, node change, fallback, extra diagnostics or training.
+Actual GPU/cgroup/CUDA/PJRT gates remain unverified. Source, recovery identities,
+target false scope, prior CPU evidence and df8/v5/v1 artifacts stay unchanged.
+The free b676 approval remains valid/unconsumed and free dispatch paused.
 
 The current affine scope is approved but waiting for resources and unconsumed;
 see the deployment result above. This task stops without further polling or

@@ -1,6 +1,6 @@
 # Code Map
 
-Updated: 2026-10-11. Bounded task navigation, not an exhaustive inventory.
+Updated: 2026-10-12. Bounded task navigation, not an exhaustive inventory.
 First-day/raw-neural JVP execution and CPU acceptance are complete; preserve graphs/HLO/full results.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the handoff/stop and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.
@@ -83,8 +83,14 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
+The [paid result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
+owns approved v2 resource non-admission: partition policy passed, fixed-node
+GPUs8/8 allocated; no submission/scope opening/attempt/ledger/GPU/numeric result.
+Approval remains unconsumed and dispatch stops without monitoring. Raw one-time
+refresh, separate clock sources, preserved false scope/identities and absent
+execution artifacts are in `outputs/T7-affine-paid-execution-20261012/`.
 The [paid proposal](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
-owns the separate candidate gnall contract/quote and focused CPU/shell evidence.
+retains the exact approved gnall contract/quote and prior CPU/shell evidence.
 Paid v2 `allocation_epochs` and `allocated_tres` admit22.05.7 scheduler time
 and actual allocation detail; `--scheduler-allocation-epochs` is CPU metadata
 only before outer deadlines. `tests/fixtures/slurm22/` records trimmed actual

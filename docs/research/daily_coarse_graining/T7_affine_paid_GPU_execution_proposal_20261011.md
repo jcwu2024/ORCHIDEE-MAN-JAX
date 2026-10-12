@@ -1,8 +1,12 @@
 # Single paid affine GPU preparation — 2026-10-11
 
-The supervisor authorized final implementation, local regressions, ordinary
-commit/push, an independent frozen checkout and target CPU-only dry-run. This
-does not authorize a paid submission, GPU preflight, allocation or training.
+The supervisor initially authorized preparation, local regressions, ordinary
+commit/push, an independent frozen checkout and target CPU-only dry-run.
+The later human specifically approved the exact paid-v2 job/CNY1.00 contract.
+The [2026-10-12 resource result](T7_affine_paid_GPU_execution_results_20261012.md)
+records one required refresh: fixed n01 GPUs8/8 allocated, so no scope opening,
+submission/job/attempt/ledger/preflight/GPU followed. Approval remains valid and
+unconsumed; dispatch stops without polling, automatic monitoring or node change.
 The free b676 one-shot remains approved/unconsumed, but this execution owner
 temporarily dispatches paid only. Old code, scope, ledger and approval remain
 untouched. Earlier candidate diffs/logs remain historical; directory isolation
@@ -22,8 +26,8 @@ and restoration machinery have been removed from the accepted preparation.
 
 Current additive rates: CPU CNY0.07/allocatedCPU-hour, GPU CNY2.20/GPU-hour.
 CPU `4×20/60×0.07=0.0933333`; GPU `20/60×2.20=0.7333333`; total
-`0.8266666667`, rounded upward **CNY0.83**. Proposed approval ceiling **CNY1.00
-is not approved**. No extra resource, whole-node exclusivity or paid fallback.
+`0.8266666667`, rounded upward **CNY0.83**. The later human specifically approved
+ceiling **CNY1.00**. No extra resource, whole-node exclusivity or paid fallback.
 CR_CORE with2 threads/core means4 Slurm CPUs are2 physical cores. Do not add
 `--hint=nomultithread`; actual `NumCPUs=4` and allocated TRES cpu=4/gpu=1 are
 mandatory, and8 allocated CPUs reject admission.
@@ -109,7 +113,7 @@ unavailable path or permission/unknown state stops paid dispatch. There is no
 full-tree/process scan, directory rename/chmod, restoration journal, manual
 lock-takeover framework or modification of the old entry/scope/ledger.
 
-## Versioned delivery and next approval
+## Versioned preparation delivery and current approval
 
 The [prior v1 delivery receipt](../../../outputs/T7-affine-paid-preparation-20261011/final-delivery.v1.json)
 records exact final files/diff, current test logs, real local/origin/remote HEAD,
@@ -135,9 +139,11 @@ no reindex or completeness claim.
 Actual paid Slurm allocation, device isolation, container/PJRT/GPU runtime and
 numerical comparison remain unverified. Target CPU readiness does not certify
 those gates or scientific accuracy. No `sbatch`/`salloc`, paid occupation,
-GPU/preflight, training or automatic fallback has occurred. The next human
-decision is the single concrete command/cwd/resources/wall/CNY1.00 approval;
-only then may the approved scope open and one job be submitted.
+GPU/preflight, training or automatic fallback has occurred. The unchanged
+command/cwd/resources/wall/CNY1.00 contract is now specifically approved, but
+the fixed node failed resource admission at the one required refresh. This
+dispatch stops; human approval remains valid and unconsumed. The target scope
+remains false/proposed and its original bytes are saved in the resource result.
 
 ## Slurm22.05.7 compatibility revision
 
@@ -170,8 +176,9 @@ map default to `OK`, explicit no-sharing to `NO`, requested oversubscription to
 `YES`. Admission requires `OK` for the declared default nonexclusive job.
 Partition-level `OverSubscribe=NO` is a separate saved policy and is not the
 job flag. `OK` alone does not prove that the partition forbids oversubscription.
-The one necessary pre-submission refresh after specific approval must recheck
-gnall's partition `OverSubscribe=NO` policy. No extra query is performed now.
+The one necessary pre-submission refresh after specific approval rechecked
+gnall's partition `OverSubscribe=NO` policy; it passed, but fixed n01 GPUs8/8
+were allocated. No subsequent resource query or availability loop follows.
 Neither exclusivity nor requested oversubscription is introduced.
 
 The tagged `env_array_for_batch_job` and sbatch OUTPUT ENVIRONMENT documentation
@@ -185,7 +192,8 @@ deadline extension or synthetic replacement env token is allowed.
 
 This revision changes admission only. Resources, costs, scientific inputs,
 precision, numeric gates and phase caps are unchanged. Real paid batch/GPU
-boundaries remain unverified and no paid submission is authorized.
+boundaries remain unverified; approved dispatch stopped before submission
+because the fixed node lacked an unallocated GPU.
 
 Current affected paid Python/shell verification passes136 distinct cases;
 the independent shell32-case run overlaps and is not counted again. The

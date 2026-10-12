@@ -1,6 +1,6 @@
 # Current Work Order
 
-Updated: 2026-10-11. First-day localization completed both graphs/24 JVPs.
+Updated: 2026-10-12. First-day localization completed both graphs/24 JVPs.
 Finite, defined next-state tangents differ for every direction, including control 200;
 raw state coordinate 20 is nonfinite. Numerical exit 3, GPU released, scope
 closed. Raw-neural v3-final saved-evidence audit is accepted with active numerical
@@ -55,36 +55,26 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-Prepare the [single paid affine package](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
-for consolidated supervisor acceptance, then specific approval of resources,
-wall time, cwd, command and maximum cost before submission. Candidate scope
-is false/proposed:gnall, preferred `ibc13b03n01`,1node/1task/4 actual allocated
-Slurm CPUs/1 V100/nonexclusive/20min/no-requeue. Current CPU0.07 and GPU2.20
-CNY/hour give additive0.8266667, rounded upward0.83; proposed ceiling1.00 is
-not yet approved. The saved idle-node snapshot reserves nothing; one resource
-refresh immediately before an approved single submission is a future step.
-Do not `sbatch`/`salloc`, start GPU/preflight, recapture, train or repeat resource
-checks in this preparation stage. Allocation start, not late Python startup,
-owns the1200s cap and≥180s release reserve. Preserve fixed inputs/math/gates.
+The [approved paid v2 dispatch](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
+stops at resource non-admission. Approval is specific to gnall/fixed
+`ibc13b03n01`,1node/1task/4 actual Slurm CPUs/1 V100/nonexclusive/20min/
+no-requeue/one scheduler attempt, unchanged f4ae942 cwd/command and CNY1.00
+ceiling (maximum0.8266667/upward0.83). The single required refresh confirmed
+gnall UP/OverSubscribe=NO but all8 fixed-node GPUs allocated. No scope opening,
+sbatch, attempt/ledger, preflight/GPU or numerical probe occurred. Approval
+remains valid/unconsumed; no automatic polling, monitor, node change or retry.
+Await explicit steering for a future dispatch; unchanged approval needs no
+renewal. Do not run an unattended resource loop, recapture, diagnose further
+or train. Source/input/false scope and previous df8/v5/v1 remain unchanged.
 
-The new paid and future free entries share an atomic persistent mutex; the
-legacy b676 entry does not cooperate. Paid admission also requires reviewed
-read-only known free scope/ledger/entry admission and the declared sole launch
-owner: paid only, free dispatch paused, free approval preserved. No old-entry
-mutation or restoration machinery remains. Fixed Slurm spool checkout/cwd,
-early attempt persistence, actual-job/kernel/UUID gates remain preparation only.
-Final local regressions, normal commit/push, independent deployment and target
-CPU dry-run are authorized continuously. New code freezes from a genuine clean
-commit; never overwrite b676 or substitute a guessed HEAD. No free approval
-migration or automatic paid retry follows. Sol owns continuous implementation,
-integration and focused verification; Astra reviews the actual artifacts at
-the consolidated delivery point, with interim escalation for material scope,
-science or cost changes. The detailed package below preserves earlier evidence.
-The active independent version is paid v2. Slurm22.05.7 compatibility uses
-actual allocated-detail proof with legacy `TRES`/`GRES`, default job sharing
-`OK`, and authoritative scheduler StartTime/EndTime before shell deadlines.
-Original time env variables are optional exact crosschecks. An observed CPU
-job is schema evidence, not GPU/batch-env acceptance. Preserve old df8/v5/v1.
+The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
+retains scheduler allocation-clock1200s/preflight240s/probe780s/release≥180s/
+24GiB, exact actual Slurm/cgroup/kernel/UUID and CUDA/PJRT gates, physical
+constraints and strict numerical comparisons. Prior136 compatibility cases
+and historical CPU12/91 are not this dispatch's GPU acceptance. Real paid
+allocation/runtime/numeric boundaries remain unverified. Free b676 approval
+is preserved/unconsumed and dispatch stays paused. Cooperative mutex/read-only
+management admission does not mechanically constrain legacy arbitrary copies.
 
 The previous accepted [early summary_input capture package](research/daily_coarse_graining/T7_summary_capture_results_20261011.md)
 completed the authorized eight-file read-only retrieval, real thin capture

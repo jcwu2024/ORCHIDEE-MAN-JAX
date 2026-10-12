@@ -1,6 +1,6 @@
 # Current Project Status
 
-Updated: 2026-10-11. First-day localization completed both graphs and 24 JVPs.
+Updated: 2026-10-12. First-day localization completed both graphs and 24 JVPs.
 Finite, defined next-state tangents differ for all directions, including control 200;
 the discrepancy is already within the first daily transition. Raw state 20
 is nonfinite, a separate retained failure. Numerical exit 3/GPU released,
@@ -65,25 +65,22 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
-The [paid affine package](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
-is preparation only, separately proposed and not submitted/approved for paid
-execution. Saved gnall metadata selects idle `ibc13b03n01`;4 allocated Slurm
-CPUs/1V100/20min cost at current additive rates is0.8266667 CNY, upward0.83,
-with a proposed1.00 ceiling. CR_CORE/SMT2 means4 Slurm CPUs are2 physical
-cores; no `--hint=nomultithread` or implicit8-CPU acceptance. Actual allocation,
-cgroup GPU mapping, container/PJRT/GPU admission remain unverified. New entry
-mutex cannot govern b676 by itself. The sole authorized launch owner dispatches
-paid only while free dispatch is paused; bounded read-only checks require the
-known free entry unchanged and its scope/ledger/execution evidence absent. New paid output/
-ledger/job-attempt identities are separate; no GPU/job/resource was reserved
-or started, and both the free one-shot and proposed paid attempt are unconsumed.
-Revised local mocks cover spool-copy/early failure, exact actual-job cgroup,
-kernel minor/UUID, source/HEAD and management-chain admission; real target
-isolation and optional CUDA-driver/PJRT binding still await approved execution.
-Active paid v2 corrects observed22.05.7 `TRES`, `GRES` and job sharing `OK`;
-scheduler StartTime/EndTime owns all deadlines with optional original env
-crosschecks. One read-only CPU job confirms that schema, without proving GPU
-allocation or batch environment. Old df8cfac/v5/v1 artifacts stay unchanged.
+The [paid v2 resource result](research/daily_coarse_graining/T7_affine_paid_GPU_execution_results_20261012.md)
+is `approved_waiting_resources`: the human specifically approved gnall/fixed
+`ibc13b03n01`,4 actual Slurm CPUs/1 V100/nonexclusive/20min/no-requeue/one
+attempt, maximum0.8266667 CNY/upward0.83/ceiling1.00. At the one required
+refresh, partition UP/OverSubscribe=NO passed, but node MIXED/CPUAlloc8 of112/
+CPULoad8.02 and8 of8 GPUs allocated left no admissible GPU. Cluster stdout
+date01:06:20Z and local receipt01:14:40Z are separate2026-10-12 clock sources.
+No submission/job/allocation, scope opening, attempt/ledger/mutex, preflight,
+GPU, arrays or HLO occurred; allocation seconds/card-hours/estimated CNY all0.
+This is resource non-admission, not runtime/numerical failure. Approval remains
+valid/unconsumed; dispatch stops without resource polling or automatic monitor.
+Accepted f4ae942 source and recovery identities, target false scope and old
+df8/v5/v1 artifacts remain unchanged. Actual GPU/cgroup/CUDA/PJRT/numeric
+gates remain unverified; prior CPU12/91 and136 mocks are separate evidence.
+Free b676 approval remains valid/unconsumed, with dispatch paused. The mutex
+still covers cooperative new entries only, not b676/arbitrary old copies.
 
 | Current evidence | Result and limit |
 |---|---|
