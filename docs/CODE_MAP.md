@@ -57,7 +57,7 @@ Paths are under `scripts/hpc/`.
 | `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
 | `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Deployed b676353 NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; target CPU shell/private-phase checks accepted, container/PJRT/GPU pending; both cards busy, no GPU/preflight/open scope/ledger reservation |
-| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Candidate independent gnall paid admission/one-shot: exact job/node/NumCPUs/AllocTRES/StartTime, actual-job cgroup/UUID-bound XML minor/kernel device mapping and optional CUDA-driver/PJRT UUID binding,20min/4CPU/1GPU/24GiB/quote caps; shared unchanged capture admission and Supervisor, fixed affine probe; new v3 CSV/XML candidate prepared/deployed at58a2d938; actual mapping/GPU validation unverified, no new job |
+| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Candidate independent gnall paid admission/one-shot: exact job/node/NumCPUs/AllocTRES/StartTime, actual-job cgroup/UUID-bound XML minor/kernel device mapping and optional CUDA-driver/PJRT UUID binding,20min/4CPU/1GPU/24GiB/quote caps; shared unchanged capture admission and Supervisor, fixed affine probe; v3 CSV/XML route succeeds on actual n01 at58a2d938; sole job15806646 FAILED2:0/7s at wildcard-cgroup isolation gate before Supervisor/preflight/probe; scope closed/consumed |
 | `shared_affine_gpu_admission.py`, `shared_affine_cuda_identity.py`, `freeze_shared_affine_paid_scope.py` | Candidate persistent atomic cross-scope mutex, bounded read-only known free-state admission under the sole paid launch owner; old b676 remains untouched, actual accepted-commit→false scope/source manifest generation; no automatic free-approval migration or stale-lock takeover |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
@@ -83,19 +83,18 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
-The [paid v3 recovery proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
-owns prepared-only startup compatibility and one continuous future allocation:
-paid Python observe_gpu_mapping captures supported CSV then UUID-bound XML,
-rejects root/identity/minor ambiguity and retains all raw outputs through
-admission failures or successful Supervisor record. Kernel/cgroup/CUDA/PJRT,
-science, budget and one-attempt gates remain. New fixed v3 paths are in Slurm
-and false source manifest; execution58a2d938 is independently deployed.
-Evidence is `outputs/T7-affine-paid-recovery-preparation-20261012/`: gln help,
-official manual, Python30/shell10 focused checks, false scope/manifest and actual
-test01 Bash/parser receipts. No submission/GPU/science acceptance follows.
-The [v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
-retains old job15782177/f4ae FAILED2:0/8s/no probe/unknown child stderr and
-consumed attempt. Earlier queue and0-run reports remain historical evidence.
+The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
+owns latest approval/execution: sole fixed n01 job15806646 at58a2d938 ended
+FAILED2:0/7s. CSV/UUID XML succeeds (driver525.85.12/minor0); unchanged wildcard
+cgroup-device gate rejects isolation before Supervisor/preflight/CUDA-PJRT/probe.
+Raw devices.list was not retained; exact configuration cause remains unproved.
+Execution evidence is `outputs/T7-affine-paid-recovery-execution-20261012/`:
+complete Slurm/stdout/XML/archive, attempts, false/open/closed scopes, saved-only
+summary and closeout. Scope closed/consumed, mutex absent, no GPU cleanup
+observation, no retry. Preparation30+10 tests and test01 CPU evidence are retained
+in the [v3 proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md).
+Old v2 job15782177/f4ae FAILED2:0/8s/no probe/unknown child stderr stays unchanged;
+free b676 approval remains paused/unconsumed. No repair/adoption/training follows.
 
 Paid v2 `allocation_epochs` and `allocated_tres` admit22.05.7 scheduler time
 and actual allocation detail; `--scheduler-allocation-epochs` is CPU metadata

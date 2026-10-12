@@ -27,20 +27,24 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [paid v3 recovery preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
-owns the current prepared-only state. Captured gln01 NVSMI525 help lists no
-selective-query minor_number; the strict candidate uses supported CSV fields,
-then UUID-bound XML minor and unchanged kernel/cgroup/CUDA/PJRT gates. Historical
-n01 version/missing stderr still prevent exact old-cause proof. Focused CPU
-Python30/shell10 checks and actual test01 Bash/parser admission pass. Execution
-is frozen at58a2d938, deployed independently with a new false scope/unconsumed
-attempt. No submission/allocation/GPU preflight/probe is authorized or performed.
-The concrete single20min/4CPU/1V100/fixed gnall n01 startup-then-affine proposal
-quotes CNY0.83 and recommends a new CNY1.00 ceiling. Original science is unchanged.
-The [v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
-retains job15782177 FAILED2:0/8s/no affine result, consumed attempt and unknown
-underlying stderr. It cannot supply a new grant. Old f4ae/inputs/history remain;
-free b676 stays paused/approved/unconsumed. Stop at proposal; no automatic run.
+The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
+owns current operation. Direct human “批准。” authorized the exact58a2d938
+single fixed gnall n01/4actualSlurmCPUs/1V100/20min/nonexclusive/no-requeue job.
+Sole job15806646 ended FAILED2:0 after7s. CSV→UUID XML succeeds on n01
+(driver525.85.12/minor0); actual-job cgroup wildcard GPU access fails the unchanged
+single-device-isolation gate. Exact devices.list/configuration cause was not
+retained; no Supervisor/preflight/CUDA-PJRT/affine12/91 ran. Numerical status is
+not_executed, not a numerical failure. Allocation0.0019444444card-hours,
+estimated additive CNY0.0048222222; actual bill unknown. Scope closed and consumed,
+mutex absent; no live post-exit GPU cleanup observation. Stop: no repair-and-rerun,
+replacement, monitoring, card change, tolerance relaxation, free fallback or training.
+Old v2/f4ae evidence remains; free b676 stays paused/approved/unconsumed.
+
+The [v3 preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
+retains frozen58a2d938, Python30/shell10 and actual test01 CPU admission, source/
+recovery-input manifests and original false scope. Those preparation snapshots
+remain historical; latest approval, opened/closed identities and consumed attempt
+are in the terminal result. No numerical repair or speed/adoption acceptance follows.
 
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing

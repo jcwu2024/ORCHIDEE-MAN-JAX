@@ -55,28 +55,24 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-The [paid v3 recovery preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
-owns current operation: prepare one continuous new allocation for startup gates
-then the unchanged affine12/91 only if startup succeeds. Preparation is complete:
-strict supported CSV→UUID-boundXML minor candidate, full raw output retention,
-Python30/shell10 focused CPU passes and actual test01 Bash/parser admission.
-Frozen source58a2d938/new independent v3 checkout/new false scope are bound in
-the proposal. This is CPU preparation, not live startup/scientific acceptance.
+The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
+owns current operation. Direct human “批准。” authorized the exact58a2d938
+single fixed gnall n01/4actualSlurmCPUs/1V100/20min/nonexclusive/no-requeue job.
+Sole job15806646 ended FAILED2:0 after7s. CSV→UUID XML succeeds on n01
+(driver525.85.12/minor0); actual-job cgroup wildcard GPU access fails the unchanged
+single-device-isolation gate. Exact devices.list/configuration cause was not
+retained; no Supervisor/preflight/CUDA-PJRT/affine12/91 ran. Numerical status is
+not_executed, not a numerical failure. Allocation0.0019444444card-hours,
+estimated additive CNY0.0048222222; actual bill unknown. Scope closed and consumed,
+mutex absent; no live post-exit GPU cleanup observation. Stop: no repair-and-rerun,
+replacement, monitoring, card change, tolerance relaxation, free fallback or training.
+Old v2/f4ae evidence remains; free b676 stays paused/approved/unconsumed.
 
-No paid job is submitted or authorized by preparation. The concrete proposal
-keeps inherited fixed gnall n01/1node/1task/4actualSlurmCPUs/1V100/nonexclusive/
-20min/no-requeue/singleattempt,1200s allocation clock/preflight240/probe780/
-release≥180/24GiB and strict original science. Quote0.8266667/upward0.83;
-recommend new CNY1.00 approval. Actual XML/device/cgroup/CUDA/PJRT/affine/release
-must pass within the same future allocation. No card/isolation/tolerance change.
-Stop for proposal review; no sbatch/salloc/GPU preflight/probe/training/monitor.
-
-The accepted [v2 failure result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
-remains FAILED2:0/8s/estimated CNY0.0055111111/no probe; exact historical cause
-unproved because child stderr/n01 version unavailable. Job15782177 attempt is
-consumed, old f4ae/scopes/inputs untouched; no old grant or b676 free dispatch.
-Fresh recovery inputs/raw434 sample3, full derivatives/masks and strict precision
-remain unchanged. The new scope remains proposed/false and unconsumed.
+The [v3 preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
+retains frozen58a2d938, Python30/shell10 and actual test01 CPU admission, source/
+recovery-input manifests and original false scope. Those preparation snapshots
+remain historical; latest approval, opened/closed identities and consumed attempt
+are in the terminal result. No numerical repair or speed/adoption acceptance follows.
 
 The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
 retains scheduler allocation-clock1200s/preflight240s/probe780s/release≥180s/

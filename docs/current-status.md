@@ -65,29 +65,24 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
-The [paid v3 recovery preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
-is prepared-only, approval pending. Authorized gln01 help capture on ibc13b02n04
-reports NVSMI525.85.12 and no minor_number in its complete selective-query list;
-the requested --version exits255 as an unsupported flag combination. Official
-NVIDIA UUID/full-XML/Linux-minor documentation supports the minimal CSV→UUID XML
-candidate, retaining exact major/minor/job-cgroup/CUDA/PJRT identity gates.
-Neither help nor docs establish the old n01 version or missing historical stderr.
+The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
+owns current operation. Direct human “批准。” authorized the exact58a2d938
+single fixed gnall n01/4actualSlurmCPUs/1V100/20min/nonexclusive/no-requeue job.
+Sole job15806646 ended FAILED2:0 after7s. CSV→UUID XML succeeds on n01
+(driver525.85.12/minor0); actual-job cgroup wildcard GPU access fails the unchanged
+single-device-isolation gate. Exact devices.list/configuration cause was not
+retained; no Supervisor/preflight/CUDA-PJRT/affine12/91 ran. Numerical status is
+not_executed, not a numerical failure. Allocation0.0019444444card-hours,
+estimated additive CNY0.0048222222; actual bill unknown. Scope closed and consumed,
+mutex absent; no live post-exit GPU cleanup observation. Stop: no repair-and-rerun,
+replacement, monitoring, card change, tolerance relaxation, free fallback or training.
+Old v2/f4ae evidence remains; free b676 stays paused/approved/unconsumed.
 
-Python30/shell10 focused CPU/mock checks pass; one existing cache_dir warning
-per run. Frozen execution58a2d938 is committed/pushed and deployed to new
-T7-affine-paid-recovery-20261012-v3. Real test01 Bash expands declared argv,
-CPU parser passes in1.860166s, imports/hashes remain exact.
-New scope proposed/false, attempts/ledger/preflight/results absent, no JAX import
-or GPU execution/submission. New quote0.8266667/upward0.83/recommended ceiling1.00
-covers one20min fixed n01/4CPU/1V100 allocation for startup then unchanged12/91.
-Preparation allocation/card-hours/cost0; future paid job requires new approval.
-
-Job15782177/f4ae remains FAILED2:0/8s/4CPUs/1GPU/estimated CNY0.0055111111;
-attempt consumed, affine not run, exact root cause unknown, no live GPU cleanup
-observation. Old evidence/inputs remain unchanged. Candidate actual XML/n01
-version/device isolation/runtime/science/release are unverified future gates.
-No numerical repair or adoption is selected; no GPU run/training/monitor starts.
-Free b676 stays paused and its independent approval unconsumed.
+The [v3 preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
+retains frozen58a2d938, Python30/shell10 and actual test01 CPU admission, source/
+recovery-input manifests and original false scope. Those preparation snapshots
+remain historical; latest approval, opened/closed identities and consumed attempt
+are in the terminal result. No numerical repair or speed/adoption acceptance follows.
 
 | Current evidence | Result and limit |
 |---|---|
