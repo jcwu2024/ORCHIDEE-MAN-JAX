@@ -1,26 +1,39 @@
 # Explore1000 Server Benchmark Contract
 
-Current CPU48 contract (2026-10-11): the main CPU candidate is one native FULL64
+Current CPU48 contract (2026-10-12): the main CPU candidate is one native FULL64
 B64 process using 48 distinct physical cores, with a complete scalar reference
 followed by five core and five wrapper samples in one 90-minute parent
 allocation. The separately authorized execution uses commit
 `4f6b2fc906c453b9030acff489637a8f83605dca` in the new immutable CPU48 checkout.
 Canonical CPU runtime, frozen input/reference identities and actual target Bash
-dry-runs passed. Submission was withheld because the specified n35 changed to
-`IDLE+PLANNED` and did not return to plain IDLE during the bounded wait. There
-were zero sbatch calls, no job ID, paid allocation, model run, parent accounting
-or saved-array collection. This attempt incurred no paid job cost; CPU48
-numerical, throughput, utilization and RSS results are unavailable. See the
-[deployment and no-submission result](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md),
+dry-runs passed and are reused. The user explicitly renewed this assignment on
+2026-10-12, allowing a verified matching healthy CPU node and normal queueing.
+`IDLE+PLANNED` and ordinary PENDING are permitted. Node selection is made via
+sbatch arguments so the old launcher default cannot select n04 inadvertently.
+The [previous no-submission result](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)
+remains unchanged: zero sbatch calls, no job or paid allocation, zero paid job
+cost. Its n35-only/closed-session conditions do not constrain this continuation.
+See the
 [CPU48 preparation](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)
 and [concrete proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md).
-The [single-job authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/AUTHORIZATION.md)
-fixes cnall/n35, one node/task, 48 CPUs, zero GPUs, 5400 seconds, no requeue,
+The [current single-job authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/AUTHORIZATION.md)
+fixes cnall, one matching healthy node/task, 48 CPUs, zero GPUs, 5400 seconds, no requeue,
 exclusivity or new memory reservation. The complete parent, including scalar,
 is billed at 48 CPUs; terminal parent accounting is counted once. Failure or
 timeout closes the attempt. The historical CPU4 matrix below is not the
-current primary candidate. The bounded attempt ended before submission; further
-execution requires a new explicit assignment.
+current primary candidate. The existing execution chat completed the unique
+submission and preserved terminal accounting and the startup log.
+The unique submitted job is **15782454**, allocated 48 CPUs on matching node
+`ibc12b07n02` with zero GPUs, then FAILED / ExitCode 2:0 / Elapsed 00:00:01.
+The pinned launcher parsed an empty `AllocTRES` value and emitted
+`Slurm did not report AllocTRES`. The original scontrol output was not saved,
+so the specific reason it could not read that field is unknown. No run root,
+model execution or stage output exists; the collector is inapplicable.
+The exact parent row reports `billing=48,cpu=48,node=1`, counted once:
+CNY0.000666667 primary / CNY0.000933333 conservative planning cost, not a
+verified bill. CPU48 throughput, utilization, RSS, numerical acceptance and
+CPU/GPU measured ratios are unavailable. See the [terminal evidence](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md).
+The one-job authorization is consumed; no second submission is authorized.
 
 Current execution (2026-10-11): the new-science B1024 lifecycle job15769234 is
 terminal FAILED1:0 after1140 parent-allocation seconds. Compilation and the

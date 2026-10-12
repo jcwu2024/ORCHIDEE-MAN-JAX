@@ -2,20 +2,26 @@
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
 [CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
-及[CPU48部署与未提交结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)、
+及[CPU48本次终态结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md)、
+[续派授权](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/AUTHORIZATION.md)、
 [CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
 用户已选接受的B1024作为当前单卡工程选择，下一主问题是CPU/GPU速度与单位成本；
 CPU主候选是单进程native FULL64 B64 batch/vmap、48个不同物理核，CPU4仅为可选短入口检查。
 本地harness/launcher/coordinator/collector及历史科学版本封装用于准备同896 point-days的GPU B64对照；
 具体code pin、90min/48CPU/noGPU命令、CNY3.60/5.04上限及停止规则见
 [运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
-本轮已获独立明确的一次CPU48授权，执行SHA固定为`4f6b2fc906c453b9030acff489637a8f83605dca`，
-已部署到新immutable checkout，canonical CPU runtime、冻结输入/reference和完整目标Bash dry-run通过。
-提交前指定n35节点变为`IDLE+PLANNED`，限定等待后仍未恢复普通IDLE；本轮停止在提交前。
-`sbatch`调用0次、无job ID、无付费allocation或模型运行；本次付费作业费用为0，CPU48数值/性能未测。
-部署与输入预检保留；未提交结果不是runtime或科学门失败，也不产生CPU/GPU实测比值。后续运行需新的明确派工。
-完整部署登记/镜像标记摘要见[最终收据](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/deployment-final-receipt.json)，
-实际文件核对与接受边界见[执行线程验收](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/root-acceptance.json)。
+用户于2026-10-12明确“允许，继续”：资源仍为cnall/1node/1task/48CPU/0GPU/5400s，
+单次作业、CNY3.60/5.04上限、非exclusive/no-requeue/无新增memory reservation均不变。
+允许选择实查的同规格健康低负载CPU节点并正常排队，不再锁定n35；`IDLE+PLANNED`和正常PENDING不是拒绝提交或关闭的理由。
+复用已部署、干净的固定SHA `4f6b2fc906c453b9030acff489637a8f83605dca`，canonical CPU runtime、
+冻结输入/reference及完整目标Bash dry-run沿用完成证据；本次仅提交一次并已完成终态采集。
+job**15782454**在`ibc12b07n02`获48CPU/0GPU后，`FAILED / ExitCode 2:0 / Elapsed 00:00:01`。
+启动脚本读取`AllocTRES`为空，日志为`Slurm did not report AllocTRES`；当时原始scontrol输出未保存，
+字段为何不可读仍未知。无run root、模型执行或测量，不能给出CPU48吞吐、利用率、RSS、数值验收或CPU/GPU速度比。
+终态父计费行`billing=48,cpu=48,node=1`只计一次，费用情景为CNY0.000666667/0.000933333，非核实账单。
+本次单次作业授权已耗尽；后续修复部署和重试需新派工及相应运行授权。
+前次n35-only未提交结果仍保留：[20261011结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)，
+其`sbatch`调用0次、无job或付费allocation，费用0；此历史结果不关闭本次明确续派。
 1280/1536探索、显存优化及小容差失败不作为前置，B1024不称已证明全局最优。
 旧job15769234首臂FULL64容差失败，第二臂未派发；已接受保存数组定位为唯一点
 283.0-091.0、Day8末rveget/PFT14，32重复一致；原因未归属，本轮科学执行关闭。详见
@@ -23,7 +29,7 @@ CPU主候选是单进程native FULL64 B64 batch/vmap、48个不同物理核，CP
 历史本地准备见[B1024双臂生命周期诊断](../../../outputs/research/global_throughput/gpu-lifecycle-preparation-20261011/CURRENT_RESULT.md)。
 下面保留历史实验上下文，旧“下一步”及额度不自动恢复为新授权。
 
-更新：2026-10-11。分支：`research/global-throughput`；起点：`main@5910ba9`。
+更新：2026-10-12。分支：`research/global-throughput`；起点：`main@5910ba9`。
 本文件是本分支的研究入口和当前工作单；[EXECUTION_AUDIT.md](EXECUTION_AUDIT.md)
 记录具体实现边界。日尺度神经算子研究继续由原分支管理。
 

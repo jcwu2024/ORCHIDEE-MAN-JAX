@@ -1,0 +1,75 @@
+{
+  "schema": "global_cpu48_b64_execution_result_v1",
+  "assignment_date": "2026-10-12",
+  "job_id": "15782454",
+  "submission_attempt": {
+    "path": "outputs/research/global_throughput/cpu48-b64-execution-20261012/submission-attempt.json",
+    "sha256": "cc3325486269336cd25c2b54c525504774d2ed34569240cffe11e908bae0dbd4",
+    "sbatch_invocation_count": 1,
+    "submission_count_limit": 1
+  },
+  "execution": {
+    "commit": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "ref": "codex/global-cpu48-b64-v1",
+    "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
+    "checkout_clean": true,
+    "node": "ibc12b07n02",
+    "cpus": 48,
+    "gpus": 0
+  },
+  "terminal": {
+    "state": "FAILED",
+    "exit_code": "2:0",
+    "elapsed": "00:00:01",
+    "accounting_tres": "billing=48,cpu=48,node=1",
+    "raw_parent_row": "15782454|FAILED|00:00:01|billing=48,cpu=48,node=1\n",
+    "raw_parent_row_path": "outputs/research/global_throughput/cpu48-b64-execution-20261012/terminal-parent.sacct.raw",
+    "raw_parent_row_sha256": "65329a55f23af07cf2f5b79b5406bf17e7dbb152e664d36abd2db9b83ba58729",
+    "slurm_log_path": "outputs/research/global_throughput/cpu48-b64-execution-20261012/slurm-15782454.log",
+    "slurm_log_sha256": "e5985b800cb682dbb2182d837064580637fc71c073ca9113f2182df3ed2ed677",
+    "slurm_log_text": "Slurm did not report AllocTRES\n",
+    "classification": "launcher startup failure after scheduler start; launcher parsed AllocTRES as empty. The raw scontrol output was not saved, so the underlying cause is unknown. This is not a model/science result.",
+    "raw_scontrol_output_saved": false
+  },
+  "outputs": {
+    "run_root_exists": false,
+    "stage_outputs_exist": false,
+    "model_executed": false,
+    "collector_executed": false,
+    "performance_measurements": null,
+    "cpu_b64_throughput": null,
+    "scientific_acceptance": false
+  },
+  "whole_parent_cost_scenarios": {
+    "billing_scope": "count full parent elapsed time once at 48 allocated CPUs",
+    "elapsed_seconds": 1,
+    "cpu_count": 48,
+    "primary_rate_cny_per_cpu_hour": 0.05,
+    "primary_cost_cny": 0.000666667,
+    "conservative_rate_cny_per_cpu_hour": 0.07,
+    "conservative_cost_cny": 0.000933333,
+    "rates_verified_bill": false
+  },
+  "comparison_boundary": {
+    "same_workload_gpu_b64": {
+      "job_id": "15579869",
+      "execution_sha": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "unique_points": 64,
+      "point_days": 896,
+      "comparison_status": "same-workload reference; no throughput ratio because this CPU attempt produced no measurements"
+    },
+    "different_total_work_gpu_b1024_x2": {
+      "job_id": "15671732",
+      "unique_points": 64,
+      "repeats": 32,
+      "lane_days": 28672,
+      "comparison_status": "different-total-work normalized reference; not a same-workload CPU/GPU speed ratio"
+    }
+  },
+  "remote_runtime_registry": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+    "entry_added": "latest_global_cpu48_b64_execution",
+    "entry_preserved": "latest_global_cpu48_b64_deployment",
+    "previous_registry_sha256": "de846c1d36334534029c868edc50fe235df8b574fc8547c2e848fa72daa284a0"
+  }
+}

@@ -1,8 +1,14 @@
 # JAX CPU48 / GPU B64 同量对照合同
 
-更新：2026-10-11。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4 仅是可选短入口检查，不是研究终点或强制前置。本轮已获得[独立单次授权](../cpu48-b64-execution-20261011/AUTHORIZATION.md)，固定版本已部署并通过canonical CPU runtime、输入/reference及完整目标Bash dry-run。指定n35随后为`IDLE+PLANNED`，有界等待后仍未恢复，本轮停止在提交前：`sbatch`调用0次、无job ID/付费allocation/模型运行，付费作业费用0，CPU48数值与性能未测。详见[部署与未提交结果](../cpu48-b64-execution-20261011/CURRENT_RESULT.md)；后续执行需新的明确派工，旧预算不复用。
+更新：2026-10-12。当前单卡工程选择继续为已接受的 **B1024**。CPU 主候选为 **单进程 native FULL64 B64 batch/vmap、48 个不同物理核**。CPU4仅是可选短入口检查。用户已明确[本次续派授权](../cpu48-b64-execution-20261012/AUTHORIZATION.md)：保持原资源、费用上限、科学/测量合同和单次作业，允许选择同规格健康低负载CPU节点并正常排队，解除n35-only限制；`IDLE+PLANNED`和正常PENDING不拒绝提交或关闭。固定执行版本、canonical runtime及完成预检复用。前次[未提交结果](../cpu48-b64-execution-20261011/CURRENT_RESULT.md)0次sbatch/无job/费用0保留，不关闭本次授权。
 
 实现、封装和检查见 [CPU48 准备结果](../cpu48-b64-preparation-20261011/CURRENT_RESULT.md)、[版本 pin](../cpu48-b64-preparation-20261011/execution-code-pin.json) 和 [具体运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
+本次唯一job**15782454**在`ibc12b07n02`获得48CPU/0GPU后启动失败，
+`FAILED / ExitCode 2:0 / Elapsed 00:00:01`。launcher读取`AllocTRES`为空并退出；
+原始scontrol输出未保存，字段为何不可读未知。无run root、模型执行、stage或性能/数值测量。
+完整父计费`billing=48,cpu=48,node=1`只计一次，费用情景CNY0.000666667/0.000933333，非核实账单。
+[本次终态证据](../cpu48-b64-execution-20261012/CURRENT_RESULT.md)已保存；单次授权耗尽、不重提。
+下列协议保留为本次不可变合同，后续执行须新派工和对应运行授权。
 
 ## 比较对象和不可变科学合同
 
@@ -35,7 +41,7 @@ CPU48在JAX导入前建立48个不同物理核的精确affinity：`XLA_FLAGS=--x
 
 scalar MemAvailable guard为24GiB，batch48为64GiB；保存compile前后、first/warm后RSS/HWM和MemAvailable。guard不是内存reservation或OOM保证。历史单进程峰值约19.925GiB、compile-end约4.776GiB；48份独立进程朴素常驻外推约229GiB，超过节点192GB / 约187GiB可见量，因此主候选采用单进程vmap。Slurm RealMemory=1失真，不编造 `--mem` 或申请whole-node exclusive。
 
-只读快照找到健康 `IDLE` 的 `ibc12b08n35`：56物理核、CPUAlloc=0、load=0.01；旧n04已满、n01为DRAIN，不采用。快照不预留节点；提交前须重新检查健康state、occupancy和负载，启动再次保存实际环境。见 [只读准备收据](../cpu48-b64-preparation-20261011/target-readonly-preparation.json)。
+准备期只读快照找到健康 `IDLE` 的 `ibc12b08n35`：56物理核、CPUAlloc=0、load=0.01；旧n04已满、n01为DRAIN，不采用。见 [只读准备收据](../cpu48-b64-preparation-20261011/target-readonly-preparation.json)。本次续派最终实查并选择`ibc12b07n02`，提交前56物理核、CPUAlloc=0、load=0.03；该快照不预留节点，启动阶段没有生成进程运行观测。
 
 ## 成本和审批边界
 
@@ -43,4 +49,4 @@ scalar MemAvailable guard为24GiB，batch48为64GiB；保存compile前后、firs
 
 core/wrapper热单位费用与整作业分列。完整作业估算优先使用终态sacct的Elapsed/AllocTRES；父作业只计一次，失败费用保留。没有终态accounting时，协调器start/end只能生成所覆盖区间的48核费用估算，整作业费用保持pending，不称完整账单或Slurm全部wall。
 
-具体code/cwd、canonical Python、冻结输入/reference、新输出路径、命令、停止规则和费用上限见 [运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。本轮独立授权仅覆盖指定n35上的一个固定版本CPU48作业及其终态采集；失败或超时即关闭，无第二作业、换节点/版本、资源扩展或自动任务。源码发现使用Verify意图和限定source fallback，graph transport不可用，不声称完整图覆盖。
+具体code/cwd、canonical Python、冻结输入/reference、新输出路径、命令、停止规则和费用上限见 [运行提案](../cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)，本次节点限制按续派授权调整。唯一提交已失败关闭，无第二作业、换执行版本、资源扩展或自动任务。源码核对使用Verify意图和限定source fallback：当前可用图索引属于根main且排除本研究worktree，执行launcher直接按固定SHA核读，不声称完整图覆盖。

@@ -67,3 +67,7 @@ outputs/research/global_throughput/gpu-lifecycle-execution-20261011/state-layout
 outputs/research/global_throughput/gpu-lifecycle-execution-20261011/explain_saved_failure.py -text
 outputs/research/global_throughput/gpu-lifecycle-execution-20261011/extract_state_layout.py -text
 outputs/research/global_throughput/gpu-lifecycle-execution-20261011/saved-array-explanation/** -text whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve CPU48 startup and terminal parent accounting bytes on Windows.
+outputs/research/global_throughput/cpu48-b64-execution-20261012/slurm-15782454.log -text
+outputs/research/global_throughput/cpu48-b64-execution-20261012/terminal-parent.sacct.raw -text

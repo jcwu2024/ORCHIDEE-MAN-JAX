@@ -1,7 +1,8 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-11。先读本页、[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
-及[CPU48部署与未提交结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md)、
+更新：2026-10-12。先读本页、[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)
+及[CPU48本次终态结果](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md)、
+[续派授权](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/AUTHORIZATION.md)、
 [CPU对照计划](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CPU_PLAN.md)。
 用户已选择接受的B1024作为当前单卡工程选择，主问题转为CPU/GPU速度与单位成本；
 不把1280/1536探索、显存优化或跨版本小容差失败作为前置。
@@ -130,14 +131,22 @@ Linux元数据tuple/list白名单兼容、实际完整合成stage的collector ro
 具体命令、64GiB/24GiB guards、原生线程策略、健康节点快照和审批边界见
 [准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/CURRENT_RESULT.md)及
 [运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-20261011/PAID_PROPOSAL.md)。
-用户已通过主管明确授权本轮唯一CPU48作业，固定执行SHA为`4f6b2fc906c453b9030acff489637a8f83605dca`，
-指定`ibc12b08n35`、cnall/1node/1task/48CPU/0GPU/5400s、非exclusive/no-requeue/无新增memory reservation。
-新immutable checkout已部署；canonical CPU JAX0.4.38、实际import、输入/reference SHA及目标Bash完整dry-run通过。
-提交前n35变为`IDLE+PLANNED`，有界等待后仍未恢复普通IDLE，已停止于提交前；
-`sbatch`调用0次、无job ID、无付费allocation/模型运行/父accounting/保存数组采集，本次付费作业费用0。
-这不是runtime或科学门失败，CPU48吞吐、并行效率、RSS和数值结果均未测，不能形成CPU/GPU新实测比。
-部署、预检和未提交收据在执行聊天自主收尾并交付；主管不继续轮询，后续运行需新的明确派工。
-单次失败或超时即关闭，无重试、第二作业、换节点、换版本、资源扩展或旧额度复用；数值/性能须以终态文件验收。
+用户于2026-10-12明确“允许，继续”，授权同规格健康节点选择和正常排队；解除n35固定限制。
+本次仍为cnall/1node/1task/48CPU/0GPU/5400s、非exclusive/no-requeue/无新增memory reservation，
+仅一次sbatch、原CNY3.60/5.04上限，固定执行SHA `4f6b2fc906c453b9030acff489637a8f83605dca`。
+已部署checkout与canonical CPU JAX0.4.38、实际import、输入/reference及完整目标Bash dry-run证据复用。
+实查健康/硬件/占用/负载后由提交参数明确选节点，避免launcher落回旧n04；DRAIN/DOWN或资源不符排除，
+`IDLE+PLANNED`及正常PENDING均可接受，不因短暂排队取消、重投或再次请批。
+前次n35-only会话在提交前停止，0次sbatch/无job/费用0；其原始收据与接受边界保留，不约束此次明确续派。
+执行线程已完成唯一提交、终态accounting及启动日志采集，主管不持续轮询。
+实际job**15782454**在`ibc12b07n02`获得48CPU/0GPU后，`FAILED / ExitCode 2:0 / Elapsed 00:00:01`。
+固定launcher读取`AllocTRES`为空，日志为`Slurm did not report AllocTRES`；原始scontrol输出未保存，
+具体字段读取失败原因未知。未建立run root、启动模型或生成stage，collector不适用；
+CPU48吞吐、线程利用率、RSS、数值一致性及CPU/GPU实测比均不可用。
+完整父计费行`billing=48,cpu=48,node=1`只计一次，费用情景CNY0.000666667/0.000933333，非核实账单。
+[终态证据](../../../outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md)保留日志和精确原始行；
+本次授权已耗尽，无第二次提交或自动任务。后续可派launcher兼容修复与轻量启动验证；
+不得从此次启动失败推导物理或CPU48性能结论，新的付费尝试仍须明确批准。
 B1024的299.139825大批量结果仅作归一化参考，不冒称与B64严格同总量端到端比；CPU2048适配非前置。
 Fortran匹配基准另缺，不强制GPU重跑或核数网格。
 

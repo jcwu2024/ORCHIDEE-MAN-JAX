@@ -1,0 +1,37 @@
+{
+  "schema": "global_cpu48_b64_terminal_mirror_receipt_v1",
+  "job_id": "15782454",
+  "remote_registry": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+    "previous_sha256": "de846c1d36334534029c868edc50fe235df8b574fc8547c2e848fa72daa284a0",
+    "updated_sha256": "228ae50a7e2dd2a0986e83404324c3827fba89118318f5439936b614f4e5bfbb",
+    "entry_added": "latest_global_cpu48_b64_execution",
+    "entry_job_state_exit_elapsed": ["15782454", "FAILED", "2:0", "00:00:01"],
+    "old_entry_preserved": "latest_global_cpu48_b64_deployment",
+    "old_entry_readback_equal_to_preupdate_value": true,
+    "new_entry_readback_matches_written_value": true,
+    "registry_update_guarded_by_previous_sha256": true
+  },
+  "mirrored_files": {
+    "CURRENT_RESULT.md": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md",
+      "sha256": "782aaf502f3b74dc040cf22d4640db983966d19c46d043e718faedfe5a442808"
+    },
+    "execution-result.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/execution-result.json",
+      "sha256": "a0398e2e7fd82403750b9aa291b37788ff1d74398d8392d03648d744830cd4f9"
+    },
+    "submission-attempt.json": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/submission-attempt.json",
+      "sha256": "cc3325486269336cd25c2b54c525504774d2ed34569240cffe11e908bae0dbd4"
+    },
+    "slurm-15782454.log": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/slurm-15782454.log",
+      "sha256": "e5985b800cb682dbb2182d837064580637fc71c073ca9113f2182df3ed2ed677"
+    },
+    "terminal-parent.sacct.raw": {
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/terminal-parent.sacct.raw",
+      "sha256": "65329a55f23af07cf2f5b79b5406bf17e7dbb152e664d36abd2db9b83ba58729"
+    }
+  }
+}
