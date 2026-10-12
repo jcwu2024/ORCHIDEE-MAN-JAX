@@ -65,30 +65,29 @@ non-admission is not execution/numerical failure. Approval persists; no further
 polling/automatic monitoring/retry/paid fallback is underway. No repair or
 complete-update speed/science acceptance follows.
 
-The [paid v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
-is `paid_admission_rejected`, not a numerical failure. Supervisor-supplied sacct
-records job15782177 FAILED/2:0, fixed n01,2026-10-12T10:11:21–10:11:29,
-8 allocated seconds/4CPUs/1GPU. No fresh scheduler query was made. Estimated
-CPU charge0.0006222222 + GPU0.0048888889 = CNY0.0055111111;1/450 card-hours.
-Invoice rounding is unverified. Earlier queue predictions and zero cost were
-only historical snapshot facts. The unique scheduler attempt is consumed.
+The [paid v3 recovery preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
+is prepared-only, approval pending. Authorized gln01 help capture on ibc13b02n04
+reports NVSMI525.85.12 and no minor_number in its complete selective-query list;
+the requested --version exits255 as an unsupported flag combination. Official
+NVIDIA UUID/full-XML/Linux-minor documentation supports the minimal CSV→UUID XML
+candidate, retaining exact major/minor/job-cgroup/CUDA/PJRT identity gates.
+Neither help nor docs establish the old n01 version or missing historical stderr.
 
-The first GPU metadata command returned2 before mapping/Supervisor/preflight/
-probe. Its captured stderr was discarded by the historical exception handler;
-retrieved Slurm stderr is0bytes and stdout420bytes contains only the rejection.
-The underlying cause is unknown; no unsupported-field/index/permission/device/
-contention claim follows from exit2. Ten known files were retrieved unchanged.
-Slurm and Python attempts exist; ledger/supervisor/preflight/results/HLO and
-shared lock are absent. Frozen finally releases its own lock before a Supervisor
-exists, consistent with the observed absence. Scheduler allocation ended, but
-there is no successful GPU mapping or GPU cleanup observation. Scope JSON is
-still open/authorized as preserved bytes; it grants no retry after consumption.
+Python30/shell10 focused CPU/mock checks pass; one existing cache_dir warning
+per run. Frozen execution58a2d938 is committed/pushed and deployed to new
+T7-affine-paid-recovery-20261012-v3. Real test01 Bash expands declared argv,
+CPU parser passes in1.860166s, imports/hashes remain exact.
+New scope proposed/false, attempts/ledger/preflight/results absent, no JAX import
+or GPU execution/submission. New quote0.8266667/upward0.83/recommended ceiling1.00
+covers one20min fixed n01/4CPU/1V100 allocation for startup then unchanged12/91.
+Preparation allocation/card-hours/cost0; future paid job requires new approval.
 
-Execution remains f4ae942; accepted queue docs are6886d26f. A small local logging
-repair retains future failed-process command/code/stdout/stderr with CPU mock
-evidence; no runtime or neural repair is selected/verified. Strict science,
-isolation, source/input identity and paid limits remain. No further GPU command,
-allocation, submission or training runs. Free b676 stays paused/unconsumed.
+Job15782177/f4ae remains FAILED2:0/8s/4CPUs/1GPU/estimated CNY0.0055111111;
+attempt consumed, affine not run, exact root cause unknown, no live GPU cleanup
+observation. Old evidence/inputs remain unchanged. Candidate actual XML/n01
+version/device isolation/runtime/science/release are unverified future gates.
+No numerical repair or adoption is selected; no GPU run/training/monitor starts.
+Free b676 stays paused and its independent approval unconsumed.
 
 | Current evidence | Result and limit |
 |---|---|

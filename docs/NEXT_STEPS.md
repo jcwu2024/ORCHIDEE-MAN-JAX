@@ -55,30 +55,28 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-The [paid v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
-owns the current `paid_admission_rejected` outcome: sole job **15782177** is
-FAILED/2:0, allocated10:11:21–10:11:29 on2026-10-12 at fixed gnall n01,
-8s/4Slurm CPUs/1GPU. Those scheduler times came from supervisor-supplied sacct,
-with no fresh scheduler query or invented command receipt. Estimated additive
-charge is CNY0.0055111111; invoice rounding is unknown. Historical PENDING
-predictions and zero-as-of-snapshot accounting are no longer current status.
+The [paid v3 recovery preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
+owns current operation: prepare one continuous new allocation for startup gates
+then the unchanged affine12/91 only if startup succeeds. Preparation is complete:
+strict supported CSV→UUID-boundXML minor candidate, full raw output retention,
+Python30/shell10 focused CPU passes and actual test01 Bash/parser admission.
+Frozen source58a2d938/new independent v3 checkout/new false scope are bound in
+the proposal. This is CPU preparation, not live startup/scientific acceptance.
 
-The nvidia-smi index0/index,uuid,name,minor_number metadata command returned2
-before Supervisor/preflight/probe. Existing stdout records only CalledProcessError;
-stderr is empty, so unsupported field, index, permissions, device or contention
-are not established causes. Read-only retrieval preserved10 known files and
-their hashes. Both attempt receipts exist; ledger/preflight/results/HLO and
-shared lock are absent. Scheduler resources ended; GPU cleanup was not observed.
-Scope bytes still say open/authorized, but the sole attempt is consumed and may
-not be reset. The only code change is local diagnostic preservation, tested
-with CPU mocks; the immutable remote f4ae942 checkout remains unchanged.
+No paid job is submitted or authorized by preparation. The concrete proposal
+keeps inherited fixed gnall n01/1node/1task/4actualSlurmCPUs/1V100/nonexclusive/
+20min/no-requeue/singleattempt,1200s allocation clock/preflight240/probe780/
+release≥180/24GiB and strict original science. Quote0.8266667/upward0.83;
+recommend new CNY1.00 approval. Actual XML/device/cgroup/CUDA/PJRT/affine/release
+must pass within the same future allocation. No card/isolation/tolerance change.
+Stop for proposal review; no sbatch/salloc/GPU preflight/probe/training/monitor.
 
-Stop after this evidence handoff. No new sbatch/allocation/GPU command/preflight/
-probe, card change, admission relaxation or training is authorized. The smallest
-future diagnostic would retain exact metadata-command stderr under a separately
-authorized allocation; it is a recommendation, not a dispatch or renewal.
-Keep recovery inputs, earlier0-run and queue evidence, old df8/v5/v1 and free
-b676 approval unchanged; free dispatch remains paused/unconsumed.
+The accepted [v2 failure result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
+remains FAILED2:0/8s/estimated CNY0.0055111111/no probe; exact historical cause
+unproved because child stderr/n01 version unavailable. Job15782177 attempt is
+consumed, old f4ae/scopes/inputs untouched; no old grant or b676 free dispatch.
+Fresh recovery inputs/raw434 sample3, full derivatives/masks and strict precision
+remain unchanged. The new scope remains proposed/false and unconsumed.
 
 The [accepted preparation](research/daily_coarse_graining/T7_affine_paid_GPU_execution_proposal_20261011.md)
 retains scheduler allocation-clock1200s/preflight240s/probe780s/release≥180s/

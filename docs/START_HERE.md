@@ -27,19 +27,20 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [paid v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
-records sole job **15782177 FAILED/2:0** after an eight-second allocation on
-`ibc13b03n01`. Startup admission's GPU metadata command returned2 before
-Supervisor/preflight/affine execution; this is not a neural numerical failure.
-The child stderr was not retained, so the underlying cause remains unknown.
-Both attempt receipts exist; the ledger/results and shared lock are absent.
-Scheduler allocation ended; no GPU cleanup observation is claimed. Estimated
-CPU+GPU charge is CNY0.0055111111 for8s/4CPUs/1GPU; invoice rounding unverified.
-The scheduler attempt is consumed: no resubmission, GPU diagnostic or training.
-Execution remains immutable f4ae942. Queue predictions/zero snapshot cost are
-historical. A small local logging repair preserves future subprocess diagnostics;
-it does not fix or validate the failed mapping. Free b676 remains paused and
-approved/unconsumed; original scopes/inputs/history stay preserved.
+The [paid v3 recovery preparation/proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md)
+owns the current prepared-only state. Captured gln01 NVSMI525 help lists no
+selective-query minor_number; the strict candidate uses supported CSV fields,
+then UUID-bound XML minor and unchanged kernel/cgroup/CUDA/PJRT gates. Historical
+n01 version/missing stderr still prevent exact old-cause proof. Focused CPU
+Python30/shell10 checks and actual test01 Bash/parser admission pass. Execution
+is frozen at58a2d938, deployed independently with a new false scope/unconsumed
+attempt. No submission/allocation/GPU preflight/probe is authorized or performed.
+The concrete single20min/4CPU/1V100/fixed gnall n01 startup-then-affine proposal
+quotes CNY0.83 and recommends a new CNY1.00 ceiling. Original science is unchanged.
+The [v2 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_failure_results_20261012.md)
+retains job15782177 FAILED2:0/8s/no affine result, consumed attempt and unknown
+underlying stderr. It cannot supply a new grant. Old f4ae/inputs/history remain;
+free b676 stays paused/approved/unconsumed. Stop at proposal; no automatic run.
 
 The main task is faster T1/daily, T7 and T30 training before formal training.
 The10x target is cumulative research. Final acceptance preserves changing
