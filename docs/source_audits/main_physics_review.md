@@ -4,11 +4,16 @@
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
-第七阶段恢复候选日志字段/位置并核对零 GPP 分支；第八阶段完成匹配捕获的
-本地观测脚本和轻量预检；随后用用户提供的新身份恢复认证，取得命名历史
-source/executable/build/run/有效 XML 身份，并按实际源码生成日志副本。
-当前可用计算分配及计费/额度条件待核实，真实配对捕获仍未执行。
-命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和 floor 因果
+第七阶段恢复候选日志字段/位置并核对零 GPP 分支；第八阶段在恢复新身份认证、
+命名历史 producer 和实际源码后，已完成一次真实 Fortran 参考年、一次原本地
+CPU JAX 年及 Day338/339/343 三个完整同输入 NPP 回放，18/18 返回数组比较
+通过原严格限。两条原轨迹进入 NPP 时已有 GPP、biomass、allocation 和维持呼吸
+输入差异；这些回放没有复现 NPP 核心不匹配，不能据此归因具体上游函数或 floor。
+指定9天直接 core→send 的36项比较及三份旧日志的27项完整 tuple 比较通过。
+三个 float32 存储→send 严格 double 诊断超限保留，单次 float32 cast 兼容性另记。
+累计计算分配31分36秒、4.2133 allocated CPU-hours，在用户确认的单节点
+8核/16GiB/累计2小时范围内；货币费用未知。原年度 NPP 科学失败仍保留。
+命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
@@ -41,11 +46,14 @@ source/executable/build/run/有效 XML 身份，并按实际源码生成日志�
   此 checkout。四份生产源码 SHA、36 份冻结输入 size/mtime 和 run.def SHA
   均与第六阶段匹配，见
   [jax-plan.json](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-plan.json)。
-  本阶段有两组人工 kernel 预检，没有新增真实模型轨迹。
+  本阶段最初准备有两组人工 kernel 预检；该准备快照没有真实模型轨迹。
 - 本次恢复执行从已接受的本地准备/认证阻塞进度提交
   `9c6ef25a1d4c9179541398108815190f44033a55` 的干净 main 开始；cwd、分支和
   实际 module 导入路径再次确认。本轮新增认证后的有界只读取证及实际源码
   日志副本；未重跑原16项准备、9项收尾核验或第4–7阶段调查/模型。
+- 本次真实匹配执行从已接受的 `e05369c9e70b4c982f34545e37af7c1782d8142d`
+  续作，仍在固定 main；HEAD 未改变。Fortran/JAX 实际执行身份、完整捕获和
+  同输入比较见第八阶段；旧准备回执保留原历史计数。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -553,7 +561,7 @@ GPP、完整parts/PFTmask、allocation后biomass/f_alloc、tax/floor参数及决
 首个受影响日补48步assimilation/vegetation门槛/累积记录。新的参考必须声明自己的
 producer，不能补称旧历史producer。本轮只写需求，未执行新捕获或申请作业。
 
-## 第八阶段：新身份恢复连接，真实匹配捕获待计算条件核实
+## 第八阶段：真实匹配捕获完成，同输入 NPP 核心回放通过
 
 本阶段已获准为 319/1961/PFT14 cold-start 做实际匹配边界捕获，覆盖
 Day337–343、Day359/364。第七阶段的“只写需求”限制不再阻止本阶段执行；
@@ -608,7 +616,7 @@ OpenSSH ACL 拦住；确认 owner 为当前账户后，按授权仅在原文件�
 已对**取回的实际源码**生成
 [实际来源 patch 审计](../../outputs/reviews/main-physics-20261012/319-matched-capture/actual-source-observers/patch-audit.json)：
 剥离日志恢复实际 npp/lpj 原字节，保留旧 logger 和原算术次序；不会用本地不同
-版本 LPJ 覆盖远端。新副本仅在本轮输出目录，未在远端构建或运行。
+版本 LPJ 覆盖远端。该审计是本地准备快照；后续隔离构建状态见下文。
 
 本地完成的可审查准备见
 [README](../../outputs/reviews/main-physics-20261012/319-matched-capture/README.md)：
@@ -635,34 +643,133 @@ OpenSSH ACL 拦住；确认 owner 为当前账户后，按授权仅在原文件�
   已在有类型的 dummy context 用既有 gfortran 16.1 通过；新增行最长102。
   这不是 ORCHIDEE 完整构建，也不是远端 Intel 编译或真实参考执行。
 
-按“两侧均能形成有意义比较后再积分”的顺序，本阶段真实 Fortran/JAX 全年
-轨迹均为0，没有先跑未配对 JAX。JAX `--execute` 在真实 identified、完整
-Fortran 捕获回执缺失时，先于创建 run 目录拒绝；缺回执守卫已实际检查。
-持真实回执的完整执行分支尚未验证，不能称为全年 runtime 已验收。
-未来真实运行还须用原严格限 `1e-8 + 1e-10*abs(ref)` 核对第六阶段年度及
-指定日四通量；若观测改变轨迹，则停止等价声明，不自动重跑或改门槛。
+初始准备时真实 Fortran/JAX 全年轨迹均为0；缺 identified、完整 Fortran 回执时，
+JAX `--execute` 已实际先于创建 run 目录拒绝。该计数属于历史准备快照。
+本次在原 Fortran 捕获 SHA 和五项准入条件均核实、`jax-run` 尚不存在后，
+使用[实际准入回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/fortran-readiness-postbuild1-resolved.json)
+启动唯一一次原本地 CPU JAX 全年，runner exit0、耗时303.89955秒。
+[执行身份](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-run/command.json)及
+[9天完整观测](../../outputs/reviews/main-physics-20261012/319-matched-capture/jax-run/selected-npp-capture.json)
+保留实际输入、日值和摘要；年度及指定日 GPP/NPP/MAINT_RESP/GROWTH_RESP 均通过
+第六阶段原严格限 `1e-8 + 1e-10*abs(ref)`，四项年度 delta 均为0。
+这是有界四通量观测一致性，不是所有状态或逐位全年轨迹等价。
+运行 stderr 的两次 XLA algebraic simplifier “50 runs” 警告见
+[原日志](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/jax-execution.stderr.txt)；
+成功返回和数值结果均保留，未因警告重跑。
+
+输入准入曾因有效配置差异暂缓；原
+[待核实回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/fortran-readiness-postbuild1.json)
+未覆盖。其后[输入核实](../../outputs/reviews/main-physics-20261012/319-matched-capture/postbuild1-input-identity-resolution.json)
+确认原 JAX first-step/compiled-day 使用年度 CO2 查表，1961实际317.27ppm与
+Fortran相同，见[无轨迹 reader 检查](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/effective-co2-input.json)。
+soilclass `test.nc` 和 `reftemp.nc` 的实际 producer size/SHA 与冻结输入一致；
+NVM14、PFT_TO_MTC14=2、dt1800、VEGET_YEAR0及cold-start/year控制保留。
+Fortran原 run.def、有效 used_run.def 与 JAX物化 run.def 的三个不同 SHA 保持
+独立身份，未修改配置来制造一致性。ALMA_OUTPUT TRUE/FALSE 是实际来源支持的
+history输出格式差异；这里不宣称序列化 history 全面等价。单位来源对应真实大写
+日发送 ID：`NPP_STOMATE/npp_daily`、`GPP/gpp_daily`、`MAINT_RESP/resp_maint`、
+`GROWTH_RESP/resp_growth`；XML中的小写 rate-field 定义不替代这些发送字段。
+
+[完整同输入比较](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/comparison.json)
+在 Day338/339/343 将完整直接观测 Fortran entry tuple 送入未修改的原 float64 CPU
+JIT NPP 核心；每次比较 `biomass`、`bm_alloc`、`resp_maint`、`resp_growth`、`npp`、
+`biomass_before_alloc` 的完整返回数组。18/18通过同一严格限，outside-limit count
+全部为0；Day338 biomass最大差 `5.2635586871892785e-18`，其余17项为0。
+Fortran精度来源见[已核实执行/精度回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/postbuild1-execution-verification-resolved.json)：
+实际producer IOIPSL `defprec.f90:19–20` 定义 `r_8=SELECTED_REAL_KIND(15,307)`、
+`r_std=r_8`；实际成功构建的 `mpiifort -r8 -fp-model precise` 配置支持8字节/64位
+real解释。这是源码和实际构建选项证据，未新增compiler probe、构建或模型运行。
+两条真实轨迹原生 biomass shape 均为 `(1,14,12,1)`；实际 producer
+`constantes_var.f90:232–233` 定义 nelements=1、icarbon=1，JAX carbon索引为0。
+没有丢弃、补零或填充 element。先前误把人工两元素预检当作真实轨迹形状的
+比较尝试在 Day337 的形状检查、首次 kernel 调用前停止，完成回放数为0；
+[原错误日志](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/replay-execution.stderr.txt)
+保留，修正 helper 后才执行上述三次回放；没有追加任何全年积分。
+
+三回放日的两条原轨迹 entry biomass/GPP/f_alloc/resp_maint_part 已超严格限，
+pft_present、frac_growthresp、dt、tax、min_stomate 完全相同。以下为直接观测的
+PFT14值，F/J分别指原 Fortran/JAX 轨迹；reserve创建量为该部件直接观测值。
+
+| 日 | entry GPP F / J | reserve floor创建量 F / J | post NPP F / J |
+|---|---|---|---|
+| 338 | 0 / 1.2241381168386465e-6 | 0.31504199107720837 / 0 | 9.999999994736442e-9 / −0.3155346427512101 |
+| 339 | 3.3274738014818624e-5 / 0 | 0 / 0.31418535863012853 | −0.31417271195702 / 1.801669924361704e-12 |
+| 343 | 2.1057950331453215e-6 / 3.4464809264695845e-5 | 0 / 0 | −0.31145974177337743 / −0.3119189349729448 |
+
+9天窗内 Fortran floor 触发日为338/342/364，JAX为337/339/341/359。实际分支、
+逐部件创建量、Fortran顺序维持呼吸更新及JAX原correction操作数均已保存；
+Fortran创建量sum/dt只标为离线派生。证据支持原轨迹进入 NPP 前已有差异，并未
+复现这三个相同输入 tuple 的 NPP 核心不匹配；不能进一步认定具体上游函数错误、
+floor的独立因果、其他分支覆盖或年度科学通过。
+
+[日界比较](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/fortran-boundary-comparison.json)
+将实际 direct post-NPP→send 四通量在9天逐一核对，36/36通过；三份旧日志与新
+logger的所选完整tuple比较27/27通过。NetCDF为365个noleap日记录、veget1–14；
+日d真实bounds为 `[(d−1)*86400,d*86400]`，中心为 `(d−0.5)*86400` 秒，
+send时钟为d；PFT14 cover=1及原NPP面积约定保留，不扩写为其他面积换算结论。
+四字段各5110有限值、float32存储；36项与一次float32 cast兼容，作为独立离线
+表示诊断。保持原double严格限时仍有三项 storage→send 诊断超限：Day340 NPP
+`1.0932610039482427e-8`，Day343 MAINT_RESP `1.264388871380362e-8`，Day359
+MAINT_RESP `1.0134268757511222e-8`。这些结果保留，不放宽门槛或混作直接double比较。
 
 第六阶段原 NPP 科学失败保留：JAX 年均 `0.386004239713388`，参考
 `0.38518497347831726`，绝对差 `0.0008192662350707258` 超过原限
 `0.0003951849734783173`；本阶段没有新科学通过结论，没有确认翻译 bug 或
 floor 因果，也没有重做已完成的舍入排除或 Day199 Oracle。
 
-**唯一优先下一步是核实可用计算节点/分配及计费或已有额度条件，形成具体执行方案。**
-认证已恢复，不再等待密钥。Slurm 可见 kshcnormal，账户 qhcess 被允许、QoS
-user_qhcess2，当前账户没有运行作业；分区记录 billing TRES。billing TRES 本身
-不能证明本次运行会产生额外费用，当前无运行作业也不能证明缺少执行权限。
-实际计费、已有额度及可用分配尚未核实。本轮未提交 sbatch/srun，也不在
-login01 编译或运行模型。若确认需要新增付费资源，须先列明资源、时间、目录、
-命令和最坏费用并取得明确批准。本轮不自动改用其他平台。
+**账户覆盖决策已解决：用户确认“已有可用额度，正常使用即可”。**
+从已接受 `e05369c9` 续作的三次有界只读查询见
+[计算条件记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/compute-admission-20261012/compute-admission.json)。
+kshcnormal 为 UP，首次快照有723个 idle 节点；候选 a05r1n09 的独立节点记录
+为 IDLE、CPUAlloc=0、负载0.05、32核、RealMemory126500M，快照不构成预留。
+qhcess/user_qhcess2 关联及近期其他已完成8核构建记录可见，构建耗时449–628秒；
+这些不是本次参考 producer 或费用证据。本次近期作业列表还含另一既有 RUNNING
+作业，不能继续把较早的“未见运行作业”快照当作当前账户状态。
+billing TRES、QoS UsageFactor=1及空白资源限额都不能单独证明新增收费、免费
+资格或货币额度，既有/缺失作业也不能单独证明收费或执行权限。
+相同 SSH 入口先后落在 login09、login03、login01：首次命令名盘点含
+mybalance/gbalance，后两节点及 `bash -l` 环境均未获得可用余额查询；没有余额、
+账户单价或结算规则返回。费用调查到此停止，不推测最坏货币费用。随后用户针对
+单节点8核/16GiB/最多2小时确认已有可用额度，见
+[用户覆盖确认](../../outputs/reviews/main-physics-20261012/319-matched-capture/compute-admission-20261012/user-allocation-coverage.json)；
+此确认解决执行覆盖决策，不证明货币费率为0，不要求另行调查余额或重复询问。
+隔离构建/捕获的具体资源、目录和命令保存在
+[执行方案](../../outputs/reviews/main-physics-20261012/319-matched-capture/prepared-compute-capture-20261012/README.md)。
+用户确认后按原捕获范围执行；只有确需新增付费或扩大资源/时限才准备具体变更。
+首次分配124281665在a05r1n09运行，sacct为8核/16GiB、23分43秒、FAILED 127:0；
+wrapper为24分05秒。新副本构建耗时340秒，但编译输入仍读取旧未加观测的
+预处理缓存；启动器因缺libnetcdf.so.13/libnetcdff.so.6/libfabric.so.1停在动态
+加载阶段，没有完整模型积分。历史原NPP、LPJ、二进制及所读取缓存的哈希和
+mtime保持原记录；此为有界身份检查，不声称旧树全部文件均已审计。必要修复
+只在新副本清理/重建缓存及配置既有运行库，不重复制模型，不改变物理源码。
+第二次分配124285780在a05r1n10占用372秒（6分12秒），同1节点8核/16GiB；
+新隔离来源重建357秒并成功链接，NPP/LPJ预处理源码和编译路径均在新根。
+两种观测标记实际存在；`strings | grep -Fq` 在pipefail下返回141，导致假阴性
+exit7并释放分配，模型没有启动。原脚本及失败日志保留。直接二进制检查通过，
+加载原Intel/MPI环境后ldd全部依赖解析。两次实际累计1795秒（29分55秒），
+原7200秒范围剩余5405秒。post-build分配124287267于12:15:04Z在a05r1n10获配，
+亲和性0–7、初始负载0.05；复用该二进制，最多3600秒，模型timeout3000秒，
+不重新构建或复制模型。该资源上限仍在原2小时/16 CPU-hours内。作业已COMPLETED 0:0，
+实际101秒（step96秒）；模型成功标记、NPP/send观测及历史三份日值logger均已生成。
+累计1896秒（31分36秒）及4.2133 allocated CPU-hours；完整数组、实际日边界与身份
+已离线核实，见[已核实参考执行](../../outputs/reviews/main-physics-20261012/319-matched-capture/postbuild1-execution-verification-resolved.json)。
+[原执行快照](../../outputs/reviews/main-physics-20261012/319-matched-capture/postbuild1-execution-verification.json)
+保留准入时 input/JAX-pending 状态及资源账；当前配对状态见上述新比较产物。
+实际构建路径、二进制标记及141退出码见
+[第二次分配取证](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-execution-20261012/audit-retry1-after-guard.txt)；
+Slurm实际用量与完整运行库解析见
+[运行环境回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-execution-20261012/validate-retry1-runtime.txt)。
+未在任何login节点编译/运行模型，不自动改用其他平台。
 现有 Intel 原环境已恢复，ifort 19.1 20200306 的 version 查询 exit0；最初未加载
 环境的 license 错误和 vendor setup 的 unset-variable 失败均保留，不能当作正确
 环境下的当前编译失败。该版本查询仍不替代实际计算节点上的完整编译 admission。
 1961 forcing 实际存在（851,746,768 bytes），只读 size/mtime，未重算整个文件哈希。
-后续新参考仅能在 jcwu 新隔离根进行；当前该根未创建，远端写入/构建/模型均为0。
+新参考只在 jcwu 新隔离根进行；实际成功 Fortran/JAX 年各1次，同输入回放3次。
 原16项和9项记录仍是历史资料；本次新增身份/文件桥/实际源补丁/引用核验见
 [恢复执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.restored-access.json)。
-没有重新调用 callback、旧 Fortran 语法/算术 AST 或 Day199 Oracle；这是未完成
-捕获的进度记录，不代表完整第八阶段科学完成。
+没有重跑旧人工 callback、Fortran 语法/算术 AST、Day199 Oracle 或原16/9/12项；
+本次新增产物验收见[最终执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/verification.final.json)。
+真实捕获及有界比较已完成，原年度科学失败和未决因果保留。
 
 ## 已确认限制与优先检查清单
 
@@ -702,13 +809,15 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    当时 trace producer、定义及发送日边界未核定，逐日差是暂定定位。日末归约/输出
    舍入远不足以解释该差，但没有界定内部轨迹误差。年度因果仍未闭合。
    第七阶段恢复候选logger字段/位置，9天原始累积与LPJ GPP/名义步号一致；
-   严格零GPP、泵取和floor的成对源条件已核对，但实际历史producer/XIOS身份、
-   完整NPP输入及创建量仍缺失，不能确认具体翻译错误。第八阶段已获准实际
-   匹配捕获并完成本地脚本/轻量预检。新身份已认证成功，实际历史源码、二进制、
-   后续成功构建和有效 XML 已识别，三份保存 trace 与命名旧运行字节相同。
-   完整 NPP entry/创建量及真实 send tuple 仍缺失；实际来源的日志副本已准备，
-   可用计算分配及计费/额度条件待核实，真实配对捕获尚未发生。后续先核实这些条件；
-   不以未配对 JAX 全年运行替代缺失的参考。
+   严格零GPP、泵取和floor的成对源条件已核对；第八阶段恢复命名历史源码、
+   二进制、有效XML及三份保存trace文件桥，在用户覆盖范围完成真实Fortran/JAX
+   年各1次和9天完整entry/创建量/post-NPP/send捕获。Day338/339/343完整同输入
+   NPP回放18/18通过；三日原轨迹在entry已有GPP/biomass/allocation/维持呼吸差异。
+   direct core→send36/36、旧日志所选tuple27/27通过；三项float32 storage→send
+   double诊断超限仍保留。原年度NPP失败没有关闭，具体上游来源和年度因果未定。
+   下一优先项是沿已观测的零/微小正GPP差异，核对进入NPP前的GPP生成、日累积
+   与相关状态；先复用保存证据，区分内部数值/状态演化与源级差异。当前没有证据
+   要求修改NPP核心，也不将三个回放样本扩展为全分支正确性证明。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -832,7 +941,7 @@ metadata_changed、Fortran/历史记录excluded、新产物not_tracked；均以�
 复用上述17项通过的轻量核验。本轮有界证据验收通过，不代表年度科学验收
 通过或因果归属已经确认；下一阶段尚未启动。
 
-第八阶段只更新本页；新脚本、隔离 Fortran 副本和回执均在
+第八阶段最初准备检查点只更新本页；新脚本、隔离 Fortran 副本和回执均在
 `outputs/reviews/main-physics-20261012/319-matched-capture/`。
 [命令记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/commands.md)、
 [访问回执](../../outputs/reviews/main-physics-20261012/319-matched-capture/access-receipt.json)与
@@ -844,20 +953,45 @@ metadata_changed、Fortran/历史记录excluded、新产物not_tracked；均以�
 [图记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/graph-receipt.json)
 采用 Verify，沿用同一 generation；JAX metadata_changed、Fortran excluded、
 新产物 not_tracked，以当前精确源码和直接产物检查补足，不作 fresh/full 图声明。
-真实匹配采集及全年等价/科学验收尚未执行。没有生产源码、测试、容差修改或
-新年/点位、GPU、训练、付费工作；执行线程交付时未暂存、提交或推送。
+该历史检查点尚未执行真实匹配采集及全年等价/科学验收，没有生产源码、测试、
+容差修改或新年/点位、GPU、训练、付费工作；当时交付未暂存、提交或推送。
 主控已集中验收本地准备及当前认证阻塞的报告和回执，复用原16项准备核验
 和9项收尾核验，作为进度检查点保存。当时完整第八阶段捕获仍未完成，等待可用
 连接信息；该验收不增加科学通过或因果归属结论。
 
-随后用户提供新身份，本轮恢复执行从 `9c6ef25a` 开始。新认证成功后的实际只读
+随后用户提供新身份，历史恢复检查点从 `9c6ef25a` 开始。新认证成功后的实际只读
 身份恢复、原环境 version admission 和实际源码日志副本见
 [本次命令](../../outputs/reviews/main-physics-20261012/319-matched-capture/commands.new-identity.md)、
 [身份分析](../../outputs/reviews/main-physics-20261012/319-matched-capture/restored-identity-analysis.json)与
 [恢复执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/verification.restored-access.json)。
 新增12项证据/文档核验通过；[本次图记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/graph-receipt.new-identity.json)
 仍为同一 generation 的 Verify，相关产物 not_tracked，以直接来源/产物补足。
-旧记录均保留；可用计算分配及计费/额度条件待核实，未提交作业，未构建/运行真实
-Fortran 或新 JAX 年，没有科学通过/bug 归属。主控已核对本轮报告差异与实际新增
+旧记录均保留；该检查点的可用计算分配及计费/额度条件尚待核实，尚未提交作业、
+构建/运行真实 Fortran 或新 JAX 年，没有科学通过/bug 归属。主控已核对当时报告与新增
 身份恢复证据，复用上述12项核验，接受历史来源恢复及本地准备的进度检查点。
-本次验收仅涉及这些资料；真实匹配捕获仍未完成，不自动进入其他阶段。
+该次验收仅涉及这些资料，当时真实匹配捕获仍未完成；不赋予后续执行身份。
+
+本次再从已接受并推送的 `e05369c9e70b4c982f34545e37af7c1782d8142d`
+续作，先完成有界计算/结算核实及可审阅命令准备，详见上述计算条件记录与执行方案。
+已纠正构建 cwd、绝对 FCM 链接、副本写路径和 NetCDF 后处理边界；复制模型估计
+21,145条目、965,885,992字节。方案是单节点8核/16GiB/2小时上限，编译最多30分钟，
+单核模型最多60分钟；16 CPU-hours 只是按8核预留时间计算的资源上限，不是货币
+费用。查询本身未取得结算信息；用户后续已明确确认已有额度覆盖该资源包，
+可以继续原捕获。不能给出最坏货币费用或免费结论。新增九项检查通过，目标
+Bash 4.2.46 无写入 dry-run exit0，历史 builder 第511行确认输出位置；见
+[本次交付核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/compute-admission-20261012/verification.final.json)。
+该准备检查点未重跑原16/9/12项、旧Fortran语法/AST/callback、Oracle或模型；
+其后用户明确授权继续，创建新参考根并在原资源范围完成隔离来源/运行库修复、
+一次成功 Fortran 年、一次原本地 CPU JAX 年和三次完整同输入回放。前两次分配
+都在模型启动前停止，修复没有新增全年积分。18项完整返回数组、36项直接发送
+边界和27项旧日志所选tuple比较通过；三个存储double诊断超限和年度科学失败保留。
+新[最终执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/verification.final.json)
+仅检查本次实际产物、身份、严格比较、文档链接及修改范围，不重跑旧检查或模型；
+[本次最终图记录](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/graph-receipt.final-execution.json)
+沿用同一 generation 的 Verify，以精确来源和实际捕获补足 metadata_changed /
+excluded / not_tracked，未重新索引或声称完整覆盖。本次有界捕获和比较已完成，
+原 NPP 科学门槛仍未通过，未新增生产 bug 归属。主控已集中核对本轮报告差异、
+实际执行/输入身份、完整同输入比较、原JAX年度输出及直接发送/存储边界记录，
+复用执行线程16项通过的产物核验，接受本轮有界捕获和比较。未重复积分或原有
+验证；三项存储诊断超限、原年度科学失败及未决上游原因均保留。本轮只提交
+本页报告，通信保持全手动，下一阶段尚未启动。
