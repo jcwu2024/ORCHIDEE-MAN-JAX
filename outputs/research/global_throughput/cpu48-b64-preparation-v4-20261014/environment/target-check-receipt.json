@@ -1,0 +1,85 @@
+{
+  "schema": "global_cpu48_v4_target_check_receipt_v1",
+  "snapshot": "original dirty-harness placeholder snapshot; not final immutable-pin evidence",
+  "checked_at": "2026-10-14",
+  "local_root": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment",
+  "remote_stage_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment",
+  "staged_source_hashes_sha256": {
+    "scripts/dev/benchmark_global_server_cpu.py": "1537902899c9349dc7675f3dc5606c148364eb9cc987a207e6fe9d525f656d82",
+    "scripts/hpc/global_cpu48_b64_coordinator.py": "0d3d81189420d4534800b05efc776c1b2bf67f1824705b073592c6ecba7cc7b7",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh": "b83e5b9a2212f3d444c00c4889d9eca33cb9ae9f8167ef35d54040c7ed315251",
+    "scripts/dev/global_server_resources.py": "c17f37f4d0acd888a9525154489e1815d3d24ff60c6fac030c73e359284dc271",
+    "scripts/dev/diagnose_global_cpu_child_environment.py": "a54c80bc26fb409617721701923ab260b91751240b3ff50754f1d2a84aaca5f8",
+    "scripts/dev/global_cpu_child_environment.py": "d5691e5e27c5eb0b63c8e6a81244368eb71b1fc174db6b7354bebf73d094d2eb"
+  },
+  "source_transfer": {
+    "observed": "All six staged source hashes matched their local source hashes after coordinator restaging.",
+    "evidence": "Hash output recorded from local Get-FileHash and remote sha256sum; no target rerun was used for this receipt."
+  },
+  "target_checks": {
+    "node": "ibtest03",
+    "route": "one-CPU cntest srun through cln01; direct SSH host resolution was unavailable",
+    "affinity": [0],
+    "diagnostic": {
+      "status": "passed_nonmodel_process_checks",
+      "exit_code": 0,
+      "stdout_sha256": "3c8008f52dd1a8459604177520f7c2200abb3f4a2b971c7905292af5b04c60c0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "local_path": "target-processes/diagnostic.stdout.json",
+      "remote_path": "target-processes/diagnostic.stdout.json"
+    },
+    "bash_syntax": {"status": "passed", "exit_code": 0},
+    "launcher_dry_run": {
+      "status": "passed",
+      "exit_code": 0,
+      "stdout_sha256": "b4a56257cacabca16422fa603368d8a05c4ea5d37bca60a8b0a50500bb7572dd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "coordinator_dry_run": {
+      "status": "dry_run",
+      "exit_code": 0,
+      "stdout_sha256": "1cb488841d68aa052cc98c888f41565f0323e80049f645c3288702d801665aa5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "route": "batch-only",
+      "budget_seconds": 3600,
+      "minimum_candidate_seconds": 1800
+    }
+  },
+  "placeholder_limits": {
+    "expected_code_commit": "1111111111111111111111111111111111111111",
+    "expected_admission_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "planned_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4",
+    "planned_run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/dry",
+    "not_read_paths_used": [
+      "not-read-admission.json",
+      "not-read-prepared.pkl",
+      "not-read-gpu",
+      "not-read-config.yaml",
+      "not-read-scalar"
+    ],
+    "scope": "CLI and child-environment checks only; model_execution=false; JAX_imported=false; no 48-CPU allocation or admission claim"
+  },
+  "directory_and_cache_observations": {
+    "planned_code_dir_absent_after_checks": true,
+    "planned_run_root_absent_after_checks": true,
+    "removed_generated_bytecode": [
+      "code/scripts/hpc/__pycache__/global_cpu48_b64_coordinator.cpython-311.pyc",
+      "code/scripts/dev/__pycache__/global_cpu_child_environment.cpython-311.pyc",
+      "code/scripts/dev/__pycache__/global_server_resources.cpython-311.pyc"
+    ],
+    "cleanup_scope": "Only these run-generated .pyc files were removed; final remote find contained the six source files and target receipts/logs, with no code-tree bytecode files."
+  },
+  "later_change_notice": {
+    "reported_by": "source_lifecycle",
+    "change": "After this snapshot, benchmark_global_server_cpu.py dry-run billing_scope wording changed to 'full current parent allocation; actual Slurm admission required'.",
+    "original_runner_sha256_above_is_pre_change": true,
+    "restaged_or_rerun_by_receipt_author": false,
+    "implication": "This receipt documents the earlier placeholder snapshot only; the later exact-pin check must use current bytes."
+  },
+  "artifact_paths": {
+    "local_processes": "target-processes/",
+    "local_shell": "target-shell/",
+    "remote_processes": "target-processes/",
+    "remote_shell": "target-shell/"
+  }
+}

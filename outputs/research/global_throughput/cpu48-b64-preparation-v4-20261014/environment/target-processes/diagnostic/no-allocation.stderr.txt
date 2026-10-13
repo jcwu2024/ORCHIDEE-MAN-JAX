@@ -1,0 +1,11 @@
+{"schema": "global_cpu_child_prejax_v1", "status": "resource_admission_failed", "pid": 99685, "thread_budget": 48, "thread_policy": {"OMP_NUM_THREADS": "48", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1", "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"}, "actual_environment": {"OMP_NUM_THREADS": "48", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": [], "affinity": [0], "JAX_imported": false, "model_execution": false, "inherited_transport_policy": null, "error": "physical performance requires an actual declared paid Slurm partition allocation", "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/benchmark_global_server_cpu.py", line 714, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/benchmark_global_server_cpu.py", line 624, in main
+    resources = admit(args.mode, args.cpu_budget)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/global_server_resources.py", line 35, in admit
+    raise RuntimeError("physical performance requires an actual declared paid Slurm partition allocation")
+RuntimeError: physical performance requires an actual declared paid Slurm partition allocation

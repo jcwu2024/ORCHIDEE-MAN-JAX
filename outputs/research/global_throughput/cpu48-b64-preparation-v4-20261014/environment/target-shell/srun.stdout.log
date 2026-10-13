@@ -1,0 +1,195 @@
+allocation_contract: partition=cnall nodes=1 tasks=1 parent_cpus=48 wall=01:00:00 memory_reservation=none primary_max_cny=2.40 conservative_max_cny=3.36 planned_chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4
+coordinator=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/hpc/global_cpu48_b64_coordinator.py --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/dry --project-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX --code-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4 --python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python --entry /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/benchmark_global_server_cpu.py --expected-code-commit 1111111111111111111111111111111111111111 --expected-gpu-reference-sha256 a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6 --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-prepared.pkl --gpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-gpu --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-config.yaml --execution-route batch-only --cpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-scalar --cpu-reference-admission-record /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-admission.json --expected-cpu-reference-admission-sha256 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --partition cnall --slurm-bin /rmprog/slurm/v22.05.7/bin --budget-seconds 3600 --reference-cap-seconds 2700 --minimum-candidate-seconds 1800 --dry-run 
+{
+  "status": "dry_run",
+  "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v4",
+  "execution_route": "batch-only",
+  "expected_execution_commit": "1111111111111111111111111111111111111111",
+  "expected_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+  "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+  "allocation": {
+    "partition": "cnall",
+    "parent_cpu_count": 48,
+    "wall_seconds": 3600,
+    "primary_worst_case_cny": 2.4000000000000004,
+    "conservative_worst_case_cny": 3.3600000000000003
+  },
+  "minimum_candidate_seconds": 1800,
+  "commands": {
+    "batch": {
+      "argv": [
+        "/rmprog/slurm/v22.05.7/bin/srun",
+        "--ntasks=1",
+        "--cpus-per-task=48",
+        "--cpu-bind=cores",
+        "--export=ALL",
+        "/usr/bin/time",
+        "-v",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/global_cpu_child_environment.py",
+        "--thread-budget",
+        "48",
+        "--",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/benchmark_global_server_cpu.py",
+        "--mode",
+        "batch",
+        "--cpu-budget",
+        "48",
+        "--sizes",
+        "64",
+        "--prepared-input",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-prepared.pkl",
+        "--gpu-reference-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-gpu",
+        "--expected-gpu-reference-sha256",
+        "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--config",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-config.yaml",
+        "--warm-repeats",
+        "5",
+        "--validation-mode",
+        "exploratory",
+        "--cpu-reference-role",
+        "cpu-internal",
+        "--memory-guard-gib",
+        "64",
+        "--output-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/dry/batch",
+        "--require-child-environment",
+        "--cpu-reference-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-scalar",
+        "--cpu-reference-admission-record",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-admission.json",
+        "--expected-cpu-reference-admission-sha256",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "environment": {
+        "OMP_NUM_THREADS": "48",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "JAX_PLATFORMS": "cpu",
+        "JAX_ENABLE_X64": "true",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"
+      }
+    }
+  },
+  "runner_cli_dry_runs": {
+    "batch": {
+      "command": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/global_cpu_child_environment.py",
+        "--thread-budget",
+        "48",
+        "--",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code/scripts/dev/benchmark_global_server_cpu.py",
+        "--mode",
+        "batch",
+        "--cpu-budget",
+        "48",
+        "--sizes",
+        "64",
+        "--prepared-input",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-prepared.pkl",
+        "--gpu-reference-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-gpu",
+        "--expected-gpu-reference-sha256",
+        "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "--config",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-config.yaml",
+        "--warm-repeats",
+        "5",
+        "--validation-mode",
+        "exploratory",
+        "--cpu-reference-role",
+        "cpu-internal",
+        "--memory-guard-gib",
+        "64",
+        "--output-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/dry/batch",
+        "--require-child-environment",
+        "--cpu-reference-dir",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-scalar",
+        "--cpu-reference-admission-record",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/not-read-admission.json",
+        "--expected-cpu-reference-admission-sha256",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--dry-run"
+      ],
+      "runner_result": {
+        "status": "dry_run",
+        "mode": "batch",
+        "CPU_budget": 48,
+        "sizes": [
+          64
+        ],
+        "warm_repeats": 5,
+        "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
+        "model_execution": false,
+        "JAX_imported": false,
+        "CPU_process_policy": "one native CPU process/device; lane count is not CPU count",
+        "parent_CPU_count_declared": null,
+        "billing_scope": "full parent allocation including scalar step; actual Slurm admission required",
+        "actual_child_prejax_receipt": {
+          "schema": "global_cpu_child_prejax_v1",
+          "status": "nonmodel_cli_only",
+          "pid": 100814,
+          "thread_budget": 48,
+          "thread_policy": {
+            "OMP_NUM_THREADS": "48",
+            "MKL_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "NUMEXPR_NUM_THREADS": "1",
+            "JAX_PLATFORMS": "cpu",
+            "JAX_ENABLE_X64": "true",
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"
+          },
+          "actual_environment": {
+            "OMP_NUM_THREADS": "48",
+            "MKL_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "NUMEXPR_NUM_THREADS": "1",
+            "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true",
+            "JAX_PLATFORMS": "cpu",
+            "JAX_ENABLE_X64": "true",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          },
+          "unexpected_policy_keys": [],
+          "affinity": [
+            0
+          ],
+          "JAX_imported": false,
+          "model_execution": false,
+          "inherited_transport_policy": {
+            "environment": {
+              "OMP_NUM_THREADS": "48",
+              "MKL_NUM_THREADS": "1",
+              "OPENBLAS_NUM_THREADS": "1",
+              "NUMEXPR_NUM_THREADS": "1",
+              "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true",
+              "JAX_PLATFORMS": "cpu",
+              "JAX_ENABLE_X64": "true",
+              "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "unexpected_policy_keys": []
+          },
+          "error": null,
+          "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"
+        },
+        "validation_mode": "exploratory",
+        "cpu_reference_role": "cpu-internal",
+        "expected_gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "child_entry_receipts": [
+        "{\"schema\": \"global_cpu_child_prejax_v1\", \"status\": \"exec_boundary_ready\", \"pid\": 100814, \"thread_budget\": 48, \"thread_policy\": {\"OMP_NUM_THREADS\": \"48\", \"MKL_NUM_THREADS\": \"1\", \"OPENBLAS_NUM_THREADS\": \"1\", \"NUMEXPR_NUM_THREADS\": \"1\", \"JAX_PLATFORMS\": \"cpu\", \"JAX_ENABLE_X64\": \"true\", \"PYTHONDONTWRITEBYTECODE\": \"1\", \"XLA_FLAGS\": \"--xla_cpu_multi_thread_eigen=true\"}, \"actual_environment\": {\"OMP_NUM_THREADS\": \"48\", \"MKL_NUM_THREADS\": \"1\", \"OPENBLAS_NUM_THREADS\": \"1\", \"NUMEXPR_NUM_THREADS\": \"1\", \"XLA_FLAGS\": \"--xla_cpu_multi_thread_eigen=true\", \"JAX_PLATFORMS\": \"cpu\", \"JAX_ENABLE_X64\": \"true\", \"PYTHONDONTWRITEBYTECODE\": \"1\"}, \"unexpected_policy_keys\": [], \"affinity\": [0], \"JAX_imported\": false, \"model_execution\": false, \"inherited_transport_policy\": {\"environment\": {\"OMP_NUM_THREADS\": \"48\", \"MKL_NUM_THREADS\": \"1\", \"OPENBLAS_NUM_THREADS\": \"1\", \"NUMEXPR_NUM_THREADS\": \"1\", \"XLA_FLAGS\": \"--xla_cpu_multi_thread_eigen=true\", \"JAX_PLATFORMS\": \"cpu\", \"JAX_ENABLE_X64\": \"true\", \"PYTHONDONTWRITEBYTECODE\": \"1\"}, \"unexpected_policy_keys\": []}, \"error\": null, \"scope\": \"pre-JAX child entry; thread budget does not prove allocation or effective parallelism\"}"
+      ]
+    }
+  },
+  "model_execution": false,
+  "JAX_imported": false
+}
+0

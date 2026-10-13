@@ -1,0 +1,38 @@
+{
+  "status": "verified_by_direct_installed_binary_reproduction",
+  "observed_at": "2026-10-14",
+  "scheduler": {
+    "version": "Slurm 22.05.7",
+    "srun_path": "/rmprog/slurm/v22.05.7/bin/srun",
+    "version_command": "/rmprog/slurm/v22.05.7/bin/srun --version",
+    "version_output": "slurm 22.05.7"
+  },
+  "documentation": {
+    "man_or_source_found": false,
+    "checked_paths": [
+      "/rmprog/slurm/v22.05.7/share/man/man1/srun.1*",
+      "/rmprog/slurm/v22.05.7",
+      "/usr/share/man/man1/srun.1*",
+      "/usr/share/doc/slurm*"
+    ],
+    "installed_help_quote": "--export=env_vars|NONE environment variables passed to launcher with optional values or NONE (pass no variables)",
+    "help_scope": "Confirms the option interface but does not specify precedence between ALL and an explicit duplicate variable."
+  },
+  "reproduction": {
+    "kind": "one-task nonmodel environment print on a free test node",
+    "partition": "cntest",
+    "node": "ibtest02",
+    "command": "env ORCHJAX_TEST_EXPORT_PRECEDENCE=inherited /rmprog/slurm/v22.05.7/bin/srun --partition=cntest --nodelist=ibtest02 --ntasks=1 --cpus-per-task=1 --cpu-bind=verbose,cores --time=00:01:00 --immediate=30 --export=ALL,ORCHJAX_TEST_EXPORT_PRECEDENCE=explicit /usr/bin/printenv ORCHJAX_TEST_EXPORT_PRECEDENCE",
+    "output": [
+      "cpu-bind=MASK - ibtest02, task 0 0 [70225]: mask 0x1 set",
+      "inherited"
+    ],
+    "conclusion": "For this installed srun 22.05.7 path, an inherited variable retained through ALL takes precedence over the explicit duplicate key=value entry."
+  },
+  "limits": [
+    "The test used one CPU on free cntest/ibtest02 only; no fake 48-CPU allocation or paid partition was used.",
+    "This establishes the observed behavior of the tested installed srun invocation; no installed manual/source quote describing precedence was found.",
+    "It does not establish any historical OMP_NUM_THREADS value or a production compute-node runtime result.",
+    "No model, Python environment, compilation, or supervisor process was run."
+  ]
+}

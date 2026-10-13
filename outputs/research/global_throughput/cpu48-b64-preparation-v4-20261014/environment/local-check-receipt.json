@@ -1,0 +1,56 @@
+{
+  "schema": "global_cpu48_v4_local_launch_checks_v1",
+  "workspace": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput",
+  "scope": "Local real-process launch, mocked allocation and synthetic arithmetic tests only; no physical-model compile or target CPU48 admission",
+  "tests": {
+    "stdout": "local-tests.stdout.txt",
+    "stderr": "local-tests.stderr.txt",
+    "command": [
+      "conda",
+      "run",
+      "--no-capture-output",
+      "-n",
+      "ORCJAX",
+      "python",
+      "-B",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/unit/test_global_cpu_child_environment.py",
+      "tests/unit/test_global_cpu48_runtime.py",
+      "tests/unit/test_global_cpu48_b64_preparation.py",
+      "tests/unit/test_global_server_benchmark.py",
+      "tests/unit/test_global_server_cpu_launchers.py"
+    ],
+    "warning": "existing cache_dir setting when cache provider disabled",
+    "passed": 108,
+    "exitcode": 0
+  },
+  "lint": {
+    "exitcode": 0,
+    "command": [
+      "conda",
+      "run",
+      "--no-capture-output",
+      "-n",
+      "ORCJAX",
+      "python",
+      "-B",
+      "-m",
+      "ruff",
+      "check",
+      "scripts/dev/global_cpu_child_environment.py",
+      "scripts/dev/global_cpu_candidate_identity.py",
+      "scripts/dev/diagnose_global_cpu_child_environment.py",
+      "scripts/dev/benchmark_global_server_cpu.py",
+      "scripts/hpc/global_cpu48_b64_coordinator.py",
+      "tests/unit/test_global_cpu_child_environment.py",
+      "tests/unit/test_global_cpu48_b64_preparation.py",
+      "tests/unit/test_global_server_benchmark.py"
+    ],
+    "stderr": "local-lint.stderr.txt",
+    "stdout": "local-lint.stdout.txt"
+  }
+}

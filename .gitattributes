@@ -104,3 +104,7 @@ outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/regression-
 # Keep CPU48 v3 execution receipts and terminal metadata byte-exact.
 outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/** -text whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/*.md text eol=lf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Keep v4 immutable admission, pin and free-node diagnostic receipts byte-exact.
+outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/** -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/**/*.md text eol=lf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

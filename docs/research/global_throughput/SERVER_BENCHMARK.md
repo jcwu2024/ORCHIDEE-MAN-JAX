@@ -1,6 +1,18 @@
 # Explore1000 Server Benchmark Contract
 
-Current status (2026-10-13 Asia/Shanghai): the single CPU48 v3 attempt is terminal and closed.
+Current operation (2026-10-14 Asia/Shanghai): unpaid CPU48 v4 repair, saved-scalar
+independent admission and batch-only execution preparation. Read the
+[v4 result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md),
+[scope](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md),
+[protocol](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
+and [concrete proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md).
+The proposed next allocation is one node/task, 48 CPUs, zero GPUs and 3600s;
+worst-case rate scenarios are CNY 2.40/3.36, unverified. It reuses the sealed
+scalar from job15820467 and preserves all candidate hard gates. No new job or
+production deployment is authorized by preparation; the supervisor reviews
+the exact artifacts under the user's existing delegated approval authority.
+
+Historical v3 status (2026-10-13): its single attempt is terminal and closed.
 The user delegated approval to the supervisor, who reviewed the actual artifacts
 and approved deployment, normal preflight, one submission, execution and collection.
 See the [new authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)
@@ -9,8 +21,9 @@ The [preparation result](../../../outputs/research/global_throughput/cpu48-b64-p
 and [new single-job proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
 retain the reviewed preparation contract. Job **15820467** ended FAILED 1:0 after
 2197 parent seconds on `ibc11b09n32`, with 48 CPUs and zero GPUs. The scalar
-FULL64 phase completed; B64 failed its inherited OMP thread-budget guard before
-lowering, compilation or timing. There is no CPU48 throughput or CPU48/GPU ratio.
+FULL64 phase completed; B64 reported an OMP thread-budget guard failure before
+lowering, compilation or timing. Its actual historical child OMP value was not
+logged. There is no CPU48 throughput or CPU48/GPU ratio.
 The v3 grant is consumed, with no retry; the v1/v2 grants remain consumed.
 
 The completed scalar report retains five core samples (median 127.074983958s,

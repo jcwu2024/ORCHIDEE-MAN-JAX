@@ -1,0 +1,72 @@
+{"command": ["C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe", "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v4-20261014\\environment\\local-processes\\conflicting_transport.py", "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe", "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\scripts\\dev\\global_cpu_child_environment.py", "--thread-budget", "1", "--", "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe", "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\scripts\\dev\\benchmark_global_server_cpu.py", "--mode", "scalar", "--cpu-budget", "1", "--sizes", "64", "--prepared-input", "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v4-20261014\\environment\\local-processes\\not-read.pkl", "--gpu-reference-dir", "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v4-20261014\\environment\\local-processes\\not-read-gpu", "--output-dir", "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v4-20261014\\environment\\local-processes\\not-created", "--require-child-environment", "--dry-run"], "start_epoch": 1791910744.5497367}
+{"schema": "global_cpu_child_prejax_v1", "status": "transport_parent_inherited", "pid": 22668, "thread_budget": 1, "thread_policy": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "actual_environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "64", "OPENBLAS_NUM_THREADS": "64", "NUMEXPR_NUM_THREADS": "64", "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false", "JAX_PLATFORMS": "cuda", "JAX_ENABLE_X64": "false", "PYTHONDONTWRITEBYTECODE": null}, "unexpected_policy_keys": ["JAX_DISABLE_JIT", "JAX_NUM_CPU_DEVICES", "OMP_THREAD_LIMIT", "TF_NUM_INTRAOP_THREADS", "XLA_FLAGS"], "affinity": null, "JAX_imported": false, "model_execution": false, "inherited_transport_policy": null, "error": null, "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
+{"schema": "global_cpu_child_prejax_v1", "status": "exec_boundary_ready", "pid": 78128, "thread_budget": 1, "thread_policy": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "actual_environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": [], "affinity": null, "JAX_imported": false, "model_execution": false, "inherited_transport_policy": {"environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "64", "OPENBLAS_NUM_THREADS": "64", "NUMEXPR_NUM_THREADS": "64", "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false", "JAX_PLATFORMS": "cuda", "JAX_ENABLE_X64": "false", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": ["JAX_DISABLE_JIT", "JAX_NUM_CPU_DEVICES", "OMP_THREAD_LIMIT", "TF_NUM_INTRAOP_THREADS", "XLA_FLAGS"]}, "error": null, "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
+{
+  "status": "dry_run",
+  "mode": "scalar",
+  "CPU_budget": 1,
+  "sizes": [
+    64
+  ],
+  "warm_repeats": 5,
+  "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
+  "model_execution": false,
+  "JAX_imported": false,
+  "CPU_process_policy": "scalar",
+  "parent_CPU_count_declared": null,
+  "billing_scope": "full parent allocation including scalar step; actual Slurm admission required",
+  "actual_child_prejax_receipt": {
+    "schema": "global_cpu_child_prejax_v1",
+    "status": "nonmodel_cli_only",
+    "pid": 67976,
+    "thread_budget": 1,
+    "thread_policy": {
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1",
+      "JAX_PLATFORMS": "cpu",
+      "JAX_ENABLE_X64": "true",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "actual_environment": {
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1",
+      "XLA_FLAGS": null,
+      "JAX_PLATFORMS": "cpu",
+      "JAX_ENABLE_X64": "true",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "unexpected_policy_keys": [],
+    "affinity": null,
+    "JAX_imported": false,
+    "model_execution": false,
+    "inherited_transport_policy": {
+      "environment": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "64",
+        "OPENBLAS_NUM_THREADS": "64",
+        "NUMEXPR_NUM_THREADS": "64",
+        "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false",
+        "JAX_PLATFORMS": "cuda",
+        "JAX_ENABLE_X64": "false",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "unexpected_policy_keys": [
+        "JAX_DISABLE_JIT",
+        "JAX_NUM_CPU_DEVICES",
+        "OMP_THREAD_LIMIT",
+        "TF_NUM_INTRAOP_THREADS",
+        "XLA_FLAGS"
+      ]
+    },
+    "error": null,
+    "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"
+  },
+  "validation_mode": "strict",
+  "cpu_reference_role": "accepted",
+  "expected_gpu_reference_sha256": null
+}
+{"returncode": 0, "timed_out": false, "end_epoch": 1791910744.8584747, "wall_seconds": 0.30873799324035645}

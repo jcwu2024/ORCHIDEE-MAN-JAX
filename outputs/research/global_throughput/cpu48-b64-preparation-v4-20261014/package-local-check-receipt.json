@@ -1,0 +1,43 @@
+{
+  "schema": "global_cpu48_v4_package_local_checks_v1",
+  "checked_at": "2026-10-14",
+  "command": [
+    "conda",
+    "run",
+    "--no-capture-output",
+    "-n",
+    "ORCJAX",
+    "python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/unit/test_prepare_global_cpu48_execution.py",
+    "--basetemp=outputs/tmp/cpu48v4p-final2"
+  ],
+  "exitcode": 0,
+  "passed": 14,
+  "seconds": 19.84,
+  "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:36:00) [MSC v.1944 64 bit (AMD64)]",
+  "interpreter": "C:\\Users\\admin\\.conda\\envs\\ORCJAX\\python.exe",
+  "logs": {
+    "package-final-binding-tests.stdout.txt": {
+      "sha256": "10c44dbfb61a7735d1b3cf25f6d03f60d53f577fe38cff8131c42d1e18b6b2a3",
+      "bytes": 569
+    },
+    "package-final-binding-tests.stderr.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "package-lint.stdout.txt": {
+      "sha256": "881513cd027e0334026cfcbad052e34fecb3f2c1fef5ab000c86973bc0196cd7",
+      "bytes": 22
+    }
+  },
+  "scope": "tiny Git/metadata fixtures; no scalar-array audit, JAX import or physical-model/server execution",
+  "fixture_directory": "outputs/tmp/cpu48v4p-final2",
+  "fixture_directory_ignored": true,
+  "warning": "existing cache_dir config with disabled cacheprovider"
+}

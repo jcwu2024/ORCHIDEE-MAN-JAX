@@ -1,0 +1,222 @@
+{
+  "schema": "global_cpu48_environment_diagnostic_v1",
+  "status": "passed_nonmodel_process_checks",
+  "python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+  "python_version": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+  "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/code",
+  "hostname": "ibtest03",
+  "checks": {
+    "scalar": {
+      "dispatch": {
+        "returncode": 0,
+        "timed_out": false,
+        "start_epoch": 1791912123.430677,
+        "end_epoch": 1791912124.0712924,
+        "wall_seconds": 0.6406154632568359,
+        "log": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/target-processes/diagnostic/scalar-policy.log"
+      },
+      "actual_child_receipt": {
+        "schema": "global_cpu_child_prejax_v1",
+        "status": "nonmodel_cli_only",
+        "pid": 99653,
+        "thread_budget": 1,
+        "thread_policy": {
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "actual_environment": {
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "XLA_FLAGS": null,
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "unexpected_policy_keys": [],
+        "affinity": [
+          0
+        ],
+        "JAX_imported": false,
+        "model_execution": false,
+        "inherited_transport_policy": {
+          "environment": {
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "64",
+            "OPENBLAS_NUM_THREADS": "64",
+            "NUMEXPR_NUM_THREADS": "64",
+            "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false",
+            "JAX_PLATFORMS": "cuda",
+            "JAX_ENABLE_X64": "false",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          },
+          "unexpected_policy_keys": [
+            "JAX_DISABLE_JIT",
+            "JAX_NUM_CPU_DEVICES",
+            "OMP_THREAD_LIMIT",
+            "TF_NUM_INTRAOP_THREADS",
+            "XLA_FLAGS"
+          ]
+        },
+        "error": null,
+        "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"
+      }
+    },
+    "batch": {
+      "dispatch": {
+        "returncode": 0,
+        "timed_out": false,
+        "start_epoch": 1791912124.0743203,
+        "end_epoch": 1791912124.4404593,
+        "wall_seconds": 0.36613893508911133,
+        "log": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/target-processes/diagnostic/batch-policy.log"
+      },
+      "actual_child_receipt": {
+        "schema": "global_cpu_child_prejax_v1",
+        "status": "nonmodel_cli_only",
+        "pid": 99667,
+        "thread_budget": 48,
+        "thread_policy": {
+          "OMP_NUM_THREADS": "48",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"
+        },
+        "actual_environment": {
+          "OMP_NUM_THREADS": "48",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true",
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "unexpected_policy_keys": [],
+        "affinity": [
+          0
+        ],
+        "JAX_imported": false,
+        "model_execution": false,
+        "inherited_transport_policy": {
+          "environment": {
+            "OMP_NUM_THREADS": "1",
+            "MKL_NUM_THREADS": "64",
+            "OPENBLAS_NUM_THREADS": "64",
+            "NUMEXPR_NUM_THREADS": "64",
+            "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false",
+            "JAX_PLATFORMS": "cuda",
+            "JAX_ENABLE_X64": "false",
+            "PYTHONDONTWRITEBYTECODE": "1"
+          },
+          "unexpected_policy_keys": [
+            "JAX_DISABLE_JIT",
+            "JAX_NUM_CPU_DEVICES",
+            "OMP_THREAD_LIMIT",
+            "TF_NUM_INTRAOP_THREADS"
+          ]
+        },
+        "error": null,
+        "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"
+      }
+    },
+    "wrong-policy": {
+      "returncode": 1,
+      "actual_child_receipt": {
+        "schema": "global_cpu_child_prejax_v1",
+        "status": "resource_admission_failed",
+        "pid": 99684,
+        "thread_budget": 48,
+        "thread_policy": {
+          "OMP_NUM_THREADS": "48",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"
+        },
+        "actual_environment": {
+          "OMP_NUM_THREADS": "1",
+          "MKL_NUM_THREADS": "64",
+          "OPENBLAS_NUM_THREADS": "64",
+          "NUMEXPR_NUM_THREADS": "64",
+          "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false",
+          "JAX_PLATFORMS": "cuda",
+          "JAX_ENABLE_X64": "false",
+          "PYTHONDONTWRITEBYTECODE": null
+        },
+        "unexpected_policy_keys": [
+          "JAX_DISABLE_JIT",
+          "JAX_NUM_CPU_DEVICES",
+          "OMP_THREAD_LIMIT",
+          "TF_NUM_INTRAOP_THREADS"
+        ],
+        "affinity": [
+          0
+        ],
+        "JAX_imported": false,
+        "model_execution": false,
+        "inherited_transport_policy": null,
+        "error": "pre-JAX child environment mismatch: OMP_NUM_THREADS,MKL_NUM_THREADS,OPENBLAS_NUM_THREADS,NUMEXPR_NUM_THREADS,XLA_FLAGS,JAX_PLATFORMS,JAX_ENABLE_X64,PYTHONDONTWRITEBYTECODE,JAX_DISABLE_JIT,JAX_NUM_CPU_DEVICES,OMP_THREAD_LIMIT,TF_NUM_INTRAOP_THREADS",
+        "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"
+      }
+    },
+    "no-allocation": {
+      "returncode": 1,
+      "actual_child_receipt": {
+        "schema": "global_cpu_child_prejax_v1",
+        "status": "resource_admission_failed",
+        "pid": 99685,
+        "thread_budget": 48,
+        "thread_policy": {
+          "OMP_NUM_THREADS": "48",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"
+        },
+        "actual_environment": {
+          "OMP_NUM_THREADS": "48",
+          "MKL_NUM_THREADS": "1",
+          "OPENBLAS_NUM_THREADS": "1",
+          "NUMEXPR_NUM_THREADS": "1",
+          "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true",
+          "JAX_PLATFORMS": "cpu",
+          "JAX_ENABLE_X64": "true",
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "unexpected_policy_keys": [],
+        "affinity": [
+          0
+        ],
+        "JAX_imported": false,
+        "model_execution": false,
+        "inherited_transport_policy": null,
+        "error": "physical performance requires an actual declared paid Slurm partition allocation",
+        "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"
+      }
+    }
+  },
+  "affinity": [
+    0
+  ],
+  "JAX_imported": false,
+  "model_execution": false,
+  "physical_allocation_claim": false,
+  "scope": "actual run_process/exec children only; no model compilation or CPU48 allocation admission"
+}

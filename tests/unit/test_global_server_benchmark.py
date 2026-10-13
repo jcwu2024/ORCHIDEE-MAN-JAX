@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import pickle
+from pathlib import Path
 from types import SimpleNamespace
 
 import jax
@@ -168,10 +169,12 @@ def test_native_FULL64_batch48_records_process_CPU_and_phase_observations(monkey
     args = SimpleNamespace(mode="batch", sizes=[64], cpu_budget=48, warm_repeats=5,
         validation_mode="exploratory", cpu_reference_role="cpu-internal", baseline_ref="source",
         expected_gpu_reference_sha256="a" * 64, gpu_reference_dir=tmp_path / "GPU",
-        cpu_reference_dir=tmp_path / "scalar", output_dir=tmp_path / "target")
+        cpu_reference_dir=tmp_path / "scalar", output_dir=tmp_path / "target",
+        cpu_reference_admission_record=tmp_path / "admission.json",
+        expected_cpu_reference_admission_sha256="b" * 64)
     resources = {"selected_logical_cpus": list(range(48)), "step_CPU_budget": 48,
         "allocated_CPU_request_count": 48, "parent_allocated_CPU_request_count": 48,
-        "billing_CPU_request_count": 48}
+        "billing_CPU_request_count": 48, "candidate_provenance": {"scope": "synthetic_test"}}
     recorder = scale.base.Recorder(args.output_dir)
     recorder.result["environment"] = toy_environment()
     try:
@@ -185,6 +188,19 @@ def test_native_FULL64_batch48_records_process_CPU_and_phase_observations(monkey
     assert record["evidence_class"] == "exploratory_performance"
     assert record["provenance"]["batch_permutation_and_replacement"] is True
     assert record["provenance"]["CPU_scalar_reference_role"] == "cpu_internal_comparison"
+    arrays = record["provenance"]["validation_arrays"]
+    raw = Path(arrays["path"]).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == arrays["sha256"]
+    assert len(raw) == arrays["bytes"]
+    evidence = pickle.loads(raw)
+    assert evidence["schema"] == "global_cpu48_candidate_validation_arrays_v1"
+    assert evidence["permutation_index"] == list(reversed(range(64)))
+    assert evidence["replacement_index"] == list(range(63)) + [0]
+    for key, indices in (("permutation", evidence["permutation_index"]),
+                         ("replacement", evidence["replacement_index"]),
+                         ("frozen_reset", list(range(64)))):
+        assert scale.base.compare(evidence[key], jax.tree_util.tree_map(
+            lambda leaf: leaf[np.asarray(indices)], value["outputs"]))["passed"]
     observations = record["provenance"]["runtime_observations"]
     assert observations == recorder.result["runtime_observations"]["B64"]
     for phase in ("pre_compile", "post_compile", "first_call_complete", "warm_complete"):

@@ -1,0 +1,200 @@
+F...FF.....FF                                                            [100%]
+================================== FAILURES ===================================
+_________ test_execution_keeps_base_science_and_research_working_tree _________
+
+tmp_path = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_execution_keeps_base_scie0')
+
+    def test_execution_keeps_base_science_and_research_working_tree(tmp_path):
+        root, run, base = repository(tmp_path)
+        current = run("rev-parse", "HEAD")
+        digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
+        output = root / "outputs/version"
+>       result = package.build(root, output, source=current, base=base, ref="codex/test-execution",
+                               harness_paths=["scripts/dev/runner.py"], expected_science=digest)
+
+tests\unit\test_prepare_global_cpu48_execution.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\dev\prepare_global_cpu48_execution.py:104: in build
+    identity = science_identity(repository, base)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\dev\prepare_global_cpu48_execution.py:64: in science_identity
+    content = git(repository, "show", f"{value}:{path}")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+repository = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_execution_keeps_base_scie0/repository')
+env = None, data = None
+arguments = ('show', 'ffd91ff3015c2dd74e53fc85745cd907464e289e:jax_orchidee/science.py')
+result = CompletedProcess(args=['git', 'show', 'ffd91ff3015c2dd74e53fc85745cd907464e289e:jax_orchidee/science.py'], returncode=...tderr=b"fatal: failed to stat 'ffd91ff3015c2dd74e53fc85745cd907464e289e:jax_orchidee/science.py': Filename too long\n")
+
+    def git(repository, *arguments, env=None, data=None):
+        result = subprocess.run(["git", *arguments], cwd=repository, env=env, input=data,
+                                capture_output=True, check=False)
+        if result.returncode:
+>           raise RuntimeError(result.stderr.decode("utf-8", errors="replace").strip())
+E           RuntimeError: fatal: failed to stat 'ffd91ff3015c2dd74e53fc85745cd907464e289e:jax_orchidee/science.py': Filename too long
+
+scripts\dev\prepare_global_cpu48_execution.py:43: RuntimeError
+_______ test_unapproved_scientific_base_is_refused_before_creating_ref ________
+
+tmp_path = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_unapproved_scientific_bas0')
+
+    def test_unapproved_scientific_base_is_refused_before_creating_ref(tmp_path):
+        root, run, base = repository(tmp_path)
+        with pytest.raises(ValueError, match="scientific identity"):
+>           package.build(root, root / "outputs/version", source="HEAD", base=base,
+                          ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"])
+
+tests\unit\test_prepare_global_cpu48_execution.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\dev\prepare_global_cpu48_execution.py:104: in build
+    identity = science_identity(repository, base)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\dev\prepare_global_cpu48_execution.py:64: in science_identity
+    content = git(repository, "show", f"{value}:{path}")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+repository = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_unapproved_scientific_bas0/repository')
+env = None, data = None
+arguments = ('show', 'e0c871a3ceec19aa6b15149d9aa7f4e2ac91e398:jax_orchidee/science.py')
+result = CompletedProcess(args=['git', 'show', 'e0c871a3ceec19aa6b15149d9aa7f4e2ac91e398:jax_orchidee/science.py'], returncode=...tderr=b"fatal: failed to stat 'e0c871a3ceec19aa6b15149d9aa7f4e2ac91e398:jax_orchidee/science.py': Filename too long\n")
+
+    def git(repository, *arguments, env=None, data=None):
+        result = subprocess.run(["git", *arguments], cwd=repository, env=env, input=data,
+                                capture_output=True, check=False)
+        if result.returncode:
+>           raise RuntimeError(result.stderr.decode("utf-8", errors="replace").strip())
+E           RuntimeError: fatal: failed to stat 'e0c871a3ceec19aa6b15149d9aa7f4e2ac91e398:jax_orchidee/science.py': Filename too long
+
+scripts\dev\prepare_global_cpu48_execution.py:43: RuntimeError
+_____________ test_version_ref_is_reusable_but_never_overwritten ______________
+
+tmp_path = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_version_ref_is_reusable_b0')
+
+    def test_version_ref_is_reusable_but_never_overwritten(tmp_path):
+        root, run, base = repository(tmp_path)
+        (root / ".git/info/exclude").write_text("outputs/\n")
+        digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
+        arguments = dict(source="HEAD", base=base, ref="codex/test-execution",
+                         harness_paths=["scripts/dev/runner.py"], expected_science=digest)
+>       first = package.build(root, root / "outputs/version", **arguments)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\test_prepare_global_cpu48_execution.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\dev\prepare_global_cpu48_execution.py:104: in build
+    identity = science_identity(repository, base)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\dev\prepare_global_cpu48_execution.py:64: in science_identity
+    content = git(repository, "show", f"{value}:{path}")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+repository = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_version_ref_is_reusable_b0/repository')
+env = None, data = None
+arguments = ('show', '2893388ccb5e55af579514c73b5058eb7cff6f74:jax_orchidee/science.py')
+result = CompletedProcess(args=['git', 'show', '2893388ccb5e55af579514c73b5058eb7cff6f74:jax_orchidee/science.py'], returncode=...tderr=b"fatal: failed to stat '2893388ccb5e55af579514c73b5058eb7cff6f74:jax_orchidee/science.py': Filename too long\n")
+
+    def git(repository, *arguments, env=None, data=None):
+        result = subprocess.run(["git", *arguments], cwd=repository, env=env, input=data,
+                                capture_output=True, check=False)
+        if result.returncode:
+>           raise RuntimeError(result.stderr.decode("utf-8", errors="replace").strip())
+E           RuntimeError: fatal: failed to stat '2893388ccb5e55af579514c73b5058eb7cff6f74:jax_orchidee/science.py': Filename too long
+
+scripts\dev\prepare_global_cpu48_execution.py:43: RuntimeError
+__________ test_tampered_scalar_audit_is_refused_before_creating_ref __________
+
+tmp_path = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_tampered_scalar_audit_is_0')
+
+    def test_tampered_scalar_audit_is_refused_before_creating_ref(tmp_path):
+        root, run, base = repository(tmp_path)
+        (root / ".git/info/exclude").write_text("outputs/\n")
+        receipt = root / "outputs/version/scalar-audit/audit.json"
+        receipt.parent.mkdir(parents=True)
+        receipt.write_bytes(b"{}\n")
+        digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
+        with pytest.raises(ValueError, match="audit receipt checksum"):
+>           package.build(root, root / "outputs/version", source="HEAD", base=base,
+                          ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"],
+                          expected_science=digest, scalar_audit_receipt=receipt,
+                          expected_scalar_audit_sha256="0" * 64)
+
+tests\unit\test_prepare_global_cpu48_execution.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\dev\prepare_global_cpu48_execution.py:104: in build
+    identity = science_identity(repository, base)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\dev\prepare_global_cpu48_execution.py:64: in science_identity
+    content = git(repository, "show", f"{value}:{path}")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+repository = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_tampered_scalar_audit_is_0/repository')
+env = None, data = None
+arguments = ('show', 'b1f19304eb6af2e358d92ed15123b44ea13ddad0:jax_orchidee/science.py')
+result = CompletedProcess(args=['git', 'show', 'b1f19304eb6af2e358d92ed15123b44ea13ddad0:jax_orchidee/science.py'], returncode=...tderr=b"fatal: failed to stat 'b1f19304eb6af2e358d92ed15123b44ea13ddad0:jax_orchidee/science.py': Filename too long\n")
+
+    def git(repository, *arguments, env=None, data=None):
+        result = subprocess.run(["git", *arguments], cwd=repository, env=env, input=data,
+                                capture_output=True, check=False)
+        if result.returncode:
+>           raise RuntimeError(result.stderr.decode("utf-8", errors="replace").strip())
+E           RuntimeError: fatal: failed to stat 'b1f19304eb6af2e358d92ed15123b44ea13ddad0:jax_orchidee/science.py': Filename too long
+
+scripts\dev\prepare_global_cpu48_execution.py:43: RuntimeError
+_____________ test_scalar_audit_cannot_escape_preparation_output ______________
+
+tmp_path = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_scalar_audit_cannot_escap0')
+
+    def test_scalar_audit_cannot_escape_preparation_output(tmp_path):
+        root, run, base = repository(tmp_path)
+        receipt = tmp_path / "audit.json"
+        receipt.write_bytes(b"{}\n")
+        digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
+        with pytest.raises(ValueError, match="inside the preparation output"):
+>           package.build(root, root / "outputs/version", source="HEAD", base=base,
+                          ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"],
+                          expected_science=digest, scalar_audit_receipt=receipt,
+                          expected_scalar_audit_sha256=hashlib.sha256(receipt.read_bytes()).hexdigest())
+
+tests\unit\test_prepare_global_cpu48_execution.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\dev\prepare_global_cpu48_execution.py:104: in build
+    identity = science_identity(repository, base)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\dev\prepare_global_cpu48_execution.py:64: in science_identity
+    content = git(repository, "show", f"{value}:{path}")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+repository = WindowsPath('E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp/test_scalar_audit_cannot_escap0/repository')
+env = None, data = None
+arguments = ('show', 'e4c7f851543358333cce4fed29b1c36e8f1035a6:jax_orchidee/science.py')
+result = CompletedProcess(args=['git', 'show', 'e4c7f851543358333cce4fed29b1c36e8f1035a6:jax_orchidee/science.py'], returncode=...tderr=b"fatal: failed to stat 'e4c7f851543358333cce4fed29b1c36e8f1035a6:jax_orchidee/science.py': Filename too long\n")
+
+    def git(repository, *arguments, env=None, data=None):
+        result = subprocess.run(["git", *arguments], cwd=repository, env=env, input=data,
+                                capture_output=True, check=False)
+        if result.returncode:
+>           raise RuntimeError(result.stderr.decode("utf-8", errors="replace").strip())
+E           RuntimeError: fatal: failed to stat 'e4c7f851543358333cce4fed29b1c36e8f1035a6:jax_orchidee/science.py': Filename too long
+
+scripts\dev\prepare_global_cpu48_execution.py:43: RuntimeError
+============================== warnings summary ===============================
+C:\Users\admin\.conda\envs\ORCJAX\Lib\site-packages\_pytest\config\__init__.py:1434
+  C:\Users\admin\.conda\envs\ORCJAX\Lib\site-packages\_pytest\config\__init__.py:1434: PytestConfigWarning: Unknown config option: cache_dir
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/unit/test_prepare_global_cpu48_execution.py::test_execution_keeps_base_science_and_research_working_tree
+FAILED tests/unit/test_prepare_global_cpu48_execution.py::test_unapproved_scientific_base_is_refused_before_creating_ref
+FAILED tests/unit/test_prepare_global_cpu48_execution.py::test_version_ref_is_reusable_but_never_overwritten
+FAILED tests/unit/test_prepare_global_cpu48_execution.py::test_tampered_scalar_audit_is_refused_before_creating_ref
+FAILED tests/unit/test_prepare_global_cpu48_execution.py::test_scalar_audit_cannot_escape_preparation_output
+5 failed, 8 passed, 1 warning in 9.30s
+ERROR conda.cli.main_run:execute(125): `conda run python -B -m pytest tests/unit/test_prepare_global_cpu48_execution.py -q -p no:cacheprovider --basetemp=outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-admission-tests-tmp` failed. (See above for error)
+

@@ -113,6 +113,55 @@ def check_gpu_gate_set(record, actual_outputs, reference_outputs):
     return results
 
 
+def check_candidate_saved_arrays(batch, outputs):
+    """Recompute batch isolation/reset gates from the separately sealed arrays."""
+    from scripts.dev import benchmark_global_batch as base
+
+    provenance = batch["record"].get("provenance", {})
+    seal = provenance.get("validation_arrays")
+    if not isinstance(seal, dict) or seal.get("schema") != "global_cpu48_candidate_validation_arrays_v1":
+        raise ValueError("v4 candidate validation-array seal missing or malformed")
+    directory = batch["checkpoint"].parent.resolve()
+    path = Path(seal.get("path", "")).resolve()
+    if not path.is_relative_to(directory) or not path.is_file():
+        raise ValueError("candidate validation-array path escapes the batch stage directory")
+    raw = path.read_bytes()
+    if len(raw) != seal.get("bytes") or sha256(raw) != seal.get("sha256"):
+        raise ValueError("candidate validation-array sidecar checksum/size mismatch")
+    evidence = pickle.loads(raw)
+    identity = batch["identity"]
+    if (evidence.get("schema") != seal["schema"] or evidence.get("candidate_identity") != identity
+            or seal.get("schema") != "global_cpu48_candidate_validation_arrays_v1"):
+        raise ValueError("candidate validation-array sidecar identity/schema mismatch")
+    size = len(identity["lanes"])
+    permutation_index = list(reversed(range(size)))
+    replacement_index = list(range(size - 1)) + [0]
+    if (evidence.get("permutation_index") != permutation_index
+            or evidence.get("replacement_index") != replacement_index):
+        raise ValueError("candidate validation-array permutation/replacement index contract mismatch")
+    gates = {gate.get("name"): gate for gate in batch["record"].get("gates", [])}
+    required = {
+        f"B{size}_server_batch_cross_group_permutation": (evidence["permutation"], permutation_index),
+        f"B{size}_server_batch_replacement_isolation": (evidence["replacement"], replacement_index),
+        f"B{size}_batch_frozen_reset_repeat": (evidence["frozen_reset"], None),
+    }
+    results = []
+    for name, (actual, indices) in required.items():
+        recorded = gates.get(name)
+        if recorded is None:
+            raise ValueError(f"required candidate saved-array gate missing: {name}")
+        expected = outputs if indices is None else base.jax.tree_util.tree_map(
+            lambda leaf: base.np.asarray(leaf)[base.np.asarray(indices)], outputs)
+        sentinels = {item["path"]: item["contract"] for item in recorded.get("allowed_sentinels", [])}
+        measured = base.compare(actual, expected, sentinel_paths=sentinels)
+        if not gate_matches(recorded, measured) or measured.get("passed") is not True:
+            raise ValueError(f"candidate saved arrays disagree with recomputed output: {name}")
+        results.append({"name": name, "passed": True, "compared_leaves": measured["compared_leaves"],
+            "max_abs": measured["max_abs"], "max_bound_ratio": measured["max_bound_ratio"]})
+    return {"sidecar": {"path": str(path), "sha256": sha256(raw), "bytes": len(raw), "schema": seal["schema"]},
+        "checks": results, "all_passed": True}
+
+
 def validate_telemetry(bundle):
     record, identity, report = bundle["record"], bundle["identity"], bundle["report"]
     proof = record["provenance"]
@@ -207,7 +256,7 @@ def elapsed_seconds(value: str) -> int:
     return int(days or 0) * 86400 + hours * 3600 + minutes * 60 + seconds
 
 
-def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Path) -> int:
+def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Path, *, batch_only=False) -> int:
     raw = accounting.get("raw_record")
     if not isinstance(raw, str) or not raw.endswith("\n"):
         raise ValueError("terminal accounting must preserve the exact sacct parsable2 parent row")
@@ -229,9 +278,10 @@ def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Pa
     seconds = elapsed_seconds(accounting["Elapsed"])
     if seconds <= 0 or accounting.get("wall_seconds") != seconds:
         raise ValueError("terminal accounting wall_seconds must equal the parent Elapsed field")
-    expected_dirs = [str(run_root / "scalar"), str(run_root / "batch")]
+    expected_dirs = [str(run_root / "batch")] if batch_only else [str(run_root / "scalar"), str(run_root / "batch")]
     if accounting.get("directories") != expected_dirs:
-        raise ValueError("raw parent accounting must cover this exact scalar and batch RUN_ROOT")
+        scope = "batch-only" if batch_only else "scalar and batch"
+        raise ValueError(f"raw parent accounting must cover this exact {scope} RUN_ROOT")
     if (accounting.get("source") not in {"sacct", "raw9"}
             or accounting.get("scope") != "whole_slurm_parent_job"
             or accounting.get("allocated_CPU_count") != 48 or accounting.get("GPU_count") != 0
@@ -241,14 +291,14 @@ def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Pa
 
 
 def raw_parent_cost(accounting: dict | None, accounting_path: Path | None, run_root: Path,
-                    expected_job_id: str | None) -> dict:
+                    expected_job_id: str | None, *, batch_only=False) -> dict:
     if accounting is None:
         return {"status": "pending_external_terminal_accounting",
             "required_source": "terminal sacct or raw9 accounting covering the entire Slurm parent allocation",
             "whole_job_cost_cny": None, "billing_verified": False}
     if not expected_job_id:
         raise ValueError("coordinator parent job ID is required to bind terminal accounting")
-    wall = validate_raw_accounting(accounting, expected_job_id, run_root)
+    wall = validate_raw_accounting(accounting, expected_job_id, run_root, batch_only=batch_only)
     return {"status": "terminal_parent_accounting_loaded", "source": accounting["source"],
         "path": str(accounting_path), "sha256": sha256(accounting_path.read_bytes()),
         "raw_parent_record": accounting["raw_record"], "raw_parent_record_sha256": accounting["raw_record_sha256"],
@@ -260,22 +310,77 @@ def raw_parent_cost(accounting: dict | None, accounting_path: Path | None, run_r
         "billing_verified": False, "scope": "whole parent Slurm job; scalar step is charged inside the parent 48-CPU allocation"}
 
 
+def reused_source_parent_cost(admission: dict, admission_path: Path, candidate_job_id: str | None) -> dict:
+    source = admission.get("scalar_source", {})
+    parent = source.get("whole_parent_accounting", {})
+    raw = parent.get("raw_record")
+    if not isinstance(raw, str) or not raw.endswith("\n"):
+        raise ValueError("validated scalar admission must preserve the exact old parent accounting row")
+    fields = raw.rstrip("\n").split("|")
+    if len(fields) != 4 or fields != [parent.get("job_id"), parent.get("terminal_status"),
+            parent.get("Elapsed"), parent.get("AllocTRES")]:
+        raise ValueError("old scalar parent accounting summary differs from its preserved raw row")
+    raw_digest = sha256(raw.encode("utf-8"))
+    if parent.get("raw_record_sha256") != raw_digest:
+        raise ValueError("old scalar parent accounting raw-row SHA mismatch")
+    source_job_id = fields[0]
+    if not candidate_job_id or candidate_job_id == source_job_id:
+        raise ValueError("new candidate job ID must be present and distinct from the old scalar source job")
+    wall = elapsed_seconds(fields[2])
+    allocated = 48 * wall / 3600
+    return {"status": "terminal_source_parent_accounting_loaded", "path": str(parent.get("path")),
+        "admission_path": str(admission_path), "admission_sha256": admission.get("sha256"),
+        "sha256": parent.get("sha256"), "job_id": source_job_id,
+        "candidate_job_id": candidate_job_id, "terminal_status": fields[1], "Elapsed": fields[2],
+        "wall_seconds": wall, "AllocTRES": fields[3], "raw_parent_record": raw,
+        "raw_parent_record_sha256": raw_digest, "allocated_CPU_request_core_hours": allocated,
+        "primary_cost_cny_estimate": allocated * 0.05,
+        "conservative_cost_cny_estimate": allocated * 0.07,
+        "billing_verified": False, "counted_once_as_source_parent": True,
+        "new_allocation_reuse_charge": False,
+        "scope": "completed prior 48-CPU source job; not included in new parent allocation estimate"}
+
+
+def validated_reused_source_parent_cost(orchestration: dict) -> dict | None:
+    if orchestration.get("execution_route") != "batch-only":
+        return None
+    commands = orchestration.get("commands", {}).get("batch", {}).get("argv", [])
+    if "--cpu-reference-dir" not in commands:
+        raise ValueError("batch-only orchestration does not name its external scalar directory")
+    scalar_dir = Path(commands[commands.index("--cpu-reference-dir") + 1])
+    admission_record = orchestration.get("external_scalar_reference_admission")
+    candidate = orchestration.get("candidate_provenance")
+    if (not isinstance(admission_record, dict) or not isinstance(candidate, dict)
+            or not admission_record.get("path") or not admission_record.get("sha256")):
+        raise ValueError("batch-only orchestration lacks external scalar admission/candidate provenance")
+    from scripts.dev.global_server_reference import validate_cpu_reference_admission
+
+    admission = validate_cpu_reference_admission(admission_record["path"], admission_record["sha256"],
+        scalar_dir, expected_source=candidate)
+    candidate_job_id = orchestration.get("allocation", {}).get("job_id") or candidate.get("job_id")
+    return reused_source_parent_cost(admission, Path(admission_record["path"]), candidate_job_id)
+
+
 def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | None = None) -> dict:
     run_root = run_root.resolve()
     orchestration = load_json(run_root / "orchestration.json")
+    batch_only = orchestration.get("execution_route") == "batch-only"
     accounting = load_json(parent_accounting_path) if parent_accounting_path is not None else None
     parent_job_id = orchestration.get("allocation", {}).get("job_id")
-    parent_cost = raw_parent_cost(accounting, parent_accounting_path, run_root, parent_job_id)
+    parent_cost = raw_parent_cost(accounting, parent_accounting_path, run_root, parent_job_id,
+        batch_only=batch_only)
     coordinator_cost = {"wall_seconds": orchestration.get("wall_seconds"),
         "primary_cost_cny_estimate": orchestration.get("coordinator_scope_primary_cost_cny_estimate"),
         "conservative_cost_cny_estimate": orchestration.get("coordinator_scope_conservative_cost_cny_estimate"),
         "scope": orchestration.get("coordinator_scope_cost_limitation"),
         "whole_parent_cost": False}
+    reused_source_parent = validated_reused_source_parent_cost(orchestration)
     if orchestration.get("status") != "completed_exploratory_measurement":
         return save_result(output_path, {"schema": "global-cpu48-b64-collection-v1",
             "status": "incomplete_run_failure_preserved", "scientific_acceptance": False,
             "coordinator_status": orchestration.get("status"), "steps": orchestration.get("steps", {}),
             "coordinator_scope_cost": coordinator_cost, "whole_parent_allocation_cost": parent_cost,
+            "reused_scalar_source_parent_cost": reused_source_parent,
             "orchestration_path": str(run_root / "orchestration.json"),
             "claim_scope": "failure accounting only; no throughput claim"})
     from scripts.dev import summarize_global_server_cost as cost
@@ -288,7 +393,14 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
         raise ValueError("coordinator-bound science SHA mismatch")
     if orchestration.get("allocation", {}).get("parent_cpu_count") != 48:
         raise ValueError("48 CPU parent allocation not sealed in orchestration")
-    scalar = sealed_stage(run_root / "scalar", SCALAR_STAGE)
+    batch_argv = orchestration["commands"]["batch"]["argv"]
+    if batch_only:
+        if "--cpu-reference-dir" not in batch_argv:
+            raise ValueError("batch-only orchestration does not name its external scalar directory")
+        scalar_dir = Path(batch_argv[batch_argv.index("--cpu-reference-dir") + 1])
+    else:
+        scalar_dir = run_root / "scalar"
+    scalar = sealed_stage(scalar_dir, SCALAR_STAGE)
     batch = sealed_stage(run_root / "batch", BATCH_STAGE)
     identity = batch["identity"]
     if (identity.get("science_sha256") != SCIENCE_SHA or identity.get("baseline_ref") != BASELINE_REF
@@ -305,8 +417,17 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
     gpu_outputs, gpu_origin = load_reference(reference_dir, identity)
     if gpu_origin.get("sha256") != expected_reference_sha:
         raise ValueError("actual loaded GPU numerical reference SHA mismatch")
-    scalar_outputs, scalar_origin = load_reference(run_root / "scalar", identity,
-        name=SCALAR_STAGE, points=64, cpu_reference_role="cpu-internal")
+    admission_args = {}
+    if batch_only:
+        admission = orchestration.get("external_scalar_reference_admission")
+        candidate_provenance = identity.get("candidate_provenance")
+        if not isinstance(admission, dict) or not candidate_provenance:
+            raise ValueError("batch-only orchestration lacks its external scalar admission/candidate provenance")
+        admission_args = {"cpu_reference_admission_record": admission.get("path"),
+            "expected_cpu_reference_admission_sha256": admission.get("sha256"),
+            "candidate_provenance": candidate_provenance}
+    scalar_outputs, scalar_origin = load_reference(scalar_dir, identity,
+        name=SCALAR_STAGE, points=64, cpu_reference_role="cpu-internal", **admission_args)
     if scalar_origin.get("role") != "cpu_internal_comparison" or scalar_origin.get("native_input_identity_verified") is not True:
         raise ValueError("CPU scalar reference was not loaded as an exact internal numerical comparison")
     outputs = batch["value"].get("outputs")
@@ -314,6 +435,7 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
         raise ValueError("candidate checkpoint must contain both complete seven-day output blocks")
     schema = require_tree_schema(outputs, gpu_outputs)
     gpu_gates = check_gpu_gate_set(batch, outputs, gpu_outputs)
+    candidate_validation_arrays = check_candidate_saved_arrays(batch, outputs) if batch_only else None
     recorded_cross = next((gate for gate in batch["record"]["gates"]
         if gate.get("name") == "B64_batch_cross_mode_server_scalar"), None)
     if recorded_cross is None:
@@ -329,6 +451,10 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
     if len(point_ids) != 64 or len(set(point_ids)) != 64 or cost_stage["core"]["point_days"] != POINT_DAYS:
         raise ValueError("candidate denominator must be 64 unique points x 14 days")
     warm = cost_stage["wrapper"]
+    source_parent = (reused_source_parent_cost(scalar_origin["admission"],
+        Path(scalar_origin["admission"]["path"]),
+        orchestration.get("allocation", {}).get("job_id") or scalar_origin["admission"].get("candidate_identity", {}).get("job_id"))
+        if scalar_origin.get("admission") is not None else None)
     jobs = []
     if accounting is not None:
         jobs = [{"directories": accounting["directories"], "status": accounting["terminal_status"],
@@ -357,9 +483,12 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
             "GPU_tolerance_failures": sum(not row["passed"] for row in gpu_gates)},
         "cpu_internal_reference": {"stage": SCALAR_STAGE, "role": scalar_origin["role"],
             "sha256": scalar["record"]["sha256"], "manifest_sha256": scalar["manifest_sha256"],
-            "report_sha256": scalar["report_sha256"]},
+            "report_sha256": scalar["report_sha256"],
+            "directory": str(scalar_dir), "admission": scalar_origin.get("admission")},
+        "candidate_validation_arrays": candidate_validation_arrays,
         "coordinator_scope_cost": coordinator_cost,
         "whole_parent_allocation_cost": parent_cost,
+        "reused_scalar_source_parent_cost": source_parent,
         "parent_accounting_limitation": "coordinator interval excludes Slurm submission/startup; whole-job cost stays pending until terminal sacct/raw9 evidence is supplied",
         "cost_scenarios": summary, "excluded_claims": [
             "accepted CPU scientific result", "GPU-equivalent scientific acceptance",

@@ -1,13 +1,26 @@
 # 全球物理模型吞吐研究
 
+当前阶段（2026-10-14）：按主管新派工完成 **CPU48 v4 的不付费修复、保存 scalar 独立验收和具体执行准备**。
+先读[v4 准备入口](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
+[本轮授权边界](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md)、
+[新协议](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
+和[新单次提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md)。
+下一候选只跑 B64，显式引用 job15820467 的已封存 scalar；不把旧 scalar 与新 B64 冒充同 job 测量。
+启动预检须覆盖真实 child launch，昂贵步骤前记录并验证实际白名单环境及 48 个独立物理核。
+固定历史科学子树、原生 dtype、760 完整 outputs/masks 和严格容差；scalar 的 3 个有限跨 GPU 超差原样保留。
+新提案为 48CPU/0GPU/3600s，未核实费率下 worst-case CNY2.40/3.36；v3 单次额度已消耗。
+本轮无 sbatch、GPU、完整物理编译或新生产部署。具体产物由主管按用户已有授权复核后决定单次提交，本聊天交付后等待派工。
+
+以下保留 v3 终态和已完成科学证据；当前操作以 v4 准备入口为准。
+
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
 [CPU48 v3新单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)、
 [CPU48 v3准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)、
 [新的单次运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
 及[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
 用户于2026-10-13授权主管审查批准，主管已接受实际产物并批准该精确版本的一次CPU48 v3作业及必要部署、预检、采集。
-本次job **15820467**已终态FAILED1:0/2197s：scalar FULL64阶段完成，B64在启动资源入场时因继承的OMP线程预算不符失败，
-未进入B64 lower/compile或热计时；没有CPU48吞吐或CPU48/GPU比值。单次授权已消耗，不恢复旧v1/v2额度、不重提。实际证据见
+本次job **15820467**已终态FAILED1:0/2197s：scalar FULL64阶段完成，B64在启动资源入场时报告OMP线程预算不符，
+历史日志未记录实际child OMP值；未进入B64 lower/compile或热计时，没有CPU48吞吐或CPU48/GPU比值。单次授权已消耗，不恢复旧v1/v2额度、不重提。实际证据见
 [v3执行入口](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md)。
 scalar原始记录为896 point-days、各5个样本：core中位127.074984s（7.050955 point-days/s），wrapper中位121.382450s（7.381627 point-days/s）。
 64个GPU参考门中61通过、3个仅有限值容差失败，冻结reset重复通过；这些是探索记录，collector只接纳失败记账，未独立接纳scalar数组或吞吐。
