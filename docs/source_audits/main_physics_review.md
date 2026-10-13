@@ -1,6 +1,6 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-12。**本轮没有发现已确认的 main 生产物理实现 bug；
+核查日期：2026-10-13。**本轮没有发现已确认的 main 生产物理实现 bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -13,6 +13,10 @@ CPU JAX 年及 Day338/339/343 三个完整同输入 NPP 回放，18/18 返回数
 三个 float32 存储→send 严格 double 诊断超限保留，单次 float32 cast 兼容性另记。
 累计计算分配31分36秒、4.2133 allocated CPU-hours，在用户确认的单节点
 8核/16GiB/累计2小时范围内；货币费用未知。原年度 NPP 科学失败仍保留。
+第九阶段已核对实际 producer 的 GPP 掩码、控制、单位、日累计和清零路径，
+复用保存值分析 Day337–343 与359/364；选定窗口最早可见的共同边界仍是
+Day337 的NPP入口，GPP与生物量/分配/维持呼吸输入均已不同。缺少完整48步
+上游元组，尚不能确认具体原因；已备好唯一的Day337下一观测合同，未执行。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
@@ -54,6 +58,10 @@ CPU JAX 年及 Day338/339/343 三个完整同输入 NPP 回放，18/18 返回数
 - 本次真实匹配执行从已接受的 `e05369c9e70b4c982f34545e37af7c1782d8142d`
   续作，仍在固定 main；HEAD 未改变。Fortran/JAX 实际执行身份、完整捕获和
   同输入比较见第八阶段；旧准备回执保留原历史计数。
+- 第九阶段从已接受并推送的
+  `85ace286931eef30551cb670f980fd383090820c` 的干净main开始；实际cwd、分支和
+  module导入路径确认。相关生产树与第八阶段数值producer相同；本阶段只读取
+  命名实际Fortran来源和现有轨迹，不生成新模型年、prefix或科学回放。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -771,6 +779,86 @@ Slurm实际用量与完整运行库解析见
 本次新增产物验收见[最终执行核验](../../outputs/reviews/main-physics-20261012/319-matched-capture/matched-comparison-20261012/verification.final.json)。
 真实捕获及有界比较已完成，原年度科学失败和未决因果保留。
 
+## 第九阶段：GPP上游源路径与选定窗口，下一观测限于Day337
+
+本阶段从第八阶段接受提交续作。完整入口为
+[Stage9 README](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/README.md)，
+[实际Fortran源图](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/fortran-producer/fortran-gpp-path.md)、
+[实际JAX路径/声明参数](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/jax-path/jax-gpp-path.json)与
+[保存值分析](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/saved-window/analysis.json)。
+只读取得命名实际producer的4份compiler-inputs及2份run.def成员，共
+1,454,080字节；[身份](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/fortran-producer/source-identity.json)
+和[传输回执](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/fortran-producer/compiler-inputs-transfer.log.receipt.json)
+记录原根、归档/成员身份与无远端写入。未重新询问认证、ACL或额度；已有额度
+确认保留，本阶段无新构建/积分/分配是任务边界。
+
+本次JAX沿原实际argv的48步日编译、block=7、NumPy accumulator off、
+single-pass fold off、outer compiled daily carbon走生产路径；PFT14 local
+beta/C3链创建的payload `gpp`直接进入STOMATE entry，不能以未证明生产入口的
+`pft14_gpp_from_assimilation`便利函数替代它。五份当前JAX源码及相关函数的
+字面摘录/身份保留。选取的48项实际声明参数一致，run.def哈希仍分别记录；
+这不证明48步动态状态或掩码相等。
+
+| 边界 | 实际Fortran producer来源 | 当前JAX来源与核定范围 |
+| --- | --- | --- |
+| 活动C3入口/掩码 | `diffuco_main` 673–679选择`diffuco_trans_co2`；STOMATE启用且`stomate.f90` 6337–6339拒绝`ok_co2=FALSE`，接受执行满足TRUE；`IS_C4__00014=FALSE`。`diffuco.f90` 2352–2384检查LAI、veget/veget_max、swdown、humrel和temp_growth | `diffuco_trans_co2_c3_pft_explicit` 3095–3341实际被local链调用；`diffuco_trans_co2_activity` 2288–2364。`OK_LAIDEV14=FALSE`取LAI>0.01；crop阈值0.001分支不用于本配置。动态门槛值未保存 |
+| 叶层、冠层和控制 | `diffuco.f90` 2566–2774的C3求解/fallback，2825–2828按层积分assimi/Rd；2839–2849乘PFT14盐度/淹水控制 | `diffuco.py` 2640–2941矢量叶层和`jnp.sum`；1611–1635/3298应用控制。两源都把失败/低叶层解落在−Rd，随后总GPP没有额外MAX(0)或+Rdtot；不同求解/归约执行的实际数值效应未核定 |
+| 控制生存期 | `diffuco.f90` 445–627只在`firstcall_diffuco`计算并保存control_salinity/control_inudate | `orchestration.py` 3661–3698的后续日helper丢弃当前salinity/tide参数，复用previous-state保存控制；3701–3753的firstcall helper才重算。不能从“day static cache”名字认定错误的每日重算 |
+| 半小时GPP/单位 | `diffuco.f90` 2902：`assimtot*12e-6*veget_max*dt_sechiba`，μmol CO2/m²PFT/s转为gC/m²mesh/timestep；未活动点保留初始化0 | `diffuco.py` 3059使用同一受assimilate控制的式子；`orchestration.py` 5821–5910传入真实local payload，非日志别名 |
+| PFT面积归一化 | `stomate.f90` 2921–2932用`veget_max/(1−totfrac_nobio)`形成veget_cov_max，3021–3032再形成`gpp_d=gpp/veget_cov_max*86400/dt_sechiba`；有源阈值/裸土掩码 | `daily_inputs.py` 199–220；本次compiled runtime从first entry复用shared vegetation normalization，未保存48步实际权重，不能据此证明或否定复用条件 |
+| 日累计与NPP入口 | `stomate.f90` 3208/9377–9399按步加`gpp_d*dt_sechiba`，do_slow除dt_stomate；4309传给LPJ，实际`stomate_lpj.f90` 1121进入NPP | `daily.py` 1212–1508通用有序fold。实际PEAT_OCCUR=FALSE不选择peat-only static-JIT路径；`orchestration.py` 7559–7639与`integration.py` 1660–1750/3249–3372/3412–3482/3510–3557把同一daily field传入NPP，f_alloc/biomass来自实际alloc输出 |
+| 发送与reset | NPP后才有cover过程和1738日GPP发送；`stomate.f90` 4968清零 | `orchestration.py` 8778–8800清零并写回day-end state。名义日d对应Fortran步48d、JAX tstep48d−1；不混同半小时累计量、日率和存储float32值 |
+
+下表均是已保存的两条原轨迹在NPP入口的直接观测；有符号差和最大绝对差是
+离线归约。它们不是上游同输入回放，也不证明全年首次分歧。native biomass
+仍为`(1,14,12,1)`，f_alloc/maintenance为`(1,14,12)`；完整值、索引、shape和
+原严格限见上述analysis。
+
+| 日 | JAX GPP入口 | Fortran GPP入口 | JAX−Fortran | biomass最大差 | f_alloc最大差 | maint_part最大差 |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 337 | 0 | 7.40095013e−7 | −7.40095013e−7 | 0.00953 | 1.17e−6 | 1.85e−5 |
+| 338 | 1.22413812e−6 | 0 | +1.22413812e−6 | 0.168 | 1.05e−4 | 2.75e−4 |
+| 339 | 0 | 3.32747380e−5 | −3.32747380e−5 | 0.00955 | 5.48e−7 | 1.73e−5 |
+| 340 | 2.85358715e−5 | 8.17117891e−6 | +2.03646926e−5 | 0.167 | 1.04e−4 | 2.71e−4 |
+| 341 | 0 | 3.56188524e−6 | −3.56188524e−6 | 0.167 | 1.04e−4 | 2.71e−4 |
+| 342 | 1.95549742e−7 | 0 | +1.95549742e−7 | 0.334 | 2.08e−4 | 5.41e−4 |
+| 343 | 3.44648093e−5 | 2.10579503e−6 | +3.23590143e−5 | 0.168 | 1.04e−4 | 2.72e−4 |
+| 359 | 0 | 9.60325572e−7 | −9.60325572e−7 | 0.165 | 1.01e−4 | 2.74e−4 |
+| 364 | 1.69140837e−6 | 0 | +1.69140837e−6 | 0.331 | 2.03e−4 | 5.48e−4 |
+
+所选9天PFT-present精确一致，但该mask不是assimilate、layer_active、GPP面积
+归一化或maintenance的part vegetmask。指定窗口最早的共同观测边界为Day337
+日末NPP入口；实际Fortran当天after-accum日志、NPP入口和post-NPP/send GPP
+均为`7.400950133835139e−7`，JAX入口为0。因此已观测的后续发送位置不能解释
+该入口差；最早不等的半小时/叶层/前一日状态仍未观测。Day338差值反向，不能
+仅凭这一模式确定掩码、根fallback或floor的年度因果。
+
+保存schema给出九个完整NPP核心入口元组及365日日值，没有所需48步DIFFUCO
+参数、gate/leaf值、归一化权重和累计前后状态。有效XML中STOMATE GPP按日
+写入；保留header虽operation为1800s，但write为1d且仅365记录，不能当48步流。
+实际DIFFUCO源码每步向numout写pre/post-control assimtot，保留stdout尾部确有
+未标步号的零值；它们不能被赋予Day337时间/PFT身份，亦不足组成完整元组。
+不从日末总量反构缺失48点，不把未观察过的门槛值当直接证据。
+
+已把候选与反证保存在
+[candidate register](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/candidate-register.json)：
+活动门槛/叶层mask、C3求解和冠层归约、归一化/累计/reset，以及已观测的
+biomass/allocation/maintenance差异继续分开核查。前几项是源机制/执行区别，
+不是已确认原因；后几项是真实原轨迹输入差异，也未追溯到最早创建点。原三日
+18/18 NPP同输入回放、36/36 core→send、27/27旧日志tuple复用，未重跑；原
+三项存储double诊断超限和年度NPP失败不变。
+
+唯一下一观测已经明确为
+[Day337合同](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/next-observation/contract.json)和
+[命令方案](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/next-observation/command-plan.md)：
+Fortran步16129–16176、JAX tstep16128–16175，记录48个真实源样本及NPP/reset
+边界；完整生产函数58个必需参数、可选参数、控制/leaf/权重、原生9输入元组
+和相关状态都列入合同。已检查的原执行资料无匹配Day336起始快照；年末restart
+不能重标为该起点。后续采集需复现未改算术的冷启动前缀；方案保留原365日
+调度/原block=7、只打开Day337观测，明确不是现成单日积分。现有binary不能
+输出新增源字段，隔离观测实现、目标shell展开dry-run、构建和执行均为后续工作。
+本阶段只生成/核验合同与参数模板，没有启动模型、prefix或新作业。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -815,8 +903,10 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    NPP回放18/18通过；三日原轨迹在entry已有GPP/biomass/allocation/维持呼吸差异。
    direct core→send36/36、旧日志所选tuple27/27通过；三项float32 storage→send
    double诊断超限仍保留。原年度NPP失败没有关闭，具体上游来源和年度因果未定。
-   下一优先项是沿已观测的零/微小正GPP差异，核对进入NPP前的GPP生成、日累积
-   与相关状态；先复用保存证据，区分内部数值/状态演化与源级差异。当前没有证据
+   第九阶段已核对实际GPP生成/累计/reset源路径与48项声明参数，完成指定9天
+   保存值分析；缺少48步源元组，仍未确认掩码/叶层/累计或相关状态创建原因。
+   下一唯一观测为Day337的48步真实上游参数、leaf/控制/权重和累积状态，见
+   上述合同；需要重现原冷启动前缀，尚未实现或执行新观测。当前没有证据
    要求修改NPP核心，也不将三个回放样本扩展为全分支正确性证明。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
@@ -995,3 +1085,20 @@ excluded / not_tracked，未重新索引或声称完整覆盖。本次有界捕�
 复用执行线程16项通过的产物核验，接受本轮有界捕获和比较。未重复积分或原有
 验证；三项存储诊断超限、原年度科学失败及未决上游原因均保留。本轮只提交
 本页报告，通信保持全手动，下一阶段尚未启动。
+
+第九阶段从`85ace286`续作，只更新本页和
+`outputs/reviews/main-physics-20261013/319-gpp-upstream/`。复用两位Luna/high执行者
+完成命名producer源图/库存核对与离线窗口分析；父级集中核对实际产物、当前
+生产调用路径、源级反证、唯一下一观测合同和报告。收尾记录见
+[commands](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/commands.md)与
+[verification.final.json](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/verification.final.json)。
+[本次图回执](../../outputs/reviews/main-physics-20261013/319-gpp-upstream/graph-receipt.json)
+为同一generation的Verify：JAX metadata_changed、源/记录not_tracked，均以
+精确当前来源和直接保存产物补足，不重索引或声称完整覆盖。没有生产/配置/
+测试/门槛改动，未执行新模型年/prefix、Oracle、NPP回放、构建、计算分配、
+GPU或训练，未重复旧验收。本次只读命名producer取证没有服务器写入；没有
+自动消息，执行线程交付时未暂存、提交或推送。主控已集中核对实际来源身份、
+保存窗口分析、候选与反证、下一观测合同及报告差异，复用上述20项通过的产物
+核验，接受本轮有界检查。该验收不代表差异根因或年度科学失败已解决，也不
+代表新观测器已实现或可直接运行；下一步仍须实现Day337的48步观测并验证其
+不改变原轨迹。本轮仅提交本页报告，保持手动跟进，未启动下一阶段。
