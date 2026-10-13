@@ -17,7 +17,7 @@
 [实际审计回执](scalar-audit/scalar-audit-receipt-v3.json)共146,678字节，SHA256为`cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431`。
 64点输入digest与精确点序独立重算通过，全部760叶shape/native dtype核对，64个GPU门重算为61通过、3有限超差（4处失败），严格科学状态仍false。
 reset只能核对原封存门证明；原重复数组未独立保留，不称独立重算reset。实际执行信息见[执行说明](scalar-audit/audit-execution-notes.md)。
-采集器最终runner接口/早停顺序回归及审计执行信息复核仍在集成，尚未绑定admission。
+采集器runner侧车门名称/数组重算、早停顺序、batch-only旧新parent成本核算及审计执行信息已完成，见[scalar admission验证索引](SCALAR_ADMISSION_VALIDATION.md)及其中原始测试输出；尚未绑定admission。
 新候选只跑 B64，显式引用旧 scalar 目录与独立 admission/SHA，不重生成 scalar，也不称同 job 测量。
 
 拟议单次资源为 cnall/1node/1task/48CPU/0GPU/3600s、非exclusive/no-requeue/无新增mem或节点限制。

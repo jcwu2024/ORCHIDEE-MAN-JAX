@@ -1,0 +1,5 @@
+command: conda run -n ORCJAX python -m pytest -q tests/unit/test_collect_global_cpu48_b64_cli.py tests/unit/test_global_server_reference_metadata.py tests/unit/test_global_server_benchmark.py
+exit_code: 0
+stdout:
+..............................................................           [100%]
+62 passed in 34.09s
