@@ -62,7 +62,182 @@ def _evidence_mismatch(checkpoint, manifest, path):
     return None
 
 
-def load_reference(directory, identity, *, name="B4_group_references", points=None, cpu_reference_role="accepted"):
+def validate_cpu_reference_admission(admission_path, expected_sha256, old_directory, *, expected_source):
+    """Verify a sealed scalar-source admission without importing pickle or JAX.
+
+    The external admission binds the old scalar checkpoint to its manifest and
+    report, then explicitly matches its scientific/input contract to the new
+    candidate. Job IDs and execution commits are retained as separate
+    provenance and are therefore allowed to differ.
+    """
+    admission_path, old_directory = Path(admission_path).resolve(), Path(old_directory).resolve()
+    admission_bytes = admission_path.read_bytes()
+    digest = hashlib.sha256(admission_bytes).hexdigest()
+    if digest != expected_sha256:
+        raise ValueError("CPU scalar admission record checksum mismatch")
+    admission = json.loads(admission_bytes)
+    if (admission.get("schema") != "global-cpu48-scalar-admission-v1"
+            or admission.get("status") != "admitted_for_internal_comparison_only"
+            or admission.get("scientific_acceptance") is not False):
+        raise ValueError("CPU scalar admission record is not an internal-comparison-only admission")
+    candidate = admission.get("candidate_identity")
+    source = admission.get("scalar_source", {})
+    source_identity = source.get("source_identity")
+    audit = admission.get("audit", {})
+    if not isinstance(candidate, dict) or not isinstance(expected_source, dict):
+        raise ValueError("CPU scalar admission candidate identity is missing")
+    candidate_job = expected_source.get("job_id")
+    for key in ("execution_commit", "execution_code_dir", "prepared_input_path", "prepared_input_sha256",
+                "gpu_reference_path", "gpu_reference_sha256", "certified_science_sha256",
+                "actual_science_source_sha256", "physical_science_tree_oid", "baseline_ref"):
+        if candidate.get(key) != expected_source.get(key):
+            raise ValueError(f"CPU scalar admission candidate identity mismatch at {key}")
+    if candidate.get("job_id") is not None:
+        if candidate_job is not None and candidate.get("job_id") != candidate_job:
+            raise ValueError("CPU scalar admission candidate job identity mismatch")
+    if not isinstance(source_identity, dict):
+        raise ValueError("CPU scalar admission lacks the original scalar source identity")
+    if (source.get("job_id") != "15820467"
+            or source.get("execution_commit") != "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8"
+            or source.get("stage_sha256") != "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa"
+            or source.get("prepared_input_sha256") != "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7"):
+        raise ValueError("CPU scalar admission is not bound to the exact sealed old source job/checkpoint/input")
+    for key, source_key in (("baseline_ref", "baseline_ref"),
+            ("science_sha256", "certified_science_sha256"),
+            ("numerical_reference_sha256", "gpu_reference_sha256")):
+        if source_identity.get(key) != candidate.get(source_key):
+            raise ValueError(f"CPU scalar admission source/candidate {source_key} mismatch")
+    for key in ("prepared_input_sha256", "gpu_reference_sha256", "certified_science_sha256",
+                "physical_science_tree_oid", "baseline_ref", "actual_science_source_sha256"):
+        if source.get(key) != candidate.get(key):
+            raise ValueError(f"CPU scalar admission source/candidate {key} mismatch")
+    if not source.get("job_id") or not source.get("execution_commit") or not source.get("execution_code_dir"):
+        raise ValueError("CPU scalar admission must preserve the source job and execution identity")
+    if ((candidate.get("job_id") is not None and not candidate.get("job_id"))
+            or not expected_source.get("execution_commit") or not expected_source.get("execution_code_dir")):
+        raise ValueError("CPU scalar admission must preserve the candidate job and execution identity")
+    if candidate_job is not None and source.get("job_id") == candidate_job:
+        raise ValueError("CPU scalar source and candidate must retain distinct job identities")
+    if audit.get("strict_numerical_passed") is not False:
+        raise ValueError("CPU scalar admission must preserve the failed strict numerical status")
+    if audit.get("frozen_reset_arrays_recomputed") is not False:
+        raise ValueError("CPU scalar admission must disclose that frozen-reset arrays were not recomputed")
+    if (audit.get("GPU_gate_count") != 64 or audit.get("GPU_passed_gate_count") != 61
+            or audit.get("GPU_tolerance_failed_gate_count") != 3
+            or audit.get("GPU_tolerance_failure_count") != 4
+            or len(audit.get("recomputed_GPU_gates", [])) != 64):
+        raise ValueError("CPU scalar admission does not preserve the recomputed 64-point gate summary")
+    parent = source.get("whole_parent_accounting", {})
+    raw_parent = parent.get("raw_record", "")
+    if (parent.get("sha256") != "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113"
+            or parent.get("job_id") != "15820467" or parent.get("wall_seconds") != 2197
+            or parent.get("allocated_CPU_count") != 48 or parent.get("GPU_count") != 0
+            or parent.get("AllocTRES") != "billing=48,cpu=48,node=1"
+            or parent.get("terminal_status") != "FAILED" or parent.get("Elapsed") != "00:36:37"
+            or parent.get("counted_once_as_source_parent") is not True
+            or hashlib.sha256(raw_parent.encode("utf-8")).hexdigest() != parent.get("raw_record_sha256")):
+        raise ValueError("CPU scalar admission lacks verified old whole-parent accounting counted once")
+
+    manifest_path, report_path = old_directory / "stage_manifest.json", old_directory / "report.json"
+    manifest_bytes, report_bytes = manifest_path.read_bytes(), report_path.read_bytes()
+    manifest_sha = hashlib.sha256(manifest_bytes).hexdigest()
+    report_sha = hashlib.sha256(report_bytes).hexdigest()
+    if source.get("manifest_sha256") != manifest_sha or source.get("report_sha256") != report_sha:
+        raise ValueError("CPU scalar admission manifest/report checksum mismatch")
+    manifest = json.loads(manifest_bytes)
+    if manifest.get("identity") != source_identity:
+        raise ValueError("CPU scalar admission source identity differs from the sealed scalar manifest")
+    stage_name = source.get("stage_name")
+    if stage_name != "B64_server_scalar_v1":
+        raise ValueError("CPU scalar admission must name the complete B64 scalar stage")
+    record = manifest.get("stages", {}).get(stage_name, {})
+    if record.get("status") != "complete" or record.get("measurement_status") != "complete":
+        raise ValueError("CPU scalar admission source stage is not complete")
+    stage_path = (old_directory / record.get("path", "")).resolve()
+    if not stage_path.is_relative_to(old_directory) or not stage_path.is_file():
+        raise ValueError("CPU scalar admission stage path escapes its sealed directory")
+    stage_bytes = stage_path.read_bytes()
+    stage_sha = hashlib.sha256(stage_bytes).hexdigest()
+    if (stage_sha != record.get("sha256") or source.get("stage_sha256") != stage_sha
+            or source.get("stage_path") != record.get("path")):
+        raise ValueError("CPU scalar admission stage checksum/path mismatch")
+    return {"path": str(admission_path), "sha256": digest, "source_job_id": source.get("job_id"),
+            "source_execution_commit": source.get("execution_commit"), "source_identity": source_identity,
+            "scalar_source": source, "candidate_identity": candidate,
+            "stage": {"name": stage_name, "path": str(stage_path),
+                "sha256": stage_sha}, "manifest_sha256": manifest_sha, "report_sha256": report_sha,
+            "audit": audit}
+
+
+def bind_cpu_reference_admission(receipt_path, output_path, candidate_identity, *, expected_receipt_sha256):
+    """Bind an independently audited old scalar receipt to a final immutable candidate.
+
+    This stdlib-only step does not rerun arrays or model code. The candidate
+    commit and code directory are supplied after the execution tree is sealed;
+    the resulting admission file remains an external runtime input.
+    """
+    receipt_path, output_path = Path(receipt_path).resolve(), Path(output_path).resolve()
+    receipt_bytes = receipt_path.read_bytes()
+    receipt_sha = hashlib.sha256(receipt_bytes).hexdigest()
+    if receipt_sha != expected_receipt_sha256:
+        raise ValueError("CPU scalar audit receipt checksum mismatch")
+    receipt = json.loads(receipt_bytes)
+    if (receipt.get("schema") != "global-cpu48-scalar-audit-v1"
+            or receipt.get("status") != "saved_arrays_audited"
+            or receipt.get("scientific_acceptance") is not False):
+        raise ValueError("CPU scalar audit receipt is not an internal-comparison-only audit")
+    audit, source = receipt.get("audit", {}), receipt.get("scalar_source", {})
+    if (audit.get("strict_numerical_passed") is not False
+            or audit.get("frozen_reset_arrays_recomputed") is not False
+            or audit.get("GPU_gate_count") != 64 or audit.get("GPU_passed_gate_count") != 61
+            or audit.get("GPU_tolerance_failed_gate_count") != 3
+            or audit.get("GPU_tolerance_failure_count") != 4
+            or len(audit.get("recomputed_GPU_gates", [])) != 64):
+        raise ValueError("CPU scalar audit receipt does not preserve the required gate/reset limitation")
+    candidate = dict(candidate_identity)
+    if candidate.get("job_id") is not None:
+        raise ValueError("final pre-allocation CPU scalar admission must leave candidate job_id null")
+    for key in ("execution_commit", "physical_science_tree_oid"):
+        value = candidate.get(key)
+        if not isinstance(value, str) or len(value) != 40 or any(char not in "0123456789abcdef" for char in value):
+            raise ValueError(f"candidate {key} must be a full lowercase Git object ID")
+    for key in ("execution_code_dir", "prepared_input_path", "prepared_input_sha256", "gpu_reference_path",
+                "gpu_reference_sha256", "certified_science_sha256", "actual_science_source_sha256", "baseline_ref"):
+        if not candidate.get(key):
+            raise ValueError(f"candidate identity is missing {key}")
+    for key in ("prepared_input_sha256", "gpu_reference_sha256", "certified_science_sha256",
+                "actual_science_source_sha256", "physical_science_tree_oid", "baseline_ref"):
+        if source.get(key) != candidate.get(key):
+            raise ValueError(f"CPU scalar source/candidate {key} mismatch")
+    source_identity = source.get("source_identity", {})
+    if (source_identity.get("science_sha256") != candidate.get("certified_science_sha256")
+            or source_identity.get("numerical_reference_sha256") != candidate.get("gpu_reference_sha256")
+            or source_identity.get("baseline_ref") != candidate.get("baseline_ref")):
+        raise ValueError("CPU scalar source identity differs from the bound candidate science/reference")
+    parent = source.get("whole_parent_accounting", {})
+    if (parent.get("sha256") != "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113"
+            or parent.get("job_id") != "15820467" or parent.get("wall_seconds") != 2197
+            or parent.get("allocated_CPU_count") != 48 or parent.get("GPU_count") != 0
+            or parent.get("counted_once_as_source_parent") is not True
+            or hashlib.sha256(parent.get("raw_record", "").encode("utf-8")).hexdigest()
+                != parent.get("raw_record_sha256")):
+        raise ValueError("CPU scalar audit receipt lacks verified old parent accounting")
+    admission = {"schema": "global-cpu48-scalar-admission-v1",
+        "status": "admitted_for_internal_comparison_only", "scientific_acceptance": False,
+        "candidate_identity": candidate, "scalar_source": source, "audit": audit,
+        "audit_receipt": {"path": str(receipt_path), "sha256": receipt_sha,
+            "schema": receipt["schema"], "status": receipt["status"]}}
+    payload = (json.dumps(admission, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("xb") as stream:
+        stream.write(payload)
+    return {"path": str(output_path), "sha256": hashlib.sha256(payload).hexdigest(),
+            "bytes": len(payload), "candidate_identity": candidate, "audit_receipt_sha256": receipt_sha}
+
+
+def load_reference(directory, identity, *, name="B4_group_references", points=None, cpu_reference_role="accepted",
+        cpu_reference_admission_record=None, expected_cpu_reference_admission_sha256=None,
+        candidate_provenance=None):
     if cpu_reference_role not in {"accepted", "cpu-internal"}:
         raise ValueError("unknown CPU reference role")
     internal = cpu_reference_role == "cpu-internal"
@@ -92,6 +267,23 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
         raise ValueError("numerical reference source backend does not match its declared role")
     if name != "B4_group_references" and origin.get("mode") != "scalar":
         raise ValueError("CPU cross-mode reference must originate from server scalar execution")
+    admission = None
+    external_v4_reuse = (cpu_reference_admission_record is not None
+        or expected_cpu_reference_admission_sha256 is not None or candidate_provenance is not None
+        or identity.get("candidate_provenance") is not None)
+    if internal and name == "B64_server_scalar_v1" and external_v4_reuse:
+        if not cpu_reference_admission_record or not expected_cpu_reference_admission_sha256 or not candidate_provenance:
+            raise ValueError("FULL64 CPU scalar reuse requires an external saved-scalar admission record")
+        admission = validate_cpu_reference_admission(cpu_reference_admission_record,
+            expected_cpu_reference_admission_sha256, directory, expected_source=candidate_provenance)
+        if (candidate_provenance.get("baseline_ref") != identity.get("baseline_ref")
+                or candidate_provenance.get("certified_science_sha256") != identity.get("science_sha256")
+                or candidate_provenance.get("gpu_reference_sha256") != identity.get("numerical_reference_sha256")
+                or candidate_provenance.get("execution_commit") != identity.get("runtime", {}).get("git_head")):
+            raise ValueError("FULL64 CPU scalar admission candidate provenance differs from current execution identity")
+        if (not candidate_provenance.get("job_id")
+                or candidate_provenance.get("job_id") == admission.get("source_job_id")):
+            raise ValueError("FULL64 CPU scalar reuse requires distinct recorded source and candidate job IDs")
     record = manifest["stages"].get(name, {})
     if record.get("status") != "complete" or not record.get("sha256"):
         raise ValueError("reference must be a complete SHA-verified stage")
@@ -130,7 +322,9 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
                     "role": "cpu_internal_comparison" if internal else "complete numerical evidence only; no prior executable or timing reuse",
                     "backend_conditions": {"source": origin["runtime"], "current": identity["runtime"]},
                     "point_ids": ids, "native_input_identity_verified": True,
-                    "fixed_gate": identity["gate"]}
+                    "fixed_gate": identity["gate"],
+                    **({"admission": admission, "candidate_provenance": candidate_provenance}
+                       if admission is not None else {})}
 
 
 def _validate_scalar_parent_allocation(origin, proof):

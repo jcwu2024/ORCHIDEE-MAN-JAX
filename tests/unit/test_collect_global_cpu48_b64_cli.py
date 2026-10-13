@@ -9,8 +9,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from scripts.dev import benchmark_global_batch as batch_base
+from scripts.dev import benchmark_global_server_cpu as server_runner
+from scripts.dev import collect_global_cpu48_b64 as collector
 from scripts.dev import summarize_global_server_cost as cost
 from scripts.dev.global_batch_stage_store import StageStore
 
@@ -248,6 +251,96 @@ def test_collector_cli_round_trip_and_saved_array_cpu_internal_gate(tmp_path):
     assert "candidate saved arrays disagree with the complete CPU scalar reference" in rejected.stderr
 
 
+def candidate_sidecar_fixture(tmp_path):
+    _, batch_dir = build_run(tmp_path)
+    manifest = json.loads((batch_dir / "stage_manifest.json").read_text())
+    identity = manifest["identity"]
+    record = manifest["stages"][BATCH_STAGE]
+    checkpoint = batch_dir / record["path"]
+    outputs_tree = pickle.loads(checkpoint.read_bytes())["value"]["outputs"]
+    order = list(reversed(range(64)))
+    replacement_index = list(range(63)) + [0]
+    permuted = batch_base.jax.tree_util.tree_map(lambda leaf: np.asarray(leaf)[order], outputs_tree)
+    replaced = batch_base.jax.tree_util.tree_map(
+        lambda leaf: np.asarray(leaf)[replacement_index], outputs_tree)
+    class SyntheticRecorder:
+        result = {"gates": []}
+
+        def gate(self, name, actual, expected):
+            self.result["gates"].append(compare_gate(name, actual, expected))
+
+    recorder = SyntheticRecorder()
+    server_runner.record_candidate_batch_isolation(recorder, 64, outputs_tree, permuted,
+        replaced, jax=batch_base.jax, np=np)
+    server_runner.record_candidate_batch_reset(recorder, 64, outputs_tree, outputs_tree)
+    seal = server_runner.seal_candidate_batch_arrays(batch_dir, identity, 64, permuted,
+        replaced, outputs_tree, jax=batch_base.jax, np=np)
+    batch = {"checkpoint": checkpoint, "identity": identity,
+        "record": {"provenance": {"validation_arrays": seal}, "gates": recorder.result["gates"]}}
+    return batch, outputs_tree, seal
+
+
+def test_runner_sealed_candidate_sidecar_recomputes_in_collector(tmp_path):
+    batch, outputs_tree, _ = candidate_sidecar_fixture(tmp_path)
+
+    result = collector.check_candidate_saved_arrays(batch, outputs_tree)
+
+    assert result["all_passed"] is True
+    assert [item["name"] for item in result["checks"]] == [
+        "B64_server_batch_cross_group_permutation",
+        "B64_server_batch_replacement_isolation",
+        "B64_batch_frozen_reset_repeat",
+    ]
+
+
+def test_collector_rejects_candidate_sidecar_array_index_and_hash_tampering(tmp_path):
+    import copy
+
+    batch, outputs_tree, seal = candidate_sidecar_fixture(tmp_path)
+    sidecar_path = Path(seal["path"])
+    evidence = pickle.loads(sidecar_path.read_bytes())
+
+    changed = copy.deepcopy(evidence)
+    first_leaf = np.asarray(changed["permutation"][0][0][0]).copy()
+    first_leaf[0] += 1
+    changed["permutation"] = ((first_leaf, *changed["permutation"][0][0][1:]),
+        changed["permutation"][0][1]), changed["permutation"][1]
+    raw = pickle.dumps(changed, protocol=pickle.HIGHEST_PROTOCOL)
+    sidecar_path.write_bytes(raw)
+    batch["record"]["provenance"]["validation_arrays"].update(
+        sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
+    try:
+        collector.check_candidate_saved_arrays(batch, outputs_tree)
+    except ValueError as exc:
+        assert "disagree with recomputed output" in str(exc)
+    else:
+        raise AssertionError("collector accepted changed candidate arrays with a recomputed seal")
+
+    batch, outputs_tree, seal = candidate_sidecar_fixture(tmp_path / "index")
+    sidecar_path = Path(seal["path"])
+    changed = pickle.loads(sidecar_path.read_bytes())
+    changed["permutation_index"][0] = 0
+    raw = pickle.dumps(changed, protocol=pickle.HIGHEST_PROTOCOL)
+    sidecar_path.write_bytes(raw)
+    batch["record"]["provenance"]["validation_arrays"].update(
+        sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
+    try:
+        collector.check_candidate_saved_arrays(batch, outputs_tree)
+    except ValueError as exc:
+        assert "permutation/replacement index contract mismatch" in str(exc)
+    else:
+        raise AssertionError("collector accepted a changed candidate permutation index")
+
+    batch, outputs_tree, seal = candidate_sidecar_fixture(tmp_path / "hash")
+    batch["record"]["provenance"]["validation_arrays"]["sha256"] = "0" * 64
+    try:
+        collector.check_candidate_saved_arrays(batch, outputs_tree)
+    except ValueError as exc:
+        assert "checksum/size mismatch" in str(exc)
+    else:
+        raise AssertionError("collector accepted a tampered candidate sidecar hash")
+
+
 def test_collector_cli_rejects_checkpoint_manifest_identity_tamper(tmp_path):
     run_root, batch_dir = build_run(tmp_path)
     path = batch_dir / "stage_manifest.json"
@@ -316,3 +409,61 @@ def test_collector_cli_binds_terminal_parent_accounting_to_raw_sacct_row(tmp_pat
         if message == "Elapsed field":
             message = "wall_seconds must equal the parent Elapsed field"
         assert message in rejected.stderr
+
+
+def test_incomplete_batch_only_return_includes_raw_reused_source_parent_cost(tmp_path, monkeypatch):
+    run_root = tmp_path / "incomplete-v4"
+    run_root.mkdir()
+    admission_path = tmp_path / "admission.json"
+    admission_path.write_text("{}")
+    raw = "15820467|FAILED|00:36:37|billing=48,cpu=48,node=1\n"
+    source_parent = {"path": "/old/parent-accounting.json", "sha256": "a" * 64,
+        "job_id": "15820467", "terminal_status": "FAILED", "Elapsed": "00:36:37",
+        "wall_seconds": 1, "AllocTRES": "billing=48,cpu=48,node=1", "raw_record": raw,
+        "raw_record_sha256": hashlib.sha256(raw.encode()).hexdigest(),
+        "allocated_parent_CPU_request_core_hours": 1,
+        "primary_cost_cny_estimate": 1, "conservative_cost_cny_estimate": 1}
+    admission = {"sha256": "b" * 64, "scalar_source": {
+        "whole_parent_accounting": source_parent}}
+    monkeypatch.setattr("scripts.dev.global_server_reference.validate_cpu_reference_admission",
+        lambda *args, **kwargs: admission)
+    orchestration = {"execution_route": "batch-only", "status": "candidate_skipped_insufficient_window",
+        "allocation": {"job_id": "15820468", "parent_cpu_count": 48},
+        "external_scalar_reference_admission": {"path": str(admission_path), "sha256": "b" * 64},
+        "candidate_provenance": {"job_id": "15820468"},
+        "commands": {"batch": {"argv": ["runner", "--cpu-reference-dir", "/sealed/scalar"]}},
+        "wall_seconds": 10, "coordinator_scope_primary_cost_cny_estimate": 0.01,
+        "coordinator_scope_conservative_cost_cny_estimate": 0.02,
+        "coordinator_scope_cost_limitation": "incomplete synthetic test", "steps": {}}
+    (run_root / "orchestration.json").write_text(json.dumps(orchestration))
+
+    result = collector.collect(run_root, tmp_path / "result.json")
+
+    source_cost = result["reused_scalar_source_parent_cost"]
+    assert result["status"] == "incomplete_run_failure_preserved"
+    assert source_cost["job_id"] == "15820467" and source_cost["candidate_job_id"] == "15820468"
+    assert source_cost["wall_seconds"] == 2197
+    assert source_cost["allocated_CPU_request_core_hours"] == 48 * 2197 / 3600
+    assert source_cost["primary_cost_cny_estimate"] == 48 * 2197 / 3600 * 0.05
+    assert source_cost["conservative_cost_cny_estimate"] == 48 * 2197 / 3600 * 0.07
+    assert source_cost["counted_once_as_source_parent"] is True
+    assert result["whole_parent_allocation_cost"]["status"] == "pending_external_terminal_accounting"
+
+    orchestration["allocation"]["job_id"] = "15820467"
+    (run_root / "orchestration.json").write_text(json.dumps(orchestration))
+    with pytest.raises(ValueError, match="distinct from the old scalar source job"):
+        collector.collect(run_root, tmp_path / "same-job.json")
+
+
+def test_batch_only_parent_accounting_covers_only_new_batch_directory(tmp_path):
+    run_root = tmp_path / "run"
+    accounting = {"raw_record": "job|COMPLETED|00:36:37|cpu=48\n",
+        "raw_record_sha256": hashlib.sha256(b"job|COMPLETED|00:36:37|cpu=48\n").hexdigest(),
+        "job_id": "job", "terminal_status": "COMPLETED", "Elapsed": "00:36:37",
+        "AllocTRES": "cpu=48", "wall_seconds": 2197, "directories": [str(run_root / "batch")],
+        "source": "sacct", "scope": "whole_slurm_parent_job", "allocated_CPU_count": 48, "GPU_count": 0}
+
+    assert collector.validate_raw_accounting(accounting, "job", run_root, batch_only=True) == 2197
+    accounting["directories"] = [str(run_root / "scalar"), str(run_root / "batch")]
+    with pytest.raises(ValueError, match="exact batch-only RUN_ROOT"):
+        collector.validate_raw_accounting(accounting, "job", run_root, batch_only=True)

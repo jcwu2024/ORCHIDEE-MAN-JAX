@@ -15,6 +15,10 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from scripts.dev.global_cpu_child_environment import normalized_environment, policy, wrapped_command  # noqa: E402
+from scripts.dev.global_cpu_child_environment import snapshot as environment_snapshot  # noqa: E402
+
 DEFAULT_REFERENCE_SHA = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
 DEFAULT_SCIENCE_SHA = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
 
@@ -152,23 +156,28 @@ def child_arguments(args, mode: str, output: Path) -> list[str]:
         "--config", str(args.config), "--warm-repeats", "5", "--validation-mode", "exploratory",
         "--cpu-reference-role", "cpu-internal",
         "--memory-guard-gib", "24" if mode == "scalar" else "64",
-        "--output-dir", str(output)]
+        "--output-dir", str(output), "--require-child-environment"]
     if mode == "batch":
-        common += ["--cpu-reference-dir", str(args.output_dir / "scalar")]
+        common += ["--cpu-reference-dir", str(getattr(args, "cpu_reference_dir", None) or args.output_dir / "scalar")]
+        for option in ("cpu_reference_admission_record", "expected_cpu_reference_admission_sha256"):
+            value = getattr(args, option, None)
+            if value is not None:
+                common += ["--" + option.replace("_", "-"), str(value)]
     return common
+
+
+def child_command(args, mode: str, output: Path) -> list[str]:
+    budget = 1 if mode == "scalar" else 48
+    boundary = args.entry.with_name("global_cpu_child_environment.py")
+    return wrapped_command(args.python, boundary, budget, child_arguments(args, mode, output))
 
 
 def step_command(args, mode: str) -> tuple[list[str], dict[str, str]]:
     cpus = 1 if mode == "scalar" else 48
-    environment = {"OMP_NUM_THREADS": "1" if cpus == 1 else "48",
-        "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
-        "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true"}
-    if cpus == 48:
-        environment["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=true"
-    exports = ",".join(f"{key}={value}" for key, value in environment.items())
+    environment = policy(cpus)
     command = [str(args.slurm_bin / "srun"), "--ntasks=1", f"--cpus-per-task={cpus}",
-        "--cpu-bind=cores", f"--export=ALL,{exports}", "/usr/bin/time", "-v"]
-    command += child_arguments(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
+        "--cpu-bind=cores", "--export=ALL", "/usr/bin/time", "-v"]
+    command += child_command(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
     return command, environment
 
 
@@ -205,7 +214,15 @@ def run_process(command: list[str], log_path: Path, timeout_seconds: float) -> d
     with log_path.open("x", encoding="utf-8") as log:
         log.write(json.dumps({"command": command, "start_epoch": started}, ensure_ascii=True) + "\n")
         log.flush()
-        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        # Also normalize the srun parent; the post-srun boundary remains authoritative.
+        environment = None
+        if "--thread-budget" in command:
+            budget = int(command[command.index("--thread-budget") + 1])
+            log.write(json.dumps(environment_snapshot(budget, status="transport_parent_inherited")) + "\n")
+            log.flush()
+            environment = normalized_environment(budget)
+        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
+                                   start_new_session=True, env=environment)
         try:
             returncode = process.wait(timeout=max(1.0, timeout_seconds))
             timed_out = False
@@ -243,26 +260,31 @@ def terminate_process_group(process, *, grace_seconds=10) -> int:
 
 
 def runner_dry_run(args, mode: str) -> dict:
-    command = child_arguments(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
-    child_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "JAX_PLATFORMS": "cpu",
-             "JAX_ENABLE_X64": "true", "OMP_NUM_THREADS": "1" if mode == "scalar" else "48",
-             "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1"}
-    if mode == "batch":
-        child_env["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=true"
-    else:
-        child_env.pop("XLA_FLAGS", None)
+    command = child_command(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
+    child_env = normalized_environment(1 if mode == "scalar" else 48)
     completed = subprocess.run([*command, "--dry-run"], capture_output=True, text=True, check=False, env=child_env)
     if completed.returncode:
         raise RuntimeError(f"runner {mode} --dry-run failed: {completed.stderr}")
     result = json.loads(completed.stdout)
     if result.get("model_execution") is not False or result.get("JAX_imported") is not False:
         raise ValueError("runner dry-run must not import JAX or execute the model")
-    return {"command": command + ["--dry-run"], "runner_result": result}
+    return {"command": command + ["--dry-run"], "runner_result": result,
+            "child_entry_receipts": completed.stderr.splitlines()}
 
 
 def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) -> dict:
-    if args.budget_seconds != 5400 or args.reference_cap_seconds != 2700 or args.minimum_candidate_seconds != 1800:
+    route = getattr(args, "execution_route", "scalar-then-batch")
+    batch_only = route == "batch-only"
+    if args.minimum_candidate_seconds != 1800:
+        raise ValueError("minimum candidate window must remain 1800 seconds")
+    if batch_only and not (1800 <= args.budget_seconds <= 5400):
+        raise ValueError("batch-only budget must stay within 1800..5400 seconds")
+    if not batch_only and (args.budget_seconds != 5400 or args.reference_cap_seconds != 2700 or args.minimum_candidate_seconds != 1800):
         raise ValueError("immutable 5400/2700/1800 second run window required")
+    if batch_only and (getattr(args, "cpu_reference_dir", None) is None or
+            getattr(args, "cpu_reference_admission_record", None) is None or
+            not re.fullmatch(r"[0-9a-f]{64}", getattr(args, "expected_cpu_reference_admission_sha256", "") or "")):
+        raise ValueError("batch-only requires an external scalar directory and exact admission record/hash")
     if args.expected_gpu_reference_sha256 != DEFAULT_REFERENCE_SHA:
         raise ValueError("declared numerical GPU reference SHA differs from accepted FULL64 snapshot")
     if args.expected_science_sha256 != DEFAULT_SCIENCE_SHA:
@@ -281,37 +303,54 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) 
             cwd=code_dir, text=True).strip()
         if head != args.expected_code_commit or dirty:
             raise ValueError("execution tree must be clean and at EXPECTED_CODE_COMMIT before starting")
+    modes = ("batch",) if batch_only else ("scalar", "batch")
+    contract = "CPU48_SINGLE_PROCESS_FULL64_B64_v4" if batch_only else "CPU48_SINGLE_PROCESS_FULL64_B64_v3"
+    namespace = "cpu48-b64-execution-v4-20261014" if batch_only else "cpu48-b64-execution-v3-20261012"
     commands = {mode: {"argv": step_command(args, mode)[0], "environment": step_command(args, mode)[1]}
-        for mode in ("scalar", "batch")}
+        for mode in modes}
     if args.dry_run:
-        checks = {mode: runner_dry_run(args, mode) for mode in ("scalar", "batch")}
-        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3",
+        checks = {mode: runner_dry_run(args, mode) for mode in modes}
+        return {"status": "dry_run", "contract": contract, "execution_route": route,
             "expected_execution_commit": args.expected_code_commit, "expected_science_sha256": DEFAULT_SCIENCE_SHA,
             "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
             "allocation": {"partition": args.partition, "parent_cpu_count": 48,
-                "wall_seconds": 5400, "primary_worst_case_cny": 3.60, "conservative_worst_case_cny": 5.04},
+                "wall_seconds": args.budget_seconds, "primary_worst_case_cny": 48 * args.budget_seconds / 3600 * 0.05,
+                "conservative_worst_case_cny": 48 * args.budget_seconds / 3600 * 0.07},
             "minimum_candidate_seconds": 1800, "commands": commands,
             "runner_cli_dry_runs": checks, "model_execution": False, "JAX_imported": "jax" in sys.modules}
     allocation = validate_allocation()
+    external_reference = None
+    candidate_provenance = None
+    if batch_only:
+        from scripts.dev.global_cpu_candidate_identity import candidate_identity
+        from scripts.dev.global_server_reference import validate_cpu_reference_admission
+        candidate_provenance = candidate_identity(args, args.code_dir)
+        external_reference = validate_cpu_reference_admission(
+            args.cpu_reference_admission_record, args.expected_cpu_reference_admission_sha256,
+            args.cpu_reference_dir, expected_source=candidate_provenance)
     output = Path(args.output_dir).resolve()
-    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"):
-        raise ValueError("RUN_ROOT must remain in CPU48/B64 v3 outputs")
+    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput" / namespace):
+        raise ValueError(f"RUN_ROOT must remain in {namespace} outputs")
     if output.exists() and any(output.iterdir()):
         raise ValueError("single-use output directory must be new and empty")
     output.mkdir(parents=True, exist_ok=True)
     start = clock()
-    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3", "status": "running",
-        "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": 5400,
-        "reference_cap_seconds": 2700, "minimum_candidate_seconds": 1800,
+    report = {"contract": contract, "execution_route": route, "status": "running",
+        "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": args.budget_seconds,
+        "reference_cap_seconds": args.reference_cap_seconds if not batch_only else None,
+        "minimum_candidate_seconds": args.minimum_candidate_seconds,
         "allocation": allocation, "host_start_snapshot": snapshot(), "expected_execution_commit": args.expected_code_commit,
         "expected_science_sha256": DEFAULT_SCIENCE_SHA, "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
         "commands": commands, "steps": {}, "scientific_acceptance": False,
+        "external_scalar_reference_admission": external_reference,
+        "candidate_provenance": candidate_provenance,
         "performance_claim_scope": "exploratory same-workload throughput only"}
     orchestration_path = output / "orchestration.json"
     atomic_json(orchestration_path, report)
     dispatch = run_process if run_step is None else run_step
     try:
-        for mode, cap in (("scalar", args.reference_cap_seconds), ("batch", None)):
+        for mode in modes:
+            cap = args.reference_cap_seconds if mode == "scalar" else None
             remaining = args.budget_seconds - (clock() - start)
             timeout = min(cap, remaining) if cap is not None else remaining
             if mode == "batch" and remaining < args.minimum_candidate_seconds:
@@ -380,6 +419,10 @@ def parser():
     result.add_argument("--budget-seconds", type=int, default=5400)
     result.add_argument("--reference-cap-seconds", type=int, default=2700)
     result.add_argument("--minimum-candidate-seconds", type=int, default=1800)
+    result.add_argument("--execution-route", choices=("scalar-then-batch", "batch-only"), default="scalar-then-batch")
+    result.add_argument("--cpu-reference-dir", type=Path)
+    result.add_argument("--cpu-reference-admission-record", type=Path)
+    result.add_argument("--expected-cpu-reference-admission-sha256")
     result.add_argument("--validate-allocation", action="store_true")
     result.add_argument("--dry-run", action="store_true")
     return result

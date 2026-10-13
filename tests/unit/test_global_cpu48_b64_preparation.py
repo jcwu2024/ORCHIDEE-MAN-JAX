@@ -16,8 +16,8 @@ RUNNER = ROOT / "scripts/dev/benchmark_global_server_cpu.py"
 EXPECTED_REF = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
 EXPECTED_SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
 EXPECTED_CODE_COMMIT = "1" * 40
-EXPECTED_CODE_DIR = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3"
-EXPECTED_RUN_ROOT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"
+EXPECTED_CODE_DIR = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4"
+EXPECTED_RUN_ROOT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014"
 
 
 def write_scontrol_evidence(tmp_path, record=None, *, stderr="", exitcode="0"):
@@ -127,7 +127,7 @@ def test_step_commands_bind_one_thread_reference_and_native_single_device_batch(
     assert batch_env == {"OMP_NUM_THREADS": "48", "MKL_NUM_THREADS": "1",
         "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
         "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true",
-        "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"}
+        "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true", "PYTHONDONTWRITEBYTECODE": "1"}
     assert "--cpu-budget 48" in " ".join(batch)
     assert "--sizes 64" in " ".join(batch)
 
@@ -144,6 +144,8 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
         "SLURM_BIN": "/synthetic/slurm/bin",
         "PREPARED_INPUT": "/synthetic/prepared.pkl", "GPU_REFERENCE_DIR": "/synthetic/gpu-reference",
         "CONFIG": "/synthetic/config.yaml",
+        "CPU_REFERENCE_ADMISSION_RECORD": "/synthetic/scalar-admission.json",
+        "EXPECTED_CPU_REFERENCE_ADMISSION_SHA256": "a" * 64,
         "RUN_ROOT": EXPECTED_RUN_ROOT + "/dry"})
     shell = subprocess.run([bash, str(LAUNCHER).replace("\\", "/"), "--dry-run"],
         env=env, text=True, capture_output=True, check=False)
@@ -155,18 +157,15 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
         text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
     dry = json.loads(result.stdout)
-    assert dry["contract"] == "CPU48_SINGLE_PROCESS_FULL64_B64_v3"
+    assert dry["contract"] == "CPU48_SINGLE_PROCESS_FULL64_B64_v4"
+    assert dry["allocation"]["wall_seconds"] == 3600
     assert dry["expected_execution_commit"] == EXPECTED_CODE_COMMIT
-    scalar_argv = dry["commands"]["scalar"]["argv"]
     batch_argv = dry["commands"]["batch"]["argv"]
-    assert scalar_argv[scalar_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/scalar"
     assert batch_argv[batch_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/batch"
     assert dry["model_execution"] is False and dry["JAX_imported"] is False
     assert dry["expected_gpu_reference_sha256"] == EXPECTED_REF
-    assert set(dry["runner_cli_dry_runs"]) == {"scalar", "batch"}
-    scalar = dry["runner_cli_dry_runs"]["scalar"]["runner_result"]
+    assert set(dry["runner_cli_dry_runs"]) == {"batch"}
     batch = dry["runner_cli_dry_runs"]["batch"]["runner_result"]
-    assert (scalar["mode"], scalar["CPU_budget"], scalar["sizes"]) == ("scalar", 1, [64])
     assert (batch["mode"], batch["CPU_budget"], batch["sizes"]) == ("batch", 48, [64])
     assert dry["runner_cli_dry_runs"]["batch"]["command"].count("--cpu-reference-dir") == 1
 
@@ -209,3 +208,31 @@ def test_candidate_is_skipped_when_less_than_1800_seconds_remain(tmp_path, monke
         clock=lambda: next(ticks), snapshot=lambda: {"hostname": "synthetic"})
     assert value["status"] == "candidate_skipped_insufficient_window"
     assert len(calls) == 1 and value["steps"]["scalar"]["status"] == "completed"
+
+
+@pytest.mark.parametrize("budget", [1800, 3600, 5400])
+def test_batch_only_accepts_bounded_budget_without_scalar_regeneration(tmp_path, budget):
+    from scripts.hpc import global_cpu48_b64_coordinator as coordinator
+
+    run_args = args(tmp_path, dry_run=True)
+    run_args.execution_route = "batch-only"
+    run_args.budget_seconds = budget
+    run_args.cpu_reference_dir = tmp_path / "external-scalar"
+    run_args.cpu_reference_admission_record = tmp_path / "admission.json"
+    run_args.expected_cpu_reference_admission_sha256 = "a" * 64
+    result = coordinator.coordinate(run_args)
+    assert set(result["commands"]) == {"batch"}
+    assert result["allocation"]["wall_seconds"] == budget
+    assert result["minimum_candidate_seconds"] == 1800
+
+
+@pytest.mark.parametrize(("budget", "minimum"), [(1799, 1800), (5401, 1800), (3600, 1)])
+def test_batch_only_rejects_budget_or_changed_minimum_before_launch(tmp_path, budget, minimum):
+    from scripts.hpc import global_cpu48_b64_coordinator as coordinator
+
+    run_args = args(tmp_path, dry_run=True)
+    run_args.execution_route = "batch-only"
+    run_args.budget_seconds = budget
+    run_args.minimum_candidate_seconds = minimum
+    with pytest.raises(ValueError, match="budget|minimum"):
+        coordinator.coordinate(run_args)

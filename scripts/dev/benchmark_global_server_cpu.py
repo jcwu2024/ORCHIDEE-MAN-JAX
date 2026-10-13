@@ -23,7 +23,47 @@ ROOT = Path(__file__).resolve().parents[2]
 PROCESS_STARTED = time.perf_counter()
 sys.path.insert(0, str(ROOT))
 
+from scripts.dev.global_cpu_child_environment import snapshot as child_snapshot
+from scripts.dev.global_cpu_child_environment import validate_environment
 from scripts.dev.global_server_resources import admit, bind, physical_cores, thread_affinity
+
+
+def seal_candidate_validation_arrays(output_dir, identity, order, permuted, replaced, materialized, *, jax, np):
+    import hashlib
+
+    from scripts.dev.probe_global_batch_cache import atomic_bytes
+
+    evidence = {"schema": "global_cpu48_candidate_validation_arrays_v1",
+        "candidate_identity": identity, "permutation_index": order,
+        "replacement_index": list(range(len(order) - 1)) + [0],
+        "permutation": permuted, "replacement": replaced, "frozen_reset": materialized}
+    for name in ("permutation", "replacement", "frozen_reset"):
+        evidence[name] = jax.tree_util.tree_map(
+            lambda value: np.asarray(jax.device_get(value)), evidence[name])
+    raw = pickle.dumps(evidence, protocol=pickle.HIGHEST_PROTOCOL)
+    evidence_path = Path(output_dir) / "candidate_validation_arrays.pkl"
+    atomic_bytes(evidence_path, raw)
+    return {"path": str(evidence_path), "sha256": hashlib.sha256(raw).hexdigest(),
+        "bytes": len(raw), "schema": evidence["schema"]}
+
+
+def record_candidate_batch_isolation(recorder, size, isolation_reference, permuted, replaced, *, jax, np):
+    order = list(reversed(range(size)))
+    replacement_index = list(range(size - 1)) + [0]
+    recorder.gate(f"B{size}_server_batch_cross_group_permutation", permuted,
+        jax.tree_util.tree_map(lambda value: np.asarray(value)[np.asarray(order)], isolation_reference))
+    recorder.gate(f"B{size}_server_batch_replacement_isolation", replaced,
+        jax.tree_util.tree_map(lambda value: np.asarray(value)[np.asarray(replacement_index)], isolation_reference))
+
+
+def record_candidate_batch_reset(recorder, size, output, materialized):
+    recorder.gate(f"B{size}_batch_frozen_reset_repeat", materialized, output)
+
+
+def seal_candidate_batch_arrays(output_dir, identity, size, permuted, replaced, materialized, *, jax, np):
+    order = list(reversed(range(size)))
+    return seal_candidate_validation_arrays(output_dir, identity, order, permuted,
+        replaced, materialized, jax=jax, np=np)
 
 
 def parser():
@@ -48,10 +88,20 @@ def parser():
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--synthetic-smoke", action="store_true")
     result.add_argument("--synthetic-stdlib-only", action="store_true", help="Pool protocol smoke without even a toy JAX compile.")
+    result.add_argument("--require-child-environment", action="store_true", help="Require exact coordinator thread environment before JAX.")
+    result.add_argument("--cpu-reference-admission-record", type=Path)
+    result.add_argument("--expected-cpu-reference-admission-sha256")
     return result
 
 
 def validate(args):
+    admission = getattr(args, "cpu_reference_admission_record", None)
+    admission_sha = getattr(args, "expected_cpu_reference_admission_sha256", None)
+    if admission is not None or admission_sha is not None:
+        import re
+        if (admission is None or not re.fullmatch(r"[0-9a-f]{64}", admission_sha or "") or
+                args.mode != "batch" or args.cpu_budget != 48 or args.cpu_reference_dir is None):
+            raise ValueError("external scalar admission requires batch48, directory, record and exact SHA256")
     if args.validation_mode == "strict" and args.cpu_reference_role == "cpu-internal":
         raise ValueError("cpu-internal reference role requires exploratory validation")
     if args.mode == "scalar" and args.cpu_budget != 1 or args.mode == "pool" and args.cpu_budget != 4:
@@ -347,9 +397,20 @@ def benchmark(args, recorder, lanes, second, scale, resources):
     identity["numerical_reference_sha256"] = origin["sha256"]
     cpu_references = {}
     if args.cpu_reference_dir is not None:
+        candidate_provenance = None
+        admission_record = getattr(args, "cpu_reference_admission_record", None)
+        if admission_record is not None:
+            from scripts.dev.global_cpu_candidate_identity import candidate_identity
+            candidate_provenance = resources.get("candidate_provenance") or candidate_identity(args, ROOT)
+            identity["candidate_provenance"] = candidate_provenance
         for size in args.sizes:
+            admission_args = {} if admission_record is None else {
+                "cpu_reference_admission_record": admission_record,
+                "expected_cpu_reference_admission_sha256": args.expected_cpu_reference_admission_sha256,
+                "candidate_provenance": candidate_provenance}
             cpu_references[size] = load_reference(args.cpu_reference_dir, identity,
-                name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role)
+                name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role,
+                **admission_args)
     store = StageStore(args.output_dir, identity)
     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen,
         validation_mode=validation_mode, cpu_reference_role=cpu_reference_role,
@@ -406,13 +467,13 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                     shuffled = [lanes[index] for index in order]
                     permuted = base.run_two(runner.programs[size], base.batch.stack_lanes(shuffled),
                         base.stack_second(shuffled, [second[index] for index in order]))
-                    recorder.gate(f"B{size}_server_batch_cross_group_permutation", permuted,
-                        jax.tree_util.tree_map(lambda value: value[np.asarray(order)], isolation_reference))
                     changed = lanes[:size - 1] + [lanes[0]]
                     replaced = base.run_two(runner.programs[size], base.batch.stack_lanes(changed),
                         base.stack_second(changed, second[:size - 1] + [second[0]]))
-                    recorder.gate(f"B{size}_server_batch_replacement_isolation", replaced,
-                        jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], isolation_reference))
+                    record_candidate_batch_isolation(recorder, size, isolation_reference,
+                        permuted, replaced, jax=jax, np=np)
+                else:
+                    order = permuted = replaced = None
                 if args.cpu_reference_dir is not None:
                     scalar, cpu_origin = cpu_references[size]
                     recorder.gate(f"B{size}_{args.mode}_cross_mode_server_scalar", output, scalar)
@@ -427,7 +488,14 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                     wrapper.append(sample["wall_seconds"])
                     wrapper_CPU.append(sample)
                 observations["warm_complete"] = memory_snapshot("warm_complete")
-                recorder.gate(f"B{size}_{args.mode}_frozen_reset_repeat", materialized, output)
+                if args.mode == "batch":
+                    record_candidate_batch_reset(recorder, size, output, materialized)
+                    validation_arrays = (seal_candidate_batch_arrays(args.output_dir, identity, size,
+                        permuted, replaced, materialized, jax=jax, np=np)
+                        if getattr(args, "cpu_reference_admission_record", None) is not None else None)
+                else:
+                    recorder.gate(f"B{size}_{args.mode}_frozen_reset_repeat", materialized, output)
+                    validation_arrays = None
                 metrics = {f"B{size}_warm_frozen_state_core": base.metrics(core, size * 14),
                            f"B{size}_preprepared_wrapper_stack_transfer_materialize": base.metrics(wrapper, size * 14)}
                 metrics[f"B{size}_warm_frozen_state_core"]["process_CPU_samples"] = core_CPU
@@ -454,6 +522,7 @@ def benchmark(args, recorder, lanes, second, scale, resources):
                         "CPU_scalar_reference": cpu_origin, "worker_records": workers,
                         "CPU_scalar_reference_role": "cpu_internal_comparison" if cpu_origin is not None and cpu_reference_role == "cpu-internal" else "accepted" if cpu_origin is not None else None,
                         "controller_thread_affinity_after_warm": controller_threads,
+                         "validation_arrays": validation_arrays,
                         "core_boundary": "actual group wall includes dispatch/barrier; all workers synchronize and retain every output; excludes materialization/serialization/IPC of full outputs",
                         "wrapper_boundary": "fresh preprepared host inputs/device transfer plus complete computation, full host output materialization and pool serialization/IPC",
                         "scalar_compile_policy": "once per persistent scalar worker, reused across distinct points and sizes"},
@@ -564,22 +633,46 @@ def main():
     args = parser().parse_args()
     validate(args)
     if args.dry_run or args.synthetic_smoke:
+        if args.require_child_environment:
+            validate_environment(args.cpu_budget)
         result = synthetic_smoke(args) if args.synthetic_smoke else {
             "status": "dry_run", "mode": args.mode, "CPU_budget": args.cpu_budget, "sizes": args.sizes,
             "warm_repeats": args.warm_repeats, "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
             "model_execution": False, "JAX_imported": "jax" in sys.modules,
             "CPU_process_policy": "one native CPU process/device; lane count is not CPU count" if args.mode == "batch" else args.mode,
             "parent_CPU_count_declared": os.environ.get("ORCHJAX_PARENT_CPU_COUNT"),
-            "billing_scope": "full parent allocation including scalar step; actual Slurm admission required"}
+            "billing_scope": "full current parent allocation; actual Slurm admission required"}
+        result["actual_child_prejax_receipt"] = child_snapshot(args.cpu_budget, status="nonmodel_cli_only")
         result.update(validation_mode=args.validation_mode, cpu_reference_role=args.cpu_reference_role,
                       expected_gpu_reference_sha256=args.expected_gpu_reference_sha256)
         print(json.dumps(result, indent=2))
         return 0
-    resources = admit(args.mode, args.cpu_budget)
-    default_guard = 96 if args.mode == "pool" else 64 if args.cpu_budget == 48 else 24
-    resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or default_guard)
-    cpus = resources["selected_logical_cpus"]
-    bind(cpus[:1] if args.mode in {"scalar", "pool"} else cpus, one_thread=args.mode != "batch")
+    try:
+        if args.require_child_environment:
+            validate_environment(args.cpu_budget)
+        resources = admit(args.mode, args.cpu_budget)
+        default_guard = 96 if args.mode == "pool" else 64 if args.cpu_budget == 48 else 24
+        resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or default_guard)
+        cpus = resources["selected_logical_cpus"]
+        bind(cpus[:1] if args.mode in {"scalar", "pool"} else cpus, one_thread=args.mode != "batch")
+        if args.require_child_environment:
+            validate_environment(args.cpu_budget)
+        if args.cpu_reference_admission_record is not None:
+            from scripts.dev.global_cpu_candidate_identity import candidate_identity
+            from scripts.dev.global_server_reference import validate_cpu_reference_admission
+            resources["candidate_provenance"] = candidate_identity(args, ROOT)
+            resources["external_scalar_reference_admission"] = validate_cpu_reference_admission(
+                args.cpu_reference_admission_record, args.expected_cpu_reference_admission_sha256,
+                args.cpu_reference_dir, expected_source=resources["candidate_provenance"])
+    except Exception as exc:
+        print(json.dumps(child_snapshot(args.cpu_budget, status="resource_admission_failed", error=str(exc))),
+              file=sys.stderr, flush=True)
+        raise
+    receipt = child_snapshot(args.cpu_budget, status="resource_admission_passed")
+    receipt.update(selected_physical_cores=resources["selected_logical_cpus"],
+                   allocation=resources["Slurm"], allocation_admitted=True)
+    print(json.dumps(receipt), file=sys.stderr, flush=True)
+    resources["actual_child_prejax_receipt"] = receipt
     resources["thread_environment_before_JAX"] = {name: os.environ.get(name) for name in (
         "XLA_FLAGS", "JAX_PLATFORMS", "JAX_ENABLE_X64", "OMP_NUM_THREADS", "MKL_NUM_THREADS",
         "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS")}
