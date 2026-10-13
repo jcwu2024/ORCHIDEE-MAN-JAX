@@ -1,6 +1,6 @@
 # Code Map
 
-Updated: 2026-10-12. Bounded task navigation, not an exhaustive inventory.
+Updated: 2026-10-13. Bounded task navigation, not an exhaustive inventory.
 First-day/raw-neural JVP execution and CPU acceptance are complete; preserve graphs/HLO/full results.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the handoff/stop and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.
@@ -57,7 +57,7 @@ Paths are under `scripts/hpc/`.
 | `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
 | `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Deployed b676353 NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; target CPU shell/private-phase checks accepted, container/PJRT/GPU pending; both cards busy, no GPU/preflight/open scope/ledger reservation |
-| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Local v2 candidate: Supervisor-owned original-mask runtime discovery, shared startup/preflight deadline, UUID-only CSV/XML/monitoring, actual-job kernel/cgroup association and explicit container contract. Broad numeric-mask association rejects unknown; unknown UUID retains mutex/full charge. Original science/count/memory/release gates unchanged. Historical frozen c8a44c3 job15812634 failed at its first CSV query; consumed v1 scope cannot migrate. No v2 deployment or execution. |
+| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Corrected local v2 candidate: Supervisor-owned unchanged scheduler-mask/runtime association, shared startup/preflight deadline, UUID-only CSV/XML/monitoring and kernel binding. OS rule width is independent; selected rw remains required, controls are deducted after selected-major intersection and cross-major unknown is separate. Unknown UUID retains mutex/full charge. Original science/count/memory/release gates unchanged. Historical frozen c8a44c3 job15812634 failed at its first CSV query; consumed v1 scope cannot migrate. No v2 deployment or execution. |
 | `shared_affine_gpu_admission.py`, `shared_affine_cuda_identity.py`, `freeze_shared_affine_paid_scope.py` | Persistent atomic cross-scope mutex and bounded free-state admission; v2 runtime count1/PCI→physical driver UUID discovery and repeated preflight/affine binding, total driver enumeration recorded separately. Legacy strict/v1 defaults retained; accepted-commit→false scope/source manifests remain explicit, with no old-approval migration or stale-lock takeover. |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
@@ -99,7 +99,9 @@ establish GPU or scientific acceptance.
 The [local v2 identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
 now owns the candidate method: Supervisor-owned original-mask discovery,
 runtime count1/PCI→driver physical UUID, UUID-only NVML and explicit actual-job
-association. Numeric masks with broad device access fail mapping_unknown.
+association from the unchanged scheduler mask in that runtime. OS access width
+is recorded independently; broad rules do not reject numeric masks and narrow
+rules do not prove node GRES configuration. Selected-device read/write is required.
 V2 explicitly separates runtime visibility from total driver enumeration;
 old consumed grants cannot migrate. Local mocks establish no deployed/API,
 allocation, memory, numerical or release acceptance. No new execution is authorized.

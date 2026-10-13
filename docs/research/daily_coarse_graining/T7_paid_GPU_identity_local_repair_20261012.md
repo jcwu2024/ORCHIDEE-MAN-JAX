@@ -1,7 +1,9 @@
 # Paid GPU identity: completed local v2 repair candidate
 
-2026-10-12. Local code, mock validation and current documentation repair only.
-No remote connection, deployment, resource refresh, scope opening, submission,
+2026-10-12; continuous correction of46793259 on2026-10-13. Local owner code,
+mock validation and current documentation repair only. The parent separately
+collected the read-only configuration/static-symbol evidence described below.
+No deployment, resource refresh, scope opening, submission,
 GPU initialization, preflight, affine probe, training or fallback ran in this
 stage. This is a candidate identity contract requiring acceptance before any
 new execution. The [sole v1 terminal result](T7_paid_single_GPU_execution_results_20261012.md)
@@ -61,20 +63,30 @@ from v1's driver-count1 predicate, requiring acceptance; science is unchanged.
 Host CSV and XML queries select only that UUID. CSV UUID/name, XML UUID/name,
 physical PCI address, XML minor and actual character-device major/minor must
 agree. Actual-job devices-v1 membership and complete raw rules are retained.
-The physical allocation association additionally requires one of:
+Allocation association trusts the unchanged scheduler-supplied original mask,
+resolved in the same accepted runtime namespace; it does not infer allocation
+from OS permission width. This corrects46793259's added broad-numeric-mask gate
+and its fixtures, which incorrectly made cgroup width an association condition.
 
 | Original scheduler mask | Required association evidence |
 |---|---|
 | One full GPU UUID | Exact match to the PCI-selected driver UUID and UUID-bound NVML/kernel identity. |
-| One integer token | Actual-job rules permit read/write on the unique selected GPU-data major/minor pair, excluding recorded control pairs; UUID-bound XML/kernel pair matches. Conservative broader/ambiguous data-access rules reject. |
-| Integer token with broad/ambiguous access or missing identity | `physical_allocation_mapping_unknown`; reject before preflight/affine. Runtime/driver/NVML agreement alone can identify the same wrong physical card and cannot close this gap. |
+| One integer token | Preserve the captured original scheduler mask and ordering; runtime count1/ordinal0 PCI→driver physical UUID→UUID-selected NVML/XML/kernel must agree. Broad and narrow OS rules use the same scheduler-provenance basis. |
+| Missing/changed mask provenance, multi-visible runtime, UUID/PCI conflict | Reject before preflight/affine. Missing selected-device read/write or identifying the selected data device as a recorded control also rejects. |
 
-These bases use trusted scheduler mask provenance and bounded actual-job
-device evidence. They do not independently prove the node's GRES File↔UUID
-configuration or OS denial of opening every other card. Broad rules do not
-prove another GPU computation; they also do not supply a missing integer-mask
-allocation association. `os_other_gpu_open_denial` remains `not_verified`.
-Missing, conflicting or unsupported evidence fails closed.
+These bases trust scheduler mask provenance; runtime/driver/NVML agreement is
+not an independent audit of node GRES File↔UUID configuration. Narrow cgroup
+rules do not establish that configuration either. Broad OS permissions remain
+an independent observation, not evidence of another GPU computation or an
+automatic rejection. `os_other_gpu_open_denial` remains `not_verified`.
+Missing, changed, conflicting or unsupported identity/source evidence rejects.
+
+Permission assessment first intersects rules with the selected data major,
+then subtracts recorded control pairs. Thus selected(195,7), control(195,255),
+`c195:7rw + c*:255rw` has the same data-major classification as explicit
+`c195:7rw + c195:255rw`. The wildcard major's other-major uncertainty is retained
+separately in `cross_major_unknown_access_rules`; it is not silently discarded
+or mislabeled as additional same-major GPU data access.
 
 ## Lifecycle and environment audit
 
@@ -109,23 +121,29 @@ establish no real container/API support, GPU memory or release acceptance.
 
 ## Local validation and next evidence
 
-Independent API/association/full-lifecycle fixtures pass49 cases: nonzero
+Corrected independent API/association/full-lifecycle fixtures pass56 cases: nonzero
 Slurm ID with job-local NVML/CUDA0, NVML index≠kernel minor, PCI-selected driver
 handle6 with total enumeration8, allocated-only visibility, multi-visible
 rejection before ordinal selection, UUID/PCI/environment conflicts, broad
-integer-mask rejection, preserved query failure and owned-group cleanup.
-Actual copied Bash runtime-child fixtures pass47 cases, including set/unset/
-empty/stale ordering and container contract/UUID passthrough; no real container
-or CUDA interpreter runs. Paid launcher/startup-evidence regressions pass130
-cases. The first shared integration run retained92 passes and one failure in
+integer-mask admission with independent OS evidence, corrected control-wildcard
+classification, changed/missing provenance rejection, preserved query failure
+and complete discovery→preflight→probe/owned-group cleanup. The affected startup
+evidence fixture now exercises the admitted complete chain rather than encoding
+the superseded cgroup-width rejection; all13 startup-evidence cases pass.
+Current validation is56+13=69 cases across three affected files, without
+repeating270 historical cases. Current bounded receipts and
+[validation summary](../../../outputs/T7-paid-single-gpu-execution-20261012/local-repair-correction/validation-summary.v1.json) are in the
+[correction package](../../../outputs/T7-paid-single-gpu-execution-20261012/local-repair-correction/).
+Unchanged Bash/private lifecycle checks are reused. Historical46793259 receipts
+remain intact: its first shared integration retained92 passes and one failure in
 an existing private Bash deadman timing fixture. Its readiness/clock repair
 preserves actual owned-child signals, TERM→KILL ordering and the independent
 blocked-supervisor check; production deadman code is unchanged. The repaired
 shared-shell suite passes14 cases. The logs cannot distinguish trap-readiness
 from wall-clock jitter as the original cause, and the corrected mock epochs
 do not certify real Linux process-group/scheduler timing. Reusing unchanged
-passing suites gives270 distinct passing cases across seven affected files,
-without a further all-suite rerun. Bounded results and the retained first failure are in the
+passing suites gave270 distinct cases at that stage; those old broad-mask
+expectations are superseded by this correction. Historical results and first failure are in the
 [validation summary](../../../outputs/T7-paid-single-gpu-execution-20261012/local-repair/validation-summary.v1.json).
 Existing pytest `cache_dir` warning is retained; fixtures use system TEMP,
 bytecode/cache generation disabled. No historical scientific probe was rerun.
@@ -137,16 +155,39 @@ The [driver Device API](https://docs.nvidia.com/cuda/archive/12.6.2/cuda-driver-
 defines PCI handle and UUID operations. Local API fakes validate argument/handle
 binding, not deployed driver enumeration, symbols or physical allocation.
 
-Before proposing a new complete bounded allocation, resolve the smallest
-pending association facts: authoritative node/job GRES File↔physical UUID
-mapping when available, or a scheduler UUID mask/actual-job unique data-device
-pair sufficient for the bounded association gate. Job15812634 did not retain
-its actual-job rules, so no blind rerun is justified by the old failure alone.
-Separately authorized CPU metadata may establish the configuration in advance;
-otherwise any required actual-job observations belong to the one future
-startup+original12/91/4 probe allocation. Real libcudart12/API/container support,
-unchanged ordering, runtime/PJRT visibility, memory and cleanup remain unverified.
-No new execution authorization follows from this local repair.
+Parent read-only evidence on2026-10-13 is retained in
+[the configuration/static-symbol package](../../../outputs/T7-paid-GPU-identity-correction-20261013/).
+cln01 `scontrol show config` reports `GresTypes=gpu`,
+`TaskPlugin=task/affinity,task/cgroup`, `SlurmdParameters=(null)` and
+`SLURM_CONF=/rmconfig/slurm/v22.05.7/etc/slurm.conf`. The usual `/etc` and reported
+`/rmconfig` configuration files were unreadable or absent; site GRES/cgroup
+contents and target-node GRES File↔UUID mapping remain unverified. The first
+login script's Windows CRLF/text-subprocess parsing failure is retained; binary
+UTF-8 transmission corrected it. This was not a driver error.
+
+On test01, foundationpose without `--nv` and the existing GPU-venv Python3.11.15
+used only stdlib/readelf. The existing libcudart.so.12 is679264 bytes, SHA256
+`9335f6a29ca91010e2da9f40e82fb4b28e3a4ae22fd385e1293e93bf3c46c9e6`, and exports
+`cudaGetDeviceCount`/`cudaDeviceGetPCIBusId`. Host driver525.85.12 exports
+`cuDeviceGetByPCIBusId`, `cuDeviceGetPCIBusId` and UUID/v2 APIs. No dlopen,
+CUDA/JAX initialization, nvidia-smi, allocation or deployment occurred. Symbols
+and null container order/CVD do not prove target GPU-job API calls or `--nv`
+bindings. The owner performed no remote connection.
+
+The smallest future proposal is one complete allocation through the existing
+v2 paid Slurm/paid Supervisor chain, after an accepted immutable commit and
+separate explicit approval: existing n04 gnall/1task/4SlurmCPUs/1V100,
+nonexclusive/no-requeue/1200s, worst-case additive quote CNY0.8266666667
+(approval ceiling CNY1.00). Reuse the declared recovery NPZ/receipt/source,
+foundationpose, GPU venv and host driver/toolchain binds. Preserve scheduler
+mask/order; retain actual-job rules and PCI/UUID observations inside the same
+remaining240s discovery+preflight window, then unchanged affine12/91/4 with
+probe≤780s and protected release≥180s/24GiB gate. Fresh preflight and the actual
+affine process repeat runtime/PJRT/PCI/UUID binding before upload/compile.
+Unknown identity stops there; no separate GPU-only discovery request, fallback
+or retry. Live API/container support, visibility, transient memory, numerical
+result and release remain unverified. No scope/deployment/submission/GPU
+authorization follows from this proposal or the parent read-only evidence.
 
 The [local package](../../../outputs/T7-paid-single-gpu-execution-20261012/local-repair/)
 retains frozen-query replay, bounded test receipts/raw failures, actual diff,

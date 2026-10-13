@@ -27,7 +27,7 @@ def mocked_cuda_runtime(monkeypatch):
 
 
 @pytest.mark.parametrize('rules,broad', [
-    ('c 195:5 rwm\nc *:255 rw\n',True),
+    ('c 195:5 rwm\nc *:255 rw\n',False),
     ('c 195:* rwm\n',True),
     ('a *:* rwm\n',True),
     ('c 195:5 rwm\nc 195:6 rw\n',True),
@@ -57,10 +57,27 @@ def test_old_strict_default_still_rejects_wildcards(rules):
         paid.admit_gpu_mapping(ENV,[ROW],rules)
 
 
+def test_fixed_control_minor_wildcard_major_has_same_data_major_classification():
+    controls = {(195, 255)}
+    explicit = paid.assess_device_rules('c 195:7 rw\nc 195:255 rw\n', (195, 7), controls)
+    wildcard = paid.assess_device_rules('c 195:7 rw\nc *:255 rw\n', (195, 7), controls)
+    for field in ('selected_device_read_write_permitted', 'broader_or_ambiguous_access_rules', 'observed_data_major_access'):
+        assert explicit[field] == wildcard[field]
+    assert not explicit['cross_major_unknown_access_rules']
+    assert wildcard['cross_major_unknown_access_rules'][0]['line_number'] == 2
+    assert wildcard['os_other_gpu_open_denial'] == 'not_verified'
+
+
+def test_unrecorded_fixed_minor_wildcard_major_remains_same_major_unknown():
+    result = paid.assess_device_rules('c 195:7 rw\nc *:8 rw\n', (195, 7), {(195, 255)})
+    assert result['broader_or_ambiguous_access_rules'] and result['cross_major_unknown_access_rules']
+
+
 @pytest.mark.parametrize('environment,row,rules',[
     (dict(ENV,SLURM_JOB_GPUS='2'),ROW,'a *:* rwm\n'),
     (dict(ENV,ORCJAX_SLURM_VISIBLE_DEVICES='GPU-wrong'),ROW,'a *:* rwm\n'),
     (ENV,dict(ROW,device_minor=6),'a *:* rwm\n'),
+    (ENV,dict(ROW,control_devices=[dict(major=195,minor=5)]),'a *:* rwm\n'),
     (ENV,ROW,'c *:255 rw\n')])
 def test_new_contract_keeps_allocation_uuid_kernel_and_selected_access_gates(environment,row,rules):
     with pytest.raises(ValueError):

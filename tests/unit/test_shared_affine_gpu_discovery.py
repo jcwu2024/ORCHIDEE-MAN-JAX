@@ -118,7 +118,7 @@ def mapping_row():
 
 
 @pytest.mark.parametrize('visible,rules,basis', [
-    ('0', 'c 195:7 rw\nc 195:255 rw\nc 195:* m\n', 'numeric_scheduler_CVD_and_unique_actual_job_data_device_pair'),
+    ('0', 'c 195:7 rw\nc 195:255 rw\nc 195:* m\n', 'scheduler_original_numeric_mask_same_runtime_driver_NVML_kernel'),
     (UUID, 'a *:* rwm\n', 'scheduler_original_UUID_matches_runtime_driver_NVML_kernel')])
 def test_association_distinguishes_all_four_identity_spaces(visible, rules, basis):
     mapping = paid.admit_gpu_mapping(dict(SLURM_JOB_GPUS='5', ORCJAX_SLURM_VISIBLE_DEVICES=visible),
@@ -129,10 +129,12 @@ def test_association_distinguishes_all_four_identity_spaces(visible, rules, basi
 
 
 @pytest.mark.parametrize('rules', ['a *:* rw\n', 'c 195:* rw\n', 'c 195:7 rw\nc *:255 rw\n', 'c 195:7 rw\nc 195:8 r\n'])
-def test_numeric_mask_broad_or_second_data_permissions_are_unknown(rules):
-    with pytest.raises(ValueError, match='physical_allocation_mapping_unknown'):
-        paid.admit_gpu_mapping(dict(SLURM_JOB_GPUS='5', ORCJAX_SLURM_VISIBLE_DEVICES='0'),
-            [mapping_row()], rules, contract=paid.GPU_EXECUTION_CONTRACT)
+def test_numeric_mask_association_uses_scheduler_provenance_not_os_width(rules):
+    mapping = paid.admit_gpu_mapping(dict(SLURM_JOB_GPUS='5', ORCJAX_SLURM_VISIBLE_DEVICES='0'),
+        [mapping_row()], rules, contract=paid.GPU_EXECUTION_CONTRACT)
+    assert mapping['allocation_association_basis'] == 'scheduler_original_numeric_mask_same_runtime_driver_NVML_kernel'
+    assert not mapping['independent_GRES_index_to_UUID_verified']
+    assert mapping['os_device_access_assessment']['os_other_gpu_open_denial'] == 'not_verified'
 
 
 @pytest.mark.parametrize('change', ['slurm_gpu_id', 'discovery_gpu_uuid', 'device_minor'])
@@ -179,6 +181,18 @@ def test_unknown_release_monitor_cannot_certify_cleanup():
         paid.IdentityPendingMonitor().sample()
 
 
+@pytest.mark.parametrize('captured,current', [('0', '1'), (None, '0')])
+def test_original_mask_changed_or_source_unknown_rejects_before_gpu_child(tmp_path, monkeypatch, captured, current):
+    monkeypatch.setenv('ORCJAX_SLURM_VISIBLE_DEVICES', current)
+    monkeypatch.setattr(paid, 'SCOPE_LOCK', tmp_path/'paid.lock')
+    monkeypatch.setattr(paid, 'read_free_admission', lambda **_: dict(status='fixture_unchanged'))
+    monkeypatch.setattr(paid, 'PaidSupervisor', lambda *_: pytest.fail('must not create GPU supervisor'))
+    plan = dict(paid_startup_observation=paid.startup_observation(dict(ORCJAX_SLURM_VISIBLE_DEVICES=captured)))
+    with pytest.raises(ValueError, match='original scheduler CVD required'):
+        paid.run_live(plan)
+    assert not paid.SCOPE_LOCK.exists()
+
+
 def test_discovery_shares_preflight_budget_and_phase_ownership(tmp_path, monkeypatch):
     from tests.unit.test_shared_latent_T7_batch_numerics_launcher import minimal_plan, FakeGroups
     plan = minimal_plan(tmp_path)
@@ -200,7 +214,7 @@ def test_discovery_shares_preflight_budget_and_phase_ownership(tmp_path, monkeyp
     assert calls[-1][1] == 780
 
 
-@pytest.mark.parametrize('outcome', ['passed', 'unknown', 'broad_numeric', 'query_failed'])
+@pytest.mark.parametrize('outcome', ['passed', 'unknown', 'broad_numeric', 'control_wildcard', 'mask_changed', 'query_failed'])
 def test_full_paid_lifecycle_owns_discovery_and_releases_or_retains_mutex(tmp_path, monkeypatch, outcome):
     from pathlib import Path
     from tests.unit.test_shared_latent_T7_batch_numerics_launcher import minimal_plan, FakeGroups
@@ -213,6 +227,8 @@ def test_full_paid_lifecycle_owns_discovery_and_releases_or_retains_mutex(tmp_pa
     groups, launched = FakeGroups(live=[777]), []
     identity = dict(passed=True, gpu_uuid=UUID, original_CUDA_VISIBLE_DEVICES='0', CUDA_DEVICE_ORDER='FASTEST_FIRST',
         slurm_gpu_id='5', allocation_association='trusted_scheduler_original_CVD_same_runtime_namespace')
+    if outcome == 'mask_changed':
+        identity['original_CUDA_VISIBLE_DEVICES'] = '1'
     runtime = dict(runtime_device_count=1, runtime_visible_ordinal=0, runtime_pci_bus_id=PCI)
     driver = dict(driver_device_count=8, driver_gpu_uuid=UUID, driver_pci_bus_id=PCI)
     binding = dict(passed=True, expected_gpu_uuid=UUID, pjrt_local_hardware_id=0,
@@ -254,21 +270,34 @@ def test_full_paid_lifecycle_owns_discovery_and_releases_or_retains_mutex(tmp_pa
     monkeypatch.setattr(paid, 'read_free_admission', lambda **_: dict(status='fixture_unchanged'))
     monkeypatch.setattr(paid.signal, 'signal', lambda *_: None)
     monkeypatch.setattr(paid.subprocess, 'run', query)
-    monkeypatch.setattr(paid, 'os', SimpleNamespace(environ=os.environ, major=lambda _: 195, minor=lambda _: 7))
-    monkeypatch.setattr(paid, '_kernel_stat', lambda *_: SimpleNamespace(st_mode=paid.stat.S_IFCHR, st_rdev=7))
-    monkeypatch.setattr(paid, 'read_cgroup_rules', lambda *_, **__: ('/fixture/job_1234/devices.list', 'a *:* rwm\n' if outcome == 'broad_numeric' else 'c 195:7 rw\n'))
-    assert paid.run_live(plan) == (0 if outcome == 'passed' else 2 if outcome == 'unknown' else 1)
+    monkeypatch.setattr(paid, 'os', SimpleNamespace(environ=os.environ, major=lambda _: 195, minor=lambda value: value))
+    real_exists = Path.exists
+    monkeypatch.setattr(Path, 'exists', lambda path: True if path.as_posix() == '/dev/nvidiactl' else real_exists(path))
+    monkeypatch.setattr(paid, '_kernel_stat', lambda path, *_: SimpleNamespace(st_mode=paid.stat.S_IFCHR,
+        st_rdev=255 if path.as_posix() == '/dev/nvidiactl' else 7))
+    rules = 'a *:* rwm\n' if outcome == 'broad_numeric' else 'c 195:7 rw\nc *:255 rw\n' if outcome == 'control_wildcard' else 'c 195:7 rw\n'
+    monkeypatch.setattr(paid, 'read_cgroup_rules', lambda *_, **__: ('/fixture/job_1234/devices.list', rules))
+    admitted = outcome in ('passed', 'broad_numeric', 'control_wildcard')
+    assert paid.run_live(plan) == (0 if admitted else 2 if outcome == 'unknown' else 1)
     ledger = json.loads(Path(plan['ledger']).read_text())
     record = json.loads(Path(plan['output']).with_suffix('.supervisor.json').read_text())
     assert not any(group == 777 for group, _ in groups.killed), 'never kill unowned groups'
     assert not record['active_owned_groups']
     assert launched[0][1]['CUDA_VISIBLE_DEVICES'] == '0'
     assert cuda.ENVIRONMENT_KEY not in launched[0][1]
-    if outcome == 'passed':
+    if admitted:
         assert [name for name, _ in launched] == ['discovery', 'preflight', 'probe']
         assert all(env['CUDA_VISIBLE_DEVICES'] == UUID for _, env in launched[1:])
         assert record['release_verified'] and not paid.SCOPE_LOCK.exists()
         assert ledger['charged_gpu_seconds'] < 1200
+        mapping = record['plan']['slurm_gpu_mapping']
+        assert mapping['allocation_association_basis'] == 'scheduler_original_numeric_mask_same_runtime_driver_NVML_kernel'
+        assert not mapping['independent_GRES_index_to_UUID_verified']
+        if outcome == 'broad_numeric':
+            assert mapping['os_device_access_assessment']['broader_or_ambiguous_access_rules']
+        elif outcome == 'control_wildcard':
+            assert not mapping['os_device_access_assessment']['broader_or_ambiguous_access_rules']
+            assert mapping['os_device_access_assessment']['cross_major_unknown_access_rules']
     else:
         assert [name for name, _ in launched] == ['discovery']
         assert record['numerical_status'] == 'not_executed'

@@ -1,6 +1,6 @@
 # Current Work Order
 
-Updated: 2026-10-12. First-day localization completed both graphs/24 JVPs.
+Updated: 2026-10-13. First-day localization completed both graphs/24 JVPs.
 Finite, defined next-state tangents differ for every direction, including control 200;
 raw state coordinate 20 is nonfinite. Numerical exit 3, GPU released, scope
 closed. Raw-neural v3-final saved-evidence audit is accepted with active numerical
@@ -71,7 +71,9 @@ establish GPU or scientific acceptance.
 The [local v2 identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
 now owns the candidate method: Supervisor-owned original-mask discovery,
 runtime count1/PCI→driver physical UUID, UUID-only NVML and explicit actual-job
-association. Numeric masks with broad device access fail mapping_unknown.
+association from the unchanged scheduler mask in that runtime. OS access width
+is recorded independently; broad rules do not reject numeric masks and narrow
+rules do not prove node GRES configuration. Selected-device read/write is required.
 V2 explicitly separates runtime visibility from total driver enumeration;
 old consumed grants cannot migrate. Local mocks establish no deployed/API,
 allocation, memory, numerical or release acceptance. No new execution is authorized.

@@ -51,6 +51,27 @@ def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
     def phase(self, name, seconds, **kwargs):
         if name == 'discovery':
             Path(self.plan['discovery_output']).write_text(json.dumps(discovery))
+        elif name == 'preflight':
+            binding = dict(passed=True, expected_gpu_uuid=UUID,
+                gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT, pjrt_local_hardware_id=0,
+                driver_device_count=1, driver_gpu_uuid=UUID, driver_pci_bus_id=PCI,
+                runtime_device_count=1, runtime_visible_ordinal=0, runtime_pci_bus_id=PCI)
+            Path(self.plan['preflight_output']).write_text(json.dumps(dict(passed=True,
+                actual_backend='gpu', jax_version='0.4.38', devices=['fixture-GPU'],
+                affine_gpu_identity=binding)))
+        elif name == 'probe':
+            arrays = Path(self.plan['output']).with_suffix('.results.npz')
+            arrays.write_bytes(b'fixture result container')
+            self.record['GPU_executed'] = True
+            Path(self.plan['output']).write_text(json.dumps(dict(status='passed', passed=True,
+                backend='gpu', jax_version='0.4.38', operand_sha256=paid.free.OPERAND_SHA,
+                measurement_count=12, preserved_array_count=91, total_small_graph_compiles=4,
+                tolerances=dict(rtol=1e-5, atol=1e-6), results_container=str(arrays),
+                affine_gpu_identity=dict(passed=True, expected_gpu_uuid=UUID,
+                    gpu_execution_contract=paid.GPU_EXECUTION_CONTRACT, pjrt_local_hardware_id=0,
+                    driver_device_count=1, driver_gpu_uuid=UUID, driver_pci_bus_id=PCI,
+                    runtime_device_count=1, runtime_visible_ordinal=0, runtime_pci_bus_id=PCI))))
+        self.record['phases'].append(dict(name=name, fixture_status='passed'))
         return 'passed', 0
     monkeypatch.setattr(constructor, 'phase', phase)
     monkeypatch.setattr(paid, 'PaidSupervisor', lambda plan: constructor(plan, watchdog=False))
@@ -84,17 +105,19 @@ def main_fixture(tmp_path, monkeypatch, *, rules='c 195:5 rwm\n'):
                            supervisor_class=constructor)
 
 
-@pytest.mark.parametrize('rules', [
-    'a *:* rwm\nc 195:5 rw\n',
-    'c 195:5 rw\nc *:255 rw\n',
+@pytest.mark.parametrize(('rules', 'same_major_status', 'cross_major_count'), [
+    ('a *:* rwm\nc 195:5 rw\n', 'broader_or_ambiguous', 1),
+    ('c 195:5 rw\nc *:255 rw\n', 'selected_and_recorded_controls_only', 1),
 ])
-def test_startup_wildcard_rejection_retains_rule_kernel_cgroup_and_prior_stages(tmp_path, monkeypatch, capsys, rules):
+def test_startup_broad_device_permissions_preserve_uuid_bound_execution_and_os_evidence(
+        tmp_path, monkeypatch, capsys, rules, same_major_status, cross_major_count):
     fixture = main_fixture(tmp_path, monkeypatch, rules=rules)
-    assert paid.main([]) == 1
+    assert paid.main([]) == 0
     report = json.loads(fixture.output.with_suffix('.supervisor.json').read_text())
     evidence = report['plan']['paid_startup_observation']
-    assert report['error'] == ('physical_allocation_mapping_unknown: numeric scheduler CVD lacks unique job-device association')
-    assert report['GPU_executed'] is False
+    assert report['primary_status'] == 'passed' and report['release_verified'] is True
+    assert report['GPU_executed'] is True and report['numerical_status'] == 'executed'
+    assert [phase['name'] for phase in report['phases']] == ['discovery', 'preflight', 'probe']
     assert evidence['slurm_job']['NumCPUs'] == '4'
     assert evidence['environment']['SLURM_JOB_GPUS'] == '3'
     assert 'SECRET_TOKEN' not in evidence['environment']
@@ -110,17 +133,52 @@ def test_startup_wildcard_rejection_retains_rule_kernel_cgroup_and_prior_stages(
     assessment = evidence['os_device_access_assessment']
     assert assessment['selected_kernel_pair'] == [195, 5]
     assert assessment['selected_device_read_write_permitted']
-    assert assessment['broader_or_ambiguous_access_rules']
+    assert assessment['observed_data_major_access'] == same_major_status
+    assert len(assessment['broader_or_ambiguous_access_rules']) == (1 if same_major_status == 'broader_or_ambiguous' else 0)
+    assert len(assessment['cross_major_unknown_access_rules']) == cross_major_count
     assert assessment['raw_devices_rules'] == rules
+    assert assessment['os_other_gpu_open_denial'] == 'not_verified'
+    if 'c *:255 rw' in rules:
+        explicit_control = paid.assess_device_rules('c 195:5 rw\nc 195:255 rw\n', (195, 5), {(195, 255)})
+        assert assessment['observed_data_major_access'] == explicit_control['observed_data_major_access']
+        assert assessment['broader_or_ambiguous_access_rules'] == explicit_control['broader_or_ambiguous_access_rules']
+        assert assessment['cross_major_unknown_access_rules'][0]['line_number'] == 2
     assert [command['stdout'] for command in evidence['gpu_observation']['commands']] == [f'0, {UUID}, Tesla V100\n', XML]
+    assert [command['command'][2] for command in evidence['gpu_observation']['commands']] == [UUID, UUID]
+    assert evidence['discovery']['runtime_identity']['runtime_visible_ordinal'] == 0
+    assert evidence['discovery']['runtime_identity']['runtime_pci_bus_id'] == PCI
+    assert evidence['discovery']['driver_identity']['driver_gpu_uuid'] == UUID
+    assert evidence['discovery']['driver_identity']['driver_pci_bus_id'] == PCI
     assert json.loads(fixture.ledger.read_text())['status'] == 'closed'
     assert not paid.SCOPE_LOCK.exists()
+    assert [phase['name'] for phase in report['phases']] == ['discovery', 'preflight', 'probe']
+    assert report['plan']['slurm_gpu_mapping']['allocation_association_basis'] == 'scheduler_original_numeric_mask_same_runtime_driver_NVML_kernel'
+    assert report['plan']['slurm_gpu_mapping']['gpu_uuid'] == UUID
+    assert report['plan']['slurm_gpu_mapping']['gpu_host_index'] == 0
+    assert report['plan']['slurm_gpu_mapping']['actual_GPU_minor'] == 5
+    result = json.loads(fixture.output.read_text())
+    assert (result['operand_sha256'], result['measurement_count'], result['preserved_array_count'],
+            result['total_small_graph_compiles']) == (paid.free.OPERAND_SHA, 12, 91, 4)
+    assert Path(result['results_container']).is_file()
     attempt = fixture.output.with_suffix('.job-attempt.json').read_bytes()
     assert json.loads(attempt)['retry_allowed'] is False
     assert paid.main([]) == 2
     second = json.loads(capsys.readouterr().out)
     assert second['error_type'] == 'FileExistsError'
     assert len(fixture.queries) == 2 and fixture.output.with_suffix('.job-attempt.json').read_bytes() == attempt
+
+
+def test_startup_rejects_missing_selected_device_read_write_permission(tmp_path, monkeypatch):
+    fixture = main_fixture(tmp_path, monkeypatch, rules='c 195:5 r\nc 195:* m\n')
+    assert paid.main([]) == 1
+    report = json.loads(fixture.output.with_suffix('.supervisor.json').read_text())
+    evidence = report['plan']['paid_startup_observation']
+    assert report['error'] == 'cgroup does not permit allocated GPU read/write access'
+    assert evidence['os_device_access_assessment']['selected_device_read_write_permitted'] is False
+    assert [row['name'] for row in report['phases']] == ['discovery']
+    assert report['GPU_executed'] is False
+    assert json.loads(fixture.ledger.read_text())['status'] == 'closed'
+    assert not paid.SCOPE_LOCK.exists()
 
 
 @pytest.mark.parametrize('failure', ['devices_read', 'proc_read', 'kernel_stat'])

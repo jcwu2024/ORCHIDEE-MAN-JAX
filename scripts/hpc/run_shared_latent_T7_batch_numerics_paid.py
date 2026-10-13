@@ -404,14 +404,8 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None,
             raise ValueError('cgroup does not permit allocated GPU read/write access')
         if cuda_identity.valid_uuid(visible):
             basis = 'scheduler_original_UUID_matches_runtime_driver_NVML_kernel'
-        elif assessment['broader_or_ambiguous_access_rules']:
-            if observation is not None:
-                observation['allocation_association'] = dict(status='physical_allocation_mapping_unknown',
-                    reason='numeric original CVD with broader/ambiguous actual-job device access',
-                    independent_GRES_index_to_UUID_verified=False)
-            raise ValueError('physical_allocation_mapping_unknown: numeric scheduler CVD lacks unique job-device association')
         else:
-            basis = 'numeric_scheduler_CVD_and_unique_actual_job_data_device_pair'
+            basis = 'scheduler_original_numeric_mask_same_runtime_driver_NVML_kernel'
         return dict(gpu_execution_contract=contract, gpu_host_index=host_index,
             gpu_uuid=row['uuid'], gpu_name=row['name'],
             slurm_gpu_id=selected, allocation_association=association,
@@ -464,10 +458,11 @@ def admit_gpu_mapping(environment, gpu_rows, devices_rules, *, observation=None,
 def assess_device_rules(raw_rules, selected_pair, controls):
     """Bounded permission evidence, never a full hardware-isolation claim.
 
-    Does not open any GPU device or enumerate other hardware. Control wildcards
-    can be ambiguous; a broad permission does not show another GPU computation.
+    Intersect each rule with the selected data major before excluding recorded
+    controls. Cross-major wildcard uncertainty is separate from that intersection.
+    Does not open devices or enumerate hardware; width is not allocation proof.
     """
-    rules, selected_permissions, broader = [], set(), []
+    rules, selected_permissions, broader, cross_major = [], set(), [], []
     for number, line in enumerate(raw_rules.splitlines(), 1):
         parts = line.split()
         if len(parts) != 3:
@@ -485,14 +480,18 @@ def assess_device_rules(raw_rules, selected_pair, controls):
         if matching and minor in ('*', str(selected_pair[1])):
             selected_permissions.update(permissions)
         if matching and set(permissions) & set('rw'):
-            if major == '*' or minor == '*':
-                broader.append(dict(line_number=number, reason='wildcard device access; hardware inventory not established'))
-            elif (int(major), int(minor)) not in {selected_pair, *controls}:
+            if major == '*':
+                cross_major.append(dict(line_number=number,
+                    reason='wildcard major permits other majors; hardware roles not established'))
+            if minor == '*':
+                broader.append(dict(line_number=number, reason='wildcard same-major device access; hardware inventory not established'))
+            elif (selected_pair[0], int(minor)) not in {selected_pair, *controls}:
                 broader.append(dict(line_number=number, reason='additional same-major device permission; hardware role not established'))
     return dict(raw_devices_rules=raw_rules, parsed_rules=rules,
         selected_kernel_pair=list(selected_pair), control_pairs=[list(pair) for pair in sorted(controls)],
         selected_device_read_write_permitted=set('rw') <= selected_permissions,
         broader_or_ambiguous_access_rules=broader,
+        cross_major_unknown_access_rules=cross_major,
         observed_data_major_access='broader_or_ambiguous' if broader else 'selected_and_recorded_controls_only',
         os_other_gpu_open_denial='not_verified', os_isolation_required=False,
         limitation='rule analysis only; no complete device inventory/open test; not evidence of computation on another GPU')
@@ -795,7 +794,8 @@ def run_live(plan):
         plan['free_management_state'] = read_free_admission(observation=observation)
         observation['free_management_state'] = plan['free_management_state']
         visible = os.environ.get('ORCJAX_SLURM_VISIBLE_DEVICES', '')
-        if not (visible.isdigit() or cuda_identity.valid_uuid(visible)):
+        if (not (visible.isdigit() or cuda_identity.valid_uuid(visible))
+                or visible != observation.get('environment', {}).get('ORCJAX_SLURM_VISIBLE_DEVICES')):
             raise ValueError('single original scheduler CVD required; physical_allocation_mapping_unknown')
         plan['scope'] = dict(plan['scope'], gpu_host_index=None, gpu_uuid='')
         observation['stage'] = 'supervisor'

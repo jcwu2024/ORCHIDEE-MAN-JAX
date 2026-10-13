@@ -1,6 +1,6 @@
 # Documentation Authority
 
-Updated: 2026-10-12. Current entry pages replace progress chronology. Dated
+Updated: 2026-10-13. Current entry pages replace progress chronology. Dated
 reports retain their experimental scope; old plans grant no execution authority.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns current action and resource boundaries.
 
@@ -26,7 +26,7 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
-| [Local v2 GPU identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md) | Current local method candidate: owned original-mask runtime count1/PCI→driver UUID discovery, UUID-selected NVML/XML/kernel and actual-job association; broad numeric masks reject unknown. V2 explicitly changes driver total-count versus runtime visibility semantics. Local mocks/replay only; no deployment/new scope/execution acceptance or approval. Old v1 terminal scope stays consumed. |
+| [Local v2 GPU identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md) | Corrected current local candidate: owned unchanged scheduler-mask runtime count1/PCI→driver UUID association and UUID-selected NVML/XML/kernel. OS permission width is independent, selected rw required; selected-major controls deducted before classification, cross-major unknown separate. V2 separates driver inventory/runtime visibility. Parent read-only configuration/static-symbol evidence establishes no live API/--nv/GPU acceptance. No deployment/new scope/execution approval; v1 consumed. |
 | [Single-GPU terminal result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md) | Latest approved attempt: sole n04 job15812634/frozen c8a44c3 FAILED2:0/6s. First GPU CSV returns6/No devices were found; no XML/cgroup/Supervisor/preflight/CUDA-PJRT/affine science. Numerical not_executed; OS denial not assessed. Estimate CNY0.0041333333,0.0016666667card-hours; bill unknown. Scope closed/consumed/mutex absent; live cleanup/peak memory unobserved; no retry/mapping query/repair/redeploy/fallback/training. |
 | [Single-GPU preparation/proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md), [contract](research/daily_coarse_graining/T7_paid_single_GPU_execution_contract_20261012.md) | Historical method/preparation authority: explicit allocated-GPU versus OS-denial boundary, exact c8a44c3 deployment/full argv,88 local cases and actual test01 CPU dry-run. Original false snapshot remains; latest independent approval/open/closed identities and execution status are in terminal result above. |
 | [Paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md) | Historical direct human v3 approval/execution: sole job15806646/frozen58a2d938 FAILED2:0/7s, CSV→UUID XML succeeds on n01, unchanged wildcard-cgroup isolation gate rejects before Supervisor/preflight/probe. Exact devices.list/configuration cause unretained. Estimated CNY0.0048222222; scope closed/consumed/mutex absent; no live GPU cleanup observation or retry. |
