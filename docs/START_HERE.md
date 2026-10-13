@@ -27,35 +27,32 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [single-GPU terminal result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md)
-owns the latest paid status: sole approved n04/4CPU/1V100 job15812634 at
-frozen c8a44c3 ended FAILED2:0 after6 allocated seconds. The first
-`nvidia-smi -i 5` CSV query returned6/“No devices were found”; no XML,
-actual-job cgroup, Supervisor, preflight, CUDA/PJRT or affine12/91 ran.
-Numerical status is not_executed; OS opening denial is not assessed.
-Scope closed/consumed, mutex absent; live GPU cleanup/peak memory unobserved.
-Allocation0.0016666667card-hours, additive estimate CNY0.0041333333; bill unknown.
-No retry, mapping query, repair/redeploy, free fallback, monitoring or training.
-The [preparation/proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md)
-retains historical false scope, exact argv and88 CPU cases; these do not
-establish GPU or scientific acceptance.
-
-The [local v2 identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
-now owns the candidate method: Supervisor-owned original-mask discovery,
-runtime count1/PCI→driver physical UUID, UUID-only NVML and explicit actual-job
-association from the unchanged scheduler mask in that runtime. OS access width
-is recorded independently; broad rules do not reject numeric masks and narrow
-rules do not prove node GRES configuration. Selected-device read/write is required.
-V2 explicitly separates runtime visibility from total driver enumeration;
-old consumed grants cannot migrate. Local mocks establish no GPU API,
-allocation, memory, numerical or release acceptance. No new execution is authorized.
+The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
+human delegation plus supervisor approval bound immutable7efe4b44 to sole
+n04/4allocatedSlurmCPU/1V100 job15822347. It completed0:0 after110 allocated
+seconds. Discovery, preflight and the unchanged affine12measurements/91arrays/
+4smallcompiles passed; saved-only NumPy analysis independently verifies the arrays.
+Strict tolerances and FP32/FP64 roles remain unchanged. This is affine component
+evidence, without original-T7 derivative repair or full-update/training acceptance.
+Runtime count1/PCI/driver UUID/PJRT/NVML/kernel agree under trusted original
+scheduler-mask provenance. Actual cgroup `a *:* rwm` is broad: selected rw passes,
+other-GPU OS opening denial and independent GRES mapping remain unverified.
+Both runtime and driver counted1 and numeric mask/ordinal/index/minor were0;
+this job does not demonstrate numeric remapping or a driver inventory larger than1.
+Sampled peak757MiB excludes unobserved discovery memory before UUID was known.
+Owned groups and final UUID memory0/utilization0/no-process sample verify release;
+ledger closed at109.724400s, scope closed/consumed/false, mutex absent.
+Scheduler allocation0.0305555556card-hours; additive estimate CNY0.0757777778,
+actual bill unknown. Terminal scontrol was purged; saved sacct owns the terminal
+state and retained RUNNING snapshots separately verify actual allocation.
+No retry, new GPU diagnostic, fallback, repair, adoption or training follows.
 
 The [v2 deployment preparation](research/daily_coarse_graining/T7_paid_v2_GPU_deployment_preparation_20261013.md)
-binds immutable7efe4b44 to an independent checkout/false scope. Actual test01
-Bash→CPU Python `--dry-run` passed with unchanged source/input/manifest and12/91/4
-planning. One fixed n04/4CPU/1V100/nonexclusive20min/CNY0.83 (future ceiling1.00)
-proposal is reviewable; no job/GPU/preflight/probe ran. Old grants stay consumed;
-new scope proposed/unconsumed, pending supervisor acceptance and new user approval.
+retains historical proposedfalse scope, full argv, source/input identities and
+target CPU admission. The [v2 identity method](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
+remains its bounded method authority. The older
+[v1 single-GPU result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md)
+and all consumed scopes/old assets remain unchanged.
 
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns historical paid v3 execution status. Direct human “批准。” authorized the exact58a2d938

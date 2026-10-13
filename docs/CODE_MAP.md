@@ -54,10 +54,10 @@ Paths are under `scripts/hpc/`.
 | `run_shared_latent_T7_state_jvp.py`, its shell launcher | Actual runtime preflight, isolated overlay resolution, independent approval-bound3600-second occupation, route/load/compile caps, actual memory/exit observations and saved-only VJP loading |
 | `shared_latent_T7_day_jvp.py`, `probe_shared_latent_T7_day_jvp.py`, `run_shared_latent_T7_day_jvp.py`, `run_shared_latent_T7_day_jvp.sh` | Completed canonical `RolloutLoss.step` first-day B1/B4 full outputs/native tangents at natural scale/no /4; exact assets, saved binaries/HLO/24 raw results, strict numeric/discrete/mask comparisons, actual exit 3 and settled independent occupation; no retry/VJP/update |
 | `shared_latent_T7_raw_neural_jvp.py`, `probe_shared_latent_T7_raw_neural_jvp.py`, `run_shared_latent_T7_raw_neural_jvp.py`, `run_shared_latent_T7_raw_neural_jvp.sh` | Completed canonical neural prefix/all 161 raw fields/exact masks; 24 native JVPs, binaries/HLO; accepted v3-final audit retains active primal/tangent failures, exact repeats/isolation; scope closed/handoff/stop |
-| `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; synthetic method evidence, no real-model/GPU acceptance |
+| `audit_shared_latent_T7_input_numerics.py`, `probe_shared_latent_T7_batch_numerics.py` | Local bounded rebuild/summary/normalization audit and unchanged affine scalar/vmap/lax.map discriminator; independent FP64 oracle, per-round complete arrays, actual AD pairing and nonfinite JSON/NPZ failure retention; bounded GPU affine12/91/4 evidence now passes; no real-T7/full-model acceptance |
 | `capture_shared_latent_T7_summary_operands.py` | Thin CPU-only identity-checked original TRAIN window0/day0 loader and canonical rebuild/assembly/normalization/PFT/pool summary boundary; sample3 raw434 preprocessing JVP and seven-key affine NPZ; actual eight-file sources now captured/CPU admitted; Windows restores saved PosixPath as lexical PurePosixPath |
 | `run_shared_latent_T7_batch_numerics.py`, its shell launcher | Deployed b676353 NumPy-only capture admission, independent one-shot1200s scope, host UUID/V100/24GiB monitor, preflight/probe owned groups and independent shell deadlines; target CPU shell/private-phase checks accepted, container/PJRT/GPU pending; both cards busy, no GPU/preflight/open scope/ledger reservation |
-| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Corrected v2 at immutable7efe4b44: Supervisor-owned unchanged scheduler-mask/runtime association, shared startup/preflight deadline, UUID-only CSV/XML/monitoring and kernel binding. OS width independent; selected rw required, selected-major controls deducted and cross-major unknown separate. Unknown UUID retains mutex/full charge. Science/count/memory/release unchanged. Independent v2 deployment/false scope and test01 real CPU dry-run admitted; no v2 job/GPU execution. Historical c8a44c3 job15812634 and consumed v1 scope unchanged. |
+| `run_shared_latent_T7_batch_numerics_paid.py`, its shell and `slurm_shared_latent_T7_batch_numerics_paid.sh` | Corrected v2 at immutable7efe4b44: Supervisor-owned unchanged scheduler-mask/runtime association, shared startup/preflight deadline, UUID-only CSV/XML/monitoring and kernel binding. OS width independent; selected rw required, selected-major controls deducted and cross-major unknown separate. Unknown UUID retains mutex/full charge. Science/count/memory/release unchanged. Sole v2 job15822347 completed0:0/110s; GPU12/91/4 and saved-array analysis pass, release verified, scope closed/consumed. Historical c8a44c3 job15812634 and consumed v1 scope unchanged. |
 | `shared_affine_gpu_admission.py`, `shared_affine_cuda_identity.py`, `freeze_shared_affine_paid_scope.py` | Persistent atomic cross-scope mutex and bounded free-state admission; v2 runtime count1/PCI→physical driver UUID discovery and repeated preflight/affine binding, total driver enumeration recorded separately. Legacy strict/v1 defaults retained; accepted-commit→false scope/source manifests remain explicit, with no old-approval migration or stale-lock takeover. |
 | `shared_gpu_budget.py`, `shared_latent_T7_memory.sh` | Shared persistent reservation/charge/termination helper and read-only NVML sampling; current launcher binds a separate grant, never resets old ledgers |
 | `analyze_shared_latent_T7_state_repeats.py` | NumPy-only21-array state extraction and per-session repeat/range evidence; no GPU/model/AD calls |
@@ -83,35 +83,32 @@ owns the separate approved1200s scope's current `approved_waiting_resources`
 status, deployment paths/identities and saved CPU receipts. Both cards were
 busy at the final refresh; no GPU launch/preflight/open scope/ledger reservation
 occurred and the one-shot is unconsumed. No further polling/automatic monitoring.
-The [single-GPU terminal result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md)
-owns the latest paid status: sole approved n04/4CPU/1V100 job15812634 at
-frozen c8a44c3 ended FAILED2:0 after6 allocated seconds. The first
-`nvidia-smi -i 5` CSV query returned6/“No devices were found”; no XML,
-actual-job cgroup, Supervisor, preflight, CUDA/PJRT or affine12/91 ran.
-Numerical status is not_executed; OS opening denial is not assessed.
-Scope closed/consumed, mutex absent; live GPU cleanup/peak memory unobserved.
-Allocation0.0016666667card-hours, additive estimate CNY0.0041333333; bill unknown.
-No retry, mapping query, repair/redeploy, free fallback, monitoring or training.
-The [preparation/proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md)
-retains historical false scope, exact argv and88 CPU cases; these do not
-establish GPU or scientific acceptance.
-
-The [local v2 identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
-now owns the candidate method: Supervisor-owned original-mask discovery,
-runtime count1/PCI→driver physical UUID, UUID-only NVML and explicit actual-job
-association from the unchanged scheduler mask in that runtime. OS access width
-is recorded independently; broad rules do not reject numeric masks and narrow
-rules do not prove node GRES configuration. Selected-device read/write is required.
-V2 explicitly separates runtime visibility from total driver enumeration;
-old consumed grants cannot migrate. Local mocks establish no GPU API,
-allocation, memory, numerical or release acceptance. No new execution is authorized.
+The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
+human delegation plus supervisor approval bound immutable7efe4b44 to sole
+n04/4allocatedSlurmCPU/1V100 job15822347. It completed0:0 after110 allocated
+seconds. Discovery, preflight and the unchanged affine12measurements/91arrays/
+4smallcompiles passed; saved-only NumPy analysis independently verifies the arrays.
+Strict tolerances and FP32/FP64 roles remain unchanged. This is affine component
+evidence, without original-T7 derivative repair or full-update/training acceptance.
+Runtime count1/PCI/driver UUID/PJRT/NVML/kernel agree under trusted original
+scheduler-mask provenance. Actual cgroup `a *:* rwm` is broad: selected rw passes,
+other-GPU OS opening denial and independent GRES mapping remain unverified.
+Both runtime and driver counted1 and numeric mask/ordinal/index/minor were0;
+this job does not demonstrate numeric remapping or a driver inventory larger than1.
+Sampled peak757MiB excludes unobserved discovery memory before UUID was known.
+Owned groups and final UUID memory0/utilization0/no-process sample verify release;
+ledger closed at109.724400s, scope closed/consumed/false, mutex absent.
+Scheduler allocation0.0305555556card-hours; additive estimate CNY0.0757777778,
+actual bill unknown. Terminal scontrol was purged; saved sacct owns the terminal
+state and retained RUNNING snapshots separately verify actual allocation.
+No retry, new GPU diagnostic, fallback, repair, adoption or training follows.
 
 The [v2 deployment preparation](research/daily_coarse_graining/T7_paid_v2_GPU_deployment_preparation_20261013.md)
-binds immutable7efe4b44 to an independent checkout/false scope. Actual test01
-Bash→CPU Python `--dry-run` passed with unchanged source/input/manifest and12/91/4
-planning. One fixed n04/4CPU/1V100/nonexclusive20min/CNY0.83 (future ceiling1.00)
-proposal is reviewable; no job/GPU/preflight/probe ran. Old grants stay consumed;
-new scope proposed/unconsumed, pending supervisor acceptance and new user approval.
+retains historical proposedfalse scope, full argv, source/input identities and
+target CPU admission. The [v2 identity method](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md)
+remains its bounded method authority. The older
+[v1 single-GPU result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md)
+and all consumed scopes/old assets remain unchanged.
 
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns historical v3 approval/execution: sole fixed n01 job15806646 at58a2d938 ended

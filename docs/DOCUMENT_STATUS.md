@@ -26,9 +26,10 @@ the pre-maintenance Git inventory is historical, not current working-tree status
 
 | Document | Role / limit |
 |---|---|
-| [V2 deployment preparation](research/daily_coarse_graining/T7_paid_v2_GPU_deployment_preparation_20261013.md) | Current deployment/proposal authority: immutable7efe4b44, independent v2 checkout/Git objects and proposedfalse scope; test01 real Bash→CPU Python dry-run/source/input/manifest admission passed. Exact one fixed n04/4CPU/1V100/nonexclusive20min/no-requeue proposal CNY0.8266666667(up0.83), future ceiling1.00; no paid/GPU execution approval. Old scope/inputs preserved; false new scope unconsumed, pending supervisor/new user acceptance. |
-| [Local v2 GPU identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md) | Corrected current local candidate: owned unchanged scheduler-mask runtime count1/PCI→driver UUID association and UUID-selected NVML/XML/kernel. OS permission width is independent, selected rw required; selected-major controls deducted before classification, cross-major unknown separate. V2 separates driver inventory/runtime visibility. Parent read-only configuration/static-symbol evidence establishes no live API/--nv/GPU acceptance. No deployment/new scope/execution approval; v1 consumed. |
-| [Single-GPU terminal result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md) | Latest approved attempt: sole n04 job15812634/frozen c8a44c3 FAILED2:0/6s. First GPU CSV returns6/No devices were found; no XML/cgroup/Supervisor/preflight/CUDA-PJRT/affine science. Numerical not_executed; OS denial not assessed. Estimate CNY0.0041333333,0.0016666667card-hours; bill unknown. Scope closed/consumed/mutex absent; live cleanup/peak memory unobserved; no retry/mapping query/repair/redeploy/fallback/training. |
+| [V2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) | Current paid execution/evidence authority: direct human delegation plus supervisor exact approval, immutable7efe4b44, sole n04/4CPU/1V100 job15822347 COMPLETED0:0/110s. GPU12/91/4 and independent saved-array NumPy checks pass; runtime/PCI/UUID/PJRT/NVML/kernel agree under original-mask operations trust, broad actual cgroup permits selected rw but OS denial/independent GRES remain unverified. Release verified, ledger109.7244s, scopeclosed/consumed/false, mutex absent; allocation0.0305555556card-hours/estimated CNY0.0757777778/bill unknown. No original-T7 repair, next diagnostic, fallback, adoption or training. |
+| [V2 deployment preparation](research/daily_coarse_graining/T7_paid_v2_GPU_deployment_preparation_20261013.md) | Historical preparation/proposal authority: immutable7efe4b44, independent checkout/Git objects, original proposedfalse scope/full argv/input/source manifest, actual test01 Bash→CPU dry-run. Separate later human delegation, supervisor approval, scope opening/consumption and GPU result are in the terminal result above. |
+| [Local v2 GPU identity repair](research/daily_coarse_graining/T7_paid_GPU_identity_local_repair_20261012.md) | Current v2 method authority: owned original-mask runtime count1/PCI→driver UUID, UUID-selected NVML/XML/kernel, independent OS rule width and selected rw. Local mocks remain preparation evidence; later actual single-count/no-remapping GPU evidence is in terminal result above. Old consumed grants never migrate. |
+| [Single-GPU terminal result](research/daily_coarse_graining/T7_paid_single_GPU_execution_results_20261012.md) | Historical v1 attempt: sole n04 job15812634/frozen c8a44c3 FAILED2:0/6s. First GPU CSV returns6/No devices were found; no XML/cgroup/Supervisor/preflight/CUDA-PJRT/affine science. Numerical not_executed; OS denial not assessed. Estimate CNY0.0041333333,0.0016666667card-hours; bill unknown. Scope closed/consumed/mutex absent; live cleanup/peak memory unobserved; no retry/mapping query/repair/redeploy/fallback/training. |
 | [Single-GPU preparation/proposal](research/daily_coarse_graining/T7_paid_single_GPU_preparation_results_20261012.md), [contract](research/daily_coarse_graining/T7_paid_single_GPU_execution_contract_20261012.md) | Historical method/preparation authority: explicit allocated-GPU versus OS-denial boundary, exact c8a44c3 deployment/full argv,88 local cases and actual test01 CPU dry-run. Original false snapshot remains; latest independent approval/open/closed identities and execution status are in terminal result above. |
 | [Paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md) | Historical direct human v3 approval/execution: sole job15806646/frozen58a2d938 FAILED2:0/7s, CSV→UUID XML succeeds on n01, unchanged wildcard-cgroup isolation gate rejects before Supervisor/preflight/probe. Exact devices.list/configuration cause unretained. Estimated CNY0.0048222222; scope closed/consumed/mutex absent; no live GPU cleanup observation or retry. |
 | [Paid v3 recovery proposal](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_proposal_20261012.md) | Historical preparation/method authority: supported CSV→UUID XML minor candidate, strict kernel/cgroup/CUDA/PJRT gates, Python30/shell10, exact58a2d938 deployment/test01 CPU admission and original false scope. Quote0.83/ceiling1.00; latest approval/consumption/terminal status is in result above. |
@@ -80,17 +81,15 @@ and trace buckets do not isolate wall time or certify a launch-bound bottleneck.
 
 ## Current authorization boundary
 
-Direct human “批准。” authorized the complete v3 proposal after preparation,
-including one fixed gnall n01/4CPU/1V100/20min startup-then-affine allocation at
-58a2d938, quote0.83/ceiling1.00. Sole job15806646 FAILED2:0/7s at the unchanged
-wildcard-cgroup isolation gate; no Supervisor/preflight/affine ran. The v3 scope
-is closed/exhausted and attempt consumed. Stop without retry, automatic monitor,
-card change, free fallback, tolerance relaxation or training. Actual CSV/XML works
-for this dispatch, but devices.list/configuration cause and CUDA/PJRT/science remain
-unverified. No source change or adoption follows; new live GPU/paid execution needs its own grant.
-Old v2 evidence and original false/open snapshots remain; free b676 approval
-stays preserved/paused/unconsumed. The result distinguishes estimated allocation
-cost from absent GPU-child computation and unknown live post-exit cleanup.
+Direct human “那边停了，你看没问题就可以批准，授权你了。” delegated
+the exact v2 proposal approval to the supervisor. Its affirmative exact-proposal
+decision, immutable7efe4b44/full argv/resources/caps/CNY1 ceiling and documentation
+065c64c are recorded before the sole submission. Job15822347 completed0:0/110s;
+affine12/91/4 and saved-array checks pass, release verified and scope consumed.
+No later diagnostic, retry, repair, alternative node, free fallback or training
+is authorized. Original-T7/full-update acceptance remains unresolved. Old paid
+anchors/source/input/scope bytes remain unchanged; free b676 stays paused/unconsumed.
+Current operations trust and observed broad OS access must remain separate.
 
 The separate free affine scope is approved but waiting for resources and unconsumed;
 see the deployment result above. This task stops without further polling or
