@@ -75,8 +75,15 @@ association from the unchanged scheduler mask in that runtime. OS access width
 is recorded independently; broad rules do not reject numeric masks and narrow
 rules do not prove node GRES configuration. Selected-device read/write is required.
 V2 explicitly separates runtime visibility from total driver enumeration;
-old consumed grants cannot migrate. Local mocks establish no deployed/API,
+old consumed grants cannot migrate. Local mocks establish no GPU API,
 allocation, memory, numerical or release acceptance. No new execution is authorized.
+
+The [v2 deployment preparation](research/daily_coarse_graining/T7_paid_v2_GPU_deployment_preparation_20261013.md)
+binds immutable7efe4b44 to an independent checkout/false scope. Actual test01
+Bash→CPU Python `--dry-run` passed with unchanged source/input/manifest and12/91/4
+planning. One fixed n04/4CPU/1V100/nonexclusive20min/CNY0.83 (future ceiling1.00)
+proposal is reviewable; no job/GPU/preflight/probe ran. Old grants stay consumed;
+new scope proposed/unconsumed, pending supervisor acceptance and new user approval.
 
 The [paid v3 terminal result](research/daily_coarse_graining/T7_affine_paid_GPU_recovery_results_20261012.md)
 owns historical paid v3 execution status. Direct human “批准。” authorized the exact58a2d938
