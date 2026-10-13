@@ -1,0 +1,45 @@
+remote_date_utc=2026-10-13T03:01:29.957605777Z
+remote_date_local=2026-10-13T11:01:29+0800
+JobId=15820467 JobName=orchjax-cpu48-b64-v3
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:24:48 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-13T10:36:24 EligibleTime=2026-10-13T10:36:24
+   AccrueTime=2026-10-13T10:36:24
+   StartTime=2026-10-13T10:36:41 EndTime=2026-10-13T12:06:41 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-13T10:36:41 Scheduler=Main
+   Partition=cnall AllocNode:Sid=ibc12b01n05:28881
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=ibc11b09n32
+   BatchHost=ibc11b09n32
+   NumNodes=1 NumCPUs=48 NumTasks=1 CPUs/Task=48 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=48,node=1,billing=48
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=48 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/scripts/hpc/slurm_global_server_cpu_48core.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_15820467.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_15820467.txt
+   Power=
+   
+
+             JOBID|ST|      TIME|TIME_LIMIT| NODES|  CPUS|NODELIST(REASON)
+          15820467| R|     24:49|   1:30:00|     1|    48|ibc11b09n32
+JobID|State|ExitCode|Elapsed|AllocCPUS|NodeList|AllocTRES
+15820467|RUNNING|0:0|00:24:49|48|ibc11b09n32|billing=48,cpu=48,node=1
+15820467.batch|RUNNING|0:0|00:24:49|48|ibc11b09n32|cpu=48,mem=0,node=1
+15820467.extern|RUNNING|0:0|00:24:49|48|ibc11b09n32|billing=48,cpu=48,node=1
+15820467.0|RUNNING|0:0|00:24:43|1|ibc11b09n32|cpu=1,mem=0,node=1
+coordinator_status=running scalar=running batch=None error=None
+{"phase": "independent_scalar_nested_cache_cleared", "elapsed_seconds": 8.632581196725368, "rss_bytes": 745820160, "landpoint_id": "001.0-071.0", "entries_before": 0, "entries_after": 0}
+{"phase": "server_scalar_once_lower_start", "elapsed_seconds": 8.67287048138678, "rss_bytes": 748142592}
+{"phase": "server_scalar_once_compile_start", "elapsed_seconds": 65.41422471217811, "rss_bytes": 1325486080}
+{"phase": "server_scalar_once_compiled", "elapsed_seconds": 749.7046948354691, "rss_bytes": 5130698752}
+{"phase": "B64_scalar_raw_output_saved_before_parity", "elapsed_seconds": 890.7666367385536, "rss_bytes": 5357588480, "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar/raw_B64_scalar_before_parity.pkl"}
+local_before_utc=2026-10-13T03:09:49.303Z
+local_after_utc=2026-10-13T03:09:49.962Z

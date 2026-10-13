@@ -1,0 +1,31 @@
+{"command": ["/rmprog/slurm/v22.05.7/bin/srun", "--ntasks=1", "--cpus-per-task=1", "--cpu-bind=cores", "--export=ALL,OMP_NUM_THREADS=1,MKL_NUM_THREADS=1,OPENBLAS_NUM_THREADS=1,NUMEXPR_NUM_THREADS=1,JAX_PLATFORMS=cpu,JAX_ENABLE_X64=true", "/usr/bin/time", "-v", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/scripts/dev/benchmark_global_server_cpu.py", "--mode", "scalar", "--cpu-budget", "1", "--sizes", "64", "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl", "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model", "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6", "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml", "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal", "--memory-guard-gib", "24", "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar"], "start_epoch": 1791859007.7845116}
+{"phase": "independent_scalar_nested_cache_cleared", "elapsed_seconds": 8.632581196725368, "rss_bytes": 745820160, "landpoint_id": "001.0-071.0", "entries_before": 0, "entries_after": 0}
+{"phase": "server_scalar_once_lower_start", "elapsed_seconds": 8.67287048138678, "rss_bytes": 748142592}
+{"phase": "server_scalar_once_compile_start", "elapsed_seconds": 65.41422471217811, "rss_bytes": 1325486080}
+{"phase": "server_scalar_once_compiled", "elapsed_seconds": 749.7046948354691, "rss_bytes": 5130698752}
+{"phase": "B64_scalar_raw_output_saved_before_parity", "elapsed_seconds": 890.7666367385536, "rss_bytes": 5357588480, "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar/raw_B64_scalar_before_parity.pkl"}
+{"phase": "B64_scalar_checkpoint_complete", "elapsed_seconds": 2140.7214978970587, "rss_bytes": 5585903616, "reused": false}
+	Command being timed: "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/scripts/dev/benchmark_global_server_cpu.py --mode scalar --cpu-budget 1 --sizes 64 --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --gpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --expected-gpu-reference-sha256 a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6 --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml --warm-repeats 5 --validation-mode exploratory --cpu-reference-role cpu-internal --memory-guard-gib 24 --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar"
+	User time (seconds): 2100.21
+	System time (seconds): 40.80
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 36:29.58
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 20904532
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 8639
+	Minor (reclaiming a frame) page faults: 9280202
+	Voluntary context switches: 202673
+	Involuntary context switches: 186891
+	Swaps: 0
+	File system inputs: 2656672
+	File system outputs: 202424
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"returncode": 0, "timed_out": false, "end_epoch": 1791861197.8192003, "wall_seconds": 2190.0346887111664}

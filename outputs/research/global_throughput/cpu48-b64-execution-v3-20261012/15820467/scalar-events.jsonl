@@ -1,0 +1,5 @@
+{"phase": "independent_scalar_nested_cache_cleared", "elapsed_seconds": 8.632581196725368, "rss_bytes": 745820160, "landpoint_id": "001.0-071.0", "entries_before": 0, "entries_after": 0}
+{"phase": "server_scalar_once_lower_start", "elapsed_seconds": 8.67287048138678, "rss_bytes": 748142592}
+{"phase": "server_scalar_once_compile_start", "elapsed_seconds": 65.41422471217811, "rss_bytes": 1325486080}
+{"phase": "server_scalar_once_compiled", "elapsed_seconds": 749.7046948354691, "rss_bytes": 5130698752}
+{"phase": "B64_scalar_raw_output_saved_before_parity", "elapsed_seconds": 890.7666367385536, "rss_bytes": 5357588480, "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar/raw_B64_scalar_before_parity.pkl"}

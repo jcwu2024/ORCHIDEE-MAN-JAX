@@ -1,0 +1,2 @@
+             JOBID|ST|      TIME|TIME_LIMIT| NODES|  CPUS|NODELIST(REASON)
+          15820467| R|     12:56|   1:30:00|     1|    48|ibc11b09n32

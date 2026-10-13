@@ -1,0 +1,8 @@
+940a6f7e2aa6bf545661ef1c815cbd0156fa92b62b18452cbad7398d7c49d47c  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v3-03026d0/cpu48-b64-03026d013626.bundle
+3380
+The bundle contains this ref:
+03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 refs/heads/codex/global-cpu48-b64-v3
+The bundle requires this ref:
+b1b5cf0835da298bddb388e61d754feeb6c14cf2 
+mirror_ref=refs/heads/codex/global-cpu48-b64-v3
+mirror_sha=03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8

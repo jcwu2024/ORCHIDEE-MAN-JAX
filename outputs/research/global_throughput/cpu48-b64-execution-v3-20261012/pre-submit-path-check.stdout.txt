@@ -1,0 +1,7 @@
+/usr/bin/python3
+Python 3.6.8
+execution_output_root_absent=yes
+matching_v3_job_logs=absent
+v3_deployment_key_present=false
+c83ed058fe526a65ad2568bad219d0f08378a0471d4fb619e9a7c3ffd2dfd698  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json
+940a6f7e2aa6bf545661ef1c815cbd0156fa92b62b18452cbad7398d7c49d47c  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v3-03026d0/cpu48-b64-03026d013626.bundle

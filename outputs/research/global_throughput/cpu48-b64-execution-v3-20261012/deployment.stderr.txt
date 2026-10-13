@@ -1,0 +1,108 @@
+Checking out files:  40% (462/1130)   
+Checking out files:  41% (464/1130)   
+Checking out files:  42% (475/1130)   
+Checking out files:  43% (486/1130)   
+Checking out files:  44% (498/1130)   
+Checking out files:  45% (509/1130)   
+Checking out files:  46% (520/1130)   
+Checking out files:  47% (532/1130)   
+Checking out files:  48% (543/1130)   
+Checking out files:  49% (554/1130)   
+Checking out files:  50% (565/1130)   
+Checking out files:  51% (577/1130)   
+Checking out files:  52% (588/1130)   
+Checking out files:  53% (599/1130)   
+Checking out files:  54% (611/1130)   
+Checking out files:  55% (622/1130)   
+Checking out files:  56% (633/1130)   
+Checking out files:  57% (645/1130)   
+Checking out files:  58% (656/1130)   
+Checking out files:  59% (667/1130)   
+Checking out files:  60% (678/1130)   
+Checking out files:  61% (690/1130)   
+Checking out files:  62% (701/1130)   
+Checking out files:  63% (712/1130)   
+Checking out files:  64% (724/1130)   
+Checking out files:  65% (735/1130)   
+Checking out files:  66% (746/1130)   
+Checking out files:  67% (758/1130)   
+Checking out files:  68% (769/1130)   
+Checking out files:  69% (780/1130)   
+Checking out files:  70% (791/1130)   
+Checking out files:  71% (803/1130)   
+Checking out files:  72% (814/1130)   
+Checking out files:  73% (825/1130)   
+Checking out files:  74% (837/1130)   
+Checking out files:  75% (848/1130)   
+Checking out files:  76% (859/1130)   
+Checking out files:  77% (871/1130)   
+Checking out files:  78% (882/1130)   
+Checking out files:  79% (893/1130)   
+Checking out files:  80% (904/1130)   
+Checking out files:  81% (916/1130)   
+Checking out files:  82% (927/1130)   
+Checking out files:  83% (938/1130)   
+Checking out files:  84% (950/1130)   
+Checking out files:  85% (961/1130)   
+Checking out files:  86% (972/1130)   
+Checking out files:  86% (978/1130)   
+Checking out files:  87% (984/1130)   
+Checking out files:  88% (995/1130)   
+Checking out files:  89% (1006/1130)   
+Checking out files:  90% (1017/1130)   
+Checking out files:  91% (1029/1130)   
+Checking out files:  92% (1040/1130)   
+Checking out files:  93% (1051/1130)   
+Checking out files:  94% (1063/1130)   
+Checking out files:  95% (1074/1130)   
+Checking out files:  96% (1085/1130)   
+Checking out files:  97% (1097/1130)   
+Checking out files:  98% (1108/1130)   
+Checking out files:  99% (1119/1130)   
+Checking out files: 100% (1130/1130)   
+Checking out files: 100% (1130/1130), done.
+Note: checking out '03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b new_branch_name
+
+HEAD is now at 03026d0... Prepare CPU48 FULL64 execution harness on accepted historical science
+error: unknown option `show-current'
+usage: git branch [options] [-r | -a] [--merged | --no-merged]
+   or: git branch [options] [-l] [-f] <branchname> [<start-point>]
+   or: git branch [options] [-r] (-d | -D) <branchname>...
+   or: git branch [options] (-m | -M) [<oldbranch>] <newbranch>
+
+Generic options
+    -v, --verbose         show hash and subject, give twice for upstream branch
+    -q, --quiet           suppress informational messages
+    -t, --track           set up tracking mode (see git-pull(1))
+    --set-upstream        change upstream info
+    -u, --set-upstream-to <upstream>
+                          change the upstream info
+    --unset-upstream      Unset the upstream info
+    --color[=<when>]      use colored output
+    -r, --remotes         act on remote-tracking branches
+    --contains <commit>   print only branches that contain the commit
+    --abbrev[=<n>]        use <n> digits to display SHA-1s
+
+Specific git-branch actions:
+    -a, --all             list both remote-tracking and local branches
+    -d, --delete          delete fully merged branch
+    -D                    delete branch (even if not merged)
+    -m, --move            move/rename a branch and its reflog
+    -M                    move/rename a branch, even if target exists
+    --list                list branch names
+    -l, --create-reflog   create the branch's reflog
+    --edit-description    edit the description for the branch
+    -f, --force           force creation (when already exists)
+    --no-merged <commit>  print only not merged branches
+    --merged <commit>     print only merged branches
+    --column[=<style>]    list branches in columns
+

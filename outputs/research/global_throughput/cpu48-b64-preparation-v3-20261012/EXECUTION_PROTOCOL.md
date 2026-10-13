@@ -1,5 +1,12 @@
 # CPU48 / FULL64 B64 v3 execution protocol
 
+Status update, 2026-10-13 Asia/Shanghai: the exact single run was authorized
+and executed as job15820467, now FAILED1:0/2197s with the attempt closed.
+Scalar completed; B64 failed the inherited OMP thread-budget guard before
+lowering/compilation or timing. See [AUTHORIZATION.md](../cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)
+and [terminal result](../cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md).
+The scientific and resource contract below is the executed protocol; it grants no retry.
+
 ## Immutable execution identity
 
 - Ref: `codex/global-cpu48-b64-v3`
@@ -64,7 +71,7 @@ The target production checkout must be created as a new immutable version and
 verified at the exact commit with a clean tree before submission. Do not point
 the launcher at the research checkout or local test staging files.
 
-The proposed future run is one attempt only. All 48 parent CPUs are billed for the
+The authorized run was one attempt only. All 48 parent CPUs are billed for the
 full allocation, including scalar reference time. Any scalar failure, timeout,
 insufficient candidate window or batch failure closes that attempt. There is
 no automatic requeue, retry, second submission or budget reuse.

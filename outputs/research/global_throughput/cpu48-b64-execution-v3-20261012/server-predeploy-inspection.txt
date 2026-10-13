@@ -1,0 +1,7 @@
+host=ibcln01
+git=git version 1.8.3.1
+base=b1b5cf0835da298bddb388e61d754feeb6c14cf2
+v3_ref=
+target_exists=no
+transfer_exists=no
+registry_sha256=c83ed058fe526a65ad2568bad219d0f08378a0471d4fb619e9a7c3ffd2dfd698 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json

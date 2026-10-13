@@ -1,8 +1,13 @@
 # CPU48 / FULL64 B64 v3 single-run proposal
 
-**Approval state: not submitted.** A separate explicit approval is required
-for this new paid allocation after production deployment, fresh scheduler
-inspection, and review of the actual command and working directory.
+**Approval state: the one authorized attempt is terminal and consumed (2026-10-13 Asia/Shanghai).**
+The user delegated approval to the supervisor, who reviewed the actual artifacts
+and approved this exact version, command, deployment and single allocation.
+See the [authorization](../cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)
+and [terminal result](../cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md).
+Job15820467 ended FAILED1:0/2197s: the scalar phase finished, then B64 failed
+the inherited OMP thread-budget guard before lowering/compilation or timing.
+Deployment and pre-submit receipts are retained. No retry or CPU48 acceptance follows.
 
 Partition `cnall`; one node, one task, 48 allocated CPUs, zero GPUs; 5400-second
 wall limit; no requeue; no node pin, node exclusion, exclusive allocation,
@@ -59,12 +64,12 @@ Stop without submission if the bundle prerequisite is unavailable, any
 commit/ref/tree or frozen input/reference hash differs, the canonical runtime
 or declared paths are unavailable, the checkout is dirty, scheduler or
 occupancy inspection is stale, the login endpoint is not `cln01` or `cln02`,
-or the reviewed allocation/command/cost envelope changes. The proposal remains
-not submitted; a future submission requires separate explicit approval.
+or the reviewed allocation/command/cost envelope changes. This exact single
+submission was approved and is now terminal; its budget is not renewed.
 
 The script's directives request only the resources listed above. Slurm selects
 the eligible node automatically. Submit only from the approved `cln01` or
-`cln02` login endpoint after separate approval is recorded. Never submit from
+`cln02` login endpoint under the recorded authorization. Never submit from
 `test01`-`test04`; those are restricted to small CPU diagnostics.
 
 The single workload preserves 64 unique FULL64 points, 896 point-days, 760

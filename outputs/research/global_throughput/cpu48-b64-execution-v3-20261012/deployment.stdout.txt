@@ -1,0 +1,13 @@
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3'...
+done.
+head=03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8
+branch=
+porcelain=
+science_tree=75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba
+alternates=absent
+bc8ce1d62f6947228c8c8438344987345bf18095f307c90a2f45dc4655c6891e  scripts/dev/benchmark_global_batch.py
+e5125ca45ea76e7dc158e80460b4d1b34f7f3a51a20b64813fda82194ef53e26  scripts/dev/prepare_global_cpu48_execution.py
+95bc4b4d98609b134492489501763489a2c783c79713a0a83334a4d9d79af816  scripts/hpc/global_cpu48_b64_coordinator.py
+577d5d08cc4e7862390661f02cbc38a9b9f247410c8db162ceb5e1b121e96349  scripts/hpc/slurm_global_server_cpu_48core.sh
+d3ab93ed9b2b0ab93bfa49841e74b30243814154ab4df7b1c5317baf88dee201  tests/unit/test_global_cpu48_b64_preparation.py
+e47035503ccbcf9f22a0bff460092f8266650347f836c4ec0032e937adfc6dc6  tests/unit/test_global_gpu_capacity.py

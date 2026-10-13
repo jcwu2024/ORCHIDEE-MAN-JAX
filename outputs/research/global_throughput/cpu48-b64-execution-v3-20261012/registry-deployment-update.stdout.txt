@@ -1,0 +1,4 @@
+c83ed058fe526a65ad2568bad219d0f08378a0471d4fb619e9a7c3ffd2dfd698  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json
+{"after_sha256": "fb1d1e5fb05a4a55e7f4eccbecf36183a5e68f0f88fb0a187d2ede79b6ab8997", "before_sha256": "c83ed058fe526a65ad2568bad219d0f08378a0471d4fb619e9a7c3ffd2dfd698", "key": "latest_global_cpu48_b64_v3_deployment", "registry_updated": true, "utc": "2026-10-13T02:27:54Z"}
+fb1d1e5fb05a4a55e7f4eccbecf36183a5e68f0f88fb0a187d2ede79b6ab8997  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json
+{"entry_utc": "2026-10-13T02:27:54Z", "execution_sha": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8", "sbatch_invocation_count": 0, "submitted": false, "updated_utc": "2026-10-13T02:27:54Z"}

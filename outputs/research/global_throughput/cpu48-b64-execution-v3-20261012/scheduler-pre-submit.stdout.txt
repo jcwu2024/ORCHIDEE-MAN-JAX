@@ -1,0 +1,805 @@
+observed_utc=2026-10-13T02:28:26Z
+login_host=ibcln01
+-- sinfo nodes --
+NODELIST|STATE|CPUS(A/I/O/T)|CPU_LOAD|MEMORY|REASON
+ibc11b02n01|drained|0/0/56/56|0.02|1|Prolog error
+ibc11b02n02|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n03|allocated|56/0/0/56|4.30|1|none
+ibc11b02n04|allocated|56/0/0/56|51.11|1|none
+ibc11b02n05|allocated|56/0/0/56|55.99|1|none
+ibc11b02n06|allocated|56/0/0/56|0.01|1|none
+ibc11b02n07|down*|0/0/56/56|52.49|1|Not responding
+ibc11b02n08|allocated|56/0/0/56|50.81|1|none
+ibc11b02n09|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b02n10|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b02n11|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n12|allocated|56/0/0/56|54.70|1|none
+ibc11b02n13|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n14|allocated|56/0/0/56|44.26|1|none
+ibc11b02n15|allocated|56/0/0/56|38.26|1|none
+ibc11b02n16|drained|0/0/56/56|19.01|1|Kill task failed
+ibc11b02n17|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n18|drained|0/0/56/56|0.04|1|Kill task failed
+ibc11b02n19|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n20|drained|0/0/56/56|0.05|1|Kill task failed
+ibc11b02n21|allocated|56/0/0/56|43.23|1|none
+ibc11b02n22|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n23|allocated|56/0/0/56|56.01|1|none
+ibc11b02n24|allocated|56/0/0/56|42.85|1|none
+ibc11b02n25|allocated|56/0/0/56|15.93|1|none
+ibc11b02n26|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n27|allocated|56/0/0/56|56.39|1|none
+ibc11b02n28|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b02n29|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n30|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n31|allocated|56/0/0/56|11.23|1|none
+ibc11b02n32|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b02n33|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n34|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n35|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n36|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b02n37|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n38|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b02n39|allocated|56/0/0/56|56.01|1|none
+ibc11b02n40|allocated|56/0/0/56|49.53|1|none
+ibc11b03n01|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n02|down*|0/0/56/56|38.69|1|Not responding
+ibc11b03n03|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n04|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n05|down*|0/0/56/56|39.41|1|Not responding
+ibc11b03n06|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n07|down*|0/0/56/56|39.36|1|Not responding
+ibc11b03n08|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n09|down*|0/0/56/56|39.34|1|Not responding
+ibc11b03n10|down*|0/0/56/56|39.40|1|Not responding
+ibc11b03n11|down*|0/0/56/56|39.36|1|Not responding
+ibc11b03n12|down*|0/0/56/56|38.69|1|Not responding
+ibc11b03n13|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n14|down*|0/0/56/56|39.35|1|Not responding
+ibc11b03n15|down*|0/0/56/56|19.56|1|Not responding
+ibc11b03n16|drained*|0/0/56/56|0.08|1|Prolog error
+ibc11b03n17|down*|0/0/56/56|0.07|1|Not responding
+ibc11b03n18|down*|0/0/56/56|4.17|1|Not responding
+ibc11b03n19|down*|0/0/56/56|0.04|1|Not responding
+ibc11b03n20|down*|0/0/56/56|7.89|1|Not responding
+ibc11b03n21|down*|0/0/56/56|28.58|1|Not responding
+ibc11b03n22|down*|0/0/56/56|6.82|1|Not responding
+ibc11b03n23|down*|0/0/56/56|24.35|1|Not responding
+ibc11b03n24|down*|0/0/56/56|38.75|1|Not responding
+ibc11b03n25|down*|0/0/56/56|39.41|1|Not responding
+ibc11b03n26|down*|0/0/56/56|39.41|1|Not responding
+ibc11b03n27|down*|0/0/56/56|11.03|1|Not responding
+ibc11b03n28|down*|0/0/56/56|39.15|1|Not responding
+ibc11b03n29|down*|0/0/56/56|34.30|1|Not responding
+ibc11b03n30|down*|0/0/56/56|38.00|1|Not responding
+ibc11b03n31|down*|0/0/56/56|4.93|1|Not responding
+ibc11b03n32|down*|0/0/56/56|3.12|1|Not responding
+ibc11b03n33|down*|0/0/56/56|33.92|1|Not responding
+ibc11b03n34|down*|0/0/56/56|34.03|1|Not responding
+ibc11b03n35|down*|0/0/56/56|34.32|1|Not responding
+ibc11b04n01|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b04n02|allocated|56/0/0/56|53.63|1|none
+ibc11b04n03|draining|8/0/48/56|0.02|1|Kill task failed
+ibc11b04n04|allocated|56/0/0/56|6.39|1|none
+ibc11b04n05|draining|1/0/55/56|1.01|1|Kill task failed
+ibc11b04n06|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n07|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n08|allocated|56/0/0/56|51.81|1|none
+ibc11b04n09|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n10|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n11|idle|0/56/0/56|1.98|1|none
+ibc11b04n12|idle|0/56/0/56|0.03|1|none
+ibc11b04n13|draining|1/0/55/56|1.02|1|Kill task failed
+ibc11b04n14|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n15|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b04n16|drained|0/0/56/56|0.03|1|Prolog error
+ibc11b04n17|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n18|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b04n19|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b04n20|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b04n21|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n22|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n23|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n24|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n25|drained*|0/0/56/56|0.05|1|李兆基升级减小负载关闭
+ibc11b04n26|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n27|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n28|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n29|drained*|0/0/56/56|0.02|1|李兆基升级减小负载关闭
+ibc11b04n30|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n31|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n32|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n33|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n34|drained*|0/0/56/56|0.02|1|李兆基升级减小负载关闭
+ibc11b04n35|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n36|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n37|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n38|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n39|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b04n40|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc11b06n07|down*|0/0/56/56|N/A|1|Not responding
+ibc11b06n08|down*|0/0/56/56|N/A|1|Not responding
+ibc11b06n09|down*|0/0/56/56|N/A|1|Not responding
+ibc11b06n10|down*|0/0/56/56|N/A|1|Not responding
+ibc11b07n01|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n02|down*|0/0/56/56|0.01|1|Not responding
+ibc11b07n03|allocated|56/0/0/56|53.10|1|none
+ibc11b07n04|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n05|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n06|down*|0/0/56/56|53.11|1|Not responding
+ibc11b07n07|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n08|allocated|56/0/0/56|0.35|1|none
+ibc11b07n09|allocated|56/0/0/56|0.35|1|none
+ibc11b07n10|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b07n11|allocated|56/0/0/56|56.01|1|none
+ibc11b07n12|allocated|56/0/0/56|56.04|1|none
+ibc11b07n13|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b07n14|allocated|56/0/0/56|56.01|1|none
+ibc11b07n15|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n16|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n17|allocated|56/0/0/56|56.07|1|none
+ibc11b07n18|down*|0/0/56/56|1.01|1|Not responding
+ibc11b07n19|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n20|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n21|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n22|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b07n23|drained|0/0/56/56|0.03|1|Prolog error
+ibc11b07n24|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n25|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n26|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b07n27|allocated|56/0/0/56|56.37|1|none
+ibc11b07n28|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n29|allocated|56/0/0/56|56.09|1|none
+ibc11b07n30|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b07n31|allocated|56/0/0/56|56.10|1|none
+ibc11b07n32|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n33|allocated|56/0/0/56|56.06|1|none
+ibc11b07n34|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n35|allocated|56/0/0/56|56.09|1|none
+ibc11b07n36|allocated|56/0/0/56|52.47|1|none
+ibc11b07n37|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n38|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b07n39|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b07n40|allocated|56/0/0/56|55.31|1|none
+ibc11b08n01|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b08n02|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n03|allocated|56/0/0/56|56.10|1|none
+ibc11b08n04|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b08n05|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n06|allocated|56/0/0/56|48.53|1|none
+ibc11b08n07|allocated|56/0/0/56|50.60|1|none
+ibc11b08n08|down*|0/0/56/56|25.86|1|Not responding
+ibc11b08n09|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n10|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b08n11|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b08n12|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n13|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n14|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n15|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n16|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b08n17|allocated|56/0/0/56|55.94|1|none
+ibc11b08n18|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n19|drained|0/0/56/56|0.04|1|Kill task failed
+ibc11b08n20|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n21|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n22|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b08n23|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b08n24|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n25|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n26|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n27|allocated|56/0/0/56|56.02|1|none
+ibc11b08n28|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n29|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n30|down*|0/0/56/56|39.31|1|Not responding
+ibc11b08n31|down*|0/0/56/56|55.25|1|Not responding
+ibc11b08n32|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b08n33|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n34|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n35|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n36|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b08n37|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b08n38|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n39|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b08n40|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n01|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n02|down*|0/0/56/56|10.61|1|Not responding
+ibc11b09n03|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n04|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b09n05|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n06|mixed|52/4/0/56|49.49|1|none
+ibc11b09n07|down*|0/0/56/56|2.04|1|Not responding
+ibc11b09n08|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n09|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n10|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n11|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n12|drained|0/0/56/56|0.02|1|Prolog error
+ibc11b09n13|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n14|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n15|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n16|allocated|56/0/0/56|55.96|1|none
+ibc11b09n17|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b09n18|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b09n19|allocated|56/0/0/56|55.98|1|none
+ibc11b09n20|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n21|allocated|56/0/0/56|51.02|1|none
+ibc11b09n22|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n23|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n24|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b09n25|allocated|56/0/0/56|56.05|1|none
+ibc11b09n26|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n27|allocated|56/0/0/56|0.01|1|none
+ibc11b09n28|allocated|56/0/0/56|0.01|1|none
+ibc11b09n29|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n30|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n31|allocated|56/0/0/56|0.03|1|none
+ibc11b09n32|idle|0/56/0/56|0.01|1|none
+ibc11b09n33|allocated|56/0/0/56|56.01|1|none
+ibc11b09n34|allocated|56/0/0/56|56.02|1|none
+ibc11b09n35|allocated|56/0/0/56|55.97|1|none
+ibc11b09n36|mixed|52/4/0/56|50.69|1|none
+ibc11b09n37|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b09n38|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b09n39|drained|0/0/56/56|0.03|1|Kill task failed
+ibc11b09n40|idle|0/56/0/56|0.01|1|none
+ibc11b10n01|allocated|56/0/0/56|0.01|1|none
+ibc11b10n02|drained|0/0/56/56|0.01|1|Prolog error
+ibc11b10n03|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n04|allocated|56/0/0/56|56.00|1|none
+ibc11b10n05|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n06|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n07|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n08|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b10n09|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n10|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n11|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n12|allocated|56/0/0/56|6.52|1|none
+ibc11b10n13|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n14|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n15|allocated|56/0/0/56|49.05|1|none
+ibc11b10n16|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n17|allocated|56/0/0/56|5.49|1|none
+ibc11b10n18|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n19|allocated|56/0/0/56|5.37|1|none
+ibc11b10n20|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n21|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b10n22|down*|0/0/56/56|94.34|1|Not responding
+ibc11b10n23|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n24|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b10n25|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n26|allocated|56/0/0/56|0.09|1|none
+ibc11b10n27|allocated|56/0/0/56|0.09|1|none
+ibc11b10n28|allocated|56/0/0/56|55.60|1|none
+ibc11b10n29|allocated|56/0/0/56|0.07|1|none
+ibc11b10n30|idle|0/56/0/56|0.02|1|none
+ibc11b10n31|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n32|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n33|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b10n34|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b10n35|down*|0/0/56/56|0.01|1|Not responding
+ibc11b10n36|down*|0/0/56/56|1.01|1|Not responding
+ibc11b10n37|drained|0/0/56/56|0.02|1|Kill task failed
+ibc11b10n38|drained|0/0/56/56|0.01|1|Kill task failed
+ibc11b10n39|drained*|0/0/56/56|N/A|1|switch debug
+ibc11b10n40|drained*|0/0/56/56|0.01|1|switch debug
+ibc12b02n01|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n02|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n03|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n04|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n05|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n06|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n07|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n08|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n09|drained*|0/0/56/56|10.01|1|升级交换机
+ibc12b02n10|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n11|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n12|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n13|drained*|0/0/56/56|0.03|1|李兆基升级减小负载关闭
+ibc12b02n14|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n15|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n16|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n17|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n18|drained*|0/0/56/56|0.02|1|李兆基升级减小负载关闭
+ibc12b02n19|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n20|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n21|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n22|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n23|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n24|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n25|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n26|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n27|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n28|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n29|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n30|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n31|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n32|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n33|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n34|drained*|0/0/56/56|0.04|1|李兆基升级减小负载关闭
+ibc12b02n35|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n36|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n37|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n38|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n39|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b02n40|drained*|0/0/56/56|0.01|1|李兆基升级减小负载关闭
+ibc12b03n01|drained|0/0/56/56|0.04|1|Kill task failed
+ibc12b03n02|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n03|allocated|56/0/0/56|55.41|1|none
+ibc12b03n04|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n05|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n06|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n07|drained|0/0/56/56|0.04|1|Kill task failed
+ibc12b03n08|idle|0/56/0/56|0.02|1|none
+ibc12b03n09|idle|0/56/0/56|0.01|1|none
+ibc12b03n10|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n11|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n12|allocated|56/0/0/56|4.39|1|none
+ibc12b03n13|drained*|0/0/56/56|0.01|1|李兆基升级，减小负载关闭
+ibc12b03n14|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n15|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n16|drained|0/0/56/56|0.01|1|Prolog error
+ibc12b03n17|drained|0/0/56/56|0.01|1|Prolog error
+ibc12b03n18|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n19|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n20|drained*|0/0/56/56|24.25|1|李兆基升级，减小负载关闭
+ibc12b03n21|down*|0/0/56/56|40.77|1|Not responding
+ibc12b03n22|down*|0/0/56/56|2.98|1|Not responding
+ibc12b03n23|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n24|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n25|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n26|drained|0/0/56/56|0.02|1|Kill task failed
+ibc12b03n27|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n28|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n29|down*|0/0/56/56|26.82|1|Not responding
+ibc12b03n30|drained|0/0/56/56|0.03|1|Prolog error
+ibc12b03n31|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n32|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n33|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n34|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n35|down*|0/0/56/56|33.73|1|Not responding
+ibc12b03n36|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n37|allocated|56/0/0/56|2.90|1|none
+ibc12b03n38|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n39|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b03n40|allocated|56/0/0/56|1.01|1|none
+ibc12b04n01|idle|0/56/0/56|0.01|1|none
+ibc12b04n02|idle|0/56/0/56|0.01|1|none
+ibc12b04n03|idle|0/56/0/56|0.01|1|none
+ibc12b04n04|idle|0/56/0/56|0.01|1|none
+ibc12b04n05|idle|0/56/0/56|0.01|1|none
+ibc12b04n06|idle|0/56/0/56|0.02|1|none
+ibc12b04n07|idle|0/56/0/56|0.03|1|none
+ibc12b04n08|idle|0/56/0/56|0.01|1|none
+ibc12b04n09|idle|0/56/0/56|0.02|1|none
+ibc12b04n10|idle|0/56/0/56|0.01|1|none
+ibc12b04n11|mixed|4/52/0/56|3.68|1|none
+ibc12b04n12|idle|0/56/0/56|0.02|1|none
+ibc12b04n13|down*|0/0/56/56|75.87|1|Not responding
+ibc12b04n14|idle|0/56/0/56|0.01|1|none
+ibc12b04n15|idle|0/56/0/56|0.02|1|none
+ibc12b04n16|idle|0/56/0/56|0.01|1|none
+ibc12b04n17|idle|0/56/0/56|0.01|1|none
+ibc12b04n18|idle|0/56/0/56|0.01|1|none
+ibc12b04n19|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b04n20|down*|0/0/56/56|N/A|1|Not responding
+ibc12b04n21|allocated|56/0/0/56|56.01|1|none
+ibc12b04n22|allocated|56/0/0/56|56.04|1|none
+ibc12b04n23|allocated|56/0/0/56|56.02|1|none
+ibc12b04n24|idle|0/56/0/56|0.01|1|none
+ibc12b04n25|idle|0/56/0/56|0.01|1|none
+ibc12b04n26|idle|0/56/0/56|0.01|1|none
+ibc12b04n27|idle|0/56/0/56|0.01|1|none
+ibc12b04n28|idle|0/56/0/56|0.01|1|none
+ibc12b04n29|idle|0/56/0/56|0.01|1|none
+ibc12b04n30|idle|0/56/0/56|0.01|1|none
+ibc12b04n31|idle|0/56/0/56|0.03|1|none
+ibc12b04n32|idle|0/56/0/56|0.01|1|none
+ibc12b04n33|idle|0/56/0/56|0.01|1|none
+ibc12b04n34|allocated|56/0/0/56|49.23|1|none
+ibc12b04n35|down*|0/0/56/56|56.65|1|Not responding
+ibc12b04n36|allocated|56/0/0/56|55.39|1|none
+ibc12b04n37|allocated|56/0/0/56|56.05|1|none
+ibc12b04n38|drained|0/0/56/56|0.03|1|Kill task failed
+ibc12b04n39|down*|0/0/56/56|0.01|1|Not responding
+ibc12b04n40|down*|0/0/56/56|0.01|1|Not responding
+ibc12b07n01|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b07n02|drained|0/0/56/56|0.03|1|Kill task failed
+ibc12b07n03|idle|0/56/0/56|0.01|1|none
+ibc12b07n04|idle|0/56/0/56|0.01|1|none
+ibc12b07n05|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b07n06|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b07n07|down*|0/0/56/56|61.23|1|Not responding
+ibc12b07n08|allocated|56/0/0/56|56.01|1|none
+ibc12b07n09|allocated|56/0/0/56|56.03|1|none
+ibc12b07n10|idle|0/56/0/56|0.01|1|none
+ibc12b07n11|idle|0/56/0/56|0.01|1|none
+ibc12b07n12|idle|0/56/0/56|0.01|1|none
+ibc12b07n13|idle|0/56/0/56|0.01|1|none
+ibc12b07n14|allocated|56/0/0/56|56.01|1|none
+ibc12b07n15|mixed|26/30/0/56|23.14|1|none
+ibc12b07n16|idle|0/56/0/56|0.01|1|none
+ibc12b07n17|allocated|56/0/0/56|56.01|1|none
+ibc12b07n18|idle|0/56/0/56|0.01|1|none
+ibc12b07n19|idle|0/56/0/56|0.01|1|none
+ibc12b07n20|idle|0/56/0/56|0.01|1|none
+ibc12b07n21|allocated|56/0/0/56|55.97|1|none
+ibc12b07n22|allocated|56/0/0/56|0.01|1|none
+ibc12b07n23|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b07n24|down*|0/0/56/56|23.01|1|Not responding
+ibc12b07n25|idle|0/56/0/56|0.01|1|none
+ibc12b07n26|idle|0/56/0/56|0.01|1|none
+ibc12b07n27|down*|0/0/56/56|50.30|1|Not responding
+ibc12b07n28|allocated|56/0/0/56|0.01|1|none
+ibc12b07n29|down*|0/0/56/56|3.49|1|Not responding
+ibc12b07n30|allocated|56/0/0/56|56.01|1|none
+ibc12b07n31|down*|0/0/56/56|0.05|1|Not responding
+ibc12b07n32|idle|0/56/0/56|0.01|1|none
+ibc12b07n33|idle|0/56/0/56|0.01|1|none
+ibc12b07n34|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b07n35|idle|0/56/0/56|0.01|1|none
+ibc12b07n36|idle|0/56/0/56|0.01|1|none
+ibc12b07n37|down*|0/0/56/56|57.03|1|Not responding
+ibc12b07n38|drained|0/0/56/56|0.02|1|Kill task failed
+ibc12b07n39|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b07n40|idle|0/56/0/56|0.01|1|none
+ibc12b08n01|idle|0/56/0/56|0.01|1|none
+ibc12b08n02|idle|0/56/0/56|0.01|1|none
+ibc12b08n03|allocated|56/0/0/56|56.01|1|none
+ibc12b08n04|allocated|56/0/0/56|54.85|1|none
+ibc12b08n05|allocated|56/0/0/56|56.03|1|none
+ibc12b08n06|allocated|56/0/0/56|28.17|1|none
+ibc12b08n07|allocated|56/0/0/56|56.02|1|none
+ibc12b08n08|drained*|0/0/56/56|0.03|1|释放资源
+ibc12b08n09|idle|0/56/0/56|0.01|1|none
+ibc12b08n10|idle|0/56/0/56|0.01|1|none
+ibc12b08n11|idle|0/56/0/56|0.02|1|none
+ibc12b08n12|idle|0/56/0/56|0.02|1|none
+ibc12b08n13|idle|0/56/0/56|0.02|1|none
+ibc12b08n14|idle|0/56/0/56|0.02|1|none
+ibc12b08n15|idle|0/56/0/56|0.02|1|none
+ibc12b08n16|down*|0/0/56/56|21.90|1|Not responding
+ibc12b08n17|mixed|16/40/0/56|16.01|1|none
+ibc12b08n18|mixed|16/40/0/56|16.01|1|none
+ibc12b08n19|mixed|16/40/0/56|16.01|1|none
+ibc12b08n20|mixed|16/40/0/56|15.98|1|none
+ibc12b08n21|mixed|16/40/0/56|16.01|1|none
+ibc12b08n22|mixed|16/40/0/56|16.02|1|none
+ibc12b08n23|mixed|16/40/0/56|16.01|1|none
+ibc12b08n24|mixed|16/40/0/56|16.01|1|none
+ibc12b08n25|idle|0/56/0/56|0.01|1|none
+ibc12b08n26|idle|0/56/0/56|0.01|1|none
+ibc12b08n27|idle|0/56/0/56|0.01|1|none
+ibc12b08n28|idle|0/56/0/56|0.01|1|none
+ibc12b08n29|idle|0/56/0/56|0.01|1|none
+ibc12b08n30|idle|0/56/0/56|0.01|1|none
+ibc12b08n31|idle|0/56/0/56|0.01|1|none
+ibc12b08n32|idle|0/56/0/56|0.01|1|none
+ibc12b08n33|idle|0/56/0/56|0.01|1|none
+ibc12b08n34|down*|0/0/56/56|23.09|1|Not responding
+ibc12b08n35|idle|0/56/0/56|0.01|1|none
+ibc12b08n36|idle|0/56/0/56|0.01|1|none
+ibc12b08n37|idle|0/56/0/56|0.01|1|none
+ibc12b08n38|idle|0/56/0/56|0.01|1|none
+ibc12b08n39|idle|0/56/0/56|0.01|1|none
+ibc12b08n40|idle|0/56/0/56|0.01|1|none
+ibc12b09n01|idle|0/56/0/56|0.01|1|none
+ibc12b09n02|idle|0/56/0/56|0.01|1|none
+ibc12b09n03|idle|0/56/0/56|0.01|1|none
+ibc12b09n04|idle|0/56/0/56|0.01|1|none
+ibc12b09n05|idle|0/56/0/56|0.01|1|none
+ibc12b09n06|idle|0/56/0/56|0.01|1|none
+ibc12b09n07|idle|0/56/0/56|0.01|1|none
+ibc12b09n08|idle|0/56/0/56|0.01|1|none
+ibc12b09n09|idle|0/56/0/56|0.01|1|none
+ibc12b09n10|idle|0/56/0/56|0.01|1|none
+ibc12b09n11|mixed|24/32/0/56|24.01|1|none
+ibc12b09n12|mixed|24/32/0/56|24.01|1|none
+ibc12b09n13|mixed|24/32/0/56|24.01|1|none
+ibc12b09n14|mixed|24/32/0/56|24.01|1|none
+ibc12b09n15|idle|0/56/0/56|0.01|1|none
+ibc12b09n16|idle|0/56/0/56|0.01|1|none
+ibc12b09n17|idle|0/56/0/56|0.01|1|none
+ibc12b09n18|idle|0/56/0/56|0.01|1|none
+ibc12b09n19|idle|0/56/0/56|0.01|1|none
+ibc12b09n20|idle|0/56/0/56|0.01|1|none
+ibc12b09n21|idle|0/56/0/56|0.01|1|none
+ibc12b09n22|idle|0/56/0/56|0.01|1|none
+ibc12b09n23|idle|0/56/0/56|0.01|1|none
+ibc12b09n24|idle|0/56/0/56|0.01|1|none
+ibc12b09n25|idle|0/56/0/56|0.01|1|none
+ibc12b09n26|allocated|56/0/0/56|56.03|1|none
+ibc12b09n27|allocated|56/0/0/56|55.68|1|none
+ibc12b09n28|idle|0/56/0/56|0.01|1|none
+ibc12b09n29|idle|0/56/0/56|0.01|1|none
+ibc12b09n30|idle|0/56/0/56|0.01|1|none
+ibc12b09n31|down*|0/0/56/56|79.13|1|Not responding
+ibc12b09n32|allocated|56/0/0/56|56.00|1|none
+ibc12b09n33|allocated|56/0/0/56|51.12|1|none
+ibc12b09n34|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b09n35|idle|0/56/0/56|0.01|1|none
+ibc12b09n36|idle|0/56/0/56|0.01|1|none
+ibc12b09n37|allocated|56/0/0/56|55.26|1|none
+ibc12b09n38|idle|0/56/0/56|0.01|1|none
+ibc12b09n39|idle|0/56/0/56|0.01|1|none
+ibc12b09n40|idle|0/56/0/56|0.03|1|none
+ibc12b10n01|idle|0/56/0/56|0.01|1|none
+ibc12b10n02|idle|0/56/0/56|0.01|1|none
+ibc12b10n03|idle|0/56/0/56|0.01|1|none
+ibc12b10n04|idle|0/56/0/56|0.01|1|none
+ibc12b10n05|idle|0/56/0/56|0.02|1|none
+ibc12b10n06|idle|0/56/0/56|0.01|1|none
+ibc12b10n07|idle|0/56/0/56|0.01|1|none
+ibc12b10n08|idle|0/56/0/56|0.01|1|none
+ibc12b10n09|down*|0/0/56/56|58.59|1|Not responding
+ibc12b10n10|allocated|56/0/0/56|55.83|1|none
+ibc12b10n11|down*|0/0/56/56|0.42|1|Not responding
+ibc12b10n12|drained|0/0/56/56|0.02|1|Prolog error
+ibc12b10n13|allocated|56/0/0/56|49.98|1|none
+ibc12b10n14|down*|0/0/56/56|0.03|1|Not responding
+ibc12b10n15|idle|0/56/0/56|0.01|1|none
+ibc12b10n16|idle|0/56/0/56|0.01|1|none
+ibc12b10n17|idle|0/56/0/56|0.04|1|none
+ibc12b10n18|idle|0/56/0/56|0.01|1|none
+ibc12b10n19|down*|0/0/56/56|38.85|1|Not responding
+ibc12b10n20|allocated|56/0/0/56|0.01|1|none
+ibc12b10n21|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b10n22|down*|0/0/56/56|N/A|1|Not responding
+ibc12b10n23|draining|1/0/55/56|1.01|1|Kill task failed
+ibc12b10n24|idle|0/56/0/56|0.01|1|none
+ibc12b10n25|idle|0/56/0/56|0.01|1|none
+ibc12b10n26|allocated|56/0/0/56|56.03|1|none
+ibc12b10n27|allocated|56/0/0/56|56.01|1|none
+ibc12b10n28|idle|0/56/0/56|0.01|1|none
+ibc12b10n29|idle|0/56/0/56|0.01|1|none
+ibc12b10n30|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b10n31|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b10n32|allocated|56/0/0/56|55.96|1|none
+ibc12b10n33|allocated|56/0/0/56|54.52|1|none
+ibc12b10n34|allocated|56/0/0/56|56.04|1|none
+ibc12b10n35|allocated|56/0/0/56|56.01|1|none
+ibc12b10n36|drained|0/0/56/56|0.01|1|Kill task failed
+ibc12b10n37|down*|0/0/56/56|30.65|1|Not responding
+ibc12b10n38|idle|0/56/0/56|0.01|1|none
+ibc12b10n39|idle|0/56/0/56|0.02|1|none
+ibc12b10n40|idle|0/56/0/56|0.01|1|none
+ibc13b03n08|down*|0/0/56/56|N/A|1|Not responding
+ibc13b04n01|idle|0/56/0/56|0.01|1|none
+ibc13b04n02|idle|0/56/0/56|0.01|1|none
+ibc13b04n03|idle|0/56/0/56|0.01|1|none
+ibc13b04n04|idle|0/56/0/56|0.02|1|none
+ibc13b04n05|idle|0/56/0/56|0.01|1|none
+ibc13b04n06|idle|0/56/0/56|0.01|1|none
+ibc13b04n07|idle|0/56/0/56|0.01|1|none
+ibc13b04n08|idle|0/56/0/56|0.02|1|none
+ibc13b04n09|idle|0/56/0/56|0.02|1|none
+ibc13b04n10|idle|0/56/0/56|0.01|1|none
+ibc13b04n11|idle|0/56/0/56|0.01|1|none
+ibc13b04n12|idle|0/56/0/56|0.03|1|none
+ibc13b04n13|idle|0/56/0/56|0.02|1|none
+ibc13b04n14|idle|0/56/0/56|0.01|1|none
+ibc13b04n15|idle|0/56/0/56|0.01|1|none
+ibc13b04n16|idle|0/56/0/56|0.01|1|none
+ibc13b04n17|idle|0/56/0/56|0.01|1|none
+ibc13b04n18|idle|0/56/0/56|0.01|1|none
+ibc13b04n19|idle|0/56/0/56|0.01|1|none
+ibc13b04n20|idle|0/56/0/56|0.01|1|none
+ibc13b04n21|idle|0/56/0/56|0.01|1|none
+ibc13b04n22|idle|0/56/0/56|0.01|1|none
+ibc13b04n23|idle|0/56/0/56|0.03|1|none
+ibc13b04n24|idle|0/56/0/56|0.01|1|none
+ibc13b04n25|idle|0/56/0/56|0.01|1|none
+ibc13b04n26|idle|0/56/0/56|0.01|1|none
+ibc13b04n27|idle|0/56/0/56|0.01|1|none
+ibc13b04n28|idle|0/56/0/56|0.01|1|none
+ibc13b04n29|idle|0/56/0/56|0.01|1|none
+ibc13b04n30|idle|0/56/0/56|0.01|1|none
+ibc13b04n31|idle|0/56/0/56|0.01|1|none
+ibc13b04n32|idle|0/56/0/56|0.01|1|none
+ibc13b04n33|idle|0/56/0/56|0.02|1|none
+ibc13b04n34|idle|0/56/0/56|0.02|1|none
+ibc13b04n35|idle|0/56/0/56|0.01|1|none
+ibc13b04n36|idle|0/56/0/56|0.02|1|none
+ibc13b04n37|idle|0/56/0/56|0.01|1|none
+ibc13b04n38|idle|0/56/0/56|0.01|1|none
+ibc13b04n39|idle|0/56/0/56|0.01|1|none
+ibc13b04n40|idle|0/56/0/56|0.01|1|none
+ibc13b05n01|drained*|0/0/56/56|0.02|1|Kill task failed
+ibc13b05n02|down*|0/0/56/56|0.03|1|Not responding
+ibc13b05n03|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n04|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n05|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n06|down*|0/0/56/56|35.98|1|Not responding
+ibc13b05n07|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b05n08|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b05n09|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n10|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n11|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n12|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b05n13|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b05n14|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n15|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n16|down*|0/0/56/56|37.84|1|Not responding
+ibc13b05n17|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b05n18|down*|0/0/56/56|56.02|1|Not responding
+ibc13b05n19|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n20|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b05n21|down*|0/0/56/56|N/A|1|Not responding
+ibc13b05n22|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n23|down*|0/0/56/56|0.01|1|Not responding
+ibc13b05n24|down*|0/0/56/56|0.37|1|Not responding
+ibc13b05n25|down*|0/0/56/56|0.38|1|Not responding
+ibc13b05n26|down*|0/0/56/56|0.37|1|Not responding
+ibc13b05n27|down*|0/0/56/56|0.37|1|Not responding
+ibc13b06n01|allocated|56/0/0/56|56.01|1|none
+ibc13b06n02|allocated|56/0/0/56|31.22|1|none
+ibc13b06n03|allocated|56/0/0/56|31.67|1|none
+ibc13b06n04|allocated|56/0/0/56|49.91|1|none
+ibc13b06n05|idle|0/56/0/56|0.01|1|none
+ibc13b06n06|down*|0/0/56/56|61.08|1|Not responding
+ibc13b06n07|idle|0/56/0/56|0.01|1|none
+ibc13b06n08|idle|0/56/0/56|0.01|1|none
+ibc13b06n09|idle|0/56/0/56|0.01|1|none
+ibc13b06n10|idle|0/56/0/56|0.01|1|none
+ibc13b06n11|idle|0/56/0/56|0.01|1|none
+ibc13b06n12|idle|0/56/0/56|0.01|1|none
+ibc13b06n13|allocated|56/0/0/56|56.01|1|none
+ibc13b06n14|idle|0/56/0/56|0.01|1|none
+ibc13b06n15|idle|0/56/0/56|0.01|1|none
+ibc13b06n16|idle|0/56/0/56|0.01|1|none
+ibc13b06n17|idle|0/56/0/56|0.04|1|none
+ibc13b06n18|idle|0/56/0/56|0.01|1|none
+ibc13b06n19|idle|0/56/0/56|0.01|1|none
+ibc13b06n20|idle|0/56/0/56|0.01|1|none
+ibc13b06n21|idle|0/56/0/56|0.02|1|none
+ibc13b06n22|idle|0/56/0/56|0.01|1|none
+ibc13b06n23|idle|0/56/0/56|0.01|1|none
+ibc13b06n24|idle|0/56/0/56|0.01|1|none
+ibc13b06n25|idle|0/56/0/56|0.03|1|none
+ibc13b06n26|idle|0/56/0/56|0.01|1|none
+ibc13b06n27|idle|0/56/0/56|0.02|1|none
+ibc13b06n28|idle|0/56/0/56|0.02|1|none
+ibc13b06n29|idle|0/56/0/56|0.01|1|none
+ibc13b06n30|idle|0/56/0/56|0.01|1|none
+ibc13b06n31|idle|0/56/0/56|0.01|1|none
+ibc13b06n32|idle|0/56/0/56|0.01|1|none
+ibc13b06n33|idle|0/56/0/56|0.01|1|none
+ibc13b06n34|idle|0/56/0/56|0.01|1|none
+ibc13b06n35|idle|0/56/0/56|0.01|1|none
+ibc13b06n36|idle|0/56/0/56|0.01|1|none
+ibc13b06n37|idle|0/56/0/56|0.01|1|none
+ibc13b06n38|idle|0/56/0/56|0.01|1|none
+ibc13b06n39|down*|0/0/56/56|N/A|1|Not responding
+ibc13b06n40|down*|0/0/56/56|N/A|1|Not responding
+ibc13b07n01|allocated|56/0/0/56|1.01|1|none
+ibc13b07n02|mixed|42/14/0/56|48.05|1|none
+ibc13b07n03|allocated|56/0/0/56|56.01|1|none
+ibc13b07n04|idle|0/56/0/56|0.02|1|none
+ibc13b07n05|idle|0/56/0/56|0.01|1|none
+ibc13b07n06|idle|0/56/0/56|0.01|1|none
+ibc13b07n07|idle|0/56/0/56|0.01|1|none
+ibc13b07n08|idle|0/56/0/56|0.01|1|none
+ibc13b07n09|idle|0/56/0/56|0.02|1|none
+ibc13b07n10|allocated|56/0/0/56|56.02|1|none
+ibc13b07n11|allocated|56/0/0/56|56.03|1|none
+ibc13b07n12|drained*|0/0/56/56|0.66|1|Kill task failed
+ibc13b07n13|idle|0/56/0/56|0.01|1|none
+ibc13b07n14|idle|0/56/0/56|0.01|1|none
+ibc13b07n15|idle|0/56/0/56|0.01|1|none
+ibc13b07n16|allocated|56/0/0/56|53.91|1|none
+ibc13b07n17|allocated|56/0/0/56|30.12|1|none
+ibc13b07n18|allocated|56/0/0/56|56.02|1|none
+ibc13b07n19|allocated|56/0/0/56|3.37|1|none
+ibc13b07n20|allocated|56/0/0/56|56.02|1|none
+ibc13b07n21|idle|0/56/0/56|0.01|1|none
+ibc13b07n22|idle|0/56/0/56|0.02|1|none
+ibc13b07n23|idle|0/56/0/56|0.01|1|none
+ibc13b07n24|idle|0/56/0/56|0.01|1|none
+ibc13b07n25|idle|0/56/0/56|0.01|1|none
+ibc13b07n26|idle|0/56/0/56|0.01|1|none
+ibc13b07n27|idle|0/56/0/56|0.01|1|none
+ibc13b07n28|idle|0/56/0/56|0.01|1|none
+ibc13b07n29|idle|0/56/0/56|0.01|1|none
+ibc13b07n30|idle|0/56/0/56|0.01|1|none
+ibc13b07n31|idle|0/56/0/56|0.01|1|none
+ibc13b07n32|idle|0/56/0/56|0.01|1|none
+ibc13b07n33|idle|0/56/0/56|0.01|1|none
+ibc13b07n34|idle|0/56/0/56|0.01|1|none
+ibc13b07n35|idle|0/56/0/56|0.01|1|none
+ibc13b07n36|down*|0/0/56/56|56.04|1|Not responding
+ibc13b07n37|down*|0/0/56/56|38.36|1|Not responding
+ibc13b07n38|idle|0/56/0/56|0.01|1|none
+ibc13b07n39|down*|0/0/56/56|0.01|1|Not responding
+ibc13b07n40|drained|0/0/56/56|0.01|1|Kill task failed
+ibc13b08n01|down*|0/0/56/56|0.02|1|Not responding
+ibc13b08n02|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n03|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n04|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n05|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b08n06|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b08n07|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n08|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n09|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b08n10|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b08n11|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n12|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b08n13|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n14|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n15|down*|0/0/56/56|0.02|1|Not responding
+ibc13b08n16|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n17|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n18|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n19|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n20|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n21|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n22|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n23|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n24|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n25|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n26|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n27|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n28|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n29|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n30|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n31|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n32|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n33|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n34|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n35|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n36|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n37|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n38|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n39|down*|0/0/56/56|0.01|1|Not responding
+ibc13b08n40|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n01|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b09n02|down*|0/0/56/56|0.02|1|Not responding
+ibc13b09n03|drained*|0/0/56/56|0.03|1|Kill task failed
+ibc13b09n04|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n05|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n06|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n07|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b09n08|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n09|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n10|drained*|0/0/56/56|0.03|1|Kill task failed
+ibc13b09n11|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n12|down*|0/0/56/56|0.02|1|Not responding
+ibc13b09n13|down*|0/0/56/56|0.02|1|Not responding
+ibc13b09n14|drained*|0/0/56/56|0.03|1|Kill task failed
+ibc13b09n15|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n16|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n17|drained*|0/0/56/56|0.01|1|Kill task failed
+ibc13b09n18|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n19|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n20|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n21|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n22|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n23|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n24|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n25|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n26|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n27|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n28|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n29|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n30|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n31|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n32|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n33|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n34|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n35|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n36|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n37|down*|0/0/56/56|0.01|1|Not responding
+ibc13b09n38|down*|0/0/56/56|0.01|1|Not responding
+-- cnall queue --
+JOBID|PARTITION|NAME|USER|ST|TIME|TIME_LIMIT|NODES|CPUS|NODELIST(REASON)|NODELIST
+-- partition --
+PartitionName=cnall
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=56
+   Nodes=ibc11b02n[01-40],ibc11b03n[01-35],ibc11b04n[01-40],ibc11b06n[07-10],ibc11b07n[01-40],ibc11b08n[01-40],ibc11b09n[01-40],ibc11b10n[01-40],ibc12b02n[01-40],ibc12b03n[01-40],ibc12b04n[01-40],ibc12b07n[01-40],ibc12b08n[01-40],ibc12b09n[01-40],ibc12b10n[01-40],ibc13b03n08,ibc13b04n[01-40],ibc13b05n[01-27],ibc13b06n[01-40],ibc13b07n[01-40],ibc13b08n[01-40],ibc13b09n[01-38]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=43960 TotalNodes=785 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=43960,mem=785M,node=785,billing=43960
+

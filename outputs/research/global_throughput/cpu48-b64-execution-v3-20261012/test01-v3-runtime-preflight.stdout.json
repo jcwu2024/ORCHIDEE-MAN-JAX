@@ -1,0 +1,25 @@
+{
+  "alternates": false,
+  "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3",
+  "commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+  "config": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/configs/orchidee_man_250919.yaml",
+  "cpu_affinity": [
+    0
+  ],
+  "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+  "gpu_reference_stage": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl",
+  "hostname": "ibtest01",
+  "jax": "0.4.38",
+  "jax_enable_x64": true,
+  "jax_orchidee_module": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/jax_orchidee/__init__.py",
+  "jaxlib": "0.4.38",
+  "lower_or_compile": false,
+  "model_execution": false,
+  "prepared_input": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+  "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+  "python": "3.11.15",
+  "python_executable": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+  "science_tree": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+  "status": "passed",
+  "worktree_clean": true
+}

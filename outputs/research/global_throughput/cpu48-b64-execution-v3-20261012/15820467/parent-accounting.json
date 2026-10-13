@@ -1,0 +1,17 @@
+{
+  "source": "sacct",
+  "scope": "whole_slurm_parent_job",
+  "job_id": "15820467",
+  "terminal_status": "FAILED",
+  "Elapsed": "00:36:37",
+  "AllocTRES": "billing=48,cpu=48,node=1",
+  "raw_record": "15820467|FAILED|00:36:37|billing=48,cpu=48,node=1\n",
+  "raw_record_sha256": "e059a19bb41ff88ee685de0e76a13727f9861039c6373832e320dad541321bd6",
+  "wall_seconds": 2197,
+  "allocated_CPU_count": 48,
+  "GPU_count": 0,
+  "directories": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/batch"
+  ]
+}

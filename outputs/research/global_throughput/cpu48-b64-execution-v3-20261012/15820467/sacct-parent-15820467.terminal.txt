@@ -1,0 +1,2 @@
+JobIDRaw|State|Elapsed|AllocTRES
+15820467|FAILED|00:36:37|billing=48,cpu=48,node=1

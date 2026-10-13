@@ -1,0 +1,28 @@
+JobId=15820467 JobName=orchjax-cpu48-b64-v3
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:12:42 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-13T10:36:24 EligibleTime=2026-10-13T10:36:24
+   AccrueTime=2026-10-13T10:36:24
+   StartTime=2026-10-13T10:36:41 EndTime=2026-10-13T12:06:41 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-13T10:36:41 Scheduler=Main
+   Partition=cnall AllocNode:Sid=ibc12b01n05:28881
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=ibc11b09n32
+   BatchHost=ibc11b09n32
+   NumNodes=1 NumCPUs=48 NumTasks=1 CPUs/Task=48 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=48,node=1,billing=48
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=48 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/scripts/hpc/slurm_global_server_cpu_48core.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_15820467.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_15820467.txt
+   Power=
+   
+

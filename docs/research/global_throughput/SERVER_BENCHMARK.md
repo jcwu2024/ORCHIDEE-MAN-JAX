@@ -1,10 +1,28 @@
 # Explore1000 Server Benchmark Contract
 
-Current status (2026-10-13): unpaid CPU48 v3 preparation for supervisor review.
+Current status (2026-10-13 Asia/Shanghai): the single CPU48 v3 attempt is terminal and closed.
+The user delegated approval to the supervisor, who reviewed the actual artifacts
+and approved deployment, normal preflight, one submission, execution and collection.
+See the [new authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)
+and [execution status](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md).
 The [preparation result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)
 and [new single-job proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
-are the current entry points. No v3 production checkout or paid submission has
-been made; fresh approval is required for one new job. The v1/v2 grants are consumed.
+retain the reviewed preparation contract. Job **15820467** ended FAILED 1:0 after
+2197 parent seconds on `ibc11b09n32`, with 48 CPUs and zero GPUs. The scalar
+FULL64 phase completed; B64 failed its inherited OMP thread-budget guard before
+lowering, compilation or timing. There is no CPU48 throughput or CPU48/GPU ratio.
+The v3 grant is consumed, with no retry; the v1/v2 grants remain consumed.
+
+The completed scalar report retains five core samples (median 127.074983958s,
+range 116.763800597–133.898973692s) and five wrapper samples (median 121.382449843s,
+range 118.898961311–133.709214089s) for 896 point-days. It records 61/64 GPU lane
+gates passing, three finite tolerance-only failures, and an exact frozen reset
+repeat. These are raw exploratory scalar records: the test01 collector took
+its incomplete-run failure path and admits accounting only, without independent
+scalar array or throughput admission. Whole-parent elapsed 2197s at 48 CPUs gives
+29.293333 core-hours and CNY 1.464667/2.050533 rate scenarios, with billing unverified.
+Scalar Linux ru_maxrss was 21406240768B (19.94GiB); sampled peak 21320556544B and
+checkpoint-current RSS 5585903616B are separate measurements.
 
 The supervisor accepted the bounded AOT repair at research commit
 `d33fa65bb263b1564ca98f72b81a69e93aabc33f` for metadata and interfaces only.
@@ -15,7 +33,8 @@ construction admission and native call behavior are unchanged. Reuse the
 both 64-point groups with 536 leaves passed metadata checks on JAX/jaxlib0.4.38
 with x64; actual SingleRunner scalar/B2 core-wrapper checks used stub physical
 factories while preserving the full carry. This is not full physical compilation
-or scientific acceptance. No repeated physical compile is authorized by this preparation.
+or scientific acceptance. The authorized job completed scalar physical compilation
+inside its allocation; B64 failed before compilation. The single attempt is closed.
 
 Execution SHA `03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8`, ref
 `codex/global-cpu48-b64-v3`, has v2
@@ -37,7 +56,7 @@ both sets; this is not a new 60-case full-module pass or target-runtime acceptan
 50-pass/10-science-guard-failure record is preserved; its carbon-source identity
 difference is resolved by the historical-science execution pin without relaxing guards.
 
-Let `P=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. The future immutable code path is
+Let `P=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. The executed immutable code path is
 `P/runtime/worktrees/global-throughput-cpu48-b64-v3`; output is
 `P/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/${SLURM_JOB_ID}`.
 Use canonical `P/.venvs/orcjax_cpu/bin/python`, frozen FULL64 payload and GPU B64
@@ -45,14 +64,14 @@ reference. Their full identities and concrete commands are in the new proposal.
 Target ibtest01 checks used only four exact pinned files in a temporary staging
 directory: Bash launcher expansion and coordinator-to-scalar/batch CLI dry-runs,
 with `model_execution=false` and `JAX_imported=false`. No srun/sbatch was invoked;
-staging was removed and the v3 production path remains absent. The prior accepted
+staging was removed and the v3 production path was absent at preparation time. The prior accepted
 Linux AOT evidence is reused, not replaced by these entry checks.
 
-The proposed allocation remains cnall, one node/task, 48 distinct physical cores,
+The approved allocation remains cnall, one node/task, 48 distinct physical cores,
 zero GPUs, 5400 seconds, nonexclusive, no requeue and no new memory reservation.
 Let Slurm choose a matching healthy CPU node and queue normally; do not pin n35.
 Clear inherited SBATCH placement, exclusivity and memory settings before the
-future command. The complete parent, including its one-CPU scalar step, is billed
+approved command. The complete parent, including its one-CPU scalar step, is billed
 at 48 CPUs: 48×1.5×CNY0.05=CNY3.60, or CNY5.04 at CNY0.07. Rates are unverified.
 Run the full scalar reference then B64, each with five core and five wrapper
 samples; scalar cap is 2700 seconds and candidate admission requires at least
@@ -62,8 +81,9 @@ original dtypes, atol1e-8/rtol1e-10 and existing hard gates. GPU B64 is the
 same-workload comparator; B1024's299.139825 is only a different-workload normalized reference.
 Version/resource/reference errors, hard-gate failure, insufficient remaining
 window or timeout stop the single attempt. Keep raw scontrol stdout/stderr/status
-and count terminal parent accounting once. Full physical lower/compile, numerical
-acceptance, CPU48 warm throughput/RSS and CPU/GPU ratios remain unverified.
+and count terminal parent accounting once. Scalar physical lowering/compilation
+and its full phase finished. The failed B64 resource admission leaves CPU48
+numerical acceptance, warm throughput/RSS and CPU48/GPU ratios unverified.
 
 Historical v2 job **15805735** ended FAILED1:0 after109 seconds on `ibc12b08n35`
 with48 CPUs/0 GPUs. Real allocation validation passed; scalar lower54.8616 seconds

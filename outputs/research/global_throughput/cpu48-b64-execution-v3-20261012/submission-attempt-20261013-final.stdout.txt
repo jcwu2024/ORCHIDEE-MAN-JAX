@@ -1,0 +1,10 @@
+pre_submit_utc=2026-10-13T02:36:23Z
+checkout=03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8
+v3_marker=submitted:false,invocations:0,job_id:null
+             JOBID| PARTITION|                          NAME|    USER|ST|      TIME|TIME_LIMIT| NODES|  CPUS|NODELIST(REASON)
+ibc11b04n11|idle|0/56/0/56|0.38
+ibc11b04n12|idle|0/56/0/56|0.01
+ibc11b09n27|idle|0/56/0/56|0.50
+ibc11b09n28|idle|0/56/0/56|0.40
+ibc11b09n32|idle|0/56/0/56|0.12
+Submitted batch job 15820467

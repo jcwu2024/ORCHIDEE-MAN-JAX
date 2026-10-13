@@ -1,10 +1,16 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-13。先读本页、[CPU48 v3准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)、
+更新：2026-10-13。先读本页、[CPU48 v3新单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)、
+[v3实际执行入口](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md)、
+[CPU48 v3准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)、
 [新的单次作业提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)、
 [已接受的有界AOT修复](../../../outputs/research/global_throughput/cpu-aot-signature-repair-20261012/REPAIR_REPORT.md)
 及[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
-当前只获未付费准备授权；v3未生产部署、未提交，旧v1/v2单次作业授权均已消耗。
+用户2026-10-13授权主管批准，主管已完成实际产物审查并批准精确v3的一次CPU48作业及必要部署、预检、运行、采集。
+执行聊天已跟进到job **15820467**终态FAILED1:0/2197s：scalar FULL64完成，B64因继承OMP线程预算不符在资源入场失败，
+未进入B64 lower/compile或热计时，无CPU48吞吐/CPU48-GPU比值。v3单次授权已消耗，旧v1/v2额度均不恢复，不重提。
+scalar原始5core/5wrapper中位127.074984s/121.382450s，896 point-days；61/64GPU参考门通过、3有限容差失败，冻结reset通过。
+collector仅失败记账，未独立接纳scalar数组/吞吐。父allocation2197s×48=29.293333核时，未核实费用情景CNY1.464667/2.050533；scalar HWM19.94GiB。
 用户已选择接受的B1024作为当前单卡工程选择，主问题转为CPU/GPU速度与单位成本；
 不把1280/1536探索、显存优化或跨版本小容差失败作为前置。
 旧[B1024双臂获批执行](../../../outputs/research/global_throughput/gpu-lifecycle-execution-20261011/CURRENT_RESULT.md)、
@@ -113,10 +119,11 @@ CPU4/48实际性能均未测。48核只是算术假设，不能作为48独立进
 CPU compile-end RSS约4.776GiB，按此作48份常驻进程的朴素外推约229GiB，超过192GB节点；单进程峰值约19.925GiB。
 原始样本、版本/输入边界、冷热费用与缺口见[本轮比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
 
-## 4. 当前阶段与下一步供主管审阅
+## 4. 当前终态与后续派工边界
 
-当前交付是**CPU48 v3未付费准备**。主候选仍为单进程native FULL64 B64 batch/vmap、48个不同物理核；
-CPU4不是强制前置，也不采用48份独立scalar进程。新提案须先经主管审阅，再取得用户新的单次作业批准。
+当前阶段是**CPU48 v3终态交付**。主管按用户授予的审批权限批准该精确提案，唯一job15820467已FAILED1:0/2197s；
+必要精确部署、正常预检、单次提交、终态跟进和采集按本次执行入口核查。无重提或自动修复权限。
+主候选仍为单进程native FULL64 B64 batch/vmap、48个不同物理核；CPU4不是强制前置，也不采用48份独立scalar进程。
 
 主管已接受研究提交`d33fa65bb263b1564ca98f72b81a69e93aabc33f`的有界AOT修复。
 首个实际失败叶子`.values_by_component[4][67]`是Python float；helper改用JAX `shaped_abstractify`，
@@ -137,10 +144,10 @@ AOT文件SHA `bc8ce1d62f6947228c8c8438344987345bf18095f307c90a2f45dc4655c6891e`�
 区分两组检查，不宣称整模块60项重跑或目标JAX0.4.38 runtime接受。
 原研究模块50通过/10失败只因两项碳修复的源码身份差异，旧报告保留；不改guard、回退碳修复或重开DIFFUCO。
 
-拟定独立代码目录为`P/runtime/worktrees/global-throughput-cpu48-b64-v3`，输出为
+实际独立代码目录为`P/runtime/worktrees/global-throughput-cpu48-b64-v3`，输出为
 `P/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/${SLURM_JOB_ID}`，
 其中`P=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`。canonical CPU Python仍为`P/.venvs/orcjax_cpu/bin/python`。
-v3未生产部署；旧pin/目录/结果不改。实际产物及小型入口检查边界见
+v3按新授权精确部署，部署/运行状态以本次执行入口为准；旧pin/目录/结果不改。准备产物及小型入口检查边界见
 [准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)。
 
 [新提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
@@ -157,8 +164,9 @@ B1024的299.139825仅作不同总量归一化参考；CPU2048、匹配Fortran基
 scalar lower54.8616s后在签名helper失败，compile/B64未运行，见[v2终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md)。
 48核父一次费用情景CNY0.072666667/0.101733333，非核实账单，单次授权已消耗。
 旧job15782454的FAILED2:0/1s与n35-only零提交证据原样保留，均不产生CPU48性能或新额度。
-本次完整物理lower/compile、GPU、sbatch、长运行、安装和生产部署均未执行；CPU48科学/热性能仍未知。
-本次仅在执行聊天交付，未联系或轮询主管线程；主管审阅实际文件后再决定新单次作业审批。
+本次精确部署和唯一CPU sbatch已执行，scalar物理编译和阶段完成；B64在线程预算资源入场失败，未编译/计时。
+CPU48科学/热性能未获得，完整父allocation按48核只计一次；scalar测量和未核实费率的费用情景见实际执行入口。
+不改环境或科学合同、不跑GPU、不做完整预编译、不自动重试；本次仅在执行聊天交付，不联系或轮询主管线程。
 
 以下保留已完成的生命周期、碳核心同步和失败定位证据，不作为CPU/GPU比较前置。
 

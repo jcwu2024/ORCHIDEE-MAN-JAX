@@ -1,0 +1,3 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v3-03026d0/cpu48-b64-03026d013626.bundle is okay
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v3-03026d0/cpu48-b64-03026d013626.bundle
+ * [new branch]      codex/global-cpu48-b64-v3 -> codex/global-cpu48-b64-v3

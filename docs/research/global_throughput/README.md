@@ -1,10 +1,17 @@
 # 全球物理模型吞吐研究
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
+[CPU48 v3新单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)、
 [CPU48 v3准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/CURRENT_RESULT.md)、
 [新的单次运行提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/PAID_PROPOSAL.md)
 及[CPU/GPU现有证据比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
-当前授权仅为未付费准备；v3尚未生产部署或提交，后续由主管审阅并取得新的单次作业批准。
+用户于2026-10-13授权主管审查批准，主管已接受实际产物并批准该精确版本的一次CPU48 v3作业及必要部署、预检、采集。
+本次job **15820467**已终态FAILED1:0/2197s：scalar FULL64阶段完成，B64在启动资源入场时因继承的OMP线程预算不符失败，
+未进入B64 lower/compile或热计时；没有CPU48吞吐或CPU48/GPU比值。单次授权已消耗，不恢复旧v1/v2额度、不重提。实际证据见
+[v3执行入口](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md)。
+scalar原始记录为896 point-days、各5个样本：core中位127.074984s（7.050955 point-days/s），wrapper中位121.382450s（7.381627 point-days/s）。
+64个GPU参考门中61通过、3个仅有限值容差失败，冻结reset重复通过；这些是探索记录，collector只接纳失败记账，未独立接纳scalar数组或吞吐。
+父allocation只计一次：2197s×48=29.293333核时，未核实费率情景CNY1.464667/2.050533。scalar进程HWM为19.94GiB，不能用checkpoint当时5.586GB的RSS替代。
 用户已选接受的B1024作为当前单卡工程选择，主问题是CPU/GPU速度与单位成本；
 CPU主候选为单进程native FULL64 B64 batch/vmap、48个不同物理核，CPU4不是强制前置。
 
@@ -24,13 +31,14 @@ ORCJAX/JAX0.10.1/x64本地准备测试15通过；新执行版本source_identity�
 另10项AOT/source-certificate筛选通过（50未选）；[原始回归记录](../../../outputs/research/global_throughput/cpu48-b64-preparation-v3-20261012/regression-recheck-20261013/REGRESSION_RECEIPT.md)
 区分两组选例。这不是整容量模块60项重跑或目标JAX0.4.38 runtime接受；原研究50通过/10失败记录不回写，不放宽guard或回退碳修复。
 
-拟议资源为cnall/1node/1task/48CPU/0GPU/5400s、非exclusive/no-requeue/无新增`--mem`；
+批准资源为cnall/1node/1task/48CPU/0GPU/5400s、非exclusive/no-requeue/无新增`--mem`；
 全父allocation含scalar都按48核计费，未核实费率的worst-case为CNY3.60/5.04。
 64 unique FULL64点、Days2–8和9–15、48半小时步/天、896 point-days，与已接受GPU B64作同量比较；
 每阶段5 core+5 wrapper，scalar cap2700s，候选须至少剩1800s。760完整native outputs/masks、x64、
 原生dtype、`atol=1e-8/rtol=1e-10`及原硬门保持。健康匹配节点可正常排队，不锁n35；新提案清除继承的提交限制。
 B1024的299.139825只作不同工作量归一化参考。
-完整物理lower/compile、科学gate、CPU48热吞吐/RSS及同量CPU/GPU比仍未验证；本次未运行模型、GPU或sbatch。
+实际scalar物理编译和完整阶段已完成；B64因线程预算入场失败，CPU48科学gate、热吞吐/RSS及同量CPU/GPU比仍未获得。
+scalar原始证据按执行入口单列，不能当作48核batch或科学接受；后续修复及新作业等待新的派工。
 
 旧v2 job**15805735**终态FAILED1:0/109s：真实allocation通过，scalar lower54.8616s后在上述签名helper失败；
 compile和B64未运行。其单次付费授权已消耗，48核父一次费用情景CNY0.072666667/0.101733333，见
@@ -144,7 +152,7 @@ CPU wrapper为7.052818167587637 point-days/s，GPU为299.1398250995909 lane-days
 scalar最多2700s，候选需至少1800s剩余窗口。整作业含scalar阶段均按48核计费，终态父sacct只计一次。
 B1024是当前GPU工程选择，其大批量吞吐与B64仅作注明不同collection总量的归一化参考；
 完整2048负载适配只在需要该级别端到端对照时再选。详见上方比较和CPU计划。
-当前仅获上方v3未付费准备授权；新提案待主管审阅和新的单次作业批准。旧比较的线性48核数值仍仅是历史算术假设，CPU4与48独立进程方案不作为前置。
+上方v3精确提案的单次作业已终态关闭；旧比较的线性48核数值仍仅是历史算术假设，CPU4与48独立进程方案不作为前置。
 旧作业预算均关闭，本次固定科学版本、原生dtype、输出和容差不变。
 
 以下为已保存的CPU1和GPU阶段证据，历史工作安排按其当时范围理解。
