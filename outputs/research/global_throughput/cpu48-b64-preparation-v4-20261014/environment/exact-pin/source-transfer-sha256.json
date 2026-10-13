@@ -1,0 +1,71 @@
+{
+  "schema": "cpu48-b64-v4-exact-pin-source-transfer-hashes-v1",
+  "source_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "remote_stage_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/exact-pin",
+  "local_stage_root": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin",
+  "files": [
+    {
+      "path": "scripts/dev/benchmark_global_server_cpu.py",
+      "sha256": "97ef0c8ccce68465bd0e8f3a94f193ef1de306fae743ec104fe02e0efefc8468",
+      "pin_manifest_entry": true,
+      "local_remote_bytes_matched": true
+    },
+    {
+      "path": "scripts/dev/global_cpu_child_environment.py",
+      "sha256": "d5691e5e27c5eb0b63c8e6a81244368eb71b1fc174db6b7354bebf73d094d2eb",
+      "pin_manifest_entry": true,
+      "local_remote_bytes_matched": true
+    },
+    {
+      "path": "scripts/dev/global_server_reference.py",
+      "sha256": "03333e3d2c9f4d015dd360ad0a8a4233b9284153252f4562695cf4dc1545a491",
+      "pin_manifest_entry": true,
+      "local_remote_bytes_matched": true
+    },
+    {
+      "path": "scripts/hpc/global_cpu48_b64_coordinator.py",
+      "sha256": "0d3d81189420d4534800b05efc776c1b2bf67f1824705b073592c6ecba7cc7b7",
+      "pin_manifest_entry": true,
+      "local_remote_bytes_matched": true
+    },
+    {
+      "path": "scripts/hpc/slurm_global_server_cpu_48core.sh",
+      "sha256": "b83e5b9a2212f3d444c00c4889d9eca33cb9ae9f8167ef35d54040c7ed315251",
+      "pin_manifest_entry": true,
+      "local_remote_bytes_matched": true
+    },
+    {
+      "path": "scripts/dev/global_server_resources.py",
+      "sha256": "c17f37f4d0acd888a9525154489e1815d3d24ff60c6fac030c73e359284dc271",
+      "pin_manifest_entry": false,
+      "dependency_note": "Required imported dependency outside harness_blob_sha256; Git blob OID was identical at execution and base commits.",
+      "local_remote_bytes_matched": true
+    }
+  ],
+  "additional_transfer_artifacts": [
+    {
+      "path": "execution-code-pin.json",
+      "sha256": "e9e301aeab7237d59a0e204ffc93fc3eee96d28ab997d89be31383d735ec2769",
+      "remote_match_reported_earlier": true
+    },
+    {
+      "path": "PROPOSED_SUBMISSION.sh",
+      "sha256": "b86068c62c96464319175135e12e5d84ce2e494a00875aceaa01ee0b1a48c160",
+      "remote_match_reported_earlier": true
+    },
+    {
+      "path": "scalar-admission.json",
+      "sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d",
+      "remote_match_reported_earlier": true
+    }
+  ],
+  "transfer_evidence_limitations": {
+    "source_remote_match_was_reported_earlier": true,
+    "raw_original_remote_hash_output_retained": false,
+    "pin_proposal_admission_remote_match_was_reported_earlier": true,
+    "raw_original_pin_proposal_admission_remote_hash_output_retained": false,
+    "independent_remote_recheck_during_packaging": false,
+    "note": "Remote match fields summarize the earlier transfer observation. Hash values here are from preserved local staged files and the declared manifest. No remote hash output is invented or substituted."
+  },
+  "evidence_basis": "Hashes are from preserved local staged files, with the earlier remote byte-match observation and missing raw remote comparison output disclosed above. No model or source code was executed for this manifest."
+}

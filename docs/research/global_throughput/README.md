@@ -1,15 +1,20 @@
 # 全球物理模型吞吐研究
 
-当前阶段（2026-10-14）：按主管新派工完成 **CPU48 v4 的不付费修复、保存 scalar 独立验收和具体执行准备**。
-先读[v4 准备入口](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
-[本轮授权边界](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md)、
-[新协议](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
-和[新单次提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md)。
-下一候选只跑 B64，显式引用 job15820467 的已封存 scalar；不把旧 scalar 与新 B64 冒充同 job 测量。
-启动预检须覆盖真实 child launch，昂贵步骤前记录并验证实际白名单环境及 48 个独立物理核。
-固定历史科学子树、原生 dtype、760 完整 outputs/masks 和严格容差；scalar 的 3 个有限跨 GPU 超差原样保留。
-新提案为 48CPU/0GPU/3600s，未核实费率下 worst-case CNY2.40/3.36；v3 单次额度已消耗。
-本轮无 sbatch、GPU、完整物理编译或新生产部署。具体产物由主管按用户已有授权复核后决定单次提交，本聊天交付后等待派工。
+当前阶段（2026-10-14）：**CPU48 v4 不付费修复、保存 scalar 独立审计和固定执行包已准备，供主管审查**。
+先读[v4 交付](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
+[授权](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md)、
+[固定 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json)、
+[协议](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
+和[精确单次提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md)。
+执行 SHA `60dccbddde10be4295aab7e7fe55fa7864d3c3f3` / ref `codex/global-cpu48-b64-v4`；
+104 个物理 blob 与 v3 基底相同，研究树 carbon 修复保留。生产/preflight 共用 post-transport child 环境边界。
+新候选 B64-only，显式绑定旧 job 15820467 scalar 和独立 admission/SHA；原 3 个有限跨 GPU 超差及科学 false 保留。
+独立审计重算 64 个输入身份/点序、760 叶及全部 GPU 门，reset 仅原封存证明；
+验证和固定 pin 目标 staging 检查边界见交付索引，不能称未来 production checkout 已部署/准入。
+提案 cnall/1 node/1 task/48 CPUs/0 GPUs/3600s，非 exclusive/no-requeue/无新增 mem 或节点限制；
+未核实费率最坏 CNY 2.40/3.36。实际 B64 编译、硬门、吞吐/RSS 与同量 CPU48/GPU 比仍未测量。
+本轮无 sbatch、GPU、完整物理编译、新生产部署或 scalar 重生成。主管按已有用户授权审查后决定；
+执行聊天交付后停止等待派工，不联系/轮询主管或创建自动任务。
 
 以下保留 v3 终态和已完成科学证据；当前操作以 v4 准备入口为准。
 

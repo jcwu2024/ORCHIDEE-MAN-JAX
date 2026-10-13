@@ -1,0 +1,7 @@
+Captured read-only staging/output observation after job 15852487:
+PYCS=0
+FUTURE_CHECKOUT=absent
+RESULT_DIR=absent
+             JOBID ST NODELIST(REASON)
+
+The command checked the isolated staged code tree for .pyc files, the future execution checkout, and the prospective v4 job-ID output directory. The squeue query returned only its header.

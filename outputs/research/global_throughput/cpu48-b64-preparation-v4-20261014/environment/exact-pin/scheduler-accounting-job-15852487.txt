@@ -1,0 +1,9 @@
+Command issued after the allocation had completed; read-only sacct query:
+/rmprog/slurm/v22.05.7/bin/sacct -j 15852487 --noheader --parsable2 --format=JobID,Partition,State,ExitCode,Elapsed,AllocCPUS,NodeList
+
+Captured tool output:
+15852487|cntest|COMPLETED|0:0|00:00:04|1|ibtest03
+15852487.extern||COMPLETED|0:0|00:00:04|1|ibtest03
+15852487.0||COMPLETED|0:0|00:00:01|1|ibtest03
+
+The parent allocation and its step both completed with exit 0; elapsed parent allocation was four seconds on ibtest03 with one allocated CPU.

@@ -1,0 +1,367 @@
+{
+  "schema": "cpu48-v4-compact-stage-review-v1",
+  "status": "passed",
+  "checked_at_utc": "2026-10-13T20:05:39.603467+00:00",
+  "command": "conda run -n ORCJAX python -B outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/review-final-stage.py",
+  "scope": "explicit staged compact v4 artifacts and four current entry documents",
+  "receipt_itself_excluded_from_scope": true,
+  "staged_diff_check": "passed",
+  "obvious_credentials_found": false,
+  "bundles_pickles_or_fixture_trees_staged": false,
+  "files_reviewed": 50,
+  "total_bytes": 693149,
+  "byte_exact_artifacts": 48,
+  "records": [
+    {
+      "path": "docs/research/global_throughput/NEW_PROJECT_PROMPT.md",
+      "bytes": 8571,
+      "git_blob_sha256": "1585c19e598706b1751c2b44c0b84609087187658b8c5651f2825ac7a2f6edac",
+      "disk_sha256": "1585c19e598706b1751c2b44c0b84609087187658b8c5651f2825ac7a2f6edac",
+      "byte_exact": true
+    },
+    {
+      "path": "docs/research/global_throughput/README.md",
+      "bytes": 57281,
+      "git_blob_sha256": "8497e5bf27bb760d675cc6f968912aeae9b2a67c48756633eb519cd5003b2c3b",
+      "disk_sha256": "1c0241291764146aed2f23c5cf09a4311b7d68ad8b6c1f435b5eb3d11ee9a568",
+      "byte_exact": false
+    },
+    {
+      "path": "docs/research/global_throughput/SERVER_BENCHMARK.md",
+      "bytes": 55181,
+      "git_blob_sha256": "892e53df68decd1790918af9e3c99b8e45f2c44099133c00e4a0fb5a8c803072",
+      "disk_sha256": "9079790f6be1c8908615dea083e3ac7f6c30d69312796404974f50d1601fb58f",
+      "byte_exact": false
+    },
+    {
+      "path": "docs/research/global_throughput/SUPERVISOR_HANDOFF.md",
+      "bytes": 27865,
+      "git_blob_sha256": "e0c260547f8eec8bf97069fd297ee81e3c710d2f6c4a90e7644085afb678d5b7",
+      "disk_sha256": "e0c260547f8eec8bf97069fd297ee81e3c710d2f6c4a90e7644085afb678d5b7",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md",
+      "bytes": 6108,
+      "git_blob_sha256": "818213ad0be9eacdd923c7c3562de62ecee5b26baafed1c7f744cf474f664327",
+      "disk_sha256": "818213ad0be9eacdd923c7c3562de62ecee5b26baafed1c7f744cf474f664327",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md",
+      "bytes": 6294,
+      "git_blob_sha256": "1b13a4483c733f890990f9a58569aa11a4d68f3fcc8b4f519a50a3c736042b80",
+      "disk_sha256": "1b13a4483c733f890990f9a58569aa11a4d68f3fcc8b4f519a50a3c736042b80",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md",
+      "bytes": 7584,
+      "git_blob_sha256": "121686352bfdc687fae47c93173685e35426c2903a572f9db1c3ec617a2ab997",
+      "disk_sha256": "121686352bfdc687fae47c93173685e35426c2903a572f9db1c3ec617a2ab997",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PROPOSED_SUBMISSION.sh",
+      "bytes": 2011,
+      "git_blob_sha256": "b86068c62c96464319175135e12e5d84ce2e494a00875aceaa01ee0b1a48c160",
+      "disk_sha256": "b86068c62c96464319175135e12e5d84ce2e494a00875aceaa01ee0b1a48c160",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/SCALAR_ADMISSION_VALIDATION.md",
+      "bytes": 3402,
+      "git_blob_sha256": "082d10dcb2147a7ab2283d06496d82f36550f6502a55304cac6eccda32278987",
+      "disk_sha256": "082d10dcb2147a7ab2283d06496d82f36550f6502a55304cac6eccda32278987",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/ENVIRONMENT_VALIDATION.md",
+      "bytes": 11164,
+      "git_blob_sha256": "11a022716f62bc36b0e767b16a676d46c6c10e0dde1ecc74d7fd4788765321a3",
+      "disk_sha256": "11a022716f62bc36b0e767b16a676d46c6c10e0dde1ecc74d7fd4788765321a3",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/CPU48_B64_V4_EXACT_PIN_CHECK_RECEIPT.json",
+      "bytes": 5742,
+      "git_blob_sha256": "ef32710afcf98560283970adf2d6115a575cc718147a9887d30c13b07db61445",
+      "disk_sha256": "ef32710afcf98560283970adf2d6115a575cc718147a9887d30c13b07db61445",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/absence-observations.txt",
+      "bytes": 342,
+      "git_blob_sha256": "c3db6e5c48c0fa0b4e7eaf19c07ffedaf83cc886fa750a705d46be06ef0a323f",
+      "disk_sha256": "c3db6e5c48c0fa0b4e7eaf19c07ffedaf83cc886fa750a705d46be06ef0a323f",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/allocation.txt",
+      "bytes": 1248,
+      "git_blob_sha256": "5f7a31035084d8722e02294f260d6958ef6bde6b4d68ad5a53005fccc3394a46",
+      "disk_sha256": "5f7a31035084d8722e02294f260d6958ef6bde6b4d68ad5a53005fccc3394a46",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/launcher-bashn.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/launcher-bashn.stderr.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/launcher-bashn.stdout.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/proposal-bashn.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/proposal-bashn.stderr.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852476/proposal-bashn.stdout.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/allocation.txt",
+      "bytes": 1249,
+      "git_blob_sha256": "59092d005133029c94a387a9c4f5f1c9ac67d133f95b8ac80867d04be460173d",
+      "disk_sha256": "59092d005133029c94a387a9c4f5f1c9ac67d133f95b8ac80867d04be460173d",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/coordinator-argv.json",
+      "bytes": 4518,
+      "git_blob_sha256": "8f177efd95baf7c0a7a0ac29ae991e6cc5128cafbca1ae48f38291382e0d8e46",
+      "disk_sha256": "8f177efd95baf7c0a7a0ac29ae991e6cc5128cafbca1ae48f38291382e0d8e46",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/coordinator-dry-run-assertions.txt",
+      "bytes": 56,
+      "git_blob_sha256": "c9ee9bcf3221f299c99395400fc91f7a6c1e98b8096cdc92ee40f8a665096579",
+      "disk_sha256": "c9ee9bcf3221f299c99395400fc91f7a6c1e98b8096cdc92ee40f8a665096579",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/coordinator-dry-run.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/coordinator-dry-run.stderr.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/coordinator-dry-run.stdout.txt",
+      "bytes": 9395,
+      "git_blob_sha256": "81ed3a09fe4a593ba428f2d964794f9280f701552b40ef45c229fb53d4881927",
+      "disk_sha256": "81ed3a09fe4a593ba428f2d964794f9280f701552b40ef45c229fb53d4881927",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/driver-stdin.sh",
+      "bytes": 6398,
+      "git_blob_sha256": "f0375486c6eb5a81430aa86c59311db39ee5eb60cefee41d4c55bf34a65bb74a",
+      "disk_sha256": "f0375486c6eb5a81430aa86c59311db39ee5eb60cefee41d4c55bf34a65bb74a",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/finished.txt",
+      "bytes": 34,
+      "git_blob_sha256": "b906d21618758edd52b599989dfe6cae96149cabdcc56d0fef9fb95b98139cea",
+      "disk_sha256": "b906d21618758edd52b599989dfe6cae96149cabdcc56d0fef9fb95b98139cea",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/launcher-bashn.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/launcher-bashn.stderr.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/launcher-bashn.stdout.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/launcher-dry-run.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/launcher-dry-run.stderr.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/launcher-dry-run.stdout.txt",
+      "bytes": 2134,
+      "git_blob_sha256": "59c097150045ca972dab65317276b993c00d190b0dda5d689c66039e9f641c92",
+      "disk_sha256": "59c097150045ca972dab65317276b993c00d190b0dda5d689c66039e9f641c92",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/proposal-bashn.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/proposal-bashn.stderr.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/proposal-bashn.stdout.txt",
+      "bytes": 0,
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/scalar-admission-validation.exitcode.txt",
+      "bytes": 2,
+      "git_blob_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "disk_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/scalar-admission-validation.stdout.txt",
+      "bytes": 156722,
+      "git_blob_sha256": "46b16c9e1170188d69c844964e922a05c91c1f418d216cf9131e3ca5fb4d5a69",
+      "disk_sha256": "46b16c9e1170188d69c844964e922a05c91c1f418d216cf9131e3ca5fb4d5a69",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487/sha256.txt",
+      "bytes": 1694,
+      "git_blob_sha256": "7aa8177379e8572d46cd7c9f662d1436d2808fb7631dda2df94d6473a4188cc4",
+      "disk_sha256": "7aa8177379e8572d46cd7c9f662d1436d2808fb7631dda2df94d6473a4188cc4",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/failed-dispatch-tool-transcripts.txt",
+      "bytes": 2100,
+      "git_blob_sha256": "a5cc191f1994ed48250fa05a4632453d1c5fbd4153f9d08a58e53a4e7220f2df",
+      "disk_sha256": "a5cc191f1994ed48250fa05a4632453d1c5fbd4153f9d08a58e53a4e7220f2df",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/invocation-job-15852487.txt",
+      "bytes": 922,
+      "git_blob_sha256": "793f7af67963f4ff72156b3b2aaae1ee2e7da128a62086da12ce9a6e53c85a22",
+      "disk_sha256": "793f7af67963f4ff72156b3b2aaae1ee2e7da128a62086da12ce9a6e53c85a22",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/scheduler-accounting-job-15852487.txt",
+      "bytes": 522,
+      "git_blob_sha256": "8aec9cca2e5f91a2a9a3a4ef006095255a92558cb4ffefcf447c43d984d8e19d",
+      "disk_sha256": "8aec9cca2e5f91a2a9a3a4ef006095255a92558cb4ffefcf447c43d984d8e19d",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/source-transfer-sha256.json",
+      "bytes": 3303,
+      "git_blob_sha256": "ffd653fdc34a7bb1b9205a3a1b9404ffcce965dc65a9f8db8449dc7a9e3ddaa1",
+      "disk_sha256": "ffd653fdc34a7bb1b9205a3a1b9404ffcce965dc65a9f8db8449dc7a9e3ddaa1",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json",
+      "bytes": 8351,
+      "git_blob_sha256": "e9e301aeab7237d59a0e204ffc93fc3eee96d28ab997d89be31383d735ec2769",
+      "disk_sha256": "e9e301aeab7237d59a0e204ffc93fc3eee96d28ab997d89be31383d735ec2769",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-harness.patch",
+      "bytes": 143960,
+      "git_blob_sha256": "d2d1f6c6ae7d64eefe41dfd41d15bac99fb59a7e31d441b78207c0d508553682",
+      "disk_sha256": "d2d1f6c6ae7d64eefe41dfd41d15bac99fb59a7e31d441b78207c0d508553682",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/local-package-verification.json",
+      "bytes": 2421,
+      "git_blob_sha256": "ee9d56a1f1e4af1f1a03086f782957704b4722b1dd5001697e01bdd2fa90d225",
+      "disk_sha256": "ee9d56a1f1e4af1f1a03086f782957704b4722b1dd5001697e01bdd2fa90d225",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/package-creation-receipt.json",
+      "bytes": 2159,
+      "git_blob_sha256": "2227398f531a6a5538785f241eec92e2d944fc563adab9bd7c3d2a50516dd325",
+      "disk_sha256": "2227398f531a6a5538785f241eec92e2d944fc563adab9bd7c3d2a50516dd325",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/review-final-stage.py",
+      "bytes": 3142,
+      "git_blob_sha256": "4f297164aef99e7e17275f1b915fbc4afa754fa4131db83edede188b8bc90979",
+      "disk_sha256": "4f297164aef99e7e17275f1b915fbc4afa754fa4131db83edede188b8bc90979",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-admission.json",
+      "bytes": 145538,
+      "git_blob_sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d",
+      "disk_sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d",
+      "byte_exact": true
+    },
+    {
+      "path": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/verify-local-package.py",
+      "bytes": 5724,
+      "git_blob_sha256": "d7c4b9fd85b919b75168bfd231a81ad1fbe70ec9c7d90a028fe68256a4e05fc9",
+      "disk_sha256": "d7c4b9fd85b919b75168bfd231a81ad1fbe70ec9c7d90a028fe68256a4e05fc9",
+      "byte_exact": true
+    }
+  ],
+  "model_or_jax_execution": false
+}

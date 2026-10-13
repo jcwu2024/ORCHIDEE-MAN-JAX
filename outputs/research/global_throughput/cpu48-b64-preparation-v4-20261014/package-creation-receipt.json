@@ -1,0 +1,16 @@
+{
+  "schema": "cpu48-v4-package-creation-receipt-v1",
+  "status": "created_and_locally_verified",
+  "command": "conda run -n ORCJAX python -B scripts/dev/prepare_global_cpu48_execution.py --source-ref 493252e418f3fd827af4a6f7748a63d3157e680d --base-ref 03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 --execution-ref codex/global-cpu48-b64-v4 --budget-seconds 3600 --scalar-audit-receipt outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-audit-receipt-v3.json --expected-scalar-audit-sha256 cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431 --output-dir outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014 --harness-path scripts/dev/benchmark_global_server_cpu.py --harness-path scripts/dev/global_cpu_candidate_identity.py --harness-path scripts/dev/global_cpu_child_environment.py --harness-path scripts/dev/diagnose_global_cpu_child_environment.py --harness-path scripts/dev/global_server_reference.py --harness-path scripts/dev/collect_global_cpu48_b64.py --harness-path scripts/dev/audit_cpu_scalar_admission.py --harness-path scripts/dev/prepare_global_cpu48_execution.py --harness-path scripts/hpc/global_cpu48_b64_coordinator.py --harness-path scripts/hpc/slurm_global_server_cpu_48core.sh --harness-path tests/unit/test_global_cpu_child_environment.py --harness-path tests/unit/test_global_cpu48_b64_preparation.py --harness-path tests/unit/test_global_server_benchmark.py --harness-path tests/unit/test_collect_global_cpu48_b64_cli.py --harness-path tests/unit/test_prepare_global_cpu48_execution.py",
+  "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "source_research_commit": "493252e418f3fd827af4a6f7748a63d3157e680d",
+  "source_implementation_commit": "01b09549cea3ff133f53d72a2a9444a0a31d7ed4",
+  "execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "process_exit_code": 0,
+  "pin": "execution-code-pin.json",
+  "local_artifact_verification": "local-package-verification.json",
+  "execution_ref_created": true,
+  "research_branch_or_science_checkout_changed": false,
+  "model_or_GPU_execution": false,
+  "remote_deployment_or_submission": false
+}

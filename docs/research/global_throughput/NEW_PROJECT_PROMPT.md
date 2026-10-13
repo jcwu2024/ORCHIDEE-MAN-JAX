@@ -27,10 +27,13 @@ Linux JAX0.4.38上确切候选通过两组64点、各536叶元数据及实际sca
 该接受只覆盖元数据/接口，复用已完成证据，不称完整物理编译、科学接受或吞吐已验证。
 用户已明确授权主管审核后批准合适新作业；2026-10-14说“怎么样了。继续。”后主管派工原独立Sol线程完成CPU48 v4不付费修复、保存scalar独立验收和可执行准备。
 先查看v4交付的具体状态，不恢复旧额度或自动提交；主管复核新固定pin/命令/证据后可按用户已有授权决定单次提交，无需把同一方案重复问回用户。
-新执行pin必须以03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8为基底，仅纳入必要harness/tests；104物理文件和整个jax_orchidee tree75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba、science11b6…、actual sourceb334…保持，研究树两项碳修复保留。
+CPU48 v4不付费准备已生成固定执行SHA60dccbddde10be4295aab7e7fe55fa7864d3c3f3，ref codex/global-cpu48-b64-v4；来源研究检查点493252e418f3fd827af4a6f7748a63d3157e680d，具体命令在v4准备目录PROPOSED_SUBMISSION.sh，从未执行sbatch。
+执行pin直接以03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8为基底，仅纳入15项harness/tests；104物理blob及tree75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba、science11b6…、actual sourceb334…逐字节保持，研究树两项碳修复保留。
+独立scalar审计job15852254在免费cntest/ibtest02单CPU/affinity[0]/23s完成，64输入身份和点序、760叶及GPU门独立重算为61通过、3点有限超差（4处比较），reset仅原封存证明。审计SHAcb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431；已绑定新pin的admission SHA f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d，科学false、candidate job_id null、旧job/code身份保留。
+环境/资源替身108项、最后runner/collector改动43项和封装14项检查通过，较早reader-inclusive 62项明确标记版本；这些不是实际B64科学/性能验收。最终固定pin目标staging检查与早期占位记录分开，不能称未来production checkout已经部署或通过真实48核准入。
 未来代码路径为/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4；未来结果namespace为runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014。
 旧job15820467已FAILED1:0/2197s：scalar FULL64完整seal，B64在线程预算资源门失败，未JAX初始化/物理编译/热计时；旧child实际OMP值未记录。
-源码缺口是生产Popen不传mode环境、srun --export=ALL含重复键，dry-run却显式传env。新修复必须在真实child exec边界确定环境，并让预检复用同一launch；保留实际48核/独立物理核硬门和成功/失败白名单回执。
+原源码缺口是生产Popen不传mode环境、srun --export=ALL含重复键，dry-run却显式传env。v4已在post-transport child边界确定mode环境，生产Popen显式传env，预检复用同一launch；保留实际48核/独立物理核硬门和成功/失败白名单回执。Slurm22.05.7免费单CPU重复键复现只证明被测试命令的继承值优先级，不证明历史child的OMP值。
 下一候选B64-only，显式引用旧job15820467的原scalar目录和独立验收artifact/SHA，不能冒充同job测量、覆盖旧身份或静默重跑scalar。
 提案cnall/1node/1task/48CPU/0GPU/3600s，非exclusive/no-requeue/无新增mem或节点限制，全父计费最坏CNY2.40/3.36，费率未核实。B64编译时间未知，60min只是探索性停止边界。
 64 unique FULL64点、Days2–8和9–15、48步/天、896 point-days、760完整native leaves/masks，各5core+5wrapper，严格容差及全部CPU内部整组/permutation/replacement-isolation/reset/结构/非有限值硬门不变。

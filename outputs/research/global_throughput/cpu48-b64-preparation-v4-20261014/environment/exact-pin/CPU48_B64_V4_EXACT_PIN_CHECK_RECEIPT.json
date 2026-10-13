@@ -1,0 +1,101 @@
+{
+  "schema": "cpu48-b64-v4-exact-pin-check-receipt-v1",
+  "status": "nonmodel_checks_passed",
+  "execution_pin": {
+    "commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+    "ref": "codex/global-cpu48-b64-v4",
+    "manifest_sha256": "e9e301aeab7237d59a0e204ffc93fc3eee96d28ab997d89be31383d735ec2769",
+    "proposal_sha256": "b86068c62c96464319175135e12e5d84ce2e494a00875aceaa01ee0b1a48c160",
+    "scalar_admission_sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d"
+  },
+  "accepted_check_allocation": {
+    "job_id": "15852487",
+    "partition": "cntest",
+    "node_from_sacct_and_scontrol": "ibtest03",
+    "requested_tasks": 1,
+    "requested_cpus_per_task": 1,
+    "allocated_cpus": 1,
+    "cpu_affinity": "0",
+    "elapsed": "00:00:04",
+    "scheduler_state": "COMPLETED",
+    "exit_code": "0:0",
+    "finished_local_time": "2026-10-14T03:27:11+0800",
+    "allocation_log_note": "allocation.txt preserves raw output; its host=1 field is a formatting defect. scontrol NodeList/BatchHost and the executed hostname assertion identify ibtest03."
+  },
+  "checks": {
+    "proposal_bash_n": 0,
+    "pinned_launcher_bash_n": 0,
+    "launcher_dry_run": 0,
+    "coordinator_dry_run": 0,
+    "scalar_admission_validation": 0,
+    "coordinator_status": "dry_run",
+    "model_execution": false,
+    "JAX_imported": false,
+    "proposal_executed": false,
+    "sbatch_invoked": false,
+    "gpu_used": false,
+    "pyc_files_created_under_staged_code": 0
+  },
+  "admission_validation": {
+    "expected_source_origin": "execution-code-pin.json external_scalar_reference.candidate_identity",
+    "declared_candidate_job_id": null,
+    "candidate_identity_recomputed": false,
+    "validator_exit_code": 0
+  },
+  "environment": {
+    "SBATCH_prefixes_cleared": true,
+    "ORCHJAX_prefixes_cleared": true,
+    "launcher_override_variables_cleared": true,
+    "ORCHIDEE_REPO_ROOT_and_ORCHIDEE_DATA_ROOT_cleared": true,
+    "actual_SLURM_CPUS_PER_TASK_value": "1",
+    "SLURM_CPUS_PER_TASK_unset_only_for_launcher_dry_run": true,
+    "SLURM_BIN_unset_for_accepted_launcher_dry_run": true
+  },
+  "path_scope": {
+    "future_execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4",
+    "future_checkout_absent_after_checks": true,
+    "prospective_result_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15852487",
+    "prospective_result_directory_absent_after_checks": true,
+    "staged_admission_used_by_launcher_and_coordinator_dry_runs": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/exact-pin/scalar-admission.json",
+    "persistent_admission_destination": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-admission.json",
+    "persistent_admission_written_by_this_check": false,
+    "old_scalar_reference": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar",
+    "transformed_argv_changed_only_coordinator_script_and_entry": true
+  },
+  "artifacts": {
+    "local_check_directory": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/environment/exact-pin/checks/job-15852487",
+    "remote_check_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/staging/cpu48-b64-v4-20261014/environment/exact-pin/checks/job-15852487",
+    "remote_local_log_files_compared": 18,
+    "all_compared_sha256_equal": true,
+    "raw_original_remote_hash_output_retained": false,
+    "earlier_source_and_input_transfer_match_was_reported": true,
+    "independent_remote_recheck_during_packaging": false,
+    "transfer_evidence_limit": "Remote-match observations are based on the earlier transfer summary; raw source/input comparison output was not retained.",
+    "argv_capture": "checks/job-15852487/coordinator-argv.json",
+    "executed_stdin_driver": "checks/job-15852487/driver-stdin.sh",
+    "accepted_invocation_and_combined_completion_output": "invocation-job-15852487.txt",
+    "six_source_hash_manifest": "source-transfer-sha256.json",
+    "all_18_log_hash_values": "checks/job-15852487/sha256.txt",
+    "saved_scheduler_accounting_transcript": "scheduler-accounting-job-15852487.txt",
+    "saved_absence_observations": "absence-observations.txt",
+    "failed_dispatch_transcripts_and_limits": "failed-dispatch-tool-transcripts.txt",
+    "15852476_existing_remote_syntax_artifacts_copied_locally": "checks/job-15852476/",
+    "stdout_stderr_and_exit_statuses": "checks/job-15852487/",
+    "prior_attempts": [
+      {
+        "job_id": "15852458",
+        "outcome": "allocation granted then released unused; PTY command stream was mangled and login-shell srun was unavailable on PATH; no compute checks ran"
+      },
+      {
+        "job_id": "15852476",
+        "outcome": "one-CPU allocation; proposal and launcher bash -n both passed; environment driver then hit unbound SLURM_BIN before launcher/coordinator dry-run or admission validation"
+      },
+      {
+        "job_id": "15852482",
+        "outcome": "checks passed, but SLURM_BIN was re-exported after cleanup; retained as nonconforming-environment evidence, not accepted exact-prefix result"
+      }
+    ]
+  },
+  "coverage_limitation": "The code graph marked all 15 pinned harness paths excluded or not tracked. Raw Git blobs were the source fallback; no reindex was performed and no completeness claim is made.",
+  "scope_statement": "No deployment checkout, result directory, admission binding, scientific-tree staging, model/JAX execution, GPU work, sbatch submission, or supervisor contact occurred."
+}

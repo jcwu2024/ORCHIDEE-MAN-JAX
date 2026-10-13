@@ -1,0 +1,52 @@
+{
+  "schema": "cpu48-v4-local-package-verification-v1",
+  "status": "passed",
+  "checked_at_utc": "2026-10-13T18:58:50.012324+00:00",
+  "command": "conda run -n ORCJAX python -B outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/verify-local-package.py",
+  "cwd": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "source_research_commit": "493252e418f3fd827af4a6f7748a63d3157e680d",
+  "base_execution_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+  "physical_files_compared": 104,
+  "physical_tree": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+  "research_tree_preserved": "62e90547ee8eadab387713397bb111c399c81b6c",
+  "source_harness_blobs_compared": 15,
+  "artifacts": {
+    "pin": {
+      "name": "execution-code-pin.json",
+      "sha256": "e9e301aeab7237d59a0e204ffc93fc3eee96d28ab997d89be31383d735ec2769",
+      "bytes": 8351
+    },
+    "patch": {
+      "name": "execution-harness.patch",
+      "sha256": "d2d1f6c6ae7d64eefe41dfd41d15bac99fb59a7e31d441b78207c0d508553682",
+      "bytes": 143960
+    },
+    "bundle": {
+      "name": "cpu48-b64-60dccbddde10.bundle",
+      "sha256": "970fc5be9bf3f59061b27ad6647d457e824392ce14336a69ff0308e3c91b928e",
+      "bytes": 36282
+    },
+    "audit": {
+      "name": "scalar-audit/scalar-audit-receipt-v3.json",
+      "sha256": "cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431",
+      "bytes": 146678
+    },
+    "admission": {
+      "name": "scalar-audit/scalar-admission.json",
+      "sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d",
+      "bytes": 145538
+    }
+  },
+  "bundle_verify": {
+    "exit_code": 0,
+    "stdout": "The bundle contains this ref:\n60dccbddde10be4295aab7e7fe55fa7864d3c3f3 refs/heads/codex/global-cpu48-b64-v4\nThe bundle requires this ref:\n03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 \nThe bundle uses this hash algorithm: sha1\n",
+    "stderr": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/cpu48-b64-60dccbddde10.bundle is okay\n",
+    "prerequisite": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8"
+  },
+  "candidate_job_id": null,
+  "scalar_job_id": "15820467",
+  "scientific_acceptance": false,
+  "model_or_jax_execution": false,
+  "remote_deployment_or_submission": false
+}

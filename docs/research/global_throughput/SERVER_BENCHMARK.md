@@ -1,16 +1,26 @@
 # Explore1000 Server Benchmark Contract
 
-Current operation (2026-10-14 Asia/Shanghai): unpaid CPU48 v4 repair, saved-scalar
-independent admission and batch-only execution preparation. Read the
+Current operation (2026-10-14 Asia/Shanghai): immutable CPU48 v4 unpaid preparation
+is ready for supervisor review. Read the
 [v4 result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md),
 [scope](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md),
+[exact pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json),
 [protocol](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
-and [concrete proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md).
-The proposed next allocation is one node/task, 48 CPUs, zero GPUs and 3600s;
-worst-case rate scenarios are CNY 2.40/3.36, unverified. It reuses the sealed
-scalar from job15820467 and preserves all candidate hard gates. No new job or
-production deployment is authorized by preparation; the supervisor reviews
-the exact artifacts under the user's existing delegated approval authority.
+and [literal proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md).
+Execution is `60dccbddde10be4295aab7e7fe55fa7864d3c3f3` / `codex/global-cpu48-b64-v4`.
+All 104 physical blobs equal v3 base; research carbon fixes remain preserved.
+The batch-only route binds independent saved-array admission from job 15820467,
+retaining three finite GPU tolerance-only failures and scientific_acceptance=false.
+Reset has sealed original proof only. Production/preflight share the post-transport
+child environment boundary and retain real 48-distinct-core admission.
+Exact-pin staged checks are distinguished from earlier placeholder evidence and
+cannot admit a future nonexistent production checkout. Proposed resources:
+cnall, one node/task, 48 CPUs, zero GPUs, 3600s, nonexclusive/no-requeue/default placement,
+no added memory; unverified worst-case CNY 2.40/3.36.
+No sbatch, GPU, full physical compilation, production deployment or scalar regeneration
+occurred. The supervisor decides after concrete review under existing delegated
+authority. Actual B64 gates, compilation, hot throughput/RSS and CPU48/GPU ratios
+remain unmeasured. Deliver in the execution chat, then await dispatch.
 
 Historical v3 status (2026-10-13): its single attempt is terminal and closed.
 The user delegated approval to the supervisor, who reviewed the actual artifacts

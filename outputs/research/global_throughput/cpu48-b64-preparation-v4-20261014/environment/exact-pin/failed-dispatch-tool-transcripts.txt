@@ -1,0 +1,33 @@
+These records preserve the observed tool outputs. The command runner returned combined output; it did not provide separate raw stdout and stderr files for these dispatch failures.
+
+JOB 15852458
+Invocation:
+ssh -tt -o BatchMode=yes -o ConnectTimeout=12 cln01 "/rmprog/slurm/v22.05.7/bin/salloc --partition=cntest --nodes=1 --ntasks=1 --cpus-per-task=1 --time=00:10:00 --nodelist=ibtest03"
+
+Observed rendered PTY output excerpt, verbatim from the tool result:
+bash: srun: command not found...
+(work) [liwei@ibcln01 ~]$ status=$?
+(work) [liwei@ibcln01 ~]$ printf 'srun_exit=%s\n' "$status"
+srun_exit=127
+(work) [liwei@ibcln01 ~]$ exit "$status"
+exit
+salloc: Relinquishing job allocation 15852458
+salloc: Job allocation 15852458 has been revoked.
+Connection to 192.168.11.1 closed.
+
+The tool result was a PTY transcript with terminal-control sequences and echoed input; no separate remote check directory or raw stdout/stderr files were created for this allocation. No compute-node check ran.
+
+JOB 15852476
+Invocation driver:
+ssh -T -o BatchMode=yes -o ConnectTimeout=12 cln01 "/rmprog/slurm/v22.05.7/bin/salloc --partition=cntest --nodes=1 --ntasks=1 --cpus-per-task=1 --time=00:10:00 --nodelist=ibtest03 /rmprog/slurm/v22.05.7/bin/srun --nodes=1 --ntasks=1 --cpus-per-task=1 --cpu-bind=cores bash -s"
+
+Observed combined tool output, verbatim:
+salloc: Granted job allocation 15852476
+salloc: Waiting for resource configuration
+salloc: Nodes ibtest03 are ready for job
+/usr/bin/bash: line 36: SLURM_BIN: unbound variable
+srun: error: ibtest03: task 0: Exited with exit code 1
+salloc: Relinquishing job allocation 15852476
+salloc: Job allocation 15852476 has been revoked.
+
+The staged job-15852476 files preserve both bash -n exit codes as 0 and empty syntax-check stderr files. The driver then failed during environment cleanup/reassignment before launcher dry-run, coordinator dry-run, or admission validation. Its stdin script was not separately saved at execution time; this record does not reconstruct it. allocation.txt and syntax-check files were copied from the existing remote staging directory.

@@ -1,0 +1,154 @@
+{
+  "schema": "cpu48-b64-immutable-execution-v4",
+  "status": "local_preparation_only",
+  "source_research_commit": "493252e418f3fd827af4a6f7748a63d3157e680d",
+  "base_execution_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+  "execution_code_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "execution_ref": "codex/global-cpu48-b64-v4",
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4",
+  "scientific_source": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "execution_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "every_scientific_blob_identical_to_base": true,
+    "research_science_tree_oid": "62e90547ee8eadab387713397bb111c399c81b6c"
+  },
+  "harness_paths": [
+    "scripts/dev/audit_cpu_scalar_admission.py",
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/collect_global_cpu48_b64.py",
+    "scripts/dev/diagnose_global_cpu_child_environment.py",
+    "scripts/dev/global_cpu_candidate_identity.py",
+    "scripts/dev/global_cpu_child_environment.py",
+    "scripts/dev/global_server_reference.py",
+    "scripts/dev/prepare_global_cpu48_execution.py",
+    "scripts/hpc/global_cpu48_b64_coordinator.py",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh",
+    "tests/unit/test_collect_global_cpu48_b64_cli.py",
+    "tests/unit/test_global_cpu48_b64_preparation.py",
+    "tests/unit/test_global_cpu_child_environment.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_prepare_global_cpu48_execution.py"
+  ],
+  "execution_changed_paths": [
+    "scripts/dev/audit_cpu_scalar_admission.py",
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/collect_global_cpu48_b64.py",
+    "scripts/dev/diagnose_global_cpu_child_environment.py",
+    "scripts/dev/global_cpu_candidate_identity.py",
+    "scripts/dev/global_cpu_child_environment.py",
+    "scripts/dev/global_server_reference.py",
+    "scripts/dev/prepare_global_cpu48_execution.py",
+    "scripts/hpc/global_cpu48_b64_coordinator.py",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh",
+    "tests/unit/test_collect_global_cpu48_b64_cli.py",
+    "tests/unit/test_global_cpu48_b64_preparation.py",
+    "tests/unit/test_global_cpu_child_environment.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_prepare_global_cpu48_execution.py"
+  ],
+  "harness_blob_sha256": {
+    "scripts/dev/audit_cpu_scalar_admission.py": "0b44af19e7143572204ca173ffce7c1d3d4471d73e270b906ab845601bfebefe",
+    "scripts/dev/benchmark_global_server_cpu.py": "97ef0c8ccce68465bd0e8f3a94f193ef1de306fae743ec104fe02e0efefc8468",
+    "scripts/dev/collect_global_cpu48_b64.py": "efcb32efa754bbdbb75936f358dc6cb5a286e6742948096bda3e3ba22d27a9e3",
+    "scripts/dev/diagnose_global_cpu_child_environment.py": "a54c80bc26fb409617721701923ab260b91751240b3ff50754f1d2a84aaca5f8",
+    "scripts/dev/global_cpu_candidate_identity.py": "e73da656a880492557161e57db5fb81e8edca988121e3feac4140ede3d192fca",
+    "scripts/dev/global_cpu_child_environment.py": "d5691e5e27c5eb0b63c8e6a81244368eb71b1fc174db6b7354bebf73d094d2eb",
+    "scripts/dev/global_server_reference.py": "03333e3d2c9f4d015dd360ad0a8a4233b9284153252f4562695cf4dc1545a491",
+    "scripts/dev/prepare_global_cpu48_execution.py": "98423254ebf01b4b85a2484efc3cf4219ff6e4c3840a94944542912438ab37a5",
+    "scripts/hpc/global_cpu48_b64_coordinator.py": "0d3d81189420d4534800b05efc776c1b2bf67f1824705b073592c6ecba7cc7b7",
+    "scripts/hpc/slurm_global_server_cpu_48core.sh": "b83e5b9a2212f3d444c00c4889d9eca33cb9ae9f8167ef35d54040c7ed315251",
+    "tests/unit/test_collect_global_cpu48_b64_cli.py": "7cd86cfcdcbe0ad0755666b47abfc7e3001b444897f68693c1ccbee7fcb0a359",
+    "tests/unit/test_global_cpu48_b64_preparation.py": "9bcd80d755e4e1ea93476442fa7476672a804b30da1818c040bcc98ec46d240f",
+    "tests/unit/test_global_cpu_child_environment.py": "12602070beed00fd3aa5c909ed6715bc74e04ca9eaef8428668b954a46b4050c",
+    "tests/unit/test_global_server_benchmark.py": "32d55e4454fc62dc3b2e902864cc5e09719d011dc3209892a346fc3a324760b8",
+    "tests/unit/test_prepare_global_cpu48_execution.py": "19b3c5661bfc2eafa5774d7dded187db74b288746dcfe9b78a7933c6bc3a1a79"
+  },
+  "patch": {
+    "name": "execution-harness.patch",
+    "sha256": "d2d1f6c6ae7d64eefe41dfd41d15bac99fb59a7e31d441b78207c0d508553682",
+    "bytes": 143960
+  },
+  "bundle": {
+    "name": "cpu48-b64-60dccbddde10.bundle",
+    "sha256": "970fc5be9bf3f59061b27ad6647d457e824392ce14336a69ff0308e3c91b928e",
+    "bytes": 36282,
+    "prerequisite": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "local_git_bundle_verify": "passed"
+  },
+  "fixed_contract": {
+    "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+    "GPU_FULL64_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "unique_points": 64,
+    "point_days": 896,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "half_hours_per_day": 48,
+    "native_output_leaves": 760,
+    "atol": 1e-08,
+    "rtol": 1e-10
+  },
+  "execution_route": "batch-only",
+  "external_scalar_reference": {
+    "directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar",
+    "source_job_id": "15820467",
+    "source_execution_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "source_checkpoint_sha256": "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa",
+    "audit_receipt": {
+      "name": "scalar-audit/scalar-audit-receipt-v3.json",
+      "sha256": "cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431",
+      "bytes": 146678
+    },
+    "admission_record": {
+      "name": "scalar-audit/scalar-admission.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-admission.json",
+      "sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d",
+      "bytes": 145538
+    },
+    "candidate_identity": {
+      "job_id": null,
+      "execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+      "execution_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4",
+      "prepared_input_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+      "gpu_reference_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl",
+      "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+      "certified_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+      "physical_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+      "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299"
+    },
+    "new_scalar_generation": false,
+    "scientific_acceptance": false
+  },
+  "allocation_plan": {
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_CPUs": 48,
+    "GPUs": 0,
+    "wall_seconds": 3600,
+    "primary_worst_case_CNY": 2.4000000000000004,
+    "conservative_worst_case_CNY": 3.3600000000000003,
+    "whole_parent_allocation_billed": true,
+    "new_scalar_generation": false,
+    "billing_verified": false
+  },
+  "working_tree_preserved": {
+    "HEAD": "493252e418f3fd827af4a6f7748a63d3157e680d",
+    "branch": "research/global-throughput"
+  },
+  "remote_deployment_or_submission": false,
+  "model_or_GPU_execution": false
+}

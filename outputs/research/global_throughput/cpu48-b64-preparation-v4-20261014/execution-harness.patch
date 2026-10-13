@@ -1,0 +1,2290 @@
+diff --git a/scripts/dev/audit_cpu_scalar_admission.py b/scripts/dev/audit_cpu_scalar_admission.py
+new file mode 100644
+index 0000000..0867617
+--- /dev/null
++++ b/scripts/dev/audit_cpu_scalar_admission.py
+@@ -0,0 +1,304 @@
++"""Independently recompute the saved FULL64 scalar-to-GPU gates only."""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import os
++import pickle
++import platform
++import subprocess
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++if (ROOT / "scripts").is_dir():
++    sys.path.insert(0, str(ROOT))
++
++
++EXPECTED_SOURCE = "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8"
++EXPECTED_TREE = "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba"
++EXPECTED_SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
++EXPECTED_BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
++EXPECTED_GPU_SHA = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
++EXPECTED_PREPARED_SHA = "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7"
++EXPECTED_EXECUTION_COMMIT = "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8"
++EXPECTED_SCALAR_SHA = "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa"
++EXPECTED_MANIFEST_SHA = "269c4e04b2404177dbb0c2b350673be0f41fa9a63dbfa5055af35f2d9550a641"
++EXPECTED_REPORT_SHA = "81bd4ceb413c079eb8f1fa7c00c61f4a8d74ddb75278d2a49bd1e5fd82db4da0"
++EXPECTED_PARENT_ACCOUNTING_SHA = "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113"
++EXPECTED_PARENT_RAW_SHA = "e059a19bb41ff88ee685de0e76a13727f9861039c6373832e320dad541321bd6"
++STAGE_NAME = "B64_server_scalar_v1"
++GPU_STAGE = "B4_group_references"
++RESET_LIMITATION = "saved frozen-reset gate is sealed; reset arrays were not independently retained for recomputation"
++
++
++def sha256(data: bytes) -> str:
++    return hashlib.sha256(data).hexdigest()
++
++
++def file_sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as stream:
++        for chunk in iter(lambda: stream.read(1 << 20), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def read_sealed_stage(directory: Path, name: str):
++    manifest_path, report_path = directory / "stage_manifest.json", directory / "report.json"
++    manifest_bytes, report_bytes = manifest_path.read_bytes(), report_path.read_bytes()
++    manifest, report = json.loads(manifest_bytes), json.loads(report_bytes)
++    identity = manifest["identity"]
++    record = manifest["stages"][name]
++    report_record = report["stages"][name]
++    from scripts.dev.global_server_reference import _evidence_mismatch
++
++    mismatch = _evidence_mismatch(record, report_record, f"report.stages.{name}")
++    if mismatch is not None:
++        raise ValueError(f"report and manifest stage evidence differs at {mismatch}")
++    if (record.get("status") != "complete"
++            or name == STAGE_NAME and record.get("measurement_status") != "complete"):
++        raise ValueError(f"{name}: complete stage required")
++    checkpoint = (directory / record["path"]).resolve()
++    if not checkpoint.is_relative_to(directory.resolve()) or not checkpoint.is_file():
++        raise ValueError(f"{name}: checkpoint escapes stage directory or is missing")
++    payload = checkpoint.read_bytes()
++    checkpoint_sha = sha256(payload)
++    if checkpoint_sha != record.get("sha256"):
++        raise ValueError(f"{name}: checkpoint checksum mismatch")
++    envelope = pickle.loads(payload)
++    if (envelope.get("identity") != identity or envelope.get("name") != name
++            or envelope.get("status") != "complete"):
++        raise ValueError(f"{name}: checkpoint envelope identity/status mismatch")
++    for field in ("gates", "provenance", "timing", "measurement_status", "evidence_class",
++            "strict_numerical_passed", "execution_origin"):
++        mismatch = _evidence_mismatch(envelope.get("record", {}).get(field), record.get(field), f"record.{field}")
++        if mismatch is not None:
++            raise ValueError(f"{name}: checkpoint and manifest evidence differs at {mismatch}")
++    return {"manifest": manifest, "report": report, "identity": identity, "record": record,
++        "value": envelope["value"], "checkpoint": checkpoint,
++        "manifest_sha256": sha256(manifest_bytes), "report_sha256": sha256(report_bytes),
++        "checkpoint_sha256": checkpoint_sha}
++
++
++def gate_matches(recorded, measured):
++    fields = ("passed", "compared_leaves", "max_abs", "max_bound_ratio", "failures", "atol", "rtol",
++        "nonfinite_policy", "allowed_sentinels")
++    return all(recorded.get(field) == measured.get(field) for field in fields)
++
++
++def audit(args):
++    scalar_dir, gpu_dir = args.scalar_dir.resolve(), args.gpu_reference_dir.resolve()
++    scalar = read_sealed_stage(scalar_dir, STAGE_NAME)
++    gpu = read_sealed_stage(gpu_dir, GPU_STAGE)
++    if (scalar["checkpoint_sha256"] != EXPECTED_SCALAR_SHA
++            or scalar["manifest_sha256"] != EXPECTED_MANIFEST_SHA
++            or scalar["report_sha256"] != EXPECTED_REPORT_SHA):
++        raise ValueError("saved scalar checkpoint/manifest/report does not match the exact terminal v3 pins")
++    identity, record = scalar["identity"], scalar["record"]
++    source_identity = record.get("execution_origin", {}).get("environment", {})
++    command = source_identity.get("command", [])
++    if (identity.get("mode") != "scalar" or identity.get("CPU_budget") != 1
++            or identity.get("baseline_ref") != EXPECTED_BASELINE
++            or identity.get("science_sha256") != EXPECTED_SCIENCE
++            or identity.get("numerical_reference_sha256") != EXPECTED_GPU_SHA
++            or len(identity.get("lanes", [])) != 64
++            or record.get("strict_numerical_passed") is not False
++            or record.get("measurement_status") != "complete"):
++        raise ValueError("saved scalar source identity/workload/strict outcome differs from the expected v3 evidence")
++    proof = record.get("provenance", {})
++    if (proof.get("point_ids") != [lane["landpoint_id"] for lane in identity["lanes"]]
++            or proof.get("unique_real_points") != 64 or proof.get("blocks") != [[2, 8], [9, 15]]
++            or proof.get("half_hours_per_day") != 48 or proof.get("full_outputs") is not True
++            or proof.get("full_two_block_workload") is not True or proof.get("frozen_reset_repeat") is not True):
++        raise ValueError("saved scalar source does not seal the full 64-point two-block workload")
++    resources = proof.get("server_resources", {})
++    slurm = resources.get("Slurm", {})
++    if slurm.get("SLURM_JOB_ID") != "15820467":
++        raise ValueError("saved scalar source is not the expected parent job 15820467")
++    if not command:
++        raise ValueError("saved scalar execution command is missing")
++    prepared_path = Path(command[command.index("--prepared-input") + 1]).resolve()
++    config_path = Path(command[command.index("--config") + 1]).resolve()
++    declared_gpu_dir = Path(command[command.index("--gpu-reference-dir") + 1]).resolve()
++    if declared_gpu_dir != gpu_dir:
++        raise ValueError("saved scalar execution GPU-reference directory mismatch")
++    prepared_sha = file_sha256(prepared_path)
++    if prepared_sha != EXPECTED_PREPARED_SHA:
++        raise ValueError("saved scalar prepared-input artifact differs from the frozen FULL64 input")
++    if gpu["record"].get("sha256") != EXPECTED_GPU_SHA:
++        raise ValueError("GPU reference stage does not match the certified FULL64 reference SHA")
++
++    execution_commit = source_identity.get("git_head")
++    code_dir = Path(source_identity.get("cwd", "")).resolve()
++    if execution_commit != EXPECTED_EXECUTION_COMMIT or not code_dir.is_dir():
++        raise ValueError("saved scalar execution commit/code directory is not available")
++    actual_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=code_dir, text=True).strip()
++    tree_oid = subprocess.check_output(["git", "rev-parse", "HEAD:jax_orchidee"], cwd=code_dir, text=True).strip()
++    if actual_head != execution_commit or tree_oid != EXPECTED_TREE:
++        raise ValueError("saved scalar code directory does not match its execution commit/physical science tree")
++    sys.path.insert(0, str(code_dir))
++    from scripts.dev.global_source_compatibility import source_identity as science_source_identity
++    from scripts.dev import benchmark_global_scale as scale
++
++    science = science_source_identity(code_dir)
++    if (science["science_sha256"] != EXPECTED_SCIENCE
++            or science["actual_science_source_sha256"] != EXPECTED_SOURCE):
++        raise ValueError("saved scalar execution source does not match the audited science digest")
++
++    from scripts.dev import benchmark_global_batch as base
++
++    input_lanes, second = scale.read_prepared(prepared_path, config_path)
++    point_ids = [lane.landpoint_id for lane in input_lanes]
++    gpu_point_ids = [lane["landpoint_id"] for lane in gpu["identity"].get("lanes", [])]
++    if (point_ids != [lane["landpoint_id"] for lane in identity["lanes"]]
++            or gpu["identity"].get("lanes") != identity.get("lanes")
++            or gpu_point_ids != point_ids or len(point_ids) != 64 or len(set(point_ids)) != 64):
++        raise ValueError("prepared input, scalar source, and GPU reference must have the same 64 unique points in exact order")
++    from types import SimpleNamespace
++
++    semantic_args = SimpleNamespace(baseline_ref=EXPECTED_BASELINE)
++    recomputed_inputs = [{"landpoint_id": lane.landpoint_id,
++        "inputs_sha256": base.semantic_reference_identity(semantic_args, lane, second_lane)}
++        for lane, second_lane in zip(input_lanes, second, strict=True)]
++    if recomputed_inputs != identity["lanes"]:
++        raise ValueError("prepared-input order/content digests differ from the sealed scalar lane identities")
++
++    scalar_value, gpu_value = scalar["value"], gpu["value"]
++    actual_outputs = scalar_value.get("outputs") if isinstance(scalar_value, dict) else scalar_value
++    reference_outputs = gpu_value.get("outputs") if isinstance(gpu_value, dict) and "outputs" in gpu_value else gpu_value
++    if actual_outputs is None or reference_outputs is None:
++        raise ValueError("saved scalar or GPU stage lacks full output arrays")
++    actual_leaves = base.jax.tree_util.tree_leaves(actual_outputs)
++    reference_leaves = base.jax.tree_util.tree_leaves(reference_outputs)
++    if len(actual_leaves) != 760 or len(reference_leaves) != 760:
++        raise ValueError("saved scalar and FULL64 GPU reference must each contain 760 output leaves")
++    schema = []
++    for index, (actual, reference) in enumerate(zip(actual_leaves, reference_leaves, strict=True)):
++        a, r = base.np.asarray(actual), base.np.asarray(reference)
++        if (a.shape != r.shape or a.dtype != r.dtype or a.ndim == 0
++                or a.shape[0] != 64 or a.dtype.kind not in "biuf"):
++            raise ValueError(f"saved output schema mismatch at leaf {index}: {a.shape}/{a.dtype} != {r.shape}/{r.dtype}")
++        schema.append({"leaf": index, "shape": list(a.shape), "dtype": str(a.dtype)})
++    gates = {gate.get("name"): gate for gate in record.get("gates", [])}
++    point_ids = [lane["landpoint_id"] for lane in identity["lanes"]]
++    results = []
++    for index, point in enumerate(point_ids):
++        name = f"B64_scalar_lane_{index}_{point}_GPU_reference"
++        saved = gates.get(name)
++        if saved is None:
++            raise ValueError(f"saved GPU gate missing: {name}")
++        expected = base.jax.tree_util.tree_map(lambda value: base.np.asarray(value)[index], reference_outputs)
++        actual = base.jax.tree_util.tree_map(lambda value: base.np.asarray(value)[index], actual_outputs)
++        sentinels = {item["path"]: item["contract"] for item in saved.get("allowed_sentinels", [])}
++        measured = base.compare(actual, expected, sentinel_paths=sentinels)
++        if not gate_matches(saved, measured):
++            raise ValueError(f"saved scalar gate differs from recomputed actual arrays: {name}")
++        if not measured["passed"]:
++            from scripts.dev.global_server_reference import finite_tolerance_failure
++            if not finite_tolerance_failure(saved):
++                raise ValueError(f"hard numerical failure in saved scalar arrays: {name}")
++        results.append({"name": name, "passed": measured["passed"],
++            "compared_leaves": measured["compared_leaves"], "max_abs": measured["max_abs"],
++            "max_bound_ratio": measured["max_bound_ratio"], "failure_count": len(measured["failures"])})
++    failed = [item for item in results if not item["passed"]]
++    if (len(results) != 64 or sum(item["failure_count"] for item in results) != 4
++            or len(failed) != 3 or record.get("strict_numerical_passed") is not False):
++        raise ValueError("recomputed scalar GPU gate summary differs from the sealed strict-failure evidence")
++    reset_name = "B64_scalar_frozen_reset_repeat"
++    reset_gate = gates.get(reset_name)
++    if reset_gate is None or reset_gate.get("passed") is not True:
++        raise ValueError("saved frozen-reset repeat gate is not sealed as passed")
++
++    accounting_path = scalar_dir.parent / "parent-accounting.json"
++    accounting_bytes = accounting_path.read_bytes()
++    accounting_sha = sha256(accounting_bytes)
++    accounting = json.loads(accounting_bytes)
++    if accounting_sha != EXPECTED_PARENT_ACCOUNTING_SHA:
++        raise ValueError("old parent accounting file differs from its terminal evidence pin")
++    raw_record = accounting.get("raw_record", "")
++    raw_sha = sha256(raw_record.encode("utf-8"))
++    if (accounting.get("job_id") != "15820467" or accounting.get("source") != "sacct"
++            or accounting.get("scope") != "whole_slurm_parent_job"
++            or accounting.get("terminal_status") != "FAILED" or accounting.get("Elapsed") != "00:36:37"
++            or accounting.get("wall_seconds") != 2197 or accounting.get("allocated_CPU_count") != 48
++            or accounting.get("GPU_count") != 0 or accounting.get("AllocTRES") != "billing=48,cpu=48,node=1"
++            or raw_record != "15820467|FAILED|00:36:37|billing=48,cpu=48,node=1\n"
++            or raw_sha != EXPECTED_PARENT_RAW_SHA or accounting.get("raw_record_sha256") != raw_sha):
++        raise ValueError("old whole-parent Slurm accounting record differs from the terminal evidence")
++
++    scalar_source = {"job_id": "15820467", "execution_commit": execution_commit,
++        "execution_code_dir": str(code_dir), "prepared_input_path": str(prepared_path),
++        "prepared_input_sha256": prepared_sha, "gpu_reference_path": str(gpu_dir),
++        "gpu_reference_sha256": EXPECTED_GPU_SHA, "certified_science_sha256": EXPECTED_SCIENCE,
++        "actual_science_source_sha256": EXPECTED_SOURCE, "physical_science_tree_oid": EXPECTED_TREE,
++        "baseline_ref": EXPECTED_BASELINE, "source_identity": identity,
++        "stage_name": STAGE_NAME, "stage_path": scalar["checkpoint"].name,
++        "stage_sha256": scalar["checkpoint_sha256"], "manifest_sha256": scalar["manifest_sha256"],
++        "report_sha256": scalar["report_sha256"], "runtime": identity.get("runtime"),
++        "workload": {"unique_points": 64, "point_days": 896, "blocks": [[2, 8], [9, 15]],
++            "half_hours_per_day": 48, "output_leaves": 760},
++        "point_ids": point_ids,
++        "input_identity": identity["lanes"],
++        "gpu_reference_stage_sha256": gpu["record"]["sha256"],
++        "whole_parent_accounting": {"path": str(accounting_path), "sha256": accounting_sha,
++            "raw_record": raw_record, "raw_record_sha256": raw_sha, "job_id": accounting["job_id"],
++            "terminal_status": accounting["terminal_status"], "Elapsed": accounting["Elapsed"],
++            "wall_seconds": accounting["wall_seconds"], "AllocTRES": accounting["AllocTRES"],
++            "allocated_CPU_count": 48, "GPU_count": 0,
++            "allocated_parent_CPU_request_core_hours": 48 * 2197 / 3600,
++            "primary_cost_cny_estimate": 48 * 2197 / 3600 * 0.05,
++            "conservative_cost_cny_estimate": 48 * 2197 / 3600 * 0.07,
++            "counted_once_as_source_parent": True}}
++    audit = {"strict_numerical_passed": False, "GPU_gate_count": 64,
++        "GPU_passed_gate_count": len(results) - len(failed), "GPU_tolerance_failed_gate_count": len(failed),
++        "GPU_tolerance_failure_count": sum(item["failure_count"] for item in failed),
++        "prepared_lane_identities_recomputed": True, "point_order_verified": True,
++        "verified_unique_point_count": 64,
++        "recomputed_GPU_gates": results, "output_schema": schema,
++        "frozen_reset_gate": {"name": reset_name, "passed": True,
++            "independent_array_recomputation": False},
++        "frozen_reset_arrays_recomputed": False, "reset_evidence_limitation": RESET_LIMITATION,
++        "scientific_acceptance": False}
++    return {"schema": "global-cpu48-scalar-audit-v1", "status": "saved_arrays_audited",
++        "scientific_acceptance": False, "scalar_source": scalar_source, "audit": audit,
++        "audit_inputs": {"scalar_checkpoint_sha256": scalar["checkpoint_sha256"],
++            "gpu_reference_checkpoint_sha256": gpu["checkpoint_sha256"],
++            "prepared_input_sha256": prepared_sha}}
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--scalar-dir", type=Path, required=True)
++    parser.add_argument("--gpu-reference-dir", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    result = audit(args)
++    try:
++        affinity_cpu_ids = sorted(os.sched_getaffinity(0))
++    except (AttributeError, OSError):
++        affinity_cpu_ids = None
++    result["audit_execution"] = {"script_path": str(Path(__file__).resolve()),
++        "script_sha256": file_sha256(Path(__file__).resolve()), "command": [sys.executable, *sys.argv],
++        "scheduler_launch_command": os.environ.get("ORCJAX_AUDIT_LAUNCH_COMMAND"),
++        "working_directory": str(Path.cwd()), "hostname": platform.node(),
++        "python": sys.version, "platform": platform.platform(),
++        "cpu_affinity_ids": affinity_cpu_ids, "cpu_affinity_count": len(affinity_cpu_ids)
++            if affinity_cpu_ids is not None else None,
++        "os_cpu_count": os.cpu_count(), "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
++        "slurm_partition": os.environ.get("SLURM_JOB_PARTITION"),
++        "slurm_cpus_per_task": os.environ.get("SLURM_CPUS_PER_TASK")}
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    with args.output.open("x", encoding="utf-8", newline="\n") as stream:
++        json.dump(result, stream, indent=2, sort_keys=True, allow_nan=False)
++        stream.write("\n")
++    print(json.dumps({"status": result["status"], "GPU_gate_count": result["audit"]["GPU_gate_count"],
++        "failed_gate_count": result["audit"]["GPU_tolerance_failed_gate_count"],
++        "reset_arrays_recomputed": result["audit"]["frozen_reset_arrays_recomputed"],
++        "receipt_sha256": sha256(args.output.read_bytes())}, allow_nan=False))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/dev/benchmark_global_server_cpu.py b/scripts/dev/benchmark_global_server_cpu.py
+index d22e7b1..2053939 100644
+--- a/scripts/dev/benchmark_global_server_cpu.py
++++ b/scripts/dev/benchmark_global_server_cpu.py
+@@ -23,9 +23,49 @@ ROOT = Path(__file__).resolve().parents[2]
+ PROCESS_STARTED = time.perf_counter()
+ sys.path.insert(0, str(ROOT))
+ 
++from scripts.dev.global_cpu_child_environment import snapshot as child_snapshot
++from scripts.dev.global_cpu_child_environment import validate_environment
+ from scripts.dev.global_server_resources import admit, bind, physical_cores, thread_affinity
+ 
+ 
++def seal_candidate_validation_arrays(output_dir, identity, order, permuted, replaced, materialized, *, jax, np):
++    import hashlib
++
++    from scripts.dev.probe_global_batch_cache import atomic_bytes
++
++    evidence = {"schema": "global_cpu48_candidate_validation_arrays_v1",
++        "candidate_identity": identity, "permutation_index": order,
++        "replacement_index": list(range(len(order) - 1)) + [0],
++        "permutation": permuted, "replacement": replaced, "frozen_reset": materialized}
++    for name in ("permutation", "replacement", "frozen_reset"):
++        evidence[name] = jax.tree_util.tree_map(
++            lambda value: np.asarray(jax.device_get(value)), evidence[name])
++    raw = pickle.dumps(evidence, protocol=pickle.HIGHEST_PROTOCOL)
++    evidence_path = Path(output_dir) / "candidate_validation_arrays.pkl"
++    atomic_bytes(evidence_path, raw)
++    return {"path": str(evidence_path), "sha256": hashlib.sha256(raw).hexdigest(),
++        "bytes": len(raw), "schema": evidence["schema"]}
++
++
++def record_candidate_batch_isolation(recorder, size, isolation_reference, permuted, replaced, *, jax, np):
++    order = list(reversed(range(size)))
++    replacement_index = list(range(size - 1)) + [0]
++    recorder.gate(f"B{size}_server_batch_cross_group_permutation", permuted,
++        jax.tree_util.tree_map(lambda value: np.asarray(value)[np.asarray(order)], isolation_reference))
++    recorder.gate(f"B{size}_server_batch_replacement_isolation", replaced,
++        jax.tree_util.tree_map(lambda value: np.asarray(value)[np.asarray(replacement_index)], isolation_reference))
++
++
++def record_candidate_batch_reset(recorder, size, output, materialized):
++    recorder.gate(f"B{size}_batch_frozen_reset_repeat", materialized, output)
++
++
++def seal_candidate_batch_arrays(output_dir, identity, size, permuted, replaced, materialized, *, jax, np):
++    order = list(reversed(range(size)))
++    return seal_candidate_validation_arrays(output_dir, identity, order, permuted,
++        replaced, materialized, jax=jax, np=np)
++
++
+ def parser():
+     result = argparse.ArgumentParser(description=__doc__)
+     result.add_argument("--mode", choices=["scalar", "pool", "batch"], required=True)
+@@ -48,10 +88,20 @@ def parser():
+     result.add_argument("--dry-run", action="store_true")
+     result.add_argument("--synthetic-smoke", action="store_true")
+     result.add_argument("--synthetic-stdlib-only", action="store_true", help="Pool protocol smoke without even a toy JAX compile.")
++    result.add_argument("--require-child-environment", action="store_true", help="Require exact coordinator thread environment before JAX.")
++    result.add_argument("--cpu-reference-admission-record", type=Path)
++    result.add_argument("--expected-cpu-reference-admission-sha256")
+     return result
+ 
+ 
+ def validate(args):
++    admission = getattr(args, "cpu_reference_admission_record", None)
++    admission_sha = getattr(args, "expected_cpu_reference_admission_sha256", None)
++    if admission is not None or admission_sha is not None:
++        import re
++        if (admission is None or not re.fullmatch(r"[0-9a-f]{64}", admission_sha or "") or
++                args.mode != "batch" or args.cpu_budget != 48 or args.cpu_reference_dir is None):
++            raise ValueError("external scalar admission requires batch48, directory, record and exact SHA256")
+     if args.validation_mode == "strict" and args.cpu_reference_role == "cpu-internal":
+         raise ValueError("cpu-internal reference role requires exploratory validation")
+     if args.mode == "scalar" and args.cpu_budget != 1 or args.mode == "pool" and args.cpu_budget != 4:
+@@ -347,9 +397,20 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+     identity["numerical_reference_sha256"] = origin["sha256"]
+     cpu_references = {}
+     if args.cpu_reference_dir is not None:
++        candidate_provenance = None
++        admission_record = getattr(args, "cpu_reference_admission_record", None)
++        if admission_record is not None:
++            from scripts.dev.global_cpu_candidate_identity import candidate_identity
++            candidate_provenance = resources.get("candidate_provenance") or candidate_identity(args, ROOT)
++            identity["candidate_provenance"] = candidate_provenance
+         for size in args.sizes:
++            admission_args = {} if admission_record is None else {
++                "cpu_reference_admission_record": admission_record,
++                "expected_cpu_reference_admission_sha256": args.expected_cpu_reference_admission_sha256,
++                "candidate_provenance": candidate_provenance}
+             cpu_references[size] = load_reference(args.cpu_reference_dir, identity,
+-                name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role)
++                name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role,
++                **admission_args)
+     store = StageStore(args.output_dir, identity)
+     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen,
+         validation_mode=validation_mode, cpu_reference_role=cpu_reference_role,
+@@ -406,13 +467,13 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+                     shuffled = [lanes[index] for index in order]
+                     permuted = base.run_two(runner.programs[size], base.batch.stack_lanes(shuffled),
+                         base.stack_second(shuffled, [second[index] for index in order]))
+-                    recorder.gate(f"B{size}_server_batch_cross_group_permutation", permuted,
+-                        jax.tree_util.tree_map(lambda value: value[np.asarray(order)], isolation_reference))
+                     changed = lanes[:size - 1] + [lanes[0]]
+                     replaced = base.run_two(runner.programs[size], base.batch.stack_lanes(changed),
+                         base.stack_second(changed, second[:size - 1] + [second[0]]))
+-                    recorder.gate(f"B{size}_server_batch_replacement_isolation", replaced,
+-                        jax.tree_util.tree_map(lambda value: value[np.asarray(list(range(size - 1)) + [0])], isolation_reference))
++                    record_candidate_batch_isolation(recorder, size, isolation_reference,
++                        permuted, replaced, jax=jax, np=np)
++                else:
++                    order = permuted = replaced = None
+                 if args.cpu_reference_dir is not None:
+                     scalar, cpu_origin = cpu_references[size]
+                     recorder.gate(f"B{size}_{args.mode}_cross_mode_server_scalar", output, scalar)
+@@ -427,7 +488,14 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+                     wrapper.append(sample["wall_seconds"])
+                     wrapper_CPU.append(sample)
+                 observations["warm_complete"] = memory_snapshot("warm_complete")
+-                recorder.gate(f"B{size}_{args.mode}_frozen_reset_repeat", materialized, output)
++                if args.mode == "batch":
++                    record_candidate_batch_reset(recorder, size, output, materialized)
++                    validation_arrays = (seal_candidate_batch_arrays(args.output_dir, identity, size,
++                        permuted, replaced, materialized, jax=jax, np=np)
++                        if getattr(args, "cpu_reference_admission_record", None) is not None else None)
++                else:
++                    recorder.gate(f"B{size}_{args.mode}_frozen_reset_repeat", materialized, output)
++                    validation_arrays = None
+                 metrics = {f"B{size}_warm_frozen_state_core": base.metrics(core, size * 14),
+                            f"B{size}_preprepared_wrapper_stack_transfer_materialize": base.metrics(wrapper, size * 14)}
+                 metrics[f"B{size}_warm_frozen_state_core"]["process_CPU_samples"] = core_CPU
+@@ -454,6 +522,7 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+                         "CPU_scalar_reference": cpu_origin, "worker_records": workers,
+                         "CPU_scalar_reference_role": "cpu_internal_comparison" if cpu_origin is not None and cpu_reference_role == "cpu-internal" else "accepted" if cpu_origin is not None else None,
+                         "controller_thread_affinity_after_warm": controller_threads,
++                         "validation_arrays": validation_arrays,
+                         "core_boundary": "actual group wall includes dispatch/barrier; all workers synchronize and retain every output; excludes materialization/serialization/IPC of full outputs",
+                         "wrapper_boundary": "fresh preprepared host inputs/device transfer plus complete computation, full host output materialization and pool serialization/IPC",
+                         "scalar_compile_policy": "once per persistent scalar worker, reused across distinct points and sizes"},
+@@ -564,22 +633,46 @@ def main():
+     args = parser().parse_args()
+     validate(args)
+     if args.dry_run or args.synthetic_smoke:
++        if args.require_child_environment:
++            validate_environment(args.cpu_budget)
+         result = synthetic_smoke(args) if args.synthetic_smoke else {
+             "status": "dry_run", "mode": args.mode, "CPU_budget": args.cpu_budget, "sizes": args.sizes,
+             "warm_repeats": args.warm_repeats, "physical_performance_requires": "bound cnall/cnmix Slurm allocation",
+             "model_execution": False, "JAX_imported": "jax" in sys.modules,
+             "CPU_process_policy": "one native CPU process/device; lane count is not CPU count" if args.mode == "batch" else args.mode,
+             "parent_CPU_count_declared": os.environ.get("ORCHJAX_PARENT_CPU_COUNT"),
+-            "billing_scope": "full parent allocation including scalar step; actual Slurm admission required"}
++            "billing_scope": "full current parent allocation; actual Slurm admission required"}
++        result["actual_child_prejax_receipt"] = child_snapshot(args.cpu_budget, status="nonmodel_cli_only")
+         result.update(validation_mode=args.validation_mode, cpu_reference_role=args.cpu_reference_role,
+                       expected_gpu_reference_sha256=args.expected_gpu_reference_sha256)
+         print(json.dumps(result, indent=2))
+         return 0
+-    resources = admit(args.mode, args.cpu_budget)
+-    default_guard = 96 if args.mode == "pool" else 64 if args.cpu_budget == 48 else 24
+-    resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or default_guard)
+-    cpus = resources["selected_logical_cpus"]
+-    bind(cpus[:1] if args.mode in {"scalar", "pool"} else cpus, one_thread=args.mode != "batch")
++    try:
++        if args.require_child_environment:
++            validate_environment(args.cpu_budget)
++        resources = admit(args.mode, args.cpu_budget)
++        default_guard = 96 if args.mode == "pool" else 64 if args.cpu_budget == 48 else 24
++        resources["host_memory_admission"] = memory_guard(args.memory_guard_gib or default_guard)
++        cpus = resources["selected_logical_cpus"]
++        bind(cpus[:1] if args.mode in {"scalar", "pool"} else cpus, one_thread=args.mode != "batch")
++        if args.require_child_environment:
++            validate_environment(args.cpu_budget)
++        if args.cpu_reference_admission_record is not None:
++            from scripts.dev.global_cpu_candidate_identity import candidate_identity
++            from scripts.dev.global_server_reference import validate_cpu_reference_admission
++            resources["candidate_provenance"] = candidate_identity(args, ROOT)
++            resources["external_scalar_reference_admission"] = validate_cpu_reference_admission(
++                args.cpu_reference_admission_record, args.expected_cpu_reference_admission_sha256,
++                args.cpu_reference_dir, expected_source=resources["candidate_provenance"])
++    except Exception as exc:
++        print(json.dumps(child_snapshot(args.cpu_budget, status="resource_admission_failed", error=str(exc))),
++              file=sys.stderr, flush=True)
++        raise
++    receipt = child_snapshot(args.cpu_budget, status="resource_admission_passed")
++    receipt.update(selected_physical_cores=resources["selected_logical_cpus"],
++                   allocation=resources["Slurm"], allocation_admitted=True)
++    print(json.dumps(receipt), file=sys.stderr, flush=True)
++    resources["actual_child_prejax_receipt"] = receipt
+     resources["thread_environment_before_JAX"] = {name: os.environ.get(name) for name in (
+         "XLA_FLAGS", "JAX_PLATFORMS", "JAX_ENABLE_X64", "OMP_NUM_THREADS", "MKL_NUM_THREADS",
+         "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS")}
+diff --git a/scripts/dev/collect_global_cpu48_b64.py b/scripts/dev/collect_global_cpu48_b64.py
+index d7c0594..b4a18fd 100644
+--- a/scripts/dev/collect_global_cpu48_b64.py
++++ b/scripts/dev/collect_global_cpu48_b64.py
+@@ -113,6 +113,55 @@ def check_gpu_gate_set(record, actual_outputs, reference_outputs):
+     return results
+ 
+ 
++def check_candidate_saved_arrays(batch, outputs):
++    """Recompute batch isolation/reset gates from the separately sealed arrays."""
++    from scripts.dev import benchmark_global_batch as base
++
++    provenance = batch["record"].get("provenance", {})
++    seal = provenance.get("validation_arrays")
++    if not isinstance(seal, dict) or seal.get("schema") != "global_cpu48_candidate_validation_arrays_v1":
++        raise ValueError("v4 candidate validation-array seal missing or malformed")
++    directory = batch["checkpoint"].parent.resolve()
++    path = Path(seal.get("path", "")).resolve()
++    if not path.is_relative_to(directory) or not path.is_file():
++        raise ValueError("candidate validation-array path escapes the batch stage directory")
++    raw = path.read_bytes()
++    if len(raw) != seal.get("bytes") or sha256(raw) != seal.get("sha256"):
++        raise ValueError("candidate validation-array sidecar checksum/size mismatch")
++    evidence = pickle.loads(raw)
++    identity = batch["identity"]
++    if (evidence.get("schema") != seal["schema"] or evidence.get("candidate_identity") != identity
++            or seal.get("schema") != "global_cpu48_candidate_validation_arrays_v1"):
++        raise ValueError("candidate validation-array sidecar identity/schema mismatch")
++    size = len(identity["lanes"])
++    permutation_index = list(reversed(range(size)))
++    replacement_index = list(range(size - 1)) + [0]
++    if (evidence.get("permutation_index") != permutation_index
++            or evidence.get("replacement_index") != replacement_index):
++        raise ValueError("candidate validation-array permutation/replacement index contract mismatch")
++    gates = {gate.get("name"): gate for gate in batch["record"].get("gates", [])}
++    required = {
++        f"B{size}_server_batch_cross_group_permutation": (evidence["permutation"], permutation_index),
++        f"B{size}_server_batch_replacement_isolation": (evidence["replacement"], replacement_index),
++        f"B{size}_batch_frozen_reset_repeat": (evidence["frozen_reset"], None),
++    }
++    results = []
++    for name, (actual, indices) in required.items():
++        recorded = gates.get(name)
++        if recorded is None:
++            raise ValueError(f"required candidate saved-array gate missing: {name}")
++        expected = outputs if indices is None else base.jax.tree_util.tree_map(
++            lambda leaf: base.np.asarray(leaf)[base.np.asarray(indices)], outputs)
++        sentinels = {item["path"]: item["contract"] for item in recorded.get("allowed_sentinels", [])}
++        measured = base.compare(actual, expected, sentinel_paths=sentinels)
++        if not gate_matches(recorded, measured) or measured.get("passed") is not True:
++            raise ValueError(f"candidate saved arrays disagree with recomputed output: {name}")
++        results.append({"name": name, "passed": True, "compared_leaves": measured["compared_leaves"],
++            "max_abs": measured["max_abs"], "max_bound_ratio": measured["max_bound_ratio"]})
++    return {"sidecar": {"path": str(path), "sha256": sha256(raw), "bytes": len(raw), "schema": seal["schema"]},
++        "checks": results, "all_passed": True}
++
++
+ def validate_telemetry(bundle):
+     record, identity, report = bundle["record"], bundle["identity"], bundle["report"]
+     proof = record["provenance"]
+@@ -207,7 +256,7 @@ def elapsed_seconds(value: str) -> int:
+     return int(days or 0) * 86400 + hours * 3600 + minutes * 60 + seconds
+ 
+ 
+-def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Path) -> int:
++def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Path, *, batch_only=False) -> int:
+     raw = accounting.get("raw_record")
+     if not isinstance(raw, str) or not raw.endswith("\n"):
+         raise ValueError("terminal accounting must preserve the exact sacct parsable2 parent row")
+@@ -229,9 +278,10 @@ def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Pa
+     seconds = elapsed_seconds(accounting["Elapsed"])
+     if seconds <= 0 or accounting.get("wall_seconds") != seconds:
+         raise ValueError("terminal accounting wall_seconds must equal the parent Elapsed field")
+-    expected_dirs = [str(run_root / "scalar"), str(run_root / "batch")]
++    expected_dirs = [str(run_root / "batch")] if batch_only else [str(run_root / "scalar"), str(run_root / "batch")]
+     if accounting.get("directories") != expected_dirs:
+-        raise ValueError("raw parent accounting must cover this exact scalar and batch RUN_ROOT")
++        scope = "batch-only" if batch_only else "scalar and batch"
++        raise ValueError(f"raw parent accounting must cover this exact {scope} RUN_ROOT")
+     if (accounting.get("source") not in {"sacct", "raw9"}
+             or accounting.get("scope") != "whole_slurm_parent_job"
+             or accounting.get("allocated_CPU_count") != 48 or accounting.get("GPU_count") != 0
+@@ -241,14 +291,14 @@ def validate_raw_accounting(accounting: dict, expected_job_id: str, run_root: Pa
+ 
+ 
+ def raw_parent_cost(accounting: dict | None, accounting_path: Path | None, run_root: Path,
+-                    expected_job_id: str | None) -> dict:
++                    expected_job_id: str | None, *, batch_only=False) -> dict:
+     if accounting is None:
+         return {"status": "pending_external_terminal_accounting",
+             "required_source": "terminal sacct or raw9 accounting covering the entire Slurm parent allocation",
+             "whole_job_cost_cny": None, "billing_verified": False}
+     if not expected_job_id:
+         raise ValueError("coordinator parent job ID is required to bind terminal accounting")
+-    wall = validate_raw_accounting(accounting, expected_job_id, run_root)
++    wall = validate_raw_accounting(accounting, expected_job_id, run_root, batch_only=batch_only)
+     return {"status": "terminal_parent_accounting_loaded", "source": accounting["source"],
+         "path": str(accounting_path), "sha256": sha256(accounting_path.read_bytes()),
+         "raw_parent_record": accounting["raw_record"], "raw_parent_record_sha256": accounting["raw_record_sha256"],
+@@ -260,22 +310,77 @@ def raw_parent_cost(accounting: dict | None, accounting_path: Path | None, run_r
+         "billing_verified": False, "scope": "whole parent Slurm job; scalar step is charged inside the parent 48-CPU allocation"}
+ 
+ 
++def reused_source_parent_cost(admission: dict, admission_path: Path, candidate_job_id: str | None) -> dict:
++    source = admission.get("scalar_source", {})
++    parent = source.get("whole_parent_accounting", {})
++    raw = parent.get("raw_record")
++    if not isinstance(raw, str) or not raw.endswith("\n"):
++        raise ValueError("validated scalar admission must preserve the exact old parent accounting row")
++    fields = raw.rstrip("\n").split("|")
++    if len(fields) != 4 or fields != [parent.get("job_id"), parent.get("terminal_status"),
++            parent.get("Elapsed"), parent.get("AllocTRES")]:
++        raise ValueError("old scalar parent accounting summary differs from its preserved raw row")
++    raw_digest = sha256(raw.encode("utf-8"))
++    if parent.get("raw_record_sha256") != raw_digest:
++        raise ValueError("old scalar parent accounting raw-row SHA mismatch")
++    source_job_id = fields[0]
++    if not candidate_job_id or candidate_job_id == source_job_id:
++        raise ValueError("new candidate job ID must be present and distinct from the old scalar source job")
++    wall = elapsed_seconds(fields[2])
++    allocated = 48 * wall / 3600
++    return {"status": "terminal_source_parent_accounting_loaded", "path": str(parent.get("path")),
++        "admission_path": str(admission_path), "admission_sha256": admission.get("sha256"),
++        "sha256": parent.get("sha256"), "job_id": source_job_id,
++        "candidate_job_id": candidate_job_id, "terminal_status": fields[1], "Elapsed": fields[2],
++        "wall_seconds": wall, "AllocTRES": fields[3], "raw_parent_record": raw,
++        "raw_parent_record_sha256": raw_digest, "allocated_CPU_request_core_hours": allocated,
++        "primary_cost_cny_estimate": allocated * 0.05,
++        "conservative_cost_cny_estimate": allocated * 0.07,
++        "billing_verified": False, "counted_once_as_source_parent": True,
++        "new_allocation_reuse_charge": False,
++        "scope": "completed prior 48-CPU source job; not included in new parent allocation estimate"}
++
++
++def validated_reused_source_parent_cost(orchestration: dict) -> dict | None:
++    if orchestration.get("execution_route") != "batch-only":
++        return None
++    commands = orchestration.get("commands", {}).get("batch", {}).get("argv", [])
++    if "--cpu-reference-dir" not in commands:
++        raise ValueError("batch-only orchestration does not name its external scalar directory")
++    scalar_dir = Path(commands[commands.index("--cpu-reference-dir") + 1])
++    admission_record = orchestration.get("external_scalar_reference_admission")
++    candidate = orchestration.get("candidate_provenance")
++    if (not isinstance(admission_record, dict) or not isinstance(candidate, dict)
++            or not admission_record.get("path") or not admission_record.get("sha256")):
++        raise ValueError("batch-only orchestration lacks external scalar admission/candidate provenance")
++    from scripts.dev.global_server_reference import validate_cpu_reference_admission
++
++    admission = validate_cpu_reference_admission(admission_record["path"], admission_record["sha256"],
++        scalar_dir, expected_source=candidate)
++    candidate_job_id = orchestration.get("allocation", {}).get("job_id") or candidate.get("job_id")
++    return reused_source_parent_cost(admission, Path(admission_record["path"]), candidate_job_id)
++
++
+ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | None = None) -> dict:
+     run_root = run_root.resolve()
+     orchestration = load_json(run_root / "orchestration.json")
++    batch_only = orchestration.get("execution_route") == "batch-only"
+     accounting = load_json(parent_accounting_path) if parent_accounting_path is not None else None
+     parent_job_id = orchestration.get("allocation", {}).get("job_id")
+-    parent_cost = raw_parent_cost(accounting, parent_accounting_path, run_root, parent_job_id)
++    parent_cost = raw_parent_cost(accounting, parent_accounting_path, run_root, parent_job_id,
++        batch_only=batch_only)
+     coordinator_cost = {"wall_seconds": orchestration.get("wall_seconds"),
+         "primary_cost_cny_estimate": orchestration.get("coordinator_scope_primary_cost_cny_estimate"),
+         "conservative_cost_cny_estimate": orchestration.get("coordinator_scope_conservative_cost_cny_estimate"),
+         "scope": orchestration.get("coordinator_scope_cost_limitation"),
+         "whole_parent_cost": False}
++    reused_source_parent = validated_reused_source_parent_cost(orchestration)
+     if orchestration.get("status") != "completed_exploratory_measurement":
+         return save_result(output_path, {"schema": "global-cpu48-b64-collection-v1",
+             "status": "incomplete_run_failure_preserved", "scientific_acceptance": False,
+             "coordinator_status": orchestration.get("status"), "steps": orchestration.get("steps", {}),
+             "coordinator_scope_cost": coordinator_cost, "whole_parent_allocation_cost": parent_cost,
++            "reused_scalar_source_parent_cost": reused_source_parent,
+             "orchestration_path": str(run_root / "orchestration.json"),
+             "claim_scope": "failure accounting only; no throughput claim"})
+     from scripts.dev import summarize_global_server_cost as cost
+@@ -288,7 +393,14 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
+         raise ValueError("coordinator-bound science SHA mismatch")
+     if orchestration.get("allocation", {}).get("parent_cpu_count") != 48:
+         raise ValueError("48 CPU parent allocation not sealed in orchestration")
+-    scalar = sealed_stage(run_root / "scalar", SCALAR_STAGE)
++    batch_argv = orchestration["commands"]["batch"]["argv"]
++    if batch_only:
++        if "--cpu-reference-dir" not in batch_argv:
++            raise ValueError("batch-only orchestration does not name its external scalar directory")
++        scalar_dir = Path(batch_argv[batch_argv.index("--cpu-reference-dir") + 1])
++    else:
++        scalar_dir = run_root / "scalar"
++    scalar = sealed_stage(scalar_dir, SCALAR_STAGE)
+     batch = sealed_stage(run_root / "batch", BATCH_STAGE)
+     identity = batch["identity"]
+     if (identity.get("science_sha256") != SCIENCE_SHA or identity.get("baseline_ref") != BASELINE_REF
+@@ -305,8 +417,17 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
+     gpu_outputs, gpu_origin = load_reference(reference_dir, identity)
+     if gpu_origin.get("sha256") != expected_reference_sha:
+         raise ValueError("actual loaded GPU numerical reference SHA mismatch")
+-    scalar_outputs, scalar_origin = load_reference(run_root / "scalar", identity,
+-        name=SCALAR_STAGE, points=64, cpu_reference_role="cpu-internal")
++    admission_args = {}
++    if batch_only:
++        admission = orchestration.get("external_scalar_reference_admission")
++        candidate_provenance = identity.get("candidate_provenance")
++        if not isinstance(admission, dict) or not candidate_provenance:
++            raise ValueError("batch-only orchestration lacks its external scalar admission/candidate provenance")
++        admission_args = {"cpu_reference_admission_record": admission.get("path"),
++            "expected_cpu_reference_admission_sha256": admission.get("sha256"),
++            "candidate_provenance": candidate_provenance}
++    scalar_outputs, scalar_origin = load_reference(scalar_dir, identity,
++        name=SCALAR_STAGE, points=64, cpu_reference_role="cpu-internal", **admission_args)
+     if scalar_origin.get("role") != "cpu_internal_comparison" or scalar_origin.get("native_input_identity_verified") is not True:
+         raise ValueError("CPU scalar reference was not loaded as an exact internal numerical comparison")
+     outputs = batch["value"].get("outputs")
+@@ -314,6 +435,7 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
+         raise ValueError("candidate checkpoint must contain both complete seven-day output blocks")
+     schema = require_tree_schema(outputs, gpu_outputs)
+     gpu_gates = check_gpu_gate_set(batch, outputs, gpu_outputs)
++    candidate_validation_arrays = check_candidate_saved_arrays(batch, outputs) if batch_only else None
+     recorded_cross = next((gate for gate in batch["record"]["gates"]
+         if gate.get("name") == "B64_batch_cross_mode_server_scalar"), None)
+     if recorded_cross is None:
+@@ -329,6 +451,10 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
+     if len(point_ids) != 64 or len(set(point_ids)) != 64 or cost_stage["core"]["point_days"] != POINT_DAYS:
+         raise ValueError("candidate denominator must be 64 unique points x 14 days")
+     warm = cost_stage["wrapper"]
++    source_parent = (reused_source_parent_cost(scalar_origin["admission"],
++        Path(scalar_origin["admission"]["path"]),
++        orchestration.get("allocation", {}).get("job_id") or scalar_origin["admission"].get("candidate_identity", {}).get("job_id"))
++        if scalar_origin.get("admission") is not None else None)
+     jobs = []
+     if accounting is not None:
+         jobs = [{"directories": accounting["directories"], "status": accounting["terminal_status"],
+@@ -357,9 +483,12 @@ def collect(run_root: Path, output_path: Path, parent_accounting_path: Path | No
+             "GPU_tolerance_failures": sum(not row["passed"] for row in gpu_gates)},
+         "cpu_internal_reference": {"stage": SCALAR_STAGE, "role": scalar_origin["role"],
+             "sha256": scalar["record"]["sha256"], "manifest_sha256": scalar["manifest_sha256"],
+-            "report_sha256": scalar["report_sha256"]},
++            "report_sha256": scalar["report_sha256"],
++            "directory": str(scalar_dir), "admission": scalar_origin.get("admission")},
++        "candidate_validation_arrays": candidate_validation_arrays,
+         "coordinator_scope_cost": coordinator_cost,
+         "whole_parent_allocation_cost": parent_cost,
++        "reused_scalar_source_parent_cost": source_parent,
+         "parent_accounting_limitation": "coordinator interval excludes Slurm submission/startup; whole-job cost stays pending until terminal sacct/raw9 evidence is supplied",
+         "cost_scenarios": summary, "excluded_claims": [
+             "accepted CPU scientific result", "GPU-equivalent scientific acceptance",
+diff --git a/scripts/dev/diagnose_global_cpu_child_environment.py b/scripts/dev/diagnose_global_cpu_child_environment.py
+new file mode 100644
+index 0000000..5496a16
+--- /dev/null
++++ b/scripts/dev/diagnose_global_cpu_child_environment.py
+@@ -0,0 +1,98 @@
++"""Tiny real-process CPU environment diagnostic; no model, JAX or fake allocation.
++
++On Linux it restricts itself and every descendant to one available CPU. A
++48-thread policy check is only an environment/CLI check, never CPU48 admission.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import subprocess
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(ROOT))
++from scripts.dev import global_cpu_child_environment as boundary  # noqa: E402
++from scripts.hpc.global_cpu48_b64_coordinator import run_process  # noqa: E402
++
++CONFLICTS = {"OMP_NUM_THREADS": "1", "OMP_THREAD_LIMIT": "1", "MKL_NUM_THREADS": "64",
++    "OPENBLAS_NUM_THREADS": "64", "NUMEXPR_NUM_THREADS": "64",
++    "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false",
++    "JAX_PLATFORMS": "cuda", "JAX_ENABLE_X64": "false", "JAX_DISABLE_JIT": "true",
++    "JAX_NUM_CPU_DEVICES": "48", "TF_NUM_INTRAOP_THREADS": "1"}
++
++
++def diagnose(output: Path) -> dict:
++    output.mkdir(parents=True, exist_ok=True)
++    if hasattr(os, "sched_getaffinity"):
++        os.sched_setaffinity(0, {min(os.sched_getaffinity(0))})
++    for key in list(os.environ):
++        if key.startswith(("SLURM_", "ORCHJAX_SLURM_")):
++            os.environ.pop(key)
++    os.environ.update(CONFLICTS)
++    runner = ROOT / "scripts/dev/benchmark_global_server_cpu.py"
++    child = runner.with_name("global_cpu_child_environment.py")
++    transport = output / "conflicting_transport.py"
++    transport.write_text("import os,sys,subprocess\n" + f"os.environ.update({CONFLICTS!r})\n" +
++        "command=sys.argv[1:]\n" +
++        "if os.name=='nt': raise SystemExit(subprocess.call(command,env=dict(os.environ)))\n" +
++        "os.execvpe(command[0],command,dict(os.environ))\n", encoding="utf-8")
++    common = ["--sizes", "64", "--prepared-input", str(output / "not-read.pkl"),
++        "--gpu-reference-dir", str(output / "not-read-gpu"), "--output-dir", str(output / "not-created"),
++        "--require-child-environment"]
++    checks = {}
++    for mode, budget in (("scalar", 1), ("batch", 48)):
++        args = [sys.executable, str(runner), "--mode", mode, "--cpu-budget", str(budget), *common, "--dry-run"]
++        if mode == "batch":
++            args += ["--cpu-reference-dir", str(output / "not-read-scalar")]
++        command = [sys.executable, str(transport), *boundary.wrapped_command(sys.executable, child, budget, args)]
++        log = output / f"{mode}-policy.log"
++        result = run_process(command, log, 20)
++        if result["returncode"] != 0:
++            raise RuntimeError(f"actual {mode} child failed; see {log}")
++        raw = log.read_text(encoding="utf-8")
++        start = raw.index('{\n  "status": "dry_run"')
++        dry, _ = json.JSONDecoder().raw_decode(raw[start:])
++        actual = dry["actual_child_prejax_receipt"]
++        expected = {key: boundary.policy(budget).get(key) for key in boundary.WHITELIST}
++        if actual["actual_environment"] != expected or actual["unexpected_policy_keys"] or actual["JAX_imported"]:
++            raise RuntimeError("actual post-transport child policy mismatch")
++        if actual["inherited_transport_policy"]["environment"]["OMP_NUM_THREADS"] != "1":
++            raise RuntimeError("conflicting inherited transport was not exercised")
++        if actual["affinity"] is not None and len(actual["affinity"]) != 1:
++            raise RuntimeError("diagnostic widened beyond one available CPU")
++        checks[mode] = {"dispatch": result, "actual_child_receipt": actual}
++    real = [sys.executable, str(runner), "--mode", "batch", "--cpu-budget", "48", *common,
++            "--cpu-reference-dir", str(output / "not-read-scalar")]
++    for name, env in (("wrong-policy", dict(os.environ)),
++                      ("no-allocation", boundary.normalized_environment(48))):
++        result = subprocess.run(real, env=env, capture_output=True, text=True, timeout=20)
++        (output / f"{name}.stderr.txt").write_text(result.stderr, encoding="utf-8")
++        receipt = json.loads(result.stderr.splitlines()[0])
++        if result.returncode == 0 or receipt["JAX_imported"] or receipt["status"] != "resource_admission_failed":
++            raise RuntimeError("wrong policy/unallocated process did not fail before JAX")
++        checks[name] = {"returncode": result.returncode, "actual_child_receipt": receipt}
++    return {"schema": "global_cpu48_environment_diagnostic_v1", "status": "passed_nonmodel_process_checks",
++        "python": sys.executable, "python_version": sys.version, "code_dir": str(ROOT),
++        "hostname": __import__("platform").node(), "checks": checks,
++        "affinity": sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else None,
++        "JAX_imported": "jax" in sys.modules, "model_execution": False,
++        "physical_allocation_claim": False,
++        "scope": "actual run_process/exec children only; no model compilation or CPU48 allocation admission"}
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--output-dir", type=Path, required=True)
++    args = parser.parse_args()
++    result = diagnose(args.output_dir.resolve())
++    raw = json.dumps(result, indent=2, allow_nan=False) + "\n"
++    (args.output_dir / "environment-diagnostic.json").write_text(raw, encoding="utf-8")
++    print(raw, end="")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/dev/global_cpu_candidate_identity.py b/scripts/dev/global_cpu_candidate_identity.py
+new file mode 100644
+index 0000000..e34380e
+--- /dev/null
++++ b/scripts/dev/global_cpu_candidate_identity.py
+@@ -0,0 +1,33 @@
++"""Stdlib candidate/source identity before any paid child or JAX import."""
++from __future__ import annotations
++
++import hashlib
++import os
++import subprocess
++from pathlib import Path
++
++from scripts.dev.global_source_compatibility import source_identity
++
++
++def sha256_file(path) -> str:
++    digest = hashlib.sha256()
++    with Path(path).open("rb") as stream:
++        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def candidate_identity(args, root=None) -> dict:
++    code = Path(root or args.entry.resolve().parents[2]).resolve()
++    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=code, text=True).strip()
++    source = source_identity(code)
++    reference = Path(args.gpu_reference_dir).resolve() / "stage_B4_group_references.pkl"
++    return {"job_id": os.environ.get("SLURM_JOB_ID"), "execution_commit": commit,
++            "execution_code_dir": str(code), "prepared_input_path": str(args.prepared_input.resolve()),
++            "prepared_input_sha256": sha256_file(args.prepared_input),
++            "gpu_reference_path": str(reference), "gpu_reference_sha256": sha256_file(reference),
++            "certified_science_sha256": source["science_sha256"],
++            "actual_science_source_sha256": source["actual_science_source_sha256"],
++            "physical_science_tree_oid": subprocess.check_output(
++                ["git", "rev-parse", f"{commit}:jax_orchidee"], cwd=code, text=True).strip(),
++            "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299"}
+diff --git a/scripts/dev/global_cpu_child_environment.py b/scripts/dev/global_cpu_child_environment.py
+new file mode 100644
+index 0000000..36582c0
+--- /dev/null
++++ b/scripts/dev/global_cpu_child_environment.py
+@@ -0,0 +1,104 @@
++"""Stdlib-only environment boundary, shared by dry runs and real CPU children.
++
++Run after srun: Slurm's ALL export precedence must not choose the thread policy.
++This module sets execution policy only and never imports JAX/model code.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import subprocess
++import sys
++
++PREFIXES = ("JAX_", "XLA_", "OMP_", "MKL_", "OPENBLAS_", "NUMEXPR_", "TF_NUM_")
++WHITELIST = ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
++             "NUMEXPR_NUM_THREADS", "XLA_FLAGS", "JAX_PLATFORMS", "JAX_ENABLE_X64",
++             "PYTHONDONTWRITEBYTECODE")
++
++
++def policy(budget: int) -> dict[str, str]:
++    if budget not in (1, 4, 48):
++        raise ValueError("CPU thread budget must be 1, 4 or 48")
++    result = {"OMP_NUM_THREADS": str(budget), "MKL_NUM_THREADS": "1",
++              "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
++              "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true",
++              "PYTHONDONTWRITEBYTECODE": "1"}
++    if budget > 1:
++        result["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=true"
++    return result
++
++
++def normalized_environment(budget: int, environ=None) -> dict[str, str]:
++    inherited = os.environ if environ is None else environ
++    result = {key: value for key, value in inherited.items() if not key.startswith(PREFIXES)}
++    result.update(policy(budget))
++    return result
++
++
++def snapshot(budget: int, *, status: str, error: str | None = None) -> dict:
++    expected = policy(budget)
++    inherited = None
++    if os.environ.get("ORCHJAX_CHILD_INHERITED_POLICY_JSON"):
++        try:
++            inherited = json.loads(os.environ["ORCHJAX_CHILD_INHERITED_POLICY_JSON"])
++        except (TypeError, ValueError):
++            inherited = {"unavailable": "inherited receipt is not valid JSON"}
++    return {"schema": "global_cpu_child_prejax_v1", "status": status,
++            "pid": os.getpid(), "thread_budget": budget,
++            "thread_policy": expected,
++            "actual_environment": {key: os.environ.get(key) for key in WHITELIST},
++            "unexpected_policy_keys": sorted(key for key in os.environ
++                if key.startswith(PREFIXES) and key not in expected),
++            "affinity": sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else None,
++            "JAX_imported": "jax" in sys.modules, "model_execution": False,
++            "inherited_transport_policy": inherited,
++            "error": error,
++            "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
++
++
++def validate_environment(budget: int) -> None:
++    actual = snapshot(budget, status="checking")
++    expected = policy(budget)
++    mismatches = [key for key in WHITELIST if os.environ.get(key) != expected.get(key)]
++    if actual["JAX_imported"] or mismatches or actual["unexpected_policy_keys"]:
++        raise RuntimeError("pre-JAX child environment mismatch: " + ",".join(mismatches + actual["unexpected_policy_keys"]))
++
++
++def wrapped_command(python: str, entry, budget: int, command: list[str]) -> list[str]:
++    return [python, str(entry), "--thread-budget", str(budget), "--", *command]
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--thread-budget", type=int, choices=(1, 4, 48), required=True)
++    parser.add_argument("command", nargs=argparse.REMAINDER)
++    args = parser.parse_args()
++    command = args.command[1:] if args.command[:1] == ["--"] else args.command
++    if not command:
++        parser.error("child command is required")
++    inherited = {"environment": {key: os.environ.get(key) for key in WHITELIST},
++                 "unexpected_policy_keys": sorted(key for key in os.environ
++                     if key.startswith(PREFIXES) and key not in policy(args.thread_budget))}
++    clean = normalized_environment(args.thread_budget)
++    clean["ORCHJAX_CHILD_INHERITED_POLICY_JSON"] = json.dumps(inherited)
++    for key in list(os.environ):
++        if key.startswith(PREFIXES):
++            os.environ.pop(key)
++    os.environ.update(clean)
++    validate_environment(args.thread_budget)
++    print(json.dumps(snapshot(args.thread_budget, status="exec_boundary_ready")), file=sys.stderr, flush=True)
++    try:
++        if os.name == "nt":
++            # Windows exec emulation does not preserve subprocess capture lifetimes.
++            return subprocess.call(command, env=clean)
++        os.execvpe(command[0], command, clean)
++    except Exception as exc:
++        print(json.dumps(snapshot(args.thread_budget, status="exec_boundary_failed", error=str(exc))),
++              file=sys.stderr, flush=True)
++        raise
++    return 1  # exec never returns successfully.
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/dev/global_server_reference.py b/scripts/dev/global_server_reference.py
+index 241bc87..1e53c04 100644
+--- a/scripts/dev/global_server_reference.py
++++ b/scripts/dev/global_server_reference.py
+@@ -62,7 +62,182 @@ def _evidence_mismatch(checkpoint, manifest, path):
+     return None
+ 
+ 
+-def load_reference(directory, identity, *, name="B4_group_references", points=None, cpu_reference_role="accepted"):
++def validate_cpu_reference_admission(admission_path, expected_sha256, old_directory, *, expected_source):
++    """Verify a sealed scalar-source admission without importing pickle or JAX.
++
++    The external admission binds the old scalar checkpoint to its manifest and
++    report, then explicitly matches its scientific/input contract to the new
++    candidate. Job IDs and execution commits are retained as separate
++    provenance and are therefore allowed to differ.
++    """
++    admission_path, old_directory = Path(admission_path).resolve(), Path(old_directory).resolve()
++    admission_bytes = admission_path.read_bytes()
++    digest = hashlib.sha256(admission_bytes).hexdigest()
++    if digest != expected_sha256:
++        raise ValueError("CPU scalar admission record checksum mismatch")
++    admission = json.loads(admission_bytes)
++    if (admission.get("schema") != "global-cpu48-scalar-admission-v1"
++            or admission.get("status") != "admitted_for_internal_comparison_only"
++            or admission.get("scientific_acceptance") is not False):
++        raise ValueError("CPU scalar admission record is not an internal-comparison-only admission")
++    candidate = admission.get("candidate_identity")
++    source = admission.get("scalar_source", {})
++    source_identity = source.get("source_identity")
++    audit = admission.get("audit", {})
++    if not isinstance(candidate, dict) or not isinstance(expected_source, dict):
++        raise ValueError("CPU scalar admission candidate identity is missing")
++    candidate_job = expected_source.get("job_id")
++    for key in ("execution_commit", "execution_code_dir", "prepared_input_path", "prepared_input_sha256",
++                "gpu_reference_path", "gpu_reference_sha256", "certified_science_sha256",
++                "actual_science_source_sha256", "physical_science_tree_oid", "baseline_ref"):
++        if candidate.get(key) != expected_source.get(key):
++            raise ValueError(f"CPU scalar admission candidate identity mismatch at {key}")
++    if candidate.get("job_id") is not None:
++        if candidate_job is not None and candidate.get("job_id") != candidate_job:
++            raise ValueError("CPU scalar admission candidate job identity mismatch")
++    if not isinstance(source_identity, dict):
++        raise ValueError("CPU scalar admission lacks the original scalar source identity")
++    if (source.get("job_id") != "15820467"
++            or source.get("execution_commit") != "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8"
++            or source.get("stage_sha256") != "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa"
++            or source.get("prepared_input_sha256") != "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7"):
++        raise ValueError("CPU scalar admission is not bound to the exact sealed old source job/checkpoint/input")
++    for key, source_key in (("baseline_ref", "baseline_ref"),
++            ("science_sha256", "certified_science_sha256"),
++            ("numerical_reference_sha256", "gpu_reference_sha256")):
++        if source_identity.get(key) != candidate.get(source_key):
++            raise ValueError(f"CPU scalar admission source/candidate {source_key} mismatch")
++    for key in ("prepared_input_sha256", "gpu_reference_sha256", "certified_science_sha256",
++                "physical_science_tree_oid", "baseline_ref", "actual_science_source_sha256"):
++        if source.get(key) != candidate.get(key):
++            raise ValueError(f"CPU scalar admission source/candidate {key} mismatch")
++    if not source.get("job_id") or not source.get("execution_commit") or not source.get("execution_code_dir"):
++        raise ValueError("CPU scalar admission must preserve the source job and execution identity")
++    if ((candidate.get("job_id") is not None and not candidate.get("job_id"))
++            or not expected_source.get("execution_commit") or not expected_source.get("execution_code_dir")):
++        raise ValueError("CPU scalar admission must preserve the candidate job and execution identity")
++    if candidate_job is not None and source.get("job_id") == candidate_job:
++        raise ValueError("CPU scalar source and candidate must retain distinct job identities")
++    if audit.get("strict_numerical_passed") is not False:
++        raise ValueError("CPU scalar admission must preserve the failed strict numerical status")
++    if audit.get("frozen_reset_arrays_recomputed") is not False:
++        raise ValueError("CPU scalar admission must disclose that frozen-reset arrays were not recomputed")
++    if (audit.get("GPU_gate_count") != 64 or audit.get("GPU_passed_gate_count") != 61
++            or audit.get("GPU_tolerance_failed_gate_count") != 3
++            or audit.get("GPU_tolerance_failure_count") != 4
++            or len(audit.get("recomputed_GPU_gates", [])) != 64):
++        raise ValueError("CPU scalar admission does not preserve the recomputed 64-point gate summary")
++    parent = source.get("whole_parent_accounting", {})
++    raw_parent = parent.get("raw_record", "")
++    if (parent.get("sha256") != "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113"
++            or parent.get("job_id") != "15820467" or parent.get("wall_seconds") != 2197
++            or parent.get("allocated_CPU_count") != 48 or parent.get("GPU_count") != 0
++            or parent.get("AllocTRES") != "billing=48,cpu=48,node=1"
++            or parent.get("terminal_status") != "FAILED" or parent.get("Elapsed") != "00:36:37"
++            or parent.get("counted_once_as_source_parent") is not True
++            or hashlib.sha256(raw_parent.encode("utf-8")).hexdigest() != parent.get("raw_record_sha256")):
++        raise ValueError("CPU scalar admission lacks verified old whole-parent accounting counted once")
++
++    manifest_path, report_path = old_directory / "stage_manifest.json", old_directory / "report.json"
++    manifest_bytes, report_bytes = manifest_path.read_bytes(), report_path.read_bytes()
++    manifest_sha = hashlib.sha256(manifest_bytes).hexdigest()
++    report_sha = hashlib.sha256(report_bytes).hexdigest()
++    if source.get("manifest_sha256") != manifest_sha or source.get("report_sha256") != report_sha:
++        raise ValueError("CPU scalar admission manifest/report checksum mismatch")
++    manifest = json.loads(manifest_bytes)
++    if manifest.get("identity") != source_identity:
++        raise ValueError("CPU scalar admission source identity differs from the sealed scalar manifest")
++    stage_name = source.get("stage_name")
++    if stage_name != "B64_server_scalar_v1":
++        raise ValueError("CPU scalar admission must name the complete B64 scalar stage")
++    record = manifest.get("stages", {}).get(stage_name, {})
++    if record.get("status") != "complete" or record.get("measurement_status") != "complete":
++        raise ValueError("CPU scalar admission source stage is not complete")
++    stage_path = (old_directory / record.get("path", "")).resolve()
++    if not stage_path.is_relative_to(old_directory) or not stage_path.is_file():
++        raise ValueError("CPU scalar admission stage path escapes its sealed directory")
++    stage_bytes = stage_path.read_bytes()
++    stage_sha = hashlib.sha256(stage_bytes).hexdigest()
++    if (stage_sha != record.get("sha256") or source.get("stage_sha256") != stage_sha
++            or source.get("stage_path") != record.get("path")):
++        raise ValueError("CPU scalar admission stage checksum/path mismatch")
++    return {"path": str(admission_path), "sha256": digest, "source_job_id": source.get("job_id"),
++            "source_execution_commit": source.get("execution_commit"), "source_identity": source_identity,
++            "scalar_source": source, "candidate_identity": candidate,
++            "stage": {"name": stage_name, "path": str(stage_path),
++                "sha256": stage_sha}, "manifest_sha256": manifest_sha, "report_sha256": report_sha,
++            "audit": audit}
++
++
++def bind_cpu_reference_admission(receipt_path, output_path, candidate_identity, *, expected_receipt_sha256):
++    """Bind an independently audited old scalar receipt to a final immutable candidate.
++
++    This stdlib-only step does not rerun arrays or model code. The candidate
++    commit and code directory are supplied after the execution tree is sealed;
++    the resulting admission file remains an external runtime input.
++    """
++    receipt_path, output_path = Path(receipt_path).resolve(), Path(output_path).resolve()
++    receipt_bytes = receipt_path.read_bytes()
++    receipt_sha = hashlib.sha256(receipt_bytes).hexdigest()
++    if receipt_sha != expected_receipt_sha256:
++        raise ValueError("CPU scalar audit receipt checksum mismatch")
++    receipt = json.loads(receipt_bytes)
++    if (receipt.get("schema") != "global-cpu48-scalar-audit-v1"
++            or receipt.get("status") != "saved_arrays_audited"
++            or receipt.get("scientific_acceptance") is not False):
++        raise ValueError("CPU scalar audit receipt is not an internal-comparison-only audit")
++    audit, source = receipt.get("audit", {}), receipt.get("scalar_source", {})
++    if (audit.get("strict_numerical_passed") is not False
++            or audit.get("frozen_reset_arrays_recomputed") is not False
++            or audit.get("GPU_gate_count") != 64 or audit.get("GPU_passed_gate_count") != 61
++            or audit.get("GPU_tolerance_failed_gate_count") != 3
++            or audit.get("GPU_tolerance_failure_count") != 4
++            or len(audit.get("recomputed_GPU_gates", [])) != 64):
++        raise ValueError("CPU scalar audit receipt does not preserve the required gate/reset limitation")
++    candidate = dict(candidate_identity)
++    if candidate.get("job_id") is not None:
++        raise ValueError("final pre-allocation CPU scalar admission must leave candidate job_id null")
++    for key in ("execution_commit", "physical_science_tree_oid"):
++        value = candidate.get(key)
++        if not isinstance(value, str) or len(value) != 40 or any(char not in "0123456789abcdef" for char in value):
++            raise ValueError(f"candidate {key} must be a full lowercase Git object ID")
++    for key in ("execution_code_dir", "prepared_input_path", "prepared_input_sha256", "gpu_reference_path",
++                "gpu_reference_sha256", "certified_science_sha256", "actual_science_source_sha256", "baseline_ref"):
++        if not candidate.get(key):
++            raise ValueError(f"candidate identity is missing {key}")
++    for key in ("prepared_input_sha256", "gpu_reference_sha256", "certified_science_sha256",
++                "actual_science_source_sha256", "physical_science_tree_oid", "baseline_ref"):
++        if source.get(key) != candidate.get(key):
++            raise ValueError(f"CPU scalar source/candidate {key} mismatch")
++    source_identity = source.get("source_identity", {})
++    if (source_identity.get("science_sha256") != candidate.get("certified_science_sha256")
++            or source_identity.get("numerical_reference_sha256") != candidate.get("gpu_reference_sha256")
++            or source_identity.get("baseline_ref") != candidate.get("baseline_ref")):
++        raise ValueError("CPU scalar source identity differs from the bound candidate science/reference")
++    parent = source.get("whole_parent_accounting", {})
++    if (parent.get("sha256") != "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113"
++            or parent.get("job_id") != "15820467" or parent.get("wall_seconds") != 2197
++            or parent.get("allocated_CPU_count") != 48 or parent.get("GPU_count") != 0
++            or parent.get("counted_once_as_source_parent") is not True
++            or hashlib.sha256(parent.get("raw_record", "").encode("utf-8")).hexdigest()
++                != parent.get("raw_record_sha256")):
++        raise ValueError("CPU scalar audit receipt lacks verified old parent accounting")
++    admission = {"schema": "global-cpu48-scalar-admission-v1",
++        "status": "admitted_for_internal_comparison_only", "scientific_acceptance": False,
++        "candidate_identity": candidate, "scalar_source": source, "audit": audit,
++        "audit_receipt": {"path": str(receipt_path), "sha256": receipt_sha,
++            "schema": receipt["schema"], "status": receipt["status"]}}
++    payload = (json.dumps(admission, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
++    output_path.parent.mkdir(parents=True, exist_ok=True)
++    with output_path.open("xb") as stream:
++        stream.write(payload)
++    return {"path": str(output_path), "sha256": hashlib.sha256(payload).hexdigest(),
++            "bytes": len(payload), "candidate_identity": candidate, "audit_receipt_sha256": receipt_sha}
++
++
++def load_reference(directory, identity, *, name="B4_group_references", points=None, cpu_reference_role="accepted",
++        cpu_reference_admission_record=None, expected_cpu_reference_admission_sha256=None,
++        candidate_provenance=None):
+     if cpu_reference_role not in {"accepted", "cpu-internal"}:
+         raise ValueError("unknown CPU reference role")
+     internal = cpu_reference_role == "cpu-internal"
+@@ -92,6 +267,23 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
+         raise ValueError("numerical reference source backend does not match its declared role")
+     if name != "B4_group_references" and origin.get("mode") != "scalar":
+         raise ValueError("CPU cross-mode reference must originate from server scalar execution")
++    admission = None
++    external_v4_reuse = (cpu_reference_admission_record is not None
++        or expected_cpu_reference_admission_sha256 is not None or candidate_provenance is not None
++        or identity.get("candidate_provenance") is not None)
++    if internal and name == "B64_server_scalar_v1" and external_v4_reuse:
++        if not cpu_reference_admission_record or not expected_cpu_reference_admission_sha256 or not candidate_provenance:
++            raise ValueError("FULL64 CPU scalar reuse requires an external saved-scalar admission record")
++        admission = validate_cpu_reference_admission(cpu_reference_admission_record,
++            expected_cpu_reference_admission_sha256, directory, expected_source=candidate_provenance)
++        if (candidate_provenance.get("baseline_ref") != identity.get("baseline_ref")
++                or candidate_provenance.get("certified_science_sha256") != identity.get("science_sha256")
++                or candidate_provenance.get("gpu_reference_sha256") != identity.get("numerical_reference_sha256")
++                or candidate_provenance.get("execution_commit") != identity.get("runtime", {}).get("git_head")):
++            raise ValueError("FULL64 CPU scalar admission candidate provenance differs from current execution identity")
++        if (not candidate_provenance.get("job_id")
++                or candidate_provenance.get("job_id") == admission.get("source_job_id")):
++            raise ValueError("FULL64 CPU scalar reuse requires distinct recorded source and candidate job IDs")
+     record = manifest["stages"].get(name, {})
+     if record.get("status") != "complete" or not record.get("sha256"):
+         raise ValueError("reference must be a complete SHA-verified stage")
+@@ -130,7 +322,9 @@ def load_reference(directory, identity, *, name="B4_group_references", points=No
+                     "role": "cpu_internal_comparison" if internal else "complete numerical evidence only; no prior executable or timing reuse",
+                     "backend_conditions": {"source": origin["runtime"], "current": identity["runtime"]},
+                     "point_ids": ids, "native_input_identity_verified": True,
+-                    "fixed_gate": identity["gate"]}
++                    "fixed_gate": identity["gate"],
++                    **({"admission": admission, "candidate_provenance": candidate_provenance}
++                       if admission is not None else {})}
+ 
+ 
+ def _validate_scalar_parent_allocation(origin, proof):
+diff --git a/scripts/dev/prepare_global_cpu48_execution.py b/scripts/dev/prepare_global_cpu48_execution.py
+index 348291b..83441d5 100644
+--- a/scripts/dev/prepare_global_cpu48_execution.py
++++ b/scripts/dev/prepare_global_cpu48_execution.py
+@@ -18,13 +18,22 @@ from pathlib import Path, PurePosixPath
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path.insert(0, str(ROOT))
+ 
+-BASE = "b1b5cf0835da298bddb388e61d754feeb6c14cf2"
++BASE = "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8"
+ SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+ BASELINE = "133e35aec7b83b9d79888c46092f64d518e97299"
+ REFERENCE = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+-TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3"
+-EXECUTION_REF = "codex/global-cpu48-b64-v3"
+-PIN_SCHEMA = "cpu48-b64-immutable-execution-v3"
++TARGET = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4"
++EXECUTION_REF = "codex/global-cpu48-b64-v4"
++PIN_SCHEMA = "cpu48-b64-immutable-execution-v4"
++PHYSICAL_TREE = "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba"
++DEFAULT_BUDGET_SECONDS = 3600
++PROJECT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX"
++PREPARED_INPUT = PROJECT + "/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl"
++PREPARED_INPUT_SHA = "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7"
++GPU_REFERENCE = PROJECT + "/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl"
++SCALAR_DIRECTORY = PROJECT + "/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar"
++SCALAR_CHECKPOINT_SHA = "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa"
++ADMISSION_REMOTE = PROJECT + "/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-admission.json"
+ 
+ 
+ def git(repository, *arguments, env=None, data=None):
+@@ -74,7 +83,9 @@ def validate_paths(paths):
+     return selected
+ 
+ 
+-def build(repository, output, *, source, base, ref, harness_paths, expected_science=SCIENCE):
++def build(repository, output, *, source, base, ref, harness_paths, expected_science=SCIENCE,
++          budget_seconds=DEFAULT_BUDGET_SECONDS, scalar_audit_receipt=None,
++          expected_scalar_audit_sha256=None):
+     repository, output = Path(repository).resolve(), Path(output).resolve()
+     if not output.is_relative_to(repository / "outputs"):
+         raise ValueError("preparation output must stay under this checkout's outputs")
+@@ -83,6 +94,8 @@ def build(repository, output, *, source, base, ref, harness_paths, expected_scie
+     full_ref = "refs/heads/" + ref
+     git(repository, "check-ref-format", full_ref)
+     selected = validate_paths(harness_paths)
++    if not isinstance(budget_seconds, int) or isinstance(budget_seconds, bool) or not 1800 <= budget_seconds <= 5400:
++        raise ValueError("CPU48 batch-only budget must be an integer from 1800 to 5400 seconds")
+     source, base = revision(repository, source), revision(repository, base)
+     if git(repository, "status", "--porcelain", "--untracked-files=all").strip():
+         raise ValueError("research source checkout must be clean before version preparation")
+@@ -91,6 +104,21 @@ def build(repository, output, *, source, base, ref, harness_paths, expected_scie
+     identity = science_identity(repository, base)
+     if identity["science_sha256"] != expected_science:
+         raise ValueError("base scientific identity differs from the accepted source")
++    if expected_science == SCIENCE and (
++            base != revision(repository, BASE) or identity["science_tree_oid"] != PHYSICAL_TREE
++            or identity["science_file_count"] != 104):
++        raise ValueError("production package must use the reviewed v3 execution base and its exact physical tree")
++    if expected_science == SCIENCE and scalar_audit_receipt is None:
++        raise ValueError("production batch-only package requires an independently audited scalar receipt")
++    if scalar_audit_receipt is not None:
++        scalar_audit_receipt = Path(scalar_audit_receipt).resolve()
++        if not scalar_audit_receipt.is_relative_to(output):
++            raise ValueError("independent scalar audit receipt must stay inside the preparation output")
++        audit_bytes = scalar_audit_receipt.read_bytes()
++        if hashlib.sha256(audit_bytes).hexdigest() != expected_scalar_audit_sha256:
++            raise ValueError("independent scalar audit receipt checksum mismatch")
++    elif expected_scalar_audit_sha256 is not None:
++        raise ValueError("independent scalar audit checksum requires a receipt")
+     for path in selected:
+         git(repository, "cat-file", "-e", f"{source}:{path}")
+     patch = git(repository, "diff", "--binary", "--no-ext-diff", base, source, "--", *selected)
+@@ -110,7 +138,7 @@ def build(repository, output, *, source, base, ref, harness_paths, expected_scie
+     execution_tree = git(repository, "rev-parse", f"{tree}:jax_orchidee").decode().strip()
+     if execution_tree != identity["science_tree_oid"]:
+         raise ValueError("scientific source subtree does not match the historical base")
+-    message = ("Prepare CPU48 FULL64 execution harness on accepted historical science\n\n"
++    message = ("Prepare CPU48 FULL64 batch-only harness on accepted historical science\n\n"
+                f"Research source: {source}\nAccepted execution base: {base}\n"
+                f"Certified scientific identity: {identity['science_sha256']}\n"
+                "All physical source blobs are unchanged from the accepted execution base.\n"
+@@ -123,8 +151,49 @@ def build(repository, output, *, source, base, ref, harness_paths, expected_scie
+             raise ValueError("existing execution ref differs; preserve it and select a new version")
+     else:
+         execution = git(repository, "commit-tree", tree, "-p", base, data=message.encode()).decode().strip()
+-        git(repository, "update-ref", full_ref, execution, "0" * 40)
+     output.mkdir(parents=True, exist_ok=True)
++    scalar_reference = None
++    if scalar_audit_receipt is not None:
++        from scripts.dev.global_server_reference import bind_cpu_reference_admission
++
++        candidate = {"job_id": None, "execution_commit": execution, "execution_code_dir": TARGET,
++            "prepared_input_path": PREPARED_INPUT, "prepared_input_sha256": PREPARED_INPUT_SHA,
++            "gpu_reference_path": GPU_REFERENCE, "gpu_reference_sha256": REFERENCE,
++            "certified_science_sha256": identity["science_sha256"],
++            "actual_science_source_sha256": identity["actual_science_source_sha256"],
++            "physical_science_tree_oid": execution_tree, "baseline_ref": BASELINE}
++        admission_path = output / "scalar-audit" / "scalar-admission.json"
++        if admission_path.exists():
++            with tempfile.TemporaryDirectory(prefix="orchjax-cpu48-admission-") as temporary:
++                checked_admission = Path(temporary) / "scalar-admission.json"
++                bind_cpu_reference_admission(scalar_audit_receipt, checked_admission, candidate,
++                    expected_receipt_sha256=expected_scalar_audit_sha256)
++                if admission_path.read_bytes() != checked_admission.read_bytes():
++                    raise ValueError("existing scalar admission differs; preserve it and select a new version")
++        else:
++            bind_cpu_reference_admission(scalar_audit_receipt, admission_path, candidate,
++                expected_receipt_sha256=expected_scalar_audit_sha256)
++        admission_bytes = admission_path.read_bytes()
++        admission = json.loads(admission_bytes)
++        if expected_science == SCIENCE and (
++                str(admission["scalar_source"]["job_id"]) != "15820467"
++                or admission["scalar_source"]["execution_commit"] != BASE
++                or admission["scalar_source"]["stage_sha256"] != SCALAR_CHECKPOINT_SHA
++                or admission.get("candidate_identity") != candidate):
++            raise ValueError("scalar admission differs from the reviewed source or exact new candidate")
++        scalar_reference = {"directory": SCALAR_DIRECTORY,
++            "source_job_id": admission["scalar_source"]["job_id"],
++            "source_execution_commit": admission["scalar_source"]["execution_commit"],
++            "source_checkpoint_sha256": admission["scalar_source"]["stage_sha256"],
++            "audit_receipt": {"name": scalar_audit_receipt.relative_to(output).as_posix(),
++                "sha256": expected_scalar_audit_sha256, "bytes": len(audit_bytes)},
++            "admission_record": {"name": admission_path.relative_to(output).as_posix(),
++                "remote_path": ADMISSION_REMOTE,
++                "sha256": hashlib.sha256(admission_bytes).hexdigest(), "bytes": len(admission_bytes)},
++            "candidate_identity": candidate, "new_scalar_generation": False,
++            "scientific_acceptance": False}
++    if not exists:
++        git(repository, "update-ref", full_ref, execution, "0" * 40)
+     patch_path = output / "execution-harness.patch"
+     patch_path.write_bytes(patch)
+     bundle = output / f"cpu48-b64-{execution[:12]}.bundle"
+@@ -144,12 +213,19 @@ def build(repository, output, *, source, base, ref, harness_paths, expected_scie
+         "bundle": {"name": bundle.name, "sha256": hashlib.sha256(bundle.read_bytes()).hexdigest(),
+                    "bytes": bundle.stat().st_size, "prerequisite": base, "local_git_bundle_verify": "passed"},
+         "fixed_contract": {"baseline_ref": BASELINE, "GPU_FULL64_reference_sha256": REFERENCE,
++                           "prepared_input_sha256": PREPARED_INPUT_SHA,
+                            "unique_points": 64, "point_days": 896, "blocks": [[2, 8], [9, 15]],
+                            "half_hours_per_day": 48, "native_output_leaves": 760,
+                            "atol": 1e-8, "rtol": 1e-10},
++        "execution_route": "batch-only",
++        "external_scalar_reference": scalar_reference,
+         "allocation_plan": {"partition": "cnall", "nodes": 1, "tasks": 1, "allocated_CPUs": 48,
+-                            "GPUs": 0, "wall_seconds": 5400, "primary_worst_case_CNY": 3.60,
+-                            "conservative_worst_case_CNY": 5.04, "whole_parent_allocation_billed": True},
++                            "GPUs": 0, "wall_seconds": budget_seconds,
++                            "primary_worst_case_CNY": 48 * budget_seconds / 3600 * 0.05,
++                            "conservative_worst_case_CNY": 48 * budget_seconds / 3600 * 0.07,
++                            "whole_parent_allocation_billed": True,
++                            "new_scalar_generation": False,
++                            "billing_verified": False},
+         "working_tree_preserved": {"HEAD": before, "branch": branch},
+         "remote_deployment_or_submission": False, "model_or_GPU_execution": False,
+     }
+@@ -165,13 +241,19 @@ def main():
+     parser.add_argument("--base-ref", default=BASE)
+     parser.add_argument("--execution-ref", default=EXECUTION_REF)
+     parser.add_argument("--harness-path", action="append", required=True)
++    parser.add_argument("--budget-seconds", type=int, default=DEFAULT_BUDGET_SECONDS)
++    parser.add_argument("--scalar-audit-receipt", type=Path, required=True)
++    parser.add_argument("--expected-scalar-audit-sha256", required=True)
+     parser.add_argument("--output-dir", type=Path, required=True)
+     args = parser.parse_args()
+     repository = ROOT
+     if Path.cwd().resolve() != repository:
+         raise ValueError("run preparation from the declared global-throughput checkout")
+     print(json.dumps(build(repository, args.output_dir, source=args.source_ref, base=args.base_ref,
+-                           ref=args.execution_ref, harness_paths=args.harness_path), indent=2))
++                           ref=args.execution_ref, harness_paths=args.harness_path,
++                           budget_seconds=args.budget_seconds,
++                           scalar_audit_receipt=args.scalar_audit_receipt,
++                           expected_scalar_audit_sha256=args.expected_scalar_audit_sha256), indent=2))
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/scripts/hpc/global_cpu48_b64_coordinator.py b/scripts/hpc/global_cpu48_b64_coordinator.py
+index 3fc82f3..4c883f0 100644
+--- a/scripts/hpc/global_cpu48_b64_coordinator.py
++++ b/scripts/hpc/global_cpu48_b64_coordinator.py
+@@ -15,6 +15,10 @@ import time
+ from pathlib import Path
+ 
+ ROOT = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(ROOT))
++from scripts.dev.global_cpu_child_environment import normalized_environment, policy, wrapped_command  # noqa: E402
++from scripts.dev.global_cpu_child_environment import snapshot as environment_snapshot  # noqa: E402
++
+ DEFAULT_REFERENCE_SHA = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+ DEFAULT_SCIENCE_SHA = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+ 
+@@ -152,23 +156,28 @@ def child_arguments(args, mode: str, output: Path) -> list[str]:
+         "--config", str(args.config), "--warm-repeats", "5", "--validation-mode", "exploratory",
+         "--cpu-reference-role", "cpu-internal",
+         "--memory-guard-gib", "24" if mode == "scalar" else "64",
+-        "--output-dir", str(output)]
++        "--output-dir", str(output), "--require-child-environment"]
+     if mode == "batch":
+-        common += ["--cpu-reference-dir", str(args.output_dir / "scalar")]
++        common += ["--cpu-reference-dir", str(getattr(args, "cpu_reference_dir", None) or args.output_dir / "scalar")]
++        for option in ("cpu_reference_admission_record", "expected_cpu_reference_admission_sha256"):
++            value = getattr(args, option, None)
++            if value is not None:
++                common += ["--" + option.replace("_", "-"), str(value)]
+     return common
+ 
+ 
++def child_command(args, mode: str, output: Path) -> list[str]:
++    budget = 1 if mode == "scalar" else 48
++    boundary = args.entry.with_name("global_cpu_child_environment.py")
++    return wrapped_command(args.python, boundary, budget, child_arguments(args, mode, output))
++
++
+ def step_command(args, mode: str) -> tuple[list[str], dict[str, str]]:
+     cpus = 1 if mode == "scalar" else 48
+-    environment = {"OMP_NUM_THREADS": "1" if cpus == 1 else "48",
+-        "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
+-        "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true"}
+-    if cpus == 48:
+-        environment["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=true"
+-    exports = ",".join(f"{key}={value}" for key, value in environment.items())
++    environment = policy(cpus)
+     command = [str(args.slurm_bin / "srun"), "--ntasks=1", f"--cpus-per-task={cpus}",
+-        "--cpu-bind=cores", f"--export=ALL,{exports}", "/usr/bin/time", "-v"]
+-    command += child_arguments(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
++        "--cpu-bind=cores", "--export=ALL", "/usr/bin/time", "-v"]
++    command += child_command(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
+     return command, environment
+ 
+ 
+@@ -205,7 +214,15 @@ def run_process(command: list[str], log_path: Path, timeout_seconds: float) -> d
+     with log_path.open("x", encoding="utf-8") as log:
+         log.write(json.dumps({"command": command, "start_epoch": started}, ensure_ascii=True) + "\n")
+         log.flush()
+-        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
++        # Also normalize the srun parent; the post-srun boundary remains authoritative.
++        environment = None
++        if "--thread-budget" in command:
++            budget = int(command[command.index("--thread-budget") + 1])
++            log.write(json.dumps(environment_snapshot(budget, status="transport_parent_inherited")) + "\n")
++            log.flush()
++            environment = normalized_environment(budget)
++        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
++                                   start_new_session=True, env=environment)
+         try:
+             returncode = process.wait(timeout=max(1.0, timeout_seconds))
+             timed_out = False
+@@ -243,26 +260,31 @@ def terminate_process_group(process, *, grace_seconds=10) -> int:
+ 
+ 
+ def runner_dry_run(args, mode: str) -> dict:
+-    command = child_arguments(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
+-    child_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "JAX_PLATFORMS": "cpu",
+-             "JAX_ENABLE_X64": "true", "OMP_NUM_THREADS": "1" if mode == "scalar" else "48",
+-             "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1"}
+-    if mode == "batch":
+-        child_env["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=true"
+-    else:
+-        child_env.pop("XLA_FLAGS", None)
++    command = child_command(args, mode, args.output_dir / ("scalar" if mode == "scalar" else "batch"))
++    child_env = normalized_environment(1 if mode == "scalar" else 48)
+     completed = subprocess.run([*command, "--dry-run"], capture_output=True, text=True, check=False, env=child_env)
+     if completed.returncode:
+         raise RuntimeError(f"runner {mode} --dry-run failed: {completed.stderr}")
+     result = json.loads(completed.stdout)
+     if result.get("model_execution") is not False or result.get("JAX_imported") is not False:
+         raise ValueError("runner dry-run must not import JAX or execute the model")
+-    return {"command": command + ["--dry-run"], "runner_result": result}
++    return {"command": command + ["--dry-run"], "runner_result": result,
++            "child_entry_receipts": completed.stderr.splitlines()}
+ 
+ 
+ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot) -> dict:
+-    if args.budget_seconds != 5400 or args.reference_cap_seconds != 2700 or args.minimum_candidate_seconds != 1800:
++    route = getattr(args, "execution_route", "scalar-then-batch")
++    batch_only = route == "batch-only"
++    if args.minimum_candidate_seconds != 1800:
++        raise ValueError("minimum candidate window must remain 1800 seconds")
++    if batch_only and not (1800 <= args.budget_seconds <= 5400):
++        raise ValueError("batch-only budget must stay within 1800..5400 seconds")
++    if not batch_only and (args.budget_seconds != 5400 or args.reference_cap_seconds != 2700 or args.minimum_candidate_seconds != 1800):
+         raise ValueError("immutable 5400/2700/1800 second run window required")
++    if batch_only and (getattr(args, "cpu_reference_dir", None) is None or
++            getattr(args, "cpu_reference_admission_record", None) is None or
++            not re.fullmatch(r"[0-9a-f]{64}", getattr(args, "expected_cpu_reference_admission_sha256", "") or "")):
++        raise ValueError("batch-only requires an external scalar directory and exact admission record/hash")
+     if args.expected_gpu_reference_sha256 != DEFAULT_REFERENCE_SHA:
+         raise ValueError("declared numerical GPU reference SHA differs from accepted FULL64 snapshot")
+     if args.expected_science_sha256 != DEFAULT_SCIENCE_SHA:
+@@ -281,37 +303,54 @@ def coordinate(args, *, run_step=None, clock=time.time, snapshot=host_snapshot)
+             cwd=code_dir, text=True).strip()
+         if head != args.expected_code_commit or dirty:
+             raise ValueError("execution tree must be clean and at EXPECTED_CODE_COMMIT before starting")
++    modes = ("batch",) if batch_only else ("scalar", "batch")
++    contract = "CPU48_SINGLE_PROCESS_FULL64_B64_v4" if batch_only else "CPU48_SINGLE_PROCESS_FULL64_B64_v3"
++    namespace = "cpu48-b64-execution-v4-20261014" if batch_only else "cpu48-b64-execution-v3-20261012"
+     commands = {mode: {"argv": step_command(args, mode)[0], "environment": step_command(args, mode)[1]}
+-        for mode in ("scalar", "batch")}
++        for mode in modes}
+     if args.dry_run:
+-        checks = {mode: runner_dry_run(args, mode) for mode in ("scalar", "batch")}
+-        return {"status": "dry_run", "contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3",
++        checks = {mode: runner_dry_run(args, mode) for mode in modes}
++        return {"status": "dry_run", "contract": contract, "execution_route": route,
+             "expected_execution_commit": args.expected_code_commit, "expected_science_sha256": DEFAULT_SCIENCE_SHA,
+             "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
+             "allocation": {"partition": args.partition, "parent_cpu_count": 48,
+-                "wall_seconds": 5400, "primary_worst_case_cny": 3.60, "conservative_worst_case_cny": 5.04},
++                "wall_seconds": args.budget_seconds, "primary_worst_case_cny": 48 * args.budget_seconds / 3600 * 0.05,
++                "conservative_worst_case_cny": 48 * args.budget_seconds / 3600 * 0.07},
+             "minimum_candidate_seconds": 1800, "commands": commands,
+             "runner_cli_dry_runs": checks, "model_execution": False, "JAX_imported": "jax" in sys.modules}
+     allocation = validate_allocation()
++    external_reference = None
++    candidate_provenance = None
++    if batch_only:
++        from scripts.dev.global_cpu_candidate_identity import candidate_identity
++        from scripts.dev.global_server_reference import validate_cpu_reference_admission
++        candidate_provenance = candidate_identity(args, args.code_dir)
++        external_reference = validate_cpu_reference_admission(
++            args.cpu_reference_admission_record, args.expected_cpu_reference_admission_sha256,
++            args.cpu_reference_dir, expected_source=candidate_provenance)
+     output = Path(args.output_dir).resolve()
+-    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"):
+-        raise ValueError("RUN_ROOT must remain in CPU48/B64 v3 outputs")
++    if not output.is_relative_to(args.project_root.resolve() / "runtime/outputs/research/global_throughput" / namespace):
++        raise ValueError(f"RUN_ROOT must remain in {namespace} outputs")
+     if output.exists() and any(output.iterdir()):
+         raise ValueError("single-use output directory must be new and empty")
+     output.mkdir(parents=True, exist_ok=True)
+     start = clock()
+-    report = {"contract": "CPU48_SINGLE_PROCESS_FULL64_B64_v3", "status": "running",
+-        "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": 5400,
+-        "reference_cap_seconds": 2700, "minimum_candidate_seconds": 1800,
++    report = {"contract": contract, "execution_route": route, "status": "running",
++        "coordinator_pid": os.getpid(), "start_epoch": start, "budget_seconds": args.budget_seconds,
++        "reference_cap_seconds": args.reference_cap_seconds if not batch_only else None,
++        "minimum_candidate_seconds": args.minimum_candidate_seconds,
+         "allocation": allocation, "host_start_snapshot": snapshot(), "expected_execution_commit": args.expected_code_commit,
+         "expected_science_sha256": DEFAULT_SCIENCE_SHA, "expected_gpu_reference_sha256": DEFAULT_REFERENCE_SHA,
+         "commands": commands, "steps": {}, "scientific_acceptance": False,
++        "external_scalar_reference_admission": external_reference,
++        "candidate_provenance": candidate_provenance,
+         "performance_claim_scope": "exploratory same-workload throughput only"}
+     orchestration_path = output / "orchestration.json"
+     atomic_json(orchestration_path, report)
+     dispatch = run_process if run_step is None else run_step
+     try:
+-        for mode, cap in (("scalar", args.reference_cap_seconds), ("batch", None)):
++        for mode in modes:
++            cap = args.reference_cap_seconds if mode == "scalar" else None
+             remaining = args.budget_seconds - (clock() - start)
+             timeout = min(cap, remaining) if cap is not None else remaining
+             if mode == "batch" and remaining < args.minimum_candidate_seconds:
+@@ -380,6 +419,10 @@ def parser():
+     result.add_argument("--budget-seconds", type=int, default=5400)
+     result.add_argument("--reference-cap-seconds", type=int, default=2700)
+     result.add_argument("--minimum-candidate-seconds", type=int, default=1800)
++    result.add_argument("--execution-route", choices=("scalar-then-batch", "batch-only"), default="scalar-then-batch")
++    result.add_argument("--cpu-reference-dir", type=Path)
++    result.add_argument("--cpu-reference-admission-record", type=Path)
++    result.add_argument("--expected-cpu-reference-admission-sha256")
+     result.add_argument("--validate-allocation", action="store_true")
+     result.add_argument("--dry-run", action="store_true")
+     return result
+diff --git a/scripts/hpc/slurm_global_server_cpu_48core.sh b/scripts/hpc/slurm_global_server_cpu_48core.sh
+index 90a7ac4..d6ce82d 100644
+--- a/scripts/hpc/slurm_global_server_cpu_48core.sh
++++ b/scripts/hpc/slurm_global_server_cpu_48core.sh
+@@ -1,21 +1,21 @@
+ #!/usr/bin/env bash
+ # One native FULL64 B64 workload in one 48-CPU parent allocation.
+ # Preparation script only; paid submission requires separate explicit approval.
+-#SBATCH -J orchjax-cpu48-b64-v3
++#SBATCH -J orchjax-cpu48-b64-v4
+ #SBATCH -p cnall
+ #SBATCH --nodes=1
+ #SBATCH --ntasks=1
+ #SBATCH --cpus-per-task=48
+-#SBATCH --time=01:30:00
+-#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_%j.txt
+-#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v3_%j.txt
++#SBATCH --time=01:00:00
++#SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v4_%j.txt
++#SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v4_%j.txt
+ #SBATCH --no-requeue
+ 
+ set -euo pipefail
+ 
+ PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+ SLURM_BIN=${SLURM_BIN:-/rmprog/slurm/v22.05.7/bin}
+-CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v3}
++CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu48-b64-v4}
+ CODE_DIR=$(realpath -m "$CODE_DIR")
+ case "$CODE_DIR" in
+   "$PROJECT"/runtime/worktrees/*) ;;
+@@ -27,13 +27,16 @@ COORDINATOR=${COORDINATOR:-$CODE_DIR/scripts/hpc/global_cpu48_b64_coordinator.py
+ PREPARED_INPUT=${PREPARED_INPUT:-$PROJECT/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl}
+ GPU_REFERENCE_DIR=${GPU_REFERENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/gpu-round4/model}
+ CONFIG=${CONFIG:-$CODE_DIR/configs/orchidee_man_250919.yaml}
+-RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/${SLURM_JOB_ID:-dry-run}}
++CPU_REFERENCE_DIR=${CPU_REFERENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar}
++CPU_REFERENCE_ADMISSION_RECORD=${CPU_REFERENCE_ADMISSION_RECORD:?set the independently verified scalar admission record}
++EXPECTED_CPU_REFERENCE_ADMISSION_SHA256=${EXPECTED_CPU_REFERENCE_ADMISSION_SHA256:?set the exact scalar admission record SHA256}
++RUN_ROOT=${RUN_ROOT:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/${SLURM_JOB_ID:-dry-run}}
+ RUN_ROOT=$(realpath -m "$RUN_ROOT")
+ EXPECTED_CODE_COMMIT=${EXPECTED_CODE_COMMIT:?set EXPECTED_CODE_COMMIT to the reviewed execution-only commit}
+ 
+ case "$RUN_ROOT" in
+-  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/*) ;;
+-  *) echo "RUN_ROOT must stay under project CPU48/B64 v3 outputs" >&2; exit 2 ;;
++  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/*) ;;
++  *) echo "RUN_ROOT must stay under project CPU48/B64 v4 outputs" >&2; exit 2 ;;
+ esac
+ [[ ${SLURM_CPUS_PER_TASK:-48} == 48 ]] || { echo "requires one 48-CPU parent allocation" >&2; exit 2; }
+ 
+@@ -47,7 +50,7 @@ fi
+ if [[ $DRY_RUN -eq 0 ]]; then
+   [[ -n ${SLURM_JOB_ID:-} && ${SLURM_NTASKS:-1} == 1 ]] || { echo "requires one active Slurm task" >&2; exit 2; }
+   [[ ${SLURM_JOB_PARTITION:-} == cnall ]] || { echo "requires cnall" >&2; exit 2; }
+-  for path in "$PYTHON" "$ENTRY" "$COORDINATOR" "$PREPARED_INPUT" "$GPU_REFERENCE_DIR" "$CONFIG"; do
++  for path in "$PYTHON" "$ENTRY" "$COORDINATOR" "$PREPARED_INPUT" "$GPU_REFERENCE_DIR" "$CONFIG" "$CPU_REFERENCE_DIR" "$CPU_REFERENCE_ADMISSION_RECORD" "$CODE_DIR/scripts/dev/global_cpu_child_environment.py"; do
+     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
+   done
+   [[ "$PYTHON" == "$PROJECT/.venvs/orcjax_cpu/bin/python" \
+@@ -80,21 +83,24 @@ args=(--output-dir "$RUN_ROOT" --project-root "$PROJECT" --code-dir "$CODE_DIR"
+   --python "$PYTHON" --entry "$ENTRY" --expected-code-commit "$EXPECTED_CODE_COMMIT"
+   --expected-gpu-reference-sha256 a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6
+   --prepared-input "$PREPARED_INPUT" --gpu-reference-dir "$GPU_REFERENCE_DIR" --config "$CONFIG"
+-  --partition cnall --slurm-bin "$SLURM_BIN" --budget-seconds 5400 --reference-cap-seconds 2700
++  --execution-route batch-only --cpu-reference-dir "$CPU_REFERENCE_DIR"
++  --cpu-reference-admission-record "$CPU_REFERENCE_ADMISSION_RECORD"
++  --expected-cpu-reference-admission-sha256 "$EXPECTED_CPU_REFERENCE_ADMISSION_SHA256"
++  --partition cnall --slurm-bin "$SLURM_BIN" --budget-seconds 3600 --reference-cap-seconds 2700
+   --minimum-candidate-seconds 1800)
+ if [[ $DRY_RUN -eq 1 ]]; then
+   args+=(--dry-run)
+-  printf 'allocation_contract: partition=cnall nodes=1 tasks=1 parent_cpus=48 wall=01:30:00 memory_reservation=none primary_max_cny=3.60 conservative_max_cny=5.04 planned_chdir=%q\n' "$CODE_DIR"
++  printf 'allocation_contract: partition=cnall nodes=1 tasks=1 parent_cpus=48 wall=01:00:00 memory_reservation=none primary_max_cny=2.40 conservative_max_cny=3.36 planned_chdir=%q\n' "$CODE_DIR"
+   printf 'coordinator='; printf '%q ' "$PYTHON" "$COORDINATOR" "${args[@]}"; printf '\n'
+   exit 0
+ fi
+ 
+ mkdir -p "$PROJECT/runtime/logs"
+-EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012}
++EVIDENCE_DIR=${EVIDENCE_DIR:-$PROJECT/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014}
+ EVIDENCE_DIR=$(realpath -m "$EVIDENCE_DIR")
+ case "$EVIDENCE_DIR" in
+-  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012) ;;
+-  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v3 output namespace" >&2; exit 2 ;;
++  "$PROJECT"/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014) ;;
++  *) echo "EVIDENCE_DIR must stay in the CPU48/B64 v4 output namespace" >&2; exit 2 ;;
+ esac
+ mkdir -p "$EVIDENCE_DIR"
+ export ORCHJAX_SLURM_JOB_RECORD_STDOUT=$EVIDENCE_DIR/scontrol-job-${SLURM_JOB_ID}.stdout
+diff --git a/tests/unit/test_collect_global_cpu48_b64_cli.py b/tests/unit/test_collect_global_cpu48_b64_cli.py
+index ca330da..d417534 100644
+--- a/tests/unit/test_collect_global_cpu48_b64_cli.py
++++ b/tests/unit/test_collect_global_cpu48_b64_cli.py
+@@ -9,8 +9,11 @@ import sys
+ from pathlib import Path
+ 
+ import numpy as np
++import pytest
+ 
+ from scripts.dev import benchmark_global_batch as batch_base
++from scripts.dev import benchmark_global_server_cpu as server_runner
++from scripts.dev import collect_global_cpu48_b64 as collector
+ from scripts.dev import summarize_global_server_cost as cost
+ from scripts.dev.global_batch_stage_store import StageStore
+ 
+@@ -248,6 +251,96 @@ def test_collector_cli_round_trip_and_saved_array_cpu_internal_gate(tmp_path):
+     assert "candidate saved arrays disagree with the complete CPU scalar reference" in rejected.stderr
+ 
+ 
++def candidate_sidecar_fixture(tmp_path):
++    _, batch_dir = build_run(tmp_path)
++    manifest = json.loads((batch_dir / "stage_manifest.json").read_text())
++    identity = manifest["identity"]
++    record = manifest["stages"][BATCH_STAGE]
++    checkpoint = batch_dir / record["path"]
++    outputs_tree = pickle.loads(checkpoint.read_bytes())["value"]["outputs"]
++    order = list(reversed(range(64)))
++    replacement_index = list(range(63)) + [0]
++    permuted = batch_base.jax.tree_util.tree_map(lambda leaf: np.asarray(leaf)[order], outputs_tree)
++    replaced = batch_base.jax.tree_util.tree_map(
++        lambda leaf: np.asarray(leaf)[replacement_index], outputs_tree)
++    class SyntheticRecorder:
++        result = {"gates": []}
++
++        def gate(self, name, actual, expected):
++            self.result["gates"].append(compare_gate(name, actual, expected))
++
++    recorder = SyntheticRecorder()
++    server_runner.record_candidate_batch_isolation(recorder, 64, outputs_tree, permuted,
++        replaced, jax=batch_base.jax, np=np)
++    server_runner.record_candidate_batch_reset(recorder, 64, outputs_tree, outputs_tree)
++    seal = server_runner.seal_candidate_batch_arrays(batch_dir, identity, 64, permuted,
++        replaced, outputs_tree, jax=batch_base.jax, np=np)
++    batch = {"checkpoint": checkpoint, "identity": identity,
++        "record": {"provenance": {"validation_arrays": seal}, "gates": recorder.result["gates"]}}
++    return batch, outputs_tree, seal
++
++
++def test_runner_sealed_candidate_sidecar_recomputes_in_collector(tmp_path):
++    batch, outputs_tree, _ = candidate_sidecar_fixture(tmp_path)
++
++    result = collector.check_candidate_saved_arrays(batch, outputs_tree)
++
++    assert result["all_passed"] is True
++    assert [item["name"] for item in result["checks"]] == [
++        "B64_server_batch_cross_group_permutation",
++        "B64_server_batch_replacement_isolation",
++        "B64_batch_frozen_reset_repeat",
++    ]
++
++
++def test_collector_rejects_candidate_sidecar_array_index_and_hash_tampering(tmp_path):
++    import copy
++
++    batch, outputs_tree, seal = candidate_sidecar_fixture(tmp_path)
++    sidecar_path = Path(seal["path"])
++    evidence = pickle.loads(sidecar_path.read_bytes())
++
++    changed = copy.deepcopy(evidence)
++    first_leaf = np.asarray(changed["permutation"][0][0][0]).copy()
++    first_leaf[0] += 1
++    changed["permutation"] = ((first_leaf, *changed["permutation"][0][0][1:]),
++        changed["permutation"][0][1]), changed["permutation"][1]
++    raw = pickle.dumps(changed, protocol=pickle.HIGHEST_PROTOCOL)
++    sidecar_path.write_bytes(raw)
++    batch["record"]["provenance"]["validation_arrays"].update(
++        sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
++    try:
++        collector.check_candidate_saved_arrays(batch, outputs_tree)
++    except ValueError as exc:
++        assert "disagree with recomputed output" in str(exc)
++    else:
++        raise AssertionError("collector accepted changed candidate arrays with a recomputed seal")
++
++    batch, outputs_tree, seal = candidate_sidecar_fixture(tmp_path / "index")
++    sidecar_path = Path(seal["path"])
++    changed = pickle.loads(sidecar_path.read_bytes())
++    changed["permutation_index"][0] = 0
++    raw = pickle.dumps(changed, protocol=pickle.HIGHEST_PROTOCOL)
++    sidecar_path.write_bytes(raw)
++    batch["record"]["provenance"]["validation_arrays"].update(
++        sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
++    try:
++        collector.check_candidate_saved_arrays(batch, outputs_tree)
++    except ValueError as exc:
++        assert "permutation/replacement index contract mismatch" in str(exc)
++    else:
++        raise AssertionError("collector accepted a changed candidate permutation index")
++
++    batch, outputs_tree, seal = candidate_sidecar_fixture(tmp_path / "hash")
++    batch["record"]["provenance"]["validation_arrays"]["sha256"] = "0" * 64
++    try:
++        collector.check_candidate_saved_arrays(batch, outputs_tree)
++    except ValueError as exc:
++        assert "checksum/size mismatch" in str(exc)
++    else:
++        raise AssertionError("collector accepted a tampered candidate sidecar hash")
++
++
+ def test_collector_cli_rejects_checkpoint_manifest_identity_tamper(tmp_path):
+     run_root, batch_dir = build_run(tmp_path)
+     path = batch_dir / "stage_manifest.json"
+@@ -316,3 +409,61 @@ def test_collector_cli_binds_terminal_parent_accounting_to_raw_sacct_row(tmp_pat
+         if message == "Elapsed field":
+             message = "wall_seconds must equal the parent Elapsed field"
+         assert message in rejected.stderr
++
++
++def test_incomplete_batch_only_return_includes_raw_reused_source_parent_cost(tmp_path, monkeypatch):
++    run_root = tmp_path / "incomplete-v4"
++    run_root.mkdir()
++    admission_path = tmp_path / "admission.json"
++    admission_path.write_text("{}")
++    raw = "15820467|FAILED|00:36:37|billing=48,cpu=48,node=1\n"
++    source_parent = {"path": "/old/parent-accounting.json", "sha256": "a" * 64,
++        "job_id": "15820467", "terminal_status": "FAILED", "Elapsed": "00:36:37",
++        "wall_seconds": 1, "AllocTRES": "billing=48,cpu=48,node=1", "raw_record": raw,
++        "raw_record_sha256": hashlib.sha256(raw.encode()).hexdigest(),
++        "allocated_parent_CPU_request_core_hours": 1,
++        "primary_cost_cny_estimate": 1, "conservative_cost_cny_estimate": 1}
++    admission = {"sha256": "b" * 64, "scalar_source": {
++        "whole_parent_accounting": source_parent}}
++    monkeypatch.setattr("scripts.dev.global_server_reference.validate_cpu_reference_admission",
++        lambda *args, **kwargs: admission)
++    orchestration = {"execution_route": "batch-only", "status": "candidate_skipped_insufficient_window",
++        "allocation": {"job_id": "15820468", "parent_cpu_count": 48},
++        "external_scalar_reference_admission": {"path": str(admission_path), "sha256": "b" * 64},
++        "candidate_provenance": {"job_id": "15820468"},
++        "commands": {"batch": {"argv": ["runner", "--cpu-reference-dir", "/sealed/scalar"]}},
++        "wall_seconds": 10, "coordinator_scope_primary_cost_cny_estimate": 0.01,
++        "coordinator_scope_conservative_cost_cny_estimate": 0.02,
++        "coordinator_scope_cost_limitation": "incomplete synthetic test", "steps": {}}
++    (run_root / "orchestration.json").write_text(json.dumps(orchestration))
++
++    result = collector.collect(run_root, tmp_path / "result.json")
++
++    source_cost = result["reused_scalar_source_parent_cost"]
++    assert result["status"] == "incomplete_run_failure_preserved"
++    assert source_cost["job_id"] == "15820467" and source_cost["candidate_job_id"] == "15820468"
++    assert source_cost["wall_seconds"] == 2197
++    assert source_cost["allocated_CPU_request_core_hours"] == 48 * 2197 / 3600
++    assert source_cost["primary_cost_cny_estimate"] == 48 * 2197 / 3600 * 0.05
++    assert source_cost["conservative_cost_cny_estimate"] == 48 * 2197 / 3600 * 0.07
++    assert source_cost["counted_once_as_source_parent"] is True
++    assert result["whole_parent_allocation_cost"]["status"] == "pending_external_terminal_accounting"
++
++    orchestration["allocation"]["job_id"] = "15820467"
++    (run_root / "orchestration.json").write_text(json.dumps(orchestration))
++    with pytest.raises(ValueError, match="distinct from the old scalar source job"):
++        collector.collect(run_root, tmp_path / "same-job.json")
++
++
++def test_batch_only_parent_accounting_covers_only_new_batch_directory(tmp_path):
++    run_root = tmp_path / "run"
++    accounting = {"raw_record": "job|COMPLETED|00:36:37|cpu=48\n",
++        "raw_record_sha256": hashlib.sha256(b"job|COMPLETED|00:36:37|cpu=48\n").hexdigest(),
++        "job_id": "job", "terminal_status": "COMPLETED", "Elapsed": "00:36:37",
++        "AllocTRES": "cpu=48", "wall_seconds": 2197, "directories": [str(run_root / "batch")],
++        "source": "sacct", "scope": "whole_slurm_parent_job", "allocated_CPU_count": 48, "GPU_count": 0}
++
++    assert collector.validate_raw_accounting(accounting, "job", run_root, batch_only=True) == 2197
++    accounting["directories"] = [str(run_root / "scalar"), str(run_root / "batch")]
++    with pytest.raises(ValueError, match="exact batch-only RUN_ROOT"):
++        collector.validate_raw_accounting(accounting, "job", run_root, batch_only=True)
+diff --git a/tests/unit/test_global_cpu48_b64_preparation.py b/tests/unit/test_global_cpu48_b64_preparation.py
+index 72fc56c..46cc0f0 100644
+--- a/tests/unit/test_global_cpu48_b64_preparation.py
++++ b/tests/unit/test_global_cpu48_b64_preparation.py
+@@ -16,8 +16,8 @@ RUNNER = ROOT / "scripts/dev/benchmark_global_server_cpu.py"
+ EXPECTED_REF = "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+ EXPECTED_SCIENCE = "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+ EXPECTED_CODE_COMMIT = "1" * 40
+-EXPECTED_CODE_DIR = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3"
+-EXPECTED_RUN_ROOT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012"
++EXPECTED_CODE_DIR = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4"
++EXPECTED_RUN_ROOT = "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014"
+ 
+ 
+ def write_scontrol_evidence(tmp_path, record=None, *, stderr="", exitcode="0"):
+@@ -127,7 +127,7 @@ def test_step_commands_bind_one_thread_reference_and_native_single_device_batch(
+     assert batch_env == {"OMP_NUM_THREADS": "48", "MKL_NUM_THREADS": "1",
+         "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
+         "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true",
+-        "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true"}
++        "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true", "PYTHONDONTWRITEBYTECODE": "1"}
+     assert "--cpu-budget 48" in " ".join(batch)
+     assert "--sizes 64" in " ".join(batch)
+ 
+@@ -144,6 +144,8 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
+         "SLURM_BIN": "/synthetic/slurm/bin",
+         "PREPARED_INPUT": "/synthetic/prepared.pkl", "GPU_REFERENCE_DIR": "/synthetic/gpu-reference",
+         "CONFIG": "/synthetic/config.yaml",
++        "CPU_REFERENCE_ADMISSION_RECORD": "/synthetic/scalar-admission.json",
++        "EXPECTED_CPU_REFERENCE_ADMISSION_SHA256": "a" * 64,
+         "RUN_ROOT": EXPECTED_RUN_ROOT + "/dry"})
+     shell = subprocess.run([bash, str(LAUNCHER).replace("\\", "/"), "--dry-run"],
+         env=env, text=True, capture_output=True, check=False)
+@@ -155,18 +157,15 @@ def test_bash_to_coordinator_to_actual_runner_dry_run_path():
+         text=True, capture_output=True, check=False)
+     assert result.returncode == 0, result.stderr
+     dry = json.loads(result.stdout)
+-    assert dry["contract"] == "CPU48_SINGLE_PROCESS_FULL64_B64_v3"
++    assert dry["contract"] == "CPU48_SINGLE_PROCESS_FULL64_B64_v4"
++    assert dry["allocation"]["wall_seconds"] == 3600
+     assert dry["expected_execution_commit"] == EXPECTED_CODE_COMMIT
+-    scalar_argv = dry["commands"]["scalar"]["argv"]
+     batch_argv = dry["commands"]["batch"]["argv"]
+-    assert scalar_argv[scalar_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/scalar"
+     assert batch_argv[batch_argv.index("--output-dir") + 1].replace("\\", "/") == EXPECTED_RUN_ROOT + "/dry/batch"
+     assert dry["model_execution"] is False and dry["JAX_imported"] is False
+     assert dry["expected_gpu_reference_sha256"] == EXPECTED_REF
+-    assert set(dry["runner_cli_dry_runs"]) == {"scalar", "batch"}
+-    scalar = dry["runner_cli_dry_runs"]["scalar"]["runner_result"]
++    assert set(dry["runner_cli_dry_runs"]) == {"batch"}
+     batch = dry["runner_cli_dry_runs"]["batch"]["runner_result"]
+-    assert (scalar["mode"], scalar["CPU_budget"], scalar["sizes"]) == ("scalar", 1, [64])
+     assert (batch["mode"], batch["CPU_budget"], batch["sizes"]) == ("batch", 48, [64])
+     assert dry["runner_cli_dry_runs"]["batch"]["command"].count("--cpu-reference-dir") == 1
+ 
+@@ -209,3 +208,31 @@ def test_candidate_is_skipped_when_less_than_1800_seconds_remain(tmp_path, monke
+         clock=lambda: next(ticks), snapshot=lambda: {"hostname": "synthetic"})
+     assert value["status"] == "candidate_skipped_insufficient_window"
+     assert len(calls) == 1 and value["steps"]["scalar"]["status"] == "completed"
++
++
++@pytest.mark.parametrize("budget", [1800, 3600, 5400])
++def test_batch_only_accepts_bounded_budget_without_scalar_regeneration(tmp_path, budget):
++    from scripts.hpc import global_cpu48_b64_coordinator as coordinator
++
++    run_args = args(tmp_path, dry_run=True)
++    run_args.execution_route = "batch-only"
++    run_args.budget_seconds = budget
++    run_args.cpu_reference_dir = tmp_path / "external-scalar"
++    run_args.cpu_reference_admission_record = tmp_path / "admission.json"
++    run_args.expected_cpu_reference_admission_sha256 = "a" * 64
++    result = coordinator.coordinate(run_args)
++    assert set(result["commands"]) == {"batch"}
++    assert result["allocation"]["wall_seconds"] == budget
++    assert result["minimum_candidate_seconds"] == 1800
++
++
++@pytest.mark.parametrize(("budget", "minimum"), [(1799, 1800), (5401, 1800), (3600, 1)])
++def test_batch_only_rejects_budget_or_changed_minimum_before_launch(tmp_path, budget, minimum):
++    from scripts.hpc import global_cpu48_b64_coordinator as coordinator
++
++    run_args = args(tmp_path, dry_run=True)
++    run_args.execution_route = "batch-only"
++    run_args.budget_seconds = budget
++    run_args.minimum_candidate_seconds = minimum
++    with pytest.raises(ValueError, match="budget|minimum"):
++        coordinator.coordinate(run_args)
+diff --git a/tests/unit/test_global_cpu_child_environment.py b/tests/unit/test_global_cpu_child_environment.py
+new file mode 100644
+index 0000000..85a0a3a
+--- /dev/null
++++ b/tests/unit/test_global_cpu_child_environment.py
+@@ -0,0 +1,176 @@
++"""Real child exec regressions, without JAX, model data or a Slurm allocation."""
++from __future__ import annotations
++
++import json
++import os
++import subprocess
++import sys
++from pathlib import Path
++
++from scripts.dev import global_cpu_child_environment as boundary
++from scripts.hpc import global_cpu48_b64_coordinator as coordinator
++
++ROOT = Path(__file__).resolve().parents[2]
++ENTRY = ROOT / "scripts/dev/benchmark_global_server_cpu.py"
++BOUNDARY = ENTRY.with_name("global_cpu_child_environment.py")
++CONFLICTS = {"OMP_NUM_THREADS": "1", "OMP_THREAD_LIMIT": "1", "MKL_NUM_THREADS": "64",
++             "OPENBLAS_NUM_THREADS": "64", "NUMEXPR_NUM_THREADS": "64",
++             "XLA_FLAGS": "--xla_force_host_platform_device_count=48 --xla_cpu_multi_thread_eigen=false",
++             "JAX_PLATFORMS": "cuda", "JAX_ENABLE_X64": "false", "JAX_DISABLE_JIT": "true",
++             "JAX_NUM_CPU_DEVICES": "48", "TF_NUM_INTRAOP_THREADS": "1"}
++
++
++def dirty_environment():
++    return {**os.environ, **CONFLICTS, "PYTHONDONTWRITEBYTECODE": "1"}
++
++
++def dry_runner(tmp_path):
++    return [sys.executable, str(ENTRY), "--mode", "batch", "--cpu-budget", "48",
++            "--sizes", "64", "--output-dir", str(tmp_path), "--dry-run",
++            "--prepared-input", str(tmp_path / "prepared.pkl"),
++            "--gpu-reference-dir", str(tmp_path / "gpu"),
++            "--cpu-reference-dir", str(tmp_path / "scalar"), "--require-child-environment"]
++
++
++def test_post_transport_exec_restores_actual_environment(tmp_path):
++    command = boundary.wrapped_command(sys.executable, BOUNDARY, 48, dry_runner(tmp_path))
++    result = subprocess.run(command, env=dirty_environment(), capture_output=True, text=True)
++    assert result.returncode == 0, result.stderr
++    actual = json.loads(result.stdout)["actual_child_prejax_receipt"]
++    assert actual["actual_environment"] == {key: boundary.policy(48).get(key) for key in boundary.WHITELIST}
++    assert actual["unexpected_policy_keys"] == []
++    assert actual["inherited_transport_policy"]["environment"]["OMP_NUM_THREADS"] == "1"
++    assert "JAX_DISABLE_JIT" in actual["inherited_transport_policy"]["unexpected_policy_keys"]
++    assert actual["JAX_imported"] is actual["model_execution"] is False
++    assert json.loads(result.stderr.splitlines()[0])["status"] == "exec_boundary_ready"
++
++
++def transport(tmp_path):
++    """Executing transport injects stale ALL values after Popen, then execs child."""
++    shim = tmp_path / "executing_transport.py"
++    shim.write_text("import os,sys,subprocess\n"
++                   f"os.environ.update({CONFLICTS!r})\n"
++                   "args=sys.argv[1:]\n"
++                   "start=args.index('/usr/bin/time')+2\n"
++                   "command=args[start:]+['--dry-run']\n"
++                   "raise SystemExit(subprocess.call(command,env=dict(os.environ)))\n", encoding="utf-8")
++    return shim
++
++
++def test_production_run_process_executes_child_after_conflicting_transport(tmp_path, monkeypatch):
++    from test_global_cpu48_b64_preparation import args
++
++    for key, value in CONFLICTS.items():
++        monkeypatch.setenv(key, value)
++    command, _ = coordinator.step_command(args(tmp_path), "batch")
++    command[:1] = [sys.executable, str(transport(tmp_path))]
++    result = coordinator.run_process(command, tmp_path / "actual.log", 20)
++    assert result["returncode"] == 0
++    text = (tmp_path / "actual.log").read_text()
++    assert '"OMP_NUM_THREADS": "48"' in text
++    assert '"unexpected_policy_keys": []' in text
++    assert '"JAX_imported": false' in text
++    assert '"resource_admission_passed"' not in text  # CLI only, no physical admission.
++
++
++def test_coordinate_uses_real_dispatch_and_child_boundary(tmp_path, monkeypatch):
++    from test_global_cpu48_b64_preparation import args
++
++    run_args = args(tmp_path, dry_run=True)
++    # Source identity and allocation are bounded unit mocks, not a target allocation.
++    run_args.dry_run = False
++    project = tmp_path / "project"
++    code = project / "runtime/worktrees/unit"
++    code.mkdir(parents=True)
++    run_args.project_root, run_args.code_dir = project, code
++    run_args.output_dir = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/unit"
++    monkeypatch.chdir(code)
++    monkeypatch.setattr(coordinator.subprocess, "check_output", lambda command, **kwargs:
++                        run_args.expected_code_commit if command[-1] == "HEAD" else "")
++    monkeypatch.setattr(coordinator, "validate_allocation", lambda: {"unit_mock": True})
++    original = coordinator.step_command
++    shim = transport(tmp_path)
++    def execute_args(args, mode):
++        command, environment = original(args, mode)
++        command[:1] = [sys.executable, str(shim)]
++        return command, environment
++    monkeypatch.setattr(coordinator, "step_command", execute_args)
++    result = coordinator.coordinate(run_args, snapshot=lambda: {"scope": "unit_mock"})
++    assert result["status"] == "completed_exploratory_measurement"
++    for mode, budget in (("scalar", 1), ("batch", 48)):
++        log = (run_args.output_dir / f"{mode}.log").read_text()
++        assert f'"OMP_NUM_THREADS": "{budget}"' in log
++        assert '"unexpected_policy_keys": []' in log
++        assert result["steps"][mode]["returncode"] == 0
++    assert result["scientific_acceptance"] is False
++
++
++def test_wrong_actual_env_logs_failure_before_jax_or_slurm(tmp_path):
++    command = [token for token in dry_runner(tmp_path) if token != "--dry-run"]
++    result = subprocess.run(command, env=dirty_environment(), capture_output=True, text=True)
++    assert result.returncode != 0
++    receipt = json.loads(result.stderr.splitlines()[0])
++    assert receipt["status"] == "resource_admission_failed"
++    assert receipt["JAX_imported"] is False
++    assert "environment mismatch" in receipt["error"]
++    assert receipt["actual_environment"]["OMP_NUM_THREADS"] == "1"
++
++
++def test_correct_env_without_paid_allocation_still_fails_closed(tmp_path):
++    command = [token for token in dry_runner(tmp_path) if token != "--dry-run"]
++    env = boundary.normalized_environment(48, dirty_environment())
++    for key in list(env):
++        if key.startswith("SLURM_") or key.startswith("ORCHJAX_SLURM_"):
++            env.pop(key)
++    result = subprocess.run(command, env=env, capture_output=True, text=True)
++    assert result.returncode != 0
++    receipt = json.loads(result.stderr.splitlines()[0])
++    assert receipt["JAX_imported"] is False
++    assert "actual declared paid Slurm" in receipt["error"]
++    assert receipt["actual_environment"]["OMP_NUM_THREADS"] == "48"
++
++
++def test_batch_only_real_dispatch_never_regenerates_scalar_and_bad_seal_stops(tmp_path, monkeypatch):
++    from test_global_cpu48_b64_preparation import args
++
++    from scripts.dev import global_cpu_candidate_identity as identity_module
++    from scripts.dev import global_server_reference as references
++
++    run_args = args(tmp_path)
++    project = tmp_path / "project"
++    code = project / "runtime/worktrees/unit"
++    code.mkdir(parents=True)
++    run_args.project_root, run_args.code_dir = project, code
++    run_args.output_dir = project / "runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/unit"
++    run_args.execution_route = "batch-only"
++    run_args.budget_seconds = 3600
++    run_args.cpu_reference_dir = tmp_path / "old-scalar"
++    run_args.cpu_reference_admission_record = tmp_path / "admission.json"
++    run_args.expected_cpu_reference_admission_sha256 = "a" * 64
++    monkeypatch.chdir(code)
++    monkeypatch.setattr(coordinator.subprocess, "check_output", lambda command, **kwargs:
++                        run_args.expected_code_commit if command[-1] == "HEAD" else "")
++    monkeypatch.setattr(coordinator, "validate_allocation", lambda: {"unit_mock": True})
++    monkeypatch.setattr(identity_module, "candidate_identity", lambda *args: {"unit_mock": True})
++    monkeypatch.setattr(references, "validate_cpu_reference_admission", lambda *args, **kwargs:
++                        {"scope": "unit_mock_external_seal"}, raising=False)
++    original = coordinator.step_command
++    shim = transport(tmp_path)
++    def execute_args(args, mode):
++        command, environment = original(args, mode)
++        command[:1] = [sys.executable, str(shim)]
++        return command, environment
++    monkeypatch.setattr(coordinator, "step_command", execute_args)
++    result = coordinator.coordinate(run_args, snapshot=lambda: {"scope": "unit_mock"})
++    assert set(result["steps"]) == set(result["commands"]) == {"batch"}
++    assert result["steps"]["batch"]["returncode"] == 0
++    assert result["external_scalar_reference_admission"]["scope"] == "unit_mock_external_seal"
++    assert not (run_args.output_dir / "scalar").exists()
++    assert not (run_args.output_dir / "scalar.log").exists()
++    run_args.output_dir = run_args.output_dir.with_name("bad-seal")
++    def reject(*args, **kwargs):
++        raise ValueError("seal changed")
++    monkeypatch.setattr(references, "validate_cpu_reference_admission", reject)
++    with __import__("pytest").raises(ValueError, match="seal changed"):
++        coordinator.coordinate(run_args, snapshot=lambda: {"scope": "unit_mock"})
++    assert not run_args.output_dir.exists()
+diff --git a/tests/unit/test_global_server_benchmark.py b/tests/unit/test_global_server_benchmark.py
+index 5bafa08..bba34c6 100644
+--- a/tests/unit/test_global_server_benchmark.py
++++ b/tests/unit/test_global_server_benchmark.py
+@@ -5,6 +5,7 @@ import copy
+ import hashlib
+ import json
+ import pickle
++from pathlib import Path
+ from types import SimpleNamespace
+ 
+ import jax
+@@ -168,10 +169,12 @@ def test_native_FULL64_batch48_records_process_CPU_and_phase_observations(monkey
+     args = SimpleNamespace(mode="batch", sizes=[64], cpu_budget=48, warm_repeats=5,
+         validation_mode="exploratory", cpu_reference_role="cpu-internal", baseline_ref="source",
+         expected_gpu_reference_sha256="a" * 64, gpu_reference_dir=tmp_path / "GPU",
+-        cpu_reference_dir=tmp_path / "scalar", output_dir=tmp_path / "target")
++        cpu_reference_dir=tmp_path / "scalar", output_dir=tmp_path / "target",
++        cpu_reference_admission_record=tmp_path / "admission.json",
++        expected_cpu_reference_admission_sha256="b" * 64)
+     resources = {"selected_logical_cpus": list(range(48)), "step_CPU_budget": 48,
+         "allocated_CPU_request_count": 48, "parent_allocated_CPU_request_count": 48,
+-        "billing_CPU_request_count": 48}
++        "billing_CPU_request_count": 48, "candidate_provenance": {"scope": "synthetic_test"}}
+     recorder = scale.base.Recorder(args.output_dir)
+     recorder.result["environment"] = toy_environment()
+     try:
+@@ -185,6 +188,19 @@ def test_native_FULL64_batch48_records_process_CPU_and_phase_observations(monkey
+     assert record["evidence_class"] == "exploratory_performance"
+     assert record["provenance"]["batch_permutation_and_replacement"] is True
+     assert record["provenance"]["CPU_scalar_reference_role"] == "cpu_internal_comparison"
++    arrays = record["provenance"]["validation_arrays"]
++    raw = Path(arrays["path"]).read_bytes()
++    assert hashlib.sha256(raw).hexdigest() == arrays["sha256"]
++    assert len(raw) == arrays["bytes"]
++    evidence = pickle.loads(raw)
++    assert evidence["schema"] == "global_cpu48_candidate_validation_arrays_v1"
++    assert evidence["permutation_index"] == list(reversed(range(64)))
++    assert evidence["replacement_index"] == list(range(63)) + [0]
++    for key, indices in (("permutation", evidence["permutation_index"]),
++                         ("replacement", evidence["replacement_index"]),
++                         ("frozen_reset", list(range(64)))):
++        assert scale.base.compare(evidence[key], jax.tree_util.tree_map(
++            lambda leaf: leaf[np.asarray(indices)], value["outputs"]))["passed"]
+     observations = record["provenance"]["runtime_observations"]
+     assert observations == recorder.result["runtime_observations"]["B64"]
+     for phase in ("pre_compile", "post_compile", "first_call_complete", "warm_complete"):
+diff --git a/tests/unit/test_prepare_global_cpu48_execution.py b/tests/unit/test_prepare_global_cpu48_execution.py
+index 4a7639d..c270143 100644
+--- a/tests/unit/test_prepare_global_cpu48_execution.py
++++ b/tests/unit/test_prepare_global_cpu48_execution.py
+@@ -2,6 +2,7 @@
+ from __future__ import annotations
+ 
+ import hashlib
++import json
+ import subprocess
+ 
+ import pytest
+@@ -46,6 +47,10 @@ def test_execution_keeps_base_science_and_research_working_tree(tmp_path):
+     assert run("status", "--porcelain") == "?? outputs/"
+     assert result["scientific_source"]["every_scientific_blob_identical_to_base"]
+     assert result["remote_deployment_or_submission"] is False
++    assert result["execution_route"] == "batch-only"
++    assert result["allocation_plan"]["new_scalar_generation"] is False
++    assert result["allocation_plan"]["wall_seconds"] == 3600
++    assert result["allocation_plan"]["conservative_worst_case_CNY"] == pytest.approx(3.36)
+ 
+ 
+ @pytest.mark.parametrize("path", ["jax_orchidee/science.py", "scripts/dev/../science.py", "scripts/dev/data.pkl"])
+@@ -90,3 +95,95 @@ def test_dirty_research_is_refused_without_creating_execution_ref(tmp_path):
+                       ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"])
+     assert run("branch", "--list", "codex/test-execution") == ""
+     assert (root / "scripts/dev/runner.py").read_text() == "budget = 49\n"
++
++
++@pytest.mark.parametrize("budget", [True, 1799, 5401, 3600.5])
++def test_budget_outside_approved_envelope_creates_no_execution_ref(tmp_path, budget):
++    root, run, base = repository(tmp_path)
++    with pytest.raises(ValueError, match="budget"):
++        package.build(root, root / "outputs/version", source="HEAD", base=base,
++                      ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"],
++                      budget_seconds=budget)
++    assert run("branch", "--list", "codex/test-execution") == ""
++
++
++def test_tampered_scalar_audit_is_refused_before_creating_ref(tmp_path):
++    root, run, base = repository(tmp_path)
++    (root / ".git/info/exclude").write_text("outputs/\n")
++    receipt = root / "outputs/version/scalar-audit/audit.json"
++    receipt.parent.mkdir(parents=True)
++    receipt.write_bytes(b"{}\n")
++    digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
++    with pytest.raises(ValueError, match="audit receipt checksum"):
++        package.build(root, root / "outputs/version", source="HEAD", base=base,
++                      ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"],
++                      expected_science=digest, scalar_audit_receipt=receipt,
++                      expected_scalar_audit_sha256="0" * 64)
++    assert run("branch", "--list", "codex/test-execution") == ""
++
++
++def test_scalar_audit_cannot_escape_preparation_output(tmp_path):
++    root, run, base = repository(tmp_path)
++    receipt = tmp_path / "audit.json"
++    receipt.write_bytes(b"{}\n")
++    digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
++    with pytest.raises(ValueError, match="inside the preparation output"):
++        package.build(root, root / "outputs/version", source="HEAD", base=base,
++                      ref="codex/test-execution", harness_paths=["scripts/dev/runner.py"],
++                      expected_science=digest, scalar_audit_receipt=receipt,
++                      expected_scalar_audit_sha256=hashlib.sha256(receipt.read_bytes()).hexdigest())
++    assert run("branch", "--list", "codex/test-execution") == ""
++
++
++def test_external_admission_binds_exact_execution_and_preserves_existing_bytes(tmp_path):
++    root, run, base = repository(tmp_path)
++    (root / ".git/info/exclude").write_text("outputs/\n")
++    digest = hashlib.sha256(b"jax_orchidee/science.py\0value = 1\n\0").hexdigest()
++    output = root / "outputs/version"
++    receipt = output / "scalar-audit/audit.json"
++    receipt.parent.mkdir(parents=True)
++    # Only a tiny metadata fixture exercises version binding here. The real
++    # saved-array audit and runtime validator have their own admission tests.
++    raw_parent = "15820467|FAILED|00:36:37|billing=48,cpu=48,node=1\n"
++    source = {"job_id": "15820467", "execution_commit": base,
++        "stage_sha256": package.SCALAR_CHECKPOINT_SHA,
++        "prepared_input_sha256": package.PREPARED_INPUT_SHA,
++        "gpu_reference_sha256": package.REFERENCE,
++        "certified_science_sha256": digest, "actual_science_source_sha256": digest,
++        "physical_science_tree_oid": run("rev-parse", f"{base}:jax_orchidee"),
++        "baseline_ref": package.BASELINE,
++        "whole_parent_accounting": {
++            "sha256": "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113",
++            "job_id": "15820467", "wall_seconds": 2197, "allocated_CPU_count": 48,
++            "GPU_count": 0, "counted_once_as_source_parent": True,
++            "raw_record": raw_parent, "raw_record_sha256": hashlib.sha256(raw_parent.encode()).hexdigest()},
++        "source_identity": {"science_sha256": digest,
++            "numerical_reference_sha256": package.REFERENCE, "baseline_ref": package.BASELINE}}
++    receipt.write_text(json.dumps({"schema": "global-cpu48-scalar-audit-v1",
++        "status": "saved_arrays_audited", "scientific_acceptance": False,
++        "scalar_source": source, "audit": {"strict_numerical_passed": False,
++            "frozen_reset_arrays_recomputed": False, "GPU_gate_count": 64,
++            "GPU_passed_gate_count": 61, "GPU_tolerance_failed_gate_count": 3,
++            "GPU_tolerance_failure_count": 4, "recomputed_GPU_gates": [{}] * 64}}))
++    arguments = dict(source="HEAD", base=base, ref="codex/test-execution",
++        harness_paths=["scripts/dev/runner.py"], expected_science=digest,
++        scalar_audit_receipt=receipt,
++        expected_scalar_audit_sha256=hashlib.sha256(receipt.read_bytes()).hexdigest())
++    result = package.build(root, output, **arguments)
++    admission = output / result["external_scalar_reference"]["admission_record"]["name"]
++    original = admission.read_bytes()
++    bound = json.loads(original)
++    assert bound["candidate_identity"]["execution_commit"] == result["execution_code_commit"]
++    assert bound["candidate_identity"]["execution_commit"] != run("rev-parse", "HEAD")
++    assert bound["candidate_identity"]["job_id"] is None
++    assert bound["scalar_source"]["execution_commit"] == base
++    assert result["external_scalar_reference"]["admission_record"]["sha256"] == hashlib.sha256(original).hexdigest()
++    assert package.build(root, output, **arguments)["execution_code_commit"] == result["execution_code_commit"]
++    assert admission.read_bytes() == original
++    bound["candidate_identity"]["execution_commit"] = run("rev-parse", "HEAD")
++    admission.write_text(json.dumps(bound))
++    changed = admission.read_bytes()
++    with pytest.raises(ValueError, match="existing scalar admission differs"):
++        package.build(root, output, **arguments)
++    assert admission.read_bytes() == changed
++    assert run("rev-parse", "codex/test-execution") == result["execution_code_commit"]

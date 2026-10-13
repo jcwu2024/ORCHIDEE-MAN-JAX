@@ -1,14 +1,21 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-14。当前按主管派工做 CPU48 v4 不付费修复、scalar 独立验收及执行准备；先读
-[v4 当前交付](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
-[授权边界](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md)、
+更新：2026-10-14。CPU48 v4 不付费修复、scalar 独立审计和固定包已准备；本次交付供主管按已有用户授权审查。
+先读[v4 当前交付](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
+[授权](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md)、
+[固定 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json)、
 [协议](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
-和[具体提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md)。
-下一候选是 B64-only，显式引用旧 job15820467 scalar，保留其 3 个有限跨 GPU 超差和严格科学 false。
-固定 v3 历史物理子树，新执行前真实 child 入口先验证白名单环境/affinity/48 独立物理核。
-提议 48CPU/0GPU/3600s，未核实费率最坏 CNY2.40/3.36；本轮不提交、不部署生产版本或做完整物理编译。
-主管按用户已有授权复核固定 pin/命令/证据后决定单次提交，无需把同一方案重复问回用户；执行聊天交付后停止等待派工。
+和[精确提案/命令](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md)。
+执行 SHA `60dccbddde10be4295aab7e7fe55fa7864d3c3f3`，ref `codex/global-cpu48-b64-v4`；
+来源研究检查点 `493252e418f3fd827af4a6f7748a63d3157e680d`，104 物理 blob 与 v3 基底相同，研究碳修复保留。
+候选 B64-only，绑定旧 job 15820467 的 scalar 和独立 admission SHA；3 个有限跨 GPU 超差和科学 false 不变。
+64 输入身份/点序、760 叶/GPU 门已独立重算；reset 只有原封存证明。真实 child 环境修复与最终 staging 证据见当前交付；
+占位检查、固定 pin dry-run 和实际未来 production checkout 准入三者边界保留。
+提案 cnall/1 node/1 task/48 CPUs/0 GPUs/3600s，非 exclusive/no-requeue/无新增 mem 或节点限制，
+未核实最坏 CNY 2.40/3.36。旧父 cost 只计一次，新 job 另计；真实 B64 编译/硬门/吞吐/RSS/CPU48-GPU 比未测量。
+本轮没有 sbatch、GPU、完整物理编译、新生产部署或 scalar 重生成。
+主管复核具体 pin/命令/证据后决定单次部署/提交，无需把同一方案重复问回用户；
+执行聊天交付后停止等待派工，不联系/轮询主管，不建新聊天或自动任务。
 
 历史 v3 终态先读[CPU48 v3新单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)、
 [v3实际执行入口](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/CURRENT_RESULT.md)、
