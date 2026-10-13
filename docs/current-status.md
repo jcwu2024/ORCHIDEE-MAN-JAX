@@ -1,11 +1,13 @@
 # Current Project Status
 
-Updated: 2026-10-13. First-day localization completed both graphs and 24 JVPs.
-Finite, defined next-state tangents differ for all directions, including control 200;
-the discrepancy is already within the first daily transition. Raw state 20
-is nonfinite, a separate retained failure. Numerical exit 3/GPU released,
-that scope closed. Raw-neural v3-final evidence is accepted with active numerical
-failures; 24 results/GPU released/scope closed. Preservation handoff complete; stop.
+Updated: 2026-10-14. [Bounded local repair review](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
+is no-go. One NumPy-only pass over24 original raw results reproduces each cycle's
+active tangent failures1769/10/36/21 and four DOC primal failures;161 masks,
+16 nontrivial repeats and12 isolation checks pass. Nine archived source members,
+two original overlay hashes and actual saved HLO were checked. No supported
+intervention or true later64 operands selects a repair. Accepted early affine
+GPU12/91/4 does not repair original T7; own JVP/VJP native20/64 versus mean24/64
+and separate state20 strict nonfinite failure remain. No prototype/model run.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns execution and authority.
 
 ## Main task and measured outcome

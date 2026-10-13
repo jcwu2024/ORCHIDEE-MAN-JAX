@@ -4,14 +4,14 @@ New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
-Updated: 2026-10-13. First-day localization completed both graphs and 24 JVPs.
-Finite, defined next-state tangents differ for all four directions, including control
-200, within the first daily transition. Raw state coordinate 20 is nonfinite,
-a separate retained failure. Numerical exit 3; that GPU scope is released/closed.
-The [accepted raw-neural result](research/daily_coarse_graining/T7_raw_neural_JVP_results_20261010.md)
-confirms active primal/tangent failures before physical transforms; exact repeats
-and masks pass. Exit 3/GPU released/scope closed. The
-[handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md) is the stop state.
+Updated: 2026-10-14. The [bounded batching-repair decision](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
+selects no local repair: raw24 saved-array reanalysis and original source/HLO
+leave two mechanisms unconfirmed. Early affine12/91/4 passes; finite cross-route,
+own native JVP/VJP and state20 nonfinite failures remain separate. The next
+recommendation is a supervisor decision on a fixed-model native AD consistency
+and valid-state admission baseline; no new execution follows. The
+[dated handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md)
+preserves historical identities and closed scopes.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls action/authority.
 
 The [GPU preparation report](research/daily_coarse_graining/T7_batch_numerics_GPU_preparation_results_20261011.md)

@@ -1,10 +1,10 @@
 # Current Work Order
 
-Updated: 2026-10-13. First-day localization completed both graphs/24 JVPs.
-Finite, defined next-state tangents differ for every direction, including control 200;
-raw state coordinate 20 is nonfinite. Numerical exit 3, GPU released, scope
-closed. Raw-neural v3-final saved-evidence audit is accepted with active numerical
-failures; 24 results saved/GPU released/scope closed. Handoff complete; stop.
+Updated: 2026-10-14. The [bounded batching-repair decision](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
+is no-go: saved raw24/source/HLO evidence supports no function-preserving local
+candidate. Early affine12/91/4 passes; finite cross-route, same-route native
+JVP/VJP and state20 nonfinite failures remain distinct and unresolved. No model
+run or prototype followed. Historical GPU scopes remain closed/consumed.
 
 The later project-maintenance authorization establishes the fixed daily checkout
 at `runtime/worktrees/daily-coarse-graining` under the root workspace. See
@@ -54,6 +54,17 @@ V4/V7 direct substitution stays stopped; T30 chunk-vmap and decoder128 remain
 unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
+
+Pause B4 local kernel repair. The supervisor's next decision is a bounded native
+AD consistency and valid-state admission baseline for the fixed66,123,713 model
+and TRAIN742/275/482/299, using existing public-loss/direction/full-VJP/repeat
+assets and state20 source evidence. Specify independent consistency without
+declaring B1 truth; retain native and mean-scale gates separately and discuss
+the undefined-state interface before selecting any change. This is a decision
+recommendation, not execution approval or an automatic next-layer diagnostic.
+See the decision report for minimum evidence, missing later-reader operands and
+the complete regression/resource boundary. No new GPU/remote compute, training,
+Teacher, cleanup or monitoring is underway.
 
 The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole
