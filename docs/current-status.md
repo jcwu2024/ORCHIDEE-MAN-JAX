@@ -1,13 +1,12 @@
 # Current Project Status
 
-Updated: 2026-10-14. [Bounded local repair review](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
-is no-go. One NumPy-only pass over24 original raw results reproduces each cycle's
-active tangent failures1769/10/36/21 and four DOC primal failures;161 masks,
-16 nontrivial repeats and12 isolation checks pass. Nine archived source members,
-two original overlay hashes and actual saved HLO were checked. No supported
-intervention or true later64 operands selects a repair. Accepted early affine
-GPU12/91/4 does not repair original T7; own JVP/VJP native20/64 versus mean24/64
-and separate state20 strict nonfinite failure remain. No prototype/model run.
+Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+is not real-model executable. Static review finds the old FP64 helper omits
+reader277 FP32 scatter and no source-supported independent physical unit2621
+FD domain is admitted.43 disconnected CPU method tests pass; no real forward,
+trace, compile, public-binding or deployed-runtime acceptance. Existing FP32
+and early affine12/91/4 evidence remain, with native20/64 versus mean24/64 own
+AD passes and separate strict state20 failure. B4 local repair remains no-go.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns execution and authority.
 
 ## Main task and measured outcome

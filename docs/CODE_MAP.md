@@ -1,9 +1,11 @@
 # Code Map
 
 Updated: 2026-10-14. Bounded task navigation, not an exhaustive inventory.
-[Batching-repair decision](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
-links raw24 NumPy/source/HLO evidence in `outputs/T7-batching-repair-decision-20261014/`;
-no local candidate or new executable. Preserve original graphs/HLO/full results.
+[Current precision preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+links disconnected methods in `scripts/hpc/shared_current_T7_precision_guard.py`
+and `shared_current_T7_fd_guard.py`, their focused unit tests and bounded evidence
+in `outputs/T7-current-model-precision-admission-preparation-20261014/`.
+No real-model executable; prior B4 repair remains no-go. Preserve original assets.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the decision recommendation and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.
 

@@ -4,12 +4,13 @@ New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
-Updated: 2026-10-14. The [bounded batching-repair decision](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
-selects no local repair: raw24 saved-array reanalysis and original source/HLO
-leave two mechanisms unconfirmed. Early affine12/91/4 passes; finite cross-route,
-own native JVP/VJP and state20 nonfinite failures remain separate. The next
-recommendation is a supervisor decision on a fixed-model native AD consistency
-and valid-state admission baseline; no new execution follows. The
+Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+delivers disconnected guards/43 CPU tests, with no real-model executable.
+The fixed B1/artifact299/T7 target lacks a verified independent physical domain
+for2621 and complete current FP64 graph admission. The supervisor must resolve
+that direction's semantics; no GPU proposal or execution follows. Prior
+[B4 local repair](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
+remains no-go, and state20 nonfinite is still a separate strict failure. The
 [dated handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md)
 preserves historical identities and closed scopes.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls action/authority.
