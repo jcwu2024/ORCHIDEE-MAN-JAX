@@ -791,8 +791,15 @@ def semantic_reference_identity(args, lane, second):
     return digest.hexdigest()
 
 
-def stage_identity(args, lanes, second, environment):
+def stage_identity(args, lanes, second, environment, *, include_git_head=False):
+    """Project runtime identity; server consumers additionally bind execution HEAD.
+
+    Generic legacy stage contracts retain their existing runtime schema.
+    Server reference preparation opts in using the actual metadata producer.
+    """
     runtime_keys = ("python", "jax", "jaxlib", "numpy", "device_details", "x64_enabled", "backend_platform_version")
+    if include_git_head:
+        runtime_keys += ("git_head",)
     compiler_keys = ("XLA_FLAGS", "JAX_PLATFORMS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
     return {
         "contract": "four-real-points-two-seven-day-blocks-full-FP64-v1",

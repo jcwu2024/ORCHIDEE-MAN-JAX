@@ -368,18 +368,21 @@ class PoolRunner:
             channel.close()
 
 
-def benchmark(args, recorder, lanes, second, scale, resources):
-    from scripts.dev.global_batch_stage_store import StageStore
-    from scripts.dev.global_server_reference import finite_tolerance_failure, load_reference
-    from scripts.dev.probe_global_batch_cache import atomic_bytes
+def prepare_references(args, recorder, lanes, second, scale, resources):
+    """Shared production input/identity/reference admission, before runner creation.
 
-    base, jax, np = scale.base, scale.jax, scale.np
+    This reads saved arrays and screens inputs. It never creates, lowers,
+    compiles or calls a physical transition.
+    """
+    from scripts.dev.global_server_reference import load_reference
+
+    base = scale.base
     screen = scale.screen_inputs(lanes, second)
     if args.cpu_budget == 48 and len(lanes) != 64:
         raise ValueError("batch48 requires exactly64 native unique prepared lanes")
     base.legacy_factory(args.baseline_ref)
     recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
-    identity = base.stage_identity(args, lanes, second, recorder.result["environment"])
+    identity = base.stage_identity(args, lanes, second, recorder.result["environment"], include_git_head=True)
     validation_mode = getattr(args, "validation_mode", "strict")
     cpu_reference_role = getattr(args, "cpu_reference_role", "accepted")
     if validation_mode == "strict" and cpu_reference_role == "cpu-internal":
@@ -395,6 +398,7 @@ def benchmark(args, recorder, lanes, second, scale, resources):
     if expected is not None and origin["sha256"] != expected:
         raise ValueError("sealed GPU reference SHA256 differs from explicitly expected artifact")
     identity["numerical_reference_sha256"] = origin["sha256"]
+    recorder.result["reference_preparation_gpu_loaded"] = True
     cpu_references = {}
     if args.cpu_reference_dir is not None:
         candidate_provenance = None
@@ -403,6 +407,15 @@ def benchmark(args, recorder, lanes, second, scale, resources):
             from scripts.dev.global_cpu_candidate_identity import candidate_identity
             candidate_provenance = resources.get("candidate_provenance") or candidate_identity(args, ROOT)
             identity["candidate_provenance"] = candidate_provenance
+            recorder.result["reference_preparation_identity"] = {
+                "baseline_ref": {"candidate": candidate_provenance.get("baseline_ref"),
+                                 "stage": identity.get("baseline_ref")},
+                "science_sha256": {"candidate": candidate_provenance.get("certified_science_sha256"),
+                                   "stage": identity.get("science_sha256")},
+                "gpu_reference_sha256": {"candidate": candidate_provenance.get("gpu_reference_sha256"),
+                                         "stage": identity.get("numerical_reference_sha256")},
+                "execution_commit": {"candidate": candidate_provenance.get("execution_commit"),
+                                     "stage": identity.get("runtime", {}).get("git_head")}}
         for size in args.sizes:
             admission_args = {} if admission_record is None else {
                 "cpu_reference_admission_record": admission_record,
@@ -411,6 +424,18 @@ def benchmark(args, recorder, lanes, second, scale, resources):
             cpu_references[size] = load_reference(args.cpu_reference_dir, identity,
                 name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role,
                 **admission_args)
+    recorder.result["reference_preparation_cpu_loaded"] = sorted(cpu_references)
+    return identity, screen, reference, origin, cpu_references, validation_mode, cpu_reference_role
+
+
+def benchmark(args, recorder, lanes, second, scale, resources):
+    from scripts.dev.global_batch_stage_store import StageStore
+    from scripts.dev.global_server_reference import finite_tolerance_failure
+    from scripts.dev.probe_global_batch_cache import atomic_bytes
+
+    base, jax, np = scale.base, scale.jax, scale.np
+    identity, screen, reference, origin, cpu_references, validation_mode, cpu_reference_role = prepare_references(
+        args, recorder, lanes, second, scale, resources)
     store = StageStore(args.output_dir, identity)
     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen,
         validation_mode=validation_mode, cpu_reference_role=cpu_reference_role,
