@@ -1,0 +1,125 @@
+{
+  "schema": "independent-scalar-pool-immutable-candidate-v1",
+  "status": "prepared_not_paid_authorized",
+  "source_research_commit": "8925ec506012da8f9155c8e90b7c282889e32369",
+  "base_execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+  "execution_code_commit": "50864f065363f6cd0de685c18d9c257723bf2838",
+  "execution_ref": "codex/global-cpu-scalar-pool-v1",
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1",
+  "scientific_source": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba"
+  },
+  "every_physical_blob_identical_to_base": true,
+  "research_science_tree_oid": "62e90547ee8eadab387713397bb111c399c81b6c",
+  "harness_paths": [
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/global_server_resources.py",
+    "scripts/dev/diagnose_global_cpu_references.py",
+    "scripts/hpc/slurm_global_server_cpu_4core.sh",
+    "tests/unit/test_global_cpu_scalar_pool.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_global_server_cpu_launchers.py",
+    "tests/unit/test_global_cpu_reference_preparation.py"
+  ],
+  "execution_changed_paths": [
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/diagnose_global_cpu_references.py",
+    "scripts/dev/global_server_resources.py",
+    "scripts/hpc/slurm_global_server_cpu_4core.sh",
+    "tests/unit/test_global_cpu_reference_preparation.py",
+    "tests/unit/test_global_cpu_scalar_pool.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_global_server_cpu_launchers.py"
+  ],
+  "harness_blob_sha256": {
+    "scripts/dev/benchmark_global_server_cpu.py": "736fac0087c3a0419b6461cfae69f98adbfd64aacf923af707af88a2bbd697c1",
+    "scripts/dev/global_server_resources.py": "89a91996aee4e77773839285779ddb30dd2f31fba1bf98fa7f15f350fd01fc11",
+    "scripts/dev/diagnose_global_cpu_references.py": "9593e00eac35a6a35585a5ed0d49b0b2f542102b95949d8adf9d94211363edf4",
+    "scripts/hpc/slurm_global_server_cpu_4core.sh": "75526da3d9c573e2111021cf05983d018e8e5d4bf0226fff5e5d27ad75f33756",
+    "tests/unit/test_global_cpu_scalar_pool.py": "ed6c63145ee57e431ea77761b71eabfb898569ba6cb1807e0a53fddde7775883",
+    "tests/unit/test_global_server_benchmark.py": "75432d8d166dd1854d02702b56b2bf0c47820674676c00d1de58380ed9bf6ae5",
+    "tests/unit/test_global_server_cpu_launchers.py": "507ba5a27794fa6cfef5c36e9aa6823d44265038a7dc213521661d12c279e386",
+    "tests/unit/test_global_cpu_reference_preparation.py": "062a37d81ed03c5d903c8dd4a1ac98c219a0c5d8d39a95b623efcbf1a762c75c"
+  },
+  "scalar_admission": {
+    "name": "scalar-admission.json",
+    "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-preparation-20261014/scalar-admission.json",
+    "sha256": "fafd685bb54c7bb366f0d10d38cba31957ba754b9a5bcd8801e75abfd7907883",
+    "bytes": 145544,
+    "source_audit_receipt_sha256": "cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431",
+    "candidate_identity": {
+      "job_id": null,
+      "execution_commit": "50864f065363f6cd0de685c18d9c257723bf2838",
+      "execution_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1",
+      "prepared_input_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+      "gpu_reference_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl",
+      "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+      "certified_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+      "physical_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+      "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299"
+    },
+    "new_scalar_generation": false
+  },
+  "bundle": {
+    "name": "cpu-scalar-pool-50864f065363.bundle",
+    "sha256": "a3eb8dd014be861844bc140b079a27699ba2da99af891a618807a795eda01c0b",
+    "bytes": 15188,
+    "prerequisite": "0100c8b09be5137b822173e0a0be66cb64939727",
+    "verify": "passed"
+  },
+  "pilot": {
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_CPUs": 4,
+    "GPUs": 0,
+    "workers": 4,
+    "worker_threads": 1,
+    "startup_concurrency": 1,
+    "wall_seconds": 5400,
+    "startup_timeout_seconds_per_worker": 1200,
+    "command_timeout_seconds": 300,
+    "sampled_aggregate_RSS_abort_GiB": 64,
+    "host_MemAvailable_guard_GiB": 64,
+    "RLIMIT_AS": null,
+    "worst_case_CNY_primary": 0.3,
+    "worst_case_CNY_conservative": 0.42,
+    "billing_verified": false,
+    "authorized": false
+  },
+  "fixed_contract": {
+    "points": 64,
+    "point_days": 896,
+    "native_output_leaves": 760,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "half_hours_per_day": 48,
+    "atol": 1e-08,
+    "rtol": 1e-10,
+    "scientific_acceptance": false
+  },
+  "paid_submitted": false,
+  "remote_deployed": false,
+  "physical_lower_compile_run": false,
+  "proposed_submission": {
+    "name": "PROPOSED_SUBMISSION.sh",
+    "sha256": "0cde7f57df2518cc65b2347a6c60061ddcaefc760b7a4c678a06916277513b7e",
+    "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1",
+    "command": "bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-preparation-20261014/PROPOSED_SUBMISSION.sh",
+    "submissions_allowed_by_this_preparation": 0
+  },
+  "run_root_pattern": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-${SLURM_JOB_ID}"
+}
