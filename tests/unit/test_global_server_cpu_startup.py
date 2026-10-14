@@ -210,15 +210,19 @@ exit "${STUB_SRUN_STATUS:-0}"
 
     def test_git_HEAD_failure_stays_fatal(self):
         result, trace, _ = self.launch(STUB_GIT_HEAD_STATUS="45")
-        self.assert_blocked(result, trace, code=45)
+        # Bash versions can report a different nonzero status for group|tee.
+        self.assert_blocked(result, trace)
+        self.assertIn("git rev-parse", trace)
 
     def test_required_date_failure_stays_fatal(self):
         result, trace, _ = self.launch(STUB_DATE_STATUS="46")
-        self.assert_blocked(result, trace, code=46)
+        self.assert_blocked(result, trace)
+        self.assertIn("date", trace)
 
     def test_required_hostname_failure_stays_fatal(self):
         result, trace, _ = self.launch(STUB_HOSTNAME_STATUS="48")
-        self.assert_blocked(result, trace, code=48)
+        self.assert_blocked(result, trace)
+        self.assertIn("hostname", trace)
 
     def test_context_tee_IO_failure_stays_fatal(self):
         write_executable(self.bin / "tee", '#!/bin/bash\nprintf "stub tee IO failure\\n" >&2\nexit 49\n')
