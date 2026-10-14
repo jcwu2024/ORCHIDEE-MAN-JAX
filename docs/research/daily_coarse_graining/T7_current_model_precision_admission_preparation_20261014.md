@@ -1,123 +1,141 @@
-# Current-model precision admission preparation
+# Current-model precision and native-AD preparation
 
-2026-10-14: **not a real-model executable package**. The requested fixed B1
-artifact299/window0/T7 FP64 plus independent physical-direction FD diagnostic
-cannot yet be specified for all four directions: coordinate2621 lacks a verified
-physical domain for an independent unit perturbation. This means evidence is
-missing, not that every such perturbation has been proved illegal. No real
-model graph, executable, GPU proposal or run follows. Local disconnected
-precision/FD guards and counterexamples are delivered instead.
+2026-10-14 v2 corrects the earlier disconnected preparation. The integrated
+entry binds the actual66,123,713-parameter/355-leaf latent32/private-reader64x2
+model, original artifact299/window0/T7 and public `(flux+stock)/9` loss.
+Local preparation and small CPU method tests are authorized. No full-model
+forward, trace, lowering, compilation, GPU execution or training occurred.
+Full deployed precision, memory, runtime and numerical admission remain unmeasured.
+Earlier GPU scopes remain closed and cannot authorize this run.
 
-## Exact object and hypotheses
+## Exact target and assets
 
-The intended object is the existing66,123,713-parameter/355-leaf
-latent32/private-reader64 field/chunk64 model, with unchanged saved weights,
-normalization/calibration, physical formulas/masks and seven-day public
-`make_shared_recurrent_objective` → `RolloutLoss.bind_checkpointed_loss_with_aux`
-loss `(flux+stock)/9`. Use native unscaled B1 loss/full3854-state VJP and dynamic
-unit directions434/2382/2621/200; mean-scale comparisons remain separate.
-Existing FP32 results supply the comparison; no new parameter-gradient graph
-is selected. The old64,884,481/artifact742 FP6432-call pass had no independent
-FD and is neither this model's admission nor derivative truth.
+The target is the exposed program-coordinate partial derivative of
+`L(theta,x0,days,targets,context)`, with fixed original weights, context,
+normalization/calibration, physics/source overlays, masks, field/chunk64 and
+native unscaled B1 loss. Parameter initialization provenance names742;
+the evaluated input is299. No parameter-gradient graph, custom reverse,
+B4 candidate, production FP64 adoption or optimizer update is added.
 
-[Saved identity bindings](../../../outputs/T7-current-model-precision-admission-preparation-20261014/preparation-status.json)
-retain c599236bcf57b745e9bafed678298010f4c3b58f plus the executed transformer/
-latent/guarded-turnover overlays, weight SHA `4f95d18d…9806c14`, context
-`ff3fdabe…be9026`, prepared299 `ee7fa6e0…1f18aa`, full case `8c0ed07c…820448`
-and initial state `54d01d0f…624f5d`. Parameter initialization provenance names742;
-the intended evaluated input is299. These are reused saved metadata identities,
-not a new full asset/model admission. The selected rebuild/assembler/materializer
-sources have no difference from c599236 in this checkout.
+`shared_current_T7_precision_assets.load_assets` verifies the unchanged original
+parameters/context/manifests/prepared299 and saved mathematical receipt before
+deserialization. Actual public `prepare_shared_window` matches full case SHA
+`8c0ed07cd295a28a2f0ca0a9ae46b1904fc59328863aa4c89af9e6f83e820448`
+and initial3854-state SHA
+`54d01d0f376b0ceed8a843740328dba9d61d2a8989507436bda1a0d16c624f5d`.
+Parameter SHA `4f95d18d97d2feb4dcab8e1dda6caeb242a4869f044a00b6a7ae6bc689806c14`;
+context `ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026`;
+prepared299 `ee7fa6e0f537fcd75dc8d02bbf4aa4f0438119f1ca73368e8f7f9d64af1f18aa`.
+Original assets remain unchanged. Linux path metadata is restored lexically as
+`PurePosixPath` on Windows; scientific array/class identities are preserved.
+No compact bundle, old executable, git-HEAD spoofing or Teacher shard is needed.
 
-The diagnostic hypothesis would be that exact-widened FP64 native AD agrees
-with independently converged directional FD while saved FP32 differs. JVP=VJP
-alone cannot establish that hypothesis or identify all root causes. A precision
-or production-interface change would still require scientific discussion.
+Historical c599236 is asset provenance, distinct from current diagnostic code.
+Actual public objective/step/loss and execution-source hashes are checked.
+The exact old expert adapter is recovered from its pinned Git blob in an output
+source cache and installed transactionally, without replacing stable sibling
+classes. Corrected turnover SHA
+`f6240cf5ce64a47b9bbe0647b5e5715305e9a9230ea77f2bd9f42981ae35a93c`
+is reused when already loaded identically, or installed over its admitted base.
+The accepted immutable NumPy PFT mask cache in `diffuco` preserves exact mask
+values and avoids retaining a tracer. Its current source is recorded separately;
+whole-file historical SHA equality is not claimed.
 
-## Bounded source and route findings
+## Callable and precision boundary
 
-| Direction | Source/domain evidence | Permitted conclusion in this preparation |
+`probe_shared_current_T7_precision_admission.py --stage dry-run` constructs the
+real arguments and public checkpointed callable without calling/tracing it.
+`shared_current_T7_fd_guard.make_combined` accepts seven dynamic arguments and
+returns `((loss,aux),full3854_state_VJP,JVP)` using native state-only
+`value_and_grad` and `jax.jvp`. All perturbed-state calls reuse one executable;
+they still execute AD, while FD uses only scalar forward losses and separate
+primal/physical gates. Every complete raw result is saved before any gate.
+
+The explicit default-off precision context transforms nine loaded neural
+modules, including actual reader scatter/buffers and loaded canonical aliases.
+Parameters and calibration arrays widen exactly from original FP32, with
+round-trip bit checks and manifests. Masks/integers/class identities stay fixed.
+Physical R4 epsilon remains exactly `2**-23`; no FP64 machine-epsilon substitution.
+All bindings restore after normal or exceptional exits. Tiny actual-adapter
+checks establish method behavior, not full-graph precision admission. The sole
+future lowering and saved optimized executable reject residual low precision.
+
+## FD semantics and interpretation
+
+| Direction | Predeclared method | Interpretation |
 |---|---|---|
-|434, frozen fraction0|`hydrol.f90::hydrol_soil_froz:8317–8454`: `profil_froz_hydro_ns=1-x`, with frozen fraction bounds and upper limiting. | Negative central endpoint is outside the nonnegative domain. Positive-side FD would require a certified initial-state domain and can describe only a right derivative at the boundary. |
-|2382, carbon_32l3.224057494e-8|Material pool: `stomate_soilcarbon.f90:2916–2918,2941–2945,2992–2996` stops on negative stocks. A numeric central radius strictly below the positive stock can be proposed. | This is a numeric nonnegative candidate, not independent physical-domain or internal-branch certification. A predeclared grid must be checked independently of AD agreement. |
-|2621, deepC_peat6.329964314e-7|`stomate_soilcarbon.f90:1385–1405` reconstructs the quantity from three same-layer carbon_32l pools. `fast_owner_reconstruction.py:61,368–370` marks source-exact derivation and likewise rebuilds that sum. | Independent unit-direction physical legality is unverified. Coordinating pool changes would change the requested direction and is not selected. Default FD classification is unsupported-domain/inconclusive. |
-|200, canopy2ground0|`hydrol.f90:5017,5073–5094` uses `MAX(precisol-precip2ground,0)`. | Negative central endpoint is inadmissible; right derivative does not automatically equal an AD branch convention. Initial-state physical certification remains necessary. |
+|434, frozen fraction0|Six positive steps, base continuous_scale/8, scalar[0,1] bound.|Right-sided boundary FD; record AD difference, no two-sided equivalence claim.|
+|2382, positive carbon_32l|Six symmetric steps, base10% of positive stock, never cross zero.|Program-coordinate central partial; physical reachability unestablished.|
+|2621, positive deepC_peat|Same bounded central grid; change only this coordinate.|computational-coordinate-only; no coordinated pools or physical-manifold claim.|
+|200, canopy2ground0|Six positive steps, base continuous_scale/8, nonnegative bound.|Right-sided boundary FD; record AD difference, no two-sided equivalence claim.|
 
-The selected public input path `successor_training.py:161–184` accepts the
-continuous vector after width/PFT-view checks. Array acceptance by that consumer
-does not certify independent physical perturbations. The contract/source review
-does not establish an allowed2621 domain, and therefore cannot close the requested
-four-direction physical FD specification. This is a bounded review of selected
-writers/consumers, not an all-physics branch audit.
-None of the four real-model physical FD domains is admitted by this preparation.
-The parent graph is ready with known-excluded daily scopes; exact source fallback
-supports this bounded review without reindexing main.
+Steps shrink by `(1,1/3,1/9,1/27,1/81,1/243)` before AD comparison.
+Representability, finite scalar losses, scalar bounds, cancellation and three
+consecutive smallest-step convergence are required. No best-step or AD-guided
+selection. Known fingerprint changes are recorded; unexposed internal branches
+remain interpretation limits rather than blanket execution blockers. Actual
+public rejection/nonfinite/physical failure is saved and classified; remaining
+directions continue unless timeout/resources stop execution. Forward-valid,
+AD-nonfinite calls remain usable for independent FD; AD failure stays separate.
+All four entries persist. Strict `rtol=1e-5, atol=1e-6` remains unchanged.
 
-The old diagnostic precision helper lists eight modules but omits
-`shared_latent_reader`. Its current line277 FP32 scatter narrows decoded values;
-lines261/290/329–330/386 also create FP32 buffers. Exact parameter/context
-widening alone cannot produce the intended full-neural FP64 graph. Any future
-integration must include the real reader and check residual low-precision tensors
-in the single admitted lowering. Exact R4 `2**-23` widening preserves that source
-threshold; replacing it with FP64 machine epsilon changes branch semantics.
+Native JVP/VJP, repeated loss/aux/full3854-state VJP, exact masks/discrete values
+and selected native FP32 comparisons are separate checks. The pinned existing
+FP32 compact report supplies historical full-state conclusions and four native
+projections locally. Future execution must load the original native B1/begin
+full3854 endpoint before lowering, check ABI and exact saved projections,
+record its hash and compare every coordinate. Those endpoint bytes were not
+historically hash-pinned; the trust limitation is explicit. No old executable
+or recomputed FP32 graph is used. Mean-scale evidence is separate, never /4 rescue.
 
-The old combined native pattern (parallel FP64 probe:242–247) can, in principle,
-return public loss/aux, full-state VJP and dynamic JVP from one compiled graph.
-Perturbed-state calls could supply scalar losses to FD without a second compile;
-every such call would still perform AD. FD estimates must use only scalar forward
-loss differences, with steps/convergence selected before consulting AD. No current
-full-graph precision, memory, timing or public-loss binding admission was performed.
+State20's undefined initial NaN and old first-day nonfinite failure remain
+independent strict failures, never filled or waived. This public loss does not
+expose a new full trajectory: new trajectory state20 is not audited, and no
+second rollout graph is added. FP64 agreement with converged FD can support
+bounded precision sensitivity; JVP=VJP alone does not establish derivative truth
+or production adoption.
 
-## Delivered method guards and interpretation
+## Local evidence and future allocation proposal
 
-`scripts/hpc/shared_current_T7_precision_guard.py` provides exact FP32 array
-widening, unchanged mask/integer storage, R4 constant checks, current-object
-metadata rejection and reader AST coverage. Its temporary patch accepts only
-synthetic fixture modules, restores bindings and stays disabled by default.
-It deliberately cannot patch or execute the real package.
+New evidence is in
+`outputs/T7-current-model-precision-admission-preparation-20261014/v2/`;
+v1 evidence remains intact. Actual local loader/dry-run and focused precision,
+FD/public-ABI/runner/supervisor fixtures provide preparation evidence. Local
+ORCJAX/local Bash expansion do not substitute for deployed JAX0.4.38/CUDA or
+target-shell admission. The combined focused suite passes103 tests in5.83s;
+warnings are the existing disabled-cache configuration and intentional FP32
+scatter counterexample. `v2/real-entry-accepted-final-dry-run.json` records the latest
+actual entry/source hashes and complete binding; its direct outer-entry log
+confirms exit0. The original loader's before/after hashes remain unchanged.
+`v2/local-verification-accepted.json` links source/test/proposal receipts and zero
+full-model calls/traces/compiles. Local Bash syntax and actual argument expansion
+passed. Six temporary shell fixtures exercise numeric-mask discovery followed
+by UUID preflight/probe, and reject missing supervision, untranslated later
+masks and reinterpreted discovery. Original scheduler-mask provenance persists.
+No target-server shell/container or JAX0.4.38/CUDA admission was run.
 
-`scripts/hpc/shared_current_T7_fd_guard.py` consumes supplied scalar samples,
-an explicit domain/branch certificate and a predeclared descending step grid.
-It rejects unsupported domains, illegal central endpoints, unknown/changed
-branches, nonfinite/cancellation-limited quotients and missing convergence.
-Output masks alone do not certify all internal branches; unknown real branch
-coverage is inconclusive. Stable consecutive steps are required before comparing
-AD, with fixed `rtol=1e-5, atol=1e-6`; no best-step/AD-guided selection or /4 rescue.
-State20's source-undefined NaN remains a separate strict failure, never filled
-or exempted. These methods are disconnected from the current public objective.
+The launcher resolves the entry from the declared checkout. Exact future
+command is in `scripts/hpc/slurm_shared_current_T7_precision_admission.sh`.
+Working directory:
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-precision-admission-20261014-v2`.
+Source SHA/command/resources must be bound by future `approval.v2.json`;
+preparation creates no false/open scope or approval file. One nonexclusive V100,
+four actual allocated Slurm CPUs,90minutes/5400s,24GiB sampled GPU memory,
+at most one full-model compile attempt, no retry. Caps: load/reference300s,
+discovery/runtime preflight240s, lowering300s, backend3000s, calls1380s,
+save/release reserve180s. Total includes startup/measurement/save/release and
+anchors to actual scheduler allocation start; caps are ceilings, not predictions.
+Actual allocated TRES must contain four CPUs. OS affinity is recorded and may
+be wider; this prepared batch command does not guarantee a four-core affinity
+mask. LLVM compilation parallelism is explicitly4. No arbitrary host-core
+subset or extra CPU allocation is selected.
+Owned process groups, UUID monitoring and runtime discovery are reused with a
+new science-stage plan; the old fixed1200s affine run is not called. Unknown
+cleanup/release retains exclusion for manual inspection.
 
-| Future evidence, if separately specified | Allowed interpretation |
-|---|---|
-|Known legal smooth domain, independently converged FD, FP64 JVP/VJP both agree, saved native FP32 differs|Bounded precision sensitivity for that model/loss/direction, not universal truth or production FP64 acceptance.|
-|Only FP64 JVP=VJP|Internal consistency only; independent correctness unestablished.|
-|Unsupported domain, unknown/changed branch, no credible convergence or boundary-only right derivative|Inconclusive for the requested two-sided AD/precision judgment; preserve all four direction records.|
-|State20 remains nonfinite, even if a loss derivative is finite|Separate strict state admission fails; derivative diagnostics cannot waive it.|
-
-CPU fixtures passed24 precision and19 FD tests in ORCJAX, with only the existing
-pytest `cache_dir` warning when its cache plugin is disabled. They validate
-exact widening/narrowing counterexample, R4 branch
-semantics, wrong model/case/normalization rejection, default restoration,
-polynomial FD, boundary/domain/branch/nonconvergence rejection and native-scale
-handling. They establish method behavior only, not real-model AD correctness,
-public binding or deployed JAX0.4.38/CUDA admission. Logs and bounded static
-reviews are in `outputs/T7-current-model-precision-admission-preparation-20261014/`.
-The original FD10-test log and later v2 intermediate/final results are retained;
-the final guard rejects tolerance overrides and lacks any unknown-branch pass.
-
-## Stop and unresolved decision
-
-The supervisor needs to decide whether a source-supported independent2621
-initial-state domain exists, or whether a constrained multi-coordinate manifold
-direction is scientifically appropriate. The latter changes the original target
-and cannot be introduced automatically. This preparation stops at that explicit
-boundary; no next-layer diagnosis or new science/resource scope starts.
-
-The requested future design ceiling was one nonexclusive V100, four actual Slurm
-CPUs,90 minutes,24GiB and at most one new real FP64 compile, including preflight,
-checks/FD/save/release. Current deployment rates (CNY0.07/core-hour +2.20/GPU-hour)
-give `(4×0.07+2.20)×1.5 = CNY3.72`; actual billing is unknown. The old total
-diagnostic occupation was46.4 minutes, including backend2328.48s (about38.8
-minutes); its CPU affinity covered0–111 rather than the requested four actual
-Slurm CPUs. That timing does not guarantee feasibility. This is an unexecuted
-design boundary, not a ready proposal: no executable command/SHA or current-graph
-admission is supplied, and no approval or submission is requested.
+At current deployment rates, `(4×CNY0.07+CNY2.20)×1.5 = CNY3.72` worst
+estimated allocation cost; actual bill unknown. Old46.4minutes was total
+occupation, including backend2328.48s≈38.8minutes and affinity0–111. It does not
+guarantee feasibility with four actual Slurm CPUs. No submission, GPU preflight,
+scope opening, new remote compute or training follows this local integration.
+Full-graph admissions are future execution gates, not a callable-impossibility claim.

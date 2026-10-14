@@ -1,10 +1,12 @@
 # Current Project Status
 
 Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
-is not real-model executable. Static review finds the old FP64 helper omits
-reader277 FP32 scatter and no source-supported independent physical unit2621
-FD domain is admitted.43 disconnected CPU method tests pass; no real forward,
-trace, compile, public-binding or deployed-runtime acceptance. Existing FP32
+now integrates the real fixed66M B1/299/T7 public callable. Actual local public
+preparation matches complete saved case/state hashes and355FP32 leaves. All nine
+neural modules/reader scatter and canonical aliases have an explicit diagnostic
+FP64 context. Program-coordinate2621 FD is computational-only; no physical
+manifold certificate blocks preparation. Focused CPU tests and real dry-run
+pass; no full-model forward/trace/compile or deployed-runtime admission. Existing FP32
 and early affine12/91/4 evidence remain, with native20/64 versus mean24/64 own
 AD passes and separate strict state20 failure. B4 local repair remains no-go.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns execution and authority.

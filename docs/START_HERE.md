@@ -5,10 +5,12 @@ and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
 Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
-delivers disconnected guards/43 CPU tests, with no real-model executable.
-The fixed B1/artifact299/T7 target lacks a verified independent physical domain
-for2621 and complete current FP64 graph admission. The supervisor must resolve
-that direction's semantics; no GPU proposal or execution follows. Prior
+delivers the actual fixed66M B1/artifact299/T7 public callable, exact original
+asset/case preparation and focused CPU tests. Coordinate2621 is an exposed
+program-coordinate partial, with computational-only FD and no manifold claim.
+One combined native FP64 state VJP/JVP graph is prepared; full-model execution,
+precision/runtime admission and GPU allocation remain unperformed. The bounded
+90-minute/CNY3.72 proposal requires fresh exact execution approval. Prior
 [B4 local repair](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
 remains no-go, and state20 nonfinite is still a separate strict failure. The
 [dated handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md)

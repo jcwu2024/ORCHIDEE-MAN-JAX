@@ -1,10 +1,13 @@
 # Current Work Order
 
 Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
-stops without a real-model executable: fixed B1/artifact299/T7 coordinate2621
-lacks a verified independent physical FD domain; current full-FP64 graph
-admission is absent. Disconnected method guards pass43 CPU tests. No true model
-graph/run or GPU proposal follows. Historical GPU scopes remain closed/consumed.
+integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
+asset/case preparation, diagnostic FP64 context and one combined native state
+VJP/JVP ABI. Program-coordinate FD permits computational-only2621; unknown
+internal branches are interpretation limits. Local tests/dry-run do not certify
+full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
+proposal remains unexecuted and needs fresh exact approval. Historical GPU
+scopes remain closed/consumed.
 
 The later project-maintenance authorization establishes the fixed daily checkout
 at `runtime/worktrees/daily-coarse-graining` under the root workspace. See
@@ -57,13 +60,13 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 The latest delegated target replaced the generic AD baseline with fixed
 66,123,713 latent32/reader64 B1 artifact299/window0/T7 public-loss FP64 plus
-independent physical-direction FD, compared with existing FP32 evidence.
-Bounded source review cannot certify unit2621 physical perturbations; changing
-carbon pools together would change that direction. The supervisor must resolve
-independent-domain versus constrained-manifold semantics before any execution
-package. Four directions and separate native/mean/state20 gates remain; unknown
-branches or unconverged FD are inconclusive. The90-minute/CNY3.72 ceiling is an
-unexecuted design boundary, not a ready GPU proposal or authorization. B4 local
+independent program-coordinate FD, compared with existing FP32 evidence.
+The clarified target is the exposed program partial derivative, permitting
+single-coordinate2621 with an explicit computational-only label. No carbon
+pools are silently coordinated. Four directions and separate native/mean/state20
+gates remain; unknown internal branches limit interpretation, and unconverged
+FD is inconclusive. The integrated90-minute/CNY3.72 proposal needs fresh exact
+resource/command approval before any GPU execution. B4 local
 repair remains no-go. No next-layer diagnostic, new GPU/remote compute, training,
 Teacher, cleanup or monitoring is underway.
 

@@ -2,10 +2,14 @@
 
 Updated: 2026-10-14. Bounded task navigation, not an exhaustive inventory.
 [Current precision preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
-links disconnected methods in `scripts/hpc/shared_current_T7_precision_guard.py`
-and `shared_current_T7_fd_guard.py`, their focused unit tests and bounded evidence
-in `outputs/T7-current-model-precision-admission-preparation-20261014/`.
-No real-model executable; prior B4 repair remains no-go. Preserve original assets.
+links `scripts/hpc/shared_current_T7_precision_assets.py` (exact single299 public
+case), `shared_current_T7_precision_guard.py` (transactional full-neural context),
+`shared_current_T7_fd_guard.py` (program-coordinate FD/native combined ABI),
+`probe_shared_current_T7_precision_admission.py` (real callable/dry-run/sole graph),
+`run_shared_current_T7_precision_admission.py` and its shell/Slurm entries
+(fresh exact allocation, owned supervision). Focused tests/new evidence are in
+`outputs/T7-current-model-precision-admission-preparation-20261014/v2/`.
+Full-model execution is unperformed; prior B4 repair remains no-go. Preserve assets.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the decision recommendation and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.
 
