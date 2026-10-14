@@ -27,13 +27,16 @@ def main():
             or os.environ.get("SLURM_NTASKS") != "1" or len(affinity) != 1
             or not socket.gethostname().startswith("ibtest")):
         raise RuntimeError("reference diagnostic requires actual cntest one-CPU test-node allocation")
-    if (args.mode != "batch" or args.cpu_budget != 1 or args.sizes != [64]
+    pool_plan = args.mode == "pool" and args.cpu_budget in {4, 48}
+    if ((not pool_plan and (args.mode != "batch" or args.cpu_budget != 1)) or args.sizes != [64]
             or args.validation_mode != "exploratory" or args.cpu_reference_role != "cpu-internal"
             or args.prepared_input is None or args.gpu_reference_dir is None
             or args.cpu_reference_dir is None or args.cpu_reference_admission_record is None
             or not args.expected_cpu_reference_admission_sha256 or not args.expected_gpu_reference_sha256
             or args.dry_run or args.synthetic_smoke or args.cache_mode != "off" or args.warm_repeats != 5):
-        raise ValueError("diagnostic requires unchanged FULL64 exploratory science/reference arguments and budget1")
+        raise ValueError("diagnostic requires FULL64 exploratory saved references, batch1 or pool4/48 plan; actual allocation remains one CPU")
+    if pool_plan:
+        cpu.validate(args)
     for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
         if os.environ.get(key) != "1":
             raise RuntimeError(f"diagnostic single-CPU thread policy differs at {key}")
@@ -62,6 +65,8 @@ def main():
                 "CPU_scalar": len(scale.jax.tree_util.tree_leaves(scalar[64][0]))},
             gpu_checkpoint_sha256=origin["sha256"], scalar_checkpoint_sha256=scalar[64][1]["sha256"],
             candidate_provenance=resources["candidate_provenance"],
+            planned_pool_CPU_budget=args.cpu_budget if pool_plan else None,
+            planned_pool_workers=args.pool_workers if pool_plan else None,
             actual_stage_runtime_git_head=identity["runtime"].get("git_head"))
     except Exception as exc:
         code = 1
