@@ -1,0 +1,129 @@
+{
+  "schema": "global_cpu48_v5_saved_failure_values_v1",
+  "status": "three_reported_cpu_internal_failure_leaves_recomputed",
+  "raw_candidate_sha256": "a135f9436afa868176bf8cc76f28134218e510c65b75909075ba24a8964810ce",
+  "scalar_source_sha256": "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa",
+  "gate_name": "B64_batch_cross_mode_server_scalar",
+  "atol": 1e-08,
+  "rtol": 1e-10,
+  "details": [
+    {
+      "path": "[0][0][0][7]",
+      "semantic_path": [
+        "0",
+        "0",
+        "0",
+        "7"
+      ],
+      "array_shape": [
+        64,
+        1,
+        14
+      ],
+      "dtype": "float64",
+      "block_days": [
+        2,
+        8
+      ],
+      "failing_element_count": 1,
+      "failing_lane_indices": [
+        6
+      ],
+      "worst_bound_ratio_coordinate": [
+        6,
+        0,
+        13
+      ],
+      "worst_lane_index": 6,
+      "worst_lane_identity": {
+        "landpoint_id": "299.0-115.0",
+        "inputs_sha256": "e7afb68c2d53a09d81016ee1862d7f611c8981f0002b0bdebcf17bddbf28f44c"
+      },
+      "candidate_value": 592.8152488486185,
+      "scalar_reference_value": 592.8152487724788,
+      "absolute_difference": 7.613971320097335e-08,
+      "allowed_absolute_bound": 6.928152487724787e-08,
+      "bound_ratio": 1.098990146880813,
+      "max_abs_over_entire_leaf": 7.613971320097335e-08
+    },
+    {
+      "path": "[1][0][5][48]",
+      "semantic_path": [
+        "1",
+        "0",
+        "5",
+        "48"
+      ],
+      "array_shape": [
+        64,
+        1
+      ],
+      "dtype": "float64",
+      "block_days": [
+        9,
+        15
+      ],
+      "failing_element_count": 1,
+      "failing_lane_indices": [
+        37
+      ],
+      "worst_bound_ratio_coordinate": [
+        37,
+        0
+      ],
+      "worst_lane_index": 37,
+      "worst_lane_identity": {
+        "landpoint_id": "313.0-079.0",
+        "inputs_sha256": "dc20ebae8ef573025a94d1e273a50a0d98397f01d7812920b3e194040a88259b"
+      },
+      "candidate_value": 29.926931253713647,
+      "scalar_reference_value": 29.926931273231105,
+      "absolute_difference": 1.951745787209802e-08,
+      "allowed_absolute_bound": 1.2992693127323111e-08,
+      "bound_ratio": 1.5021872433093637,
+      "max_abs_over_entire_leaf": 1.951745787209802e-08
+    },
+    {
+      "path": "[1][0][6][0]",
+      "semantic_path": [
+        "1",
+        "0",
+        "6",
+        "0"
+      ],
+      "array_shape": [
+        64,
+        1
+      ],
+      "dtype": "float64",
+      "block_days": [
+        9,
+        15
+      ],
+      "failing_element_count": 1,
+      "failing_lane_indices": [
+        37
+      ],
+      "worst_bound_ratio_coordinate": [
+        37,
+        0
+      ],
+      "worst_lane_index": 37,
+      "worst_lane_identity": {
+        "landpoint_id": "313.0-079.0",
+        "inputs_sha256": "dc20ebae8ef573025a94d1e273a50a0d98397f01d7812920b3e194040a88259b"
+      },
+      "candidate_value": 29.926931253713647,
+      "scalar_reference_value": 29.926931273231105,
+      "absolute_difference": 1.951745787209802e-08,
+      "allowed_absolute_bound": 1.2992693127323111e-08,
+      "bound_ratio": 1.5021872433093637,
+      "max_abs_over_entire_leaf": 1.951745787209802e-08
+    }
+  ],
+  "local_numpy": "2.4.6",
+  "model_execution": false,
+  "JAX_imported": true,
+  "scope": "NumPy extraction from existing saved arrays only; no repair, new model call or tolerance change; not an accepted sealed batch stage or full scientific re-audit",
+  "GPU_failure_causality": "not inferred from separate GPU tolerance failures"
+}

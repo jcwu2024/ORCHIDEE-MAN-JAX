@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/register-terminal.sh",
+  "destination": null,
+  "start_epoch": 1791978320.2901075,
+  "stdin_sha256": "0854b659813fc3710372671dd3756c726fb4d0834915cd12dfac296ab46fd9fa",
+  "exit_code": 0,
+  "end_epoch": 1791978320.7791164,
+  "wall_seconds": 0.48900890350341797,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\register-terminal.stdout.txt",
+    "sha256": "ba3112477d611f7643bb12517b58f91fe353c685bf73626a225f02b6aea73442",
+    "bytes": 1903
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\register-terminal.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

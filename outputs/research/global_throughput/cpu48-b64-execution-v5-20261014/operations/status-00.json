@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/status-snapshot.sh",
+  "destination": null,
+  "start_epoch": 1791960383.4551785,
+  "stdin_sha256": "2e51f8529abe1485325790a9591728fdff9999eed81d5f0ae3679115f6a3e901",
+  "exit_code": 0,
+  "end_epoch": 1791960384.1440778,
+  "wall_seconds": 0.6888992786407471,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\status-00.stdout.txt",
+    "sha256": "9f2a4e74ab898c37167ed1880e4402ff69177dd952a61bb569f0959a103ec0e8",
+    "bytes": 7765
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\status-00.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "files": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch.log",
+      "retained_remote": true,
+      "sha256": "dae0c19b37adea497c02f78f98d7dc9c2aee06433cda865a8859c7f8071c0f2e",
+      "bytes": 9478,
+      "local_mirror": "batch.log",
+      "tracked": true
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/orchestration.json",
+      "retained_remote": true,
+      "sha256": "066587d2e876f336135a483bc66ed72f94dd0b22ef270df07a7afdad8102a4a0",
+      "bytes": 182774,
+      "local_mirror": "orchestration.json",
+      "tracked": false
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/events.jsonl",
+      "retained_remote": true,
+      "sha256": "bd6140f5c1cfb8010a429d4a83ed9aad5460320469556ff2fe759aaf8a6e2b99",
+      "bytes": 605,
+      "local_mirror": null,
+      "tracked": false
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/raw_B64_batch_before_parity.pkl",
+      "retained_remote": true,
+      "sha256": "a135f9436afa868176bf8cc76f28134218e510c65b75909075ba24a8964810ce",
+      "bytes": 27562300,
+      "local_mirror": "raw_B64_batch_before_parity.pkl",
+      "tracked": false
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/report.json",
+      "retained_remote": true,
+      "sha256": "75b094ec1708b029b541717eb0328f101e2f42df3734ab48f47cfe56f4b20068",
+      "bytes": 1128664,
+      "local_mirror": "model-report.json",
+      "tracked": false
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/stage_manifest.json",
+      "retained_remote": true,
+      "sha256": "44f9417385dad33f927cfcef603c7ef5f230f815fb4cf2dd454a1a3f658f5a3e",
+      "bytes": 12366,
+      "local_mirror": "stage_manifest.json",
+      "tracked": true
+    }
+  ],
+  "arrays_inspected": true,
+  "model_recomputation": false,
+  "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765",
+  "schema": "global_cpu48_v5_saved_runtime_artifacts_v1",
+  "array_inspection_scope": "only the three reported internal failing leaf arrays were extracted with NumPy from existing candidate/scalar files; see saved-failure-values.json; no full scientific re-audit or model calls",
+  "scalar_source_local_mirror": {
+    "path": "source-scalar.pkl",
+    "sha256": "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa",
+    "tracked": false,
+    "source_job": "15820467",
+    "new_generation": false
+  },
+  "compact_products": [
+    {
+      "path": "AUTHORIZATION.md",
+      "sha256": "dd3c93acbb4e7d3e5c42d3eafd9d1a6055a0dfd817708a31aa9603cb79ac31b6",
+      "bytes": 3266
+    },
+    {
+      "path": "execution-summary.json",
+      "sha256": "e039e8c0a7fcd4758dfcd569cf7ede810cc765ca78e4780fef2656a1d1250987",
+      "bytes": 12152
+    },
+    {
+      "path": "CPU_GPU_COMPARISON.json",
+      "sha256": "14830ae19550e2a9f1f803ef0ab4be16b5e95e27e0bf7831f822d2153c13eabb",
+      "bytes": 4714
+    },
+    {
+      "path": "collector-result.json",
+      "sha256": "cfc08477597ee41852cbfbaa1bf6fa4edbb30c83237f80106ab10aa825bd82e2",
+      "bytes": 6267
+    },
+    {
+      "path": "saved-failure-values.json",
+      "sha256": "18b68f288cc3b545ff13a4c1065ca231c8d3b9aa53795f9f93f63564128d5b24",
+      "bytes": 3534
+    },
+    {
+      "path": "stage_manifest.json",
+      "sha256": "44f9417385dad33f927cfcef603c7ef5f230f815fb4cf2dd454a1a3f658f5a3e",
+      "bytes": 12366
+    },
+    {
+      "path": "terminal/parent-accounting.json",
+      "sha256": "472d7f6ce2823eabd8fbeb04dd8428ffe9312d0719aa0360792268def244eb3b",
+      "bytes": 575
+    },
+    {
+      "path": "terminal/terminal-full.sacct.raw",
+      "sha256": "b27fb9a73bc9f5c4773e5a27f3c992ea1871b949c140e66e9ed4166c4915cd01",
+      "bytes": 970
+    },
+    {
+      "path": "terminal/collector-execution-receipt.json",
+      "sha256": "23bb4c112e5e4d9500c65fa4a7db4f494a6d743743d00455678fadf89724706a",
+      "bytes": 501
+    },
+    {
+      "path": "terminal-registry-receipt.json",
+      "sha256": "8acb0d93e0d473febea96f3c653c7f4852c751c9a536a5a4fa632b960f128762",
+      "bytes": 2081
+    }
+  ],
+  "launch_scontrol": [
+    {
+      "path": "terminal/launch-scontrol.stdout",
+      "sha256": "cf50f61468dd2318caf671f1564c5f9c739dc847d481d3fff202e3d83157589b",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/scontrol-job-15857765.stdout"
+    },
+    {
+      "path": "terminal/launch-scontrol.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/scontrol-job-15857765.stderr"
+    },
+    {
+      "path": "terminal/launch-scontrol.exitcode",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/scontrol-job-15857765.exitcode"
+    }
+  ]
+}

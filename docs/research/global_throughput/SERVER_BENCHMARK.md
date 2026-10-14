@@ -1,8 +1,17 @@
 # Explore1000 Server Benchmark Contract
 
-Current status (2026-10-14 Asia/Shanghai): the fixed CPU48 B64 v5 candidate is
-deployed and passed one bounded free reference-preparation check; supervisor
-review is pending and paid execution is not authorized. Read the [proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PAID_PROPOSAL.md),
+Current status (2026-10-14 Asia/Shanghai): the sole approved paid CPU48 B64 v5
+job **15857765 FAILED 1:0 after 819s** on `ibc12b03n02`; this attempt is closed.
+Read the [execution entry](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/CURRENT_RESULT.md),
+[single-attempt authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/AUTHORIZATION.md),
+[terminal summary](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/execution-summary.json),
+[CPU/GPU comparison](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/CPU_GPU_COMPARISON.json),
+[saved failure values](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/saved-failure-values.json),
+[collector result](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/collector-result.json),
+[runtime evidence manifest](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/runtime-evidence-manifest.json),
+[artifact review](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/artifact-review.json),
+[preparation result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md),
+[proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PAID_PROPOSAL.md),
 [tracked preparation result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md),
 [machine-readable preparation summary](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/preparation-result.json),
 [execution pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/execution-code-pin.json),
@@ -27,13 +36,25 @@ are empty. The same allocation checked real launcher/coordinator/runner argument
 expansion through dry-run; it verifies the planned job-ID path substitution only.
 The real-launch output-directory absence gate remains in the launcher but was not
 exercised by dry-run. Planned 48-CPU arguments are not 48-CPU admission.
-The separate proposal is cnall/one node/task/48 CPUs/zero GPUs/3600s,
-nonexclusive/no-requeue/no added memory or placement restriction, with
-unverified CNY2.40/3.36 rate scenarios. It remains unapproved and unsubmitted;
-all old paid grants remain closed. This free preparation is not numerical,
+The approved single attempt ran once: cnall/one node/task/48 CPUs/zero GPUs/3600s,
+nonexclusive/no-requeue/no added memory or placement restriction. Actual48
+distinct physical cores passed admission; whole-parent use was10.92 allocated
+core-hours with unverified CNY0.546/0.7644 scenarios. B64 lower/compile/first
+call took90.676/256.663/131.938s. The first hard stop was the strict CPU-internal
+scalar gate: three finite leaf comparisons at two points exceeded unchanged
+tolerances. No sealed batch stage, reset, 5+5 warm repeats, or throughput ratio
+was completed. No repair/retry/extension/cancellation followed; all old paid
+grants remain closed. The free preparation is not numerical,
 scientific or throughput acceptance. The prior 61/64 scalar GPU passes, three
 finite failing points/four comparisons, sealed-reset-proof-only limit and
 scientific_acceptance=false are unchanged.
+The two recorded permutation/replacement calls and gates ran and passed; no
+independent sealed-array recomputation followed, and reset/warm/validation seal
+were not reached. Cold first-call time is not a warm sample. The new parent
+estimate is CNY0.546/0.7644 (unverified); prior scalar job15820467 remains a
+separate 2197s asset at CNY1.464666667/2.050533333, counted once. Free pinned
+collector job15864638 completed 0:0 in 6s on cntest/ibtest01 at 1 CPU and only
+preserved `incomplete_run_failure_preserved` accounting.
 
 Historical paid status: CPU48 v4's sole paid job **15853683**
 ended **FAILED 1:0 / 50 parent seconds**, and this attempt is closed. Read the

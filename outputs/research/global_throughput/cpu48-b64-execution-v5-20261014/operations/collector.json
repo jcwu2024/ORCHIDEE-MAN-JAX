@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/collector-driver.sh",
+  "destination": null,
+  "start_epoch": 1791977373.7184963,
+  "stdin_sha256": "7510fdb6f003ebb791bc079ecf24509dd005d60ae6c12631ebbfc671cd6bfea6",
+  "exit_code": 0,
+  "end_epoch": 1791977380.496662,
+  "wall_seconds": 6.778165578842163,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\collector.stdout.txt",
+    "sha256": "0a23e2c55a7a94ebc5a8af4a8d0439371501b40d5c9d400a7681cdc94d695d40",
+    "bytes": 1132
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\collector.stderr.txt",
+    "sha256": "7c1ccaac5c9c81d7f15b510fbe12b0b725729c26394761e7378e2524c725d649",
+    "bytes": 170
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "schema": "global_cpu48_v5_terminal_artifact_review_v1",
+  "status": "compact_terminal_evidence_reviewed",
+  "review_scope": "Cross-check of the listed compact run products and retained-artifact manifest; this review added no model execution, saved-array recomputation or scientific audit. Prior targeted NumPy extraction is recorded in saved-failure-values.json.",
+  "primary_records": [
+    {
+      "path": "CURRENT_RESULT.md",
+      "sha256": "3077224ab49cc1ca7a7348fd82e79f599e4667e2a956e0c71b3c3f2433ceff36"
+    },
+    {
+      "path": "execution-summary.json",
+      "sha256": "e039e8c0a7fcd4758dfcd569cf7ede810cc765ca78e4780fef2656a1d1250987"
+    },
+    {
+      "path": "CPU_GPU_COMPARISON.json",
+      "sha256": "14830ae19550e2a9f1f803ef0ab4be16b5e95e27e0bf7831f822d2153c13eabb"
+    },
+    {
+      "path": "saved-failure-values.json",
+      "sha256": "18b68f288cc3b545ff13a4c1065ca231c8d3b9aa53795f9f93f63564128d5b24"
+    },
+    {
+      "path": "collector-result.json",
+      "sha256": "cfc08477597ee41852cbfbaa1bf6fa4edbb30c83237f80106ab10aa825bd82e2"
+    },
+    {
+      "path": "runtime-evidence-manifest.json",
+      "sha256": "76977d1addd96a61d029d79df51dfebf88dcbe28d0744fe059fd42fc54b91a8f"
+    },
+    {
+      "path": "terminal-registry-receipt.json",
+      "sha256": "8acb0d93e0d473febea96f3c653c7f4852c751c9a536a5a4fa632b960f128762"
+    }
+  ],
+  "execution": {
+    "job_id": "15857765",
+    "terminal_state": "FAILED",
+    "exit_code": "1:0",
+    "parent_elapsed_seconds": 819,
+    "start_cst": "2026-10-14T14:34:22+08:00",
+    "end_cst": "2026-10-14T14:48:01+08:00",
+    "node": "ibc12b03n02",
+    "allocated_cpus": 48,
+    "admitted_distinct_physical_cores": 48,
+    "paid_attempt_closed": true,
+    "scientific_acceptance": false,
+    "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727"
+  },
+  "result": {
+    "lower_seconds": 90.67577147111297,
+    "compile_seconds": 256.66296943090856,
+    "first_call_seconds": 131.93829891085625,
+    "first_failure_gate": "B64_batch_cross_mode_server_scalar",
+    "failed_leaf_comparisons": 3,
+    "failed_points": 2,
+    "tolerance": {
+      "atol": 1e-8,
+      "rtol": 1e-10
+    },
+    "failure_witnesses": [
+      {
+        "path": "[0][0][0][7]",
+        "block_days": [2, 8],
+        "point": "299.0-115.0",
+        "candidate": 592.8152488486185,
+        "scalar_reference": 592.8152487724788,
+        "absolute_difference": 7.613971320097335e-8,
+        "bound_ratio": 1.098990146880813
+      },
+      {
+        "path": "[1][0][5][48]",
+        "block_days": [9, 15],
+        "point": "313.0-079.0",
+        "candidate": 29.926931253713647,
+        "scalar_reference": 29.926931273231105,
+        "absolute_difference": 1.951745787209802e-8,
+        "bound_ratio": 1.5021872433093637
+      },
+      {
+        "path": "[1][0][6][0]",
+        "block_days": [9, 15],
+        "point": "313.0-079.0",
+        "candidate": 29.926931253713647,
+        "scalar_reference": 29.926931273231105,
+        "absolute_difference": 1.951745787209802e-8,
+        "bound_ratio": 1.5021872433093637
+      }
+    ],
+    "permutation_and_replacement_calls_executed": true,
+    "recorded_permutation_and_replacement_gates_passed": true,
+    "independent_sealed_array_recomputation": false,
+    "reset_gate_reached": false,
+    "warm_repeats_reached": false,
+    "validation_arrays_sealed": false,
+    "warm_cpu_throughput_or_cpu_gpu_warm_ratio": null,
+    "cold_first_call_is_not_warm_sample": true
+  },
+  "separate_gpu_comparison": {
+    "warm_comparator_job_id": "15579869",
+    "comparison_observed_in_CPU_job": "15857765",
+    "numerical_reference_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl",
+    "numerical_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "numerical_gate_scope": "Current CPU48 batch against accepted FULL64 GPU numerical reference checkpoint a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6; separate from the warm performance comparator job",
+    "passed_points": 61,
+    "total_points": 64,
+    "failing_points": 3,
+    "failure_comparisons": 4,
+    "causality_with_cpu_internal_failure": "not established"
+  },
+  "collector": {
+    "job_id": "15864638",
+    "partition": "cntest",
+    "node": "ibtest01",
+    "allocated_cpus": 1,
+    "status": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 6,
+    "result_status": "incomplete_run_failure_preserved",
+    "model_execution": false
+  },
+  "accounting": {
+    "new_parent_core_hours": 10.92,
+    "new_parent_cost_cny_estimates_unverified": [0.546, 0.7644],
+    "prior_scalar_job_id": "15820467",
+    "prior_scalar_parent_seconds": 2197,
+    "prior_scalar_core_hours": 29.293333333333333,
+    "prior_scalar_cost_cny_estimates_unverified": [1.464666667, 2.050533333],
+    "prior_scalar_counted_once_and_not_recharged_to_new_parent": true
+  },
+  "retained_large_artifacts": [
+    {
+      "role": "full_model_report",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/report.json",
+      "local_mirror": "model-report.json",
+      "bytes": 1128664,
+      "sha256": "75b094ec1708b029b541717eb0328f101e2f42df3734ab48f47cfe56f4b20068"
+    },
+    {
+      "role": "raw_candidate_output_before_parity",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/raw_B64_batch_before_parity.pkl",
+      "local_mirror": "raw_B64_batch_before_parity.pkl",
+      "bytes": 27562300,
+      "sha256": "a135f9436afa868176bf8cc76f28134218e510c65b75909075ba24a8964810ce"
+    }
+  ],
+  "next_action": "Wait for new supervisor dispatch; no retry, repair, extension, or cancellation is authorized by this terminal record."
+}

@@ -1,7 +1,15 @@
 # 全球物理模型吞吐研究
 
-当前阶段（2026-10-14）：**CPU48 B64 v5 候选已固定、部署并通过一次有界免费参考准备检查；待主管审查，付费执行未授权**。
-先读[准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md)、
+当前阶段（2026-10-14）：**CPU48 B64 v5 的唯一获批付费作业 job15857765 已 FAILED 1:0/819s，本次执行关闭**。
+先读[v5 执行入口](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/CURRENT_RESULT.md)、
+[单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/AUTHORIZATION.md)、
+[终态摘要](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/execution-summary.json)、
+[CPU/GPU比较](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/CPU_GPU_COMPARISON.json)、
+[失败值](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/saved-failure-values.json)、
+[collector结果](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/collector-result.json)、
+[证据清单](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/runtime-evidence-manifest.json)、
+[制品审查](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/artifact-review.json)、
+[准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md)、
 [机器可读摘要](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/preparation-result.json)、
 [执行 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/execution-code-pin.json)
 和[付费提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PAID_PROPOSAL.md)。完整免费检查报告另保留于本地与服务器：
@@ -13,10 +21,11 @@ v5 新 immutable checkout 部署成功，clean 且无 alternates。登录节点�
 64 个真实点的 FULL64 输入及 GPU/scalar 参考（各760叶）加载通过，四项 candidate/stage identity 相同。
 实际脚本耗时16.98秒；仅运行共享 `prepare_references` 后退出，没有创建物理 runner、执行 lower/compile/run 或产生 benchmark 阶段/门/计时。
 免费检查还验证 production launcher/coordinator/runner dry-run 的参数展开及 job-ID 输出路径。dry-run 只检查计划路径替换；真实启动时的目录不存在门保留但未执行。计划48 CPU参数不是48核资源准入。
-本地 compact artifact review 为补充审阅记录；tracked preparation result 与 CURRENT_RESULT 是主要交接入口。
-付费提案仅为 cnall/1 node/1 task/48 CPU/0 GPU/3600s、nonexclusive、no-requeue、无新增内存或 placement 限制，
-费率情景 CNY2.40/3.36 未核实；必须等待主管对该精确候选和命令的审批。没有提交付费作业，旧额度均关闭。
-本结果不代表48核资源入场、物理计算、科学接受或吞吐。原 scalar 61/64 GPU 门通过、3 个有限超差点/4处比较、reset 仅封存证明及 scientific acceptance false 均保留。
+免费准备阶段的本地 compact artifact review 为补充审阅记录；tracked preparation result 是该阶段交接入口。
+批准的唯一命令已按 cnall/1 node/1 task/48 CPU/0 GPU/3600s、nonexclusive、no-requeue、无新增内存或 placement 限制提交一次；实测节点 `ibc12b03n02`，实际48个不同物理核通过准入。父作业819s×48=10.92核时，未核实费用情景CNY0.546/0.7644；本次授权已消耗，不重试、修复、延长或取消。
+B64 lower/compile/first call分别为90.676s/256.663s/131.938s；峰值RSS约10.35GB。完整原生输出保存后，首个硬失败是CPU internal strict gate `B64_batch_cross_mode_server_scalar`：760叶中3处有限容差失败，分布于2个点，最差比值1.502187。失败值及点位见上方记录；这是CPU旧scalar比较，与旧GPU门中61/64通过、3点4处失败不同，不推断共同原因。
+置换/replacement调用已执行且两条记录门通过，但没有独立sealed-array复算；reset、warm repeats及validation seal均未到达。因此没有CPU48热吞吐、同量CPU/GPU速度比或热单位成本，冷first-call不是warm样本。新parent成本估算为CNY0.546/0.7644（费率未核实）；旧scalar job15820467的2197s、CNY1.464666667/2.050533333另计一次，不重复计费。免费collector job15864638在cntest/ibtest01以1 CPU完成0:0/6s，仅保留`incomplete_run_failure_preserved`记账，未重算模型。
+旧scalar 61/64 GPU门、3个有限超差点/4处比较、reset仅封存证明及 scientific acceptance false 均保留。任何后续调查或执行须新派工。
 
 以下为 v4 历史付费终态；当时未保存失败比较双方，具体身份根因由上述后续免费重放确认。
 **CPU48 v4 唯一付费 job15853683 已 FAILED 1:0/50s，本次尝试关闭**。

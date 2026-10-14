@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/presubmit-metadata.sh",
+  "destination": null,
+  "start_epoch": 1791959974.9457843,
+  "stdin_sha256": "73643954c7f44e03e81213edf5ca0605ad76920ac8deab7956b7a6ee2f63ee32",
+  "exit_code": 0,
+  "end_epoch": 1791959978.4659095,
+  "wall_seconds": 3.520125150680542,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\presubmit-metadata.stdout.txt",
+    "sha256": "89dae42b69cbe8af900160472d7261f2e531e21017fdfafc4fba8c5463928c90",
+    "bytes": 3397
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\presubmit-metadata.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

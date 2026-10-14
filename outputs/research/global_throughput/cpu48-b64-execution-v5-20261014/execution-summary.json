@@ -1,0 +1,358 @@
+{
+  "schema": "global_cpu48_v5_terminal_summary_v1",
+  "job_id": "15857765",
+  "status": "FAILED",
+  "exit_code": "1:0",
+  "parent_elapsed_seconds": 819,
+  "start_CST": "2026-10-14T14:34:22+08:00",
+  "end_CST": "2026-10-14T14:48:01+08:00",
+  "node": "ibc12b03n02",
+  "paid_attempt_closed": true,
+  "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+  "execution_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+  "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765",
+  "workload": {
+    "unique_points": 64,
+    "blocks": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "point_days": 896,
+    "native_output_leaves": 760
+  },
+  "runtime": {
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64_enabled": true
+  },
+  "actual_node_start_snapshot": {
+    "captured_epoch": 1791959669.7156746,
+    "hostname": "ibc12b03n02",
+    "loadavg": [
+      0.94,
+      22.85,
+      30.33
+    ],
+    "affinity_logical_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "MemAvailable_bytes": 185706741760,
+    "uptime": "14:34:29 up 121 days,  3:02,  0 users,  load average: 0.94, 22.85, 30.33"
+  },
+  "resource_admission": {
+    "allocated_CPUs": 48,
+    "distinct_physical_cores": 48,
+    "selected_logical_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "parent_billing_CPU_count": 48,
+    "thread_environment_before_JAX": {
+      "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true",
+      "JAX_PLATFORMS": "cpu",
+      "JAX_ENABLE_X64": "true",
+      "OMP_NUM_THREADS": "48",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "host_memory_admission": {
+      "MemAvailable_bytes": 185688641536,
+      "conservative_required_bytes": 68719476736,
+      "scope": "host RSS estimate, not a Slurm whole-node memory reservation or OOM guarantee"
+    },
+    "post_compile_observed_thread_count": 179,
+    "all_post_compile_thread_masks_within_declared_cores": true,
+    "scope": "allocation/affinity is not demonstrated48-core utilization"
+  },
+  "first_substantive_failure": {
+    "gate": "B64_batch_cross_mode_server_scalar",
+    "type": "CPU internal strict numerical tolerance gate; not startup/provenance failure",
+    "compared_leaves": 760,
+    "failed_leaf_comparisons": [
+      {
+        "path": "[0][0][0][7]",
+        "reason": "tolerance",
+        "max_bound_ratio": 1.098990146880813
+      },
+      {
+        "path": "[1][0][5][48]",
+        "reason": "tolerance",
+        "max_bound_ratio": 1.5021872433093637
+      },
+      {
+        "path": "[1][0][6][0]",
+        "reason": "tolerance",
+        "max_bound_ratio": 1.5021872433093637
+      }
+    ],
+    "max_bound_ratio": 1.5021872433093637,
+    "whole_760_leaf_tree_max_abs": 8.463580161333084e-05,
+    "whole_tree_max_abs_is_not_failed_coordinate_absdiff": true,
+    "witness_file": "saved-failure-values.json"
+  },
+  "separate_GPU_gate_results": {
+    "passed_points": 61,
+    "total_points": 64,
+    "failing_points": [
+      {
+        "name": "B64_batch_lane_11_285.0-087.0_GPU_reference",
+        "failures": [
+          {
+            "path": "[1][0][0][7]",
+            "reason": "tolerance",
+            "max_bound_ratio": 1.4304787900728568
+          }
+        ],
+        "max_abs": 1.9278377294540405e-07,
+        "max_bound_ratio": 1.4304787900728568
+      },
+      {
+        "name": "B64_batch_lane_37_313.0-079.0_GPU_reference",
+        "failures": [
+          {
+            "path": "[1][0][5][48]",
+            "reason": "tolerance",
+            "max_bound_ratio": 1.2114397202245712
+          },
+          {
+            "path": "[1][0][6][0]",
+            "reason": "tolerance",
+            "max_bound_ratio": 1.2114397202245712
+          }
+        ],
+        "max_abs": 6.889691576361656e-06,
+        "max_bound_ratio": 1.2114397202245712
+      },
+      {
+        "name": "B64_batch_lane_45_283.0-091.0_GPU_reference",
+        "failures": [
+          {
+            "path": "[0][0][0][7]",
+            "reason": "tolerance",
+            "max_bound_ratio": 1.4072734041854673
+          }
+        ],
+        "max_abs": 4.1676685214042664e-07,
+        "max_bound_ratio": 1.4072734041854673
+      }
+    ],
+    "failure_comparisons": 4,
+    "causality_relative_to_CPU_internal_failure": "not established"
+  },
+  "recorded_isolation_gates": [
+    {
+      "name": "B64_server_batch_cross_group_permutation",
+      "passed": true,
+      "compared_leaves": 760
+    },
+    {
+      "name": "B64_server_batch_replacement_isolation",
+      "passed": true,
+      "compared_leaves": 760
+    }
+  ],
+  "gate_boundary": "permutation/replacement calls and recorded gates completed; no independent sealed-array isolation/reset recomputation; reset/warm/validation-array seal not reached",
+  "phases": [
+    {
+      "phase": "server_batch_B64_lower_start",
+      "elapsed_seconds": 8.354386137798429,
+      "rss_bytes": 1295634432
+    },
+    {
+      "phase": "server_batch_B64_compile_start",
+      "elapsed_seconds": 100.55754223838449,
+      "rss_bytes": 2233655296
+    },
+    {
+      "phase": "server_batch_B64_compiled",
+      "elapsed_seconds": 357.28199182637036,
+      "rss_bytes": 6207782912
+    },
+    {
+      "phase": "B64_batch_raw_output_saved_before_parity",
+      "elapsed_seconds": 489.6195173058659,
+      "rss_bytes": 6085009408,
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765/batch/raw_B64_batch_before_parity.pkl"
+    }
+  ],
+  "timing_seconds": {
+    "server_batch_B64_host_stack_seconds": 0.40362329594790936,
+    "server_batch_B64_device_transfer_seconds": 0.1096389926970005,
+    "server_batch_B64_lower_seconds": 90.67577147111297,
+    "server_batch_B64_compile_seconds": 256.66296943090856,
+    "B64_first_call_seconds": 131.93829891085625
+  },
+  "compiled_input_signature": {
+    "caller_leaves": 536,
+    "public_input_leaves": 536,
+    "internal_all_args_leaves": 536,
+    "kept_input_leaves": 417,
+    "public_tree_shape_dtype_weak_type_equal": true,
+    "internal_signature_equal": true
+  },
+  "peak_RSS_bytes_sampled": 10336268288,
+  "linux_ru_maxrss_peak_bytes": 10354053120,
+  "model_process_CPU_user_system_seconds": 1294.2199999999998,
+  "model_benchmark_wall_seconds": 759.1614878531545,
+  "no_complete_batch_stage": true,
+  "warm_core_samples": [],
+  "warm_wrapper_samples": [],
+  "new_parent_accounting": {
+    "status": "terminal_parent_accounting_loaded",
+    "source": "sacct",
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/terminal/parent-accounting.json",
+    "sha256": "472d7f6ce2823eabd8fbeb04dd8428ffe9312d0719aa0360792268def244eb3b",
+    "raw_parent_record": "15857765|FAILED|00:13:39|billing=48,cpu=48,node=1\n",
+    "raw_parent_record_sha256": "12d2d2d07f41d82b1ee1a9218c53a73494805f3b94fdf33acab8c9ce09ea6d36",
+    "job_id": "15857765",
+    "AllocTRES": "billing=48,cpu=48,node=1",
+    "Elapsed": "00:13:39",
+    "terminal_status": "FAILED",
+    "wall_seconds": 819,
+    "allocated_parent_CPU_request_core_hours": 10.92,
+    "primary_cost_cny_estimate": 0.546,
+    "conservative_cost_cny_estimate": 0.7644000000000001,
+    "billing_verified": false,
+    "scope": "whole parent Slurm job; scalar step is charged inside the parent 48-CPU allocation"
+  },
+  "prior_scalar_asset_accounting": {
+    "status": "terminal_source_parent_accounting_loaded",
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/parent-accounting.json",
+    "admission_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/scalar-admission.json",
+    "admission_sha256": "4d2d3d18d92c0d6c6bc737059bc2b2555cf36f77b4a3c4406844071ab6a3e7f5",
+    "sha256": "a04c687530f390ad1d5f1d3668293a552b3a9b37f0cd05ef1f264660c2f37113",
+    "job_id": "15820467",
+    "candidate_job_id": "15857765",
+    "terminal_status": "FAILED",
+    "Elapsed": "00:36:37",
+    "wall_seconds": 2197,
+    "AllocTRES": "billing=48,cpu=48,node=1",
+    "raw_parent_record": "15820467|FAILED|00:36:37|billing=48,cpu=48,node=1\n",
+    "raw_parent_record_sha256": "e059a19bb41ff88ee685de0e76a13727f9861039c6373832e320dad541321bd6",
+    "allocated_CPU_request_core_hours": 29.293333333333333,
+    "primary_cost_cny_estimate": 1.4646666666666668,
+    "conservative_cost_cny_estimate": 2.0505333333333335,
+    "billing_verified": false,
+    "counted_once_as_source_parent": true,
+    "new_allocation_reuse_charge": false,
+    "scope": "completed prior 48-CPU source job; not included in new parent allocation estimate"
+  },
+  "accounting_boundary": "raw sacct819s parent is authority; unchanged collector generic scalar-step scope string does not mean scalar was regenerated or double charged",
+  "collector": {
+    "job_id": "15864638",
+    "source_SHA256": "efcb32efa754bbdbb75936f358dc6cb5a286e6742948096bda3e3ba22d27a9e3",
+    "result_path": "collector-result.json",
+    "result_SHA256": "cfc08477597ee41852cbfbaa1bf6fa4edbb30c83237f80106ab10aa825bd82e2",
+    "status": "incomplete_run_failure_preserved",
+    "model_execution": false
+  },
+  "original_error": "gate failed: B64_batch_cross_mode_server_scalar; see report.json",
+  "traceback": "Traceback (most recent call last):\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5/scripts/dev/benchmark_global_server_cpu.py\", line 741, in main\n    benchmark(args, recorder, lanes, second, scale, resources)\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5/scripts/dev/benchmark_global_server_cpu.py\", line 558, in benchmark\n    (value, record), reused = store.run(f\"B{size}_server_{args.mode}_v1\", operation)\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5/scripts/dev/global_batch_stage_store.py\", line 148, in run\n    value, record = operation()\n                    ^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5/scripts/dev/benchmark_global_server_cpu.py\", line 504, in operation\n    recorder.gate(f\"B{size}_{args.mode}_cross_mode_server_scalar\", output, scalar)\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5/scripts/dev/benchmark_global_batch.py\", line 218, in gate\n    raise AssertionError(f\"gate failed: {name}; see report.json\")\nAssertionError: gate failed: B64_batch_cross_mode_server_scalar; see report.json\n",
+  "scientific_acceptance": false,
+  "limits": [
+    "No completed batch stage, sealed validation arrays, reset gate or five+five warm samples.",
+    "No CPU48 warm throughput or CPU/GPU warm speed/cost ratio.",
+    "Separate GPU three finite failing points/four comparisons, scalar61/64 and sealed-reset-proof limitation persist.",
+    "No repair, retry, extension, cancellation, environment/source change or scientific acceptance."
+  ]
+}

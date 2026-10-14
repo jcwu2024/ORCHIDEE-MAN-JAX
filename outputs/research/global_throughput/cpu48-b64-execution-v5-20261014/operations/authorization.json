@@ -1,0 +1,29 @@
+{
+  "mode": "upload",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/AUTHORIZATION.md",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/AUTHORIZATION.md"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/AUTHORIZATION.md",
+  "destination": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/AUTHORIZATION.md",
+  "start_epoch": 1791960057.2179685,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791960057.5370572,
+  "wall_seconds": 0.3190886974334717,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\authorization.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v5-20261014\\operations\\authorization.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

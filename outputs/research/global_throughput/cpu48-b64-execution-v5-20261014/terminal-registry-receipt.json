@@ -1,0 +1,41 @@
+{
+  "old_checkouts_or_assets_changed": false, 
+  "README_after_sha256": "16d00b1bf2b534fae6c95602649ab64f0ba2ecc4ae744e8086f57dfd9e76c61d", 
+  "entry": {
+    "next_action": "wait for new supervisor dispatch; no retry", 
+    "collector_result_sha256": "cfc08477597ee41852cbfbaa1bf6fa4edbb30c83237f80106ab10aa825bd82e2", 
+    "prior_scalar_seconds": 2197, 
+    "whole_parent_CNY_scenarios": [
+      0.546, 
+      0.7644
+    ], 
+    "prior_scalar_job_id": "15820467", 
+    "collector_job_id": "15864638", 
+    "failure_gate": "B64_batch_cross_mode_server_scalar", 
+    "prior_scalar_recharged": false, 
+    "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5", 
+    "preserve_all_prior_records_and_assets": true, 
+    "warm_samples": 0, 
+    "job_id": "15857765", 
+    "allocated_CPUs": 48, 
+    "terminal_state": "FAILED", 
+    "evidence_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v5-20261014", 
+    "exit_code": "1:0", 
+    "stage_manifest_sha256": "44f9417385dad33f927cfcef603c7ef5f230f815fb4cf2dd454a1a3f658f5a3e", 
+    "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765", 
+    "raw_outputs_sha256": "a135f9436afa868176bf8cc76f28134218e510c65b75909075ba24a8964810ce", 
+    "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727", 
+    "parent_seconds": 819, 
+    "physical_compile_and_first_call_completed": true, 
+    "attempt_closed": true, 
+    "scientific_acceptance": false, 
+    "GPUs": 0
+  }, 
+  "main_daily_research_refs_changed": false, 
+  "README_before_sha256": "5e3ba3db3de0c7ea6fbd0136594b29afdf5f9df80aec072e2144ea16ebd45328", 
+  "registry_before_sha256": "7de57bf880156963def8a3faebadced52e5338f84d22c113d522f2d601406363", 
+  "old_records_and_bytes_preserved": true, 
+  "registry_after_sha256": "2502a2d3493b7dec266e784c5c2c7375e6b3910d39579ebb9ba7996848a7d32b", 
+  "archive_or_delete": false, 
+  "schema": "global_cpu48_v5_terminal_registry_v1"
+}

@@ -1,0 +1,4 @@
+JobIDRaw|Partition|State|ExitCode|Elapsed|Timelimit|AllocCPUS|NodeList
+15864638|cntest|COMPLETED|0:0|00:00:06|00:05:00|1|ibtest01
+15864638.extern||COMPLETED|0:0|00:00:07||1|ibtest01
+15864638.0||COMPLETED|0:0|00:00:03||1|ibtest01

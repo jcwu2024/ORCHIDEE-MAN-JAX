@@ -1,0 +1,30 @@
+{
+  "job_id": "15857765",
+  "terminal_state": "FAILED",
+  "exit_code": "1:0",
+  "parent_seconds": 819,
+  "allocated_CPUs": 48,
+  "GPUs": 0,
+  "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+  "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+  "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857765",
+  "evidence_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v5-20261014",
+  "failure_gate": "B64_batch_cross_mode_server_scalar",
+  "physical_compile_and_first_call_completed": true,
+  "warm_samples": 0,
+  "whole_parent_CNY_scenarios": [
+    0.546,
+    0.7644
+  ],
+  "prior_scalar_job_id": "15820467",
+  "prior_scalar_seconds": 2197,
+  "prior_scalar_recharged": false,
+  "scientific_acceptance": false,
+  "attempt_closed": true,
+  "collector_job_id": "15864638",
+  "collector_result_sha256": "cfc08477597ee41852cbfbaa1bf6fa4edbb30c83237f80106ab10aa825bd82e2",
+  "raw_outputs_sha256": "a135f9436afa868176bf8cc76f28134218e510c65b75909075ba24a8964810ce",
+  "stage_manifest_sha256": "44f9417385dad33f927cfcef603c7ef5f230f815fb4cf2dd454a1a3f658f5a3e",
+  "next_action": "wait for new supervisor dispatch; no retry",
+  "preserve_all_prior_records_and_assets": true
+}
