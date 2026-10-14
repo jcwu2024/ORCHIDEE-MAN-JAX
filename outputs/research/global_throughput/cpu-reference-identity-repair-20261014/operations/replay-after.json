@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu-reference-identity-repair-20261014/replay-after-driver.sh",
+  "destination": null,
+  "start_epoch": 1791949409.5355625,
+  "stdin_sha256": "5c24697bb3127ac6a136e8117be00ac20d6bacd4aba189141df7df7e29e0bbca",
+  "exit_code": 0,
+  "end_epoch": 1791949432.1459806,
+  "wall_seconds": 22.61041808128357,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu-reference-identity-repair-20261014\\operations\\replay-after.stdout.txt",
+    "sha256": "54f4cdf22ec5000f291b1c9abce86ee98e7a10551b05401bf0c0cf58fe7c27d8",
+    "bytes": 733
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu-reference-identity-repair-20261014\\operations\\replay-after.stderr.txt",
+    "sha256": "919bad3adc0fc154c8efbcefe30aa4d1cb307bdaf98d12d92f905bbfe93980ab",
+    "bytes": 220
+  }
+}

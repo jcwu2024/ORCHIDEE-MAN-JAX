@@ -1,0 +1,88 @@
+{
+  "schema": "global_cpu_reference_identity_repair_v1",
+  "root_cause": "actual metadata.git_head omitted by stage_identity runtime projection",
+  "before": {
+    "job_id": "15855041",
+    "status": "reference_preparation_failed",
+    "message": "FULL64 CPU scalar admission candidate provenance differs from current execution identity",
+    "comparisons": {
+      "baseline_ref": {
+        "candidate": "133e35aec7b83b9d79888c46092f64d518e97299",
+        "stage": "133e35aec7b83b9d79888c46092f64d518e97299"
+      },
+      "science_sha256": {
+        "candidate": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+        "stage": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+      },
+      "gpu_reference_sha256": {
+        "candidate": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "stage": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "execution_commit": {
+        "candidate": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+        "stage": null
+      }
+    },
+    "report_sha256": "8f18494d4c731a527937e800d0b1eb4f68562ee32de9bd7dde0370ba3bddb0e7"
+  },
+  "after": {
+    "job_id": "15855062",
+    "status": "reference_preparation_passed",
+    "comparisons": {
+      "baseline_ref": {
+        "candidate": "133e35aec7b83b9d79888c46092f64d518e97299",
+        "stage": "133e35aec7b83b9d79888c46092f64d518e97299"
+      },
+      "science_sha256": {
+        "candidate": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+        "stage": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+      },
+      "gpu_reference_sha256": {
+        "candidate": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "stage": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "execution_commit": {
+        "candidate": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+        "stage": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3"
+      }
+    },
+    "report_sha256": "2d28e1e3c83fd9728816254d9e45a32f3776a57e878abb084bf8ff4809384d20",
+    "GPU_reference_loaded": true,
+    "CPU_reference_loaded": true,
+    "output_leaf_counts": {
+      "GPU": 760,
+      "CPU_scalar": 760
+    }
+  },
+  "runtime": {
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64_enabled": true,
+    "device_details": [
+      {
+        "platform": "cpu",
+        "kind": "cpu",
+        "id": 0
+      }
+    ]
+  },
+  "actual_allocation": {
+    "job_id": "15855062",
+    "partition": "cntest",
+    "node": "ibtest02",
+    "actual_cpus": 1,
+    "affinity": [
+      0
+    ]
+  },
+  "physical_lower_compile_run": false,
+  "scientific_acceptance": false,
+  "production_checkout_updated": false,
+  "paid_submission": false,
+  "admission_path_rebinding_only": {
+    "candidate_identity.execution_code_dir": {
+      "original": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4",
+      "derived": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014"
+    }
+  }
+}

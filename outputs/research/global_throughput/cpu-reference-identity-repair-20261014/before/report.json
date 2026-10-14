@@ -1,0 +1,146 @@
+{
+  "status": "reference_preparation_failed",
+  "phases": [],
+  "gates": [],
+  "timing": {},
+  "environment": {
+    "command": [
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014/scripts/dev/diagnose_global_cpu_references.py",
+      "--mode",
+      "batch",
+      "--cpu-budget",
+      "1",
+      "--sizes",
+      "64",
+      "--prepared-input",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "--gpu-reference-dir",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+      "--expected-gpu-reference-sha256",
+      "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+      "--cpu-reference-dir",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar",
+      "--cpu-reference-admission-record",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-reference-identity-repair-20261014/diagnostic-admission.json",
+      "--expected-cpu-reference-admission-sha256",
+      "41f59ab72cd620cd892398ae3b069d1867b6b7d72cd98dede40dbf93c0cdde51",
+      "--validation-mode",
+      "exploratory",
+      "--cpu-reference-role",
+      "cpu-internal",
+      "--warm-repeats",
+      "5",
+      "--memory-guard-gib",
+      "64",
+      "--config",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014/configs/orchidee_man_250919.yaml",
+      "--truth-root",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014",
+      "--output-dir",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-reference-identity-repair-20261014/before"
+    ],
+    "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014",
+    "platform": "Linux-3.10.0-1160.el7.nosig.x86_64-x86_64-with-glibc2.17",
+    "python": "3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "numpy": "2.2.6",
+    "devices": [
+      "TFRT_CPU_0"
+    ],
+    "device_details": [
+      {
+        "platform": "cpu",
+        "kind": "cpu",
+        "id": 0
+      }
+    ],
+    "backend_platform_version": "cpu",
+    "x64_enabled": true,
+    "cpu_count": 56,
+    "cpu_affinity": [
+      0
+    ],
+    "cpu_model": "x86_64",
+    "hostname": "ibtest02",
+    "physical_gpu": {
+      "uuid": null,
+      "driver_version": null,
+      "source": "launcher-selected GPU; original numerical manifest lacks physical UUID/driver"
+    },
+    "loadavg": [
+      109.55,
+      110.61,
+      110.76
+    ],
+    "env": {
+      "XLA_FLAGS": null,
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "JAX_PLATFORMS": "cpu",
+      "JAX_COMPILATION_CACHE_DIR": null,
+      "ORCHJAX_DISABLE_COMPILATION_CACHE": "1",
+      "CUDA_VISIBLE_DEVICES": null,
+      "XLA_PYTHON_CLIENT_PREALLOCATE": null
+    },
+    "cache_policy": "disabled",
+    "gpu_count": 0,
+    "visible_affinity_core_count": 1,
+    "assigned_cpu_count": "1",
+    "rss_instrumentation": "proc_statm_current_RSS_100ms_sample_plus_resource_ru_maxrss_Linux_KiB_converted_to_bytes",
+    "warm_reset_policy": "each repeat uses the same frozen Day1 end state; two sequential seven-day blocks",
+    "block_days": [
+      [
+        2,
+        8
+      ],
+      [
+        9,
+        15
+      ]
+    ],
+    "inner_npts": 1,
+    "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+    "git_head": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+    "fortran_science_gate": "not_run; separate annual/source acceptance contract"
+  },
+  "reference_preparation_gpu_loaded": true,
+  "reference_preparation_identity": {
+    "baseline_ref": {
+      "candidate": "133e35aec7b83b9d79888c46092f64d518e97299",
+      "stage": "133e35aec7b83b9d79888c46092f64d518e97299"
+    },
+    "science_sha256": {
+      "candidate": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "stage": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+    },
+    "gpu_reference_sha256": {
+      "candidate": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+      "stage": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+    },
+    "execution_commit": {
+      "candidate": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+      "stage": null
+    }
+  },
+  "message": "FULL64 CPU scalar admission candidate provenance differs from current execution identity",
+  "traceback": "Traceback (most recent call last):\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014/scripts/dev/diagnose_global_cpu_references.py\", line 58, in main\n    prepared = cpu.prepare_references(args, recorder, lanes, second, scale, resources)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014/scripts/dev/benchmark_global_server_cpu.py\", line 424, in prepare_references\n    cpu_references[size] = load_reference(args.cpu_reference_dir, identity,\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014/scripts/dev/global_server_reference.py\", line 283, in load_reference\n    raise ValueError(\"FULL64 CPU scalar admission candidate provenance differs from current execution identity\")\nValueError: FULL64 CPU scalar admission candidate provenance differs from current execution identity\n",
+  "diagnostic_allocation": {
+    "job_id": "15855041",
+    "partition": "cntest",
+    "node": "ibtest02",
+    "actual_cpus": 1,
+    "affinity": [
+      0
+    ]
+  },
+  "JAX_initialized": true,
+  "physical_runner_created": false,
+  "physical_lower_compile_run": false,
+  "scientific_acceptance": false,
+  "exit_boundary": "immediately after shared production prepare_references; before StageStore/SingleRunner/PoolRunner",
+  "peak_rss_bytes": 1020428288,
+  "linux_ru_maxrss_peak_bytes": 1020428288,
+  "elapsed_seconds": 17.26861252076924
+}

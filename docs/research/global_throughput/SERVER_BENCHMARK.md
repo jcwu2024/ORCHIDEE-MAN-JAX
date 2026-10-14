@@ -1,6 +1,24 @@
 # Explore1000 Server Benchmark Contract
 
-Current status (2026-10-14 Asia/Shanghai): CPU48 v4's sole paid job **15853683**
+Current status (2026-10-14 Asia/Shanghai): bounded identity repair and free
+precompile reference preparation are complete, awaiting supervisor acceptance.
+Read the [repair result](../../../outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md).
+Before job15855041 reproduced the original provenance ValueError with the real
+producer: baseline/science/GPU SHA matched, but stage_identity omitted the actual
+metadata.git_head. Server preparation now explicitly opts into that projection;
+generic legacy stage schemas and all consumer guards remain unchanged.
+After job15855062 completed the shared production prepare_references path using
+real FULL64 input and both GPU/scalar references, each retaining 760 leaves,
+on JAX/jaxlib0.4.38 CPU/x64. Both runs were cntest/ibtest02 with actual one CPU,
+300s limits and parent durations 65s/23s; neither constructed a physical runner
+or reached physical lower/compile/run. This is not CPU48 admission, numerical
+acceptance or throughput evidence. Original production checkout and admission
+remain intact; diagnostic overlays and the sole staging-path admission rebinding
+are recorded. All 55 focused local producer/rejection/interface tests passed;
+synthetic guard fixture limits are disclosed separately from target evidence.
+No new paid proposal/submission, GPU or scalar generation occurred.
+
+Historical paid status: CPU48 v4's sole paid job **15853683**
 ended **FAILED 1:0 / 50 parent seconds**, and this attempt is closed. Read the
 [actual terminal result](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md),
 [single execution authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)

@@ -112,3 +112,7 @@ outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/**/*.md tex
 # Preserve approved CPU48 v4 deployment, preflight and execution evidence bytes.
 outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/** -text whitespace=-blank-at-eol,-blank-at-eof
 outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/**/*.md text eol=lf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Preserve bounded CPU reference identity diagnostic evidence bytes.
+outputs/research/global_throughput/cpu-reference-identity-repair-20261014/** -text whitespace=-blank-at-eol,-blank-at-eof
+outputs/research/global_throughput/cpu-reference-identity-repair-20261014/**/*.md text eol=lf whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

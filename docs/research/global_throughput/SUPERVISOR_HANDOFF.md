@@ -1,6 +1,17 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-14。CPU48 v4 唯一付费 job **15853683** 已 **FAILED 1:0/50s**，本次尝试关闭。
+更新：2026-10-14。有界参考身份修复和免费 precompile 全链验证已完成，待主管验收。
+当前先读[修复结果](../../../outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md)及同目录summary.json。
+免费修前job15855041重现原错误：实际metadata含git_head，但stage_identity投影遗漏；baseline/science/GPU SHA三项一致，执行SHA变为null。
+server显式opt-in传递实际git_head，generic旧stage schema和所有reference guard不变。
+修后job15855062在真实JAX/jaxlib0.4.38 CPU/x64读取FULL64输入及GPU/旧scalar完整760叶参考，两条load_reference通过，四项身份均匹配。
+生产benchmark与诊断直接共用prepare_references；仅cntest/ibtest02实际1CPU、每次300s上限（父65s/23s），返回后立即退出、不构建runner或模型lower/compile/run。
+历史104物理blob/sciencepin及研究carbon修复分离保留，原production checkout/pin/admission字节未变；staging派生admission只重绑实际代码路径，不生成新audit。
+没有新付费提案/作业、scalar重生成或GPU运行；61/64、3点4处有限超差、reset只有封存证明、科学false均不变。
+本地producer/错误execution身份拒绝/关联接口55项测试通过；synthetic loader单测stub边界在报告披露，不冒充实际目标runtime。
+后续生产48CPU资源、模型编译/运行、数值门和吞吐仍未验证，须新派工；所有旧付费额度保持关闭。
+
+以下为v4历史付费终态：CPU48 v4 唯一付费 job **15853683** 已 **FAILED 1:0/50s**，本次尝试关闭。
 先读[v4 实际终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md)、
 [单次执行授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)、
 [v4 准备交付](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、

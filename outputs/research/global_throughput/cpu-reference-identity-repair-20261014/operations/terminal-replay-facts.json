@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu-reference-identity-repair-20261014/terminal-replay-facts.sh",
+  "destination": null,
+  "start_epoch": 1791949591.4805875,
+  "stdin_sha256": "2d296be9208275fd4be08f6156d7fb6ed9d45f2431c4c40cadf8ea01926469dc",
+  "exit_code": 0,
+  "end_epoch": 1791949593.0418074,
+  "wall_seconds": 1.5612199306488037,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu-reference-identity-repair-20261014\\operations\\terminal-replay-facts.stdout.txt",
+    "sha256": "c79d0ae2c0feb29d87f2888d017298fc077554e08e8700079016f9d4427c7faf",
+    "bytes": 1444
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu-reference-identity-repair-20261014\\operations\\terminal-replay-facts.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

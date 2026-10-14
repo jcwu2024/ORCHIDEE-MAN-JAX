@@ -1,0 +1,13 @@
+JobIDRaw|Partition|State|ExitCode|Elapsed|Timelimit|AllocCPUS|AllocTRES|NodeList
+15855041|cntest|COMPLETED|0:0|00:01:05|00:05:00|1|billing=1,cpu=1,node=1|ibtest02
+15855041.extern||COMPLETED|0:0|00:01:06||1|billing=1,cpu=1,node=1|ibtest02
+15855041.0||COMPLETED|0:0|00:01:02||1|cpu=1,mem=0,node=1|ibtest02
+15855062|cntest|COMPLETED|0:0|00:00:23|00:05:00|1|billing=1,cpu=1,node=1|ibtest02
+15855062.extern||COMPLETED|0:0|00:00:23||1|billing=1,cpu=1,node=1|ibtest02
+15855062.0||COMPLETED|0:0|00:00:20||1|cpu=1,mem=0,node=1|ibtest02
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3
+75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba
+8f18494d4c731a527937e800d0b1eb4f68562ee32de9bd7dde0370ba3bddb0e7  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-reference-identity-repair-20261014/before/report.json
+2d28e1e3c83fd9728816254d9e45a32f3776a57e878abb084bf8ff4809384d20  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-reference-identity-repair-20261014/after/report.json
+f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-reference-identity-repair-20261014/original-admission.json
+41f59ab72cd620cd892398ae3b069d1867b6b7d72cd98dede40dbf93c0cdde51  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-reference-identity-repair-20261014/diagnostic-admission.json

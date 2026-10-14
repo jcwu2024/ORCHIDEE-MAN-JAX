@@ -98,7 +98,7 @@ def mock_toy(monkeypatch, lanes, second):
     monkeypatch.setattr(scale.base, "legacy_factory", lambda *args: None)
     monkeypatch.setattr(scale.base, "roughheight_sentinel_contract", lambda *args: {})
     monkeypatch.setattr(batch, "make_scalar_transition", lambda *args, **kwargs: toy_transition)
-    monkeypatch.setattr(scale.base, "stage_identity", lambda *args: toy_identity(lanes))
+    monkeypatch.setattr(scale.base, "stage_identity", lambda *args, **kwargs: toy_identity(lanes))
     monkeypatch.setattr(cpu, "thread_affinity", lambda *args: {"all_observed_thread_masks_within_declared_cores": True})
     monkeypatch.setattr(candidate, "thread_affinity", lambda *args: {"all_observed_thread_masks_within_declared_cores": True})
     outputs = [scale.base.run_two(jax.jit(toy_transition), lane.arguments, other)
@@ -142,7 +142,7 @@ def test_expected_GPU_reference_hash_mismatch_stops_before_runner_compile(monkey
     monkeypatch.setattr(scale, "screen_inputs", lambda *args: {})
     monkeypatch.setattr(scale.base, "legacy_factory", lambda *args: None)
     monkeypatch.setattr(scale.base, "roughheight_sentinel_contract", lambda *args: {})
-    monkeypatch.setattr(scale.base, "stage_identity", lambda *args: {})
+    monkeypatch.setattr(scale.base, "stage_identity", lambda *args, **kwargs: {})
     monkeypatch.setattr(refs, "load_reference", lambda *args, **kwargs: (None, {"sha256": "b" * 64}))
     def forbidden(*args, **kwargs):
         pytest.fail("reference identity mismatch must precede runner construction/compile")

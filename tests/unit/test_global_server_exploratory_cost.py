@@ -156,7 +156,7 @@ def test_runner_scalar_complete_record_is_admitted_without_cross_mode(monkeypatc
     # Keep the toy transition but declare the complete fixed comparator policy.
     identity = _fixtures.toy_identity(lanes)
     identity["gate"] = cost.FIXED_GATE.copy()
-    monkeypatch.setattr(_fixtures.scale.base, "stage_identity", lambda *args: identity.copy())
+    monkeypatch.setattr(_fixtures.scale.base, "stage_identity", lambda *args, **kwargs: identity.copy())
     _fixtures.run_toy_case(args, recorder, lanes, second)
     manifest = json.loads((args.output_dir / "stage_manifest.json").read_text())
     name = "B16_server_scalar_v1"

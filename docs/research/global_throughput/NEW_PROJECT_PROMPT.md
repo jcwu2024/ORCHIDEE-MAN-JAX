@@ -14,7 +14,14 @@ subagent-steward 已安装，只辅助各线程内部子代理安排，不替代
 固定 cwd E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput，branch research/global-throughput。
 不往根 main 写研究，不切换别人的工作树；添加 UI 项目不证明旧聊天 cwd 改变。
 先读 AGENTS.md，以及 docs/research/global_throughput/SUPERVISOR_HANDOFF.md、README.md、SERVER_BENCHMARK.md。
-当前执行证据入口：outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md、AUTHORIZATION.md、runtime-evidence-manifest.json、artifact-review/review.json。
+当前证据入口：outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md、summary.json、overlay-provenance.json、before/report.json、after/report.json及targeted test结果。
+有界参考身份修复和免费precompile完整参考准备已完成，待主管验收；修前job15855041在实际cntest/ibtest02/1CPU重现provenance ValueError，metadata.git_head在stage_identity被丢弃，另外三项身份完全一致。
+server显式opt-in保留真实producer的git_head；generic旧schema和reference guard不变。修后job15855062同节点实际1CPU、JAX/jaxlib0.4.38 CPU/x64读取真实FULL64输入，GPU/旧scalar两条load_reference通过（各760叶），四项身份匹配。
+生产benchmark与诊断直接共用prepare_references，返回后退出、未构建physical runner或模型lower/compile/run；每次免费上限300s，父65s/23s。不是48CPU物理资源、数值或吞吐验收。
+隔离staging只覆盖harness，104物理文件/sciencepin不变，原60dcc…production/pin/admission原字节保留。derived admission仅明确重绑实际staging代码路径，不创建新audit。
+本地producer/错误execution身份拒绝/关联接口55项测试通过，synthetic guard单测stub及runtime声明边界见test-results.txt和修复报告，不代替目标0.4.38验证。
+本轮无付费提案/作业、scalar重生成、GPU执行或环境变化；科学false、3点4处有限超差与reset封存限制保留。所有旧付费额度仍关闭，后续模型执行必须新派工。
+历史执行证据入口：outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md、AUTHORIZATION.md、runtime-evidence-manifest.json、artifact-review/review.json。
 固定 pin 与原命令在 cpu48-b64-preparation-v4-20261014/execution-code-pin.json、PROPOSED_SUBMISSION.sh；准备证据已被实际终态入口接替。
 读 docs/WORKSPACE_MANAGEMENT.md 和 handoff 链接的共享主树 deployment-explore1000.md；其他历史按问题查阅。
 

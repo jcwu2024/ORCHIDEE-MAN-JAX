@@ -1,0 +1,26 @@
+{
+  "original_execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "staging_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014",
+  "diagnostic_only": true,
+  "production_checkout_unchanged": true,
+  "admission_change": {
+    "candidate_identity.execution_code_dir": {
+      "original": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4",
+      "derived": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/diagnostics/global-cpu-reference-identity-20261014"
+    }
+  },
+  "original_admission_sha256": "f71eb5db4e638615ef5e06be5783d193bbfc1bd7563dd30c2424e04b40c14a8d",
+  "derived_admission_sha256": "41f59ab72cd620cd892398ae3b069d1867b6b7d72cd98dede40dbf93c0cdde51",
+  "original_source_audit_preserved": true,
+  "before_overlays": {
+    "benchmark_global_batch.py": "bc8ce1d62f6947228c8c8438344987345bf18095f307c90a2f45dc4655c6891e",
+    "benchmark_global_server_cpu.py": "2e6ba8880a1be2f799dcb9bcf1b42f5a5ce32871c281ddb730094f475e881385",
+    "diagnose_global_cpu_references.py": "c6d1131afcd57f7d6228b27ae8989d8a7d9cb5e36ee358fd2e563fafa9077941"
+  },
+  "before_source_boundary": "Historical stage_identity bytes unmodified; server pre-run block extracted to prepare_references without identity change, used by both benchmark and diagnostic.",
+  "after_overlays": {
+    "benchmark_global_batch.py": "351522c38826b785ab0d31b4a4ca21fcfaea74712229efc4650bad89ea77ced9",
+    "benchmark_global_server_cpu.py": "a5adbf18ae81acf3de1632daffd8def91e049a2a7f753e5255e4d198213fc9ad",
+    "diagnose_global_cpu_references.py": "c6d1131afcd57f7d6228b27ae8989d8a7d9cb5e36ee358fd2e563fafa9077941"
+  }
+}

@@ -1,6 +1,19 @@
 # 全球物理模型吞吐研究
 
-当前阶段（2026-10-14）：**CPU48 v4 唯一付费 job15853683 已 FAILED 1:0/50s，本次尝试关闭**。
+当前阶段（2026-10-14）：**参考身份投影的有界修复与免费完整 precompile 参考准备验证已完成，待主管验收**。
+先读[修复结果](../../../outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md)。
+历史 producer 在免费 job15855041（cntest/ibtest02/实际1CPU）重现原 provenance ValueError；
+四项比较中 baseline/science/GPU SHA 均一致，唯有 actual metadata.git_head 被 stage_identity 丢弃为 null。
+server 显式 opt-in 保留该实际值，通用旧 stage identity schema 不变，consumer 校验未放宽。
+修后 job15855062 同一目标 JAX/jaxlib0.4.38 CPU/x64 路径读入真实 FULL64 输入及 GPU/旧 scalar 参考，
+两份760叶数组加载通过，所有四项身份一致；生产与诊断共用 prepare_references，返回后立即退出、未构建物理 runner。
+两次均仅实际1CPU、各300s上限（父65s/23s），不是48CPU资源或吞吐验收；原科学门、scalar 61/64及reset封存限制保留。
+本地针对producer、错误execution身份拒绝及关联接口的55项测试通过；synthetic guard单测边界见修复报告，不代替真实目标运行时证据。
+隔离 diagnostic staging 只覆盖 harness；原60dcc…生产checkout/pin/admission字节不动，派生admission仅明确重绑staging路径。
+没有付费作业、新付费提案、模型lower/compile/run、scalar重生成或GPU执行；旧付费额度仍关闭。后续执行须新派工。
+
+以下为 v4 历史付费终态；当时未保存失败比较双方，具体身份根因由上述后续免费重放确认。
+**CPU48 v4 唯一付费 job15853683 已 FAILED 1:0/50s，本次尝试关闭**。
 先读[v4 实际终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md)、
 [单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)
 及[固定 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json)。
@@ -19,7 +32,7 @@
 B1024 仍仅为不同总量的工程参考。原 pin、报告和日志保留；不重试、延长、取消或自行修复，不恢复旧额度。
 执行聊天完成交付后停止工作，等待派工，不联系/轮询主管或创建自动任务。
 
-以下保留 v3 终态和已完成科学证据；当前状态以 v4 实际终态入口为准。
+以下保留 v3 终态和已完成科学证据；当前操作状态以顶部有界修复结果为准。
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
 [CPU48 v3新单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)、

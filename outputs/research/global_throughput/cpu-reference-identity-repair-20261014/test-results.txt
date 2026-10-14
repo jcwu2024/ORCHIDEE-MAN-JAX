@@ -1,0 +1,11 @@
+Focused CPU reference identity test result
+
+Command:
+conda run -n ORCJAX python -m pytest -q -p no:cacheprovider tests/unit/test_global_cpu_reference_preparation.py tests/unit/test_global_server_benchmark.py tests/unit/test_global_server_exploratory_cost.py
+
+Result: 55 passed, 1 pytest configuration warning, 10.01 seconds.
+
+The new loader test uses a synthetic sealed reference and the production
+reference loader. It stubs immutable-admission validation, fixes the synthetic
+source digest, and records the server-accepted JAX/jaxlib version so the test
+reaches the execution-commit provenance guard. No remote checks were run.
