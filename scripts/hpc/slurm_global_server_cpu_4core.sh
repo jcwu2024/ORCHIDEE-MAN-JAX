@@ -1,13 +1,12 @@
 #!/bin/bash
-# Four allocated physical cores: four persistent one-core workers and JAX batch.
+# Four allocated physical cores: persistent independent B1 workers, pool only.
 # No model execution occurs outside this Slurm allocation.
 #SBATCH -J orchjax-srv-cpu4
 #SBATCH -p cnall
-#SBATCH --nodelist=ibc11b02n04
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=00:45:00
+#SBATCH --time=01:30:00
 #SBATCH -o runtime/logs/global_server_cpu4_%j.txt
 #SBATCH -e runtime/logs/global_server_cpu4_%j.txt
 #SBATCH --no-requeue
@@ -16,7 +15,7 @@ set -euo pipefail
 
 PROJECT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
-CODE_DIR=${CODE_DIR:-$PROJECT/runtime/worktrees/global-throughput-cpu-performance-v1}
+CODE_DIR=${CODE_DIR:?set CODE_DIR to the reviewed immutable pool candidate checkout}
 CODE_DIR=$(realpath -m "$CODE_DIR")
 case "$CODE_DIR" in
   "$PROJECT"/runtime/worktrees/*) ;;
@@ -34,10 +33,23 @@ case "$RUN_ROOT" in
   *) echo "RUN_ROOT must stay under the project server-benchmark output directory" >&2; exit 2 ;;
 esac
 ENTRY=$CODE_DIR/scripts/dev/benchmark_global_server_cpu.py
-VALIDATION_MODE=${VALIDATION_MODE:-strict}
-CPU_REFERENCE_ROLE=${CPU_REFERENCE_ROLE:-accepted}
-BENCHMARK_SIZES=${BENCHMARK_SIZES:-16 64}
-CPU4_METHODS=${CPU4_METHODS:-pool batch}
+VALIDATION_MODE=${VALIDATION_MODE:-exploratory}
+CPU_REFERENCE_ROLE=${CPU_REFERENCE_ROLE:-cpu-internal}
+BENCHMARK_SIZES=${BENCHMARK_SIZES:-64}
+CPU4_METHODS=${CPU4_METHODS:-pool}
+POOL_WORKERS=${POOL_WORKERS:-4}
+POOL_START_CONCURRENCY=${POOL_START_CONCURRENCY:-1}
+POOL_START_TIMEOUT_SECONDS=${POOL_START_TIMEOUT_SECONDS:-1800}
+POOL_COMMAND_TIMEOUT_SECONDS=${POOL_COMMAND_TIMEOUT_SECONDS:-1800}
+POOL_MEMORY_LIMIT_GIB=${POOL_MEMORY_LIMIT_GIB:-64}
+POOL_MEMORY_GUARD_GIB=${POOL_MEMORY_GUARD_GIB:-64}
+POOL_WORKER_ADDRESS_SPACE_GIB=${POOL_WORKER_ADDRESS_SPACE_GIB:-}
+CACHE_MODE=${CACHE_MODE:-persistent}
+CACHE_ROOT=${CACHE_ROOT:-$RUN_ROOT/scalar-worker-cache}
+CPU_REFERENCE_ADMISSION_RECORD=${CPU_REFERENCE_ADMISSION_RECORD:-}
+EXPECTED_CPU_REFERENCE_ADMISSION_SHA256=${EXPECTED_CPU_REFERENCE_ADMISSION_SHA256:-}
+EXPECTED_GPU_REFERENCE_SHA256=${EXPECTED_GPU_REFERENCE_SHA256:-}
+ENV_ENTRY=$CODE_DIR/scripts/dev/global_cpu_child_environment.py
 read -r -a sizes <<< "$BENCHMARK_SIZES"
 case "$VALIDATION_MODE:$CPU_REFERENCE_ROLE" in
   strict:accepted|exploratory:accepted|exploratory:cpu-internal) ;;
@@ -53,9 +65,20 @@ for size in "${sizes[@]}"; do
   seen_sizes[$size]=1
   previous_size=$size
 done
-[[ $CPU4_METHODS == pool || $CPU4_METHODS == batch || $CPU4_METHODS == 'pool batch' ]] || {
-  echo "CPU4_METHODS must be pool, batch or 'pool batch'" >&2; exit 2;
+[[ $CPU4_METHODS == pool || $CPU4_METHODS == batch ]] || {
+  echo "CPU4_METHODS must be pool (current route) or explicitly batch (historical only)" >&2; exit 2;
 }
+if [[ $CPU4_METHODS == pool ]]; then
+  [[ $POOL_WORKERS =~ ^[1-4]$ && $POOL_START_CONCURRENCY =~ ^[1-4]$ && $POOL_START_CONCURRENCY -le $POOL_WORKERS ]] || {
+    echo "pool workers/start concurrency must fit four allocated physical cores" >&2; exit 2;
+  }
+  if [[ $CPU_REFERENCE_ROLE == cpu-internal ]]; then
+    [[ $BENCHMARK_SIZES == 64 && -n $CPU_REFERENCE_ADMISSION_RECORD && $EXPECTED_CPU_REFERENCE_ADMISSION_SHA256 =~ ^[0-9a-f]{64}$ && $EXPECTED_GPU_REFERENCE_SHA256 =~ ^[0-9a-f]{64}$ ]] || {
+      echo "pool CPU-internal requires FULL64 plus exact new scalar admission and GPU SHA256" >&2; exit 2;
+    }
+  fi
+fi
+[[ $CACHE_MODE == off || $CACHE_MODE == persistent ]] || { echo "invalid CACHE_MODE" >&2; exit 2; }
 DRY_RUN=0
 
 if [[ ${1:-} == --dry-run ]]; then
@@ -71,9 +94,12 @@ fi
 if [[ $DRY_RUN -eq 0 ]]; then
   [[ -n ${SLURM_JOB_ID:-} && ${SLURM_NTASKS:-1} == 1 ]] || { echo "requires one active Slurm task" >&2; exit 2; }
   [[ ${SLURM_JOB_PARTITION:-} == cnall ]] || { echo "requires cnall" >&2; exit 2; }
-  for path in "$PYTHON" "$ENTRY" "$PREPARED_INPUT" "$GPU_REFERENCE_DIR" "$CPU_REFERENCE_DIR" "$CONFIG"; do
+  for path in "$PYTHON" "$ENTRY" "$ENV_ENTRY" "$PREPARED_INPUT" "$GPU_REFERENCE_DIR" "$CPU_REFERENCE_DIR" "$CONFIG"; do
     [[ -e $path ]] || { echo "required path missing: $path" >&2; exit 2; }
   done
+  if [[ -n $CPU_REFERENCE_ADMISSION_RECORD ]]; then
+    [[ -f $CPU_REFERENCE_ADMISSION_RECORD ]] || { echo "scalar admission record missing" >&2; exit 2; }
+  fi
   test -z "$(cd "$CODE_DIR" && git status --porcelain --untracked-files=all)" || {
     echo "benchmark checkout must be clean and immutable" >&2; exit 2;
   }
@@ -96,16 +122,27 @@ common=(--cpu-budget 4 --sizes "${sizes[@]}" --prepared-input "$PREPARED_INPUT"
   --config "$CONFIG" --warm-repeats 5 --validation-mode "$VALIDATION_MODE"
   --cpu-reference-role "$CPU_REFERENCE_ROLE")
 pool=(--mode pool "${common[@]}" --output-dir "$RUN_ROOT/pool4")
-pool+=(--memory-guard-gib 96)
+pool+=(--memory-guard-gib "$POOL_MEMORY_GUARD_GIB" --pool-memory-limit-gib "$POOL_MEMORY_LIMIT_GIB"
+  --pool-workers "$POOL_WORKERS" --pool-start-concurrency "$POOL_START_CONCURRENCY"
+  --pool-start-timeout-seconds "$POOL_START_TIMEOUT_SECONDS"
+  --pool-command-timeout-seconds "$POOL_COMMAND_TIMEOUT_SECONDS" --cache-mode "$CACHE_MODE"
+  --require-child-environment)
+if [[ $CACHE_MODE == persistent ]]; then pool+=(--cache-root "$CACHE_ROOT"); fi
+if [[ -n $POOL_WORKER_ADDRESS_SPACE_GIB ]]; then pool+=(--pool-worker-address-space-gib "$POOL_WORKER_ADDRESS_SPACE_GIB"); fi
+if [[ -n $CPU_REFERENCE_ADMISSION_RECORD ]]; then
+  pool+=(--cpu-reference-admission-record "$CPU_REFERENCE_ADMISSION_RECORD"
+    --expected-cpu-reference-admission-sha256 "$EXPECTED_CPU_REFERENCE_ADMISSION_SHA256")
+fi
+if [[ -n $EXPECTED_GPU_REFERENCE_SHA256 ]]; then pool+=(--expected-gpu-reference-sha256 "$EXPECTED_GPU_REFERENCE_SHA256"); fi
 batch=(--mode batch "${common[@]}" --memory-guard-gib 24 --output-dir "$RUN_ROOT/batch4")
 
 if [[ $DRY_RUN -eq 1 ]]; then
-  printf 'script_defaults: partition=cnall node=ibc11b02n04 cpus=4 wall=00:45:00 memory_reservation=none pool_admission_guard_gib=96 batch_admission_guard_gib=24 output=%q cpu_reference=%q\n' "$RUN_ROOT" "$CPU_REFERENCE_DIR"
+  printf 'script_defaults: partition=cnall node=not_pinned cpus=4 wall=01:30:00 memory_reservation=none pool_admission_guard_gib=%q pool_sampled_RSS_abort_gib=%q output=%q cpu_reference=%q\n' "$POOL_MEMORY_GUARD_GIB" "$POOL_MEMORY_LIMIT_GIB" "$RUN_ROOT" "$CPU_REFERENCE_DIR"
   printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU4_METHODS"
-  if [[ $CPU4_METHODS == pool || $CPU4_METHODS == 'pool batch' ]]; then
-    printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${pool[@]}"; printf '\n'
+  if [[ $CPU4_METHODS == pool ]]; then
+    printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENV_ENTRY" --thread-budget 1 -- "$PYTHON" "$ENTRY" "${pool[@]}"; printf '\n'
   fi
-  if [[ $CPU4_METHODS == batch || $CPU4_METHODS == 'pool batch' ]]; then
+  if [[ $CPU4_METHODS == batch ]]; then
     printf 'command='; printf '%q ' "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores /usr/bin/time -v "$PYTHON" "$ENTRY" "${batch[@]}"; printf '\n'
   fi
   exit 0
@@ -136,20 +173,26 @@ export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ALLOC_TRES_SOURCE
   printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s\n' "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}"
   printf 'slurm_alloc_tres=%s slurm_alloc_tres_source=%s\n' \
     "$ORCHJAX_SLURM_ALLOC_TRES" "$ORCHJAX_SLURM_ALLOC_TRES_SOURCE"
-  printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q memory_reservation=none pool_admission_guard_gib=96 batch_admission_guard_gib=24\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU4_METHODS"
+  printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q memory_reservation=none pool_admission_guard_gib=%q pool_sampled_RSS_abort_gib=%q workers=%q startup_concurrency=%q cache_mode=%q cache_root=%q\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU4_METHODS" "$POOL_MEMORY_GUARD_GIB" "$POOL_MEMORY_LIMIT_GIB" "$POOL_WORKERS" "$POOL_START_CONCURRENCY" "$CACHE_MODE" "$CACHE_ROOT"
+  if command -v nvidia-smi >/dev/null 2>&1; then nvidia-smi; fi
 } | tee "$RUN_ROOT/launch-context.txt"
 
 run_case() {
   local mode=$1
   shift
   printf 'starting mode=%s utc=%s\n' "$mode" "$(date -u +%FT%TZ)" | tee -a "$RUN_ROOT/launch-context.txt"
-  "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
-    /usr/bin/time -v "$PYTHON" "$ENTRY" "$@"
+  if [[ $mode == pool ]]; then
+    "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
+      /usr/bin/time -v "$PYTHON" "$ENV_ENTRY" --thread-budget 1 -- "$PYTHON" "$ENTRY" "$@"
+  else
+    "$SLURM_BIN/srun" --ntasks=1 --cpus-per-task=4 --cpu-bind=cores \
+      /usr/bin/time -v "$PYTHON" "$ENTRY" "$@"
+  fi
 }
 
-if [[ $CPU4_METHODS == pool || $CPU4_METHODS == 'pool batch' ]]; then
+if [[ $CPU4_METHODS == pool ]]; then
   run_case pool "${pool[@]}"
 fi
-if [[ $CPU4_METHODS == batch || $CPU4_METHODS == 'pool batch' ]]; then
+if [[ $CPU4_METHODS == batch ]]; then
   run_case batch "${batch[@]}"
 fi

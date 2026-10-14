@@ -546,6 +546,8 @@ def test_pool_core_barrier_contains_all_workers_without_full_output_IPC():
             return {"completed_point_indices": self.indices}
     runner = cpu.PoolRunner.__new__(cpu.PoolRunner)
     runner.channels = [Channel(list(range(index, 16, 4))) for index in range(4)]
+    runner.receive = lambda key: ([channel.recv()[key] for channel in runner.channels]
+        if key == "completed_point_indices" else [{"process_CPU_user_system_seconds_delta": 0}] * 4)
     runner.run(16)
     assert sent == [{"command": "run", "size": 16}] * 4
     runner.channels[-1].indices = []
@@ -564,7 +566,7 @@ def test_pool_wrapper_transfers_fresh_host_pairs_and_materializes_full_outputs(m
     monkeypatch.setattr(scale.base, "metadata", lambda *args: toy_environment())
     monkeypatch.setattr(scale.base, "independent_scalar_executable", lambda *args: jax.jit(toy_transition))
     monkeypatch.setattr(cache, "configure_cache", lambda *args: {})
-    monkeypatch.setattr(cache, "CacheEvents", lambda: SimpleNamespace(close=lambda: None))
+    monkeypatch.setattr(cache, "CacheEvents", lambda: SimpleNamespace(close=lambda: None, events=[]))
     puts, gets = [], []
     original_put, original_get = jax.device_put, jax.device_get
     def put(value):
@@ -593,7 +595,8 @@ def test_pool_wrapper_transfers_fresh_host_pairs_and_materializes_full_outputs(m
     assert len(puts) == 2 and puts[0] is not puts[1]
     assert puts[1][4][0] is lanes[4].arguments
     assert channel.sent[1] == {"completed_point_indices": [0, 4, 8, 12]}
-    assert len(gets) == 1 and set(channel.sent[2]["outputs"]) == {0, 4, 8, 12}
+    assert len(gets) == 1 and set(channel.sent[3]["outputs"]) == {0, 4, 8, 12}
+    assert "worker_CPU_sample" in channel.sent[2] and "worker_CPU_sample" in channel.sent[4]
 
 
 def test_CPU_parsed_default_uses_real_cache_off_interface(monkeypatch, tmp_path):

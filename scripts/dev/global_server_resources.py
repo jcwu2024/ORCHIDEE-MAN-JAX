@@ -29,15 +29,15 @@ def admit(mode, budget, *, environ=None, allowed=None, sysfs=Path("/sys/devices/
     hostname = platform.node() if hostname is None else hostname
     if mode not in {"scalar", "pool", "batch"} or budget not in {1, 4, 48}:
         raise ValueError("CPU modes scalar/pool/batch require budgets 1, 4 or batch48")
-    if mode == "scalar" and budget != 1 or mode == "pool" and budget != 4:
-        raise ValueError("scalar requires one core; persistent pool requires four cores")
+    if mode == "scalar" and budget != 1:
+        raise ValueError("scalar requires one core")
     if not env.get("SLURM_JOB_ID") or env.get("SLURM_JOB_PARTITION") not in partitions:
         raise RuntimeError("physical performance requires an actual declared paid Slurm partition allocation")
     if int(env.get("SLURM_CPUS_PER_TASK", "0")) != budget or int(env.get("SLURM_NTASKS", "1")) != 1:
         raise RuntimeError("Slurm allocation must be one task with exactly the declared CPU budget")
     parent_text = env.get("ORCHJAX_PARENT_CPU_COUNT")
     if budget == 48 and parent_text is None:
-        raise RuntimeError("batch48 requires explicit parent allocation CPU count")
+        raise RuntimeError("CPU48 requires explicit parent allocation CPU count")
     parent = budget
     if parent_text is not None:
         if not re.fullmatch(r"[1-9][0-9]*", parent_text):
@@ -75,7 +75,7 @@ def admit(mode, budget, *, environ=None, allowed=None, sysfs=Path("/sys/devices/
                 "SLURM_JOB_ID", "SLURM_JOB_PARTITION", "SLURM_CPUS_PER_TASK", "SLURM_NTASKS",
                 "SLURM_JOB_NODELIST", "SLURM_MEM_PER_NODE", "SLURM_MEM_PER_CPU", "ORCHJAX_PARENT_CPU_COUNT", "ORCHJAX_SLURM_ALLOC_TRES",
                 "ORCHJAX_SLURM_ALLOC_TRES_SOURCE")},
-            "pool_controller_policy": "shares worker0 allocated core; no fifth CPU" if mode == "pool" else None,
+            "pool_controller_policy": "shares worker0 allocated core; controller and all workers stay within declared allocation, no extra CPU" if mode == "pool" else None,
             "thread_count_claim": "affinity is a resource bound; vmap is not a thread-count claim"}
 
 

@@ -61,11 +61,15 @@ def test_stage_identity_preserves_legacy_schema_and_opts_into_metadata_git_head(
     assert len(server["runtime"]["git_head"]) == 40
 
 
-def test_prepare_references_uses_git_head_before_any_runner_or_compile(monkeypatch, tmp_path):
+@pytest.mark.parametrize("mode,cpu_budget", [("batch", 48), ("pool", 4)])
+def test_prepare_references_uses_git_head_before_any_runner_or_compile(monkeypatch, tmp_path, mode, cpu_budget):
     lanes, second = _fixtures.toy_prepared(64)
     admission_path = tmp_path / "admission.json"
     admission_path.write_text("{}")
     args = _args(tmp_path, cpu_reference_dir=tmp_path / "scalar", admission_record=admission_path)
+    args.mode, args.cpu_budget = mode, cpu_budget
+    if mode == "pool":
+        args.pool_workers = 4
     environment = _real_metadata(args)
     monkeypatch.setattr(base, "scientific_source_digest", lambda: "d" * 64)
     recorder = SimpleNamespace(result={"environment": environment}, sentinel_paths=None)
@@ -106,9 +110,13 @@ def test_prepare_references_uses_git_head_before_any_runner_or_compile(monkeypat
         "candidate": environment["git_head"], "stage": environment["git_head"]}
     assert recorder.result["reference_preparation_cpu_loaded"] == [64]
     assert len(calls) == 2
+    if mode == "pool":
+        assert identity["pool_execution"]["pool_workers"] == 4
+        assert calls[1][1]["candidate_provenance"] == candidate
 
 
-def test_real_reference_loader_rejects_wrong_execution_commit_after_sealed_load(monkeypatch, tmp_path):
+@pytest.mark.parametrize("mode,cpu_budget", [("batch", 48), ("pool", 4)])
+def test_real_reference_loader_rejects_wrong_execution_commit_after_sealed_load(monkeypatch, tmp_path, mode, cpu_budget):
     lanes, second = _fixtures.toy_prepared(64)
     args = _args(tmp_path, mode="scalar", cpu_budget=1)
     environment = _real_metadata(args)
@@ -166,7 +174,7 @@ def test_real_reference_loader_rejects_wrong_execution_commit_after_sealed_load(
     store = StageStore(directory, source_identity)
     store.save("B64_server_scalar_v1", value, record)
 
-    consumer = {**source_identity, "mode": "batch", "CPU_budget": 48,
+    consumer = {**source_identity, "mode": mode, "CPU_budget": cpu_budget,
         "validation_mode": "exploratory", "cpu_reference_role": "cpu-internal"}
     candidate = {
         "job_id": "15853683",
