@@ -1,0 +1,60 @@
+{
+  "CPU48_on_192GB_support": "unresolved; no worker measurements were obtained",
+  "CPU_strict_gate": "not_reached",
+  "Slurm_exit_code": "1:0",
+  "actual_allocation": {
+    "TRES_source": "TRES",
+    "allocated_TRES_or_scheduler_TRES": "cpu=4,node=1,billing=4",
+    "envelope_matches": true,
+    "fields": {
+      "NumCPUs": "4",
+      "NumTasks": "1",
+      "Partition": "cnall",
+      "Requeue": "0",
+      "TimeLimit": "01:30:00"
+    },
+    "job_id": "15866488",
+    "node": "ibc11b04n04",
+    "state": "FAILED",
+    "utc": "2026-10-14T15:12:51.747254Z",
+    "violations": []
+  },
+  "automatic_retry_permitted": false,
+  "boundary": "before run_case and Python child/PoolRunner dispatch",
+  "cache_hit_measurements": null,
+  "checkout_state": "detached_clean",
+  "code_repaired": false,
+  "execution_commit": "50864f065363f6cd0de685c18d9c257723bf2838",
+  "first_fault": "optional nvidia-smi returns failure inside set -euo pipefail launch-context pipeline",
+  "frozen_reset_gate": "not_reached",
+  "job_id": "15866488",
+  "log_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15866488.txt",
+  "log_sha256": "a879dd2f396cd8ef9f272e756603c9548c783e01dd38382288bc046d59280e86",
+  "next_proposal": "Review optional GPU telemetry failure handling, validate without model execution, then separately approve a new immutable candidate and one 4CPU/5400s pilot (max CNY0.30/0.42); no automatic execution",
+  "paid_resubmitted": false,
+  "paid_submission_count": 1,
+  "paid_submissions_remaining": 0,
+  "parent_elapsed_seconds": 1,
+  "physical_lower_compile_run": false,
+  "physical_memory_measurements": null,
+  "physical_throughput_measurements": null,
+  "physical_worker_count_started": 0,
+  "prior_scalar_recharged": false,
+  "rates_or_invoice_verified": false,
+  "run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-15866488",
+  "run_root_entries": [
+    "launch-context.txt"
+  ],
+  "schema": "scalar_pool_pilot_closed_stage_v1",
+  "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+  "scientific_acceptance": false,
+  "source_line": 177,
+  "source_path": "scripts/hpc/slurm_global_server_cpu_4core.sh",
+  "state": "FAILED",
+  "utc": "2026-10-14T15:19:23.435883Z",
+  "whole_parent_CNY_scenarios": [
+    5.555555555555556e-05,
+    7.777777777777778e-05
+  ],
+  "whole_parent_allocated_CPU_hours": 0.0011111111111111111
+}

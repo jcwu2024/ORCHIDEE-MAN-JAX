@@ -1,0 +1,5 @@
+scalar-worker-cache|absent
+pool4|absent
+pool4/report.json|absent
+pool4/stage_manifest.json|absent
+pool4/workers|absent

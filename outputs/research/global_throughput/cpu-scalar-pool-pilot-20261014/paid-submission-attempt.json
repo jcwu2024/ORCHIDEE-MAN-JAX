@@ -1,0 +1,35 @@
+{
+  "automatic_retry_permitted": false,
+  "command": [
+    "bash",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-preparation-20261014/PROPOSED_SUBMISSION.sh"
+  ],
+  "execution_commit": "50864f065363f6cd0de685c18d9c257723bf2838",
+  "job_id": "15866488",
+  "maximum_allowed_invocations": 1,
+  "paid_sbatch_invocations": 1,
+  "rates_verified": false,
+  "resources": {
+    "CPUs": 4,
+    "GPUs": 0,
+    "exclusive": false,
+    "memory_reservation": null,
+    "no_requeue": true,
+    "nodelist": null,
+    "nodes": 1,
+    "partition": "cnall",
+    "tasks": 1,
+    "wall_seconds": 5400
+  },
+  "returncode": 0,
+  "schema": "scalar_pool_paid_submission_attempt_v1",
+  "state": "submitted_once",
+  "stderr": "",
+  "stdout": "15866488\n",
+  "utc": "2026-10-14T15:08:42.957624Z",
+  "worst_case_CNY": [
+    0.3,
+    0.42
+  ],
+  "worst_case_allocated_CPU_hours": 6
+}

@@ -2,7 +2,7 @@
 
 更新：2026-10-14。用户已纠正CPU方案：**复用成熟独立单点程序，把独立任务并发调度到48核，测完成吞吐与单位成本；停止CPU B64 vmap大程序路线。** GPU工程选择仍为B1024。有限末位差异深层归因不是CPU基线前置；科学严格失败、历史费用和输出完整保留。
 
-先读[当前入口](README.md)、[CPU worker方案/具体审批对象](CPU_SCALAR_POOL_PLAN.md)、[实际轻量验证](CPU_SCALAR_POOL_VALIDATION.md)、[服务器合同](SERVER_BENCHMARK.md)。[保存数组短分析](CPU48_V5_SAVED_ANALYSIS.md)已收尾，不继续扩展诊断。下一次物理pilot尚未批准，没有新的paid提交、完整物理lower/compile/run或部署。
+先读[pool4首次终态](CPU_SCALAR_POOL_PILOT_RESULT.md)、[当前入口](README.md)、[原审批对象](CPU_SCALAR_POOL_PLAN.md)、[接口验证](CPU_SCALAR_POOL_VALIDATION.md)、[服务器合同](SERVER_BENCHMARK.md)。主管已批准并完成部署/免费预检和唯一paid提交：job15866488 FAILED1:0/1秒，止于CPU launcher可选GPU遥测；没有物理worker/lower/compile/run。本次remaining=0，已关闭，不修复重提。[保存数组短分析](CPU48_V5_SAVED_ANALYSIS.md)仍不继续扩展。
 
 ## 角色与工作树
 
@@ -12,9 +12,11 @@
 
 ## 当前交付与下一决策
 
-已有B1 scalar和pool复用路径，扩展持久worker数/真实allocation约束、受限串行启动、RSS/CPU/cache记录和完整任务汇总；只用轻量协议/替身验证，不据此声称物理内存或48核性能。下一审批对象为4CPU/4worker、串行启动的90分钟受限pilot；确切code pin、cwd、命令、停止边界与CNY0.30/0.42最坏费用情景见方案。它用于测单点worker真实增量内存和启动可摊销性，不能直接批准或承诺48worker驻留。
+生产pin为`50864f065363f6cd0de685c18d9c257723bf2838`，实际节点ibc11b04n04/4CPU；run目录只有launch-context.txt，无cache/pool4/worker/report/stage。177行裸nvidia-smi在set-e/pipefail管道中失败，194行pool dispatch未到达；并非数值/编译/内存失败。免费job15866448在cntest/ibtest01/1CPU/63秒通过保存GPU/scalar各760叶参考加载，未创建物理runner。
 
-主管审查实际代码、验证记录与pin后，按用户已有委托审查具体pilot，而非再次询问用户同一类事项。本交付本身不提交或部署。pilot通过后才决定真正48核allocation的worker数/资源；若节点装不下，不暗改输出、精度或强行启动48冷编译。
+原始日志、sacct完整父行和所有step、目录与缺失制品收据已回传并核SHA，具体路径见终态报告。完整父4×1秒只计一次：0.001111111核时、未核实¥0.00005556/¥0.00007778；免费预检和旧scalar单列。逐worker编译/cache/内存、first/warm、strict CPU/reset均not reached；缺失证据不等于已证明192GB不足。
+
+最小下一对象是审查CPU可选GPU遥测失败处理建议（launcher177行显式条件捕获非零）并做目标CPU非模型控制流检查，之后审查新immutable pin与相同4CPU/4worker/90分钟单次pilot、最坏¥0.30/¥0.42；本次没有改生产代码或新增额度。只有小pool实际证据后再决定48核worker/资源，不线性外推或强开48冷编译。
 
 比较目标是CPU独立B1任务与GPU B1024在同总任务/输入分布/连续窗口下的完成吞吐及费用；允许不同分块。已有GPU B1024×2来自64真点×32重复、28672 lane-days，wrapper299.139825 lane-days/s，仅容量背景。CPU64点pilot未达同总工作量；真正同量CPU数据、48核结果和异质点/member扩展尚缺。不得把重复样本升级为独立member或把旧性能/科学验收转授新碳核心。
 

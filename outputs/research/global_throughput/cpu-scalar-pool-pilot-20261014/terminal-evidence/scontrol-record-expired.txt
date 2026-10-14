@@ -1,0 +1,1 @@
+scontrol job record expired before terminal collection; complete earlier scontrol output retained in local observation-001.log. sacct remains authoritative terminal accounting. No job action taken.

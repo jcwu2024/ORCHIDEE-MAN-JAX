@@ -1,0 +1,37 @@
+2026-10-14T14:58:45Z
+ibtest01
+ 22:58:45 up 133 days, 12:01,  8 users,  load average: 104.08, 101.39, 99.06
+pid 105360's current affinity list: 0
+JobId=15866448 JobName=bash
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:01 TimeLimit=00:05:00 TimeMin=N/A
+   SubmitTime=2026-10-14T22:58:44 EligibleTime=2026-10-14T22:58:44
+   AccrueTime=Unknown
+   StartTime=2026-10-14T22:58:44 EndTime=2026-10-14T23:03:44 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-14T22:58:44 Scheduler=Main
+   Partition=cntest AllocNode:Sid=ibc12b01n05:89314
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=ibtest01
+   BatchHost=ibtest01
+   NumNodes=1 NumCPUs=1 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=1,node=1,billing=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=(null)
+     Nodes=ibtest01 CPU_IDs=0 Mem=0 GRES=
+   MinCPUsNode=1 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=bash
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1
+   Power=
+   
+
+actual_module_import=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1/jax_orchidee/__init__.py
+{"parser_status": "dry_run", "JAX_imported": false, "reference_command": ["/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1/scripts/dev/global_cpu_child_environment.py", "--thread-budget", "1", "--", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1/scripts/dev/diagnose_global_cpu_references.py", "--mode", "pool", "--cpu-budget", "4", "--sizes", "64", "--prepared-input", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl", "--gpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model", "--cpu-reference-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar", "--config", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1/configs/orchidee_man_250919.yaml", "--warm-repeats", "5", "--validation-mode", "exploratory", "--cpu-reference-role", "cpu-internal", "--output-dir", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-pilot-20261014/reference-preflight", "--memory-guard-gib", "64", "--pool-memory-limit-gib", "64", "--pool-workers", "4", "--pool-start-concurrency", "1", "--pool-start-timeout-seconds", "1200", "--pool-command-timeout-seconds", "300", "--cache-mode", "off", "--require-child-environment", "--cpu-reference-admission-record", "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-preparation-20261014/scalar-admission.json", "--expected-cpu-reference-admission-sha256", "fafd685bb54c7bb366f0d10d38cba31957ba754b9a5bcd8801e75abfd7907883", "--expected-gpu-reference-sha256", "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"]}
+{"schema": "global_cpu_child_prejax_v1", "status": "exec_boundary_ready", "pid": 105386, "thread_budget": 1, "thread_policy": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "actual_environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": [], "affinity": [0], "JAX_imported": false, "model_execution": false, "inherited_transport_policy": {"environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": []}, "error": null, "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
+{"status": "reference_preparation_passed", "message": null, "identity": {"baseline_ref": {"candidate": "133e35aec7b83b9d79888c46092f64d518e97299", "stage": "133e35aec7b83b9d79888c46092f64d518e97299"}, "science_sha256": {"candidate": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5", "stage": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"}, "gpu_reference_sha256": {"candidate": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6", "stage": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"}, "execution_commit": {"candidate": "50864f065363f6cd0de685c18d9c257723bf2838", "stage": "50864f065363f6cd0de685c18d9c257723bf2838"}}, "physical_lower_compile_run": false}
+2026-10-14T14:59:46Z

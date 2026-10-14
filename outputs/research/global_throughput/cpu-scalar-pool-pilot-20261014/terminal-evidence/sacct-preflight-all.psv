@@ -1,0 +1,4 @@
+JobIDRaw|JobName|Partition|State|ExitCode|Start|End|ElapsedRaw|AllocCPUS|NodeList|AllocTRES|MaxRSS|TotalCPU
+15866448|bash|cntest|COMPLETED|0:0|2026-10-14T22:58:44|2026-10-14T22:59:47|63|1|ibtest01|billing=1,cpu=1,node=1||00:11.157
+15866448.extern|extern||COMPLETED|0:0|2026-10-14T22:58:44|2026-10-14T22:59:47|63|1|ibtest01|billing=1,cpu=1,node=1|0|00:00.001
+15866448.0|bash||COMPLETED|0:0|2026-10-14T22:58:44|2026-10-14T22:59:47|63|1|ibtest01|cpu=1,mem=0,node=1|0|00:11.155

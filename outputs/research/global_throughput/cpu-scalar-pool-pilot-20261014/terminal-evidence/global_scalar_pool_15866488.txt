@@ -1,0 +1,98 @@
+2026-10-14T15:08:59Z
+ibc11b04n04
+ 23:08:59 up 133 days, 13:06,  0 users,  load average: 47.07, 47.01, 47.17
+JobId=15866488 JobName=orchjax-srv-cpu4
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:01 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-14T23:08:43 EligibleTime=2026-10-14T23:08:43
+   AccrueTime=2026-10-14T23:08:43
+   StartTime=2026-10-14T23:08:58 EndTime=2026-10-15T00:38:58 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-14T23:08:58 Scheduler=Backfill
+   Partition=cnall AllocNode:Sid=ibc12b01n05:11214
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=ibc11b04n04
+   BatchHost=ibc11b04n04
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=(null)
+     Nodes=ibc11b04n04 CPU_IDs=20,25-27 Mem=0 GRES=
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1/scripts/hpc/slurm_global_server_cpu_4core.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15866488.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15866488.txt
+   Power=
+   
+
+pid 32633's current affinity list: 20,25-27
+CPU CORE SOCKET ONLINE
+0   0    0      yes
+1   1    0      yes
+2   2    0      yes
+3   3    0      yes
+4   4    0      yes
+5   5    0      yes
+6   6    0      yes
+7   7    0      yes
+8   8    0      yes
+9   9    0      yes
+10  10   0      yes
+11  11   0      yes
+12  12   0      yes
+13  13   0      yes
+14  14   0      yes
+15  15   0      yes
+16  16   0      yes
+17  17   0      yes
+18  18   0      yes
+19  19   0      yes
+20  20   0      yes
+21  21   0      yes
+22  22   0      yes
+23  23   0      yes
+24  24   0      yes
+25  25   0      yes
+26  26   0      yes
+27  27   0      yes
+28  28   1      yes
+29  29   1      yes
+30  30   1      yes
+31  31   1      yes
+32  32   1      yes
+33  33   1      yes
+34  34   1      yes
+35  35   1      yes
+36  36   1      yes
+37  37   1      yes
+38  38   1      yes
+39  39   1      yes
+40  40   1      yes
+41  41   1      yes
+42  42   1      yes
+43  43   1      yes
+44  44   1      yes
+45  45   1      yes
+46  46   1      yes
+47  47   1      yes
+48  48   1      yes
+49  49   1      yes
+50  50   1      yes
+51  51   1      yes
+52  52   1      yes
+53  53   1      yes
+54  54   1      yes
+55  55   1      yes
+50864f065363f6cd0de685c18d9c257723bf2838
+slurm_cpus_per_task=4 slurm_job_cpus_per_node=4
+slurm_alloc_tres=cpu=4,node=1,billing=4 slurm_alloc_tres_source=TRES
+validation_mode=exploratory cpu_reference_role=cpu-internal sizes=64 methods=pool memory_reservation=none pool_admission_guard_gib=64 pool_sampled_RSS_abort_gib=64 workers=4 startup_concurrency=1 cache_mode=persistent cache_root=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-15866488/scalar-worker-cache
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+

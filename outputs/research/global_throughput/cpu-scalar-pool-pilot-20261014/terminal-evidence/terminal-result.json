@@ -1,0 +1,264 @@
+{
+  "schema": "global_cpu_scalar_pool_pilot_terminal_v1",
+  "job_id": "15866488",
+  "status": "failed_launcher_telemetry_before_physical_runner",
+  "submission_count": 1,
+  "authorization_remaining_submissions": 0,
+  "retry_or_fix_or_scale_performed": false,
+  "execution_commit": "50864f065363f6cd0de685c18d9c257723bf2838",
+  "physical_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+  "scheduler": {
+    "parent": {
+      "JobIDRaw": "15866488",
+      "JobName": "orchjax-srv-cpu4",
+      "Partition": "cnall",
+      "State": "FAILED",
+      "ExitCode": "1:0",
+      "Submit": "2026-10-14T23:08:43",
+      "Start": "2026-10-14T23:08:58",
+      "End": "2026-10-14T23:08:59",
+      "ElapsedRaw": "1",
+      "AllocCPUS": "4",
+      "NNodes": "1",
+      "NodeList": "ibc11b04n04",
+      "AllocTRES": "billing=4,cpu=4,node=1",
+      "ReqTRES": "billing=4,cpu=4,mem=1024K,node=1",
+      "ReqMem": "1024K",
+      "TotalCPU": "00:00:00",
+      "CPUTimeRAW": "4"
+    },
+    "all_rows": [
+      {
+        "JobIDRaw": "15866488",
+        "JobName": "orchjax-srv-cpu4",
+        "Partition": "cnall",
+        "State": "FAILED",
+        "ExitCode": "1:0",
+        "Submit": "2026-10-14T23:08:43",
+        "Start": "2026-10-14T23:08:58",
+        "End": "2026-10-14T23:08:59",
+        "ElapsedRaw": "1",
+        "AllocCPUS": "4",
+        "NNodes": "1",
+        "NodeList": "ibc11b04n04",
+        "AllocTRES": "billing=4,cpu=4,node=1",
+        "ReqTRES": "billing=4,cpu=4,mem=1024K,node=1",
+        "ReqMem": "1024K",
+        "MaxRSS": "",
+        "MaxVMSize": "",
+        "TotalCPU": "00:00.374",
+        "UserCPU": "00:00.069",
+        "SystemCPU": "00:00.304",
+        "CPUTimeRAW": "4"
+      },
+      {
+        "JobIDRaw": "15866488.batch",
+        "JobName": "batch",
+        "Partition": "",
+        "State": "FAILED",
+        "ExitCode": "1:0",
+        "Submit": "2026-10-14T23:08:58",
+        "Start": "2026-10-14T23:08:58",
+        "End": "2026-10-14T23:08:59",
+        "ElapsedRaw": "1",
+        "AllocCPUS": "4",
+        "NNodes": "1",
+        "NodeList": "ibc11b04n04",
+        "AllocTRES": "cpu=4,mem=0,node=1",
+        "ReqTRES": "",
+        "ReqMem": "",
+        "MaxRSS": "0",
+        "MaxVMSize": "3276K",
+        "TotalCPU": "00:00.371",
+        "UserCPU": "00:00.069",
+        "SystemCPU": "00:00.301",
+        "CPUTimeRAW": "4"
+      },
+      {
+        "JobIDRaw": "15866488.extern",
+        "JobName": "extern",
+        "Partition": "",
+        "State": "COMPLETED",
+        "ExitCode": "0:0",
+        "Submit": "2026-10-14T23:08:58",
+        "Start": "2026-10-14T23:08:58",
+        "End": "2026-10-14T23:08:59",
+        "ElapsedRaw": "1",
+        "AllocCPUS": "4",
+        "NNodes": "1",
+        "NodeList": "ibc11b04n04",
+        "AllocTRES": "billing=4,cpu=4,node=1",
+        "ReqTRES": "",
+        "ReqMem": "",
+        "MaxRSS": "0",
+        "MaxVMSize": "0",
+        "TotalCPU": "00:00.003",
+        "UserCPU": "00:00:00",
+        "SystemCPU": "00:00.003",
+        "CPUTimeRAW": "4"
+      }
+    ],
+    "parent_counted_once": true,
+    "timestamp_timezone": "cluster local +0800",
+    "ReqMem_1024K_is_scheduler_default_not_new_reservation": true
+  },
+  "failure": {
+    "category": "launcher_optional_GPU_telemetry_failure",
+    "last_error": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver",
+    "source": "scripts/hpc/slurm_global_server_cpu_4core.sh",
+    "telemetry_line": 177,
+    "pool_dispatch_line_not_reached": 194,
+    "set_euo_pipefail": true,
+    "causal_boundary": "unguarded nvidia-smi fails inside launch-context pipeline under errexit/pipefail before run_case"
+  },
+  "physical_execution": {
+    "requested_workers": 4,
+    "workers_started": 0,
+    "runner_created": false,
+    "lower_compile_run": false,
+    "cache_directory_created": false,
+    "artifact_presence": {
+      "scalar-worker-cache": "absent",
+      "pool4": "absent",
+      "pool4/report.json": "absent",
+      "pool4/stage_manifest.json": "absent",
+      "pool4/workers": "absent"
+    },
+    "run_root_files": [
+      "cpu4-15866488/launch-context.txt"
+    ],
+    "completed_point_days": null,
+    "workload_planned_point_days": 896,
+    "core_samples": [],
+    "wrapper_samples": [],
+    "worker_records": [],
+    "CPU_strict_gate": "not_reached",
+    "GPU_gate": "not_reached",
+    "frozen_reset_gate": "not_reached",
+    "StableHLO_SHA": null,
+    "cache_hits": null,
+    "resident_RSS_or_HWM": null,
+    "first_call": null,
+    "warm_CPU_utilization": null,
+    "scientific_acceptance": false
+  },
+  "preflight": {
+    "job_id": "15866448",
+    "status": "reference_preparation_passed",
+    "allocation": {
+      "job_id": "15866448",
+      "partition": "cntest",
+      "node": "ibtest01",
+      "actual_cpus": 1,
+      "affinity": [
+        0
+      ]
+    },
+    "output_leaf_counts": {
+      "GPU": 760,
+      "CPU_scalar": 760
+    },
+    "physical_runner_created": false,
+    "physical_lower_compile_run": false,
+    "accounting": [
+      {
+        "JobIDRaw": "15866448",
+        "JobName": "bash",
+        "Partition": "cntest",
+        "State": "COMPLETED",
+        "ExitCode": "0:0",
+        "Start": "2026-10-14T22:58:44",
+        "End": "2026-10-14T22:59:47",
+        "ElapsedRaw": "63",
+        "AllocCPUS": "1",
+        "NodeList": "ibtest01",
+        "AllocTRES": "billing=1,cpu=1,node=1",
+        "MaxRSS": "",
+        "TotalCPU": "00:11.157"
+      },
+      {
+        "JobIDRaw": "15866448.extern",
+        "JobName": "extern",
+        "Partition": "",
+        "State": "COMPLETED",
+        "ExitCode": "0:0",
+        "Start": "2026-10-14T22:58:44",
+        "End": "2026-10-14T22:59:47",
+        "ElapsedRaw": "63",
+        "AllocCPUS": "1",
+        "NodeList": "ibtest01",
+        "AllocTRES": "billing=1,cpu=1,node=1",
+        "MaxRSS": "0",
+        "TotalCPU": "00:00.001"
+      },
+      {
+        "JobIDRaw": "15866448.0",
+        "JobName": "bash",
+        "Partition": "",
+        "State": "COMPLETED",
+        "ExitCode": "0:0",
+        "Start": "2026-10-14T22:58:44",
+        "End": "2026-10-14T22:59:47",
+        "ElapsedRaw": "63",
+        "AllocCPUS": "1",
+        "NodeList": "ibtest01",
+        "AllocTRES": "cpu=1,mem=0,node=1",
+        "MaxRSS": "0",
+        "TotalCPU": "00:11.155"
+      }
+    ],
+    "scope": "free one-CPU saved-reference loading; not paid pool performance or physical execution"
+  },
+  "cost": {
+    "elapsed_seconds": 1,
+    "allocated_CPUs": 4,
+    "allocated_core_seconds": 4,
+    "allocated_core_hours_decimal": "0.001111111111111111111111111111",
+    "rates_CNY_per_allocated_core_hour": [
+      "0.05",
+      "0.07"
+    ],
+    "CNY_scenarios_decimal": [
+      "0.00005555555555555555555555555555",
+      "0.00007777777777777777777777777777"
+    ],
+    "billing_verified": false,
+    "whole_parent_counted_once": true,
+    "old_scalar_job_15820467_charged_again": false,
+    "warm_unit_cost": null
+  },
+  "CPU48_192GB": {
+    "supported_by_this_run": false,
+    "infeasibility_demonstrated": false,
+    "reason": "zero physical workers reached; no new residency/startup/cache/performance measurements"
+  },
+  "next_reviewable_action_not_executed": {
+    "code_suggestion": "make optional GPU telemetry failure nonfatal on CPU launcher, retaining warning and all scientific/resource gates",
+    "source_line": 177,
+    "first_validation": "nonmodel target CPU Bash/stub failure-path check, then new exact pin/reference identity preflight",
+    "future_pilot": {
+      "CPUs": 4,
+      "workers": 4,
+      "wall_seconds": 5400,
+      "startup_concurrency": 1,
+      "aggregate_RSS_abort_GiB": 64,
+      "host_MemAvailable_guard_GiB": 64,
+      "RLIMIT_AS": null,
+      "worst_case_core_hours": 6,
+      "worst_case_CNY": [
+        0.3,
+        0.42
+      ],
+      "rates_verified": false,
+      "requires_new_approval": true
+    },
+    "permission_or_submission_granted_here": false
+  },
+  "limitations": [
+    "not a same-workload GPU B1024 comparison",
+    "no physical numerical/memory/performance acceptance",
+    "scheduler scontrol job record expired during collection; complete earlier original snapshot retained",
+    "scheduler TotalCPU differs between early and later snapshots; no useful model utilization can be inferred",
+    "remote originals retained; no science pickle existed or was deserialized"
+  ]
+}

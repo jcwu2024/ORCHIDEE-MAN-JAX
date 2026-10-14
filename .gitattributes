@@ -122,3 +122,6 @@ outputs/research/global_throughput/cpu-reference-identity-repair-20261014/**/*.m
 
 # Preserve the single approved CPU48 v5 attempt's authorization and raw receipts.
 outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/** -text whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve scalar-pool pilot receipt and scheduler bytes with their recorded hashes.
+outputs/research/global_throughput/cpu-scalar-pool-pilot-20261014/** -text whitespace=-blank-at-eol,-blank-at-eof

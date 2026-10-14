@@ -1,0 +1,187 @@
+{
+  "schema": "global_cpu_scalar_pool_terminal_manifest_v1",
+  "job_id": "15866488",
+  "remote_evidence_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-pilot-20261014/terminal-evidence",
+  "remote_originals_preserved": true,
+  "archive_SHA256_verified": "ca7721e91ad57bfcbfe16d005c217887832b4c04a4406ac98d764873e19c5043",
+  "execution_launcher_SHA256": "75526da3d9c573e2111021cf05983d018e8e5d4bf0226fff5e5d27ad75f33756",
+  "execution_launcher_matches_exact_git_pin": true,
+  "artifacts": [
+    {
+      "path": "terminal-evidence/actual-allocation-check.json",
+      "bytes": 384,
+      "sha256": "b4bbf052be0e0ee134325aa1799568bf007c8e8815045bed2a24ade1364479f1",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/deployed-code-state-verified.txt",
+      "bytes": 82,
+      "sha256": "136638a6aa4604301a01dc9f706f5ff5be3f1abd8e58589acb35c17c7c37a302",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/deployed-code-state.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/deployed-launcher.sh",
+      "bytes": 10015,
+      "sha256": "75526da3d9c573e2111021cf05983d018e8e5d4bf0226fff5e5d27ad75f33756",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/global_scalar_pool_15866488.txt",
+      "bytes": 3545,
+      "sha256": "a879dd2f396cd8ef9f272e756603c9548c783e01dd38382288bc046d59280e86",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/launch-context.txt",
+      "bytes": 3545,
+      "sha256": "a879dd2f396cd8ef9f272e756603c9548c783e01dd38382288bc046d59280e86",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/physical-artifact-presence.txt",
+      "bytes": 119,
+      "sha256": "1f2632930c4eae4a324bcb2e4f7e8a90272c7523673730c683b81aee1601c86e",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/remote-collection-finish-time.txt",
+      "bytes": 21,
+      "sha256": "f59a38e67684e1c4ed4b7130ead3feb622381d66687b9bb46116beb8ca568209",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/remote-collection-resume-time.txt",
+      "bytes": 21,
+      "sha256": "5908f986bf41268e30c71d34bd466e2b27b7b663ed98fb3f9a9b25719bfcf09a",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/remote-collection-time.txt",
+      "bytes": 21,
+      "sha256": "fc051b94814c92925cbf3f8e195695eb1accf0a17c91a73cae357d55228d6a8b",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/run-root-file-sha256.txt",
+      "bytes": 198,
+      "sha256": "c715119df6398efadc407f1f707db016674e9dbd0461fe540a083d2fd98dea48",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/run-root-inventory.txt",
+      "bytes": 96,
+      "sha256": "dca1b57d323a84e7aae63622429801a11fc2ea67a2ab3bc9cd5d60aa01894160",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/run-root.tar",
+      "bytes": 10240,
+      "sha256": "e229c6d5afaf54f9fc17a89021361751b4ca4ce6123de388d3ddbcb23c831b4d",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/sacct-all.psv",
+      "bytes": 741,
+      "sha256": "62587d6d650dd860c5564d62c612ddac9efc6766977cd5e72e5305f76d216d16",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/sacct-parent.psv",
+      "bytes": 335,
+      "sha256": "e56fc39f8355fe93391f50178103d17d5326c0891b6e025eba43106677dd66e5",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/sacct-preflight-all.psv",
+      "bytes": 474,
+      "sha256": "c9b95b0c348644d509a4133eea635624b66830521cf5d210ed95f9716aa5ebdf",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/scontrol-job.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence/scontrol-record-expired.txt",
+      "bytes": 198,
+      "sha256": "7ff2778a9cea3c2657b4d1afc90cc8630b864dd666ac4dd3b965757ebd2f4ff3",
+      "kind": "remote_original_bytes"
+    },
+    {
+      "path": "terminal-evidence-15866488.tar",
+      "bytes": 51200,
+      "sha256": "ca7721e91ad57bfcbfe16d005c217887832b4c04a4406ac98d764873e19c5043",
+      "kind": "verified_transport_archive"
+    },
+    {
+      "path": "terminal-evidence/SHA256SUMS",
+      "bytes": 1669,
+      "sha256": "32fea4f1493af6546b26441d38347db5b8d5b8b9a107ec8bd068bfacf97a4d7c",
+      "kind": "remote_original_manifest"
+    },
+    {
+      "path": "terminal-evidence/observation-001.log",
+      "bytes": 3427,
+      "sha256": "117d5ec25af2a0c356872cc27248692763d98056909677fca9cd610916866c2a",
+      "kind": "original_first_observation"
+    },
+    {
+      "path": "terminal-evidence/scontrol-first-observation.txt",
+      "bytes": 1422,
+      "sha256": "212e74867beff7562142a3772f1651515456d077d54299797b3fe82385d17ffd",
+      "kind": "exact_original_line_extraction"
+    },
+    {
+      "path": "terminal-evidence/closure-receipt.json",
+      "bytes": 2426,
+      "sha256": "8b221ac5937094d5077ead6d96c59103cd5d78750e0a0820dfbf95cd590f7ada",
+      "kind": "independent_parent_remote_receipt"
+    },
+    {
+      "path": "terminal-evidence/paid-observed-scontrol.txt",
+      "bytes": 1595,
+      "sha256": "ffae389270899c7b260539b821f8c3a20c138d547d86f398b4a3de33f916d6db",
+      "kind": "independent_parent_original_scontrol"
+    },
+    {
+      "path": "terminal-evidence/terminal-result.json",
+      "bytes": 8572,
+      "sha256": "6e5ee70e0827a0d01636b21691f1c12a7ca4a6abe0f992fcf152ef4fe619e7c0",
+      "kind": "local_stdlib_analysis"
+    },
+    {
+      "path": "authorization.json",
+      "bytes": 1403,
+      "sha256": "21e303fff0839e1709ad977b8e484b2e0d6322a2081aa5f84e51c4ac47f5d9b7",
+      "kind": "existing_parent_evidence_not_modified"
+    },
+    {
+      "path": "deployment-receipt.json",
+      "bytes": 1332,
+      "sha256": "fea9fbd7a1fb38555e9a35049c0da913946c6181b1433592e4cbf41be23fae13",
+      "kind": "existing_parent_evidence_not_modified"
+    },
+    {
+      "path": "reference-preflight-report.json",
+      "bytes": 262150,
+      "sha256": "df34f9e76628a26b019ab552d4d78d3cb3d3e7658f9b8bcfe16420c18d0ffe56",
+      "kind": "existing_parent_evidence_not_modified"
+    }
+  ],
+  "checks": {
+    "all_remote_manifest_hashes_match_local": true,
+    "archive_members_safe": true,
+    "exact_parent_row_once": true,
+    "all_actual_run_files_preserved": true,
+    "no_production_source_modified": true,
+    "no_new_model_or_job_actions": true
+  }
+}

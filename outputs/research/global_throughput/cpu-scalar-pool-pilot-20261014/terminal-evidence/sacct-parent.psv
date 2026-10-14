@@ -1,0 +1,2 @@
+JobIDRaw|JobName|Partition|State|ExitCode|Submit|Start|End|ElapsedRaw|AllocCPUS|NNodes|NodeList|AllocTRES|ReqTRES|ReqMem|TotalCPU|CPUTimeRAW
+15866488|orchjax-srv-cpu4|cnall|FAILED|1:0|2026-10-14T23:08:43|2026-10-14T23:08:58|2026-10-14T23:08:59|1|4|1|ibc11b04n04|billing=4,cpu=4,node=1|billing=4,cpu=4,mem=1024K,node=1|1024K|00:00:00|4

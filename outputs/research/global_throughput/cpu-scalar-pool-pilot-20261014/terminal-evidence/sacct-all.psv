@@ -1,0 +1,4 @@
+JobIDRaw|JobName|Partition|State|ExitCode|Submit|Start|End|ElapsedRaw|AllocCPUS|NNodes|NodeList|AllocTRES|ReqTRES|ReqMem|MaxRSS|MaxVMSize|TotalCPU|UserCPU|SystemCPU|CPUTimeRAW
+15866488|orchjax-srv-cpu4|cnall|FAILED|1:0|2026-10-14T23:08:43|2026-10-14T23:08:58|2026-10-14T23:08:59|1|4|1|ibc11b04n04|billing=4,cpu=4,node=1|billing=4,cpu=4,mem=1024K,node=1|1024K|||00:00.374|00:00.069|00:00.304|4
+15866488.batch|batch||FAILED|1:0|2026-10-14T23:08:58|2026-10-14T23:08:58|2026-10-14T23:08:59|1|4|1|ibc11b04n04|cpu=4,mem=0,node=1|||0|3276K|00:00.371|00:00.069|00:00.301|4
+15866488.extern|extern||COMPLETED|0:0|2026-10-14T23:08:58|2026-10-14T23:08:58|2026-10-14T23:08:59|1|4|1|ibc11b04n04|billing=4,cpu=4,node=1|||0|0|00:00.003|00:00:00|00:00.003|4

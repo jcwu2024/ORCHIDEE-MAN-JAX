@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-14T15:12:51.747254Z",
+  "job_id": "15866488",
+  "state": "FAILED",
+  "allocated_TRES_or_scheduler_TRES": "cpu=4,node=1,billing=4",
+  "TRES_source": "TRES",
+  "node": "ibc11b04n04",
+  "fields": {
+    "NumCPUs": "4",
+    "NumTasks": "1",
+    "Partition": "cnall",
+    "Requeue": "0",
+    "TimeLimit": "01:30:00"
+  },
+  "envelope_matches": true,
+  "violations": []
+}

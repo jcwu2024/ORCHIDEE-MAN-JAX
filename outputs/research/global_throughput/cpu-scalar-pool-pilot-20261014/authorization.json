@@ -1,0 +1,16 @@
+{
+  "schema": "global_cpu_scalar_pool_pilot_approval_v1",
+  "approval_date": "2026-10-14",
+  "source": "Supervisor delegation under explicit user authorization: 你看没问题就可以批准，授权你",
+  "execution_commit": "50864f065363f6cd0de685c18d9c257723bf2838",
+  "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v1",
+  "reference_preflight": {"partition": "cntest", "node_family": "ibtest", "tasks": 1, "CPUs": 1, "wall_seconds": 300, "physical_runner_created": false},
+  "paid_pilot": {"partition": "cnall", "nodes": 1, "tasks": 1, "CPUs": 4, "workers": 4, "GPUs": 0, "wall_seconds": 5400, "exclusive": false, "no_requeue": true, "nodelist": null, "memory_reservation": null, "startup_concurrency": 1, "worker_start_timeout_seconds": 1200, "command_timeout_seconds": 300, "aggregate_RSS_abort_GiB": 64, "host_MemAvailable_guard_GiB": 64, "RLIMIT_AS": null, "worst_case_allocated_CPU_hours": 6, "worst_case_CNY": [0.30, 0.42], "rates_verified": false},
+  "paid_submission_limit": 1,
+  "stop_on_failure_timeout_numeric_or_memory_gate": true,
+  "automatic_retry_or_scale_up": false,
+  "physical_source_or_tolerance_changes": false,
+  "GPU_jobs": false,
+  "scalar_regeneration": false,
+  "goal": "Actual CPU48 independent B1 throughput and allocated-core cost comparison against GPU B1024; pilot is residency/startup/cache evidence only"
+}
