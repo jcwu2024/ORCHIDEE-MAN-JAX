@@ -125,3 +125,6 @@ outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/** -text whit
 
 # Preserve scalar-pool pilot receipt and scheduler bytes with their recorded hashes.
 outputs/research/global_throughput/cpu-scalar-pool-pilot-20261014/** -text whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve the telemetry-fix candidate and target verification receipts byte-exact.
+outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/** -text whitespace=-blank-at-eol,-blank-at-eof

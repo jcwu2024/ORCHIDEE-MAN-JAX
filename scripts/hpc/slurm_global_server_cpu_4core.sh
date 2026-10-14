@@ -165,16 +165,28 @@ export ORCHJAX_SLURM_ALLOC_TRES_SOURCE=$ALLOC_TRES_SOURCE
 {
   date -u +%FT%TZ
   hostname
-  uptime
+  if ! uptime; then
+    printf 'warning: optional CPU telemetry unavailable: uptime failed\n' >&2
+  fi
   "$SLURM_BIN/scontrol" show job --details "$SLURM_JOB_ID"
-  taskset -pc $$
-  lscpu -e=CPU,CORE,SOCKET,ONLINE
+  if ! taskset -pc $$; then
+    printf 'warning: optional CPU telemetry unavailable: taskset query failed\n' >&2
+  fi
+  if ! lscpu -e=CPU,CORE,SOCKET,ONLINE; then
+    printf 'warning: optional CPU telemetry unavailable: lscpu failed\n' >&2
+  fi
   (cd "$CODE_DIR" && git rev-parse HEAD)
   printf 'slurm_cpus_per_task=%s slurm_job_cpus_per_node=%s\n' "$SLURM_CPUS_PER_TASK" "${SLURM_JOB_CPUS_PER_NODE:-unknown}"
   printf 'slurm_alloc_tres=%s slurm_alloc_tres_source=%s\n' \
     "$ORCHJAX_SLURM_ALLOC_TRES" "$ORCHJAX_SLURM_ALLOC_TRES_SOURCE"
   printf 'validation_mode=%q cpu_reference_role=%q sizes=%q methods=%q memory_reservation=none pool_admission_guard_gib=%q pool_sampled_RSS_abort_gib=%q workers=%q startup_concurrency=%q cache_mode=%q cache_root=%q\n' "$VALIDATION_MODE" "$CPU_REFERENCE_ROLE" "$BENCHMARK_SIZES" "$CPU4_METHODS" "$POOL_MEMORY_GUARD_GIB" "$POOL_MEMORY_LIMIT_GIB" "$POOL_WORKERS" "$POOL_START_CONCURRENCY" "$CACHE_MODE" "$CACHE_ROOT"
-  if command -v nvidia-smi >/dev/null 2>&1; then nvidia-smi; fi
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    if ! nvidia-smi; then
+      printf 'warning: optional GPU telemetry unavailable: nvidia-smi failed\n' >&2
+    fi
+  else
+    printf 'warning: optional GPU telemetry unavailable: nvidia-smi not found\n' >&2
+  fi
 } | tee "$RUN_ROOT/launch-context.txt"
 
 run_case() {
