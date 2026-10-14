@@ -1,6 +1,17 @@
 # Current Project Status
 
-Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+is approved, resource-blocked and stopped without submission. Explicit human
+approval bound exact30d7eb7/proposal59b09320 to one V100/four allocated CPUs/
+5400s/24GiB/CNY3.72, one compile and52 calls. The bounded refresh found all GPUs
+allocated on eligible UP nodes; remaining nodes were drained/down. PrivateData=jobs
+hid other-user end times, so no short release window was established. No job,
+allocation, approval file, mutex, ledger, discovery/preflight or model run occurred.
+New native FP64/FD/self-repeat/full3854/physics/resource gates are unmeasured;
+allocation card-hours/CPU-hours are0, estimated CNY0, actual billing unqueried,
+release not applicable. No automatic resume/retry, budget extension, layer graph,
+training, automation or further polling follows.
+[Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 now integrates the real fixed66M B1/299/T7 public callable. Actual local public
 preparation matches complete saved case/state hashes and355FP32 leaves. All nine
 neural modules/reader scatter and canonical aliases have an explicit diagnostic

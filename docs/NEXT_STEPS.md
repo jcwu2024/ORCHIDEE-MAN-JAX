@@ -1,12 +1,19 @@
 # Current Work Order
 
-Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+records explicit human approval of immutable30d7eb7/proposal59b09320 and a
+resource-blocked stop before submission. No eligible GPU was available at the
+captured refresh; no allocation, job, approval file, mutex, ledger or GPU/model
+execution occurred. This diagnostic line is stopped under this grant, without
+automatic resume, retry, budget extension or further polling.
+[Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation, diagnostic FP64 context and one combined native state
 VJP/JVP ABI. Program-coordinate FD permits computational-only2621; unknown
 internal branches are interpretation limits. Local tests/dry-run do not certify
 full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
-proposal remains unexecuted and needs fresh exact approval. Historical GPU
+proposal was explicitly approved but remains unexecuted after the accepted
+resource-blocked stop. Historical GPU
 scopes remain closed/consumed.
 The actual test01 CPU outer dry-run and full saved B1/begin endpoint inspection
 pass at committed30d7eb7, with exact full case/state and four projections.
@@ -69,11 +76,15 @@ The clarified target is the exposed program partial derivative, permitting
 single-coordinate2621 with an explicit computational-only label. No carbon
 pools are silently coordinated. Four directions and separate native/mean/state20
 gates remain; unknown internal branches limit interpretation, and unconverged
-FD is inconclusive. The integrated90-minute/CNY3.72 proposal needs fresh exact
-resource/command approval before any GPU execution. B4 local
-repair remains no-go. No next-layer diagnostic, new GPU/remote compute, training,
-Teacher, cleanup or monitoring is underway. The authorized bounded test01 CPU
-preparation is complete and does not grant that proposed GPU allocation.
+FD is inconclusive. The integrated90-minute/CNY3.72 proposal was explicitly
+approved for immutable30d7eb7, one V100/four allocated CPUs/5400s/24GiB,
+one compile and52 calls. The resource refresh admitted no node; the task stopped
+before any submission or allocation. New native FP64, FD, self-repeat/full3854,
+physics and resource gates remain unmeasured. Stop this precision/FD line under
+the current grant: no automatic resume/retry, budget extension, layer graph,
+training, automation or further resource polling. B4 local repair remains no-go,
+and state20 remains a separate strict failure. Accepted CPU preparation and old
+FP32 evidence are retained; neither supplies new FP64 scientific acceptance.
 
 The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole

@@ -4,7 +4,13 @@ New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
-Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+is approved, resource-blocked and stopped without submission. The human approved
+exact30d7eb7/proposal59b09320, but the refresh found no eligible GPU. No job,
+allocation, approval file, mutex, ledger, preflight or model execution occurred;
+zero allocation card-hours/CPU-hours and estimated CNY0. New FP64/native/FD/full3854
+results remain unmeasured. No automatic resume or further polling follows.
+[Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 delivers the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation and focused CPU tests.
 Server preparation at committed30d7eb7 passes the actual test01 outer CPU dry-run
@@ -15,7 +21,8 @@ Coordinate2621 is an exposed
 program-coordinate partial, with computational-only FD and no manifold claim.
 One combined native FP64 state VJP/JVP graph is prepared; full-model execution,
 precision/runtime admission and GPU allocation remain unperformed. The bounded
-90-minute/CNY3.72 proposal requires fresh exact execution approval. Prior
+90-minute/CNY3.72 proposal was explicitly approved; the latest outcome is the
+resource-blocked stop above. Prior
 [B4 local repair](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
 remains no-go, and state20 nonfinite is still a separate strict failure. The
 [dated handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md)

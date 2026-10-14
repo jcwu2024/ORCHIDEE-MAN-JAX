@@ -1,6 +1,11 @@
 # Code Map
 
-Updated: 2026-10-14. Bounded task navigation, not an exhaustive inventory.
+Updated: 2026-10-15. Bounded task navigation, not an exhaustive inventory.
+[Current precision execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+owns the approved/resource-blocked stop. Immutable30d7eb7 was not submitted;
+new model/FP64/FD results are unmeasured. Resource receipts/raw snapshot are in
+`outputs/T7-current-model-precision-admission-execution-20261015/resource-blocked/`.
+No automatic continuation or polling follows.
 [Current precision preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 links `scripts/hpc/shared_current_T7_precision_assets.py` (exact single299 public
 case), `shared_current_T7_precision_guard.py` (transactional full-neural context),
@@ -14,7 +19,8 @@ full saved FP32 endpoint/baseline loss and auxiliary values, scalar ULP/cancella
 analysis, source/cache deployment and actual Bash→parser command receipts.
 `--source-cache` keeps the exact historical expert bytes under task-checkout
 `outputs`; Git lookups use `cwd` for server Git1.8.3.1 compatibility.
-Full-model execution is unperformed; prior B4 repair remains no-go. Preserve assets.
+Preparation remains accepted; approved full-model execution was resource-blocked
+and stopped without allocation. Prior B4 repair remains no-go. Preserve assets.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the decision recommendation and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.
 
