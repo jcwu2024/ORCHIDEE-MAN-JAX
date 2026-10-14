@@ -1,0 +1,231 @@
+{
+  "schema": "global_cpu48_v5_preparation_result_v1",
+  "status": "prepared_deployed_free_checked_not_paid_approved",
+  "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+  "execution_ref": "codex/global-cpu48-b64-v5",
+  "parent_execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "source_research_commit": "978946bbf90593b5ea1c93d414dc6410a82b3f59",
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+  "scientific_source": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba"
+  },
+  "changed_paths": [
+    "scripts/dev/benchmark_global_batch.py",
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/diagnose_global_cpu_references.py",
+    "tests/unit/test_global_cpu_reference_preparation.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_global_server_exploratory_cost.py"
+  ],
+  "scalar_admission": {
+    "sha256": "4d2d3d18d92c0d6c6bc737059bc2b2555cf36f77b4a3c4406844071ab6a3e7f5",
+    "source_job_id": "15820467",
+    "source_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "checkpoint_sha256": "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa",
+    "audit_receipt_sha256": "cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431",
+    "new_audit": false,
+    "scalar_source_and_audit_equal_original_admission": true
+  },
+  "free_check": {
+    "job_id": "15857559",
+    "partition": "cntest",
+    "node": "ibtest02",
+    "actual_cpus": 1,
+    "affinity": [
+      0
+    ],
+    "limit_seconds": 300,
+    "sacct_state": "COMPLETED",
+    "sacct_exit_code": "0:0",
+    "sacct_parent_elapsed_seconds": 65,
+    "status": "reference_preparation_passed",
+    "workload_points": 64,
+    "output_leaf_counts": {
+      "GPU": 760,
+      "CPU_scalar": 760
+    },
+    "reference_preparation_identity": {
+      "baseline_ref": {
+        "candidate": "133e35aec7b83b9d79888c46092f64d518e97299",
+        "stage": "133e35aec7b83b9d79888c46092f64d518e97299"
+      },
+      "science_sha256": {
+        "candidate": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+        "stage": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5"
+      },
+      "gpu_reference_sha256": {
+        "candidate": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+        "stage": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+      },
+      "execution_commit": {
+        "candidate": "0100c8b09be5137b822173e0a0be66cb64939727",
+        "stage": "0100c8b09be5137b822173e0a0be66cb64939727"
+      }
+    },
+    "actual_stage_runtime_git_head": "0100c8b09be5137b822173e0a0be66cb64939727",
+    "environment": {
+      "jax": "0.4.38",
+      "jaxlib": "0.4.38",
+      "x64_enabled": true,
+      "gpu_count": 0,
+      "cpu_affinity": [
+        0
+      ]
+    },
+    "candidate_provenance": {
+      "job_id": "15857559",
+      "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+      "execution_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+      "prepared_input_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+      "gpu_reference_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl",
+      "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+      "certified_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+      "physical_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+      "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299"
+    },
+    "physical_runner_created": false,
+    "physical_lower_compile_run": false,
+    "exit_boundary": "immediately after shared production prepare_references; before StageStore/SingleRunner/PoolRunner",
+    "scientific_acceptance": false
+  },
+  "target_shell_dry_run": {
+    "schema": "cpu48_v5_package_and_argument_check_v1",
+    "harness_blob_sha256": {
+      "scripts/dev/benchmark_global_batch.py": "351522c38826b785ab0d31b4a4ca21fcfaea74712229efc4650bad89ea77ced9",
+      "scripts/dev/benchmark_global_server_cpu.py": "a5adbf18ae81acf3de1632daffd8def91e049a2a7f753e5255e4d198213fc9ad",
+      "scripts/dev/diagnose_global_cpu_references.py": "c6d1131afcd57f7d6228b27ae8989d8a7d9cb5e36ee358fd2e563fafa9077941",
+      "tests/unit/test_global_cpu_reference_preparation.py": "8f34ac486429cdecf643a8ed8ae77df63f1a74f791719d721aa28344693438d3",
+      "tests/unit/test_global_server_benchmark.py": "71c062b7ec7a798619d5baa79f401969fe1435d005a02cb943c39c87117c0114",
+      "tests/unit/test_global_server_exploratory_cost.py": "9826cfa1deabd0bc6f2dcd7f997175e5800e169506f74ccf6f43a2ab9f1ec775"
+    },
+    "actual_free_cpus": 1,
+    "actual_free_affinity": [
+      0
+    ],
+    "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+    "checkout_clean": true,
+    "proposal_sha256": "c87ce9e9d274201c68980739748db33168fb8ae6b312ab390233a76bc968e993",
+    "normal_admission_binding_passed": true,
+    "launcher_coordinator_runner_argument_expansion_passed": true,
+    "dry_run_scope": "planned48 arguments only; no actual48 resource admission or model execution",
+    "planned_run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857559",
+    "paid_submission": false,
+    "JAX_imported": false
+  },
+  "retention": {
+    "registry_before_sha256": "a9ec87f475effcb5cc1a2afe9489566ce32bb310c27491565ed442fb15535b62",
+    "registry_after_sha256": "7de57bf880156963def8a3faebadced52e5338f84d22c113d522f2d601406363",
+    "README_before_sha256": "4f8afd6c154c0d2af460dd7102dce43b2178e94bb2a999dd41e404a1cfd3c810",
+    "README_after_sha256": "5e3ba3db3de0c7ea6fbd0136594b29afdf5f9df80aec072e2144ea16ebd45328",
+    "old_records_preserved": true,
+    "old_README_bytes_preserved": true,
+    "archive_or_delete": false
+  },
+  "paid_proposal": {
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_cpus": 48,
+    "gpus": 0,
+    "time_limit_seconds": 3600,
+    "nonexclusive": true,
+    "requeue": false,
+    "added_memory_or_placement_restriction": false,
+    "unverified_worst_case_CNY": [
+      2.4,
+      3.36
+    ],
+    "run_root_pattern": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/${SLURM_JOB_ID}",
+    "submitted": false,
+    "approved": false,
+    "next_dispatch": "supervisor approval"
+  },
+  "limitations": [
+    "No actual48 admission, physical compilation/run, numerical candidate gates or warm throughput measured.",
+    "Scalar61/64 GPU passes; three finite failing points/four comparisons persist; scientific acceptance remains false.",
+    "Reset remains sealed proof only; old paid grants remain closed; no automatic retry."
+  ],
+  "artifacts": [
+    {
+      "path": "execution-code-pin.json",
+      "bytes": 4675,
+      "sha256": "d800ffc9be9dc4867dc1b8ce19ca57b9da74082206f55b81d674a1adc556c2e6"
+    },
+    {
+      "path": "execution-harness.patch",
+      "bytes": 23135,
+      "sha256": "27920b2441c62f2476faf0420110cbcbf4d6a096bfe597b75aef01678f1ad0c6"
+    },
+    {
+      "path": "cpu48-b64-0100c8b09be5.bundle",
+      "bytes": 6638,
+      "sha256": "0668675de188c67c23ebacaf5f52a722458badbc2d9c2117bf18bca288ba91c1"
+    },
+    {
+      "path": "scalar-admission.json",
+      "bytes": 145538,
+      "sha256": "4d2d3d18d92c0d6c6bc737059bc2b2555cf36f77b4a3c4406844071ab6a3e7f5"
+    },
+    {
+      "path": "PROPOSED_SUBMISSION.sh",
+      "bytes": 2118,
+      "sha256": "c87ce9e9d274201c68980739748db33168fb8ae6b312ab390233a76bc968e993"
+    },
+    {
+      "path": "PAID_PROPOSAL.md",
+      "bytes": 3156,
+      "sha256": "68ba22d0ebfa2e8d7a07210535c8c23c7c1a3bea92488408bf88e5c1d53e95a9"
+    },
+    {
+      "path": "registry-retention-receipt.json",
+      "bytes": 2441,
+      "sha256": "046120e9e8a32cbc5f823aa72f7cc9f745394f7d84c569d9235d13e9c1f6105b"
+    },
+    {
+      "path": "free-check/15857559/report.json",
+      "bytes": 261868,
+      "sha256": "d70dd295df32227c6050db890c7732a1e54a6fe70bf7d5ea631a07b6a772247f"
+    },
+    {
+      "path": "free-check/15857559/actual-argv.txt",
+      "bytes": 1531,
+      "sha256": "d14a12f5e82e06c6f8a8e513a94542f0cba3cf72333ed36850b0a4a2569e6bcd"
+    },
+    {
+      "path": "free-check/15857559/actual-free-allocation.txt",
+      "bytes": 1128,
+      "sha256": "a173c8c84b402292f0fcda620966f58ace6f7b5ca03a2d3f80c0986ba8ead3ec"
+    },
+    {
+      "path": "free-check/15857559/sacct-terminal.txt",
+      "bytes": 258,
+      "sha256": "4fb4e97ad4d99e09c1a415fc3147c23bd5877c1ee0cfb22110f6eb9d22aa21fb"
+    },
+    {
+      "path": "free-check/15857559/exitcode.raw",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "free-check/15857559/launcher-dry-run.stdout",
+      "bytes": 2151,
+      "sha256": "62487d2f4914114d414f4466f5d3222701705a27ebb91ed1c0dd30dbb5b811e5"
+    },
+    {
+      "path": "free-check/15857559/coordinator-dry-run.stdout",
+      "bytes": 9363,
+      "sha256": "bab9b0dd38bccb5c1f576ad053b76e2432d518208fa1fa2448ee7637fc7350fb"
+    },
+    {
+      "path": "free-check/15857559/package-and-arguments.json",
+      "bytes": 1567,
+      "sha256": "6fa3439287b0dc0a47b34a0d64fff58ca7f9af1ed6d0b70f821871feace7874f"
+    }
+  ]
+}

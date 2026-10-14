@@ -1,0 +1,25 @@
+{
+  "schema": "cpu48_v5_package_and_argument_check_v1",
+  "harness_blob_sha256": {
+    "scripts/dev/benchmark_global_batch.py": "351522c38826b785ab0d31b4a4ca21fcfaea74712229efc4650bad89ea77ced9",
+    "scripts/dev/benchmark_global_server_cpu.py": "a5adbf18ae81acf3de1632daffd8def91e049a2a7f753e5255e4d198213fc9ad",
+    "scripts/dev/diagnose_global_cpu_references.py": "c6d1131afcd57f7d6228b27ae8989d8a7d9cb5e36ee358fd2e563fafa9077941",
+    "tests/unit/test_global_cpu_reference_preparation.py": "8f34ac486429cdecf643a8ed8ae77df63f1a74f791719d721aa28344693438d3",
+    "tests/unit/test_global_server_benchmark.py": "71c062b7ec7a798619d5baa79f401969fe1435d005a02cb943c39c87117c0114",
+    "tests/unit/test_global_server_exploratory_cost.py": "9826cfa1deabd0bc6f2dcd7f997175e5800e169506f74ccf6f43a2ab9f1ec775"
+  },
+  "actual_free_cpus": 1,
+  "actual_free_affinity": [
+    0
+  ],
+  "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+  "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+  "checkout_clean": true,
+  "proposal_sha256": "c87ce9e9d274201c68980739748db33168fb8ae6b312ab390233a76bc968e993",
+  "normal_admission_binding_passed": true,
+  "launcher_coordinator_runner_argument_expansion_passed": true,
+  "dry_run_scope": "planned48 arguments only; no actual48 resource admission or model execution",
+  "planned_run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15857559",
+  "paid_submission": false,
+  "JAX_imported": false
+}

@@ -1,22 +1,39 @@
 # Explore1000 Server Benchmark Contract
 
-Current status (2026-10-14 Asia/Shanghai): bounded identity repair and free
-precompile reference preparation are complete, awaiting supervisor acceptance.
-Read the [repair result](../../../outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md).
-Before job15855041 reproduced the original provenance ValueError with the real
-producer: baseline/science/GPU SHA matched, but stage_identity omitted the actual
-metadata.git_head. Server preparation now explicitly opts into that projection;
-generic legacy stage schemas and all consumer guards remain unchanged.
-After job15855062 completed the shared production prepare_references path using
-real FULL64 input and both GPU/scalar references, each retaining 760 leaves,
-on JAX/jaxlib0.4.38 CPU/x64. Both runs were cntest/ibtest02 with actual one CPU,
-300s limits and parent durations 65s/23s; neither constructed a physical runner
-or reached physical lower/compile/run. This is not CPU48 admission, numerical
-acceptance or throughput evidence. Original production checkout and admission
-remain intact; diagnostic overlays and the sole staging-path admission rebinding
-are recorded. All 55 focused local producer/rejection/interface tests passed;
-synthetic guard fixture limits are disclosed separately from target evidence.
-No new paid proposal/submission, GPU or scalar generation occurred.
+Current status (2026-10-14 Asia/Shanghai): the fixed CPU48 B64 v5 candidate is
+deployed and passed one bounded free reference-preparation check; supervisor
+review is pending and paid execution is not authorized. Read the [proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PAID_PROPOSAL.md),
+[tracked preparation result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md),
+[machine-readable preparation summary](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/preparation-result.json),
+[execution pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/execution-code-pin.json),
+[local artifact review](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/artifact-review.json).
+The full target report is retained locally and remotely at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/free-check/15857559/report.json`,
+SHA256 `d70dd295df32227c6050db890c7732a1e54a6fe70bf7d5ea631a07b6a772247f`.
+The clean immutable checkout is `0100c8b09be5137b822173e0a0be66cb64939727`
+(`codex/global-cpu48-b64-v5`), based on `60dccbdd...`; its 104 physical files,
+science certificate and scientific source identity match the base. The login-node
+deployment receipt records the bundle SHA and successful `git bundle verify`.
+In the actual target allocation, pin, normal scalar admission, proposal and six
+harness hashes were checked.
+Free job15857559 completed 0:0 in 65 parent seconds on cntest/ibtest02 with a
+300s limit, one actual CPU and affinity `[0]`.
+JAX/jaxlib0.4.38 CPU/x64 loaded the real FULL64 input plus GPU and scalar
+references (760 leaves each); baseline, science, GPU-reference and execution
+commit identities all matched. The diagnostic took 16.98s and exited immediately
+after the shared production `prepare_references` path. No physical runner or
+physical lower/compile/run was performed; phases, gates and benchmark timings
+are empty. The same allocation checked real launcher/coordinator/runner argument
+expansion through dry-run; it verifies the planned job-ID path substitution only.
+The real-launch output-directory absence gate remains in the launcher but was not
+exercised by dry-run. Planned 48-CPU arguments are not 48-CPU admission.
+The separate proposal is cnall/one node/task/48 CPUs/zero GPUs/3600s,
+nonexclusive/no-requeue/no added memory or placement restriction, with
+unverified CNY2.40/3.36 rate scenarios. It remains unapproved and unsubmitted;
+all old paid grants remain closed. This free preparation is not numerical,
+scientific or throughput acceptance. The prior 61/64 scalar GPU passes, three
+finite failing points/four comparisons, sealed-reset-proof-only limit and
+scientific_acceptance=false are unchanged.
 
 Historical paid status: CPU48 v4's sole paid job **15853683**
 ended **FAILED 1:0 / 50 parent seconds**, and this attempt is closed. Read the

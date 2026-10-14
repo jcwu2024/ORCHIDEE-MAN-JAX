@@ -1,0 +1,20 @@
+The bundle contains this ref:
+0100c8b09be5137b822173e0a0be66cb64939727 refs/heads/codex/global-cpu48-b64-v5
+The bundle requires this ref:
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3 
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5'...
+done.
+scripts/dev/benchmark_global_batch.py
+scripts/dev/benchmark_global_server_cpu.py
+scripts/dev/diagnose_global_cpu_references.py
+tests/unit/test_global_cpu_reference_preparation.py
+tests/unit/test_global_server_benchmark.py
+tests/unit/test_global_server_exploratory_cost.py
+0100c8b09be5137b822173e0a0be66cb64939727
+75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba
+d800ffc9be9dc4867dc1b8ce19ca57b9da74082206f55b81d674a1adc556c2e6  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/execution-code-pin.json
+4d2d3d18d92c0d6c6bc737059bc2b2555cf36f77b4a3c4406844071ab6a3e7f5  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/scalar-admission.json
+c87ce9e9d274201c68980739748db33168fb8ae6b312ab390233a76bc968e993  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PROPOSED_SUBMISSION.sh
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3
+75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba
+DEPLOYMENT=clean_new_immutable_checkout_no_alternates

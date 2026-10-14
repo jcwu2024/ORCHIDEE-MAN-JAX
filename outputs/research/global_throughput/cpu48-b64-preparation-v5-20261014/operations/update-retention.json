@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/update-retention.sh",
+  "destination": null,
+  "start_epoch": 1791955698.968641,
+  "stdin_sha256": "438ee6f7cb51e333ed4b8fc7a7c7781fea61d7b187156f3145c3858457492e48",
+  "exit_code": 0,
+  "end_epoch": 1791955699.5122538,
+  "wall_seconds": 0.5436127185821533,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v5-20261014\\operations\\update-retention.stdout.txt",
+    "sha256": "c5aa9e92133b6b47fb0a2ad2e89c9a67b59791a95c388b8660b6b48c179732d3",
+    "bytes": 2258
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v5-20261014\\operations\\update-retention.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

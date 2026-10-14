@@ -1,0 +1,74 @@
+{
+  "schema": "cpu48-b64-fixed-identity-candidate-v1",
+  "status": "prepared_not_paid_authorized",
+  "source_research_commit": "978946bbf90593b5ea1c93d414dc6410a82b3f59",
+  "base_execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "execution_code_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+  "execution_ref": "codex/global-cpu48-b64-v5",
+  "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+  "scientific_source": {
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "science_file_count": 104,
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba"
+  },
+  "research_science_tree_oid": "62e90547ee8eadab387713397bb111c399c81b6c",
+  "changed_paths": [
+    "scripts/dev/benchmark_global_batch.py",
+    "scripts/dev/benchmark_global_server_cpu.py",
+    "scripts/dev/diagnose_global_cpu_references.py",
+    "tests/unit/test_global_cpu_reference_preparation.py",
+    "tests/unit/test_global_server_benchmark.py",
+    "tests/unit/test_global_server_exploratory_cost.py"
+  ],
+  "every_physical_blob_identical_to_base": true,
+  "harness_blob_sha256": {
+    "scripts/dev/benchmark_global_batch.py": "351522c38826b785ab0d31b4a4ca21fcfaea74712229efc4650bad89ea77ced9",
+    "scripts/dev/benchmark_global_server_cpu.py": "a5adbf18ae81acf3de1632daffd8def91e049a2a7f753e5255e4d198213fc9ad",
+    "scripts/dev/diagnose_global_cpu_references.py": "c6d1131afcd57f7d6228b27ae8989d8a7d9cb5e36ee358fd2e563fafa9077941",
+    "tests/unit/test_global_cpu_reference_preparation.py": "8f34ac486429cdecf643a8ed8ae77df63f1a74f791719d721aa28344693438d3",
+    "tests/unit/test_global_server_benchmark.py": "71c062b7ec7a798619d5baa79f401969fe1435d005a02cb943c39c87117c0114",
+    "tests/unit/test_global_server_exploratory_cost.py": "9826cfa1deabd0bc6f2dcd7f997175e5800e169506f74ccf6f43a2ab9f1ec775"
+  },
+  "bundle": {
+    "name": "cpu48-b64-0100c8b09be5.bundle",
+    "sha256": "0668675de188c67c23ebacaf5f52a722458badbc2d9c2117bf18bca288ba91c1",
+    "bytes": 6638,
+    "prerequisite": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+    "verify": "passed"
+  },
+  "patch": {
+    "name": "execution-harness.patch",
+    "sha256": "27920b2441c62f2476faf0420110cbcbf4d6a096bfe597b75aef01678f1ad0c6",
+    "bytes": 23135
+  },
+  "scalar_admission": {
+    "name": "scalar-admission.json",
+    "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/scalar-admission.json",
+    "sha256": "4d2d3d18d92c0d6c6bc737059bc2b2555cf36f77b4a3c4406844071ab6a3e7f5",
+    "bytes": 145538,
+    "candidate_identity": {
+      "job_id": null,
+      "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+      "execution_code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+      "prepared_input_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+      "gpu_reference_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model/stage_B4_group_references.pkl",
+      "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+      "certified_science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+      "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+      "physical_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+      "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299"
+    },
+    "source_job_id": "15820467",
+    "source_commit": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "checkpoint_sha256": "1cddeaf80c2fc36f173835a5ff1bd4d8d520b144d4c96289ef6fe86dde898dfa",
+    "audit_receipt_path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v4-20261014\\scalar-audit\\scalar-audit-receipt-v3.json",
+    "audit_receipt_sha256": "cb1331edb7094e74ec1814c6813a0eee218c58ea4e89f1c0c1f630e981479431",
+    "new_audit": false,
+    "scalar_source_and_audit_equal_original_admission": true
+  },
+  "run_root_pattern": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/${SLURM_JOB_ID}",
+  "paid_submitted": false,
+  "scientific_acceptance": false
+}

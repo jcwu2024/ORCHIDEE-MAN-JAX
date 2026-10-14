@@ -1,17 +1,22 @@
 # 全球 JAX 运行效率：新项目主管交接
 
-更新：2026-10-14。有界参考身份修复和免费 precompile 全链验证已完成，待主管验收。
-当前先读[修复结果](../../../outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md)及同目录summary.json。
-免费修前job15855041重现原错误：实际metadata含git_head，但stage_identity投影遗漏；baseline/science/GPU SHA三项一致，执行SHA变为null。
-server显式opt-in传递实际git_head，generic旧stage schema和所有reference guard不变。
-修后job15855062在真实JAX/jaxlib0.4.38 CPU/x64读取FULL64输入及GPU/旧scalar完整760叶参考，两条load_reference通过，四项身份均匹配。
-生产benchmark与诊断直接共用prepare_references；仅cntest/ibtest02实际1CPU、每次300s上限（父65s/23s），返回后立即退出、不构建runner或模型lower/compile/run。
-历史104物理blob/sciencepin及研究carbon修复分离保留，原production checkout/pin/admission字节未变；staging派生admission只重绑实际代码路径，不生成新audit。
-没有新付费提案/作业、scalar重生成或GPU运行；61/64、3点4处有限超差、reset只有封存证明、科学false均不变。
-本地producer/错误execution身份拒绝/关联接口55项测试通过；synthetic loader单测stub边界在报告披露，不冒充实际目标runtime。
-后续生产48CPU资源、模型编译/运行、数值门和吞吐仍未验证，须新派工；所有旧付费额度保持关闭。
+更新：2026-10-14。CPU48 B64 v5 候选已固定、部署并通过一次有界免费参考准备检查；待主管审查，付费执行未授权。
+当前先读[v5准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md)、
+[机器可读摘要](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/preparation-result.json)、
+[提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PAID_PROPOSAL.md)、
+[固定 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/execution-code-pin.json)、
+[本地制品审查](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/artifact-review.json)。完整免费报告保留于本地及服务器：`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/free-check/15857559/report.json`，SHA256 `d70dd295df32227c6050db890c7732a1e54a6fe70bf7d5ea631a07b6a772247f`。
+执行 SHA `0100c8b09be5137b822173e0a0be66cb64939727` / ref `codex/global-cpu48-b64-v5`，基于 `60dccbdd...`；
+仅三个已接受的生产 harness 文件和三个测试文件变化，104 个物理文件、science SHA `11b6...`、actual source SHA `b334...`与物理 tree `75d8...`不变。
+新 immutable checkout 部署成功且 clean/no alternates；登录节点部署收据记录 bundle SHA 和 `git bundle verify` 通过。免费 job15857559 在 cntest/ibtest02 的300秒上限内 COMPLETED 0:0/65s，实际1CPU、affinity `[0]`、JAX/jaxlib0.4.38 CPU/x64，
+读入64点 FULL64 输入及 GPU/scalar 参考（各760叶）；四项 baseline/science/GPU SHA/execution commit 均匹配，诊断耗时16.98秒。
+生产路径与诊断共用 `prepare_references`；本次在其后立即退出，没有创建物理 runner、lower/compile/run，phases/gates/timing为空；scientific acceptance仍为false。
+实际 allocation 检查 pin、admission、提案和六个 harness 哈希，并验证锁定 production launcher/coordinator/runner 参数 dry-run及计划 job-ID 路径替换。真实启动时的输出目录不存在门仍保留，但 dry-run 未执行该门；这不是48CPU准入或模型计算。
+付费提案为 cnall/1 node/1 task/48 CPU/0 GPU/3600s、nonexclusive/no-requeue/无新增mem或placement限制，未核实费用情景 CNY2.40/3.36；尚未批准或提交，旧额度保持关闭。
+原身份修复的 job15855041/15855062 和55项本地测试继续作为修复因果与接口证据；它们不等同当前v5的48核入场、物理数值或吞吐验证。
+scalar 61/64 GPU门、3点4处有限超差、reset仅封存证明和 scientific false 均保留。完整来源、收据和范围见[v5制品审查](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/artifact-review.json)。
 
-以下为v4历史付费终态：CPU48 v4 唯一付费 job **15853683** 已 **FAILED 1:0/50s**，本次尝试关闭。
+以下为v4历史付费终态：CPU48 v4 唯一付费 job **15853683** 已 **FAILED 1:0/50s**，该次尝试关闭。
 先读[v4 实际终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md)、
 [单次执行授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)、
 [v4 准备交付](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
@@ -155,12 +160,11 @@ CPU4/48实际性能均未测。48核只是算术假设，不能作为48独立进
 CPU compile-end RSS约4.776GiB，按此作48份常驻进程的朴素外推约229GiB，超过192GB节点；单进程峰值约19.925GiB。
 原始样本、版本/输入边界、冷热费用与缺口见[本轮比较](../../../outputs/research/global_throughput/cpu-gpu-b1024-comparison-20261011/CURRENT_RESULT.md)。
 
-## 4. v4 当前终态与 v3 历史边界
+## 4. v4 历史终态与 v3 历史边界
 
-当前 v4 实际执行和采集已完成，以本文开头链接的终态入口为准。主管按用户已有委托权限批准精确提案，
-原固定命令只产生 job15853683 一次；生产路径预检和真实48核入场通过，实际 runner 在参考 provenance 门失败。
-这没有新增 B64 物理、科学或性能证据；源代码未修复，执行 checkout 仍封存在原 pin。本次仅交付后等待派工。
-下面的 v3 pin、5400s 提案、scalar 测量和终态是历史证据，不是当前 v4 命令或恢复额度。
+v4 实际执行和采集已完成，详情见本文开头的v4历史入口。原命令只产生 job15853683一次；
+production预检和真实48核入场通过，实际runner在参考provenance门失败，没有新增B64物理、科学或性能证据。
+修复与新候选属于后续独立派工，v4执行checkout仍封存在原pin。本节及下方v3内容均为历史证据，不授权重提或恢复额度。
 
 v3阶段已完成**终态交付**。主管按用户授予的审批权限批准该精确提案，唯一job15820467已FAILED1:0/2197s；
 必要精确部署、正常预检、单次提交、终态跟进和采集按 v3 执行入口核查。旧额度不重提；v4 定向修复来自上方新派工。

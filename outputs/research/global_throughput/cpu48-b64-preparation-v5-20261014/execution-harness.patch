@@ -1,0 +1,423 @@
+diff --git a/scripts/dev/benchmark_global_batch.py b/scripts/dev/benchmark_global_batch.py
+index 569b17c..33c48fc 100644
+--- a/scripts/dev/benchmark_global_batch.py
++++ b/scripts/dev/benchmark_global_batch.py
+@@ -791,8 +791,15 @@ def semantic_reference_identity(args, lane, second):
+     return digest.hexdigest()
+ 
+ 
+-def stage_identity(args, lanes, second, environment):
++def stage_identity(args, lanes, second, environment, *, include_git_head=False):
++    """Project runtime identity; server consumers additionally bind execution HEAD.
++
++    Generic legacy stage contracts retain their existing runtime schema.
++    Server reference preparation opts in using the actual metadata producer.
++    """
+     runtime_keys = ("python", "jax", "jaxlib", "numpy", "device_details", "x64_enabled", "backend_platform_version")
++    if include_git_head:
++        runtime_keys += ("git_head",)
+     compiler_keys = ("XLA_FLAGS", "JAX_PLATFORMS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+     return {
+         "contract": "four-real-points-two-seven-day-blocks-full-FP64-v1",
+diff --git a/scripts/dev/benchmark_global_server_cpu.py b/scripts/dev/benchmark_global_server_cpu.py
+index 2053939..c77b821 100644
+--- a/scripts/dev/benchmark_global_server_cpu.py
++++ b/scripts/dev/benchmark_global_server_cpu.py
+@@ -368,18 +368,21 @@ class PoolRunner:
+             channel.close()
+ 
+ 
+-def benchmark(args, recorder, lanes, second, scale, resources):
+-    from scripts.dev.global_batch_stage_store import StageStore
+-    from scripts.dev.global_server_reference import finite_tolerance_failure, load_reference
+-    from scripts.dev.probe_global_batch_cache import atomic_bytes
++def prepare_references(args, recorder, lanes, second, scale, resources):
++    """Shared production input/identity/reference admission, before runner creation.
+ 
+-    base, jax, np = scale.base, scale.jax, scale.np
++    This reads saved arrays and screens inputs. It never creates, lowers,
++    compiles or calls a physical transition.
++    """
++    from scripts.dev.global_server_reference import load_reference
++
++    base = scale.base
+     screen = scale.screen_inputs(lanes, second)
+     if args.cpu_budget == 48 and len(lanes) != 64:
+         raise ValueError("batch48 requires exactly64 native unique prepared lanes")
+     base.legacy_factory(args.baseline_ref)
+     recorder.sentinel_paths = base.roughheight_sentinel_contract(lanes[0])
+-    identity = base.stage_identity(args, lanes, second, recorder.result["environment"])
++    identity = base.stage_identity(args, lanes, second, recorder.result["environment"], include_git_head=True)
+     validation_mode = getattr(args, "validation_mode", "strict")
+     cpu_reference_role = getattr(args, "cpu_reference_role", "accepted")
+     if validation_mode == "strict" and cpu_reference_role == "cpu-internal":
+@@ -395,6 +398,7 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+     if expected is not None and origin["sha256"] != expected:
+         raise ValueError("sealed GPU reference SHA256 differs from explicitly expected artifact")
+     identity["numerical_reference_sha256"] = origin["sha256"]
++    recorder.result["reference_preparation_gpu_loaded"] = True
+     cpu_references = {}
+     if args.cpu_reference_dir is not None:
+         candidate_provenance = None
+@@ -403,6 +407,15 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+             from scripts.dev.global_cpu_candidate_identity import candidate_identity
+             candidate_provenance = resources.get("candidate_provenance") or candidate_identity(args, ROOT)
+             identity["candidate_provenance"] = candidate_provenance
++            recorder.result["reference_preparation_identity"] = {
++                "baseline_ref": {"candidate": candidate_provenance.get("baseline_ref"),
++                                 "stage": identity.get("baseline_ref")},
++                "science_sha256": {"candidate": candidate_provenance.get("certified_science_sha256"),
++                                   "stage": identity.get("science_sha256")},
++                "gpu_reference_sha256": {"candidate": candidate_provenance.get("gpu_reference_sha256"),
++                                         "stage": identity.get("numerical_reference_sha256")},
++                "execution_commit": {"candidate": candidate_provenance.get("execution_commit"),
++                                     "stage": identity.get("runtime", {}).get("git_head")}}
+         for size in args.sizes:
+             admission_args = {} if admission_record is None else {
+                 "cpu_reference_admission_record": admission_record,
+@@ -411,6 +424,18 @@ def benchmark(args, recorder, lanes, second, scale, resources):
+             cpu_references[size] = load_reference(args.cpu_reference_dir, identity,
+                 name=f"B{size}_server_scalar_v1", points=size, cpu_reference_role=cpu_reference_role,
+                 **admission_args)
++    recorder.result["reference_preparation_cpu_loaded"] = sorted(cpu_references)
++    return identity, screen, reference, origin, cpu_references, validation_mode, cpu_reference_role
++
++
++def benchmark(args, recorder, lanes, second, scale, resources):
++    from scripts.dev.global_batch_stage_store import StageStore
++    from scripts.dev.global_server_reference import finite_tolerance_failure
++    from scripts.dev.probe_global_batch_cache import atomic_bytes
++
++    base, jax, np = scale.base, scale.jax, scale.np
++    identity, screen, reference, origin, cpu_references, validation_mode, cpu_reference_role = prepare_references(
++        args, recorder, lanes, second, scale, resources)
+     store = StageStore(args.output_dir, identity)
+     recorder.result.update(stages=store.manifest["stages"], compatibility_audit=screen,
+         validation_mode=validation_mode, cpu_reference_role=cpu_reference_role,
+diff --git a/scripts/dev/diagnose_global_cpu_references.py b/scripts/dev/diagnose_global_cpu_references.py
+new file mode 100644
+index 0000000..ef61183
+--- /dev/null
++++ b/scripts/dev/diagnose_global_cpu_references.py
+@@ -0,0 +1,83 @@
++"""Free one-CPU saved-reference preparation; exits before physical runner creation.
++
++Uses the production input reader, stage identity producer and reference loader.
++This entry cannot execute a physical model and never admits a CPU48 allocation.
++"""
++from __future__ import annotations
++
++import json
++import os
++import socket
++import sys
++import traceback
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(ROOT))
++
++
++def main():
++    from scripts.dev import benchmark_global_server_cpu as cpu
++    from scripts.dev.global_cpu_candidate_identity import candidate_identity
++
++    args = cpu.parser().parse_args()
++    affinity = sorted(os.sched_getaffinity(0))
++    if (os.environ.get("SLURM_JOB_PARTITION") != "cntest"
++            or os.environ.get("SLURM_CPUS_PER_TASK") != "1"
++            or os.environ.get("SLURM_NTASKS") != "1" or len(affinity) != 1
++            or not socket.gethostname().startswith("ibtest")):
++        raise RuntimeError("reference diagnostic requires actual cntest one-CPU test-node allocation")
++    if (args.mode != "batch" or args.cpu_budget != 1 or args.sizes != [64]
++            or args.validation_mode != "exploratory" or args.cpu_reference_role != "cpu-internal"
++            or args.prepared_input is None or args.gpu_reference_dir is None
++            or args.cpu_reference_dir is None or args.cpu_reference_admission_record is None
++            or not args.expected_cpu_reference_admission_sha256 or not args.expected_gpu_reference_sha256
++            or args.dry_run or args.synthetic_smoke or args.cache_mode != "off" or args.warm_repeats != 5):
++        raise ValueError("diagnostic requires unchanged FULL64 exploratory science/reference arguments and budget1")
++    for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
++        if os.environ.get(key) != "1":
++            raise RuntimeError(f"diagnostic single-CPU thread policy differs at {key}")
++    os.environ.setdefault("ORCHIDEE_REPO_ROOT", str(ROOT))
++    os.environ.setdefault("ORCHIDEE_DATA_ROOT", str(args.truth_root / "data"))
++    os.environ.setdefault("ORCHIDEE_REFERENCE_ROOT", str(args.truth_root / "reference"))
++    os.environ["ORCHIDEE_OUTPUT_ROOT"] = str(args.output_dir.resolve())
++    from scripts.dev import benchmark_global_scale as scale
++
++    scale.jax.config.update("jax_enable_x64", True)
++    recorder = scale.base.Recorder(args.output_dir.resolve())
++    code = 0
++    try:
++        environment = scale.base.metadata(args)
++        recorder.result["environment"] = environment
++        if (environment["jax"] != "0.4.38" or environment["jaxlib"] != "0.4.38"
++                or environment["gpu_count"] != 0 or len(environment["device_details"]) != 1):
++            raise RuntimeError("accepted single CPU JAX/jaxlib0.4.38 required")
++        resources = {"candidate_provenance": candidate_identity(args, ROOT),
++                     "parent_allocated_CPU_request_count": 1, "billing_CPU_request_count": 1}
++        lanes, second = scale.read_prepared(args.prepared_input, args.config)
++        prepared = cpu.prepare_references(args, recorder, lanes, second, scale, resources)
++        identity, screen, gpu, origin, scalar, _, _ = prepared
++        recorder.result.update(status="reference_preparation_passed", workload_points=len(lanes),
++            compatibility_audit=screen, output_leaf_counts={"GPU": len(scale.jax.tree_util.tree_leaves(gpu)),
++                "CPU_scalar": len(scale.jax.tree_util.tree_leaves(scalar[64][0]))},
++            gpu_checkpoint_sha256=origin["sha256"], scalar_checkpoint_sha256=scalar[64][1]["sha256"],
++            candidate_provenance=resources["candidate_provenance"],
++            actual_stage_runtime_git_head=identity["runtime"].get("git_head"))
++    except Exception as exc:
++        code = 1
++        recorder.result.update(status="reference_preparation_failed", message=str(exc), traceback=traceback.format_exc())
++    finally:
++        recorder.result.update(diagnostic_allocation={"job_id": os.environ.get("SLURM_JOB_ID"),
++            "partition": os.environ.get("SLURM_JOB_PARTITION"), "node": socket.gethostname(),
++            "actual_cpus": 1, "affinity": affinity}, JAX_initialized=True,
++            physical_runner_created=False, physical_lower_compile_run=False, scientific_acceptance=False,
++            exit_boundary="immediately after shared production prepare_references; before StageStore/SingleRunner/PoolRunner")
++        recorder.stop.set()
++        recorder.flush()
++        print(json.dumps({"status":recorder.result["status"], "message":recorder.result.get("message"),
++            "identity":recorder.result.get("reference_preparation_identity"), "physical_lower_compile_run":False}))
++    return code
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/unit/test_global_cpu_reference_preparation.py b/tests/unit/test_global_cpu_reference_preparation.py
+new file mode 100644
+index 0000000..21e8925
+--- /dev/null
++++ b/tests/unit/test_global_cpu_reference_preparation.py
+@@ -0,0 +1,197 @@
++"""Synthetic coverage for production CPU reference identity preparation."""
++from __future__ import annotations
++
++import copy
++import importlib.util
++import json
++from pathlib import Path
++from types import SimpleNamespace
++
++import jax
++import numpy as np
++import pytest
++
++from scripts.dev import benchmark_global_batch as base
++from scripts.dev import benchmark_global_scale as scale
++from scripts.dev import benchmark_global_server_cpu as cpu
++from scripts.dev.global_batch_stage_store import StageStore
++from scripts.dev import global_server_reference as refs
++
++_spec = importlib.util.spec_from_file_location(
++    "global_server_benchmark_fixtures", Path(__file__).with_name("test_global_server_benchmark.py"))
++_fixtures = importlib.util.module_from_spec(_spec)
++_spec.loader.exec_module(_fixtures)
++
++
++def _args(tmp_path, *, mode="batch", cpu_budget=48, cpu_reference_dir=None,
++          admission_record=None):
++    return SimpleNamespace(
++        baseline_ref="toy-baseline",
++        warm_repeats=5,
++        mode=mode,
++        cpu_budget=cpu_budget,
++        sizes=[64],
++        validation_mode="exploratory",
++        cpu_reference_role="cpu-internal",
++        expected_gpu_reference_sha256="a" * 64,
++        gpu_reference_dir=tmp_path / "gpu",
++        cpu_reference_dir=cpu_reference_dir,
++        cpu_reference_admission_record=admission_record,
++        expected_cpu_reference_admission_sha256="b" * 64 if admission_record else None,
++        output_dir=tmp_path / "output",
++    )
++
++
++def _real_metadata(args):
++    jax.config.update("jax_enable_x64", True)
++    return base.metadata(args)
++
++
++def test_stage_identity_preserves_legacy_schema_and_opts_into_metadata_git_head(monkeypatch, tmp_path):
++    lanes, second = _fixtures.toy_prepared(4)
++    args = _args(tmp_path, cpu_budget=1)
++    environment = _real_metadata(args)
++    monkeypatch.setattr(base, "scientific_source_digest", lambda: "d" * 64)
++
++    legacy = base.stage_identity(args, lanes, second, environment)
++    server = base.stage_identity(args, lanes, second, environment, include_git_head=True)
++
++    assert "git_head" not in legacy["runtime"]
++    assert server["runtime"]["git_head"] == environment["git_head"]
++    assert len(server["runtime"]["git_head"]) == 40
++
++
++def test_prepare_references_uses_git_head_before_any_runner_or_compile(monkeypatch, tmp_path):
++    lanes, second = _fixtures.toy_prepared(64)
++    admission_path = tmp_path / "admission.json"
++    admission_path.write_text("{}")
++    args = _args(tmp_path, cpu_reference_dir=tmp_path / "scalar", admission_record=admission_path)
++    environment = _real_metadata(args)
++    monkeypatch.setattr(base, "scientific_source_digest", lambda: "d" * 64)
++    recorder = SimpleNamespace(result={"environment": environment}, sentinel_paths=None)
++    candidate = {
++        "job_id": "15853683",
++        "execution_commit": environment["git_head"],
++        "execution_code_dir": str(base.ROOT),
++        "baseline_ref": args.baseline_ref,
++        "certified_science_sha256": base.scientific_source_digest(),
++        "gpu_reference_sha256": args.expected_gpu_reference_sha256,
++    }
++    calls = []
++
++    monkeypatch.setattr(scale, "screen_inputs", lambda *a: {"unique_real_points": len(lanes)})
++    monkeypatch.setattr(base, "legacy_factory", lambda *a: None)
++    monkeypatch.setattr(base, "roughheight_sentinel_contract", lambda *a: {})
++
++    def load_reference(directory, identity, **kwargs):
++        calls.append((directory, kwargs))
++        if kwargs.get("name", "B4_group_references") == "B4_group_references":
++            return None, {"sha256": args.expected_gpu_reference_sha256}
++        return None, {"sha256": "c" * 64}
++
++    def forbidden(*args, **kwargs):
++        pytest.fail("reference preparation must stop before runner creation or compilation")
++
++    monkeypatch.setattr(refs, "load_reference", load_reference)
++    monkeypatch.setattr(base, "lower_compile", forbidden)
++    monkeypatch.setattr(cpu, "SingleRunner", forbidden)
++    monkeypatch.setattr(cpu, "PoolRunner", forbidden)
++
++    prepared = cpu.prepare_references(args, recorder, lanes, second, scale,
++        {"candidate_provenance": candidate})
++    identity = prepared[0]
++
++    assert identity["runtime"]["git_head"] == environment["git_head"]
++    assert recorder.result["reference_preparation_identity"]["execution_commit"] == {
++        "candidate": environment["git_head"], "stage": environment["git_head"]}
++    assert recorder.result["reference_preparation_cpu_loaded"] == [64]
++    assert len(calls) == 2
++
++
++def test_real_reference_loader_rejects_wrong_execution_commit_after_sealed_load(monkeypatch, tmp_path):
++    lanes, second = _fixtures.toy_prepared(64)
++    args = _args(tmp_path, mode="scalar", cpu_budget=1)
++    environment = _real_metadata(args)
++    monkeypatch.setattr(base, "scientific_source_digest", lambda: "d" * 64)
++    # The synthetic sealed artifact targets the server loader's accepted runtime gate.
++    environment["jax"] = environment["jaxlib"] = "0.4.38"
++    source_identity = base.stage_identity(args, lanes, second, environment, include_git_head=True)
++    source_identity.update(
++        precision_policy=scale.PRECISION_POLICY,
++        mode="scalar",
++        validation_mode="exploratory",
++        cpu_reference_role="accepted",
++        numerical_reference_sha256=args.expected_gpu_reference_sha256,
++    )
++
++    output = (
++        (({"x": np.zeros((64, 1)), "mask": np.ones((64, 1), dtype=bool)},),
++         {"daily": np.zeros((64, 7, 48, 1))}),
++        (({"x": np.zeros((64, 1)), "mask": np.ones((64, 1), dtype=bool)},),
++         {"daily": np.zeros((64, 7, 48, 1))}),
++    )
++    timing = {
++        "B64_warm_frozen_state_core": {"samples_seconds": [1.0] * 5, "valid_point_days": 896},
++        "B64_preprepared_wrapper_stack_transfer_materialize": {
++            "samples_seconds": [1.0] * 5, "valid_point_days": 896},
++    }
++    point_ids = [lane.landpoint_id for lane in lanes]
++    gates = [{"name": f"B64_scalar_lane_{index}_{point}_GPU_reference", "passed": True,
++              "atol": 1e-8, "rtol": 1e-10} for index, point in enumerate(point_ids)]
++    compared_leaves = base.compare(output, output)["compared_leaves"]
++    gates.append({"name": "B64_scalar_frozen_reset_repeat", "passed": True,
++                  "atol": 1e-8, "rtol": 1e-10, "compared_leaves": compared_leaves})
++    record = {
++        "gates": gates,
++        "provenance": {
++            "unique_real_points": 64,
++            "point_ids": point_ids,
++            "precision_policy": scale.PRECISION_POLICY,
++            "full_two_block_workload": True,
++            "full_outputs": True,
++            "blocks": [[2, 8], [9, 15]],
++            "half_hours_per_day": 48,
++            "full_two_block_parity": True,
++            "frozen_reset_repeat": True,
++            "five_or_more_synchronized_repeats": True,
++        },
++        "timing": timing,
++        "measurement_status": "complete",
++        "evidence_class": "exploratory_performance",
++        "strict_numerical_passed": True,
++        "execution_origin": {"available": True, "environment": environment},
++    }
++    value = {"outputs": output, "measurements": timing}
++    directory = tmp_path / "sealed-scalar"
++    store = StageStore(directory, source_identity)
++    store.save("B64_server_scalar_v1", value, record)
++
++    consumer = {**source_identity, "mode": "batch", "CPU_budget": 48,
++        "validation_mode": "exploratory", "cpu_reference_role": "cpu-internal"}
++    candidate = {
++        "job_id": "15853683",
++        "execution_commit": environment["git_head"],
++        "execution_code_dir": str(base.ROOT),
++        "baseline_ref": source_identity["baseline_ref"],
++        "certified_science_sha256": source_identity["science_sha256"],
++        "gpu_reference_sha256": source_identity["numerical_reference_sha256"],
++    }
++    admission_path = tmp_path / "admission.json"
++    admission_path.write_text(json.dumps({"synthetic": True}))
++
++    # The immutable production admission has additional source/accounting evidence;
++    # this mock isolates the real load_reference provenance guard in this synthetic test.
++    monkeypatch.setattr(refs, "validate_cpu_reference_admission",
++        lambda *a, **kwargs: {"source_job_id": "15820467"})
++    loaded, proof = refs.load_reference(directory, consumer, name="B64_server_scalar_v1",
++        points=64, cpu_reference_role="cpu-internal", cpu_reference_admission_record=admission_path,
++        expected_cpu_reference_admission_sha256="b" * 64, candidate_provenance=candidate)
++    assert proof["sha256"] == store.manifest["stages"]["B64_server_scalar_v1"]["sha256"]
++    assert loaded[0][0][0]["x"].shape == (64, 1)
++
++    wrong_commit = copy.deepcopy(candidate)
++    wrong_commit["execution_commit"] = "0" * 40
++    with pytest.raises(ValueError, match="candidate provenance differs from current execution identity"):
++        refs.load_reference(directory, consumer, name="B64_server_scalar_v1", points=64,
++            cpu_reference_role="cpu-internal", cpu_reference_admission_record=admission_path,
++            expected_cpu_reference_admission_sha256="b" * 64, candidate_provenance=wrong_commit)
+diff --git a/tests/unit/test_global_server_benchmark.py b/tests/unit/test_global_server_benchmark.py
+index bba34c6..3812ceb 100644
+--- a/tests/unit/test_global_server_benchmark.py
++++ b/tests/unit/test_global_server_benchmark.py
+@@ -98,7 +98,7 @@ def mock_toy(monkeypatch, lanes, second):
+     monkeypatch.setattr(scale.base, "legacy_factory", lambda *args: None)
+     monkeypatch.setattr(scale.base, "roughheight_sentinel_contract", lambda *args: {})
+     monkeypatch.setattr(batch, "make_scalar_transition", lambda *args, **kwargs: toy_transition)
+-    monkeypatch.setattr(scale.base, "stage_identity", lambda *args: toy_identity(lanes))
++    monkeypatch.setattr(scale.base, "stage_identity", lambda *args, **kwargs: toy_identity(lanes))
+     monkeypatch.setattr(cpu, "thread_affinity", lambda *args: {"all_observed_thread_masks_within_declared_cores": True})
+     monkeypatch.setattr(candidate, "thread_affinity", lambda *args: {"all_observed_thread_masks_within_declared_cores": True})
+     outputs = [scale.base.run_two(jax.jit(toy_transition), lane.arguments, other)
+@@ -142,7 +142,7 @@ def test_expected_GPU_reference_hash_mismatch_stops_before_runner_compile(monkey
+     monkeypatch.setattr(scale, "screen_inputs", lambda *args: {})
+     monkeypatch.setattr(scale.base, "legacy_factory", lambda *args: None)
+     monkeypatch.setattr(scale.base, "roughheight_sentinel_contract", lambda *args: {})
+-    monkeypatch.setattr(scale.base, "stage_identity", lambda *args: {})
++    monkeypatch.setattr(scale.base, "stage_identity", lambda *args, **kwargs: {})
+     monkeypatch.setattr(refs, "load_reference", lambda *args, **kwargs: (None, {"sha256": "b" * 64}))
+     def forbidden(*args, **kwargs):
+         pytest.fail("reference identity mismatch must precede runner construction/compile")
+diff --git a/tests/unit/test_global_server_exploratory_cost.py b/tests/unit/test_global_server_exploratory_cost.py
+index 620abd1..edd6186 100644
+--- a/tests/unit/test_global_server_exploratory_cost.py
++++ b/tests/unit/test_global_server_exploratory_cost.py
+@@ -156,7 +156,7 @@ def test_runner_scalar_complete_record_is_admitted_without_cross_mode(monkeypatc
+     # Keep the toy transition but declare the complete fixed comparator policy.
+     identity = _fixtures.toy_identity(lanes)
+     identity["gate"] = cost.FIXED_GATE.copy()
+-    monkeypatch.setattr(_fixtures.scale.base, "stage_identity", lambda *args: identity.copy())
++    monkeypatch.setattr(_fixtures.scale.base, "stage_identity", lambda *args, **kwargs: identity.copy())
+     _fixtures.run_toy_case(args, recorder, lanes, second)
+     manifest = json.loads((args.output_dir / "stage_manifest.json").read_text())
+     name = "B16_server_scalar_v1"

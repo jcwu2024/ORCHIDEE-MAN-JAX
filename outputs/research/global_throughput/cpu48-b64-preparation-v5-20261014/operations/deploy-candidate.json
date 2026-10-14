@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/deploy-candidate.sh",
+  "destination": null,
+  "start_epoch": 1791954415.5106776,
+  "stdin_sha256": "d3debbac764964ca09e468e4cfcb43443f60aec76a6d920804d18e1412154d3f",
+  "exit_code": 0,
+  "end_epoch": 1791954422.1699607,
+  "wall_seconds": 6.65928316116333,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v5-20261014\\operations\\deploy-candidate.stdout.txt",
+    "sha256": "314330212866eecf85d8d9c43070c5661eeb204f83c06cd1538b7a39fbff7e45",
+    "bytes": 1397
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-preparation-v5-20261014\\operations\\deploy-candidate.stderr.txt",
+    "sha256": "d431462ccc5c2c7a5d571d1bce33c02a24d16c3a13cc96a5a6582a28a76a4938",
+    "bytes": 876
+  }
+}

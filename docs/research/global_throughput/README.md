@@ -1,16 +1,22 @@
 # 全球物理模型吞吐研究
 
-当前阶段（2026-10-14）：**参考身份投影的有界修复与免费完整 precompile 参考准备验证已完成，待主管验收**。
-先读[修复结果](../../../outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md)。
-历史 producer 在免费 job15855041（cntest/ibtest02/实际1CPU）重现原 provenance ValueError；
-四项比较中 baseline/science/GPU SHA 均一致，唯有 actual metadata.git_head 被 stage_identity 丢弃为 null。
-server 显式 opt-in 保留该实际值，通用旧 stage identity schema 不变，consumer 校验未放宽。
-修后 job15855062 同一目标 JAX/jaxlib0.4.38 CPU/x64 路径读入真实 FULL64 输入及 GPU/旧 scalar 参考，
-两份760叶数组加载通过，所有四项身份一致；生产与诊断共用 prepare_references，返回后立即退出、未构建物理 runner。
-两次均仅实际1CPU、各300s上限（父65s/23s），不是48CPU资源或吞吐验收；原科学门、scalar 61/64及reset封存限制保留。
-本地针对producer、错误execution身份拒绝及关联接口的55项测试通过；synthetic guard单测边界见修复报告，不代替真实目标运行时证据。
-隔离 diagnostic staging 只覆盖 harness；原60dcc…生产checkout/pin/admission字节不动，派生admission仅明确重绑staging路径。
-没有付费作业、新付费提案、模型lower/compile/run、scalar重生成或GPU执行；旧付费额度仍关闭。后续执行须新派工。
+当前阶段（2026-10-14）：**CPU48 B64 v5 候选已固定、部署并通过一次有界免费参考准备检查；待主管审查，付费执行未授权**。
+先读[准备结果](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md)、
+[机器可读摘要](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/preparation-result.json)、
+[执行 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/execution-code-pin.json)
+和[付费提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/PAID_PROPOSAL.md)。完整免费检查报告另保留于本地与服务器：
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/free-check/15857559/report.json`，SHA256 `d70dd295df32227c6050db890c7732a1e54a6fe70bf7d5ea631a07b6a772247f`。
+执行 commit `0100c8b09be5137b822173e0a0be66cb64939727` / `codex/global-cpu48-b64-v5`，基于 `60dccbdd...`；
+只含三个已接受的生产 harness 文件和三个测试文件，104 个物理文件及 science identity 不变。
+v5 新 immutable checkout 部署成功，clean 且无 alternates。登录节点部署收据记录 bundle SHA 与 `git bundle verify` 通过；实际目标 allocation 分别检查 pin、scalar admission、提案和六个 harness 哈希。
+免费 job15857559 在 cntest/ibtest02 实际1 CPU、affinity `[0]`，300秒上限内 COMPLETED 0:0、父作业65秒；目标 JAX/jaxlib 0.4.38、x64 初始化，
+64 个真实点的 FULL64 输入及 GPU/scalar 参考（各760叶）加载通过，四项 candidate/stage identity 相同。
+实际脚本耗时16.98秒；仅运行共享 `prepare_references` 后退出，没有创建物理 runner、执行 lower/compile/run 或产生 benchmark 阶段/门/计时。
+免费检查还验证 production launcher/coordinator/runner dry-run 的参数展开及 job-ID 输出路径。dry-run 只检查计划路径替换；真实启动时的目录不存在门保留但未执行。计划48 CPU参数不是48核资源准入。
+本地 compact artifact review 为补充审阅记录；tracked preparation result 与 CURRENT_RESULT 是主要交接入口。
+付费提案仅为 cnall/1 node/1 task/48 CPU/0 GPU/3600s、nonexclusive、no-requeue、无新增内存或 placement 限制，
+费率情景 CNY2.40/3.36 未核实；必须等待主管对该精确候选和命令的审批。没有提交付费作业，旧额度均关闭。
+本结果不代表48核资源入场、物理计算、科学接受或吞吐。原 scalar 61/64 GPU 门通过、3 个有限超差点/4处比较、reset 仅封存证明及 scientific acceptance false 均保留。
 
 以下为 v4 历史付费终态；当时未保存失败比较双方，具体身份根因由上述后续免费重放确认。
 **CPU48 v4 唯一付费 job15853683 已 FAILED 1:0/50s，本次尝试关闭**。

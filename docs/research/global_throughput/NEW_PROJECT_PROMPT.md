@@ -14,18 +14,18 @@ subagent-steward 已安装，只辅助各线程内部子代理安排，不替代
 固定 cwd E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput，branch research/global-throughput。
 不往根 main 写研究，不切换别人的工作树；添加 UI 项目不证明旧聊天 cwd 改变。
 先读 AGENTS.md，以及 docs/research/global_throughput/SUPERVISOR_HANDOFF.md、README.md、SERVER_BENCHMARK.md。
-当前证据入口：outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md、summary.json、overlay-provenance.json、before/report.json、after/report.json及targeted test结果。
-有界参考身份修复和免费precompile完整参考准备已完成，待主管验收；修前job15855041在实际cntest/ibtest02/1CPU重现provenance ValueError，metadata.git_head在stage_identity被丢弃，另外三项身份完全一致。
-server显式opt-in保留真实producer的git_head；generic旧schema和reference guard不变。修后job15855062同节点实际1CPU、JAX/jaxlib0.4.38 CPU/x64读取真实FULL64输入，GPU/旧scalar两条load_reference通过（各760叶），四项身份匹配。
-生产benchmark与诊断直接共用prepare_references，返回后退出、未构建physical runner或模型lower/compile/run；每次免费上限300s，父65s/23s。不是48CPU物理资源、数值或吞吐验收。
-隔离staging只覆盖harness，104物理文件/sciencepin不变，原60dcc…production/pin/admission原字节保留。derived admission仅明确重绑实际staging代码路径，不创建新audit。
-本地producer/错误execution身份拒绝/关联接口55项测试通过，synthetic guard单测stub及runtime声明边界见test-results.txt和修复报告，不代替目标0.4.38验证。
-本轮无付费提案/作业、scalar重生成、GPU执行或环境变化；科学false、3点4处有限超差与reset封存限制保留。所有旧付费额度仍关闭，后续模型执行必须新派工。
+当前候选证据入口：outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/CURRENT_RESULT.md、preparation-result.json、execution-code-pin.json、scalar-admission.json及PAID_PROPOSAL.md；本地artifact-review.json是补充审阅记录。完整free report保留在本地与服务器：/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v5-20261014/free-check/15857559/report.json，SHA256 d70dd295df32227c6050db890c7732a1e54a6fe70bf7d5ea631a07b6a772247f。
+候选已固定并部署：执行 SHA 0100c8b09be5137b822173e0a0be66cb64939727，ref codex/global-cpu48-b64-v5，parent 为 60dccbddde10be4295aab7e7fe55fa7864d3c3f3。仅六个harness/test文件改变；104物理文件、science SHA 11b6…、actual source SHA b334…与tree 75d8…均不变。登录节点部署收据记录bundle SHA和git bundle verify通过。
+免费 job15857559 在 cntest/ibtest02 的300秒上限内 COMPLETED 0:0/65s，实际1CPU、affinity [0]；JAX/jaxlib0.4.38 CPU/x64读取64点FULL64输入及GPU/旧scalar参考（各760叶），四项身份比较全部一致，目标脚本耗时16.98秒。
+诊断在生产共用的 prepare_references 后退出；未建 physical runner，未执行模型 lower/compile/run，phases/gates/timing为空，scientific_acceptance=false。allocation验证了pin/admission/proposal及六个harness哈希和launcher/coordinator/runner dry-run参数展开、计划job-ID路径替换；真实启动时的目录不存在门未在dry-run中执行，不代表48CPU准入。
+提案为 cnall/1node/1task/48CPU/0GPU/3600s、nonexclusive/no-requeue/无新增mem或placement限制，未核实费率情景CNY2.40/3.36；付费命令未授权、未提交，旧额度不恢复。由主管审查该精确候选和命令后决定下一步。
+参考身份修复的因果证据仍见 outputs/research/global_throughput/cpu-reference-identity-repair-20261014/CURRENT_RESULT.md；job15855041/15855062和55项本地测试不作为v5的48核执行或性能证明。
+原scalar 61/64 GPU门、3点4处有限超差、reset只有封存证明和scientific_acceptance=false保留；没有新GPU运行或scalar生成。
 历史执行证据入口：outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md、AUTHORIZATION.md、runtime-evidence-manifest.json、artifact-review/review.json。
 固定 pin 与原命令在 cpu48-b64-preparation-v4-20261014/execution-code-pin.json、PROPOSED_SUBMISSION.sh；准备证据已被实际终态入口接替。
 读 docs/WORKSPACE_MANAGEMENT.md 和 handoff 链接的共享主树 deployment-explore1000.md；其他历史按问题查阅。
 
-当前 CPU48 v4 唯一付费 job15853683 已 FAILED 1:0/50s，本次授权消耗并关闭。
+以下为 v4 历史付费终态，不是当前候选：唯一付费 job15853683 已 FAILED 1:0/50s，该次授权消耗并关闭。
 执行 SHA60dccbddde10be4295aab7e7fe55fa7864d3c3f3，ref codex/global-cpu48-b64-v4；原命令 SHAb86068c62c96464319175135e12e5d84ce2e494a00875aceaa01ee0b1a48c160 只执行一次。
 实际代码路径 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4，checkout 仍干净。
 104 物理 blob/tree75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba 与 v3 相同，science11b6…/actual sourceb334…不变，研究树两项碳修复保留。

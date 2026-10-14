@@ -1,0 +1,124 @@
+{
+  "schema": "cpu48-b64-v5-local-artifact-review-v1",
+  "review_scope": "local_package_and_collected_free_check_artifacts",
+  "status": "prepared_deployed_free_reference_preparation_passed_waiting_paid_authorization",
+  "workspace": {
+    "root": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+    "branch": "research/global-throughput",
+    "source_research_commit": "978946bbf90593b5ea1c93d414dc6410a82b3f59",
+    "concurrent_work_preserved": true
+  },
+  "candidate": {
+    "pin": "execution-code-pin.json",
+    "execution_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+    "execution_ref": "codex/global-cpu48-b64-v5",
+    "base_execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+    "target_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v5",
+    "changed_paths": [
+      "scripts/dev/benchmark_global_batch.py",
+      "scripts/dev/benchmark_global_server_cpu.py",
+      "scripts/dev/diagnose_global_cpu_references.py",
+      "tests/unit/test_global_cpu_reference_preparation.py",
+      "tests/unit/test_global_server_benchmark.py",
+      "tests/unit/test_global_server_exploratory_cost.py"
+    ],
+    "all_104_physical_blobs_identical_to_base": true,
+    "physical_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "science_sha256": "11b6db89c467c25bee347528838844c5ca7e1c36dd1adb5bbdc082b5513fc2f5",
+    "actual_science_source_sha256": "b33450cae9cd8c9b2d5f7c6075fe270f461887edc09c77417c5e820a5c18fab8",
+    "bundle_sha256": "0668675de188c67c23ebacaf5f52a722458badbc2d9c2117bf18bca288ba91c1",
+    "bundle_verify": "passed",
+    "scalar_admission_sha256": "4d2d3d18d92c0d6c6bc737059bc2b2555cf36f77b4a3c4406844071ab6a3e7f5",
+    "scalar_admission_reuses_original_audit_and_source": true,
+    "new_scalar_audit": false
+  },
+  "deployment": {
+    "receipt": "operations/deploy-candidate.json",
+    "exit_code": 0,
+    "reported_checkout_commit": "0100c8b09be5137b822173e0a0be66cb64939727",
+    "reported_physical_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "reported_state": "clean_new_immutable_checkout_no_alternates",
+    "bundle_sha_and_git_bundle_verify_checked_in_login_node_deployment": true,
+    "evidence_boundary": "local transfer/deployment receipts and target free-check assertions; no additional remote commands by this reviewer"
+  },
+  "free_check": {
+    "job_id": "15857559",
+    "partition": "cntest",
+    "node": "ibtest02",
+    "actual_cpus": 1,
+    "affinity": [0],
+    "time_limit_seconds": 300,
+    "sacct_state": "COMPLETED",
+    "sacct_exit_code": "0:0",
+    "sacct_parent_elapsed_seconds": 65,
+    "report": "free-check/15857559/report.json",
+    "report_sha256": "d70dd295df32227c6050db890c7732a1e54a6fe70bf7d5ea631a07b6a772247f",
+    "report_retained_local_and_remote": true,
+    "report_sha256_locally_verified": true,
+    "status": "reference_preparation_passed",
+    "runtime": {
+      "jax": "0.4.38",
+      "jaxlib": "0.4.38",
+      "x64_enabled": true,
+      "gpu_count": 0
+    },
+    "workload_points": 64,
+    "gpu_reference_leaves_loaded": 760,
+    "cpu_scalar_reference_leaves_loaded": 760,
+    "candidate_stage_identity_fields_all_match": [
+      "baseline_ref",
+      "science_sha256",
+      "gpu_reference_sha256",
+      "execution_commit"
+    ],
+    "physical_runner_created": false,
+    "physical_lower_compile_run": false,
+    "phases_empty": true,
+    "gates_empty": true,
+    "benchmark_timing_empty": true,
+    "scientific_acceptance": false
+  },
+  "target_shell_dry_run": {
+    "evidence": "free-check/15857559/package-and-arguments.json and launcher/coordinator dry-run receipts",
+    "candidate_pin_admission_proposal_and_harness_checks_passed": true,
+    "launcher_coordinator_runner_argument_expansion_passed": true,
+    "planned_cpu_arguments": 48,
+    "actual_48_cpu_admission": false,
+    "model_execution": false,
+    "paid_submission": false,
+    "run_root_pattern": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/${SLURM_JOB_ID}",
+    "planned_job_id_path_substitution_verified": true,
+    "real_launch_output_directory_absence_gate_present": true,
+    "real_launch_output_directory_absence_gate_exercised": false
+  },
+  "registry_retention": {
+    "receipt": "registry-retention-receipt.json",
+    "old_registry_records_preserved": true,
+    "old_shared_readme_bytes_preserved": true,
+    "main_daily_and_research_refs_changed": false,
+    "old_checkouts_or_assets_changed": false,
+    "archive_or_delete": false
+  },
+  "paid_proposal": {
+    "proposal": "PAID_PROPOSAL.md",
+    "submission_script": "PROPOSED_SUBMISSION.sh",
+    "partition": "cnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_cpus": 48,
+    "gpus": 0,
+    "time_limit_seconds": 3600,
+    "nonexclusive": true,
+    "requeue": false,
+    "added_memory_or_placement_restriction": false,
+    "unverified_worst_case_cost_cny": [2.4, 3.36],
+    "approved": false,
+    "submitted": false,
+    "next_dispatch": "supervisor approval"
+  },
+  "limits": [
+    "The free run validates reference preparation on one CPU only; it does not establish actual 48-CPU admission, physical execution, numerical candidate gates, warm throughput or scientific acceptance.",
+    "The v5 candidate does not alter the preserved scalar 61/64 GPU gates, three finite failing points/four comparisons, or sealed-reset-proof-only limitation.",
+    "The reviewed proposal remains unapproved and unsubmitted; all old paid grants remain closed."
+  ]
+}

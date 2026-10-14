@@ -1,0 +1,15 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v5-0100c8b09be5/cpu48-b64-0100c8b09be5.bundle is okay
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v5-0100c8b09be5/cpu48-b64-0100c8b09be5.bundle
+ * [new branch]      codex/global-cpu48-b64-v5 -> codex/global-cpu48-b64-v5
+Note: checking out '0100c8b09be5137b822173e0a0be66cb64939727'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b new_branch_name
+
+HEAD is now at 0100c8b... Package accepted CPU reference identity projection repair
