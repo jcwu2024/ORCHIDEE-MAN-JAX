@@ -1,0 +1,1964 @@
+ibcln01
+2026-10-14T09:32:52+0800
+git version 1.8.3.1
+PartitionName=cnall
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=56
+   Nodes=ibc11b02n[01-40],ibc11b03n[01-35],ibc11b04n[01-40],ibc11b06n[07-10],ibc11b07n[01-40],ibc11b08n[01-40],ibc11b09n[01-40],ibc11b10n[01-40],ibc12b02n[01-40],ibc12b03n[01-40],ibc12b04n[01-40],ibc12b07n[01-40],ibc12b08n[01-40],ibc12b09n[01-40],ibc12b10n[01-40],ibc13b03n08,ibc13b04n[01-40],ibc13b05n[01-27],ibc13b06n[01-40],ibc13b07n[01-40],ibc13b08n[01-40],ibc13b09n[01-38]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=43960 TotalNodes=785 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=43960,mem=785M,node=785,billing=43960
+
+NODELIST PARTITION STATE CPUS CPUS(A/I/O/T)
+ibc11b02n01 cnall drain 56 0/0/56/56
+ibc11b02n02 cnall drain 56 0/0/56/56
+ibc11b02n03 cnall alloc 56 56/0/0/56
+ibc11b02n04 cnall alloc 56 56/0/0/56
+ibc11b02n05 cnall drain 56 0/0/56/56
+ibc11b02n06 cnall alloc 56 56/0/0/56
+ibc11b02n07 cnall down* 56 0/0/56/56
+ibc11b02n08 cnall alloc 56 56/0/0/56
+ibc11b02n09 cnall drain 56 0/0/56/56
+ibc11b02n10 cnall drain 56 0/0/56/56
+ibc11b02n11 cnall drain 56 0/0/56/56
+ibc11b02n12 cnall mix 56 54/2/0/56
+ibc11b02n13 cnall drain 56 0/0/56/56
+ibc11b02n14 cnall alloc 56 56/0/0/56
+ibc11b02n15 cnall alloc 56 56/0/0/56
+ibc11b02n16 cnall drain 56 0/0/56/56
+ibc11b02n17 cnall drain 56 0/0/56/56
+ibc11b02n18 cnall drain 56 0/0/56/56
+ibc11b02n19 cnall drain 56 0/0/56/56
+ibc11b02n20 cnall drain 56 0/0/56/56
+ibc11b02n21 cnall alloc 56 56/0/0/56
+ibc11b02n22 cnall drain 56 0/0/56/56
+ibc11b02n23 cnall alloc 56 56/0/0/56
+ibc11b02n24 cnall alloc 56 56/0/0/56
+ibc11b02n25 cnall alloc 56 56/0/0/56
+ibc11b02n26 cnall drain 56 0/0/56/56
+ibc11b02n27 cnall alloc 56 56/0/0/56
+ibc11b02n28 cnall drain 56 0/0/56/56
+ibc11b02n29 cnall drain 56 0/0/56/56
+ibc11b02n30 cnall drain 56 0/0/56/56
+ibc11b02n31 cnall alloc 56 56/0/0/56
+ibc11b02n32 cnall drain 56 0/0/56/56
+ibc11b02n33 cnall drain 56 0/0/56/56
+ibc11b02n34 cnall drain 56 0/0/56/56
+ibc11b02n35 cnall drain 56 0/0/56/56
+ibc11b02n36 cnall drain 56 0/0/56/56
+ibc11b02n37 cnall drain 56 0/0/56/56
+ibc11b02n38 cnall drain 56 0/0/56/56
+ibc11b02n39 cnall alloc 56 56/0/0/56
+ibc11b02n40 cnall alloc 56 56/0/0/56
+ibc11b03n01 cnall down* 56 0/0/56/56
+ibc11b03n02 cnall down* 56 0/0/56/56
+ibc11b03n03 cnall down* 56 0/0/56/56
+ibc11b03n04 cnall down* 56 0/0/56/56
+ibc11b03n05 cnall down* 56 0/0/56/56
+ibc11b03n06 cnall down* 56 0/0/56/56
+ibc11b03n07 cnall down* 56 0/0/56/56
+ibc11b03n08 cnall down* 56 0/0/56/56
+ibc11b03n09 cnall down* 56 0/0/56/56
+ibc11b03n10 cnall down* 56 0/0/56/56
+ibc11b03n11 cnall down* 56 0/0/56/56
+ibc11b03n12 cnall down* 56 0/0/56/56
+ibc11b03n13 cnall down* 56 0/0/56/56
+ibc11b03n14 cnall down* 56 0/0/56/56
+ibc11b03n15 cnall down* 56 0/0/56/56
+ibc11b03n16 cnall drain* 56 0/0/56/56
+ibc11b03n17 cnall down* 56 0/0/56/56
+ibc11b03n18 cnall down* 56 0/0/56/56
+ibc11b03n19 cnall down* 56 0/0/56/56
+ibc11b03n20 cnall down* 56 0/0/56/56
+ibc11b03n21 cnall down* 56 0/0/56/56
+ibc11b03n22 cnall down* 56 0/0/56/56
+ibc11b03n23 cnall down* 56 0/0/56/56
+ibc11b03n24 cnall down* 56 0/0/56/56
+ibc11b03n25 cnall down* 56 0/0/56/56
+ibc11b03n26 cnall down* 56 0/0/56/56
+ibc11b03n27 cnall down* 56 0/0/56/56
+ibc11b03n28 cnall down* 56 0/0/56/56
+ibc11b03n29 cnall down* 56 0/0/56/56
+ibc11b03n30 cnall down* 56 0/0/56/56
+ibc11b03n31 cnall down* 56 0/0/56/56
+ibc11b03n32 cnall down* 56 0/0/56/56
+ibc11b03n33 cnall down* 56 0/0/56/56
+ibc11b03n34 cnall down* 56 0/0/56/56
+ibc11b03n35 cnall down* 56 0/0/56/56
+ibc11b04n01 cnall drain 56 0/0/56/56
+ibc11b04n02 cnall alloc 56 56/0/0/56
+ibc11b04n03 cnall drng 56 8/0/48/56
+ibc11b04n04 cnall mix 56 48/8/0/56
+ibc11b04n05 cnall drng 56 1/0/55/56
+ibc11b04n06 cnall drain 56 0/0/56/56
+ibc11b04n07 cnall drain 56 0/0/56/56
+ibc11b04n08 cnall alloc 56 56/0/0/56
+ibc11b04n09 cnall drain 56 0/0/56/56
+ibc11b04n10 cnall drain 56 0/0/56/56
+ibc11b04n11 cnall idle 56 0/56/0/56
+ibc11b04n12 cnall alloc 56 56/0/0/56
+ibc11b04n13 cnall drng 56 1/0/55/56
+ibc11b04n14 cnall drain 56 0/0/56/56
+ibc11b04n15 cnall drain 56 0/0/56/56
+ibc11b04n16 cnall drain 56 0/0/56/56
+ibc11b04n17 cnall drain 56 0/0/56/56
+ibc11b04n18 cnall drain 56 0/0/56/56
+ibc11b04n19 cnall drain 56 0/0/56/56
+ibc11b04n20 cnall drain 56 0/0/56/56
+ibc11b04n21 cnall drain* 56 0/0/56/56
+ibc11b04n22 cnall drain* 56 0/0/56/56
+ibc11b04n23 cnall drain* 56 0/0/56/56
+ibc11b04n24 cnall drain* 56 0/0/56/56
+ibc11b04n25 cnall drain* 56 0/0/56/56
+ibc11b04n26 cnall drain* 56 0/0/56/56
+ibc11b04n27 cnall drain* 56 0/0/56/56
+ibc11b04n28 cnall drain* 56 0/0/56/56
+ibc11b04n29 cnall drain* 56 0/0/56/56
+ibc11b04n30 cnall drain* 56 0/0/56/56
+ibc11b04n31 cnall drain* 56 0/0/56/56
+ibc11b04n32 cnall drain* 56 0/0/56/56
+ibc11b04n33 cnall drain* 56 0/0/56/56
+ibc11b04n34 cnall drain* 56 0/0/56/56
+ibc11b04n35 cnall drain* 56 0/0/56/56
+ibc11b04n36 cnall drain* 56 0/0/56/56
+ibc11b04n37 cnall drain* 56 0/0/56/56
+ibc11b04n38 cnall drain* 56 0/0/56/56
+ibc11b04n39 cnall drain* 56 0/0/56/56
+ibc11b04n40 cnall drain* 56 0/0/56/56
+ibc11b06n07 cnall down* 56 0/0/56/56
+ibc11b06n08 cnall down* 56 0/0/56/56
+ibc11b06n09 cnall down* 56 0/0/56/56
+ibc11b06n10 cnall down* 56 0/0/56/56
+ibc11b07n01 cnall drain 56 0/0/56/56
+ibc11b07n02 cnall down* 56 0/0/56/56
+ibc11b07n03 cnall alloc 56 56/0/0/56
+ibc11b07n04 cnall drain 56 0/0/56/56
+ibc11b07n05 cnall drain 56 0/0/56/56
+ibc11b07n06 cnall down* 56 0/0/56/56
+ibc11b07n07 cnall drain 56 0/0/56/56
+ibc11b07n08 cnall idle 56 0/56/0/56
+ibc11b07n09 cnall alloc 56 56/0/0/56
+ibc11b07n10 cnall drain 56 0/0/56/56
+ibc11b07n11 cnall alloc 56 56/0/0/56
+ibc11b07n12 cnall alloc 56 56/0/0/56
+ibc11b07n13 cnall drain 56 0/0/56/56
+ibc11b07n14 cnall idle 56 0/56/0/56
+ibc11b07n15 cnall drain 56 0/0/56/56
+ibc11b07n16 cnall drain 56 0/0/56/56
+ibc11b07n17 cnall alloc 56 56/0/0/56
+ibc11b07n18 cnall down* 56 0/0/56/56
+ibc11b07n19 cnall drain 56 0/0/56/56
+ibc11b07n20 cnall drain 56 0/0/56/56
+ibc11b07n21 cnall drain 56 0/0/56/56
+ibc11b07n22 cnall drain 56 0/0/56/56
+ibc11b07n23 cnall drain 56 0/0/56/56
+ibc11b07n24 cnall drain 56 0/0/56/56
+ibc11b07n25 cnall drain 56 0/0/56/56
+ibc11b07n26 cnall drain 56 0/0/56/56
+ibc11b07n27 cnall alloc 56 56/0/0/56
+ibc11b07n28 cnall drain 56 0/0/56/56
+ibc11b07n29 cnall alloc 56 56/0/0/56
+ibc11b07n30 cnall drain 56 0/0/56/56
+ibc11b07n31 cnall alloc 56 56/0/0/56
+ibc11b07n32 cnall drain 56 0/0/56/56
+ibc11b07n33 cnall alloc 56 56/0/0/56
+ibc11b07n34 cnall drain 56 0/0/56/56
+ibc11b07n35 cnall alloc 56 56/0/0/56
+ibc11b07n36 cnall alloc 56 56/0/0/56
+ibc11b07n37 cnall drain 56 0/0/56/56
+ibc11b07n38 cnall drain 56 0/0/56/56
+ibc11b07n39 cnall drain 56 0/0/56/56
+ibc11b07n40 cnall alloc 56 56/0/0/56
+ibc11b08n01 cnall drain 56 0/0/56/56
+ibc11b08n02 cnall drain 56 0/0/56/56
+ibc11b08n03 cnall alloc 56 56/0/0/56
+ibc11b08n04 cnall drain 56 0/0/56/56
+ibc11b08n05 cnall drain 56 0/0/56/56
+ibc11b08n06 cnall alloc 56 56/0/0/56
+ibc11b08n07 cnall alloc 56 56/0/0/56
+ibc11b08n08 cnall down* 56 0/0/56/56
+ibc11b08n09 cnall drain 56 0/0/56/56
+ibc11b08n10 cnall drain 56 0/0/56/56
+ibc11b08n11 cnall drain 56 0/0/56/56
+ibc11b08n12 cnall drain 56 0/0/56/56
+ibc11b08n13 cnall drain 56 0/0/56/56
+ibc11b08n14 cnall drain 56 0/0/56/56
+ibc11b08n15 cnall drain 56 0/0/56/56
+ibc11b08n16 cnall drain 56 0/0/56/56
+ibc11b08n17 cnall alloc 56 56/0/0/56
+ibc11b08n18 cnall drain 56 0/0/56/56
+ibc11b08n19 cnall drain 56 0/0/56/56
+ibc11b08n20 cnall drain 56 0/0/56/56
+ibc11b08n21 cnall drain 56 0/0/56/56
+ibc11b08n22 cnall drain 56 0/0/56/56
+ibc11b08n23 cnall drain 56 0/0/56/56
+ibc11b08n24 cnall drain 56 0/0/56/56
+ibc11b08n25 cnall drain 56 0/0/56/56
+ibc11b08n26 cnall drain 56 0/0/56/56
+ibc11b08n27 cnall alloc 56 56/0/0/56
+ibc11b08n28 cnall drain 56 0/0/56/56
+ibc11b08n29 cnall drain 56 0/0/56/56
+ibc11b08n30 cnall down* 56 0/0/56/56
+ibc11b08n31 cnall down* 56 0/0/56/56
+ibc11b08n32 cnall drain 56 0/0/56/56
+ibc11b08n33 cnall drain 56 0/0/56/56
+ibc11b08n34 cnall drain 56 0/0/56/56
+ibc11b08n35 cnall drain 56 0/0/56/56
+ibc11b08n36 cnall drain 56 0/0/56/56
+ibc11b08n37 cnall drain 56 0/0/56/56
+ibc11b08n38 cnall drain 56 0/0/56/56
+ibc11b08n39 cnall drain 56 0/0/56/56
+ibc11b08n40 cnall drain 56 0/0/56/56
+ibc11b09n01 cnall drain 56 0/0/56/56
+ibc11b09n02 cnall down* 56 0/0/56/56
+ibc11b09n03 cnall drain 56 0/0/56/56
+ibc11b09n04 cnall drain 56 0/0/56/56
+ibc11b09n05 cnall drain 56 0/0/56/56
+ibc11b09n06 cnall alloc 56 56/0/0/56
+ibc11b09n07 cnall down* 56 0/0/56/56
+ibc11b09n08 cnall drain 56 0/0/56/56
+ibc11b09n09 cnall drain 56 0/0/56/56
+ibc11b09n10 cnall drain 56 0/0/56/56
+ibc11b09n11 cnall drain 56 0/0/56/56
+ibc11b09n12 cnall drain 56 0/0/56/56
+ibc11b09n13 cnall drain 56 0/0/56/56
+ibc11b09n14 cnall drain 56 0/0/56/56
+ibc11b09n15 cnall drain 56 0/0/56/56
+ibc11b09n16 cnall alloc 56 56/0/0/56
+ibc11b09n17 cnall drain 56 0/0/56/56
+ibc11b09n18 cnall drain 56 0/0/56/56
+ibc11b09n19 cnall alloc 56 56/0/0/56
+ibc11b09n20 cnall drain 56 0/0/56/56
+ibc11b09n21 cnall drain 56 0/0/56/56
+ibc11b09n22 cnall drain 56 0/0/56/56
+ibc11b09n23 cnall drain 56 0/0/56/56
+ibc11b09n24 cnall drain 56 0/0/56/56
+ibc11b09n25 cnall alloc 56 56/0/0/56
+ibc11b09n26 cnall drain 56 0/0/56/56
+ibc11b09n27 cnall idle 56 0/56/0/56
+ibc11b09n28 cnall idle 56 0/56/0/56
+ibc11b09n29 cnall drain 56 0/0/56/56
+ibc11b09n30 cnall drain 56 0/0/56/56
+ibc11b09n31 cnall idle 56 0/56/0/56
+ibc11b09n32 cnall idle 56 0/56/0/56
+ibc11b09n33 cnall alloc 56 56/0/0/56
+ibc11b09n34 cnall alloc 56 56/0/0/56
+ibc11b09n35 cnall alloc 56 56/0/0/56
+ibc11b09n36 cnall alloc 56 56/0/0/56
+ibc11b09n37 cnall drain 56 0/0/56/56
+ibc11b09n38 cnall drain 56 0/0/56/56
+ibc11b09n39 cnall drain 56 0/0/56/56
+ibc11b09n40 cnall idle 56 0/56/0/56
+ibc11b10n01 cnall idle 56 0/56/0/56
+ibc11b10n02 cnall idle 56 0/56/0/56
+ibc11b10n03 cnall idle 56 0/56/0/56
+ibc11b10n04 cnall alloc 56 56/0/0/56
+ibc11b10n05 cnall idle 56 0/56/0/56
+ibc11b10n06 cnall idle 56 0/56/0/56
+ibc11b10n07 cnall idle 56 0/56/0/56
+ibc11b10n08 cnall idle 56 0/56/0/56
+ibc11b10n09 cnall idle 56 0/56/0/56
+ibc11b10n10 cnall idle 56 0/56/0/56
+ibc11b10n11 cnall idle 56 0/56/0/56
+ibc11b10n12 cnall alloc 56 56/0/0/56
+ibc11b10n13 cnall idle 56 0/56/0/56
+ibc11b10n14 cnall idle 56 0/56/0/56
+ibc11b10n15 cnall alloc 56 56/0/0/56
+ibc11b10n16 cnall idle 56 0/56/0/56
+ibc11b10n17 cnall mix 56 32/24/0/56
+ibc11b10n18 cnall idle 56 0/56/0/56
+ibc11b10n19 cnall idle 56 0/56/0/56
+ibc11b10n20 cnall idle 56 0/56/0/56
+ibc11b10n21 cnall idle 56 0/56/0/56
+ibc11b10n22 cnall down* 56 0/0/56/56
+ibc11b10n23 cnall idle 56 0/56/0/56
+ibc11b10n24 cnall idle 56 0/56/0/56
+ibc11b10n25 cnall idle 56 0/56/0/56
+ibc11b10n26 cnall idle 56 0/56/0/56
+ibc11b10n27 cnall idle 56 0/56/0/56
+ibc11b10n28 cnall idle 56 0/56/0/56
+ibc11b10n29 cnall alloc 56 56/0/0/56
+ibc11b10n30 cnall alloc 56 56/0/0/56
+ibc11b10n31 cnall idle 56 0/56/0/56
+ibc11b10n32 cnall idle 56 0/56/0/56
+ibc11b10n33 cnall idle 56 0/56/0/56
+ibc11b10n34 cnall idle 56 0/56/0/56
+ibc11b10n35 cnall down* 56 0/0/56/56
+ibc11b10n36 cnall down* 56 0/0/56/56
+ibc11b10n37 cnall idle 56 0/56/0/56
+ibc11b10n38 cnall idle 56 0/56/0/56
+ibc11b10n39 cnall drain* 56 0/0/56/56
+ibc11b10n40 cnall drain* 56 0/0/56/56
+ibc12b02n01 cnall drain* 56 0/0/56/56
+ibc12b02n02 cnall drain* 56 0/0/56/56
+ibc12b02n03 cnall drain* 56 0/0/56/56
+ibc12b02n04 cnall drain* 56 0/0/56/56
+ibc12b02n05 cnall drain* 56 0/0/56/56
+ibc12b02n06 cnall drain* 56 0/0/56/56
+ibc12b02n07 cnall drain* 56 0/0/56/56
+ibc12b02n08 cnall drain* 56 0/0/56/56
+ibc12b02n09 cnall drain* 56 0/0/56/56
+ibc12b02n10 cnall drain* 56 0/0/56/56
+ibc12b02n11 cnall drain* 56 0/0/56/56
+ibc12b02n12 cnall drain* 56 0/0/56/56
+ibc12b02n13 cnall drain* 56 0/0/56/56
+ibc12b02n14 cnall drain* 56 0/0/56/56
+ibc12b02n15 cnall drain* 56 0/0/56/56
+ibc12b02n16 cnall drain* 56 0/0/56/56
+ibc12b02n17 cnall drain* 56 0/0/56/56
+ibc12b02n18 cnall drain* 56 0/0/56/56
+ibc12b02n19 cnall drain* 56 0/0/56/56
+ibc12b02n20 cnall drain* 56 0/0/56/56
+ibc12b02n21 cnall drain* 56 0/0/56/56
+ibc12b02n22 cnall drain* 56 0/0/56/56
+ibc12b02n23 cnall drain* 56 0/0/56/56
+ibc12b02n24 cnall drain* 56 0/0/56/56
+ibc12b02n25 cnall drain* 56 0/0/56/56
+ibc12b02n26 cnall drain* 56 0/0/56/56
+ibc12b02n27 cnall drain* 56 0/0/56/56
+ibc12b02n28 cnall drain* 56 0/0/56/56
+ibc12b02n29 cnall drain* 56 0/0/56/56
+ibc12b02n30 cnall drain* 56 0/0/56/56
+ibc12b02n31 cnall drain* 56 0/0/56/56
+ibc12b02n32 cnall drain* 56 0/0/56/56
+ibc12b02n33 cnall drain* 56 0/0/56/56
+ibc12b02n34 cnall drain* 56 0/0/56/56
+ibc12b02n35 cnall drain* 56 0/0/56/56
+ibc12b02n36 cnall drain* 56 0/0/56/56
+ibc12b02n37 cnall drain* 56 0/0/56/56
+ibc12b02n38 cnall drain* 56 0/0/56/56
+ibc12b02n39 cnall drain* 56 0/0/56/56
+ibc12b02n40 cnall drain* 56 0/0/56/56
+ibc12b03n01 cnall idle 56 0/56/0/56
+ibc12b03n02 cnall idle 56 0/56/0/56
+ibc12b03n03 cnall mix 56 51/5/0/56
+ibc12b03n04 cnall idle 56 0/56/0/56
+ibc12b03n05 cnall idle 56 0/56/0/56
+ibc12b03n06 cnall idle 56 0/56/0/56
+ibc12b03n07 cnall idle 56 0/56/0/56
+ibc12b03n08 cnall idle 56 0/56/0/56
+ibc12b03n09 cnall idle 56 0/56/0/56
+ibc12b03n10 cnall idle 56 0/56/0/56
+ibc12b03n11 cnall idle 56 0/56/0/56
+ibc12b03n12 cnall idle 56 0/56/0/56
+ibc12b03n13 cnall drain* 56 0/0/56/56
+ibc12b03n14 cnall idle 56 0/56/0/56
+ibc12b03n15 cnall idle 56 0/56/0/56
+ibc12b03n16 cnall idle 56 0/56/0/56
+ibc12b03n17 cnall idle 56 0/56/0/56
+ibc12b03n18 cnall idle 56 0/56/0/56
+ibc12b03n19 cnall idle 56 0/56/0/56
+ibc12b03n20 cnall drain* 56 0/0/56/56
+ibc12b03n21 cnall down* 56 0/0/56/56
+ibc12b03n22 cnall down* 56 0/0/56/56
+ibc12b03n23 cnall idle 56 0/56/0/56
+ibc12b03n24 cnall idle 56 0/56/0/56
+ibc12b03n25 cnall idle 56 0/56/0/56
+ibc12b03n26 cnall idle 56 0/56/0/56
+ibc12b03n27 cnall idle 56 0/56/0/56
+ibc12b03n28 cnall idle 56 0/56/0/56
+ibc12b03n29 cnall down* 56 0/0/56/56
+ibc12b03n30 cnall idle 56 0/56/0/56
+ibc12b03n31 cnall idle 56 0/56/0/56
+ibc12b03n32 cnall idle 56 0/56/0/56
+ibc12b03n33 cnall idle 56 0/56/0/56
+ibc12b03n34 cnall idle 56 0/56/0/56
+ibc12b03n35 cnall down* 56 0/0/56/56
+ibc12b03n36 cnall idle 56 0/56/0/56
+ibc12b03n37 cnall idle 56 0/56/0/56
+ibc12b03n38 cnall idle 56 0/56/0/56
+ibc12b03n39 cnall alloc 56 56/0/0/56
+ibc12b03n40 cnall alloc 56 56/0/0/56
+ibc12b04n01 cnall idle 56 0/56/0/56
+ibc12b04n02 cnall idle 56 0/56/0/56
+ibc12b04n03 cnall idle 56 0/56/0/56
+ibc12b04n04 cnall idle 56 0/56/0/56
+ibc12b04n05 cnall idle 56 0/56/0/56
+ibc12b04n06 cnall idle 56 0/56/0/56
+ibc12b04n07 cnall idle 56 0/56/0/56
+ibc12b04n08 cnall idle 56 0/56/0/56
+ibc12b04n09 cnall idle 56 0/56/0/56
+ibc12b04n10 cnall idle 56 0/56/0/56
+ibc12b04n11 cnall idle 56 0/56/0/56
+ibc12b04n12 cnall alloc 56 56/0/0/56
+ibc12b04n13 cnall down* 56 0/0/56/56
+ibc12b04n14 cnall idle 56 0/56/0/56
+ibc12b04n15 cnall idle 56 0/56/0/56
+ibc12b04n16 cnall idle 56 0/56/0/56
+ibc12b04n17 cnall idle 56 0/56/0/56
+ibc12b04n18 cnall idle 56 0/56/0/56
+ibc12b04n19 cnall alloc 56 56/0/0/56
+ibc12b04n20 cnall down* 56 0/0/56/56
+ibc12b04n21 cnall alloc 56 56/0/0/56
+ibc12b04n22 cnall alloc 56 56/0/0/56
+ibc12b04n23 cnall alloc 56 56/0/0/56
+ibc12b04n24 cnall idle 56 0/56/0/56
+ibc12b04n25 cnall idle 56 0/56/0/56
+ibc12b04n26 cnall idle 56 0/56/0/56
+ibc12b04n27 cnall idle 56 0/56/0/56
+ibc12b04n28 cnall idle 56 0/56/0/56
+ibc12b04n29 cnall idle 56 0/56/0/56
+ibc12b04n30 cnall idle 56 0/56/0/56
+ibc12b04n31 cnall idle 56 0/56/0/56
+ibc12b04n32 cnall idle 56 0/56/0/56
+ibc12b04n33 cnall idle 56 0/56/0/56
+ibc12b04n34 cnall alloc 56 56/0/0/56
+ibc12b04n35 cnall down* 56 0/0/56/56
+ibc12b04n36 cnall mix 56 28/28/0/56
+ibc12b04n37 cnall idle 56 0/56/0/56
+ibc12b04n38 cnall idle 56 0/56/0/56
+ibc12b04n39 cnall down* 56 0/0/56/56
+ibc12b04n40 cnall down* 56 0/0/56/56
+ibc12b07n01 cnall idle 56 0/56/0/56
+ibc12b07n02 cnall idle 56 0/56/0/56
+ibc12b07n03 cnall idle 56 0/56/0/56
+ibc12b07n04 cnall idle 56 0/56/0/56
+ibc12b07n05 cnall idle 56 0/56/0/56
+ibc12b07n06 cnall idle 56 0/56/0/56
+ibc12b07n07 cnall down* 56 0/0/56/56
+ibc12b07n08 cnall alloc 56 56/0/0/56
+ibc12b07n09 cnall idle 56 0/56/0/56
+ibc12b07n10 cnall idle 56 0/56/0/56
+ibc12b07n11 cnall idle 56 0/56/0/56
+ibc12b07n12 cnall idle 56 0/56/0/56
+ibc12b07n13 cnall idle 56 0/56/0/56
+ibc12b07n14 cnall idle 56 0/56/0/56
+ibc12b07n15 cnall mix 56 51/5/0/56
+ibc12b07n16 cnall idle 56 0/56/0/56
+ibc12b07n17 cnall alloc 56 56/0/0/56
+ibc12b07n18 cnall mix 56 16/40/0/56
+ibc12b07n19 cnall mix 56 16/40/0/56
+ibc12b07n20 cnall mix 56 32/24/0/56
+ibc12b07n21 cnall alloc 56 56/0/0/56
+ibc12b07n22 cnall idle 56 0/56/0/56
+ibc12b07n23 cnall idle 56 0/56/0/56
+ibc12b07n24 cnall down* 56 0/0/56/56
+ibc12b07n25 cnall idle 56 0/56/0/56
+ibc12b07n26 cnall idle 56 0/56/0/56
+ibc12b07n27 cnall down* 56 0/0/56/56
+ibc12b07n28 cnall alloc 56 56/0/0/56
+ibc12b07n29 cnall down* 56 0/0/56/56
+ibc12b07n30 cnall alloc 56 56/0/0/56
+ibc12b07n31 cnall down* 56 0/0/56/56
+ibc12b07n32 cnall idle 56 0/56/0/56
+ibc12b07n33 cnall idle 56 0/56/0/56
+ibc12b07n34 cnall idle 56 0/56/0/56
+ibc12b07n35 cnall idle 56 0/56/0/56
+ibc12b07n36 cnall idle 56 0/56/0/56
+ibc12b07n37 cnall down* 56 0/0/56/56
+ibc12b07n38 cnall idle 56 0/56/0/56
+ibc12b07n39 cnall idle 56 0/56/0/56
+ibc12b07n40 cnall idle 56 0/56/0/56
+ibc12b08n01 cnall idle 56 0/56/0/56
+ibc12b08n02 cnall idle 56 0/56/0/56
+ibc12b08n03 cnall idle 56 0/56/0/56
+ibc12b08n04 cnall mix 56 52/4/0/56
+ibc12b08n05 cnall idle 56 0/56/0/56
+ibc12b08n06 cnall alloc 56 56/0/0/56
+ibc12b08n07 cnall alloc 56 56/0/0/56
+ibc12b08n08 cnall drain* 56 0/0/56/56
+ibc12b08n09 cnall idle 56 0/56/0/56
+ibc12b08n10 cnall idle 56 0/56/0/56
+ibc12b08n11 cnall idle 56 0/56/0/56
+ibc12b08n12 cnall idle 56 0/56/0/56
+ibc12b08n13 cnall idle 56 0/56/0/56
+ibc12b08n14 cnall idle 56 0/56/0/56
+ibc12b08n15 cnall idle 56 0/56/0/56
+ibc12b08n16 cnall down* 56 0/0/56/56
+ibc12b08n17 cnall idle 56 0/56/0/56
+ibc12b08n18 cnall idle 56 0/56/0/56
+ibc12b08n19 cnall idle 56 0/56/0/56
+ibc12b08n20 cnall idle 56 0/56/0/56
+ibc12b08n21 cnall idle 56 0/56/0/56
+ibc12b08n22 cnall idle 56 0/56/0/56
+ibc12b08n23 cnall idle 56 0/56/0/56
+ibc12b08n24 cnall idle 56 0/56/0/56
+ibc12b08n25 cnall idle 56 0/56/0/56
+ibc12b08n26 cnall idle 56 0/56/0/56
+ibc12b08n27 cnall idle 56 0/56/0/56
+ibc12b08n28 cnall idle 56 0/56/0/56
+ibc12b08n29 cnall idle 56 0/56/0/56
+ibc12b08n30 cnall idle 56 0/56/0/56
+ibc12b08n31 cnall idle 56 0/56/0/56
+ibc12b08n32 cnall idle 56 0/56/0/56
+ibc12b08n33 cnall mix 56 24/32/0/56
+ibc12b08n34 cnall down* 56 0/0/56/56
+ibc12b08n35 cnall idle 56 0/56/0/56
+ibc12b08n36 cnall idle 56 0/56/0/56
+ibc12b08n37 cnall idle 56 0/56/0/56
+ibc12b08n38 cnall idle 56 0/56/0/56
+ibc12b08n39 cnall idle 56 0/56/0/56
+ibc12b08n40 cnall idle 56 0/56/0/56
+ibc12b09n01 cnall idle 56 0/56/0/56
+ibc12b09n02 cnall idle 56 0/56/0/56
+ibc12b09n03 cnall idle 56 0/56/0/56
+ibc12b09n04 cnall idle 56 0/56/0/56
+ibc12b09n05 cnall idle 56 0/56/0/56
+ibc12b09n06 cnall idle 56 0/56/0/56
+ibc12b09n07 cnall idle 56 0/56/0/56
+ibc12b09n08 cnall idle 56 0/56/0/56
+ibc12b09n09 cnall idle 56 0/56/0/56
+ibc12b09n10 cnall idle 56 0/56/0/56
+ibc12b09n11 cnall alloc 56 56/0/0/56
+ibc12b09n12 cnall alloc 56 56/0/0/56
+ibc12b09n13 cnall mix 56 24/32/0/56
+ibc12b09n14 cnall mix 56 28/28/0/56
+ibc12b09n15 cnall idle 56 0/56/0/56
+ibc12b09n16 cnall idle 56 0/56/0/56
+ibc12b09n17 cnall idle 56 0/56/0/56
+ibc12b09n18 cnall idle 56 0/56/0/56
+ibc12b09n19 cnall idle 56 0/56/0/56
+ibc12b09n20 cnall idle 56 0/56/0/56
+ibc12b09n21 cnall idle 56 0/56/0/56
+ibc12b09n22 cnall idle 56 0/56/0/56
+ibc12b09n23 cnall idle 56 0/56/0/56
+ibc12b09n24 cnall idle 56 0/56/0/56
+ibc12b09n25 cnall idle 56 0/56/0/56
+ibc12b09n26 cnall alloc 56 56/0/0/56
+ibc12b09n27 cnall alloc 56 56/0/0/56
+ibc12b09n28 cnall alloc 56 56/0/0/56
+ibc12b09n29 cnall alloc 56 56/0/0/56
+ibc12b09n30 cnall alloc 56 56/0/0/56
+ibc12b09n31 cnall down* 56 0/0/56/56
+ibc12b09n32 cnall idle 56 0/56/0/56
+ibc12b09n33 cnall alloc 56 56/0/0/56
+ibc12b09n34 cnall idle 56 0/56/0/56
+ibc12b09n35 cnall idle 56 0/56/0/56
+ibc12b09n36 cnall idle 56 0/56/0/56
+ibc12b09n37 cnall alloc 56 56/0/0/56
+ibc12b09n38 cnall idle 56 0/56/0/56
+ibc12b09n39 cnall idle 56 0/56/0/56
+ibc12b09n40 cnall idle 56 0/56/0/56
+ibc12b10n01 cnall idle 56 0/56/0/56
+ibc12b10n02 cnall idle 56 0/56/0/56
+ibc12b10n03 cnall idle 56 0/56/0/56
+ibc12b10n04 cnall idle 56 0/56/0/56
+ibc12b10n05 cnall idle 56 0/56/0/56
+ibc12b10n06 cnall idle 56 0/56/0/56
+ibc12b10n07 cnall idle 56 0/56/0/56
+ibc12b10n08 cnall idle 56 0/56/0/56
+ibc12b10n09 cnall down* 56 0/0/56/56
+ibc12b10n10 cnall alloc 56 56/0/0/56
+ibc12b10n11 cnall down* 56 0/0/56/56
+ibc12b10n12 cnall idle 56 0/56/0/56
+ibc12b10n13 cnall alloc 56 56/0/0/56
+ibc12b10n14 cnall down* 56 0/0/56/56
+ibc12b10n15 cnall idle 56 0/56/0/56
+ibc12b10n16 cnall idle 56 0/56/0/56
+ibc12b10n17 cnall idle 56 0/56/0/56
+ibc12b10n18 cnall idle 56 0/56/0/56
+ibc12b10n19 cnall down* 56 0/0/56/56
+ibc12b10n20 cnall idle 56 0/56/0/56
+ibc12b10n21 cnall idle 56 0/56/0/56
+ibc12b10n22 cnall down* 56 0/0/56/56
+ibc12b10n23 cnall drng 56 1/0/55/56
+ibc12b10n24 cnall drain 56 0/0/56/56
+ibc12b10n25 cnall alloc 56 56/0/0/56
+ibc12b10n26 cnall alloc 56 56/0/0/56
+ibc12b10n27 cnall alloc 56 56/0/0/56
+ibc12b10n28 cnall alloc 56 56/0/0/56
+ibc12b10n29 cnall alloc 56 56/0/0/56
+ibc12b10n30 cnall alloc 56 56/0/0/56
+ibc12b10n31 cnall alloc 56 56/0/0/56
+ibc12b10n32 cnall alloc 56 56/0/0/56
+ibc12b10n33 cnall alloc 56 56/0/0/56
+ibc12b10n34 cnall alloc 56 56/0/0/56
+ibc12b10n35 cnall alloc 56 56/0/0/56
+ibc12b10n36 cnall idle 56 0/56/0/56
+ibc12b10n37 cnall down* 56 0/0/56/56
+ibc12b10n38 cnall idle 56 0/56/0/56
+ibc12b10n39 cnall idle 56 0/56/0/56
+ibc12b10n40 cnall idle 56 0/56/0/56
+ibc13b03n08 cnall down* 56 0/0/56/56
+ibc13b04n01 cnall idle 56 0/56/0/56
+ibc13b04n02 cnall idle 56 0/56/0/56
+ibc13b04n03 cnall idle 56 0/56/0/56
+ibc13b04n04 cnall idle 56 0/56/0/56
+ibc13b04n05 cnall idle 56 0/56/0/56
+ibc13b04n06 cnall idle 56 0/56/0/56
+ibc13b04n07 cnall idle 56 0/56/0/56
+ibc13b04n08 cnall idle 56 0/56/0/56
+ibc13b04n09 cnall idle 56 0/56/0/56
+ibc13b04n10 cnall idle 56 0/56/0/56
+ibc13b04n11 cnall idle 56 0/56/0/56
+ibc13b04n12 cnall idle 56 0/56/0/56
+ibc13b04n13 cnall idle 56 0/56/0/56
+ibc13b04n14 cnall idle 56 0/56/0/56
+ibc13b04n15 cnall idle 56 0/56/0/56
+ibc13b04n16 cnall idle 56 0/56/0/56
+ibc13b04n17 cnall idle 56 0/56/0/56
+ibc13b04n18 cnall idle 56 0/56/0/56
+ibc13b04n19 cnall idle 56 0/56/0/56
+ibc13b04n20 cnall idle 56 0/56/0/56
+ibc13b04n21 cnall idle 56 0/56/0/56
+ibc13b04n22 cnall idle 56 0/56/0/56
+ibc13b04n23 cnall idle 56 0/56/0/56
+ibc13b04n24 cnall idle 56 0/56/0/56
+ibc13b04n25 cnall idle 56 0/56/0/56
+ibc13b04n26 cnall idle 56 0/56/0/56
+ibc13b04n27 cnall idle 56 0/56/0/56
+ibc13b04n28 cnall idle 56 0/56/0/56
+ibc13b04n29 cnall idle 56 0/56/0/56
+ibc13b04n30 cnall idle 56 0/56/0/56
+ibc13b04n31 cnall idle 56 0/56/0/56
+ibc13b04n32 cnall idle 56 0/56/0/56
+ibc13b04n33 cnall idle 56 0/56/0/56
+ibc13b04n34 cnall idle 56 0/56/0/56
+ibc13b04n35 cnall idle 56 0/56/0/56
+ibc13b04n36 cnall idle 56 0/56/0/56
+ibc13b04n37 cnall idle 56 0/56/0/56
+ibc13b04n38 cnall idle 56 0/56/0/56
+ibc13b04n39 cnall alloc 56 56/0/0/56
+ibc13b04n40 cnall alloc 56 56/0/0/56
+ibc13b05n01 cnall drain* 56 0/0/56/56
+ibc13b05n02 cnall down* 56 0/0/56/56
+ibc13b05n03 cnall down* 56 0/0/56/56
+ibc13b05n04 cnall down* 56 0/0/56/56
+ibc13b05n05 cnall down* 56 0/0/56/56
+ibc13b05n06 cnall down* 56 0/0/56/56
+ibc13b05n07 cnall drain* 56 0/0/56/56
+ibc13b05n08 cnall drain* 56 0/0/56/56
+ibc13b05n09 cnall down* 56 0/0/56/56
+ibc13b05n10 cnall down* 56 0/0/56/56
+ibc13b05n11 cnall down* 56 0/0/56/56
+ibc13b05n12 cnall drain* 56 0/0/56/56
+ibc13b05n13 cnall drain* 56 0/0/56/56
+ibc13b05n14 cnall down* 56 0/0/56/56
+ibc13b05n15 cnall down* 56 0/0/56/56
+ibc13b05n16 cnall down* 56 0/0/56/56
+ibc13b05n17 cnall drain* 56 0/0/56/56
+ibc13b05n18 cnall down* 56 0/0/56/56
+ibc13b05n19 cnall down* 56 0/0/56/56
+ibc13b05n20 cnall drain* 56 0/0/56/56
+ibc13b05n21 cnall down* 56 0/0/56/56
+ibc13b05n22 cnall down* 56 0/0/56/56
+ibc13b05n23 cnall down* 56 0/0/56/56
+ibc13b05n24 cnall down* 56 0/0/56/56
+ibc13b05n25 cnall down* 56 0/0/56/56
+ibc13b05n26 cnall down* 56 0/0/56/56
+ibc13b05n27 cnall down* 56 0/0/56/56
+ibc13b06n01 cnall mix 56 32/24/0/56
+ibc13b06n02 cnall mix 56 28/28/0/56
+ibc13b06n03 cnall mix 56 44/12/0/56
+ibc13b06n04 cnall alloc 56 56/0/0/56
+ibc13b06n05 cnall idle 56 0/56/0/56
+ibc13b06n06 cnall down* 56 0/0/56/56
+ibc13b06n07 cnall idle 56 0/56/0/56
+ibc13b06n08 cnall idle 56 0/56/0/56
+ibc13b06n09 cnall idle 56 0/56/0/56
+ibc13b06n10 cnall idle 56 0/56/0/56
+ibc13b06n11 cnall idle 56 0/56/0/56
+ibc13b06n12 cnall idle 56 0/56/0/56
+ibc13b06n13 cnall idle 56 0/56/0/56
+ibc13b06n14 cnall idle 56 0/56/0/56
+ibc13b06n15 cnall idle 56 0/56/0/56
+ibc13b06n16 cnall idle 56 0/56/0/56
+ibc13b06n17 cnall idle 56 0/56/0/56
+ibc13b06n18 cnall idle 56 0/56/0/56
+ibc13b06n19 cnall idle 56 0/56/0/56
+ibc13b06n20 cnall idle 56 0/56/0/56
+ibc13b06n21 cnall idle 56 0/56/0/56
+ibc13b06n22 cnall idle 56 0/56/0/56
+ibc13b06n23 cnall idle 56 0/56/0/56
+ibc13b06n24 cnall idle 56 0/56/0/56
+ibc13b06n25 cnall alloc 56 56/0/0/56
+ibc13b06n26 cnall idle 56 0/56/0/56
+ibc13b06n27 cnall idle 56 0/56/0/56
+ibc13b06n28 cnall idle 56 0/56/0/56
+ibc13b06n29 cnall idle 56 0/56/0/56
+ibc13b06n30 cnall idle 56 0/56/0/56
+ibc13b06n31 cnall idle 56 0/56/0/56
+ibc13b06n32 cnall idle 56 0/56/0/56
+ibc13b06n33 cnall idle 56 0/56/0/56
+ibc13b06n34 cnall idle 56 0/56/0/56
+ibc13b06n35 cnall idle 56 0/56/0/56
+ibc13b06n36 cnall idle 56 0/56/0/56
+ibc13b06n37 cnall idle 56 0/56/0/56
+ibc13b06n38 cnall idle 56 0/56/0/56
+ibc13b06n39 cnall down* 56 0/0/56/56
+ibc13b06n40 cnall down* 56 0/0/56/56
+ibc13b07n01 cnall alloc 56 56/0/0/56
+ibc13b07n02 cnall mix 56 30/26/0/56
+ibc13b07n03 cnall idle 56 0/56/0/56
+ibc13b07n04 cnall alloc 56 56/0/0/56
+ibc13b07n05 cnall idle 56 0/56/0/56
+ibc13b07n06 cnall mix 56 48/8/0/56
+ibc13b07n07 cnall idle 56 0/56/0/56
+ibc13b07n08 cnall idle 56 0/56/0/56
+ibc13b07n09 cnall idle 56 0/56/0/56
+ibc13b07n10 cnall alloc 56 56/0/0/56
+ibc13b07n11 cnall alloc 56 56/0/0/56
+ibc13b07n12 cnall drain* 56 0/0/56/56
+ibc13b07n13 cnall idle 56 0/56/0/56
+ibc13b07n14 cnall idle 56 0/56/0/56
+ibc13b07n15 cnall idle 56 0/56/0/56
+ibc13b07n16 cnall alloc 56 56/0/0/56
+ibc13b07n17 cnall mix 56 32/24/0/56
+ibc13b07n18 cnall idle 56 0/56/0/56
+ibc13b07n19 cnall mix 56 32/24/0/56
+ibc13b07n20 cnall idle 56 0/56/0/56
+ibc13b07n21 cnall idle 56 0/56/0/56
+ibc13b07n22 cnall idle 56 0/56/0/56
+ibc13b07n23 cnall idle 56 0/56/0/56
+ibc13b07n24 cnall idle 56 0/56/0/56
+ibc13b07n25 cnall idle 56 0/56/0/56
+ibc13b07n26 cnall idle 56 0/56/0/56
+ibc13b07n27 cnall idle 56 0/56/0/56
+ibc13b07n28 cnall alloc 56 56/0/0/56
+ibc13b07n29 cnall idle 56 0/56/0/56
+ibc13b07n30 cnall idle 56 0/56/0/56
+ibc13b07n31 cnall idle 56 0/56/0/56
+ibc13b07n32 cnall idle 56 0/56/0/56
+ibc13b07n33 cnall idle 56 0/56/0/56
+ibc13b07n34 cnall idle 56 0/56/0/56
+ibc13b07n35 cnall idle 56 0/56/0/56
+ibc13b07n36 cnall down* 56 0/0/56/56
+ibc13b07n37 cnall down* 56 0/0/56/56
+ibc13b07n38 cnall idle 56 0/56/0/56
+ibc13b07n39 cnall down* 56 0/0/56/56
+ibc13b07n40 cnall idle 56 0/56/0/56
+ibc13b08n01 cnall down* 56 0/0/56/56
+ibc13b08n02 cnall down* 56 0/0/56/56
+ibc13b08n03 cnall down* 56 0/0/56/56
+ibc13b08n04 cnall down* 56 0/0/56/56
+ibc13b08n05 cnall drain* 56 0/0/56/56
+ibc13b08n06 cnall drain* 56 0/0/56/56
+ibc13b08n07 cnall down* 56 0/0/56/56
+ibc13b08n08 cnall down* 56 0/0/56/56
+ibc13b08n09 cnall drain* 56 0/0/56/56
+ibc13b08n10 cnall drain* 56 0/0/56/56
+ibc13b08n11 cnall down* 56 0/0/56/56
+ibc13b08n12 cnall drain* 56 0/0/56/56
+ibc13b08n13 cnall down* 56 0/0/56/56
+ibc13b08n14 cnall down* 56 0/0/56/56
+ibc13b08n15 cnall down* 56 0/0/56/56
+ibc13b08n16 cnall down* 56 0/0/56/56
+ibc13b08n17 cnall down* 56 0/0/56/56
+ibc13b08n18 cnall down* 56 0/0/56/56
+ibc13b08n19 cnall down* 56 0/0/56/56
+ibc13b08n20 cnall down* 56 0/0/56/56
+ibc13b08n21 cnall down* 56 0/0/56/56
+ibc13b08n22 cnall down* 56 0/0/56/56
+ibc13b08n23 cnall down* 56 0/0/56/56
+ibc13b08n24 cnall down* 56 0/0/56/56
+ibc13b08n25 cnall down* 56 0/0/56/56
+ibc13b08n26 cnall down* 56 0/0/56/56
+ibc13b08n27 cnall down* 56 0/0/56/56
+ibc13b08n28 cnall down* 56 0/0/56/56
+ibc13b08n29 cnall down* 56 0/0/56/56
+ibc13b08n30 cnall down* 56 0/0/56/56
+ibc13b08n31 cnall down* 56 0/0/56/56
+ibc13b08n32 cnall down* 56 0/0/56/56
+ibc13b08n33 cnall down* 56 0/0/56/56
+ibc13b08n34 cnall down* 56 0/0/56/56
+ibc13b08n35 cnall down* 56 0/0/56/56
+ibc13b08n36 cnall down* 56 0/0/56/56
+ibc13b08n37 cnall down* 56 0/0/56/56
+ibc13b08n38 cnall down* 56 0/0/56/56
+ibc13b08n39 cnall down* 56 0/0/56/56
+ibc13b08n40 cnall down* 56 0/0/56/56
+ibc13b09n01 cnall drain* 56 0/0/56/56
+ibc13b09n02 cnall down* 56 0/0/56/56
+ibc13b09n03 cnall drain* 56 0/0/56/56
+ibc13b09n04 cnall down* 56 0/0/56/56
+ibc13b09n05 cnall down* 56 0/0/56/56
+ibc13b09n06 cnall down* 56 0/0/56/56
+ibc13b09n07 cnall drain* 56 0/0/56/56
+ibc13b09n08 cnall down* 56 0/0/56/56
+ibc13b09n09 cnall down* 56 0/0/56/56
+ibc13b09n10 cnall drain* 56 0/0/56/56
+ibc13b09n11 cnall down* 56 0/0/56/56
+ibc13b09n12 cnall down* 56 0/0/56/56
+ibc13b09n13 cnall down* 56 0/0/56/56
+ibc13b09n14 cnall drain* 56 0/0/56/56
+ibc13b09n15 cnall down* 56 0/0/56/56
+ibc13b09n16 cnall down* 56 0/0/56/56
+ibc13b09n17 cnall drain* 56 0/0/56/56
+ibc13b09n18 cnall down* 56 0/0/56/56
+ibc13b09n19 cnall down* 56 0/0/56/56
+ibc13b09n20 cnall down* 56 0/0/56/56
+ibc13b09n21 cnall down* 56 0/0/56/56
+ibc13b09n22 cnall down* 56 0/0/56/56
+ibc13b09n23 cnall down* 56 0/0/56/56
+ibc13b09n24 cnall down* 56 0/0/56/56
+ibc13b09n25 cnall down* 56 0/0/56/56
+ibc13b09n26 cnall down* 56 0/0/56/56
+ibc13b09n27 cnall down* 56 0/0/56/56
+ibc13b09n28 cnall down* 56 0/0/56/56
+ibc13b09n29 cnall down* 56 0/0/56/56
+ibc13b09n30 cnall down* 56 0/0/56/56
+ibc13b09n31 cnall down* 56 0/0/56/56
+ibc13b09n32 cnall down* 56 0/0/56/56
+ibc13b09n33 cnall down* 56 0/0/56/56
+ibc13b09n34 cnall down* 56 0/0/56/56
+ibc13b09n35 cnall down* 56 0/0/56/56
+ibc13b09n36 cnall down* 56 0/0/56/56
+ibc13b09n37 cnall down* 56 0/0/56/56
+ibc13b09n38 cnall down* 56 0/0/56/56
+ibtest01 cntest idle 28 0/28/0/28
+ibtest02 cntest idle 28 0/28/0/28
+ibtest03 cntest idle 28 0/28/0/28
+ibtest04 cntest idle 28 0/28/0/28
+             JOBID PARTITION         NAME     USER ST       TIME  NODES NODELIST(REASON)
+# Server runtime deployment entry
+
+This directory registers the server-local runtime and independent Git branch mirror.
+`registry.json` binds exact checkout SHAs, source overlay recovery, existing archives,
+scientific inputs/results, environments, process evidence and shared Git dependencies.
+The workstation repository and its reviewed branches are the development authority.
+
+## Branches and immutable execution
+
+- `main`: local project root and shared maintenance policy.
+- `research/daily-coarse-graining`: local daily worktree; existing server execution
+  uses `runtime/checkouts/shared-split-width-v1` at
+  `c599236bcf57b745e9bafed678298010f4c3b58f` with registered transfer overlays.
+- `research/global-throughput`: local global worktree; retained B1024 execution
+  checkout `runtime/worktrees/global-throughput-gpu-fixed1024-v1` is at
+  `bd9e4c04af68d77e79b984bfc8aa064977f893d3`.
+
+`repository.git` is a self-contained bare branch mirror, with no new working tree
+or alternate-object dependency. `registry.json` records expected/observed imported
+branch SHAs after bundle verification. The existing root at `688e14c` and all
+historical execution trees are preserved; a mirrored ref does not update them.
+Use a declared commit and immutable checkout for future approved execution.
+The approved CPU48/FULL64/B64 execution checkout is registered as
+`runtime/worktrees/global-throughput-cpu48-b64-v1` at
+`4f6b2fc906c453b9030acff489637a8f83605dca`; it shares the bare mirror object
+store, which must remain available while this checkout is retained.
+Never overwrite an in-use or dirty checkout to make it match a branch tip.
+
+For future bundle updates (from this directory, Git 1.8.3.1 compatible):
+
+```bash
+git --git-dir=repository.git bundle verify /absolute/runtime/transfer/BUNDLE
+git --git-dir=repository.git fetch /absolute/runtime/transfer/BUNDLE refs/heads/BRANCH:refs/heads/BRANCH
+git --git-dir=repository.git rev-parse refs/heads/BRANCH
+```
+
+First declare expected SHAs, compare the advertised bundle refs, import without
+force or implicit merges, compare observed refs and update the registry. Preserve
+the transferred bundle and its checksum receipt. Reuse unchanged executable trees;
+do not create one working tree per incoming bundle. Git object maintenance is not
+part of ordinary deployment. No jobs or automations are created by mirroring.
+
+## Assets and evidence
+
+All paths below are relative to the canonical project root:
+
+| Asset | Canonical location |
+| --- | --- |
+| Forcing and static scientific inputs | `runtime/data/` |
+| 669-point reference assets | `runtime/assets/teacher_669_a403cd3/landpoints/` |
+| Global prepared input | `runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl` |
+| Daily prepared data and Teacher | `runtime/outputs/training/target-oriented-prepared-1000-a243029/`, `runtime/outputs/training/pft14-daily-teacher-v6/` |
+| Daily arrays, full gradients, HLO and compiled binaries | `runtime/outputs/diagnostics/shared-latent-reader-20261004/` |
+| Global completed evidence | `runtime/outputs/research/global_throughput/` |
+| Accepted CPU/GPU environments | `.venvs/orcjax_cpu/`, `.venvs/orcjax_gpu/` |
+| Transfer overlays | `runtime/transfer/shared-latent-reader-20261004/`, `runtime/transfer/T7-raw-neural-jvp-20261010/`, `runtime/transfer/shared-combined-recurrent-20260926/` |
+| CUDA tools/wrappers | `runtime/toolchains/`, registered transfer `nvlink-bin/` |
+
+Scientific failures are retained evidence. B1024 is the best valid global screen;
+B2048 OOM and daily state-gradient/raw-neural failures do not establish production
+acceptance. Closed budgets and historical commands do not authorize further runs.
+Do not run scientific computation on login nodes. Paid submissions require the
+project's explicit resource/time/command/directory/cost approval.
+
+## Recovery
+
+The existing 2026-09-22 archive reports remain the completion authority for
+45 checkout and 10 historical worktree working-file archives. Restore only a
+named member from its recorded archive while preserving its original `.git`:
+
+```bash
+RT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime
+tar -tzf "$RT/archives/inactive-checkouts-20260922.tar.gz" checkouts/NAME
+tar -xzf "$RT/archives/inactive-checkouts-20260922.tar.gz" -C "$RT" checkouts/NAME
+```
+
+For historical worktrees use `inactive-worktrees-20260922.tar.gz` and
+`worktrees/NAME`. Inspect target usage/contents first; after verified restoration,
+remove only that tree's `ARCHIVED_WORKING_FILES.md` marker. Never delete `.git` or
+its alternate ancestors. This registry lists every direct/transitive retained dependency.
+
+`maintenance-20261010/daily-source-overlays.tar.gz` is a verified 132-member
+snapshot of current transfer source overlays, excluding Python caches. Its JSON
+receipt binds every file SHA-256, file mode and symlink target. Originals remain
+in place. For non-overwriting recovery, verify the archive SHA-256 from the receipt
+and extract into a fresh staging directory before reviewing/replacing missing source:
+
+```bash
+RT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime
+sha256sum "$RT/deployment/maintenance-20261010/daily-source-overlays.tar.gz"
+mkdir "$RT/deployment/recovery-YYYYMMDD"
+tar -xzf "$RT/deployment/maintenance-20261010/daily-source-overlays.tar.gz" -C "$RT/deployment/recovery-YYYYMMDD"
+```
+
+Preserve scientific data, unique results, prepared-data module/class identities,
+environments, compiled-cache identities and ongoing process paths. Runtime file
+quota is scarce: prefer compact receipts, consolidated assets and verified archives,
+without creating duplicate working trees or deleting evidence to reach a cleanup target.
+The quota snapshot is for the shared liwei account, not this project's usage.
+
+## Verified mirror import, 2026-10-10
+
+| Branch | Expected = observed mirror SHA | Local checkout |
+| --- | --- | --- |
+| `main` | `7cae3e02adad23674767a590fdf4d27f239ce065` | `E:/ORCHIDEE-MAN-JAX` |
+| `research/daily-coarse-graining` | `7461227ad38bf8a4fb399c47cc588ce0e1b771c6` | `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/daily-coarse-graining` |
+| `research/global-throughput` | `c537f59f33568b6e5960254fe55fb307f82ca503` | `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput` |
+
+The bare mirror is synchronized. Existing scientific execution checkout SHAs and
+overlay identities remain those recorded above. This is not a full server source
+update or acceptance of a new science/model version. Local multi-line development
+rules are in `docs/WORKSPACE_MANAGEMENT.md`; `scripts/dev/workspace_status.py`
+is a read-only status entry.
+
+The final v2 bundle only adds the root management entries
+`docs/deployment-explore1000.md`, `docs/RESEARCH_WORKFLOW.md` and `runtime/README.md`.
+The mirror main ref was updated by non-forced fast-forward fetch; daily/global refs
+are unchanged. Both transferred bundles and versioned import receipts are retained.
+Original execution and scientific-asset checks are reused for this documentation update.
+f453142af6835d71a77bc56e05ba2a1c9a4ab06585c7558086d1e409c82373ae  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json
+{
+  "schema": "orchidee_server_deployment_registry_v1",
+  "updated_utc": "2026-10-13T02:38:16Z",
+  "runtime": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime",
+  "branch_mirror": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+  "branch_sync_status": "Global exact CPU48 v3 pin 03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 imported by verified non-forced bundle fetch; main/daily refs and historical executions preserved.",
+  "source_branches": [
+    "main",
+    "research/daily-coarse-graining",
+    "research/global-throughput"
+  ],
+  "scientific_execution": "Existing immutable checkouts and overlay identities remain authoritative; mirrored refs do not change an execution checkout or authorize computation.",
+  "preserved_root": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+    "sha": "688e14cd4bd36d700ad67bc27c7a71195d282697",
+    "branch": "research/daily-coarse-graining",
+    "porcelain": "",
+    "alternate_dependencies": []
+  },
+  "retained_checkouts": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+      "sha": "688e14cd4bd36d700ad67bc27c7a71195d282697",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-checked-v2",
+      "sha": "45da5f97571cf5da9ecd3ac36c37581ded1c26c8",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-checked-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-profile-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-schedule-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-physical-recurrent-t30-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-physical-recurrent-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/physical-microbatch-v1/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-dual-integration-v1-incomplete",
+      "sha": "b2e156254f5c9a5de104ac074314240d122dea98",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-dual-paid-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-validator-cache-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-dual-placement-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-budget-profile-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-parallel-routes-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-epoch-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-checked-reuse-v1/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dual-8cce49e",
+      "sha": "8cce49e81dab8537d0f39ff76de81350a1f923e8",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-local-v2",
+      "sha": "f220013852d1ad7777a154090c360b9ef9cdc920",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-reuse-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-reuse-v1",
+      "sha": "cfc518d095efa468b9ceb2a317fe9dfe035f7c62",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-execution-0507e1b",
+      "sha": "0507e1b4286ee673d7865d40e4c58e73bdab1dc9",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4",
+      "sha": "605c941ef830ba0ca001cb0736a332530e4f0cf1",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-recurrent-605c941/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-persistent-158192f/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-thermal-6467453/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-admission-8004a11/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-decoder-094dfd2/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-transformer-4eeb168/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full",
+      "sha": "c2498e4936c52f0a081ea38d0c6fc6c92e6bb3e8",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-learning-4408daf",
+      "sha": "4408dafe01c7ab1688b9de5f2a60b17ad8db732c",
+      "branch": "research/daily-coarse-graining",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1",
+      "sha": "c599236bcf57b745e9bafed678298010f4c3b58f",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-local-v2/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-dynamic-reuse-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1/.git/objects",
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-large-v1",
+      "sha": "ef8c23f2456e57af962c47145724ba6064a1368e",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-parallel-v1",
+      "sha": "630207126d75e688f0bd04af7dd7fa81f3cb5c66",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-staged-v1",
+      "sha": "08e7f4895b3cd14ea20bffc2f474a9dc52a76c47",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [
+        "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-joint-c2498e4-full/.git/objects"
+      ]
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-performance-v1",
+      "sha": "4bc82a0747c2fd156430956e41ba426271a88b20",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed1024-v1",
+      "sha": "bd9e4c04af68d77e79b984bfc8aa064977f893d3",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-fixed2048-v1",
+      "sha": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
+      "sha": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-startup-v2",
+      "sha": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "branch": "research/global-throughput",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v1",
+      "sha": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
+      "sha": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
+      "sha": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+      "branch": "cpu-performance-baseline",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1",
+      "sha": "7879d8e357ba69a59d4b2eaf794d69ebd32f8850",
+      "branch": "research/global-throughput",
+      "porcelain": "",
+      "alternate_dependencies": []
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+      "sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+      "branch": "DETACHED",
+      "porcelain": "",
+      "alternate_dependencies": [],
+      "role": "approved B1024 lifecycle diagnostic"
+    }
+  ],
+  "summary": {
+    "git_roots": 78,
+    "archived_markers": 55,
+    "retained_working_trees": 23,
+    "alternate_using_roots": 46,
+    "all_observed_head_resolve": true,
+    "all_direct_alternates_exist": true
+  },
+  "activity_snapshot_utc": "2026-10-10T08:20:24.894481Z",
+  "scheduler": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "processes": {
+    "login": {
+      "project_processes": [
+        {
+          "pid": "82135",
+          "cmd": "python3 -c import os,json\nr=[]; unresolved=[]; root='/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX'\nuid=os.getuid()\nfor name in os.listdir('/proc'):\n if not name.isdigit(): continue\n p='/proc/'+name\n try:\n  if os.stat(p).st_uid!=uid: continue\n  cmd=open(p+'/cmdline','rb').read().replace(b'\\0',b' ').decode('utf-8','replace')\n  try: cwd=os.readlink(p+'/cwd')\n  except Exception as e: cwd='UNREADABLE'; unresolved.append({'pid':name,'cmd':cmd,'error':str(e)})\n  try: env=open(p+'/environ','rb').read().decode('utf-8','replace')\n  except Exception: env=''\n  if root in cmd or root in cwd or root in env: r.append({'pid':name,'cmd':cmd,'cwd':cwd,'environment_mentions_project':root in env})\n except (FileNotFoundError,ProcessLookupError): pass\n except Exception as e: unresolved.append({'pid':name,'error':str(e)})\nprint(json.dumps({'project_processes':r,'unreadable_processes':unresolved})) ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        }
+      ],
+      "unreadable_processes": [
+        {
+          "pid": "81609",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/81609/cwd'"
+        }
+      ]
+    },
+    "test01": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "1360",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/1360/cwd'"
+        },
+        {
+          "pid": "15111",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/15111/cwd'"
+        },
+        {
+          "pid": "113448",
+          "cmd": "sshd: liwei@pts/19   ",
+          "error": "[Errno 13] Permission denied: '/proc/113448/cwd'"
+        }
+      ]
+    },
+    "test02": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "37543",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/37543/cwd'"
+        },
+        {
+          "pid": "62115",
+          "cmd": "sshd: liwei@pts/6    ",
+          "error": "[Errno 13] Permission denied: '/proc/62115/cwd'"
+        }
+      ]
+    },
+    "test03": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "88738",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/88738/cwd'"
+        }
+      ]
+    },
+    "test04": {
+      "project_processes": [],
+      "unreadable_processes": [
+        {
+          "pid": "90941",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/90941/cwd'"
+        }
+      ]
+    },
+    "gln01": {
+      "project_processes": [
+        {
+          "pid": "16813",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-original-30610006-0000-4000-8000-000000000001.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "26041",
+          "cmd": "bash -c tail -3 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log; tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "26046",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "43655",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-compile-candidate-30610006-0000-4000-8000-000000000002.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "49870",
+          "cmd": "bash -c tail -2 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-matched-30610006-0000-4000-8000-000000000003.launcher.log; tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-matched-30610006-0000-4000-8000-000000000003.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "49875",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T30-20261006-matched-30610006-0000-4000-8000-000000000003.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "60743",
+          "cmd": "tail -n 2 -f /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T7-20261006-free-migration.compile.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        },
+        {
+          "pid": "75082",
+          "cmd": "tail -n 0 -F /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/latent-reader-T7-batch-20261008.compile-and-compare.launcher.log ",
+          "cwd": "/home/liwei",
+          "environment_mentions_project": false
+        }
+      ],
+      "unreadable_processes": [
+        {
+          "pid": "1152",
+          "cmd": "sshd: liwei@notty    ",
+          "error": "[Errno 13] Permission denied: '/proc/1152/cwd'"
+        }
+      ]
+    }
+  },
+  "gpu_compute_apps": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "process_limits": "A bounded instantaneous snapshot. Privilege-separated sshd cwd/environ is unreadable; readable workers were inspected. No unknown scientific jobs were cancelled.",
+  "quota_observation": {
+    "scope": "shared liwei account, not project usage or attributable project growth",
+    "utc": "2026-10-10T08:15Z",
+    "filesystem": "/WORK",
+    "kbytes": 25133031976,
+    "quota_kbytes": 25000000000,
+    "grace": "2d6h10m45s",
+    "files": 9187470,
+    "quota_files": 10000000,
+    "hard_limit_fields": 0,
+    "source": "bash -lc login banner; no recursive account scan"
+  },
+  "data_assets": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/data",
+      "role": "canonical forcing/static science inputs; approx 42.6 GB forcing is prior documented scope, no new recursive measurement"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/assets/teacher_669_a403cd3/landpoints",
+      "role": "669-point reference landpoint assets"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+      "role": "canonical prepared global input"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029",
+      "role": "daily consolidated prepared training data"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6",
+      "role": "unique Teacher data"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004",
+      "role": "daily raw arrays, successful binaries, HLO, full AD, manifests and closed budgets"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput",
+      "role": "global CPU/GPU evidence; B1024 valid, B2048 OOM, neither result authorizes another run"
+    }
+  ],
+  "exists_verification": {
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/assets/teacher_669_a403cd3/landpoints": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-nvlink-12.6.85": true,
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-runtime-compat-12.3.101-driver-545.23.08": true
+  },
+  "environments": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu"
+  ],
+  "toolchains": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-nvlink-12.6.85",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-runtime-compat-12.3.101-driver-545.23.08"
+  ],
+  "daily_overlay_recovery": {
+    "timestamp_utc": "2026-10-10T08:21:37.603831Z",
+    "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1",
+    "checkout_sha": "c599236bcf57b745e9bafed678298010f4c3b58f",
+    "archive": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/maintenance-20261010/daily-source-overlays.tar.gz",
+    "archive_sha256": "1aa8535160096564e6f1dd1626794012396085f62c4a292700161219f27febbb",
+    "member_count": 132,
+    "source_roots": [
+      "transfer/shared-latent-reader-20261004",
+      "transfer/T7-raw-neural-jvp-20261010",
+      "transfer/shared-combined-recurrent-20260926"
+    ],
+    "validation": "exact member set, SHA256/source equality, modes and symlink targets; source originals preserved",
+    "restore": "tar -xzf /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/maintenance-20261010/daily-source-overlays.tar.gz -C /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime",
+    "scope": "source overlay recovery only; no data, result arrays, caches or environments copied/deleted"
+  },
+  "accepted_raw_neural_source_archive": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.source.tar.gz",
+    "observed_sha256": "f3dbcc7f62aed4f3afe478ae3f8f434d3d8a7efd1dba292c6c2aea62e1c2fd86",
+    "matches_handoff": true
+  },
+  "existing_archives": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkouts-20260922.tar.gz",
+      "report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-checkouts-20260922.tar.json",
+      "trees": 45,
+      "report_status": "archived_and_working_files_removed",
+      "bytes": 511838380
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-worktrees-20260922.tar.gz",
+      "report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/archives/inactive-worktrees-20260922.tar.json",
+      "trees": 10,
+      "report_status": "archived_and_working_files_removed",
+      "bytes": 70720864
+    }
+  ],
+  "existing_archive_verification": "Completion reports and markers read, every surviving HEAD and alternate target checked. Historical byte-comparison acceptance reused; no full archive rehash this session.",
+  "archive_candidates_deferred": [
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-metadata-v1",
+      "sha": "ad6c0e1faa7e22b590627844e9cb0ad492e9deb3",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-startup-v2",
+      "sha": "2b14506992e9c9c7c851cef7b905606e55ac4e04",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v1",
+      "sha": "a51efcdabf7ff2e9f97a463a6f72e9f6a2cf478e",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v2",
+      "sha": "9d19f0760b93e1186eaf796db4903ddfd16a806f",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-sweetspot-v3",
+      "sha": "12b495b9425de3ad1dc16efa3a5a0e69d7e89222",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    },
+    {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-v1",
+      "sha": "7879d8e357ba69a59d4b2eaf794d69ebd32f8850",
+      "reason": "historical global iteration; no observed running consumer, but complete restore/dependency proof and source/result provenance must precede any working-file removal"
+    }
+  ],
+  "maintenance_changes": "One 132-member verified source overlay archive plus compact registry/entry/receipts and a refs-only bare mirror. No existing checkout working file, data, results, environments, caches or Git store removed.",
+  "restoration": "See deployment/README.md. Keep .git objects and all alternate ancestors. Never git gc/prune/clean/reset or interpret archived missing files as source deletions.",
+  "branch_import": {
+    "schema": "server_mirror_docs_update_v2",
+    "timestamp_utc": "2026-10-10T08:45:57.611513Z",
+    "mirror": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010-v2.bundle",
+    "bundle_sha256": "721b9d50bf52db047472d00f8bbfca461495a768e8cac097e0205318f7a94369",
+    "bundle_bytes": 12426182,
+    "previous_branches": {
+      "main": "08882286b064af1337dfbf2e229f55f22c431499",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "expected_branches": {
+      "main": "7cae3e02adad23674767a590fdf4d27f239ce065",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "actual_branches": {
+      "main": "7cae3e02adad23674767a590fdf4d27f239ce065",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "bundle_verify": {
+      "rc": 0,
+      "stdout": "The bundle contains these 3 refs:\n7cae3e02adad23674767a590fdf4d27f239ce065 refs/heads/main\n7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/heads/research/daily-coarse-graining\nc537f59f33568b6e5960254fe55fb307f82ca503 refs/heads/research/global-throughput\nThe bundle records a complete history.",
+      "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010-v2.bundle is okay"
+    },
+    "fetch_main_only": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010-v2.bundle\n   0888228..7cae3e0  main       -> main"
+    },
+    "main_fast_forward_verified": true,
+    "changed_paths": [
+      "A\tdocs/RESEARCH_WORKFLOW.md",
+      "A\tdocs/deployment-explore1000.md",
+      "A\truntime/README.md"
+    ],
+    "daily_global_refs_unchanged": true,
+    "self_contained_evidence": "v1 accepted self-contained mirror reused; no alternate configuration changed",
+    "validation_scope": "Only bundle/object/branch identities and three management documents. Prior 78 Git roots / 132 overlay / scientific asset and runtime process evidence reused without repeating checks.",
+    "mirror_entries": 31,
+    "mirror_regular_files": 21,
+    "mirror_bytes": 25754472,
+    "new_execution_working_trees": 0,
+    "existing_execution_checkouts_untouched": true
+  },
+  "branch_routes": [
+    {
+      "branch": "main",
+      "local_checkout": "E:/ORCHIDEE-MAN-JAX",
+      "mirror_sha": "7cae3e02adad23674767a590fdf4d27f239ce065",
+      "execution_checkout": null,
+      "role": "local shared-policy/development root; no server science deployment implied"
+    },
+    {
+      "branch": "research/daily-coarse-graining",
+      "local_checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/daily-coarse-graining",
+      "mirror_sha": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1",
+      "execution_sha": "c599236bcf57b745e9bafed678298010f4c3b58f",
+      "execution_overlays": [
+        "transfer/shared-latent-reader-20261004",
+        "transfer/T7-raw-neural-jvp-20261010",
+        "transfer/shared-combined-recurrent-20260926"
+      ],
+      "role": "mirrored development head differs from preserved source/overlay execution identity"
+    },
+    {
+      "branch": "research/global-throughput",
+      "local_checkout": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+      "mirror_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+      "execution_checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+      "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+      "role": "approved immutable B1024 lifecycle execution; historical checkouts retained"
+    }
+  ],
+  "local_management_documents": [
+    "docs/WORKSPACE_MANAGEMENT.md",
+    "scripts/dev/workspace_status.py"
+  ],
+  "latest_activity_snapshot_utc": "2026-10-10T08:30:33.912234Z",
+  "latest_scheduler": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "latest_gpu_compute_apps": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "final_validation": "All 78 observed original HEADs/branches/status/alternates/archive markers unchanged; all 132 overlay source identities and archive SHA still match.",
+  "quota_raw_receipt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/maintenance-20261010/quota-login-banner.txt",
+  "initial_branch_import": {
+    "timestamp_utc": "2026-10-10T08:28:59.554158Z",
+    "mirror": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010.bundle",
+    "bundle_sha256": "be64d2b74cf7f3fbe97e30dcfdcfe5e3d5f9e24620027ec98253b82541b2f043",
+    "bundle_bytes": 12400208,
+    "expected_branches": {
+      "main": "08882286b064af1337dfbf2e229f55f22c431499",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "actual_branches": {
+      "main": "08882286b064af1337dfbf2e229f55f22c431499",
+      "research/daily-coarse-graining": "7461227ad38bf8a4fb399c47cc588ce0e1b771c6",
+      "research/global-throughput": "c537f59f33568b6e5960254fe55fb307f82ca503"
+    },
+    "bundle_verify": {
+      "rc": 0,
+      "stdout": "The bundle contains these 3 refs:\n08882286b064af1337dfbf2e229f55f22c431499 refs/heads/main\n7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/heads/research/daily-coarse-graining\nc537f59f33568b6e5960254fe55fb307f82ca503 refs/heads/research/global-throughput\nThe bundle records a complete history.",
+      "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010.bundle is okay"
+    },
+    "fetch": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/maintenance-20261010/project-three-heads-20261010.bundle\n * [new branch]      main       -> main\n * [new branch]      research/daily-coarse-graining -> research/daily-coarse-graining\n * [new branch]      research/global-throughput -> research/global-throughput"
+    },
+    "fsck": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "self_contained": true,
+    "new_working_trees": 0,
+    "mirror_entries": 29,
+    "mirror_regular_files": 19,
+    "mirror_bytes": 12872283,
+    "unchanged_execution_checkouts": true
+  },
+  "management_document_update": {
+    "utc": "2026-10-10T08:45:57.611513Z",
+    "main_previous": "08882286b064af1337dfbf2e229f55f22c431499",
+    "main_current": "7cae3e02adad23674767a590fdf4d27f239ce065",
+    "paths": [
+      "A\tdocs/RESEARCH_WORKFLOW.md",
+      "A\tdocs/deployment-explore1000.md",
+      "A\truntime/README.md"
+    ],
+    "previous_scientific_execution_evidence_reused": true
+  },
+  "latest_global_lifecycle_deployment": {
+    "schema": "global_lifecycle_exact_deployment_v1",
+    "utc": "2026-10-11T08:42:24.544280+00:00",
+    "execution_sha": "3b4ae35e695f85480ecb72461e4ba93f4534bbd8",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-gpu-lifecycle-v1",
+    "branch": "research/global-throughput",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/gpu-lifecycle-20261011-3b4ae35/global-throughput-3b4ae35.bundle",
+    "bundle_sha256": "c41277078f7c05efac832a7f25136e5cc64b037f8594774c64e2af86fbfa4ed5",
+    "bundle_bytes": 4861356,
+    "registry_previous_sha256": "be35fd8949f8b1df0581424641b70398e1ff0a382baa5b9e9ee1dcfd966ecb97",
+    "checkout_porcelain": "",
+    "source_overlay": null,
+    "alternate_dependencies": [],
+    "old_checkouts_preserved": true,
+    "main_daily_refs_preserved": true,
+    "authorization": "User explicitly approved bounded lifecycle two-arm plan via supervisor 01a128d2-3ec2-77a1-8d51-1665c220d2ca on 2026-10-11.",
+    "allocation": {
+      "partition": "gnall",
+      "nodes": 1,
+      "tasks": 1,
+      "V100_32GB_count": 1,
+      "Slurm_CPUs": 4,
+      "wall_seconds": 7200,
+      "requeue": false,
+      "exclusive": false,
+      "primary_worst_case_CNY": 4.8,
+      "conservative_worst_case_CNY": 4.96
+    },
+    "submitted": false
+  },
+  "latest_global_cpu48_b64_deployment": {
+    "schema": "global_cpu48_b64_execution_deployment_v1",
+    "utc": "2026-10-11T14:32:48.980312Z",
+    "authorization": "CPU48/FULL64/B64 exact run authorization recorded in workstation outputs/research/global_throughput/cpu48-b64-execution-20261011/AUTHORIZATION.md",
+    "research_delivery_commit": "f0a3c8951fe4c7b1bf591c855aa796bf2a73d11f",
+    "execution_sha": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "execution_ref": "codex/global-cpu48-b64-v1",
+    "base_sha": "8aa2e05aa24b65dc4d30a27d4ee857bba6312221",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
+    "checkout_porcelain": "",
+    "alternate_dependencies": [
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/repository.git/objects"
+    ],
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v1/cpu48-b64-4f6b2fc906c4.bundle",
+    "bundle_sha256": "93b960d602c7e176bdf76af495ae93de7252e3d28c4ad111ea01c07647c6dd9f",
+    "bundle_bytes": 39681,
+    "mirror_ref": "refs/heads/codex/global-cpu48-b64-v1",
+    "mirror_sha": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "gpu_reference_checkpoint_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "diagnostic_host": "ibtest03",
+    "target_bash": "GNU bash 4.2.46",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64": true,
+    "launcher_dry_run": "passed",
+    "coordinator_and_runner_dry_runs": "passed",
+    "model_execution_during_preflight": false,
+    "allocation": {
+      "partition": "cnall",
+      "nodes": 1,
+      "tasks": 1,
+      "CPUs": 48,
+      "GPUs": 0,
+      "wall_seconds": 5400,
+      "requeue": false,
+      "exclusive": false,
+      "memory_reservation": null,
+      "primary_worst_case_CNY": 3.6,
+      "conservative_worst_case_CNY": 5.04
+    },
+    "registry_previous_sha256": "13f778bcb836163ce04126152d763bd43106e4209c982eb895db835bfaec89ea",
+    "submitted": false,
+    "job_id": null,
+    "submission_state": "closed_no_submission_target_not_plain_idle_after_bounded_wait",
+    "sbatch_invocation_count": 0,
+    "final_target_snapshot": {
+      "local_observed_utc": "2026-10-11T14:55:35Z",
+      "remote_utc": "2026-10-11T14:47:15Z",
+      "state": "IDLE+PLANNED",
+      "sinfo_state": "plnd",
+      "CPUAlloc": 0,
+      "CPUTot": 56,
+      "CPULoad": 0.01,
+      "FreeMem_MB": 177983,
+      "AllocTRES": "",
+      "reservations": 0,
+      "queued_jobs_targeting_node": 0
+    },
+    "bounded_wait": {
+      "maximum_seconds": 300,
+      "local_observation_span_seconds": 243,
+      "remote_observation_span_seconds": 242,
+      "explicit_sleep_seconds": 180,
+      "scheduler_snapshot_count": 3,
+      "exact_dispatch_time_recorded": false
+    },
+    "model_execution": false,
+    "collector_execution": false,
+    "parent_accounting": "not_applicable_no_job",
+    "remote_result_paths": {
+      "current_result": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261011/CURRENT_RESULT.md",
+      "pre_submit_receipt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261011/pre-submit-receipt.json",
+      "submission_attempt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261011/submission-attempt.json"
+    },
+    "remote_result_sha256": {
+      "CURRENT_RESULT.md": "3e177be0b93bc9c4db907a9dd304cac8919ff100b0ba570eb3446336c0d7df11",
+      "pre-submit-receipt.json": "97172f555685773d51e0bac7aaf2bc3fd96edd8c58ac111620ebadc3fa69d6f3",
+      "submission-attempt.json": "a691af01fa0297e24c86a67d051472cbfb6173ea54e1bdf5c988f491e8bb016a"
+    },
+    "final_registry_previous_sha256": "5f4e8e52fac8617d5aa107370e82084ca7b5165438f2feb5014498d2c539d149",
+    "finalized_utc": "2026-10-11T14:57:48.279472Z"
+  },
+  "latest_global_cpu48_b64_execution": {
+    "schema": "global_cpu48_b64_execution_terminal_v1",
+    "utc": "2026-10-12T02:41:07.815965Z",
+    "deployment_entry_preserved": "latest_global_cpu48_b64_deployment",
+    "execution_sha": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "execution_ref": "codex/global-cpu48-b64-v1",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v1",
+    "checkout_porcelain": "",
+    "job_id": "15782454",
+    "submission_state": "FAILED",
+    "exit_code": "2:0",
+    "elapsed": "00:00:01",
+    "node": "ibc12b07n02",
+    "allocation": {
+      "partition": "cnall",
+      "nodes": 1,
+      "tasks": 1,
+      "cpus_per_task": 48,
+      "gpus": 0,
+      "wall_seconds": 5400,
+      "no_requeue": true,
+      "exclusive": false,
+      "memory_reservation": null,
+      "primary_worst_case_cny": 3.6,
+      "conservative_worst_case_cny": 5.04,
+      "whole_parent_billed_at_48_cpus": true
+    },
+    "sbatch_invocation_count": 1,
+    "launcher_error": "Slurm did not report AllocTRES",
+    "raw_scontrol_output_saved": false,
+    "failure_cause_beyond_empty_alloc_tres": "unknown",
+    "parent_accounting_raw": "15782454|FAILED|00:00:01|billing=48,cpu=48,node=1\n",
+    "parent_accounting_raw_sha256": "65329a55f23af07cf2f5b79b5406bf17e7dbb152e664d36abd2db9b83ba58729",
+    "run_root_exists": false,
+    "model_execution": false,
+    "collector_execution": false,
+    "performance_measurements": null,
+    "primary_planning_cost_cny": 0.000666667,
+    "conservative_planning_cost_cny": 0.000933333,
+    "rates_verified_bill": false,
+    "remote_result_paths": {
+      "CURRENT_RESULT.md": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/CURRENT_RESULT.md",
+      "execution-result.json": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/execution-result.json",
+      "submission-attempt.json": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/submission-attempt.json",
+      "slurm-15782454.log": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/slurm-15782454.log",
+      "terminal-parent.sacct.raw": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-20261012/terminal-parent.sacct.raw"
+    },
+    "remote_result_sha256": {
+      "CURRENT_RESULT.md": "782aaf502f3b74dc040cf22d4640db983966d19c46d043e718faedfe5a442808",
+      "execution-result.json": "a0398e2e7fd82403750b9aa291b37788ff1d74398d8392d03648d744830cd4f9",
+      "submission-attempt.json": "cc3325486269336cd25c2b54c525504774d2ed34569240cffe11e908bae0dbd4",
+      "slurm-15782454.log": "e5985b800cb682dbb2182d837064580637fc71c073ca9113f2182df3ed2ed677",
+      "terminal-parent.sacct.raw": "65329a55f23af07cf2f5b79b5406bf17e7dbb152e664d36abd2db9b83ba58729"
+    }
+  },
+  "latest_global_cpu48_b64_v2_deployment": {
+    "schema": "global_cpu48_b64_v2_target_deployment_v1",
+    "utc": "2026-10-12T08:24:23Z",
+    "source_research_commit": "72a983fc3d7352e5bec0cc7266df87568e60cb84",
+    "execution_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "execution_ref": "codex/global-cpu48-b64-v2",
+    "base_sha": "4f6b2fc906c453b9030acff489637a8f83605dca",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+    "checkout_porcelain": "",
+    "alternate_dependencies": [],
+    "mirror_ref": "refs/heads/codex/global-cpu48-b64-v2",
+    "mirror_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/cpu48-b64-b1b5cf0835da.bundle",
+    "bundle_sha256": "42de12b0262eb721666ce7d5da9fb493c832eaa20a1cea0124c03a3a2162e2f9",
+    "bundle_bytes": 5091,
+    "target_host": "ibtest01",
+    "target_bash": "GNU bash 4.2.46",
+    "target_python": "3.11.15",
+    "module_import": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2/jax_orchidee/__init__.py",
+    "target_validation": "six synthetic fixture cases across seven invocations; valid TRES fallback reached controlled srun stub; five rejection cases stopped before srun; no real allocation or model execution",
+    "target_results": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-repair-v2-20261012/target-validation/results",
+    "allocation": {
+      "partition": "cnall",
+      "nodes": 1,
+      "tasks": 1,
+      "cpus": 48,
+      "gpus": 0,
+      "wall_seconds": 5400,
+      "primary_worst_case_cny": 3.6,
+      "conservative_worst_case_cny": 5.04
+    },
+    "submitted": false,
+    "authorized_paid_submissions_remaining": 1,
+    "registry_previous_sha256": "228ae50a7e2dd2a0986e83404324c3827fba89118318f5439936b614f4e5bfbb"
+  },
+  "latest_global_cpu48_b64_v2_execution": {
+    "schema": "global_cpu48_b64_v2_execution_terminal_v1",
+    "utc": "2026-10-12T09:37:43.426012Z",
+    "deployment_entry_preserved": "latest_global_cpu48_b64_v2_deployment",
+    "prior_v1_terminal_preserved": "latest_global_cpu48_b64_execution",
+    "execution_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "execution_ref": "codex/global-cpu48-b64-v2",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v2",
+    "job_id": "15805735",
+    "submission_state": "FAILED",
+    "exit_code": "1:0",
+    "elapsed": "00:01:49",
+    "node": "ibc12b08n35",
+    "allocation": {
+      "partition": "cnall",
+      "nodes": 1,
+      "tasks": 1,
+      "cpus_per_task": 48,
+      "gpus": 0,
+      "wall_seconds": 5400,
+      "no_requeue": true,
+      "exclusive": false,
+      "memory_reservation": null,
+      "allocated_tres": "cpu=48,node=1,billing=48",
+      "allocated_tres_source": "TRES",
+      "primary_worst_case_cny": 3.6,
+      "conservative_worst_case_cny": 5.04,
+      "whole_parent_billed_at_48_cpus": true
+    },
+    "sbatch_invocation_count": 1,
+    "real_allocation_validation": "passed",
+    "failure": {
+      "phase": "scalar AOT input metadata inspection before compile",
+      "location": "benchmark_global_batch.py::_aval_signature called from describe_aot_signature/lower_compile",
+      "message": "AttributeError: 'float' object has no attribute 'shape'",
+      "offending_argument_leaf": null,
+      "lower_seconds": 54.8616076009348,
+      "compile_called": false
+    },
+    "run_root_exists": true,
+    "stage_count": 0,
+    "scientific_gate_count": 0,
+    "warm_samples": {
+      "core": [],
+      "wrapper": []
+    },
+    "batch_dispatched": false,
+    "model_step_executed": false,
+    "collector_execution": false,
+    "performance_measurements": null,
+    "scientific_acceptance": false,
+    "whole_parent_allocation_cost": {
+      "allocated_cpu_count_seconds": 5232,
+      "primary_cny": 0.072666667,
+      "conservative_cny": 0.101733333,
+      "rates_verified_bill": false,
+      "basis": "single terminal parent accounting row; count 48 allocated CPUs once for 109 seconds"
+    },
+    "coordinator_scope_cost_estimates_cny": {
+      "primary": 0.07032488934199015,
+      "conservative": 0.09845484507878621,
+      "limitation": "excludes Slurm submission/startup and final scheduler accounting"
+    },
+    "parent_accounting_raw": "15805735|FAILED|00:01:49|billing=48,cpu=48,node=1|ibc12b08n35|1:0\n",
+    "parent_accounting_raw_sha256": "b1adac477661bdaeae9cf35de9ddb89136c9bc7d4b81815ba59b2fa95343f371",
+    "sacct_rows_sha256": "19f421e6e8c8cf3c05bb7855d6e505c4dc559e5ccfbb744de5eb9ea37f532dc8",
+    "remote_result_paths": {
+      "CURRENT_RESULT.md": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/CURRENT_RESULT.md",
+      "execution-result.json": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/execution-result.json",
+      "terminal-measurements.json": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/terminal-measurements.json",
+      "terminal-evidence-manifest.json": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/terminal-evidence-manifest.json",
+      "submission-attempt.json": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/submission-attempt.json",
+      "terminal-parent.sacct.raw": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/terminal-parent.sacct.raw",
+      "sacct-job-15805735.raw": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/sacct-job-15805735.raw",
+      "global_cpu48_b64_v2_15805735.txt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_cpu48_b64_v2_15805735.txt",
+      "scalar_report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/15805735/scalar/report.json",
+      "scalar_log": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/15805735/scalar.log",
+      "orchestration": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v2-20261012/15805735/orchestration.json"
+    },
+    "remote_result_sha256": {
+      "CURRENT_RESULT.md": "ee4749beb27ad63621e4a431c044c3d24082b5a5cd9168702ebe942674cd9481",
+      "execution-result.json": "15a93ff78c5fca1bab22373c9ecf3f7f9f3a6c4d2bf9676f6a5c55075bee3bca",
+      "terminal-measurements.json": "77fa2ca7f252b28145b21151452c438b8d475758886165037c4f147f615f4059",
+      "terminal-evidence-manifest.json": "d7cfab758d43b58058ec7333fb9245ff07f646a8b4a55f41dd597c3b22a4ab04",
+      "submission-attempt.json": "70542ef71251c891781e2bccb839d3ca3a0d823c8cff8dc927aed08c91127469",
+      "terminal-parent.sacct.raw": "b1adac477661bdaeae9cf35de9ddb89136c9bc7d4b81815ba59b2fa95343f371",
+      "sacct-job-15805735.raw": "19f421e6e8c8cf3c05bb7855d6e505c4dc559e5ccfbb744de5eb9ea37f532dc8",
+      "global_cpu48_b64_v2_15805735.txt": "c76b8ea4253799ea431f962561dc36ecdf8f645133e0fa8f81255c87f90e1822",
+      "pre-submit-receipt.json": "1a2af0f1034cb1f2eddb25b50d20a3d1c7830a0d0ad08d7774a018702f2ee7e5"
+    },
+    "authorized_paid_submissions_remaining": 0,
+    "automatic_retry_permitted": false
+  },
+  "latest_global_cpu48_b64_v3_deployment": {
+    "schema": "global_cpu48_b64_v3_target_deployment_v1",
+    "authorization": "New explicit one-submission CPU48 v3 authorization recorded 2026-10-13; no v1/v2 budget or authorization reused.",
+    "source_research_commit": "8a860c144f6263fed5b9bf246a88f6d83d36797f",
+    "execution_sha": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "execution_ref": "codex/global-cpu48-b64-v3",
+    "base_sha": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3",
+    "checkout_state": "detached_clean",
+    "alternate_dependencies": [],
+    "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "bundle": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v3-03026d0/cpu48-b64-03026d013626.bundle",
+    "bundle_sha256": "940a6f7e2aa6bf545661ef1c815cbd0156fa92b62b18452cbad7398d7c49d47c",
+    "bundle_bytes": 3380,
+    "bundle_prerequisite": "b1b5cf0835da298bddb388e61d754feeb6c14cf2",
+    "transfer_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v3-03026d0",
+    "mirror_ref": "refs/heads/codex/global-cpu48-b64-v3",
+    "mirror_sha": "03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8",
+    "deployment_method": "Git 1.8.3.1 bare-mirror non-forced bundle fetch; fresh clone --no-hardlinks; detached checkout at exact SHA.",
+    "harness_blob_sha256": {
+      "scripts/dev/benchmark_global_batch.py": "bc8ce1d62f6947228c8c8438344987345bf18095f307c90a2f45dc4655c6891e",
+      "scripts/dev/prepare_global_cpu48_execution.py": "e5125ca45ea76e7dc158e80460b4d1b34f7f3a51a20b64813fda82194ef53e26",
+      "scripts/hpc/global_cpu48_b64_coordinator.py": "95bc4b4d98609b134492489501763489a2c783c79713a0a83334a4d9d79af816",
+      "scripts/hpc/slurm_global_server_cpu_48core.sh": "577d5d08cc4e7862390661f02cbc38a9b9f247410c8db162ceb5e1b121e96349",
+      "tests/unit/test_global_cpu48_b64_preparation.py": "d3ab93ed9b2b0ab93bfa49841e74b30243814154ab4df7b1c5317baf88dee201",
+      "tests/unit/test_global_gpu_capacity.py": "e47035503ccbcf9f22a0bff460092f8266650347f836c4ec0032e937adfc6dc6"
+    },
+    "target_host": "ibtest01",
+    "target_bash": "GNU bash 4.2.46",
+    "canonical_python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "target_python": "3.11.15",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "x64": true,
+    "module_import": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v3/jax_orchidee/__init__.py",
+    "target_validation": "One-CPU test01 identity/runtime/input/reference preflight passed; no model execution, lowering, or compilation.",
+    "prepared_input": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl",
+    "prepared_input_sha256": "be83763773c2e515bc15743befa3f26beee885ccbcb14f387e15b13c387a4dc7",
+    "gpu_reference_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model",
+    "gpu_reference_sha256": "a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6",
+    "baseline_ref": "133e35aec7b83b9d79888c46092f64d518e97299",
+    "allocation": {
+      "partition": "cnall",
+      "nodes": 1,
+      "tasks": 1,
+      "cpus_per_task": 48,
+      "gpus": 0,
+      "wall_seconds": 5400,
+      "no_requeue": true,
+      "exclusive": false,
+      "memory_reservation": null,
+      "primary_worst_case_cny": 3.6,
+      "conservative_worst_case_cny": 5.04,
+      "whole_parent_allocation_billed": true,
+      "slurm_node_selection": "automatic; no nodelist or exclusion"
+    },
+    "submitted": true,
+    "sbatch_invocation_count": 1,
+    "target_results": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012",
+    "local_evidence": "outputs/research/global_throughput/cpu48-b64-execution-v3-20261012",
+    "utc": "2026-10-13T02:27:54Z",
+    "registry_previous_sha256": "c83ed058fe526a65ad2568bad219d0f08378a0471d4fb619e9a7c3ffd2dfd698",
+    "job_id": "15820467",
+    "submission_utc": "2026-10-13T02:36:24Z",
+    "initial_job_state": "RUNNING",
+    "initial_node": "ibc11b09n32",
+    "initial_start_utc": "2026-10-13T02:36:41Z"
+  }
+}
+commit
+4f6b2fc906c453b9030acff489637a8f83605dca refs/heads/codex/global-cpu48-b64-v1
+b1b5cf0835da298bddb388e61d754feeb6c14cf2 refs/heads/codex/global-cpu48-b64-v2
+03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 refs/heads/codex/global-cpu48-b64-v3
+7cae3e02adad23674767a590fdf4d27f239ce065 refs/heads/main
+7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/heads/research/daily-coarse-graining
+3b4ae35e695f85480ecb72461e4ba93f4534bbd8 refs/heads/research/global-throughput
+FUTURE_CHECKOUT=absent

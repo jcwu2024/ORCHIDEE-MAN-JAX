@@ -1,0 +1,30 @@
+{
+  "mode": "download",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-r",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683",
+    "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/paid-run"
+  ],
+  "source": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683",
+  "destination": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/paid-run",
+  "start_epoch": 1791943988.258295,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791943988.7609804,
+  "wall_seconds": 0.5026853084564209,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\collect-paid-run.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\collect-paid-run.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

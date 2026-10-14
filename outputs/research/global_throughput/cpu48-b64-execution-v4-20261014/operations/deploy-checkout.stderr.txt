@@ -1,0 +1,15 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/cpu48-b64-60dccbddde10.bundle is okay
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/cpu48-b64-60dccbddde10.bundle
+ * [new branch]      codex/global-cpu48-b64-v4 -> codex/global-cpu48-b64-v4
+Note: checking out '60dccbddde10be4295aab7e7fe55fa7864d3c3f3'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b new_branch_name
+
+HEAD is now at 60dccbd... Prepare CPU48 FULL64 batch-only harness on accepted historical science

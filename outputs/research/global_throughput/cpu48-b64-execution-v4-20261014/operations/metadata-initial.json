@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/metadata-inspect.sh",
+  "destination": null,
+  "start_epoch": 1791942071.589369,
+  "stdin_sha256": "9ee48e45f4e0f6b57a35e4a78c7d005b7712317ed20ebff3072a4388d98d9ad3",
+  "exit_code": 0,
+  "end_epoch": 1791942072.2370472,
+  "wall_seconds": 0.6476781368255615,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\metadata-initial.stdout.txt",
+    "sha256": "2056af35dc505d7fcb72df0bfbb0cdbbc3364c2d4c91ec318fc6c249fe101eff",
+    "bytes": 90922
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\metadata-initial.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

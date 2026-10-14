@@ -1,0 +1,7 @@
+2026-10-14T09:56:02+0800
+ibcln01
+executed_proposal=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/PROPOSED_SUBMISSION.sh
+submission_cwd=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+Submitted batch job 15853683
+submission_exit=0
+2026-10-14T09:56:03+0800

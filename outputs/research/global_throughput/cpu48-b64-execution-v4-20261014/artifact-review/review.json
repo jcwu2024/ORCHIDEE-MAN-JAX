@@ -1,0 +1,140 @@
+{
+  "schema": "cpu48-b64-v4-local-artifact-review-v1",
+  "review_scope": "local_artifacts_only",
+  "status": "reviewed_terminal_failure_preserved_no_benchmark_result",
+  "workspace": {
+    "root": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+    "branch": "research/global-throughput",
+    "head": "e762c6f87d9f2b61f8531c3688e1f86d3bbd1bac",
+    "existing_worktree_modifications_preserved": true
+  },
+  "candidate_identity_comparison": {
+    "pin": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json",
+    "preflight": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/production-preflight.json",
+    "actual_candidate_fields_compared": [
+      "execution_commit",
+      "execution_code_dir",
+      "prepared_input_path",
+      "prepared_input_sha256",
+      "gpu_reference_path",
+      "gpu_reference_sha256",
+      "certified_science_sha256",
+      "actual_science_source_sha256",
+      "physical_science_tree_oid",
+      "baseline_ref"
+    ],
+    "all_actual_candidate_fields_match": true,
+    "scalar_admission_sha256_matches_pin": true,
+    "scalar_checkpoint_sha256_matches_pin": true,
+    "scalar_source_job_matches_pin": true,
+    "harness_blob_hashes_match_pin": true
+  },
+  "preflight": {
+    "job_id": "15853600",
+    "partition": "cntest",
+    "allocated_cpus": 1,
+    "status": "actual_production_identity_and_seal_passed",
+    "canonical_python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "jax": "0.4.38",
+    "jaxlib": "0.4.38",
+    "checkout_clean": true,
+    "shared_logs_write_probe": "passed_removed_own_probe",
+    "JAX_imported": false,
+    "model_execution": false,
+    "meaning": "production-path identity/seal and dry-run preflight only; not model execution or performance evidence"
+  },
+  "deployment": {
+    "checkout_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+    "physical_science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba",
+    "alternates": "none",
+    "deployment_receipt_exit_code": 0,
+    "transferred_bundle_pin_proposal_and_admission_receipts_exit_code": 0
+  },
+  "submission": {
+    "receipt": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/operations/paid-submission.json",
+    "submitted_job_id": "15853683",
+    "receipt_exit_code": 0,
+    "stdout_reports_one_submitted_batch_job": true,
+    "stderr_bytes": 0,
+    "approved_proposal_sha256": "b86068c62c96464319175135e12e5d84ce2e494a00875aceaa01ee0b1a48c160",
+    "submission_cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX",
+    "submission_once_marker": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/submission-invoked.txt",
+    "raw_submission_stdout": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/submission.stdout.raw",
+    "raw_submission_exit_code": 0,
+    "one_job_reported": true,
+    "sbatch_process_argv_trace_independently_captured": false,
+    "argv_basis": "submission wrapper executed the SHA-verified immutable proposal; raw output reports job 15853683"
+  },
+  "terminal_execution": {
+    "job_id": "15853683",
+    "status": "FAILED",
+    "exit_code": "1:0",
+    "elapsed_seconds": 50,
+    "partition": "cnall",
+    "node": "ibc11b09n36",
+    "allocated_cpus": 48,
+    "allocated_gpus": 0,
+    "allocated_parent_cpu_request_core_hours": 0.6666666666666666,
+    "terminal_parent_record": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/terminal-parent.sacct.raw",
+    "full_sacct_record": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/terminal-full.sacct.raw",
+    "whole_parent_cost_estimates_cny": {
+      "primary": 0.03333333333333333,
+      "conservative": 0.04666666666666667,
+      "billing_verified": false
+    },
+    "first_substantive_failure": {
+      "message": "FULL64 CPU scalar admission candidate provenance differs from current execution identity",
+      "source": "paid-run/batch/report.json traceback; scripts/dev/global_server_reference.py load_reference guard at line 283",
+      "benchmark_stage": "CPU scalar reference loading, before candidate B64 timing/validation",
+      "candidate_provenance_fields_compared_by_guard": [
+        "baseline_ref",
+        "certified_science_sha256",
+        "gpu_reference_sha256",
+        "execution_commit"
+      ],
+      "specific_mismatching_runtime_field_isolated_by_saved_report": false,
+      "job_id_mismatch_at_later_guard_is_not_claimed_as_root_cause": true
+    },
+    "benchmark_wall_seconds_reported_before_failure": 7.55642295628786,
+    "warm_timing_samples": 0,
+    "candidate_scientific_acceptance": false,
+    "throughput_claim_available": false
+  },
+  "resource_admission": {
+    "allocation_admitted": true,
+    "pre_jax_child_receipt_status": "resource_admission_passed",
+    "affinity_cpu_count": 48,
+    "thread_environment_policy_passed": true,
+    "effective_48_thread_claim": false,
+    "meaning": "scheduler allocation, affinity, and pre-JAX environment gates passed; this does not establish benchmark throughput"
+  },
+  "collector": {
+    "artifact": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/collector-result.json",
+    "status": "incomplete_run_failure_preserved",
+    "scientific_acceptance": false,
+    "whole_parent_accounting_loaded": true,
+    "no_throughput_claim": true,
+    "collector_execution_receipt": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/collector-execution-receipt.json",
+    "collector_job_id": "15853855",
+    "collector_node": "ibtest01",
+    "collector_partition": "cntest",
+    "collector_cpus": 1,
+    "collector_model_execution": false
+  },
+  "terminal_review": {
+    "status": "complete_for_available_local_artifacts",
+    "missing_local_evidence": [
+      "independent sbatch process argv trace; the exact proposal was hash-verified and its execution/result are recorded",
+      "verified provider invoice/rate; costs remain rate-scenario estimates"
+    ],
+    "no_scientific_acceptance_or_benchmark_completion_claimed": true,
+    "failure_is_not_attributed_to_resource_admission_or_scheduler_contention": true
+  },
+  "limits": [
+    "No remote commands, allocation, runtime checks, or source/pin/proposal/admission edits were performed by this reviewer.",
+    "Local transfer and deployment receipts attest command exits and reported hashes; this review does not independently recompute remote artifact bytes.",
+    "The saved production preflight proves identity and dry-run setup only. This paid attempt passed scheduler allocation and pre-JAX resource admission but failed before candidate B64 timing/validation.",
+    "The first error is recorded exactly. The saved benchmark report does not serialize the full current identity at the failing comparison, so the mismatching field among the four guarded fields is not inferred.",
+    "No retry, source edit, or remote follow-up was performed by this reviewer."
+  ]
+}

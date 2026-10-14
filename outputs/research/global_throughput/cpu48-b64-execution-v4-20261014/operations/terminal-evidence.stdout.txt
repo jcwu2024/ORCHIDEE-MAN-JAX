@@ -1,0 +1,8 @@
+2e0a400f41aa598f07dcefdb43443c0f1be0fb841351a104c98b1ccc4422af9c  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683/orchestration.json
+a3e67e45f944a7c0f0c92d73fe5f843de210db09eb7da0b8fc069b4157eb5fae  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683/batch.log
+da686739ea670f3c7dfb1067540099a284f8f6f7314029341ef0f07bcc4a1169  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683/batch/report.json
+ad106ba30c62b51f499f72c70f790b9056c7c01ca97a927c9e013fd0a2dc9285  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/terminal-parent.sacct.raw
+0cf8b8f1823c1877554ee40efb80c8ea9bd1d57123d0bce31d3d5dac7fe4af96  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/terminal-full.sacct.raw
+15853683|FAILED|00:00:50|billing=48,cpu=48,node=1
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3
+75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba

@@ -1,0 +1,16 @@
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3
+75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba
+a9ec87f475effcb5cc1a2afe9489566ce32bb310c27491565ed442fb15535b62  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json
+0cb5e63c2a518d6adc2749b6bcf85c797032439286909dc11930369be827ff77  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.before-cpu48-v4-terminal.json
+4f8afd6c154c0d2af460dd7102dce43b2178e94bb2a999dd41e404a1cfd3c810  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/README.md
+caf713cba625876d50298fb16cf11cd89c68607379c50b1cb9e9dc6e5e4c3ae7  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md
+5603c0d6b9cb8046c0966dfe0cf0cb08870a502488f73b12a750f4ee646f9515  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/runtime-evidence-manifest.json
+JobIDRaw|Partition|State|ExitCode|Elapsed|AllocCPUS|NodeList
+15853600|cntest|COMPLETED|0:0|00:00:10|1|ibtest01
+15853600.extern||COMPLETED|0:0|00:00:10|1|ibtest01
+15853600.0||COMPLETED|0:0|00:00:07|1|ibtest01
+15853855|cntest|COMPLETED|0:0|00:00:04|1|ibtest01
+15853855.extern||COMPLETED|0:0|00:00:04|1|ibtest01
+15853855.0||COMPLETED|0:0|00:00:01|1|ibtest01
+2026-10-14T10:22:06+0800
+TERMINAL_METADATA_REGISTERED=passed

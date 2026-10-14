@@ -1,0 +1,29 @@
+{
+  "mode": "upload",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/runtime-evidence-manifest.json",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/runtime-evidence-manifest.json"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/runtime-evidence-manifest.json",
+  "destination": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/runtime-evidence-manifest.json",
+  "start_epoch": 1791944961.9869761,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791944962.292014,
+  "wall_seconds": 0.3050377368927002,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\transfer-runtime-manifest.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\transfer-runtime-manifest.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

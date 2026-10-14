@@ -1,0 +1,29 @@
+{
+  "mode": "upload",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/execution-code-pin.json"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json",
+  "destination": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/execution-code-pin.json",
+  "start_epoch": 1791942434.8999379,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791942435.1468494,
+  "wall_seconds": 0.24691152572631836,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\transfer-pin.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\transfer-pin.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

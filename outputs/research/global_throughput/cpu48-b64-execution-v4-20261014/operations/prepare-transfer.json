@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/prepare-transfer.sh",
+  "destination": null,
+  "start_epoch": 1791942258.9712534,
+  "stdin_sha256": "1d204f7b2b3a7681f6a1b89457f54f421776a39cbb8976aa604ee91667fa354f",
+  "exit_code": 0,
+  "end_epoch": 1791942259.2784586,
+  "wall_seconds": 0.3072052001953125,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\prepare-transfer.stdout.txt",
+    "sha256": "ad1bc2808b5e77d69dd244345510f3f4daf4b86ca7c1b02e5b699ca8e504527c",
+    "bytes": 114
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\prepare-transfer.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

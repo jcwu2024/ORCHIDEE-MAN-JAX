@@ -1,26 +1,34 @@
 # Explore1000 Server Benchmark Contract
 
-Current operation (2026-10-14 Asia/Shanghai): immutable CPU48 v4 unpaid preparation
-is ready for supervisor review. Read the
-[v4 result](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md),
-[scope](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md),
-[exact pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json),
-[protocol](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
-and [literal proposal](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md).
+Current status (2026-10-14 Asia/Shanghai): CPU48 v4's sole paid job **15853683**
+ended **FAILED 1:0 / 50 parent seconds**, and this attempt is closed. Read the
+[actual terminal result](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md),
+[single execution authorization](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)
+and [exact pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json).
 Execution is `60dccbddde10be4295aab7e7fe55fa7864d3c3f3` / `codex/global-cpu48-b64-v4`.
 All 104 physical blobs equal v3 base; research carbon fixes remain preserved.
-The batch-only route binds independent saved-array admission from job 15820467,
-retaining three finite GPU tolerance-only failures and scientific_acceptance=false.
-Reset has sealed original proof only. Production/preflight share the post-transport
-child environment boundary and retain real 48-distinct-core admission.
-Exact-pin staged checks are distinguished from earlier placeholder evidence and
-cannot admit a future nonexistent production checkout. Proposed resources:
-cnall, one node/task, 48 CPUs, zero GPUs, 3600s, nonexclusive/no-requeue/default placement,
-no added memory; unverified worst-case CNY 2.40/3.36.
-No sbatch, GPU, full physical compilation, production deployment or scalar regeneration
-occurred. The supervisor decides after concrete review under existing delegated
-authority. Actual B64 gates, compilation, hot throughput/RSS and CPU48/GPU ratios
-remain unmeasured. Deliver in the execution chat, then await dispatch.
+The unchanged proposal was submitted once: cnall, one node/task, 48 CPUs, zero
+GPUs, 3600s, nonexclusive/no-requeue/default placement, no added memory. Actual
+node was `ibc11b09n36`. Production-path free preflight job15853600 passed candidate
+identity/seal, all 15 harness hashes and original-path argument expansion.
+The paid child's post-transport environment, 48 distinct physical cores and host
+memory admission passed before JAX; JAX/jaxlib0.4.38 CPU/x64 then initialized.
+The first substantive failure was `load_reference`: scalar admission candidate
+provenance differed from the current execution identity. The failing comparison's
+full expected/actual pair was not serialized; no specific root cause is assigned.
+Preflight identity/seal validation did not certify that runner reference-load path.
+Report phases/gates are empty and timing is empty: no B64 lower/compile, candidate
+arrays, warm samples, CPU48 throughput, same-workload CPU48/GPU ratio or hot cost.
+Frozen collector job15853855 on free cntest admits failure accounting only.
+New parent 50s × 48 CPUs = 0.666666667 core-hours; unverified CNY 0.033333333/0.046666667.
+Old scalar source job15820467 remains separate: 2197s × 48 = 29.293333333 core-hours,
+CNY 1.464666667/2.050533333, counted once. Its 61/64 GPU passes, three finite failing
+points, sealed-reset-proof-only limitation and scientific_acceptance=false remain.
+Same-workload GPU B64 samples and cost boundaries are retained in the
+[comparator evidence](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/GPU_COMPARATOR_EVIDENCE.md).
+No scalar regeneration, GPU/B2048 rerun, science/environment change, cancellation,
+extension, repair or resubmission occurred. Deliver in the execution chat, then
+await dispatch; old grants remain closed.
 
 Historical v3 status (2026-10-13): its single attempt is terminal and closed.
 The user delegated approval to the supervisor, who reviewed the actual artifacts

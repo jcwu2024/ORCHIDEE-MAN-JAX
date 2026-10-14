@@ -1,0 +1,32 @@
+2026-10-14T09:40:16+0800
+ibcln01
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/cpu48-b64-60dccbddde10.bundle: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/execution-code-pin.json: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/PROPOSED_SUBMISSION.sh: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-admission.json: OK
+ 36282 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/cpu48-b64-60dccbddde10.bundle
+  8351 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/execution-code-pin.json
+  2011 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/PROPOSED_SUBMISSION.sh
+145538 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/scalar-audit/scalar-admission.json
+192182 total
+The bundle contains this ref:
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3 refs/heads/codex/global-cpu48-b64-v4
+The bundle requires this ref:
+03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3 refs/heads/codex/global-cpu48-b64-v4
+commit
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu48-b64-v4'...
+done.
+7cae3e02adad23674767a590fdf4d27f239ce065 refs/heads/main
+7cae3e02adad23674767a590fdf4d27f239ce065 refs/remotes/origin/HEAD
+4f6b2fc906c453b9030acff489637a8f83605dca refs/remotes/origin/codex/global-cpu48-b64-v1
+b1b5cf0835da298bddb388e61d754feeb6c14cf2 refs/remotes/origin/codex/global-cpu48-b64-v2
+03026d013626d3ed7379c2a5fd3ebb7f1c5fd9f8 refs/remotes/origin/codex/global-cpu48-b64-v3
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3 refs/remotes/origin/codex/global-cpu48-b64-v4
+7cae3e02adad23674767a590fdf4d27f239ce065 refs/remotes/origin/main
+7461227ad38bf8a4fb399c47cc588ce0e1b771c6 refs/remotes/origin/research/daily-coarse-graining
+3b4ae35e695f85480ecb72461e4ba93f4534bbd8 refs/remotes/origin/research/global-throughput
+60dccbddde10be4295aab7e7fe55fa7864d3c3f3
+75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba
+ALTERNATES=none
+DEPLOYMENT=clean_exact_checkout

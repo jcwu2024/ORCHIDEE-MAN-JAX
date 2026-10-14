@@ -1,22 +1,25 @@
 # 全球物理模型吞吐研究
 
-当前阶段（2026-10-14）：**CPU48 v4 不付费修复、保存 scalar 独立审计和固定执行包已准备，供主管审查**。
-先读[v4 交付](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/CURRENT_RESULT.md)、
-[授权](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/AUTHORIZATION.md)、
-[固定 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json)、
-[协议](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/EXECUTION_PROTOCOL.md)
-和[精确单次提案](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/PAID_PROPOSAL.md)。
+当前阶段（2026-10-14）：**CPU48 v4 唯一付费 job15853683 已 FAILED 1:0/50s，本次尝试关闭**。
+先读[v4 实际终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md)、
+[单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)
+及[固定 pin](../../../outputs/research/global_throughput/cpu48-b64-preparation-v4-20261014/execution-code-pin.json)。
 执行 SHA `60dccbddde10be4295aab7e7fe55fa7864d3c3f3` / ref `codex/global-cpu48-b64-v4`；
-104 个物理 blob 与 v3 基底相同，研究树 carbon 修复保留。生产/preflight 共用 post-transport child 环境边界。
-新候选 B64-only，显式绑定旧 job 15820467 scalar 和独立 admission/SHA；原 3 个有限跨 GPU 超差及科学 false 保留。
-独立审计重算 64 个输入身份/点序、760 叶及全部 GPU 门，reset 仅原封存证明；
-验证和固定 pin 目标 staging 检查边界见交付索引，不能称未来 production checkout 已部署/准入。
-提案 cnall/1 node/1 task/48 CPUs/0 GPUs/3600s，非 exclusive/no-requeue/无新增 mem 或节点限制；
-未核实费率最坏 CNY 2.40/3.36。实际 B64 编译、硬门、吞吐/RSS 与同量 CPU48/GPU 比仍未测量。
-本轮无 sbatch、GPU、完整物理编译、新生产部署或 scalar 重生成。主管按已有用户授权审查后决定；
-执行聊天交付后停止等待派工，不联系/轮询主管或创建自动任务。
+104 个物理 blob 与 v3 基底相同，研究树 carbon 修复保留。原命令只提交一次，cnall/1 node/1 task/48 CPU/0 GPU/3600s，
+非 exclusive/no-requeue/无新增 mem 或节点限制；实际节点 `ibc11b09n36`。
+新 production checkout 的免费预检 job15853600 通过实际 candidate identity/seal、15项 harness hash 和原路径 dry-run；
+真实付费 child 的环境、48 个不同物理核及内存准入也通过，随后 JAX0.4.38 CPU/x64 初始化。
+首个实质故障为 `load_reference` 拒绝 scalar admission 的 candidate provenance 与当前 execution identity 不一致。
+失败比较双方未完整序列化，未归属具体差异原因；预检通过不等于实际 runner 的参考加载通过。
+报告 phases/gates 为空、timing 为空：没有 B64 lower/compile、保存候选数组、五次热样本或 CPU48/GPU 速度/热成本比。
+免费 job15853855 的冻结 collector 仅接纳失败记账；新父 50s×48=0.666667 核时，未核实费用 CNY0.033333333/0.046666667。
+旧 scalar job15820467 的 2197s×48=29.293333 核时、CNY1.464666667/2.050533333 单列且只计一次。
+原 scalar 61/64 GPU 门通过、3 点有限超差、reset 仅原封存证明及科学 false 保留；本次无 scalar 重生成。
+同量 GPU B64 原始样本见[比较证据](../../../outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/GPU_COMPARATOR_EVIDENCE.md)，
+B1024 仍仅为不同总量的工程参考。原 pin、报告和日志保留；不重试、延长、取消或自行修复，不恢复旧额度。
+执行聊天完成交付后停止工作，等待派工，不联系/轮询主管或创建自动任务。
 
-以下保留 v3 终态和已完成科学证据；当前操作以 v4 准备入口为准。
+以下保留 v3 终态和已完成科学证据；当前状态以 v4 实际终态入口为准。
 
 新项目用户/新主管先读[主管交接](SUPERVISOR_HANDOFF.md)、
 [CPU48 v3新单次授权](../../../outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/AUTHORIZATION.md)、

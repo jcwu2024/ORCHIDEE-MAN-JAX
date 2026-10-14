@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/submit-once.sh",
+  "destination": null,
+  "start_epoch": 1791943461.911742,
+  "stdin_sha256": "3bec8f6ba6dd4ef2138560f7d61a103b7060dada0015d4497031aadcc2d39968",
+  "exit_code": 0,
+  "end_epoch": 1791943462.3938787,
+  "wall_seconds": 0.48213672637939453,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\paid-submission.stdout.txt",
+    "sha256": "b3546f969ea9e2a387eb3894a60fa876fc0829202731fd574c4c2c596720a390",
+    "bytes": 289
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\paid-submission.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

@@ -1,5 +1,13 @@
 # CPU48 v4 unpaid repair and preparation scope
 
+Current decision (2026-10-14): the supervisor accepted this preparation and
+approved its exact fixed proposal for one deployment and paid submission under
+the user's existing delegated authority. That sole attempt, job15853683, ended
+FAILED1:0/50s and is closed. Read the separate
+[terminal result](../cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md) and
+[execution authorization](../cpu48-b64-execution-v4-20261014/AUTHORIZATION.md).
+The preparation records below remain historical; no paid grant is restored.
+
 On 2026-10-14 (Asia/Shanghai), the supervisor dispatched this work after the
 user said “怎么样了。继续。” and had authorized supervisor review and approval
 of suitable new jobs. Dispatch source: `01a128d2-3ec2-77a1-8d51-1665c220d2ca`.

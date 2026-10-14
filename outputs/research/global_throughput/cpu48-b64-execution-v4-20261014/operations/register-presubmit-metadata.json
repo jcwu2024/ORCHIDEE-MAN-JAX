@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/register-and-presubmit-metadata.sh",
+  "destination": null,
+  "start_epoch": 1791943394.9379675,
+  "stdin_sha256": "9717508f097dce652d905afe4445edccbc2775df463b3eb9009197d2c06ab3c6",
+  "exit_code": 0,
+  "end_epoch": 1791943396.0151784,
+  "wall_seconds": 1.0772109031677246,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\register-presubmit-metadata.stdout.txt",
+    "sha256": "b0402282d9ce7417239fedcdc8462b942e6bde78968e2b11ca413e734781129b",
+    "bytes": 30436
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\register-presubmit-metadata.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

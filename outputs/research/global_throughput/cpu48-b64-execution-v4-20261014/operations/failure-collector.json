@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/failure-collector-driver.sh",
+  "destination": null,
+  "start_epoch": 1791944331.541975,
+  "stdin_sha256": "4bd97096636ace31b4467f227a67462aac5868423996f2db28a44bdd98c69440",
+  "exit_code": 0,
+  "end_epoch": 1791944335.8385522,
+  "wall_seconds": 4.296577215194702,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\failure-collector.stdout.txt",
+    "sha256": "216dea95da3814409dca08b793c1b8bab0e4e24e1ba0cac9e2893072424efadf",
+    "bytes": 1131
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\failure-collector.stderr.txt",
+    "sha256": "f970958ee50d7cc69cb05816e04b0c61beaf35e7d3eca9ddfc7382b34c427f90",
+    "bytes": 220
+  }
+}

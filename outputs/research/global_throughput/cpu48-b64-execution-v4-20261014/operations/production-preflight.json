@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/production-preflight-driver.sh",
+  "destination": null,
+  "start_epoch": 1791942756.6038103,
+  "stdin_sha256": "e6b8b920c573371953b42fb3a9e71027df34aac3119cd01a474fa8e8acf1a070",
+  "exit_code": 0,
+  "end_epoch": 1791942766.9138143,
+  "wall_seconds": 10.310003995895386,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\production-preflight.stdout.txt",
+    "sha256": "0592234f0de3b65205884b602c2ba6796fec7cd96cb2140a2d9b6ff474debefc",
+    "bytes": 151
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\production-preflight.stderr.txt",
+    "sha256": "20b37b0e3b099165f6d9600c3af35959e38a6af17e840ed94f4994780d107bca",
+    "bytes": 220
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "mode": "ssh",
+  "argv": [
+    "ssh",
+    "-T",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01",
+    "bash -s"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/deploy-checkout.sh",
+  "destination": null,
+  "start_epoch": 1791942514.9565969,
+  "stdin_sha256": "e540fcece5a3bd6422568d7088b2a1d0cfb3c1383fb5be55d4da7eb445f1557a",
+  "exit_code": 0,
+  "end_epoch": 1791942519.4325323,
+  "wall_seconds": 4.475935459136963,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\deploy-checkout.stdout.txt",
+    "sha256": "eb4d61d881920bee6b41eb100de85db6e06baa3c38ea7bb1a99bdb1e09b9af8d",
+    "bytes": 2304
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\deploy-checkout.stderr.txt",
+    "sha256": "6f7930c077ac1b3466150845880451a91ec3a3c097f59983be6985f6876f8db5",
+    "bytes": 889
+  }
+}

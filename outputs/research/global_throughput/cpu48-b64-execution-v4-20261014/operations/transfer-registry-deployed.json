@@ -1,0 +1,29 @@
+{
+  "mode": "upload",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/registry-deployed.json",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/registry-deployed.json"
+  ],
+  "source": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/registry-deployed.json",
+  "destination": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu48-b64-v4-60dccbddde10/registry-deployed.json",
+  "start_epoch": 1791943392.1899748,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791943392.4772308,
+  "wall_seconds": 0.28725600242614746,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\transfer-registry-deployed.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\transfer-registry-deployed.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "schema": "global_cpu48_v4_terminal_evidence_v1",
+  "job_id": "15853683",
+  "terminal_status": "FAILED",
+  "scientific_acceptance": false,
+  "records": [
+    {
+      "local_path": "CURRENT_RESULT.md",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md",
+      "sha256": "caf713cba625876d50298fb16cf11cd89c68607379c50b1cb9e9dc6e5e4c3ae7",
+      "bytes": 6223
+    },
+    {
+      "local_path": "collector-result.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/collector-result.json",
+      "sha256": "d7faeb702d568c897aefdc0f3ca2b560684f326edee2e90a270fc681cd7db0ca",
+      "bytes": 6323
+    },
+    {
+      "local_path": "identity-and-child-receipts.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/identity-and-child-receipts.json",
+      "sha256": "287b18364a89e23582cb8c89e30e8bc65580ab503f24ed8806b1b265ad22e6f1",
+      "bytes": 12602
+    },
+    {
+      "local_path": "paid-run/batch.log",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683/batch.log",
+      "sha256": "a3e67e45f944a7c0f0c92d73fe5f843de210db09eb7da0b8fc069b4157eb5fae",
+      "bytes": 8894
+    },
+    {
+      "local_path": "paid-run/batch/report.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683/batch/report.json",
+      "sha256": "da686739ea670f3c7dfb1067540099a284f8f6f7314029341ef0f07bcc4a1169",
+      "bytes": 209598
+    },
+    {
+      "local_path": "paid-run/orchestration.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/15853683/orchestration.json",
+      "sha256": "2e0a400f41aa598f07dcefdb43443c0f1be0fb841351a104c98b1ccc4422af9c",
+      "bytes": 182814
+    },
+    {
+      "local_path": "preflight/15853600/coordinator-actual-argv.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/coordinator-actual-argv.json",
+      "sha256": "ac13730a05fda33845d65388ab2b2a037f0e3675a0bf26f7354482bf2d1c299d",
+      "bytes": 2104
+    },
+    {
+      "local_path": "preflight/15853600/coordinator-dry-run.stderr.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/coordinator-dry-run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_path": "preflight/15853600/coordinator-dry-run.stdout.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/coordinator-dry-run.stdout.txt",
+      "sha256": "ff53b6d2debe541dd02d2f189dc072a705b6badc9b93f4ebf714537a0a9f0792",
+      "bytes": 9389
+    },
+    {
+      "local_path": "preflight/15853600/launcher-dry-run.stderr.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/launcher-dry-run.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_path": "preflight/15853600/launcher-dry-run.stdout.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/launcher-dry-run.stdout.txt",
+      "sha256": "c68f4782009d92c1863214836b2e312856eacfa96b5e2021bc20ac5d765616d7",
+      "bytes": 2164
+    },
+    {
+      "local_path": "preflight/15853600/preflight-complete.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/preflight-complete.txt",
+      "sha256": "03076198e5399c283b3664677dc6813696fc9897d2db154aff8119226ee426c0",
+      "bytes": 80
+    },
+    {
+      "local_path": "preflight/15853600/production-preflight.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/production-preflight.json",
+      "sha256": "a59f994842d1b437aa7af25057f9e5c61282cb8f07c74113108e3fad6632a0ef",
+      "bytes": 4719
+    },
+    {
+      "local_path": "preflight/15853600/production-preflight.stderr.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/production-preflight.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_path": "preflight/15853600/production-preflight.stdout.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/production-preflight.stdout.txt",
+      "sha256": "a59f994842d1b437aa7af25057f9e5c61282cb8f07c74113108e3fad6632a0ef",
+      "bytes": 4719
+    },
+    {
+      "local_path": "preflight/15853600/scontrol-free-job.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600/scontrol-free-job.txt",
+      "sha256": "fdae986d7bd844366a6d807e1553984796078928b098652a8140df5fad5d9db9",
+      "bytes": 975
+    },
+    {
+      "local_path": "registry-deployed.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.before-cpu48-v4-terminal.json",
+      "sha256": "0cb5e63c2a518d6adc2749b6bcf85c797032439286909dc11930369be827ff77",
+      "bytes": 60095
+    },
+    {
+      "local_path": "registry-terminal.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/registry.json",
+      "sha256": "a9ec87f475effcb5cc1a2afe9489566ce32bb310c27491565ed442fb15535b62",
+      "bytes": 62960
+    },
+    {
+      "local_path": "terminal/all-parent-format.sacct.raw",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/all-parent-format.sacct.raw",
+      "sha256": "038ddfa9c94220424691ea7d0a675b9a179dc61e93a49bdb965070dc0c08ccdd",
+      "bytes": 208
+    },
+    {
+      "local_path": "terminal/captured-at.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/captured-at.txt",
+      "sha256": "e88136f0c0ae0ec7fdab8c88cf6e78eef32473b954f240b3a0d9c2e6bfb45265",
+      "bytes": 25
+    },
+    {
+      "local_path": "terminal/collector-complete.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/collector-complete.txt",
+      "sha256": "b59c31b30b9a04a13083b9ffe96f740b0e9ecdd46e24918d2c7fe8ce6c4577fa",
+      "bytes": 25
+    },
+    {
+      "local_path": "terminal/collector-execution-receipt.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/collector-execution-receipt.json",
+      "sha256": "526d9a01a8e9d589e6adf5629a916667c296af6ef5094c85de579d8b3a3f3996",
+      "bytes": 500
+    },
+    {
+      "local_path": "terminal/collector-source.sha256",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/collector-source.sha256",
+      "sha256": "dbcae97d7f1696311a7a88e01ee9baab0817babc4a2c74e118cac0005906076e",
+      "bytes": 106
+    },
+    {
+      "local_path": "terminal/parent-accounting.json",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/parent-accounting.json",
+      "sha256": "182d2d9bd2755be940f135c45a95866576b92d1dd19137bb013f363259b772f7",
+      "bytes": 574
+    },
+    {
+      "local_path": "terminal/postrun-checkout-identity.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/postrun-checkout-identity.txt",
+      "sha256": "de3f95f545f087eec7b86faeb9b1031df243a7042bfc2ebce96b0294b787f657",
+      "bytes": 82
+    },
+    {
+      "local_path": "terminal/postrun-checkout-status.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/postrun-checkout-status.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_path": "terminal/presubmit-node-facts.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/presubmit-node-facts.txt",
+      "sha256": "481298c424b0f7904f615ca0e26b0390db6fa6ab79f3d13fdac06a32e5bf1ae9",
+      "bytes": 683069
+    },
+    {
+      "local_path": "terminal/presubmit-queue.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/presubmit-queue.txt",
+      "sha256": "0f69b160b7e2cae3817be785863734680bfe1860a4300737e1a32904bbe004b0",
+      "bytes": 89
+    },
+    {
+      "local_path": "terminal/slurm-parent.log",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/slurm-parent.log",
+      "sha256": "2e0a400f41aa598f07dcefdb43443c0f1be0fb841351a104c98b1ccc4422af9c",
+      "bytes": 182814
+    },
+    {
+      "local_path": "terminal/submission-invoked.txt",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/submission-invoked.txt",
+      "sha256": "eebf8bc46853455d4a4964e8500f3aead127e77c2dd5b3cf94feefef2909695f",
+      "bytes": 25
+    },
+    {
+      "local_path": "terminal/submission.exitcode.raw",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/submission.exitcode.raw",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "local_path": "terminal/submission.stderr.raw",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/submission.stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_path": "terminal/submission.stdout.raw",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/submission.stdout.raw",
+      "sha256": "fbd9668935b5f39509ab5585cdcf0116f7cff9666c384df5e6a0453b85acd06a",
+      "bytes": 29
+    },
+    {
+      "local_path": "terminal/terminal-full.sacct.raw",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/terminal-full.sacct.raw",
+      "sha256": "0cf8b8f1823c1877554ee40efb80c8ea9bd1d57123d0bce31d3d5dac7fe4af96",
+      "bytes": 950
+    },
+    {
+      "local_path": "terminal/terminal-parent.sacct.raw",
+      "remote_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/terminal/terminal-parent.sacct.raw",
+      "sha256": "ad106ba30c62b51f499f72c70f790b9056c7c01ca97a927c9e013fd0a2dc9285",
+      "bytes": 50
+    }
+  ],
+  "scope": "byte hashes bind collected evidence; no model or independent candidate-array success claim",
+  "derived_local_records": [
+    "CURRENT_RESULT.md",
+    "identity-and-child-receipts.json",
+    "registry-terminal.json"
+  ],
+  "transport_operation_receipts": "operations/"
+}

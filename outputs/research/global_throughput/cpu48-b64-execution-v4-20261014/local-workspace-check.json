@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "cwd": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput",
+  "git_top_level": "E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput",
+  "branch": "research/global-throughput",
+  "actual_import": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\jax_orchidee\\__init__.py",
+  "head": "e762c6f87d9f2b61f8531c3688e1f86d3bbd1bac",
+  "physical_model_execution": false
+}

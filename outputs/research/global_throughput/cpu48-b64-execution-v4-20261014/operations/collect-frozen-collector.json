@@ -1,0 +1,29 @@
+{
+  "mode": "download",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/collector-result.json",
+    "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/collector-result.json"
+  ],
+  "source": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/collector-result.json",
+  "destination": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/collector-result.json",
+  "start_epoch": 1791944368.124363,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791944368.419318,
+  "wall_seconds": 0.2949550151824951,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\collect-frozen-collector.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\collect-frozen-collector.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

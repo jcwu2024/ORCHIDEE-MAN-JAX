@@ -1,0 +1,30 @@
+{
+  "mode": "download",
+  "argv": [
+    "scp",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-r",
+    "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600",
+    "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight"
+  ],
+  "source": "cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight/15853600",
+  "destination": "outputs/research/global_throughput/cpu48-b64-execution-v4-20261014/preflight",
+  "start_epoch": 1791943057.302499,
+  "stdin_sha256": null,
+  "exit_code": 0,
+  "end_epoch": 1791943058.0624123,
+  "wall_seconds": 0.7599132061004639,
+  "stdout": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\collect-production-preflight.stdout.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "stderr": {
+    "path": "E:\\ORCHIDEE-MAN-JAX\\runtime\\worktrees\\global-throughput\\outputs\\research\\global_throughput\\cpu48-b64-execution-v4-20261014\\operations\\collect-production-preflight.stderr.txt",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

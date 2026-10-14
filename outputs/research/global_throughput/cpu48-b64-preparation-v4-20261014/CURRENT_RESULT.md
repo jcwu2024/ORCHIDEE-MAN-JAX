@@ -1,5 +1,10 @@
 # CPU48 v4 准备结果
 
+当前实际终态（2026-10-14）：主管批准的原精确提案已只执行一次；job15853683 FAILED1:0/50s，额度关闭。
+真实 production 预检和付费48核入场通过；runner 在 scalar reference provenance 门失败，没有 B64 编译或热测量。
+新父未核实费用 CNY0.033333333/0.046666667，旧 scalar 父单列。先读[实际执行结果](../cpu48-b64-execution-v4-20261014/CURRENT_RESULT.md)
+及[单次授权](../cpu48-b64-execution-v4-20261014/AUTHORIZATION.md)；下文仍是原准备阶段记录，不恢复付费额度。
+
 更新：2026-10-14。环境传递修复、保存 scalar 独立审计、固定执行包及最终目标端非模型检查已完成。
 范围见[授权](AUTHORIZATION.md)，合同见[协议](EXECUTION_PROTOCOL.md)，精确资源、命令与停止条件见[提案](PAID_PROPOSAL.md)。
 本轮没有 sbatch、GPU、完整物理编译、新生产部署或 scalar 重生成；本聊天交付后停止等待派工。

@@ -1,0 +1,20 @@
+{
+  "schema": "cpu48-v4-local-delivery-acceptance-v1",
+  "status": "passed_saved_failure_evidence_only",
+  "starting_research_commit": "e762c6f87d9f2b61f8531c3688e1f86d3bbd1bac",
+  "execution_commit": "60dccbddde10be4295aab7e7fe55fa7864d3c3f3",
+  "manifest_sha256": "5603c0d6b9cb8046c0966dfe0cf0cb08870a502488f73b12a750f4ee646f9515",
+  "manifest_records_verified": 35,
+  "operation_receipts_verified": 28,
+  "current_entry_links_verified": 9,
+  "terminal_job_id": "15853683",
+  "terminal_seconds": 50,
+  "allocated_cpus": 48,
+  "model_execution": false,
+  "remote_actions": false,
+  "source_changes": false,
+  "scientific_acceptance": false,
+  "throughput_claim": false,
+  "specific_failed_identity_field_resolved": false,
+  "scope": "local bytes, recorded failure/resource/accounting boundaries and current entry links; no model rerun"
+}
