@@ -1,10 +1,11 @@
 # Current-model T7 precision/FD execution outcome
 
-Updated: 2026-10-15. Status: **approved, resource-blocked, stopped without submission**.
-The human explicitly approved the exact current-model proposal. No eligible GPU
-was available at the bounded resource refresh, so this task stopped before
-creating an approval file, submitting `sbatch`, or writing a mutex or ledger.
-This is resource non-admission, not a runtime or numerical failure.
+Updated: 2026-10-15. Status: **approved, submitted; job15866925 PENDING (Priority)**
+at the first scheduler snapshot. The user clarified normal Slurm queueing is
+allowed. We incorrectly treated busy GPUs as a submission block; the earlier
+closure was wrong and did not revoke human approval. The exact approved argv
+was submitted from gln01 without node pinning or execution-version change:
+`sbatch` exit0, raw stdout `Submitted batch job 15866925`.
 
 The accepted [preparation](T7_current_model_precision_admission_preparation_20261014.md)
 remains valid within its CPU/source scope. It establishes the actual public
@@ -29,7 +30,7 @@ scalar FD calls through the same executable. No retry or training is included.
 The four directions are 434, 2382, 2621 and control200; coordinate2621 remains
 an exposed computational partial, without a physical-manifold claim.
 
-## Resource refresh and stop
+## Historical availability observation and corrected submission
 
 The captured scheduler snapshot reported:
 
@@ -47,10 +48,17 @@ but `PrivateData=jobs` hides other users' job end times. There was no provable
 short release window. These are snapshot facts, not a claim that resources can
 never become available.
 
-cln01 and gln01 were reachable. No GPU discovery, GPU command, preflight or
-runtime child was started. The accepted stop ends this precision/FD diagnostic
-line under this grant: no automatic resume, retry, budget extension, layer
-graph, training, automation or further resource polling follows.
+cln01 and gln01 were reachable. No GPU discovery, preflight or runtime child
+started at that earlier observation. These are transient availability facts,
+not a terminal outcome or a prohibition on normal Slurm queueing.
+
+Job15866925 first snapshot: PENDING(Priority), four CPUs, one GPU, one node,
+one task,90-minute limit, Requeue=0, OverSubscribe=OK. Automatic node selection
+is retained. Predicted start2026-10-16T22:03:56 is an estimate, not an actual
+start or reservation. Queue time is outside the5400-second allocation clock.
+Retain this sole live job through terminal status with sparse status reads,
+without cancellation/resubmission, retry, extension, layer graphs, training or
+automation. If the bounded run is inconclusive, stop this line after the run.
 
 ## Measurements and accounting
 
@@ -62,21 +70,27 @@ graph, training, automation or further resource polling follows.
 | control200 | Not measured | Not measured | Not measured; inconclusive |
 
 Full3854 FP64-versus-saved-FP32 comparison, precision admission, memory/runtime
-gates and all other new scientific outcomes are unmeasured/inconclusive. The
+gates and all other new scientific outcomes are unmeasured while queued. The
 saved FP32 projections and scalar-resolution bounds remain historical/preparation
 evidence, not new FP64 results. The separate strict state20 nonfinite failure
-remains unresolved; no value is filled in or exempted by this stop.
+remains unresolved; no value is filled in or exempted by queueing.
 
-Actual submissions, job IDs, allocations, model compilations and model calls are
-all zero. No approval file, mutex or ledger was written. GPU allocation/card-hours
-and allocated CPU-hours are zero; estimated allocation cost is CNY0. Actual
-billing was not queried. Release is **not applicable**, because no allocation or
-owned GPU process existed. The paid GPU execution attempt was not consumed,
-but that fact does not authorize continuation after the accepted stop.
+One successful submission owns job15866925. The official `approval.v2` file was
+written remotely and copied to local queued evidence. At the first PENDING
+snapshot allocations/model compiles/model calls are0, allocation card-hours/
+CPU-hours and allocation cost estimate are0; billing was not queried. Release
+is not applicable to that pending snapshot. Terminal allocation/runtime/cleanup
+accounting remains to be recorded; the approved ceiling remains CNY3.72.
 
-The resource-blocked receipt and captured raw snapshot are retained under
+Actual submission evidence is under
+`outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/`:
+`submission.raw.stdout.txt`, `first-scheduler-snapshot.raw.stdout.txt` and
+`submission-receipt.json`, alongside the copied official approval file.
+
+The historical availability receipt and captured raw snapshot remain under
 `outputs/T7-current-model-precision-admission-execution-20261015/resource-blocked/`.
-The exact receipt is `resource-blocked.json`; captured evidence is
+Its terminal-stop interpretation is superseded. The exact receipt is
+`resource-blocked.json`; captured evidence is
 `scheduler-nodes.captured-stdout.txt`, `partition.captured-stdout.txt`,
 `private-data.captured-stdout.txt`,
 `queue-gnall.user-visible.captured-stdout.txt` (empty), and
@@ -90,4 +104,5 @@ CPU preparation evidence remains under
 `outputs/T7-current-model-precision-admission-preparation-20261014/v2/server-preparation/`.
 Original source/assets and historical results are preserved. No reference,
 precision adoption, B4 repair, complete-update speed gain or training acceptance
-follows. [NEXT_STEPS](../../NEXT_STEPS.md) owns the current stop boundary.
+follows from submission alone. [NEXT_STEPS](../../NEXT_STEPS.md) owns the single
+live-job execution and post-run stop boundary.

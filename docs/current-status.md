@@ -1,16 +1,18 @@
 # Current Project Status
 
 Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-is approved, resource-blocked and stopped without submission. Explicit human
-approval bound exact30d7eb7/proposal59b09320 to one V100/four allocated CPUs/
-5400s/24GiB/CNY3.72, one compile and52 calls. The bounded refresh found all GPUs
-allocated on eligible UP nodes; remaining nodes were drained/down. PrivateData=jobs
-hid other-user end times, so no short release window was established. No job,
-allocation, approval file, mutex, ledger, discovery/preflight or model run occurred.
-New native FP64/FD/self-repeat/full3854/physics/resource gates are unmeasured;
-allocation card-hours/CPU-hours are0, estimated CNY0, actual billing unqueried,
-release not applicable. No automatic resume/retry, budget extension, layer graph,
-training, automation or further polling follows.
+records approved sole job15866925, submitted at immutable30d7eb7/proposal59b09320;
+first snapshot PENDING(Priority), exact approved argv, automatic node selection.
+We incorrectly treated busy GPUs as a submission block; the user clarified
+normal Slurm queueing is allowed, and the earlier closure did not revoke approval.
+Retain this single live job through terminal status with sparse status reads.
+Queue time is outside the5400-second allocation clock; predicted start
+2026-10-16T22:03:56 is an estimate, not an actual start or reservation.
+New FP64/native/FD/full3854/physics/resource gates remain unmeasured at the
+pending snapshot. No cancel/resubmit, retry, extension, layer graph, training
+or automation; stop this line after an inconclusive bounded run.
+Actual submission evidence is under outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/;
+earlier resource-blocked/ evidence remains historical availability observation.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 now integrates the real fixed66M B1/299/T7 public callable. Actual local public
 preparation matches complete saved case/state hashes and355FP32 leaves. All nine

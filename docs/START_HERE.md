@@ -5,11 +5,18 @@ and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
 Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-is approved, resource-blocked and stopped without submission. The human approved
-exact30d7eb7/proposal59b09320, but the refresh found no eligible GPU. No job,
-allocation, approval file, mutex, ledger, preflight or model execution occurred;
-zero allocation card-hours/CPU-hours and estimated CNY0. New FP64/native/FD/full3854
-results remain unmeasured. No automatic resume or further polling follows.
+records approved sole job15866925, submitted at immutable30d7eb7/proposal59b09320;
+first snapshot PENDING(Priority), exact approved argv, automatic node selection.
+We incorrectly treated busy GPUs as a submission block; the user clarified
+normal Slurm queueing is allowed, and the earlier closure did not revoke approval.
+Retain this single live job through terminal status with sparse status reads.
+Queue time is outside the5400-second allocation clock; predicted start
+2026-10-16T22:03:56 is an estimate, not an actual start or reservation.
+New FP64/native/FD/full3854/physics/resource gates remain unmeasured at the
+pending snapshot. No cancel/resubmit, retry, extension, layer graph, training
+or automation; stop this line after an inconclusive bounded run.
+Actual submission evidence is under outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/;
+earlier resource-blocked/ evidence remains historical availability observation.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 delivers the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation and focused CPU tests.
@@ -22,7 +29,7 @@ program-coordinate partial, with computational-only FD and no manifold claim.
 One combined native FP64 state VJP/JVP graph is prepared; full-model execution,
 precision/runtime admission and GPU allocation remain unperformed. The bounded
 90-minute/CNY3.72 proposal was explicitly approved; the latest outcome is the
-resource-blocked stop above. Prior
+pending job above. Prior
 [B4 local repair](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
 remains no-go, and state20 nonfinite is still a separate strict failure. The
 [dated handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md)

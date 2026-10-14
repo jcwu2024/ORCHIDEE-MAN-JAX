@@ -1,11 +1,18 @@
 # Code Map
 
-Updated: 2026-10-15. Bounded task navigation, not an exhaustive inventory.
-[Current precision execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-owns the approved/resource-blocked stop. Immutable30d7eb7 was not submitted;
-new model/FP64/FD results are unmeasured. Resource receipts/raw snapshot are in
-`outputs/T7-current-model-precision-admission-execution-20261015/resource-blocked/`.
-No automatic continuation or polling follows.
+Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+records approved sole job15866925, submitted at immutable30d7eb7/proposal59b09320;
+first snapshot PENDING(Priority), exact approved argv, automatic node selection.
+We incorrectly treated busy GPUs as a submission block; the user clarified
+normal Slurm queueing is allowed, and the earlier closure did not revoke approval.
+Retain this single live job through terminal status with sparse status reads.
+Queue time is outside the5400-second allocation clock; predicted start
+2026-10-16T22:03:56 is an estimate, not an actual start or reservation.
+New FP64/native/FD/full3854/physics/resource gates remain unmeasured at the
+pending snapshot. No cancel/resubmit, retry, extension, layer graph, training
+or automation; stop this line after an inconclusive bounded run.
+Actual submission evidence is under outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/;
+earlier resource-blocked/ evidence remains historical availability observation.
 [Current precision preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 links `scripts/hpc/shared_current_T7_precision_assets.py` (exact single299 public
 case), `shared_current_T7_precision_guard.py` (transactional full-neural context),
@@ -19,8 +26,8 @@ full saved FP32 endpoint/baseline loss and auxiliary values, scalar ULP/cancella
 analysis, source/cache deployment and actual Bash→parser command receipts.
 `--source-cache` keeps the exact historical expert bytes under task-checkout
 `outputs`; Git lookups use `cwd` for server Git1.8.3.1 compatibility.
-Preparation remains accepted; approved full-model execution was resource-blocked
-and stopped without allocation. Prior B4 repair remains no-go. Preserve assets.
+Preparation remains accepted; approved full-model execution is queued, without
+allocation at the first snapshot. Prior B4 repair remains no-go. Preserve assets.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the decision recommendation and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.
 

@@ -1,19 +1,26 @@
 # Current Work Order
 
 Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-records explicit human approval of immutable30d7eb7/proposal59b09320 and a
-resource-blocked stop before submission. No eligible GPU was available at the
-captured refresh; no allocation, job, approval file, mutex, ledger or GPU/model
-execution occurred. This diagnostic line is stopped under this grant, without
-automatic resume, retry, budget extension or further polling.
+records approved sole job15866925, submitted at immutable30d7eb7/proposal59b09320;
+first snapshot PENDING(Priority), exact approved argv, automatic node selection.
+We incorrectly treated busy GPUs as a submission block; the user clarified
+normal Slurm queueing is allowed, and the earlier closure did not revoke approval.
+Retain this single live job through terminal status with sparse status reads.
+Queue time is outside the5400-second allocation clock; predicted start
+2026-10-16T22:03:56 is an estimate, not an actual start or reservation.
+New FP64/native/FD/full3854/physics/resource gates remain unmeasured at the
+pending snapshot. No cancel/resubmit, retry, extension, layer graph, training
+or automation; stop this line after an inconclusive bounded run.
+Actual submission evidence is under outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/;
+earlier resource-blocked/ evidence remains historical availability observation.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation, diagnostic FP64 context and one combined native state
 VJP/JVP ABI. Program-coordinate FD permits computational-only2621; unknown
 internal branches are interpretation limits. Local tests/dry-run do not certify
 full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
-proposal was explicitly approved but remains unexecuted after the accepted
-resource-blocked stop. Historical GPU
+proposal was explicitly approved and submitted; model execution has not begun
+at the first pending snapshot. Historical GPU
 scopes remain closed/consumed.
 The actual test01 CPU outer dry-run and full saved B1/begin endpoint inspection
 pass at committed30d7eb7, with exact full case/state and four projections.
@@ -78,11 +85,13 @@ pools are silently coordinated. Four directions and separate native/mean/state20
 gates remain; unknown internal branches limit interpretation, and unconverged
 FD is inconclusive. The integrated90-minute/CNY3.72 proposal was explicitly
 approved for immutable30d7eb7, one V100/four allocated CPUs/5400s/24GiB,
-one compile and52 calls. The resource refresh admitted no node; the task stopped
-before any submission or allocation. New native FP64, FD, self-repeat/full3854,
-physics and resource gates remain unmeasured. Stop this precision/FD line under
-the current grant: no automatic resume/retry, budget extension, layer graph,
-training, automation or further resource polling. B4 local repair remains no-go,
+one compile and52 calls. Job15866925 is submitted, first snapshot PENDING(Priority),
+Requeue=0/OverSubscribe=OK. Retain this exact single job through terminal status
+with sparse status reads; queue time does not consume allocation time. No
+cancel/resubmit, retry, extension, layer graph, training or automation. If the
+bounded run is scientifically inconclusive, stop this line after the run.
+New native FP64/FD/self-repeat/full3854/physics/resource gates are unmeasured.
+B4 local repair remains no-go,
 and state20 remains a separate strict failure. Accepted CPU preparation and old
 FP32 evidence are retained; neither supplies new FP64 scientific acceptance.
 
