@@ -1,6 +1,6 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-13。**本轮没有发现已确认的 main 生产物理实现 bug；
+核查日期：2026-10-14。**本轮没有发现已确认的 main 生产物理实现 bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -15,8 +15,11 @@ CPU JAX 年及 Day338/339/343 三个完整同输入 NPP 回放，18/18 返回数
 8核/16GiB/累计2小时范围内；货币费用未知。原年度 NPP 科学失败仍保留。
 第九阶段已核对实际 producer 的 GPP 掩码、控制、单位、日累计和清零路径，
 复用保存值分析 Day337–343 与359/364；选定窗口最早可见的共同边界仍是
-Day337 的NPP入口，GPP与生物量/分配/维持呼吸输入均已不同。缺少完整48步
-上游元组，尚不能确认具体原因；已备好唯一的Day337下一观测合同，未执行。
+Day337 的NPP入口，GPP与生物量/分配/维持呼吸输入均已不同。第十阶段已完成
+JAX Day337 的48步真实捕获及自身原轨迹17项严格比较。当天48步的humrel均为0，
+低于1e−8活动阈值，光合活动全为FALSE、半小时GPP全为0；归一化/有序累计及
+NPP/send/reset核对通过。Fortran新增捕获因现有SSH身份被服务器拒绝而未执行，
+跨侧48步比较与同输入重放仍缺失，不能确认两侧差异来源或年度因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
@@ -62,6 +65,12 @@ Day337 的NPP入口，GPP与生物量/分配/维持呼吸输入均已不同。�
   `85ace286931eef30551cb670f980fd383090820c` 的干净main开始；实际cwd、分支和
   module导入路径确认。相关生产树与第八阶段数值producer相同；本阶段只读取
   命名实际Fortran来源和现有轨迹，不生成新模型年、prefix或科学回放。
+- 第十阶段从已接受并推送的
+  `638253db350314becce8eeb8089f3e5c8b68ae6c` 的干净main开始；cwd、分支和实际
+  module导入路径确认。仅点319、1961、PFT14、Day337观测，保留原cold-start
+  365日调度及JAX block=7。执行/来源身份见
+  [执行合同](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/execution-contract.json)和
+  [实际JAX命令](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/jax/jax-run-attempt-3/command.json)。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -859,6 +868,87 @@ Fortran步16129–16176、JAX tstep16128–16175，记录48个真实源样本及
 输出新增源字段，隔离观测实现、目标shell展开dry-run、构建和执行均为后续工作。
 本阶段只生成/核验合同与参数模板，没有启动模型、prefix或新作业。
 
+## 第十阶段：JAX Day337真实48步闭合，Fortran捕获受认证阻塞
+
+本阶段入口为
+[Stage10 README](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/README.md)。
+原Day337合同和[预先验收/选点规则](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/acceptance-plan.md)
+继续有效：Fortran kjit16129–16176、JAX tstep16128–16175，前日界16128和
+日末NPP/send/reset16176；没有匹配Day336 restart，仍需原全年冷启动轨迹。
+观测实现与辅助分析位于outputs，生产物理源码、配置、算术、dtype、mask、
+48步日scan、外层block及local JIT边界保留。
+
+### 实际JAX捕获与自身轨迹准入
+
+[第三次运行](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/jax/jax-run-attempt-3/command.json)
+完整执行365/365天，CPU、block=7，退出0，命令wall time为252.189秒。
+[真实捕获](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/jax/jax-run-attempt-3/selected-trajectory.json)
+含DIFFUCO、root solver、GPP accumulator、entry payload各48条连续day/offset记录，
+另含前日界、原生NPP实际调用和日末reset。生产调用的58必需参数和7可选参数
+保留来源/shape/dtype；NPP入口保持九个完整原生字段及其shape。
+执行observer SHA与保存preflight同为`165aa61350181f7680f443f34080a40076a652e1f69f7ce0fe83cf355961c162`。
+
+对各自Stage8轨迹，九个原生NPP输入、Day337四通量和年度四通量共17项通过
+`1e-8 + 1e-10*abs(reference)`及精确shape/离散mask检查。
+biomass入口最大绝对偏差`8.090239589364501e−11`；当天四通量精确一致；
+年度四通量最大绝对偏差`6.852296507986466e−13`。这是本次观测轨迹的严格准入，
+原年度NPP科学超限仍保留：第三阶段原绝对误差`0.0008192662350707258`
+高于原允许值`0.0003951849734783173`；本次summary同样未通过该科学门槛。
+
+### 实际门槛与内部链
+
+[48步离线结果](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/analysis/jax-only-analysis.json)和
+[可读结果](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/analysis/jax-only-results.md)
+只使用上述真实捕获。48步中`humrel=0`、`min_sechiba=1e−8`，有符号距离
+始终为`−1e−8`，因此实际`assimilate=FALSE`且半小时GPP均为0。LAI、veget、
+veget_max、temp_growth上下界的距离均为正；SWDOWN距离范围为
+`[−1e−8,1061.077728644035]`。水分胁迫门槛足以解释本次JAX窗口的零GPP，
+但humrel在窗口前的创建来源及真实Fortran对应输入仍未核定。
+
+实际覆盖归一化权重48步均为1；287项步间/单位/有序累计核对通过，
+日末平均→原生NPP GPP、NPP GPP→daily modelout sender和精确零reset共3项通过。
+这份窗口只覆盖实际关闭的光合活动路径。叶/根有效性使用同身份
+`canopy.calculate`与raw root valid flags交集，有效叶/根计数均为0；实际根候选
+非有限计数也为0。因此这些通过结果没有增加活动叶层/根求解的精度证据。
+
+### 运行历史、保存修复与Fortran缺口
+
+[完整运行账](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/jax/attempt-history.json)
+保留三次全年启动：首次28.688秒，在cold-start Day1的observer身份检查失败，
+完整年0；第二次250.751秒，完成365天，但严格JSON序列化NaN失败、完整捕获0；
+第三次252.189秒，完成365天及完整捕获1。故本阶段为3次年度启动、2次完整
+年度积分、1次成功capture，年度命令wall合计531.628秒；另有三次1/1/2日
+route diagnostics，wall合计241.900秒。两日检查仅验证cold-start和后续半小时
+scan；原外层block=7由完整365日执行覆盖。第三次全年执行用于恢复丢失的真实
+半小时捕获，其必要原因、次数和约4–5分钟本地CPU资源已在执行前说明。
+
+第二次完成积分后的内存回调未能保存，保留该summary及失败回执；没有从其
+日末结果反构半小时记录。修复采用严格JSON非有限标签与每条callback即时
+写入单个JSONL journal，保留dtype/shape/mask，不将NaN替换为0。
+[序列化验收](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/analysis/serialization-review.md)
+区分真实非有限根production probe和实际Day337观测；它们不混计科学样本。
+分析只有离线读取，轨迹/重放均为0；
+[分析回执](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/analysis/command.json)
+的缺Fortran退出状态2保留，同时JAX-only状态明确为complete。
+
+[Fortran认证事实](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/fortran/03_stage10_auth_state.json)
+显示现有身份以此前成功的同一SSH命令被服务器拒绝，exit255，远端脚本未开始。
+本阶段远端写入、构建、积分、分配及分配秒均为0；Stage8使用1896秒，原累计
+7200秒授权剩5304秒，单节点8核/16GiB，所有setup/build/run/failure时间继续计入。
+未修改/复制密钥、修改ACL、切换身份、重复认证重试或新增结算/资源审批门槛。
+
+[本地准备回执](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/fortran/stage10-local-readiness.json)和
+[可执行恢复入口](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/fortran/STAGE10_RECOVERY.md)
+保存插入式观测源码、48样本parser smoke、原源码撤除恢复、源参数/可选参数映射、
+待编译后记录LAI字面阈值的实现、前日界/日末边界、包身份、Bash语法/argv及隔离路径检查。
+本地Stage8参考身份核验7项receipt及5项identity通过，实际Stage10 Fortran parity为0。
+目标shell dry-run、fresh node/load admission、隔离构建/全年捕获及自身17项parity
+均待现有SSH访问恢复。之后才按预定规则选最多三个真实完整元组做有界同输入重放。
+当前跨侧48步比较和Fortran同输入重放均未执行；不同输入轨迹、历史日末GPP
+及本次零活动窗口均不支持翻译bug、全年首差或GPP唯一年度因果结论。
+Stage8的18/18 NPP、36/36 core→send、27/27旧tuple及Stage9的20项核验继续复用；
+原三项float32存储double诊断超限和科学失败均保留。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -905,8 +995,10 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    double诊断超限仍保留。原年度NPP失败没有关闭，具体上游来源和年度因果未定。
    第九阶段已核对实际GPP生成/累计/reset源路径与48项声明参数，完成指定9天
    保存值分析；缺少48步源元组，仍未确认掩码/叶层/累计或相关状态创建原因。
-   下一唯一观测为Day337的48步真实上游参数、leaf/控制/权重和累积状态，见
-   上述合同；需要重现原冷启动前缀，尚未实现或执行新观测。当前没有证据
+   第十阶段已完成JAX Day337的48步捕获及自身17项严格parity；humrel为0使
+   当天活动门槛全部关闭，287项内部链及3项NPP/send/reset核对通过。Fortran侧
+   受现有SSH身份拒绝阻塞，下一步仍是恢复访问后执行同日真实捕获和自身parity，
+   再作最多三个完整真实元组重放。humrel创建来源、两侧首差及年度因果未定。当前没有证据
    要求修改NPP核心，也不将三个回放样本扩展为全分支正确性证明。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
@@ -1102,3 +1194,27 @@ GPU或训练，未重复旧验收。本次只读命名producer取证没有服务
 核验，接受本轮有界检查。该验收不代表差异根因或年度科学失败已解决，也不
 代表新观测器已实现或可直接运行；下一步仍须实现Day337的48步观测并验证其
 不改变原轨迹。本轮仅提交本页报告，保持手动跟进，未启动下一阶段。
+
+第十阶段从`638253db`续作，实际产物和
+[命令记录](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/commands.md)
+保存本地3次年度启动、2次365日完成、1次成功48步capture及3次route diagnostics。
+原执行者分别完成Fortran本地恢复链和JAX捕获，Sol/medium复核保存链并完成
+真实JAX-only离线分析；父级核对实际capture、17项严格parity、humrel门槛、
+287项链路/3项日末检查、195条journal及资源/修改范围。收尾核验见
+[verification.final.json](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/verification.final.json)，
+图工具ready/相同generation及not_tracked限制见
+[本次覆盖回执](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/graph-final-coverage.json)。
+Stage8/9已接受的同输入回放、发送/存储和源码审计证据继续复用；本次数值
+积分单列在上述运行账，离线分析/收尾核验的模型和重放为0。实际Fortran新采集
+因现有身份认证拒绝而未开始，Stage10远端分配消耗0秒，剩余5304秒授权保留。
+本次只更新本页和新outputs，未暂存、提交、推送、发送跨聊天消息或建立自动跟进；
+交付主控手动验收JAX结果与恢复材料，整体跨侧任务仍待真实Fortran捕获。
+
+主控于2026-10-14集中核对实际捕获、运行命令、分析绑定、认证回执及报告差异，
+复用执行方已完成的24项收尾核验，接受本轮JAX部分成果与Fortran本地恢复准备。
+实际48步身份、原生NPP入口及自身17项轨迹比较支持上述有界结论；本次验收
+未新增模型积分或重放。该进度checkpoint不代表两侧匹配捕获完成，亦未确认
+生产物理代码错误。唯一优先下一步仍为恢复现有Fortran服务器访问后完成另一侧
+捕获；保留原科学失败、剩余资源额度及手动跟进方式。
+用户同日确认其目前也无法登录该服务器；等待现有访问恢复，不以重复认证
+尝试或重跑已接受JAX轨迹替代缺失的Fortran观测。
