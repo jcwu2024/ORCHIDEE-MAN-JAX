@@ -6,7 +6,12 @@ preparation matches complete saved case/state hashes and355FP32 leaves. All nine
 neural modules/reader scatter and canonical aliases have an explicit diagnostic
 FP64 context. Program-coordinate2621 FD is computational-only; no physical
 manifold certificate blocks preparation. Focused CPU tests and real dry-run
-pass; no full-model forward/trace/compile or deployed-runtime admission. Existing FP32
+pass. Actual test01 CPU outer-entry preparation and saved-only full3854 FP64
+B1/begin VJP inspection pass at committed30d7eb7; all four projections agree
+exactly with the pinned compact receipt. Original endpoint hash is recorded and
+unchanged, with its historical lack of a pinned byte hash retained as a limit.
+Saved baseline loss/auxiliary and actual server Bash→parser argv are retained.
+No full-model forward/trace/compile, CUDA initialization or GPU admission. Existing FP32
 and early affine12/91/4 evidence remain, with native20/64 versus mean24/64 own
 AD passes and separate strict state20 failure. B4 local repair remains no-go.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns execution and authority.

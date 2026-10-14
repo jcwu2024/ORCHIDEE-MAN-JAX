@@ -8,6 +8,10 @@ internal branches are interpretation limits. Local tests/dry-run do not certify
 full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
 proposal remains unexecuted and needs fresh exact approval. Historical GPU
 scopes remain closed/consumed.
+The actual test01 CPU outer dry-run and full saved B1/begin endpoint inspection
+pass at committed30d7eb7, with exact full case/state and four projections.
+Saved baseline loss/auxiliary, conditional scalar-resolution analysis and actual
+server Bash→parser argv are preparation evidence only; CUDA was not initialized.
 
 The later project-maintenance authorization establishes the fixed daily checkout
 at `runtime/worktrees/daily-coarse-graining` under the root workspace. See
@@ -68,7 +72,8 @@ gates remain; unknown internal branches limit interpretation, and unconverged
 FD is inconclusive. The integrated90-minute/CNY3.72 proposal needs fresh exact
 resource/command approval before any GPU execution. B4 local
 repair remains no-go. No next-layer diagnostic, new GPU/remote compute, training,
-Teacher, cleanup or monitoring is underway.
+Teacher, cleanup or monitoring is underway. The authorized bounded test01 CPU
+preparation is complete and does not grant that proposed GPU allocation.
 
 The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole

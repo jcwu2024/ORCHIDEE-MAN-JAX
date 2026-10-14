@@ -9,6 +9,11 @@ case), `shared_current_T7_precision_guard.py` (transactional full-neural context
 `run_shared_current_T7_precision_admission.py` and its shell/Slurm entries
 (fresh exact allocation, owned supervision). Focused tests/new evidence are in
 `outputs/T7-current-model-precision-admission-preparation-20261014/v2/`.
+Its `server-preparation/` contains actual test01 outer-entry binding,
+full saved FP32 endpoint/baseline loss and auxiliary values, scalar ULP/cancellation
+analysis, source/cache deployment and actual Bash→parser command receipts.
+`--source-cache` keeps the exact historical expert bytes under task-checkout
+`outputs`; Git lookups use `cwd` for server Git1.8.3.1 compatibility.
 Full-model execution is unperformed; prior B4 repair remains no-go. Preserve assets.
 [NEXT_STEPS.md](NEXT_STEPS.md) controls the decision recommendation and closed-scope boundaries;
 [current-status.md](current-status.md) owns measured facts and limits.

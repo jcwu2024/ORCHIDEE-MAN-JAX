@@ -6,7 +6,12 @@ These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
 Updated: 2026-10-14. [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 delivers the actual fixed66M B1/artifact299/T7 public callable, exact original
-asset/case preparation and focused CPU tests. Coordinate2621 is an exposed
+asset/case preparation and focused CPU tests.
+Server preparation at committed30d7eb7 passes the actual test01 outer CPU dry-run
+and saved-only full3854 B1 endpoint/projection inspection. Exact baseline
+loss/auxiliary and actual Bash→parser arguments are retained; no GPU initialized.
+The checkout cache stays under its tracked `outputs` directory and old Git works.
+Coordinate2621 is an exposed
 program-coordinate partial, with computational-only FD and no manifold claim.
 One combined native FP64 state VJP/JVP graph is prepared; full-model execution,
 precision/runtime admission and GPU allocation remain unperformed. The bounded
