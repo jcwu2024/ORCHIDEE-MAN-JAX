@@ -1,0 +1,29 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/execution-code-pin.json: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v3-20261015/cpu-scalar-pool-bae03d9ef787.bundle: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/scalar-admission.json: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/PROPOSED_SUBMISSION.sh: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v3-20261015/cpu-scalar-pool-bae03d9ef787.bundle is okay
+The bundle contains this ref:
+bae03d9ef78726f00987737cdc58eac705a922ae refs/heads/codex/global-cpu-scalar-pool-v3
+The bundle requires this ref:
+50864f065363f6cd0de685c18d9c257723bf2838 
+bae03d9ef78726f00987737cdc58eac705a922ae refs/heads/codex/global-cpu-scalar-pool-v3
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v3-20261015/cpu-scalar-pool-bae03d9ef787.bundle
+ * [new branch]      codex/global-cpu-scalar-pool-v3 -> codex/global-cpu-scalar-pool-v3
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3'...
+done.
+Note: checking out 'bae03d9ef78726f00987737cdc58eac705a922ae'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b new_branch_name
+
+HEAD is now at bae03d9... Keep optional CPU startup telemetry failures nonfatal
+{"admission_sha256": "259936bb09f5d0006895b1f5ae17fa298c0baada07edcb23b2355ed892ef796a", "alternate_dependencies": [], "authorization": "2026-10-15 supervisor instruction: repair, deploy, free non-model verification, prepare exact pilot only", "checkout_state": "detached_clean", "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3", "evidence_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3", "execution_commit": "bae03d9ef78726f00987737cdc58eac705a922ae", "execution_ref": "codex/global-cpu-scalar-pool-v3", "new_paid_approval_required": true, "paid_submission_count": 0, "paid_submissions_remaining": 0, "pin_sha256": "92ea3f3e93eaa65168c34f878ed8315c7b9005912f216f7c9c61d8c0a3e115c5", "preserve_all_prior_records_and_checkouts": true, "proposal_sha256": "db9a5a7bb4a382f373e7cf7cb4d340d185d32293a305a086c585dd6db57070f9", "proposed_allocation": {"GPUs": 0, "RLIMIT_AS": null, "allocated_CPUs": 4, "authorized": false, "billing_verified": false, "command_timeout_seconds": 300, "exclusive": false, "host_MemAvailable_guard_GiB": 64, "memory_reservation": null, "no_requeue": true, "nodelist": null, "nodes": 1, "partition": "cnall", "sampled_aggregate_RSS_abort_GiB": 64, "startup_concurrency": 1, "startup_timeout_seconds_per_worker": 1200, "tasks": 1, "wall_seconds": 5400, "worker_threads": 1, "workers": 4, "worst_case_CNY_conservative": 0.42, "worst_case_CNY_primary": 0.3}, "registry_before_sha256": "80eff37b4e3e370493b23530508ac7982ded6ed3ef25083668025e99637f22b9", "schema": "global_cpu_scalar_pool_telemetry_fix_deployment_v1", "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba", "transfer_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v3-20261015", "utc": "2026-10-14T16:24:43.727707Z"}
+2026-10-14T16:24:43Z
+bae03d9ef78726f00987737cdc58eac705a922ae

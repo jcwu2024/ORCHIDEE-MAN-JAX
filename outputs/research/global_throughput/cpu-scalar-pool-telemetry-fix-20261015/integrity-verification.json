@@ -1,0 +1,35 @@
+{
+  "schema": "scalar_pool_telemetry_fix_integrity_v1",
+  "checks_passed": true,
+  "candidates": {
+    "superseded_v2": {
+      "commit": "08c9fd8079f1438f36b816de32d089ce38edc811",
+      "changed_paths": [
+        "scripts/hpc/slurm_global_server_cpu_4core.sh",
+        "tests/unit/test_global_server_cpu_startup.py"
+      ],
+      "admission_only_two_identity_fields_changed": true
+    },
+    "final_v3": {
+      "commit": "bae03d9ef78726f00987737cdc58eac705a922ae",
+      "changed_paths": [
+        "scripts/hpc/slurm_global_server_cpu_4core.sh",
+        "tests/unit/test_global_server_cpu_startup.py"
+      ],
+      "admission_only_two_identity_fields_changed": true
+    }
+  },
+  "target_job": "15866807",
+  "target_test_count": 14,
+  "unchanged_old_failure_receipts": {
+    "terminal-result.json": "6e5ee70e0827a0d01636b21691f1c12a7ca4a6abe0f992fcf152ef4fe619e7c0",
+    "terminal-evidence-manifest.json": "7ef597517c4ad651ae802e9556952a79cb7507d2ba4a6fc2c7d665fe18060fa4"
+  },
+  "admission_target_match": true,
+  "previous_registry_records_preserved": true,
+  "entry_document_links_exist": true,
+  "reference_arrays_decoded_or_audited": false,
+  "physical_model_executed": false,
+  "paid_submitted": false,
+  "new_paid_submission_allowance": 0
+}

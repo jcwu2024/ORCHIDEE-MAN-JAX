@@ -1,0 +1,71 @@
+2026-10-14T16:18:43Z
+ibtest01
+ 00:18:43 up 133 days, 13:21,  8 users,  load average: 61.13, 61.78, 66.97
+pid 78581's current affinity list: 0
+GNU bash, version 4.2.46(2)-release (x86_64-redhat-linux-gnu)
+Copyright (C) 2011 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+actual_module_import=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/jax_orchidee/__init__.py
+test_context_tee_IO_failure_stays_fatal (__main__.LauncherStartupTests.test_context_tee_IO_failure_stays_fatal) ... ok
+test_dirty_checkout_blocks_dispatch (__main__.LauncherStartupTests.test_dirty_checkout_blocks_dispatch) ... ok
+test_dispatch_failure_stays_fatal_even_when_GPU_telemetry_fails (__main__.LauncherStartupTests.test_dispatch_failure_stays_fatal_even_when_GPU_telemetry_fails) ... ok
+test_git_HEAD_failure_stays_fatal (__main__.LauncherStartupTests.test_git_HEAD_failure_stays_fatal) ... FAIL
+test_missing_allocated_TRES_blocks_dispatch (__main__.LauncherStartupTests.test_missing_allocated_TRES_blocks_dispatch) ... ok
+test_missing_prepared_input_blocks_dispatch (__main__.LauncherStartupTests.test_missing_prepared_input_blocks_dispatch) ... ok
+test_nvidia_absent_warns_and_dispatches (__main__.LauncherStartupTests.test_nvidia_absent_warns_and_dispatches) ... ok
+test_nvidia_present_failure_warns_and_dispatches (__main__.LauncherStartupTests.test_nvidia_present_failure_warns_and_dispatches) ... ok
+test_nvidia_present_success_dispatches (__main__.LauncherStartupTests.test_nvidia_present_success_dispatches) ... ok
+test_optional_CPU_queries_fail_without_blocking_dispatch (__main__.LauncherStartupTests.test_optional_CPU_queries_fail_without_blocking_dispatch) ... ok
+test_required_date_failure_stays_fatal (__main__.LauncherStartupTests.test_required_date_failure_stays_fatal) ... FAIL
+test_required_hostname_failure_stays_fatal (__main__.LauncherStartupTests.test_required_hostname_failure_stays_fatal) ... FAIL
+test_scontrol_failure_stays_fatal (__main__.LauncherStartupTests.test_scontrol_failure_stays_fatal) ... ok
+test_wrong_CPU_budget_blocks_dispatch (__main__.LauncherStartupTests.test_wrong_CPU_budget_blocks_dispatch) ... ok
+
+======================================================================
+FAIL: test_git_HEAD_failure_stays_fatal (__main__.LauncherStartupTests.test_git_HEAD_failure_stays_fatal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/tests/unit/test_global_server_cpu_startup.py", line 213, in test_git_HEAD_failure_stays_fatal
+    self.assert_blocked(result, trace, code=45)
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/tests/unit/test_global_server_cpu_startup.py", line 159, in assert_blocked
+    self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+AssertionError: 1 != 45 : stub date
+stub hostname
+stub uptime
+JobId=mock-startup NumCPUs=4 NumTasks=1 Partition=cnall TRES=cpu=4,node=1,billing=4
+stub taskset
+stub lscpu
+1111111111111111111111111111111111111111
+
+
+======================================================================
+FAIL: test_required_date_failure_stays_fatal (__main__.LauncherStartupTests.test_required_date_failure_stays_fatal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/tests/unit/test_global_server_cpu_startup.py", line 217, in test_required_date_failure_stays_fatal
+    self.assert_blocked(result, trace, code=46)
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/tests/unit/test_global_server_cpu_startup.py", line 159, in assert_blocked
+    self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+AssertionError: 1 != 46 : stub date
+
+
+======================================================================
+FAIL: test_required_hostname_failure_stays_fatal (__main__.LauncherStartupTests.test_required_hostname_failure_stays_fatal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/tests/unit/test_global_server_cpu_startup.py", line 221, in test_required_hostname_failure_stays_fatal
+    self.assert_blocked(result, trace, code=48)
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2/tests/unit/test_global_server_cpu_startup.py", line 159, in assert_blocked
+    self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+AssertionError: 1 != 48 : stub date
+stub hostname
+
+
+----------------------------------------------------------------------
+Ran 14 tests in 4.106s
+
+FAILED (failures=3)
+srun: error: ibtest01: task 0: Exited with exit code 1

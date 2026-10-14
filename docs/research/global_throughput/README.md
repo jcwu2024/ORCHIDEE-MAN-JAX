@@ -1,15 +1,15 @@
 # 全球物理模型吞吐研究
 
-更新：2026-10-14。**当前CPU目标是在48核allocation内并发调度成熟独立单点程序，测完整任务吞吐和单位成本。停止推进64点vmap大程序路线。** GPU实用配置仍为已测B1024；不要求CPU凑相同batch形状，不把历史B64末位差异归因闭合作为前置。
+更新：2026-10-15。**当前CPU目标是在48核allocation内并发调度成熟独立单点程序，测完整任务吞吐和单位成本。停止推进64点vmap大程序路线。** GPU实用配置仍为已测B1024；不要求CPU凑相同batch形状，不把历史B64末位差异归因闭合作为前置。
 
-最新终态先读[独立B1 pool pilot结果](CPU_SCALAR_POOL_PILOT_RESULT.md)：主管批准后已部署pin`50864f065363f6cd0de685c18d9c257723bf2838`，免费参考预检job15866448通过；唯一付费job15866488在CPU launcher可选`nvidia-smi`失败后FAILED1:0/1秒。未启动物理worker，无新lower/compile/run、内存或热吞吐证据；本次授权关闭、remaining=0，不修复重提。另读[原审批方案](CPU_SCALAR_POOL_PLAN.md)、[接口验证](CPU_SCALAR_POOL_VALIDATION.md)、[服务器合同](SERVER_BENCHMARK.md)及[主管交接](SUPERVISOR_HANDOFF.md)。
+最新审查对象先读[遥测修复与新候选](CPU_SCALAR_POOL_TELEMETRY_FIX.md)：按主管新工作单完成可选遥测修复、新pin封定、独立部署及免费非模型验证。最终pin`bae03d9ef78726f00987737cdc58eac705a922ae`，目标job15866807在cntest/1CPU/10秒COMPLETED，14项真实启动stub测试、launcher/parser dry-run和admission身份匹配通过；未运行物理模型。相同4CPU/4worker/90分钟单次pilot仅备妥，新增付费授权为0。旧[首次pilot结果](CPU_SCALAR_POOL_PILOT_RESULT.md)及免费参考加载15866448原样保留，复用81项接口检查和参考证据。另读[原方案](CPU_SCALAR_POOL_PLAN.md)、[接口验证](CPU_SCALAR_POOL_VALIDATION.md)、[服务器合同](SERVER_BENCHMARK.md)及[主管交接](SUPERVISOR_HANDOFF.md)。
 
 ## 当前可复用内容与缺口
 
 - `SingleRunner`已有一次编译B1后串行遍历点的成熟执行路径；`PoolRunner`已有spawn持久worker、独立状态、单核绑定、轮转分配与完整唯一点汇总。本次扩展这条pool路径，按实际allocation限制worker数，分批启动编译，保留完整输出和严格门。
 - 旧scalar job15820467的FULL64串行热core/wrapper中位127.074984/121.382450秒，896 point-days。它是一核探索记录，具有原GPU有限容差失败与科学接受false，不能称48核扩展结果。
 - 该进程postcompile RSS约5.18GB、warm约5.57GB、HWM约19.94GiB；包含编译和整组输入/输出。持久化复用能摊薄启动，磁盘缓存能否跨worker命中仍待实证。没有证据保证48个进程能装进单个192GB节点。
-- 首次4核/4worker pilot止于launcher遥测：原RUN_ROOT仅launch-context，无cache/pool/worker/report/stage。需先审查CPU可选GPU遥测失败控制流的有界修正及非模型验证，再单独审批一次相同4核/90分钟pilot（最坏¥0.30/¥0.42）；本次不执行。没有48worker内存支持证据，也没有证明192GB不足。
+- 首次4核/4worker paid job15866488止于launcher遥测：原RUN_ROOT仅launch-context，无cache/pool/worker/report/stage。本轮修复及非模型验证通过，但仍无物理worker新证据；相同4核/90分钟pilot（最坏¥0.30/¥0.42）等待主管审查，不自动执行。没有48worker内存支持证据，也没有证明192GB不足。
 
 ## 已保存证据
 
@@ -28,6 +28,6 @@
 
 本线面向论文669个独立PFT14网格的完整物理正向效率；原时间递推、48半小时步/天、native dtypes、760完整输出与masks、`atol=1e-8/rtol=1e-10`保持。x64不等于全算术FP64。静态Fortran分支ledger与运行科学验收仍分开；不能省过程、改容差或减少科学有效输出来提速。详见[精度边界](PRECISION_BOUNDARY.md)、[执行审计](EXECUTION_AUDIT.md)和[Fortran科学验收政策](../../source_audits/paper_scientific_acceptance_policy.md)。
 
-固定cwd `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput`、branch `research/global-throughput`；开工核对top-level/branch/实际import，不写main或daily树。[工作树管理](../../WORKSPACE_MANAGEMENT.md)和[共享部署入口](../../../../../../docs/deployment-explore1000.md)仍有效。全部旧单次额度及本次pool4额度均已关闭，不自动修复、重提或扩48。交付commit/push后停止，不联系、轮询或唤醒主管，不建替代聊天或自动任务。
+固定cwd `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput`、branch `research/global-throughput`；开工核对top-level/branch/实际import，不写main或daily树。[工作树管理](../../WORKSPACE_MANAGEMENT.md)和[共享部署入口](../../../../../../docs/deployment-explore1000.md)仍有效。全部旧单次paid额度均已关闭；本轮只授权修复、部署和免费验证，未增加paid余额，不自动重提或扩48。交付commit/push后停止，不联系、轮询或唤醒主管，不建替代聊天或自动任务。
 
 历史原始制品和专门报告原样保留；本页及另外三份入口压缩前全文可从Git `8fac02c1d5ac67d9a7e829a8d3f47fbf73f29ad6` 对应路径恢复。历史工作单不自动恢复授权。

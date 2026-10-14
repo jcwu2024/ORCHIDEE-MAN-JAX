@@ -1,0 +1,32 @@
+2026-10-14T16:27:53Z
+ibtest01
+ 00:27:53 up 133 days, 13:30,  8 users,  load average: 59.03, 59.53, 63.63
+pid 81900's current affinity list: 0
+GNU bash, version 4.2.46(2)-release (x86_64-redhat-linux-gnu)
+Copyright (C) 2011 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+actual_module_import=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/jax_orchidee/__init__.py
+test_context_tee_IO_failure_stays_fatal (__main__.LauncherStartupTests.test_context_tee_IO_failure_stays_fatal) ... ok
+test_dirty_checkout_blocks_dispatch (__main__.LauncherStartupTests.test_dirty_checkout_blocks_dispatch) ... ok
+test_dispatch_failure_stays_fatal_even_when_GPU_telemetry_fails (__main__.LauncherStartupTests.test_dispatch_failure_stays_fatal_even_when_GPU_telemetry_fails) ... ok
+test_git_HEAD_failure_stays_fatal (__main__.LauncherStartupTests.test_git_HEAD_failure_stays_fatal) ... ok
+test_missing_allocated_TRES_blocks_dispatch (__main__.LauncherStartupTests.test_missing_allocated_TRES_blocks_dispatch) ... ok
+test_missing_prepared_input_blocks_dispatch (__main__.LauncherStartupTests.test_missing_prepared_input_blocks_dispatch) ... ok
+test_nvidia_absent_warns_and_dispatches (__main__.LauncherStartupTests.test_nvidia_absent_warns_and_dispatches) ... ok
+test_nvidia_present_failure_warns_and_dispatches (__main__.LauncherStartupTests.test_nvidia_present_failure_warns_and_dispatches) ... ok
+test_nvidia_present_success_dispatches (__main__.LauncherStartupTests.test_nvidia_present_success_dispatches) ... ok
+test_optional_CPU_queries_fail_without_blocking_dispatch (__main__.LauncherStartupTests.test_optional_CPU_queries_fail_without_blocking_dispatch) ... ok
+test_required_date_failure_stays_fatal (__main__.LauncherStartupTests.test_required_date_failure_stays_fatal) ... ok
+test_required_hostname_failure_stays_fatal (__main__.LauncherStartupTests.test_required_hostname_failure_stays_fatal) ... ok
+test_scontrol_failure_stays_fatal (__main__.LauncherStartupTests.test_scontrol_failure_stays_fatal) ... ok
+test_wrong_CPU_budget_blocks_dispatch (__main__.LauncherStartupTests.test_wrong_CPU_budget_blocks_dispatch) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 3.233s
+
+OK
+{"job_id": "15866807", "node": "ibtest01", "allocated_CPUs": 1, "execution_commit": "bae03d9ef78726f00987737cdc58eac705a922ae", "candidate_identity_matches": true, "startup_test_count": 14, "physical_lower_compile_run": false, "paid_submitted": false}
+2026-10-14T16:28:00Z

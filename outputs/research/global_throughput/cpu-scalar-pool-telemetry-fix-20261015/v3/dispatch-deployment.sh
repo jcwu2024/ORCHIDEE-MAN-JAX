@@ -1,0 +1,1 @@
+bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/deploy-candidate.sh 92ea3f3e93eaa65168c34f878ed8315c7b9005912f216f7c9c61d8c0a3e115c5

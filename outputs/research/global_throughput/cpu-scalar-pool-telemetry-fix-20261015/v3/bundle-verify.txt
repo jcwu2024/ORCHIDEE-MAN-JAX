@@ -1,0 +1,6 @@
+The bundle contains this ref:
+bae03d9ef78726f00987737cdc58eac705a922ae refs/heads/codex/global-cpu-scalar-pool-v3
+The bundle requires this ref:
+50864f065363f6cd0de685c18d9c257723bf2838 
+The bundle uses this hash algorithm: sha1
+E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/cpu-scalar-pool-bae03d9ef787.bundle is okay

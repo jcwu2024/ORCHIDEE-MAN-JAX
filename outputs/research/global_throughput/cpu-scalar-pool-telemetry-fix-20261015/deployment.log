@@ -1,0 +1,30 @@
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/execution-code-pin.json: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v2-20261015/cpu-scalar-pool-08c9fd8079f1.bundle: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/scalar-admission.json: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/PROPOSED_SUBMISSION.sh: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v2-20261015/cpu-scalar-pool-08c9fd8079f1.bundle is okay
+The bundle contains this ref:
+08c9fd8079f1438f36b816de32d089ce38edc811 refs/heads/codex/global-cpu-scalar-pool-v2
+The bundle requires this ref:
+50864f065363f6cd0de685c18d9c257723bf2838 
+08c9fd8079f1438f36b816de32d089ce38edc811 refs/heads/codex/global-cpu-scalar-pool-v2
+From /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v2-20261015/cpu-scalar-pool-08c9fd8079f1.bundle
+ * [new branch]      codex/global-cpu-scalar-pool-v2 -> codex/global-cpu-scalar-pool-v2
+Cloning into '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2'...
+done.
+Checking out files:  50% (452/896)   Checking out files:  51% (457/896)   Checking out files:  52% (466/896)   Checking out files:  53% (475/896)   Checking out files:  54% (484/896)   Checking out files:  55% (493/896)   Checking out files:  56% (502/896)   Checking out files:  57% (511/896)   Checking out files:  58% (520/896)   Checking out files:  59% (529/896)   Checking out files:  60% (538/896)   Checking out files:  61% (547/896)   Checking out files:  62% (556/896)   Checking out files:  63% (565/896)   Checking out files:  64% (574/896)   Checking out files:  65% (583/896)   Checking out files:  66% (592/896)   Checking out files:  67% (601/896)   Checking out files:  68% (610/896)   Checking out files:  69% (619/896)   Checking out files:  70% (628/896)   Checking out files:  71% (637/896)   Checking out files:  72% (646/896)   Checking out files:  73% (655/896)   Checking out files:  74% (664/896)   Checking out files:  75% (672/896)   Checking out files:  76% (681/896)   Checking out files:  77% (690/896)   Checking out files:  78% (699/896)   Checking out files:  79% (708/896)   Checking out files:  80% (717/896)   Checking out files:  81% (726/896)   Checking out files:  82% (735/896)   Checking out files:  83% (744/896)   Checking out files:  84% (753/896)   Checking out files:  85% (762/896)   Checking out files:  86% (771/896)   Checking out files:  87% (780/896)   Checking out files:  88% (789/896)   Checking out files:  89% (798/896)   Checking out files:  90% (807/896)   Checking out files:  91% (816/896)   Checking out files:  92% (825/896)   Checking out files:  93% (834/896)   Checking out files:  94% (843/896)   Checking out files:  95% (852/896)   Checking out files:  96% (861/896)   Checking out files:  97% (870/896)   Checking out files:  98% (879/896)   Checking out files:  99% (888/896)   Checking out files: 100% (896/896)   Checking out files: 100% (896/896), done.
+Note: checking out '08c9fd8079f1438f36b816de32d089ce38edc811'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b new_branch_name
+
+HEAD is now at 08c9fd8... Keep optional CPU startup telemetry failures nonfatal
+{"admission_sha256": "95436e9df5611f64ca2d721ab74a76646c54167bdf0e06a1f02f9218fc558d36", "alternate_dependencies": [], "authorization": "2026-10-15 supervisor instruction: repair, deploy, free non-model verification, prepare exact pilot only", "checkout_state": "detached_clean", "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v2", "evidence_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015", "execution_commit": "08c9fd8079f1438f36b816de32d089ce38edc811", "execution_ref": "codex/global-cpu-scalar-pool-v2", "new_paid_approval_required": true, "paid_submission_count": 0, "paid_submissions_remaining": 0, "pin_sha256": "33a943e00ce9475af99d14c55b8f47d98bd8f231253594842825c9f594befde9", "preserve_all_prior_records_and_checkouts": true, "proposal_sha256": "c36b1f85a54524aa84243bfdefd668ca08c36f2b1fb2562c008ef7b999b6268b", "proposed_allocation": {"GPUs": 0, "RLIMIT_AS": null, "allocated_CPUs": 4, "authorized": false, "billing_verified": false, "command_timeout_seconds": 300, "exclusive": false, "host_MemAvailable_guard_GiB": 64, "memory_reservation": null, "no_requeue": true, "nodelist": null, "nodes": 1, "partition": "cnall", "sampled_aggregate_RSS_abort_GiB": 64, "startup_concurrency": 1, "startup_timeout_seconds_per_worker": 1200, "tasks": 1, "wall_seconds": 5400, "worker_threads": 1, "workers": 4, "worst_case_CNY_conservative": 0.42, "worst_case_CNY_primary": 0.3}, "registry_before_sha256": "eb776996720d131c8c8418294bda92f2b8b18b6355d78aaa0d1a43c1ffc1f14e", "schema": "global_cpu_scalar_pool_telemetry_fix_deployment_v1", "science_tree_oid": "75d8b1e9ccc9ef55d25344c66ad88d3742b3b3ba", "transfer_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/global-cpu-scalar-pool-v2-20261015", "utc": "2026-10-14T16:17:23.353631Z"}
+2026-10-14T16:17:23Z
+08c9fd8079f1438f36b816de32d089ce38edc811

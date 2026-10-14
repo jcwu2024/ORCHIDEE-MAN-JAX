@@ -1,0 +1,8 @@
+{"all_previous_records_preserved": true, "new_paid_submission_allowance": 0, "execution_commit": "bae03d9ef78726f00987737cdc58eac705a922ae"}
+JobID|JobName|Partition|NodeList|AllocCPUS|AllocTRES|ElapsedRaw|State|ExitCode
+15866780|bash|cntest|ibtest01|1|billing=1,cpu=1,node=1|9|FAILED|1:0
+15866780.extern|extern||ibtest01|1|billing=1,cpu=1,node=1|10|COMPLETED|0:0
+15866780.0|bash||ibtest01|1|cpu=1,mem=0,node=1|9|FAILED|1:0
+15866807|bash|cntest|ibtest01|1|billing=1,cpu=1,node=1|10|COMPLETED|0:0
+15866807.extern|extern||ibtest01|1|billing=1,cpu=1,node=1|10|COMPLETED|0:0
+15866807.0|bash||ibtest01|1|cpu=1,mem=0,node=1|10|COMPLETED|0:0

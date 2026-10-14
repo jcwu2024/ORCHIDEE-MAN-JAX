@@ -1,6 +1,6 @@
 # 服务器吞吐合同：独立单点CPU worker与GPU B1024
 
-更新：2026-10-14。当前CPU路线为成熟B1程序在48核allocation内并发调度独立任务，旧CPU48/B64 vmap路线关闭。[首次pool4终态](CPU_SCALAR_POOL_PILOT_RESULT.md)：已批准部署/预检及唯一付费job15866488，FAILED1:0/1秒，止于launcher177行可选GPU遥测；物理worker与数值/内存/热吞吐均not reached。授权已消耗，不修复重提。[原方案](CPU_SCALAR_POOL_PLAN.md)保留审批对象，[验证记录](CPU_SCALAR_POOL_VALIDATION.md)保留本地接口证据。
+更新：2026-10-15。当前CPU路线为成熟B1程序在48核allocation内并发调度独立任务，旧CPU48/B64 vmap路线关闭。[遥测修复与新候选](CPU_SCALAR_POOL_TELEMETRY_FIX.md)记录最终pin`bae03d9ef78726f00987737cdc58eac705a922ae`已独立部署、免费job15866807完成1CPU/10秒启动矩阵与身份/dry-run检查；没有新物理运行或paid提交。[首次pool4终态](CPU_SCALAR_POOL_PILOT_RESULT.md)保留旧job15866488在可选GPU遥测处FAILED1:0/1秒、零worker的原证据；该paid授权关闭。相同4CPU/90分钟新pilot只备妥，等待主管审查。[原方案](CPU_SCALAR_POOL_PLAN.md)与[验证记录](CPU_SCALAR_POOL_VALIDATION.md)仍作历史准备证据。
 
 ## 不变的科学与任务合同
 
@@ -24,7 +24,7 @@ worker数显式受allocation预算和任务数约束；48核模式不会默认�
 
 旧scalar job15820467一次B1 lower55.8773秒、compile684.2656秒；64点串行first137.3622秒。postcompile RSS5,180,694,528B、warm5,565,206,528B、Linux HWM21,406,240,768B（19.94GiB）。这些包含进程编译残留、全组输入与输出，既不是单点状态大小，也不是48份实际并发测量。
 
-每个spawn仍独立调用lower/compile；磁盘cache命中未经跨worker实测。持久worker可以摊薄启动但不会消除既有编译成本。48倍RSS/HWM仅能作风险算术，不能证明可行或不可行。首次4worker pilot未启动任何worker，RUN_ROOT仅launch-context、无cache/pool/report/stage，因此没有新增驻留或编译数据，不能据失败认定192GB不足。下一对象须先审查可选GPU遥测失败处理及非模型控制流验证，再单独审批相同4CPU/90min pilot（最坏¥0.30/¥0.42）；不自动执行或承诺48资源。
+每个spawn仍独立调用lower/compile；磁盘cache命中未经跨worker实测。持久worker可以摊薄启动但不会消除既有编译成本。48倍RSS/HWM仅能作风险算术，不能证明可行或不可行。首次4worker pilot未启动任何worker，RUN_ROOT仅launch-context、无cache/pool/report/stage，因此没有新增驻留或编译数据，不能据失败认定192GB不足。可选遥测的窄修复与非模型控制流检查现已完成；新admission只改执行commit/目录。相同4CPU/90min pilot（最坏¥0.30/¥0.42）须经主管审查，本轮不提交，不承诺48资源。新检查不重算旧scalar或参考数组，也不替代完整科学/资源准入。
 
 ## 工作量与GPU比较
 
