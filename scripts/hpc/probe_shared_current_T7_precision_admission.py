@@ -42,7 +42,13 @@ def parser():
         p.add_argument('--' + name, type=Path, required=True)
     for name in ('approval-report', 'runtime-preflight', 'fp32-reference'):
         p.add_argument('--' + name, type=Path)
+    p.add_argument('--source-cache', type=Path)
     return p
+
+
+def resolve_source_cache(output, configured=None):
+    """Use an explicit shared cache or keep the historical output-local default."""
+    return Path(configured) if configured is not None else Path(output).parent/'source-cache'
 
 
 def sha(path):
@@ -171,10 +177,41 @@ def load_fp32_reference(path, *, full=False):
         if sha(endpoint) != before:
             raise ValueError('read-only original endpoint changed')
         result.update(full_state_loaded=True, state_gradient=gradient.copy(),
+            baseline_forward=baseline_forward_metadata(saved['result'][0]),
             endpoint={'path': str(endpoint), 'sha256': before},
             endpoint_hash_previously_pinned=False,
             endpoint_binding='canonical original report path, B1/begin ABI, full finite state and four independently saved exact native projections')
     return result
+
+
+def baseline_forward_metadata(value):
+    """Retain saved scalar/auxiliary structure and dtype/finite facts only."""
+    def leaf(item):
+        if isinstance(item, dict):
+            return {str(key): leaf(child) for key, child in item.items()}
+        if isinstance(item, (list, tuple)):
+            return [leaf(child) for child in item]
+        try:
+            array = np.asarray(item)
+        except Exception:
+            return {'python_type': type(item).__name__, 'available': False}
+        if array.dtype.kind not in 'biufc':
+            if np.isscalar(item) and isinstance(item, (str, bytes)):
+                return {'python_type': type(item).__name__, 'value': json_value(item)}
+            return {'python_type': type(item).__name__, 'available': False}
+        finite = np.isfinite(array)
+        row = {'dtype': str(array.dtype), 'shape': list(array.shape),
+               'finite': bool(np.all(finite)), 'finite_count': int(np.count_nonzero(finite)),
+               'element_count': int(array.size)}
+        if array.ndim == 0:
+            row['value'] = json_value(array.item())
+        return row
+
+    if isinstance(value, (tuple, list)) and len(value) == 2:
+        loss, auxiliary = value
+        return {'available': True, 'loss': leaf(loss), 'auxiliary': leaf(auxiliary)}
+    return {'available': False, 'saved_forward': leaf(value),
+            'reason': 'saved result[0] is not a (loss, auxiliary) pair'}
 
 
 def result_gates(jax, result):
@@ -372,7 +409,8 @@ def main():
     try:
         with ExitStack() as stack:
             from scripts.hpc.shared_current_T7_precision_guard import historical_expert_source_context
-            historical_expert = stack.enter_context(historical_expert_source_context(ROOT, args.output.parent/'source-cache'))
+            source_cache = resolve_source_cache(args.output, args.source_cache)
+            historical_expert = stack.enter_context(historical_expert_source_context(ROOT, source_cache))
             with journal.deadline(CAPS['load'], 'asset_load') if journal else nullcontext():
                 assets = load_assets(jax, parameters=args.parameters, prepared_context=args.prepared_context,
                     training_prepared_manifest=args.training_prepared_manifest, dataset_manifest=args.dataset_manifest,
@@ -390,6 +428,7 @@ def main():
             report = {'schema_version': 'current_T7_precision_preparation_v2', 'status': 'real_callable_prepared_unexecuted',
                 'asset_identity': assets['manifest_metadata'], 'original_assets': assets['original_assets'],
                 'binding': binding, 'historical_expert_source': historical_expert,
+                'historical_expert_source_cache': str(source_cache.resolve()),
                 'context_widening': context_widening, 'fd_plans': plans,
                 'entry_sha256': sha(__file__), 'stage_caps': CAPS, 'total_seconds': TOTAL_SECONDS,
                 'full_model_calls': 0, 'full_model_traces': 0, 'full_model_compiles': 0,

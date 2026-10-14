@@ -26,6 +26,7 @@ COMMAND=(bash "$CODE/scripts/hpc/run_shared_current_T7_precision_admission.sh"
   --state-input-metadata "$OLD/T7-state-inputs-20261009.json"
   --turnover-overlay "$RUNTIME/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py"
   --fp32-reference "$OLD/T7-B1-state-jvp-completion-20261009.independent-analysis.json"
+  --source-cache "$CODE/outputs/T7-current-model-precision-admission-20261014-v2/source-cache"
   --approval-report "$OUT/approval.v2.json"
   --runtime-preflight "$OUT/runtime-preflight.v2.json"
   --output "$OUT/result.v2.json")

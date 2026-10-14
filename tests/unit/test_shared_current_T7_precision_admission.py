@@ -51,6 +51,38 @@ def test_unit_direction_native_scale():
         probe.unit_direction(3854)
 
 
+def test_source_cache_default_and_explicit_override(tmp_path):
+    output = tmp_path/'run'/'result.json'
+    required = []
+    for name in ('parameters', 'prepared-context', 'training-prepared-manifest',
+                 'dataset-manifest', 'saved-identity-receipt', 'state-input-metadata',
+                 'turnover-overlay', 'output'):
+        required.extend(['--'+name, str(output if name == 'output' else tmp_path/name)])
+    assert probe.parser().parse_args(['--stage', 'dry-run', *required]).source_cache is None
+    assert probe.resolve_source_cache(output) == output.parent/'source-cache'
+    configured = tmp_path/'shared'/'source-cache'
+    assert probe.parser().parse_args(['--stage', 'dry-run', *required,
+        '--source-cache', str(configured)]).source_cache == configured
+    assert probe.resolve_source_cache(output, configured) == configured
+
+
+def test_saved_fp32_baseline_forward_metadata():
+    metadata = probe.baseline_forward_metadata((np.float32(1.25), {
+        'flux': np.array([2.0, np.nan], dtype=np.float32),
+        'mask': np.array([True, False]),
+    }))
+    assert metadata['available']
+    assert metadata['loss'] == {
+        'dtype': 'float32', 'shape': [], 'finite': True, 'finite_count': 1,
+        'element_count': 1, 'value': 1.25,
+    }
+    assert metadata['auxiliary']['flux']['dtype'] == 'float32'
+    assert metadata['auxiliary']['flux']['shape'] == [2]
+    assert metadata['auxiliary']['flux']['finite_count'] == 1
+    assert not metadata['auxiliary']['flux']['finite']
+    assert metadata['auxiliary']['mask']['dtype'] == 'bool'
+
+
 def test_save_before_gate_exception(tmp_path, monkeypatch):
     class Journal:
         report = {'results': []}

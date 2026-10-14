@@ -59,13 +59,12 @@ def historical_expert_source_context(root, cache_directory):
     root = Path(root).resolve(strict=True)
     cache_directory = Path(cache_directory).resolve()
     cache_directory.relative_to((root/'outputs').resolve())
-    git_root = subprocess.run(['git', '-C', str(root), 'rev-parse', '--show-toplevel'],
+    git_root = subprocess.run(['git', 'rev-parse', '--show-toplevel'], cwd=root,
         check=True, capture_output=True, text=True).stdout.strip()
     if Path(git_root).resolve() != root:
         raise ValueError('Historical source root must be the declared checkout')
-    source = subprocess.run(['git', '-C', str(root), 'show',
-        HISTORICAL_EXPERT_REVISION+':'+HISTORICAL_EXPERT_PATH],
-        check=True, capture_output=True).stdout
+    source = subprocess.run(['git', 'show', HISTORICAL_EXPERT_REVISION+':'+HISTORICAL_EXPERT_PATH],
+        cwd=root, check=True, capture_output=True).stdout
     if hashlib.sha256(source).hexdigest() != HISTORICAL_EXPERT_SHA256:
         raise ValueError('Pinned historical expert Git blob hash differs')
     if any(isinstance(node, ast.ClassDef) for node in ast.walk(ast.parse(source))):

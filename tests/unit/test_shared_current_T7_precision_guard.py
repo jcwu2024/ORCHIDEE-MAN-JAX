@@ -357,3 +357,22 @@ def test_historical_expert_rejects_cache_outside_outputs(canonical_modules, tmp_
     with pytest.raises(ValueError):
         with guard.historical_expert_source_context(root, tmp_path):
             pass
+
+
+def test_historical_expert_git_commands_use_cwd_without_dash_c(canonical_modules, monkeypatch, tmp_path):
+    real_run = guard.subprocess.run
+    git_calls = []
+
+    def recording_run(args, **kwargs):
+        git_calls.append((args, kwargs.get('cwd')))
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(guard.subprocess, 'run', recording_run)
+    root = Path(__file__).resolve().parents[2]
+    cache = root/'outputs'/tmp_path.name/'source-cache'
+    with guard.historical_expert_source_context(root, cache):
+        pass
+    assert len(git_calls) == 2
+    assert [call[0][1] for call in git_calls] == ['rev-parse', 'show']
+    assert all(call[0][0] == 'git' and '-C' not in call[0] for call in git_calls)
+    assert all(Path(cwd).resolve() == root for _, cwd in git_calls)
