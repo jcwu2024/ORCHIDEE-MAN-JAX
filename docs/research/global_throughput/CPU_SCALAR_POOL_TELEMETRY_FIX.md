@@ -1,5 +1,10 @@
 # CPU pool遥测修复与待审新候选
 
+当前状态指针（2026-10-15）：后续新明确授权的v3唯一paid pilot已经提交并关闭，
+job15869035在pre-JAX物理核准入FAILED1:0/4秒、零worker，见
+[v3终态](CPU_SCALAR_POOL_PILOT_V3_RESULT.md)。以下“待审/未提交/新增授权0”均为
+本报告准备阶段的历史状态，不恢复额度；本次v3授权remaining=0，不重提。
+
 更新：2026-10-15。**修复、独立部署及免费非模型验证已完成；新增paid提交/授权均为0。**
 最终待审pin为`bae03d9ef78726f00987737cdc58eac705a922ae`，ref
 `codex/global-cpu-scalar-pool-v3`。相同4CPU/4worker/90分钟单次pilot已备妥，

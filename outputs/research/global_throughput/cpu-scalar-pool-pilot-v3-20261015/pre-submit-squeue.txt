@@ -1,0 +1,12 @@
+JOBID PARTITION NAME ST TIME TIME_LIMIT CPUS NODELIST(REASON)
+15866341 cnall L6HS1 R 10:29:39 365-00:00:00 10 ibc13b07n03
+15867212_4 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc12b11n[08-11]
+15867212_5 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc12b11n[33-36]
+15867212_6 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc11b11n31,ibc12b11n[26-28]
+15867212_7 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc11b11n[15-17,32]
+15867212_1 cnmix sens_bound76 R 7:17:33 1-00:00:00 64 ibc11b11n[31-34]
+15867212_2 cnmix sens_bound76 R 7:17:33 1-00:00:00 64 ibc12b11n[33-36]
+15867212_3 cnmix sens_bound76 R 7:17:33 1-00:00:00 64 ibc12b11n[33-36]
+15867212_0 cnmix sens_bound76 R 7:29:42 1-00:00:00 64 ibc11b11n[31-34]
+15867212_[8-11%8] cnmix,cnall sens_bound76 PD 0:00 1-00:00:00 64 (JobArrayTaskLimit)
+15866925 gnall T7-current-precision PD 0:00 1:30:00 4 (Priority)

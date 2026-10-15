@@ -1,0 +1,8 @@
+PARTITION AVAIL TIMELIMIT NODES STATE CPUS(A/I/O/T)
+cnall up infinite 85 drain* 0/0/4760/4760
+cnall up infinite 168 down* 0/0/9408/9408
+cnall up infinite 4 drng 11/0/213/224
+cnall up infinite 118 drain 0/0/6608/6608
+cnall up infinite 21 mix 673/503/0/1176
+cnall up infinite 87 alloc 4872/0/0/4872
+cnall up infinite 302 idle 0/16912/0/16912

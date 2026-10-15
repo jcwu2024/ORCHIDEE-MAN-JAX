@@ -1,0 +1,32 @@
+2026-10-15T01:14:26Z
+JOBID PARTITION NAME STATE TIME TIME_LIMIT CPUS NODELIST(REASON)
+15869035 cnall orchjax-srv-cpu4 PENDING 0:00 1:30:00 4 (None)
+JobId=15869035 JobName=orchjax-srv-cpu4
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=PENDING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:00 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-15T09:13:37 EligibleTime=2026-10-15T09:13:37
+   AccrueTime=2026-10-15T09:13:37
+   StartTime=Unknown EndTime=Unknown Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-15T09:13:37 Scheduler=Main
+   Partition=cnall AllocNode:Sid=ibc12b01n05:41207
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=
+   NumNodes=1-1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,mem=1M,node=1,billing=4
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/hpc/slurm_global_server_cpu_4core.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15869035.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15869035.txt
+   Power=
+   
+
+15869035|PENDING|0:0|0|4||None assigned|00:00:00|00:00:00|00:00:00|0||

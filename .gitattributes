@@ -128,3 +128,6 @@ outputs/research/global_throughput/cpu-scalar-pool-pilot-20261014/** -text white
 
 # Preserve the telemetry-fix candidate and target verification receipts byte-exact.
 outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/** -text whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve the newly approved scalar-pool v3 pilot's raw execution receipts.
+outputs/research/global_throughput/cpu-scalar-pool-pilot-v3-20261015/** -text whitespace=-blank-at-eol,-blank-at-eof

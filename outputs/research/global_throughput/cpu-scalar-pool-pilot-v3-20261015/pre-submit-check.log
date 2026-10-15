@@ -1,0 +1,44 @@
+2026-10-15T01:12:30Z
+ibcln01
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/scalar-admission.json: OK
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/PROPOSED_SUBMISSION.sh: OK
+15866807|COMPLETED|0:0|10|1|billing=1,cpu=1,node=1|ibtest01
+15866807.extern|COMPLETED|0:0|10|1|billing=1,cpu=1,node=1|ibtest01
+15866807.0|COMPLETED|0:0|10|1|cpu=1,mem=0,node=1|ibtest01
+PartitionName=cnall
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=56
+   Nodes=ibc11b02n[01-40],ibc11b03n[01-35],ibc11b04n[01-40],ibc11b06n[07-10],ibc11b07n[01-40],ibc11b08n[01-40],ibc11b09n[01-40],ibc11b10n[01-40],ibc12b02n[01-40],ibc12b03n[01-40],ibc12b04n[01-40],ibc12b07n[01-40],ibc12b08n[01-40],ibc12b09n[01-40],ibc12b10n[01-40],ibc13b03n08,ibc13b04n[01-40],ibc13b05n[01-27],ibc13b06n[01-40],ibc13b07n[01-40],ibc13b08n[01-40],ibc13b09n[01-38]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=NO
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=43960 TotalNodes=785 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=43960,mem=785M,node=785,billing=43960
+
+PARTITION AVAIL TIMELIMIT NODES STATE CPUS(A/I/O/T)
+cnall up infinite 85 drain* 0/0/4760/4760
+cnall up infinite 168 down* 0/0/9408/9408
+cnall up infinite 4 drng 11/0/213/224
+cnall up infinite 118 drain 0/0/6608/6608
+cnall up infinite 21 mix 673/503/0/1176
+cnall up infinite 87 alloc 4872/0/0/4872
+cnall up infinite 302 idle 0/16912/0/16912
+JOBID PARTITION NAME ST TIME TIME_LIMIT CPUS NODELIST(REASON)
+15866341 cnall L6HS1 R 10:29:39 365-00:00:00 10 ibc13b07n03
+15867212_4 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc12b11n[08-11]
+15867212_5 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc12b11n[33-36]
+15867212_6 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc11b11n31,ibc12b11n[26-28]
+15867212_7 cnmix sens_bound76 R 7:11:55 1-00:00:00 64 ibc11b11n[15-17,32]
+15867212_1 cnmix sens_bound76 R 7:17:33 1-00:00:00 64 ibc11b11n[31-34]
+15867212_2 cnmix sens_bound76 R 7:17:33 1-00:00:00 64 ibc12b11n[33-36]
+15867212_3 cnmix sens_bound76 R 7:17:33 1-00:00:00 64 ibc12b11n[33-36]
+15867212_0 cnmix sens_bound76 R 7:29:42 1-00:00:00 64 ibc11b11n[31-34]
+15867212_[8-11%8] cnmix,cnall sens_bound76 PD 0:00 1-00:00:00 64 (JobArrayTaskLimit)
+15866925 gnall T7-current-precision PD 0:00 1:30:00 4 (Priority)
+existing free startup/admission check matches; no science check repeated
+not_submitted: /rmprog/slurm/v22.05.7/bin/sbatch --parsable --partition=cnall --nodes=1 --ntasks=1 --cpus-per-task=4 --time=01:30:00 --no-requeue --chdir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3 --export=ALL --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_%j.txt --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_%j.txt /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/hpc/slurm_global_server_cpu_4core.sh 
+bae03d9ef78726f00987737cdc58eac705a922ae
+pre-submit-check-passed

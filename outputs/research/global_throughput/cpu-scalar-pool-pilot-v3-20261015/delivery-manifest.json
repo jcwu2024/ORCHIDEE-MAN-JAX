@@ -1,0 +1,275 @@
+{
+  "schema": "global_cpu_scalar_pool_v3_delivery_manifest_v1",
+  "files": [
+    {
+      "name": "analyze_result.py",
+      "size_bytes": 6786,
+      "sha256": "7d38e94c83e5e7f5331f87d0d5bf9bc26910e4dbdde4dcc2f5ebf93167ec17cf"
+    },
+    {
+      "name": "approved-submission-dry-run.txt",
+      "size_bytes": 574,
+      "sha256": "a9f2305c190aba7361d011638d1d97eef69e94b99cdd2979827abf775f998243"
+    },
+    {
+      "name": "collect-terminal.sh",
+      "size_bytes": 2601,
+      "sha256": "1895efd081e9b9404b55dadbbc597d60cc700ef107a77762b680bb117c9f3813"
+    },
+    {
+      "name": "collection-transport.log",
+      "size_bytes": 4899,
+      "sha256": "2f814be9ab12b9cd1862e409bb1453873d9926160e78d33afed022352b2bde4f"
+    },
+    {
+      "name": "collection-utc.txt",
+      "size_bytes": 21,
+      "sha256": "4a0ab48f1786bec0e7ae33583b0fafe16fef2e066d3646bc1de33d26c57ad12a"
+    },
+    {
+      "name": "CURRENT_RESULT.md",
+      "size_bytes": 1212,
+      "sha256": "54e4172e9c131353b8a94a693f16dfa48025570629fd56741c59ab6c6428b853"
+    },
+    {
+      "name": "docs/CPU_SCALAR_POOL_PILOT_V3_RESULT.md",
+      "size_bytes": 8052,
+      "sha256": "23403e4c6e4d4b1be0ec25487526e6b4d11c329a0498b2bca53fef07f18f2414"
+    },
+    {
+      "name": "docs/CPU_SCALAR_POOL_TELEMETRY_FIX.md",
+      "size_bytes": 9230,
+      "sha256": "d2735d6b31442a72686de3441ea65405253246bfdb9823bf690cde222ff30e2b"
+    },
+    {
+      "name": "docs/NEW_PROJECT_PROMPT.md",
+      "size_bytes": 6405,
+      "sha256": "ee0a8183489bfa8942dde42b38bc95834b5c896831fa23d6850d43a8bffd6259"
+    },
+    {
+      "name": "docs/README.md",
+      "size_bytes": 5920,
+      "sha256": "36e41bf24bd7d0f455abaef723fafc0801fc360616d68eaf67d3ceb4e80035c5"
+    },
+    {
+      "name": "docs/SERVER_BENCHMARK.md",
+      "size_bytes": 8505,
+      "sha256": "12fc777c80d66817f0e1a970177ac48eab36e501f9a50208b15c621dd47a9bf0"
+    },
+    {
+      "name": "docs/SUPERVISOR_HANDOFF.md",
+      "size_bytes": 6890,
+      "sha256": "2fd230984c91e25b7de94be3d87c57adb3ec36a8d9eae39a81ccf152f048482c"
+    },
+    {
+      "name": "documentation-link-check.json",
+      "size_bytes": 338,
+      "sha256": "789dd1876d6d00aed6d4c6973750dfd4ffd748c1d4006dafd42219a74e44fd9e"
+    },
+    {
+      "name": "finalize-registry.sh",
+      "size_bytes": 3104,
+      "sha256": "78d3b76d3dedfd5d621f03f1eb654e016a0b231f0fdab47f2baa8b9c77c41255"
+    },
+    {
+      "name": "job-15869035.raw.log",
+      "size_bytes": 10801,
+      "sha256": "07fa451f2d0dc26c3b9d2bf8efc7b1fc9c5c23422feb00dbfb81d10950fabbb5"
+    },
+    {
+      "name": "launch-context.raw.txt",
+      "size_bytes": 4705,
+      "sha256": "3a268c5c85bacc8e86d47b6c877ff7bf6fdec0019b2fbc8412f21101bce29f3e"
+    },
+    {
+      "name": "monitor-001.log",
+      "size_bytes": 1678,
+      "sha256": "7277d65f3ad6928b09a81b4372059538748cb316fbdff6881e0e85110613bab2"
+    },
+    {
+      "name": "monitor-002.log",
+      "size_bytes": 9148,
+      "sha256": "8a81c9df5083b5dd386b10ccb87c59f026ec2b4baa69a94e9597d638a9ff159c"
+    },
+    {
+      "name": "monitor.sh",
+      "size_bytes": 830,
+      "sha256": "5573fa9a7580f6a322972d27f58acbc927041479e9b90daf844fcb1eeba05d77"
+    },
+    {
+      "name": "package-terminal.log",
+      "size_bytes": 35,
+      "sha256": "c60c53596dcf9184fe3fff91e1763f4334b9c75aa91a12d189918f9ae218cc8f"
+    },
+    {
+      "name": "package-terminal.sh",
+      "size_bytes": 298,
+      "sha256": "b67be9d736be6b874b2f797903e9b70c2fba0049f97244c7eed45eb18c2780d1"
+    },
+    {
+      "name": "paid-initial-scontrol.txt",
+      "size_bytes": 1447,
+      "sha256": "8ab46ed5857dfab21ba17c0919dca28026120ff97ff3e4a623eebb1189c55e79"
+    },
+    {
+      "name": "paid-job-id.txt",
+      "size_bytes": 9,
+      "sha256": "fc850051bb77e16ffec8bbf468905a961895abffeb3c04c50852d886836c9aab"
+    },
+    {
+      "name": "paid-sbatch.stderr",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "paid-sbatch.stdout",
+      "size_bytes": 9,
+      "sha256": "fc850051bb77e16ffec8bbf468905a961895abffeb3c04c50852d886836c9aab"
+    },
+    {
+      "name": "paid-submission-attempt.json",
+      "size_bytes": 1743,
+      "sha256": "59f0b8dc741a6304eb835a49cf81912907e5c88476c240e6f45514503c936b21"
+    },
+    {
+      "name": "pre-submit-check.log",
+      "size_bytes": 3370,
+      "sha256": "82fc33f4b85fdd427b32ba99d804fac36746b42a72b0ab8754a94a9c7510a6a6"
+    },
+    {
+      "name": "pre-submit-check.sh",
+      "size_bytes": 2008,
+      "sha256": "d925ba12f8640c2236294b57407fa1d4ec47e68a429a4aaf79f960ef55396eab"
+    },
+    {
+      "name": "pre-submit-partition.txt",
+      "size_bytes": 948,
+      "sha256": "13622a848266d26abb6651523ba5d9cd9ea996634692f98eb318148724706026"
+    },
+    {
+      "name": "pre-submit-sinfo.txt",
+      "size_bytes": 340,
+      "sha256": "cad27856cf44c4ff140dc01db651e1da9fc1e5e61934542f1f6b63caa8974419"
+    },
+    {
+      "name": "pre-submit-squeue.txt",
+      "size_bytes": 855,
+      "sha256": "37564f45c433d9d132a0b370ee76afb40177592035dbd63ba02cee6be483cd35"
+    },
+    {
+      "name": "read-scheduler-config.sh",
+      "size_bytes": 548,
+      "sha256": "09da5df041bf3d5f065468f4a658b41c409f257dd5b68aed8689bf367bf431a7"
+    },
+    {
+      "name": "registry-after.json",
+      "size_bytes": 78273,
+      "sha256": "1aff0cd2d65147a2024e6081f86d6e598659b72f35008071d8dd525e150233fc"
+    },
+    {
+      "name": "registry-before.json",
+      "size_bytes": 75006,
+      "sha256": "d72146f58be430af0d0995826438a5ab1599ec41aca930667718ad3c5fcdb83b"
+    },
+    {
+      "name": "registry-finalization-transport.log",
+      "size_bytes": 3276,
+      "sha256": "701823b14eb0dc39e6f835d74016552fc90141926cf39711ddde351aa3e2a179"
+    },
+    {
+      "name": "registry-finalization.json",
+      "size_bytes": 3784,
+      "sha256": "303452df011347057a77d0d68e932d3d92f01cdfe99b18682c244103b9703096"
+    },
+    {
+      "name": "result-analysis.json",
+      "size_bytes": 5209,
+      "sha256": "f0aa13a8c8691d7d7036642809c09e461f8ddb404b22423ddf8ead8f97187a3c"
+    },
+    {
+      "name": "reused-free-verification.sacct.raw",
+      "size_bytes": 185,
+      "sha256": "5e625ab358ec201b81340efef9cd418f1a0d1419ac8e4d704b5eb25da21ddab3"
+    },
+    {
+      "name": "run-root-inventory.txt",
+      "size_bytes": 46,
+      "sha256": "14b16f1b7693f710a7fc766e96edeb90971fbdc0524a905aa912b5cb0a8d8f7c"
+    },
+    {
+      "name": "scheduler-config-selected.txt",
+      "size_bytes": 462,
+      "sha256": "c31ff472de7fbf8c69b534529088599481f3d57c30ae6c30071600e51c24c1f1"
+    },
+    {
+      "name": "scheduler-config-transport.log",
+      "size_bytes": 881,
+      "sha256": "6417620f9cb4fab442d4ebd957281d6b4de9c95ec90e93b3d3a150cc2401afd7"
+    },
+    {
+      "name": "scheduler-config.raw.txt",
+      "size_bytes": 8771,
+      "sha256": "ed45a6e5edfe8236fa4c420e4543af382648f5baa7687715cec1fb1edf0040bb"
+    },
+    {
+      "name": "submission-transport.log",
+      "size_bytes": 3046,
+      "sha256": "2237155a6353f5d31765f70cf1f87347db135402df8481dcf065589e1e8a067e"
+    },
+    {
+      "name": "submit-paid-once.sh",
+      "size_bytes": 4693,
+      "sha256": "7a5e09fcb014ac366e84a999728b14deb1c5160ef2ef61d233d32f9cfacd97df"
+    },
+    {
+      "name": "sync-delivery.sh",
+      "size_bytes": 956,
+      "sha256": "fca251b189a95e1703c0b56064d210dbc4537a5ade7580766bc631472cec4a24"
+    },
+    {
+      "name": "terminal-code-head.txt",
+      "size_bytes": 41,
+      "sha256": "9a1793739cbb85eeb73b0e27762ed7683a4b2a655700a037c335644f888357a7"
+    },
+    {
+      "name": "terminal-code-status.txt",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "terminal-evidence.tar.gz",
+      "size_bytes": 26002,
+      "sha256": "1bd0b9360536c3f6a53185461de63b0b7a2a5fe696afed9991cfed8bf1e20399"
+    },
+    {
+      "name": "terminal-inventory.json",
+      "size_bytes": 4150,
+      "sha256": "8580c9ae19243a985c77b808b2b56feaa1c667edb3fcc55eb15e4c0d3ca1482f"
+    },
+    {
+      "name": "terminal-node-snapshot.txt",
+      "size_bytes": 738,
+      "sha256": "ee29cffbe03a750425799e141497b1aeddb78d1e070e5f995cfd495b02730bf4"
+    },
+    {
+      "name": "terminal-sacct-all.psv",
+      "size_bytes": 661,
+      "sha256": "347609053d3fa7794608ba2ab39754fff66a9cf816ef55689cd10b2e6ebba876"
+    },
+    {
+      "name": "terminal-sacct-parent.psv",
+      "size_bytes": 162,
+      "sha256": "b0e46f88f432bd8160ad83249a348037a4d42eec21d24c73e1275eaf92a8d729"
+    },
+    {
+      "name": "terminal-scontrol.txt",
+      "size_bytes": 1588,
+      "sha256": "f8894f3f6929415e24dcad2dcee830f2ad13536ea791fbe88e8420cfd5be3f81"
+    },
+    {
+      "name": "verify_delivery.py",
+      "size_bytes": 3510,
+      "sha256": "dc8e32ad6a6186db4ddca3fd4597757b15a68c86652350de92258a70b9ad45cb"
+    }
+  ]
+}

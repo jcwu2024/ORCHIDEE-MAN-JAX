@@ -1,0 +1,127 @@
+{
+  "expected_artifact_existence": {
+    "pool4": false,
+    "pool4/raw_B64_pool_before_parity.pkl": false,
+    "pool4/report.json": false,
+    "pool4/stage_manifest.json": false,
+    "pool4/workers": false,
+    "scalar-worker-cache": false
+  },
+  "files": [
+    {
+      "name": "approved-submission-dry-run.txt",
+      "sha256": "a9f2305c190aba7361d011638d1d97eef69e94b99cdd2979827abf775f998243",
+      "size_bytes": 574
+    },
+    {
+      "name": "collection-utc.txt",
+      "sha256": "4a0ab48f1786bec0e7ae33583b0fafe16fef2e066d3646bc1de33d26c57ad12a",
+      "size_bytes": 21
+    },
+    {
+      "name": "job-15869035.raw.log",
+      "sha256": "07fa451f2d0dc26c3b9d2bf8efc7b1fc9c5c23422feb00dbfb81d10950fabbb5",
+      "size_bytes": 10801
+    },
+    {
+      "name": "launch-context.raw.txt",
+      "sha256": "3a268c5c85bacc8e86d47b6c877ff7bf6fdec0019b2fbc8412f21101bce29f3e",
+      "size_bytes": 4705
+    },
+    {
+      "name": "paid-initial-scontrol.txt",
+      "sha256": "8ab46ed5857dfab21ba17c0919dca28026120ff97ff3e4a623eebb1189c55e79",
+      "size_bytes": 1447
+    },
+    {
+      "name": "paid-job-id.txt",
+      "sha256": "fc850051bb77e16ffec8bbf468905a961895abffeb3c04c50852d886836c9aab",
+      "size_bytes": 9
+    },
+    {
+      "name": "paid-sbatch.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "name": "paid-sbatch.stdout",
+      "sha256": "fc850051bb77e16ffec8bbf468905a961895abffeb3c04c50852d886836c9aab",
+      "size_bytes": 9
+    },
+    {
+      "name": "paid-submission-attempt.json",
+      "sha256": "59f0b8dc741a6304eb835a49cf81912907e5c88476c240e6f45514503c936b21",
+      "size_bytes": 1743
+    },
+    {
+      "name": "pre-submit-partition.txt",
+      "sha256": "13622a848266d26abb6651523ba5d9cd9ea996634692f98eb318148724706026",
+      "size_bytes": 948
+    },
+    {
+      "name": "pre-submit-sinfo.txt",
+      "sha256": "cad27856cf44c4ff140dc01db651e1da9fc1e5e61934542f1f6b63caa8974419",
+      "size_bytes": 340
+    },
+    {
+      "name": "pre-submit-squeue.txt",
+      "sha256": "37564f45c433d9d132a0b370ee76afb40177592035dbd63ba02cee6be483cd35",
+      "size_bytes": 855
+    },
+    {
+      "name": "registry-before.json",
+      "sha256": "d72146f58be430af0d0995826438a5ab1599ec41aca930667718ad3c5fcdb83b",
+      "size_bytes": 75006
+    },
+    {
+      "name": "reused-free-verification.sacct.raw",
+      "sha256": "5e625ab358ec201b81340efef9cd418f1a0d1419ac8e4d704b5eb25da21ddab3",
+      "size_bytes": 185
+    },
+    {
+      "name": "run-root-inventory.txt",
+      "sha256": "14b16f1b7693f710a7fc766e96edeb90971fbdc0524a905aa912b5cb0a8d8f7c",
+      "size_bytes": 46
+    },
+    {
+      "name": "terminal-code-head.txt",
+      "sha256": "9a1793739cbb85eeb73b0e27762ed7683a4b2a655700a037c335644f888357a7",
+      "size_bytes": 41
+    },
+    {
+      "name": "terminal-code-status.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "name": "terminal-node-snapshot.txt",
+      "sha256": "ee29cffbe03a750425799e141497b1aeddb78d1e070e5f995cfd495b02730bf4",
+      "size_bytes": 738
+    },
+    {
+      "name": "terminal-sacct-all.psv",
+      "sha256": "347609053d3fa7794608ba2ab39754fff66a9cf816ef55689cd10b2e6ebba876",
+      "size_bytes": 661
+    },
+    {
+      "name": "terminal-sacct-parent.psv",
+      "sha256": "b0e46f88f432bd8160ad83249a348037a4d42eec21d24c73e1275eaf92a8d729",
+      "size_bytes": 162
+    },
+    {
+      "name": "terminal-scontrol.txt",
+      "sha256": "f8894f3f6929415e24dcad2dcee830f2ad13536ea791fbe88e8420cfd5be3f81",
+      "size_bytes": 1588
+    }
+  ],
+  "job_id": "15869035",
+  "original_job_log": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15869035.txt",
+  "original_run_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-15869035",
+  "physical_model_executed": false,
+  "root_entries": [
+    "launch-context.txt"
+  ],
+  "schema": "global_scalar_pool_v3_terminal_inventory_v1",
+  "scientific_arrays_opened": false,
+  "utc": "2026-10-15T01:17:41.191734Z"
+}

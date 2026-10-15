@@ -1,6 +1,6 @@
 # 服务器吞吐合同：独立单点CPU worker与GPU B1024
 
-更新：2026-10-15。当前CPU路线为成熟B1程序在48核allocation内并发调度独立任务，旧CPU48/B64 vmap路线关闭。[遥测修复与新候选](CPU_SCALAR_POOL_TELEMETRY_FIX.md)记录最终pin`bae03d9ef78726f00987737cdc58eac705a922ae`已独立部署、免费job15866807完成1CPU/10秒启动矩阵与身份/dry-run检查；没有新物理运行或paid提交。[首次pool4终态](CPU_SCALAR_POOL_PILOT_RESULT.md)保留旧job15866488在可选GPU遥测处FAILED1:0/1秒、零worker的原证据；该paid授权关闭。相同4CPU/90分钟新pilot只备妥，等待主管审查。[原方案](CPU_SCALAR_POOL_PLAN.md)与[验证记录](CPU_SCALAR_POOL_VALIDATION.md)仍作历史准备证据。
+更新：2026-10-15。当前CPU路线为成熟B1程序在真实物理核allocation内并发调度独立任务，48核是待验证目标，旧CPU48/B64 vmap路线关闭。[v3单次pilot终态](CPU_SCALAR_POOL_PILOT_V3_RESULT.md)：新授权仅提交job15869035，pin`bae03d9ef78726f00987737cdc58eac705a922ae`，实际cnall/4CPU/ibc11b02n24，FAILED1:0/4秒。可选遥测修复已真正走到srun；affinity`[24,25,79,80]`实际只覆盖3个(socket,core)，pre-JAX物理核门阻断，0worker。额度已关闭，不自动重提。[遥测修复与免费验证](CPU_SCALAR_POOL_TELEMETRY_FIX.md)、[首次pool4终态](CPU_SCALAR_POOL_PILOT_RESULT.md)、[原方案](CPU_SCALAR_POOL_PLAN.md)与[验证记录](CPU_SCALAR_POOL_VALIDATION.md)保留历史证据。
 
 ## 不变的科学与任务合同
 
@@ -24,7 +24,7 @@ worker数显式受allocation预算和任务数约束；48核模式不会默认�
 
 旧scalar job15820467一次B1 lower55.8773秒、compile684.2656秒；64点串行first137.3622秒。postcompile RSS5,180,694,528B、warm5,565,206,528B、Linux HWM21,406,240,768B（19.94GiB）。这些包含进程编译残留、全组输入与输出，既不是单点状态大小，也不是48份实际并发测量。
 
-每个spawn仍独立调用lower/compile；磁盘cache命中未经跨worker实测。持久worker可以摊薄启动但不会消除既有编译成本。48倍RSS/HWM仅能作风险算术，不能证明可行或不可行。首次4worker pilot未启动任何worker，RUN_ROOT仅launch-context、无cache/pool/report/stage，因此没有新增驻留或编译数据，不能据失败认定192GB不足。可选遥测的窄修复与非模型控制流检查现已完成；新admission只改执行commit/目录。相同4CPU/90min pilot（最坏¥0.30/¥0.42）须经主管审查，本轮不提交，不承诺48资源。新检查不重算旧scalar或参考数组，也不替代完整科学/资源准入。
+每个spawn仍独立调用lower/compile；磁盘cache命中未经跨worker实测。持久worker可以摊薄启动但不会消除既有编译成本。48倍RSS/HWM仅能作风险算术，不能证明可行或不可行。首次及v3 pilot均未启动worker，RUN_ROOT仅launch-context、无cache/pool/report/stage，192GB支持48worker仍证据不足。v3启动CPU24与80同为socket0/core24，25与79分别为core25/core23；物理门以package/core双key去重，未放宽。Slurm记录56CPU/ThreadsPerCore1而OS表有112logical CPUs；CR_CORE与task/affinity,task/cgroup均有原始收据，尚不归因具体flag。下一步仅可另审无模型绑定/计量诊断，不能承诺hint或threads-per-core已解决或没有额外billing。
 
 ## 工作量与GPU比较
 
@@ -34,6 +34,7 @@ worker数显式受allocation预算和任务数约束；48核模式不会默认�
 | GPU B1024×2 | job15671732，64真点×32重复=2048任务，28672 lane-days；core81.772918770秒，wrapper95.848153921秒（299.139825 lane-days/s） | 是重复容量样本，不代表2048异质点/独立member；历史pin验收不能转授当前研究科学树 |
 | 旧GPU B64 | job15579869，64真点/896 point-days；wrapper6.222332641秒 | 可作同量小工作量背景，已被B1024实用选择取代为主问题；不重跑 |
 | 首次CPU pool4 pilot | job15866488，计划64真点/896 point-days；launcher遥测失败，零物理worker | 无完成工作、数值门或性能数据，不构成B1024同总量比较或48核结果 |
+| v3 CPU pool4 pilot | job15869035，计划同为64真点/896 point-days；pre-JAX物理核准入失败，零worker | Slurm4CPU不等于本次4物理核；760 strict/reset、first/warm、cache/驻留全not reached |
 
 正式CPU/GPU吞吐比较允许不同分块，但总任务数、真实点分布、初态、forcing/参数和时间窗口须匹配；重复任务要分别记task_id与source point index，不能当独立member。若使用GPU现有64×32背景，CPU也需相同有序2048任务实测与来源审查；本次接口仍以64真实点pilot为边界，未擅自扩大或重跑GPU。真正669异质点、不同成员或长期运行须另定义输入并验证。
 
@@ -43,7 +44,7 @@ worker数显式受allocation预算和任务数约束；48核模式不会默认�
 
 费用用完整父allocation的实际ElapsedRaw和allocated CPU/GPU计一次，含启动、编译、门、IO与失败；warm单位成本另算`allocated CPUs × warm wall/3600 × CPU rate / completed point-days`。GPU另加辅助CPU，资源请求量不等于实际busy-core数。记录CPU核时/GPU卡时及完成工作，费用情景CPU CNY0.05/0.07每allocated-core-hour、GPU CNY2.20/card-hour，账单均未核实。不得把编译当热速度、不同总量冷/热混比，或按worker数线性外推。
 
-本次pool4完整父4CPU×1秒=0.001111111核时，费用情景¥0.00005556/¥0.00007778；无warm单位成本。免费预检15866448为cntest/1CPU/63秒，单列且没有物理执行；旧scalar完整父另保留、不重复计费。原始sacct全部行与唯一父行见终态报告。
+最新v3完整父4CPU×4秒=0.004444444核时，未核实费用CNY0.000222222/0.000311111，只计一次。父TotalCPU0.812秒/wall4秒=0.203 busy-core equivalents、4CPU归一5.075%，仅为pre-JAX失败启动，不是pool利用率。无完成工作、warm单位成本或模型RSS。旧首次pool4父4CPU×1秒费用¥0.00005556/¥0.00007778保留单列；免费15866448/15866807与旧scalar均不重计。原始sacct全部行与唯一父行见各终态报告。
 
 ## 历史与来源
 

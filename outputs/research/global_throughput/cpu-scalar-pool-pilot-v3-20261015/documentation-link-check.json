@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "existing_local_links_checked": 77,
+  "final_integrity_receipt_expected_after_remote_verification": true,
+  "documents": [
+    "CPU_SCALAR_POOL_PILOT_V3_RESULT.md",
+    "README.md",
+    "SERVER_BENCHMARK.md",
+    "SUPERVISOR_HANDOFF.md",
+    "NEW_PROJECT_PROMPT.md",
+    "CPU_SCALAR_POOL_TELEMETRY_FIX.md"
+  ]
+}

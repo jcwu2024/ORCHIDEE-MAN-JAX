@@ -1,0 +1,158 @@
+{
+  "CPU_utilization": {
+    "model_or_pool_utilization": "not reached",
+    "parent_allocated_CPU_normalized_fraction": 0.05075,
+    "parent_sacct_CPU_time_divided_by_wall": 0.203,
+    "parent_sacct_TotalCPU_seconds": 0.812,
+    "scope": "short failed pre-JAX startup only; not worker efficiency or model throughput",
+    "step_elapsed_seconds": 3,
+    "step_sacct_TotalCPU_seconds": 0.465,
+    "time_command_busy_core_equivalents": 0.15625,
+    "time_command_system_seconds": 0.21,
+    "time_command_user_seconds": 0.24,
+    "time_command_wall_seconds": 2.88
+  },
+  "FULL64_760_leaf_CPU_strict_gate": "not reached",
+  "GPU_cross_backend_exploratory_gates": "not reached",
+  "JAX_imported": false,
+  "Slurm_CPU_IDs": "47-50",
+  "accounting": {
+    "CNY_at_0.05": "0.0002222222222222222222222222222",
+    "CNY_at_0.07": "0.0003111111111111111111111111111",
+    "allocated_core_hours": "0.004444444444444444444444444444",
+    "billing_parent_count": 1,
+    "historical_jobs_added_to_this_cost": false,
+    "includes": "full parent allocation: startup, admission, failure, launcher/IO",
+    "rates_verified": false,
+    "step_rows_added_to_parent_cost": false
+  },
+  "actual_srun_dispatch_reached": true,
+  "allocated_CPUs": 4,
+  "allocated_TRES": "billing=4,cpu=4,node=1",
+  "completed_point_days": 0,
+  "error": "allocation affinity must contain exactly the declared unique physical cores; require Slurm core binding, SMT is not another core",
+  "execution_commit": "bae03d9ef78726f00987737cdc58eac705a922ae",
+  "exit_code": "1:0",
+  "failure_class": "pre-JAX physical-core resource admission",
+  "first_call_core_wrapper": "not reached",
+  "five_warm_core_wrapper_samples": "not reached",
+  "frozen_reset_gate": "not reached",
+  "gate_key": [
+    "package_id",
+    "physical_core_id"
+  ],
+  "gate_source": "scripts/dev/global_server_resources.py:61-67 at execution pin",
+  "gate_source_sha256": "89a91996aee4e77773839285779ddb30dd2f31fba1bf98fa7f15f350fd01fc11",
+  "intended_point_days": 896,
+  "intended_unique_points": 64,
+  "job_id": "15869035",
+  "launch_host_load_average": [
+    53.85,
+    54.57,
+    52.39
+  ],
+  "memory_192GB_48worker_conclusion": "no supporting or rejecting residence/throughput evidence",
+  "minimum_next_decision": "separately authorize/define a non-model physical-core binding diagnostic; verify Slurm billing IDs, OS affinity and sysfs topology before any revised pin or paid pilot",
+  "node": "ibc11b02n24",
+  "observed_lscpu_affinity_mapping": [
+    {
+      "core": 24,
+      "logical_cpu": 24,
+      "socket": 0
+    },
+    {
+      "core": 25,
+      "logical_cpu": 25,
+      "socket": 0
+    },
+    {
+      "core": 23,
+      "logical_cpu": 79,
+      "socket": 0
+    },
+    {
+      "core": 24,
+      "logical_cpu": 80,
+      "socket": 0
+    }
+  ],
+  "observed_unique_physical_core_count": 3,
+  "observed_unique_socket_core_keys": [
+    [
+      0,
+      23
+    ],
+    [
+      0,
+      24
+    ],
+    [
+      0,
+      25
+    ]
+  ],
+  "optional_GPU_telemetry_fix_exercised": true,
+  "paid_submission_count": 1,
+  "paid_submissions_remaining": 0,
+  "parent_elapsed_seconds": 4,
+  "per_worker_lower_compile_cache_RSS_HWM": "not reached",
+  "physical_model_executed": false,
+  "prejax_affinity": [
+    24,
+    25,
+    79,
+    80
+  ],
+  "prejax_process_time_MaxRSS_kbytes": 18780,
+  "prejax_process_time_MaxRSS_scope": "time-command child peak; not a model/worker or aggregate pool peak",
+  "prohibited_inference": "four billable Slurm CPUs do not establish four distinct physical cores on this observed configuration",
+  "raw_sources": [
+    {
+      "name": "job-15869035.raw.log",
+      "sha256": "07fa451f2d0dc26c3b9d2bf8efc7b1fc9c5c23422feb00dbfb81d10950fabbb5"
+    },
+    {
+      "name": "launch-context.raw.txt",
+      "sha256": "3a268c5c85bacc8e86d47b6c877ff7bf6fdec0019b2fbc8412f21101bce29f3e"
+    },
+    {
+      "name": "terminal-sacct-all.psv",
+      "sha256": "347609053d3fa7794608ba2ab39754fff66a9cf816ef55689cd10b2e6ebba876"
+    },
+    {
+      "name": "terminal-sacct-parent.psv",
+      "sha256": "b0e46f88f432bd8160ad83249a348037a4d42eec21d24c73e1275eaf92a8d729"
+    },
+    {
+      "name": "terminal-node-snapshot.txt",
+      "sha256": "ee29cffbe03a750425799e141497b1aeddb78d1e070e5f995cfd495b02730bf4"
+    },
+    {
+      "name": "scheduler-config.raw.txt",
+      "sha256": "ed45a6e5edfe8236fa4c420e4543af382648f5baa7687715cec1fb1edf0040bb"
+    },
+    {
+      "name": "scheduler-config-selected.txt",
+      "sha256": "c31ff472de7fbf8c69b534529088599481f3d57c30ae6c30071600e51c24c1f1"
+    },
+    {
+      "name": "terminal-inventory.json",
+      "sha256": "8580c9ae19243a985c77b808b2b56feaa1c667edb3fcc55eb15e4c0d3ca1482f"
+    },
+    {
+      "name": "paid-submission-attempt.json",
+      "sha256": "59f0b8dc741a6304eb835a49cf81912907e5c88476c240e6f45514503c936b21"
+    }
+  ],
+  "retry_permitted": false,
+  "schema": "global_cpu_scalar_pool_pilot_v3_result_v1",
+  "scientific_accepted": false,
+  "scientific_arrays_deserialized": false,
+  "state": "FAILED",
+  "terminal_node_snapshot_scope": "later snapshot; cannot establish launch contention or explain affinity mapping",
+  "unverified_option_candidates": [
+    "hint",
+    "threads-per-core"
+  ],
+  "workers_started": 0
+}

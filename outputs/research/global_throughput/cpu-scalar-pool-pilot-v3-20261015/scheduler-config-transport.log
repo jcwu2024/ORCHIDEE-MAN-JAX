@@ -1,0 +1,11 @@
+CpuFreqDef              = Unknown
+CpuFreqGovernors        = OnDemand,Performance,UserSpace
+ProctrackType           = proctrack/cgroup
+SchedulerParameters     = bf_interval=60,bf_continue,bf_resolution=300,bf_max_job_test=5000,bf_max_job_user=100,enable_user_top
+SelectType              = select/cons_tres
+SelectTypeParameters    = CR_CORE
+SlurmdParameters        = (null)
+TaskPlugin              = task/affinity,task/cgroup
+TaskPluginParam         = (null type)
+ed45a6e5edfe8236fa4c420e4543af382648f5baa7687715cec1fb1edf0040bb  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-pilot-v3-20261015/scheduler-config.raw.txt
+c31ff472de7fbf8c69b534529088599481f3d57c30ae6c30071600e51c24c1f1  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-pilot-v3-20261015/scheduler-config-selected.txt

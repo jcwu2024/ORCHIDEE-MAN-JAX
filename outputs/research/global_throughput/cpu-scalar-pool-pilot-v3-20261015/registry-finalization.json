@@ -1,0 +1,103 @@
+{
+  "all_prior_records_unchanged": true,
+  "prior_record_count": 49,
+  "records_added_by_this_pilot": 1,
+  "registry_after_sha256": "1aff0cd2d65147a2024e6081f86d6e598659b72f35008071d8dd525e150233fc",
+  "registry_before_finalization_sha256": "5f290c72e76574ca565ea56db1810c4366215977c21d3286c1d5620c4ca70e34",
+  "registry_before_submission_sha256": "d72146f58be430af0d0995826438a5ab1599ec41aca930667718ad3c5fcdb83b",
+  "registry_key": "global_cpu_scalar_pool_paid_pilot_v3_20261015",
+  "schema": "scalar_pool_v3_terminal_registry_finalization_v1",
+  "terminal_entry": {
+    "JAX_imported": false,
+    "actual_accounting": {
+      "CNY_at_0.05": "0.0002222222222222222222222222222",
+      "CNY_at_0.07": "0.0003111111111111111111111111111",
+      "allocated_core_hours": "0.004444444444444444444444444444",
+      "billing_parent_count": 1,
+      "historical_jobs_added_to_this_cost": false,
+      "includes": "full parent allocation: startup, admission, failure, launcher/IO",
+      "rates_verified": false,
+      "step_rows_added_to_parent_cost": false
+    },
+    "actual_affinity": [
+      24,
+      25,
+      79,
+      80
+    ],
+    "actual_allocated_CPUs": 4,
+    "actual_node": "ibc11b02n24",
+    "actual_parent_elapsed_seconds": 4,
+    "actual_unique_socket_core_keys": [
+      [
+        0,
+        23
+      ],
+      [
+        0,
+        24
+      ],
+      [
+        0,
+        25
+      ]
+    ],
+    "admission_sha256": "259936bb09f5d0006895b1f5ae17fa298c0baada07edcb23b2355ed892ef796a",
+    "all_prior_registry_records_unchanged": true,
+    "authorization": "2026-10-15 human approval relayed by root: exact v3 single paid pilot",
+    "automatic_retry_permitted": false,
+    "code_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3",
+    "command": [
+      "bash",
+      "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/PROPOSED_SUBMISSION.sh"
+    ],
+    "evidence_dir": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-pilot-v3-20261015",
+    "execution_commit": "bae03d9ef78726f00987737cdc58eac705a922ae",
+    "execution_ref": "codex/global-cpu-scalar-pool-v3",
+    "job_id": "15869035",
+    "maximum_allowed_invocations": 1,
+    "new_paid_approval_required": true,
+    "original_job_log_sha256": "07fa451f2d0dc26c3b9d2bf8efc7b1fc9c5c23422feb00dbfb81d10950fabbb5",
+    "paid_sbatch_invocations": 1,
+    "paid_submissions_remaining": 0,
+    "physical_model_executed": false,
+    "physical_workers_started": 0,
+    "proposal_sha256": "db9a5a7bb4a382f373e7cf7cb4d340d185d32293a305a086c585dd6db57070f9",
+    "rates_verified": false,
+    "resources": {
+      "CPUs": 4,
+      "GPUs": 0,
+      "RLIMIT_AS": null,
+      "RSS_abort_GiB": 64,
+      "command_timeout_seconds": 300,
+      "exclusive": false,
+      "host_MemAvailable_guard_GiB": 64,
+      "memory_reservation": null,
+      "no_requeue": true,
+      "nodelist": null,
+      "nodes": 1,
+      "partition": "cnall",
+      "startup_concurrency": 1,
+      "startup_timeout_seconds_per_worker": 1200,
+      "tasks": 1,
+      "wall_seconds": 5400,
+      "workers": 4
+    },
+    "returncode": 0,
+    "schema": "scalar_pool_paid_submission_attempt_v3",
+    "scientific_accepted": false,
+    "state": "closed_failed_prejax_physical_core_admission",
+    "stderr": "",
+    "stdout": "15869035\n",
+    "terminal_analysis_sha256": "f0aa13a8c8691d7d7036642809c09e461f8ddb404b22423ddf8ead8f97187a3c",
+    "terminal_exit_code": "1:0",
+    "terminal_job_state": "FAILED",
+    "terminal_utc": "2026-10-15T01:26:11.251458Z",
+    "utc": "2026-10-15T01:13:36.983763Z",
+    "worst_case_CNY": [
+      0.3,
+      0.42
+    ],
+    "worst_case_allocated_CPU_hours": 6
+  }
+}

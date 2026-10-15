@@ -2,19 +2,20 @@
 
 更新：2026-10-15。**当前CPU目标是在48核allocation内并发调度成熟独立单点程序，测完整任务吞吐和单位成本。停止推进64点vmap大程序路线。** GPU实用配置仍为已测B1024；不要求CPU凑相同batch形状，不把历史B64末位差异归因闭合作为前置。
 
-最新审查对象先读[遥测修复与新候选](CPU_SCALAR_POOL_TELEMETRY_FIX.md)：按主管新工作单完成可选遥测修复、新pin封定、独立部署及免费非模型验证。最终pin`bae03d9ef78726f00987737cdc58eac705a922ae`，目标job15866807在cntest/1CPU/10秒COMPLETED，14项真实启动stub测试、launcher/parser dry-run和admission身份匹配通过；未运行物理模型。相同4CPU/4worker/90分钟单次pilot仅备妥，新增付费授权为0。旧[首次pilot结果](CPU_SCALAR_POOL_PILOT_RESULT.md)及免费参考加载15866448原样保留，复用81项接口检查和参考证据。另读[原方案](CPU_SCALAR_POOL_PLAN.md)、[接口验证](CPU_SCALAR_POOL_VALIDATION.md)、[服务器合同](SERVER_BENCHMARK.md)及[主管交接](SUPERVISOR_HANDOFF.md)。
+最新结果先读[v3单次pilot终态](CPU_SCALAR_POOL_PILOT_V3_RESULT.md)：新明确授权下仅提交job15869035，pin`bae03d9ef78726f00987737cdc58eac705a922ae`，实际cnall/ibc11b02n24/4allocated CPUs，FAILED1:0/4秒。GPU遥测warning后已到真实srun，但affinity`[24,25,79,80]`由同次lscpu表核为3个不同(socket,core)，物理核硬门在JAX前阻断。0worker，所有编译/cache/内存/760 strict/reset/first/warm指标not reached；新授权remaining=0，不重提。此前[遥测修复与免费验证](CPU_SCALAR_POOL_TELEMETRY_FIX.md)、旧[首次pilot结果](CPU_SCALAR_POOL_PILOT_RESULT.md)、81项接口检查及参考加载15866448均原样复用。另读[服务器合同](SERVER_BENCHMARK.md)及[主管交接](SUPERVISOR_HANDOFF.md)。
 
 ## 当前可复用内容与缺口
 
 - `SingleRunner`已有一次编译B1后串行遍历点的成熟执行路径；`PoolRunner`已有spawn持久worker、独立状态、单核绑定、轮转分配与完整唯一点汇总。本次扩展这条pool路径，按实际allocation限制worker数，分批启动编译，保留完整输出和严格门。
 - 旧scalar job15820467的FULL64串行热core/wrapper中位127.074984/121.382450秒，896 point-days。它是一核探索记录，具有原GPU有限容差失败与科学接受false，不能称48核扩展结果。
 - 该进程postcompile RSS约5.18GB、warm约5.57GB、HWM约19.94GiB；包含编译和整组输入/输出。持久化复用能摊薄启动，磁盘缓存能否跨worker命中仍待实证。没有证据保证48个进程能装进单个192GB节点。
-- 首次4核/4worker paid job15866488止于launcher遥测：原RUN_ROOT仅launch-context，无cache/pool/worker/report/stage。本轮修复及非模型验证通过，但仍无物理worker新证据；相同4核/90分钟pilot（最坏¥0.30/¥0.42）等待主管审查，不自动执行。没有48worker内存支持证据，也没有证明192GB不足。
+- 首次job15866488止于launcher遥测；本次v3 job15869035止于pre-JAX物理核准入。两个RUN_ROOT均只有launch-context，无物理worker。Slurm本次计4CPU但实际affinity仅3个物理key，不能把billable CPU数当已验证物理核数。下一对象仅是待审的无模型绑定/计量诊断，不实施hint/线程flag或付费重试。192GB是否支持48worker仍证据不足。
 
 ## 已保存证据
 
 | 证据 | 可用结论与边界 |
 | --- | --- |
+| [v3单次pilot终态](CPU_SCALAR_POOL_PILOT_V3_RESULT.md) | job15869035 FAILED1:0/4s，ibc11b02n24/4CPU，资源准入阻断且零worker；完整父0.004444444核时，未核实CNY0.000222222/0.000311111只计一次。 |
 | [pool4首次终态](CPU_SCALAR_POOL_PILOT_RESULT.md) | job15866488 FAILED1:0/1s，ibc11b04n04/4CPU；物理worker与所有数值门均not reached。完整父0.001111111核时，未核实费用¥0.00005556/¥0.00007778，旧scalar不重复计费。 |
 | [v5保存数组短分析](CPU48_V5_SAVED_ANALYSIS.md) | 760叶全树复核；CPU内部3个有限超差元素/2点，无额外结构、dtype、离散值或非有限问题；strict FAIL与科学false保留。v5是单CPU JAX进程/device的64点vmap，未取得warm吞吐。 |
 | [v5终态](../../../outputs/research/global_throughput/cpu48-b64-execution-v5-20261014/CURRENT_RESULT.md) | job15857765 FAILED1:0/819s；48核父10.92核时，费用情景CNY0.546/0.7644，已关闭。旧scalar父2197s的CNY1.464666667/2.050533333另计一次。原输出、pin和失败原因不改。 |
@@ -28,6 +29,6 @@
 
 本线面向论文669个独立PFT14网格的完整物理正向效率；原时间递推、48半小时步/天、native dtypes、760完整输出与masks、`atol=1e-8/rtol=1e-10`保持。x64不等于全算术FP64。静态Fortran分支ledger与运行科学验收仍分开；不能省过程、改容差或减少科学有效输出来提速。详见[精度边界](PRECISION_BOUNDARY.md)、[执行审计](EXECUTION_AUDIT.md)和[Fortran科学验收政策](../../source_audits/paper_scientific_acceptance_policy.md)。
 
-固定cwd `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput`、branch `research/global-throughput`；开工核对top-level/branch/实际import，不写main或daily树。[工作树管理](../../WORKSPACE_MANAGEMENT.md)和[共享部署入口](../../../../../../docs/deployment-explore1000.md)仍有效。全部旧单次paid额度均已关闭；本轮只授权修复、部署和免费验证，未增加paid余额，不自动重提或扩48。交付commit/push后停止，不联系、轮询或唤醒主管，不建替代聊天或自动任务。
+固定cwd `E:/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput`、branch `research/global-throughput`；开工核对top-level/branch/实际import，不写main或daily树。[工作树管理](../../WORKSPACE_MANAGEMENT.md)和[共享部署入口](../../../../../../docs/deployment-explore1000.md)仍有效。全部旧额度及本次v3唯一paid额度均已关闭，不重提或扩48；未授权后续诊断执行。交付后不联系、轮询或自动唤醒主管，不建替代聊天或自动任务。
 
 历史原始制品和专门报告原样保留；本页及另外三份入口压缩前全文可从Git `8fac02c1d5ac67d9a7e829a8d3f47fbf73f29ad6` 对应路径恢复。历史工作单不自动恢复授权。

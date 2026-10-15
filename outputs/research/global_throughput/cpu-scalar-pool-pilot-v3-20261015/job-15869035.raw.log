@@ -1,0 +1,193 @@
+2026-10-15T01:14:31Z
+ibc11b02n24
+ 09:14:31 up 133 days, 23:25,  0 users,  load average: 53.85, 54.57, 52.39
+JobId=15869035 JobName=orchjax-srv-cpu4
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:01 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-15T09:13:37 EligibleTime=2026-10-15T09:13:37
+   AccrueTime=2026-10-15T09:13:37
+   StartTime=2026-10-15T09:14:30 EndTime=2026-10-15T10:44:30 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-15T09:14:30 Scheduler=Main
+   Partition=cnall AllocNode:Sid=ibc12b01n05:41207
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=ibc11b02n24
+   BatchHost=ibc11b02n24
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=(null)
+     Nodes=ibc11b02n24 CPU_IDs=47-50 Mem=0 GRES=
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/hpc/slurm_global_server_cpu_4core.sh
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15869035.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/global_scalar_pool_15869035.txt
+   Power=
+   
+
+pid 93424's current affinity list: 24,25,79,80
+CPU CORE SOCKET ONLINE
+0   0    0      yes
+1   1    0      yes
+2   2    0      yes
+3   3    0      yes
+4   4    0      yes
+5   5    0      yes
+6   6    0      yes
+7   7    0      yes
+8   8    0      yes
+9   9    0      yes
+10  10   0      yes
+11  11   0      yes
+12  12   0      yes
+13  13   0      yes
+14  14   0      yes
+15  15   0      yes
+16  16   0      yes
+17  17   0      yes
+18  18   0      yes
+19  19   0      yes
+20  20   0      yes
+21  21   0      yes
+22  22   0      yes
+23  23   0      yes
+24  24   0      yes
+25  25   0      yes
+26  26   0      yes
+27  27   0      yes
+28  28   1      yes
+29  29   1      yes
+30  30   1      yes
+31  31   1      yes
+32  32   1      yes
+33  33   1      yes
+34  34   1      yes
+35  35   1      yes
+36  36   1      yes
+37  37   1      yes
+38  38   1      yes
+39  39   1      yes
+40  40   1      yes
+41  41   1      yes
+42  42   1      yes
+43  43   1      yes
+44  44   1      yes
+45  45   1      yes
+46  46   1      yes
+47  47   1      yes
+48  48   1      yes
+49  49   1      yes
+50  50   1      yes
+51  51   1      yes
+52  52   1      yes
+53  53   1      yes
+54  54   1      yes
+55  55   1      yes
+56  0    0      yes
+57  1    0      yes
+58  2    0      yes
+59  3    0      yes
+60  4    0      yes
+61  5    0      yes
+62  6    0      yes
+63  7    0      yes
+64  8    0      yes
+65  9    0      yes
+66  10   0      yes
+67  11   0      yes
+68  12   0      yes
+69  13   0      yes
+70  14   0      yes
+71  15   0      yes
+72  16   0      yes
+73  17   0      yes
+74  18   0      yes
+75  19   0      yes
+76  20   0      yes
+77  21   0      yes
+78  22   0      yes
+79  23   0      yes
+80  24   0      yes
+81  25   0      yes
+82  26   0      yes
+83  27   0      yes
+84  28   1      yes
+85  29   1      yes
+86  30   1      yes
+87  31   1      yes
+88  32   1      yes
+89  33   1      yes
+90  34   1      yes
+91  35   1      yes
+92  36   1      yes
+93  37   1      yes
+94  38   1      yes
+95  39   1      yes
+96  40   1      yes
+97  41   1      yes
+98  42   1      yes
+99  43   1      yes
+100 44   1      yes
+101 45   1      yes
+102 46   1      yes
+103 47   1      yes
+104 48   1      yes
+105 49   1      yes
+106 50   1      yes
+107 51   1      yes
+108 52   1      yes
+109 53   1      yes
+110 54   1      yes
+111 55   1      yes
+bae03d9ef78726f00987737cdc58eac705a922ae
+slurm_cpus_per_task=4 slurm_job_cpus_per_node=4
+slurm_alloc_tres=cpu=4,node=1,billing=4 slurm_alloc_tres_source=TRES
+validation_mode=exploratory cpu_reference_role=cpu-internal sizes=64 methods=pool memory_reservation=none pool_admission_guard_gib=64 pool_sampled_RSS_abort_gib=64 workers=4 startup_concurrency=1 cache_mode=persistent cache_root=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-15869035/scalar-worker-cache
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+warning: optional GPU telemetry unavailable: nvidia-smi failed
+starting mode=pool utc=2026-10-15T01:14:31Z
+{"schema": "global_cpu_child_prejax_v1", "status": "exec_boundary_ready", "pid": 93472, "thread_budget": 1, "thread_policy": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "actual_environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": [], "affinity": [24, 25, 79, 80], "JAX_imported": false, "model_execution": false, "inherited_transport_policy": {"environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": []}, "error": null, "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
+{"schema": "global_cpu_child_prejax_v1", "status": "resource_admission_failed", "pid": 93472, "thread_budget": 1, "thread_policy": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "actual_environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": [], "affinity": [24, 25, 79, 80], "JAX_imported": false, "model_execution": false, "inherited_transport_policy": {"environment": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1", "XLA_FLAGS": null, "JAX_PLATFORMS": "cpu", "JAX_ENABLE_X64": "true", "PYTHONDONTWRITEBYTECODE": "1"}, "unexpected_policy_keys": []}, "error": "allocation affinity must contain exactly the declared unique physical cores; require Slurm core binding, SMT is not another core", "scope": "pre-JAX child entry; thread budget does not prove allocation or effective parallelism"}
+Traceback (most recent call last):
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/dev/benchmark_global_server_cpu.py", line 1041, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/dev/benchmark_global_server_cpu.py", line 942, in main
+    resources = admit(args.mode, args.cpu_budget)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/dev/global_server_resources.py", line 67, in admit
+    raise RuntimeError("allocation affinity must contain exactly the declared unique physical cores; require Slurm core binding, SMT is not another core")
+RuntimeError: allocation affinity must contain exactly the declared unique physical cores; require Slurm core binding, SMT is not another core
+Command exited with non-zero status 1
+	Command being timed: "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/dev/global_cpu_child_environment.py --thread-budget 1 -- /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/scripts/dev/benchmark_global_server_cpu.py --mode pool --cpu-budget 4 --sizes 64 --prepared-input /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/round4-inputs-remote-canonical/prepared_inputs_remote_64.pkl --gpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/gpu-round4/model --cpu-reference-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu48-b64-execution-v3-20261012/15820467/scalar --config /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/global-throughput-cpu-scalar-pool-v3/configs/orchidee_man_250919.yaml --warm-repeats 5 --validation-mode exploratory --cpu-reference-role cpu-internal --output-dir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-15869035/pool4 --memory-guard-gib 64 --pool-memory-limit-gib 64 --pool-workers 4 --pool-start-concurrency 1 --pool-start-timeout-seconds 1200 --pool-command-timeout-seconds 300 --cache-mode persistent --require-child-environment --cache-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/server-benchmark/cpu4-15869035/scalar-worker-cache --cpu-reference-admission-record /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/research/global_throughput/cpu-scalar-pool-telemetry-fix-20261015/v3/scalar-admission.json --expected-cpu-reference-admission-sha256 259936bb09f5d0006895b1f5ae17fa298c0baada07edcb23b2355ed892ef796a --expected-gpu-reference-sha256 a3a871e69d8bcb06565f463da43f864938aa5cedeb998cd61c2f1224c14555b6"
+	User time (seconds): 0.24
+	System time (seconds): 0.21
+	Percent of CPU this job got: 15%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.88
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18780
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1844
+	Minor (reclaiming a frame) page faults: 6213
+	Voluntary context switches: 2559
+	Involuntary context switches: 308
+	Swaps: 0
+	File system inputs: 22376
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+srun: error: ibc11b02n24: task 0: Exited with exit code 1

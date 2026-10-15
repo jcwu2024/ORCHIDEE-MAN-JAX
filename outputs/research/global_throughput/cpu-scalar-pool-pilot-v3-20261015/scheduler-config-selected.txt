@@ -1,0 +1,9 @@
+CpuFreqDef              = Unknown
+CpuFreqGovernors        = OnDemand,Performance,UserSpace
+ProctrackType           = proctrack/cgroup
+SchedulerParameters     = bf_interval=60,bf_continue,bf_resolution=300,bf_max_job_test=5000,bf_max_job_user=100,enable_user_top
+SelectType              = select/cons_tres
+SelectTypeParameters    = CR_CORE
+SlurmdParameters        = (null)
+TaskPlugin              = task/affinity,task/cgroup
+TaskPluginParam         = (null type)

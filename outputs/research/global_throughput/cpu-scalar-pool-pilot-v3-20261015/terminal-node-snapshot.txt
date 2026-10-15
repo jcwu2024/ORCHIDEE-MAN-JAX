@@ -1,0 +1,18 @@
+NodeName=ibc11b02n24 Arch=x86_64 CoresPerSocket=28 
+   CPUAlloc=51 CPUEfctv=56 CPUTot=56 CPULoad=54.79
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=(null)
+   NodeAddr=ibc11b02n24 NodeHostName=ibc11b02n24 Version=22.05.7
+   OS=Linux 3.10.0-1160.el7.nosig.x86_64 #1 SMP Sun Apr 24 08:26:01 CST 2022 
+   RealMemory=1 AllocMem=0 FreeMem=111598 Sockets=2 Boards=1
+   State=MIXED ThreadsPerCore=1 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=cnall 
+   BootTime=2026-06-03T09:49:26 SlurmdStartTime=2026-06-03T09:54:12
+   LastBusyTime=2026-08-31T23:00:57
+   CfgTRES=cpu=56,mem=1M,billing=56
+   AllocTRES=cpu=51
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+
