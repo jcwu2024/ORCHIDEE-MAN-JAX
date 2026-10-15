@@ -1,26 +1,28 @@
 # Current Work Order
 
 Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-records approved sole job15866925, submitted at immutable30d7eb7/proposal59b09320;
-first snapshot PENDING(Priority), exact approved argv, automatic node selection.
-We incorrectly treated busy GPUs as a submission block; the user clarified
-normal Slurm queueing is allowed, and the earlier closure did not revoke approval.
-Retain this single live job through terminal status with sparse status reads.
-Queue time is outside the5400-second allocation clock; predicted start
-2026-10-16T22:03:56 is an estimate, not an actual start or reservation.
-New FP64/native/FD/full3854/physics/resource gates remain unmeasured at the
-pending snapshot. No cancel/resubmit, retry, extension, layer graph, training
-or automation; stop this line after an inconclusive bounded run.
-Actual submission evidence is under outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/;
-earlier resource-blocked/ evidence remains historical availability observation.
+records sole job15866925 FAILED1:0 before discovery/preflight/model execution:
+8 allocated seconds, four CPUs/one GPU on ibc13b02n03. A legacy helper retained
+old fixed-node allocation identity despite current automatic node selection.
+The actual RUNNING response was not saved; terminal scontrol was purged, so
+exact lost fields are not reconstructed. All new FP64/FD/full3854/physics gates
+remain unmeasured; this is a launcher failure, not a numerical counterexample.
+Allocation:0.002222222222 card-hours/0.008888888889 CPU-hours, estimated
+CNY0.005511111111, bill unknown. Slurm terminal; no owned GPU children started,
+no UUID sample and no UUID-release-pass claim. State20 remains unwaived.
+The single attempt is used and this precision/FD line is STOPPED. Bounded local
+launcher repair passes144 scoped CPU tests in2.03s; supervisor audit found no
+additional legacy time/scope/output defect. This supplies no GPU/gradient admission;
+no GPU authorization, deployment, resubmission, training, automation or watching.
+Actual captures: outputs/T7-current-model-precision-admission-execution-20261015/terminal/,
+including terminal-summary.json and local-validation-receipt.json.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation, diagnostic FP64 context and one combined native state
 VJP/JVP ABI. Program-coordinate FD permits computational-only2621; unknown
 internal branches are interpretation limits. Local tests/dry-run do not certify
 full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
-proposal was explicitly approved and submitted; model execution has not begun
-at the first pending snapshot. Historical GPU
+proposal was submitted once and failed before model execution; the attempt is used. Historical GPU
 scopes remain closed/consumed.
 The actual test01 CPU outer dry-run and full saved B1/begin endpoint inspection
 pass at committed30d7eb7, with exact full case/state and four projections.
@@ -85,12 +87,15 @@ pools are silently coordinated. Four directions and separate native/mean/state20
 gates remain; unknown internal branches limit interpretation, and unconverged
 FD is inconclusive. The integrated90-minute/CNY3.72 proposal was explicitly
 approved for immutable30d7eb7, one V100/four allocated CPUs/5400s/24GiB,
-one compile and52 calls. Job15866925 is submitted, first snapshot PENDING(Priority),
-Requeue=0/OverSubscribe=OK. Retain this exact single job through terminal status
-with sparse status reads; queue time does not consume allocation time. No
-cancel/resubmit, retry, extension, layer graph, training or automation. If the
-bounded run is scientifically inconclusive, stop this line after the run.
-New native FP64/FD/self-repeat/full3854/physics/resource gates are unmeasured.
+one compile and52 calls. The actual single attempt job15866925 FAILED1:0 before
+discovery/preflight/model execution after8 allocated seconds. All new scientific
+gates remain unmeasured. This precision/FD line is STOPPED: no retry/resubmit,
+new GPU proposal, deployment, remote write, training, automation or watching.
+The bounded local launcher/helper repair passed144 CPU regressions in2.03s;
+it preserves legacy defaults and raw diagnostics and does not restore execution
+authorization. Supervisor dependency review found no additional time/path defect.
+The earlier busy-GPU submission block was wrong; normal queueing was allowed.
+Historical pending/start estimates are superseded by actual terminal accounting.
 B4 local repair remains no-go,
 and state20 remains a separate strict failure. Accepted CPU preparation and old
 FP32 evidence are retained; neither supplies new FP64 scientific acceptance.

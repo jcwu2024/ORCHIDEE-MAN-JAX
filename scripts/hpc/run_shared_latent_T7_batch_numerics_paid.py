@@ -175,7 +175,7 @@ def allocation_epochs(environment, job, *, observation=None):
     return start, end
 
 
-def allocated_tres(job):
+def allocated_tres(job, *, expected_node=NODE):
     """Allocated fields only, with actual allocation detail for legacy TRES.
 
     22.05.7 job_info.c:696 emits tres_alloc_str, falling back to tres_req_str
@@ -190,7 +190,7 @@ def allocated_tres(job):
     if any(value != values[0] for value in values[1:]):
         raise ValueError('conflicting actual allocated TRES fields')
     if 'TRES' in sources:
-        if job.get('JobState') != 'RUNNING' or job.get('Nodes') != NODE:
+        if job.get('JobState') != 'RUNNING' or job.get('Nodes') != expected_node:
             raise ValueError('legacy TRES lacks actual single-node allocation detail')
         ids = set()
         for item in job.get('CPU_IDs', '').split(','):

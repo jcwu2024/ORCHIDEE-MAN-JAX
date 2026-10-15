@@ -32,8 +32,8 @@ GPU_PYTHON = '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/pytho
 SLURM = paid.SLURM
 
 
-def _allocated_tres(job):
-    values, sources = paid.allocated_tres(job)
+def _allocated_tres(job, *, expected_node):
+    values, sources = paid.allocated_tres(job, expected_node=expected_node)
     if values.get('cpu') != '4' or values.get('gres/gpu') != '1' or values.get('node') != '1':
         raise ValueError('actual allocated TRES CPU/GPU/node count differs')
     typed = [value for key, value in values.items() if key.startswith('gres/gpu:')]
@@ -44,11 +44,17 @@ def _allocated_tres(job):
 
 def validate_allocation(environment, job, hostname, *, now=None):
     """Validate live 1xV100/4-CPU/90-minute nonexclusive scheduler allocation."""
+    node_list = job.get('NodeList', '')
+    node_field = job.get('Nodes')
+    allocated_node = node_list.split(',')[0].split('.')[0]
     required = dict(JobId=environment.get('SLURM_JOB_ID'), JobState='RUNNING',
         Partition='gnall', NumNodes='1', NumCPUs='4', NumTasks='1',
         Requeue='0', TimeLimit='01:30:00')
     if (not str(required['JobId'] or '').isdigit()
-            or hostname.split('.')[0] != job.get('NodeList', '').split(',')[0].split('.')[0]
+            or not node_list or ',' in node_list or '[' in node_list or ']' in node_list
+            or not re.fullmatch(r'[A-Za-z0-9_-]+', allocated_node)
+            or (node_field is not None and node_field != allocated_node)
+            or hostname.split('.')[0] != allocated_node
             or any(job.get(key) != value for key, value in required.items())
             or environment.get('SLURM_CPUS_PER_TASK') != '4'
             or environment.get('SLURM_NTASKS') != '1'
@@ -57,7 +63,7 @@ def validate_allocation(environment, job, hostname, *, now=None):
             or environment.get('SLURM_GPUS_ON_NODE', '1') != '1'
             or job.get('OverSubscribe') != 'OK'):
         raise ValueError('actual Slurm job/node/resources differ from 90-minute scope')
-    allocation, sources = _allocated_tres(job)
+    allocation, sources = _allocated_tres(job, expected_node=allocated_node)
     details = [job[key] for key in ('GresDetail', 'GRES') if key in job]
     physical_gpu = environment.get('SLURM_JOB_GPUS')
     if (not physical_gpu or not details or len(set(details)) != 1
@@ -75,19 +81,73 @@ def validate_allocation(environment, job, hostname, *, now=None):
     for key, epoch in (('SLURM_JOB_START_TIME', starts), ('SLURM_JOB_END_TIME', ends)):
         if key in environment and (not str(environment[key]).isdigit() or int(environment[key]) != int(epoch)):
             raise ValueError('original scheduler epoch differs from live allocation')
-    return dict(job=job, start_epoch=starts, end_epoch=ends, allocated_tres=allocation,
+    return dict(job=job, allocated_node=allocated_node, start_epoch=starts, end_epoch=ends, allocated_tres=allocation,
         tres_fields=sources, physical_gpu=physical_gpu, nonexclusive=True)
 
 
-def read_live_allocation(environment=None):
+def _diagnostic_text(value):
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')
+    return value
+
+
+def _save_allocation_diagnostic(path, observation):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    free.atomic_json(path, observation)
+
+
+def read_live_allocation(environment=None, *, diagnostic_output=None):
     environment = os.environ if environment is None else environment
     job_id = environment.get('SLURM_JOB_ID', '')
     if not job_id.isdigit():
         raise ValueError('numeric live Slurm job ID required')
-    result = subprocess.run([SLURM, 'show', 'job', '--details', '-o', job_id],
-        capture_output=True, text=True, timeout=4, check=True)
-    job = paid.parse_job(result.stdout)
-    return validate_allocation(environment, job, socket.gethostname())
+    command = [SLURM, 'show', 'job', '--details', '-o', job_id]
+    hostname = socket.gethostname()
+    observation = dict(schema_version='current_T7_live_allocation_diagnostic_v1',
+        status='scheduler_query_started', command=command, hostname=hostname, job_id=job_id)
+    path = None if diagnostic_output is None else Path(diagnostic_output)
+    if path is not None and path.exists():
+        raise FileExistsError('preserve existing live allocation diagnostic')
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=4, check=False)
+    except Exception as error:
+        observation.update(status='scheduler_query_failed',
+            query_error_type=type(error).__name__, query_error=str(error),
+            stdout=_diagnostic_text(getattr(error, 'stdout', getattr(error, 'output', None))),
+            stderr=_diagnostic_text(getattr(error, 'stderr', None)))
+        if path is not None:
+            _save_allocation_diagnostic(path, observation)
+        raise
+    observation.update(status='scheduler_response_saved_before_validation',
+        returncode=result.returncode, stdout=result.stdout, stderr=result.stderr)
+    if path is not None:
+        _save_allocation_diagnostic(path, observation)
+    if result.returncode:
+        observation.update(status='scheduler_command_failed',
+            query_error_type='CalledProcessError', query_error=f'scontrol exited {result.returncode}')
+        if path is not None:
+            _save_allocation_diagnostic(path, observation)
+        raise subprocess.CalledProcessError(result.returncode, command,
+            output=result.stdout, stderr=result.stderr)
+    try:
+        job = paid.parse_job(result.stdout)
+        observation['parsed_job'] = job
+        allocation = validate_allocation(environment, job, hostname)
+    except Exception as error:
+        observation.update(status='allocation_validation_failed',
+            validation_error_type=type(error).__name__, validation_error=str(error))
+        if path is not None:
+            _save_allocation_diagnostic(path, observation)
+        raise
+    observation.update(status='allocation_validated',
+        allocated_node=allocation['allocated_node'],
+        allocated_tres=allocation['allocated_tres'],
+        allocated_tres_fields=allocation['tres_fields'],
+        physical_gpu=allocation['physical_gpu'])
+    if path is not None:
+        _save_allocation_diagnostic(path, observation)
+    return allocation
 
 
 def quote_cost(allocation_seconds):
@@ -108,6 +168,7 @@ def build_plan(args, argv):
     supervisor_output = output.with_suffix('.supervisor.json')
     preflight_output = (args.runtime_preflight or output.with_suffix('.runtime-preflight.json')).resolve()
     discovery_output = output.with_suffix('.discovery.json')
+    allocation_diagnostic_output = output.with_suffix('.allocation-diagnostic.json')
     shell = ROOT / 'scripts/hpc/run_shared_current_T7_precision_admission.sh'
     child = lambda entry, child_args: ['bash', str(shell), '--runtime-child', GPU_PYTHON,
         str(ROOT / 'scripts/hpc' / entry), *child_args]
@@ -124,7 +185,8 @@ def build_plan(args, argv):
         lower_seconds=CAPS['lower'], compile_seconds=CAPS['compile'], calls_seconds=CAPS['calls']))
     return dict(scope=scope, checkout=str(ROOT), output=str(output), ledger=str(ledger),
         supervisor_output=str(supervisor_output), preflight_output=str(preflight_output),
-        discovery_output=str(discovery_output), shell_started_epoch=os.environ.get('CURRENT_T7_SHELL_STARTED_EPOCH'),
+        discovery_output=str(discovery_output), allocation_diagnostic_output=str(allocation_diagnostic_output),
+        shell_started_epoch=os.environ.get('CURRENT_T7_SHELL_STARTED_EPOCH'),
         commands=commands, phase_environment={}, paid_startup_observation=paid.startup_observation(os.environ))
 
 
@@ -233,8 +295,11 @@ class CurrentSupervisor(paid.PaidSupervisor):
 def run_live(args, argv, *, allocation_reader=None, lock_factory=AffineScopeLock,
              supervisor_factory=CurrentSupervisor):
     approval = probe.check_approval(args, argv)
-    allocation_reader = read_live_allocation if allocation_reader is None else allocation_reader
-    allocation = allocation_reader()
+    if allocation_reader is None:
+        diagnostic_output = args.output.resolve().with_suffix('.allocation-diagnostic.json')
+        allocation = read_live_allocation(diagnostic_output=diagnostic_output)
+    else:
+        allocation = allocation_reader()
     plan = build_plan(args, argv)
     plan['allocation'] = allocation
     plan['slurm_allocation'] = allocation

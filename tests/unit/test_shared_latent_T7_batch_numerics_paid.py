@@ -306,6 +306,18 @@ def test_allocated_tres_uses_legacy_tres_only_with_running_resource_records(monk
         paid.allocated_tres(legacy)
 
 
+def test_allocated_tres_legacy_node_can_be_overridden_but_default_remains_fixed(monkeypatch):
+    _, _, job = allocation_fixture(monkeypatch)
+    legacy = dict(job)
+    legacy["TRES"] = legacy.pop("AllocTRES")
+    legacy.update(Nodes="ibc13b02n03", CPU_IDs="0-3", GRES="gpu:v100:1(IDX:3)")
+
+    with pytest.raises(ValueError, match="legacy TRES lacks actual single-node allocation detail"):
+        paid.allocated_tres(legacy)
+    accepted, sources = paid.allocated_tres(legacy, expected_node="ibc13b02n03")
+    assert accepted["cpu"] == "4" and sources == ["TRES"]
+
+
 @pytest.mark.parametrize("fields", [
     {"ReqTRES": "cpu=4,node=1,gres/gpu=1"},
     {"AllocTRES": "cpu=4,node=1,gres/gpu=1", "TRES": "cpu=4,node=1,gres/gpu=2"},

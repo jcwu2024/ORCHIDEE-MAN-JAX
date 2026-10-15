@@ -1,18 +1,21 @@
 # Current Project Status
 
 Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-records approved sole job15866925, submitted at immutable30d7eb7/proposal59b09320;
-first snapshot PENDING(Priority), exact approved argv, automatic node selection.
-We incorrectly treated busy GPUs as a submission block; the user clarified
-normal Slurm queueing is allowed, and the earlier closure did not revoke approval.
-Retain this single live job through terminal status with sparse status reads.
-Queue time is outside the5400-second allocation clock; predicted start
-2026-10-16T22:03:56 is an estimate, not an actual start or reservation.
-New FP64/native/FD/full3854/physics/resource gates remain unmeasured at the
-pending snapshot. No cancel/resubmit, retry, extension, layer graph, training
-or automation; stop this line after an inconclusive bounded run.
-Actual submission evidence is under outputs/T7-current-model-precision-admission-execution-20261015/queued-execution/;
-earlier resource-blocked/ evidence remains historical availability observation.
+records sole job15866925 FAILED1:0 before discovery/preflight/model execution:
+8 allocated seconds, four CPUs/one GPU on ibc13b02n03. A legacy helper retained
+old fixed-node allocation identity despite current automatic node selection.
+The actual RUNNING response was not saved; terminal scontrol was purged, so
+exact lost fields are not reconstructed. All new FP64/FD/full3854/physics gates
+remain unmeasured; this is a launcher failure, not a numerical counterexample.
+Allocation:0.002222222222 card-hours/0.008888888889 CPU-hours, estimated
+CNY0.005511111111, bill unknown. Slurm terminal; no owned GPU children started,
+no UUID sample and no UUID-release-pass claim. State20 remains unwaived.
+The single attempt is used and this precision/FD line is STOPPED. Bounded local
+launcher repair passes144 scoped CPU tests in2.03s; supervisor audit found no
+additional legacy time/scope/output defect. This supplies no GPU/gradient admission;
+no GPU authorization, deployment, resubmission, training, automation or watching.
+Actual captures: outputs/T7-current-model-precision-admission-execution-20261015/terminal/,
+including terminal-summary.json and local-validation-receipt.json.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 now integrates the real fixed66M B1/299/T7 public callable. Actual local public
 preparation matches complete saved case/state hashes and355FP32 leaves. All nine

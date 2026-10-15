@@ -50,6 +50,18 @@ def valid_allocation(now=1_800_000_000):
     return env, job, now
 
 
+def legacy_allocation(node='ibc13b02n03', now=1_800_000_000):
+    env, job, now = valid_allocation(now)
+    env['SLURM_JOB_GPUS'] = '0'
+    job['NodeList'] = node
+    job['Nodes'] = node
+    job['CPU_IDs'] = '0-3'
+    job['GRES'] = 'gpu:v100:1(IDX:0)'
+    job.pop('GresDetail')
+    job['TRES'] = job.pop('AllocTRES')
+    return env, job, now
+
+
 def test_dry_run_forwards_exact_arguments_to_host_probe(monkeypatch, tmp_path):
     argv = cli_args('dry-run', tmp_path / 'out.json')
     calls = []
@@ -129,6 +141,77 @@ def test_allocation_accepts_exact_scope_and_cost_is_capped():
     assert overrun['ceiling_exposure_cny'] == pytest.approx(3.72)
     assert overrun['actual_bill_known'] is False
     assert runner.quote_cost(runner.TOTAL_SECONDS + 500)['allocation_seconds'] == runner.TOTAL_SECONDS + 500
+
+
+@pytest.mark.parametrize('node', ['ibc13b02n03', 'ibc13b03n04'])
+def test_current_allocation_uses_actual_node_for_legacy_tres(node):
+    env, job, now = legacy_allocation(node)
+    allocation = runner.validate_allocation(env, job, node + '.cluster', now=now)
+    assert allocation['allocated_node'] == node
+    assert allocation['tres_fields'] == ['TRES']
+    assert allocation['allocated_tres']['cpu'] == '4'
+
+
+@pytest.mark.parametrize('mutation,match', [
+    ('wrong_resource', 'actual allocated TRES CPU/GPU/node count differs'),
+    ('node_hostname_conflict', 'actual Slurm job/node/resources differ'),
+    ('node_field_conflict', 'actual Slurm job/node/resources differ'),
+    ('requested_only', 'actual allocated TRES unavailable'),
+    ('missing_cpu_ids', 'actual allocated CPU IDs unavailable'),
+    ('invalid_cpu_ids', 'actual allocated CPU IDs differ|actual allocated CPU IDs unavailable'),
+    ('missing_gpu_detail', 'actual allocated GPU detail differs|legacy TRES lacks actual allocated GPU detail'),
+    ('mismatched_gpu_detail', 'allocated GPU detail differs from scheduler environment'),
+    ('mismatched_gpu_index', 'allocated GPU detail differs from scheduler environment'),
+])
+def test_current_allocation_rejects_incomplete_or_conflicting_evidence(mutation, match):
+    env, job, now = legacy_allocation()
+    hostname = 'ibc13b02n03.cluster'
+    if mutation == 'wrong_resource':
+        job['TRES'] = 'cpu=8,gres/gpu=1,gres/gpu:v100=1,node=1'
+    elif mutation == 'node_hostname_conflict':
+        hostname = 'ibc13b03n04.cluster'
+    elif mutation == 'node_field_conflict':
+        job['Nodes'] = 'ibc13b03n04'
+    elif mutation == 'requested_only':
+        job['ReqTRES'] = job.pop('TRES')
+    elif mutation == 'missing_cpu_ids':
+        job.pop('CPU_IDs')
+    elif mutation == 'invalid_cpu_ids':
+        job['CPU_IDs'] = '0-2'
+    elif mutation == 'missing_gpu_detail':
+        job.pop('GRES')
+    elif mutation == 'mismatched_gpu_detail':
+        job['GRES'] = 'gpu:v100:1(IDX:1)'
+    elif mutation == 'mismatched_gpu_index':
+        job['GRES'] = 'gpu:v100:1(IDX:0)'
+        env['SLURM_JOB_GPUS'] = '1'
+    with pytest.raises(ValueError, match=match):
+        runner.validate_allocation(env, job, hostname, now=now)
+
+
+def test_live_allocation_failure_persists_reconstructed_scheduler_response(monkeypatch, tmp_path):
+    env, job, _ = legacy_allocation()
+    job['TRES'] = 'cpu=8,gres/gpu=1,gres/gpu:v100=1,node=1'
+    # Reconstructed fixture only; the failed job's original RUNNING response is unavailable.
+    reconstructed_stdout = ' '.join(f'{key}={value}' for key, value in job.items())
+    reconstructed_stderr = 'fixture stderr: reconstructed scheduler response'
+    diagnostic = tmp_path / 'allocation-diagnostic.json'
+    monkeypatch.setattr(runner.socket, 'gethostname', lambda: 'ibc13b02n03.cluster')
+    monkeypatch.setattr(runner.subprocess, 'run', lambda command, **kwargs: SimpleNamespace(
+        returncode=0, stdout=reconstructed_stdout, stderr=reconstructed_stderr))
+
+    with pytest.raises(ValueError, match='actual allocated TRES CPU/GPU/node count differs'):
+        runner.read_live_allocation(env, diagnostic_output=diagnostic)
+
+    saved = json.loads(diagnostic.read_text())
+    assert saved['command'] == [runner.SLURM, 'show', 'job', '--details', '-o', env['SLURM_JOB_ID']]
+    assert saved['hostname'] == 'ibc13b02n03.cluster'
+    assert saved['returncode'] == 0
+    assert saved['stdout'] == reconstructed_stdout
+    assert saved['stderr'] == reconstructed_stderr
+    assert saved['status'] == 'allocation_validation_failed'
+    assert saved['validation_error_type'] == 'ValueError'
+    assert saved['validation_error'] == 'actual allocated TRES CPU/GPU/node count differs'
 
 
 def _plan(tmp_path):
