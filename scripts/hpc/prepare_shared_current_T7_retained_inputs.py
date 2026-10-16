@@ -192,22 +192,43 @@ def consume_retained_inputs(assets: dict[str, object], data_root: str | Path) ->
             "qair", "temp_air", "pb", "precip_rain", "precip_snow", "lwdown", "swdown",
             "ccanopy", "veget_max", "soiltile",
         )
-        payload_fields = {}
-        vector_fields = {
-            "kindex", "lon", "lat", "contfrac", "zlev", "zlevuv", "u", "v", "qair",
-            "temp_air", "pb", "precip_rain", "precip_snow", "lwdown", "swdown", "ccanopy",
+        payload_domain = bundle.domain
+        source_shapes = {
+            "kindex": np.shape(payload_domain.kindex),
+            "lalo": np.shape(payload_domain.lalo),
+            "lon": np.shape(payload_domain.lon),
+            "lat": np.shape(payload_domain.lat),
+            "contfrac": np.shape(payload_domain.contfrac_land),
+            "resolution": None if payload_domain.resolution is None else np.shape(payload_domain.resolution),
+            "neighbours": None if payload_domain.neighbours is None else np.shape(payload_domain.neighbours),
+            "corners": None if payload_domain.corners is None else np.shape(payload_domain.corners),
+            "seglength": None if payload_domain.seglength is None else np.shape(payload_domain.seglength),
         }
+        vector_fields = {
+            "zlev", "zlevuv", "u", "v", "qair", "temp_air", "pb", "precip_rain",
+            "precip_snow", "lwdown", "swdown", "ccanopy",
+        }
+        payload_fields = {}
         for field in fields(IntersurfFirstStepPayload):
             name = field.name
             if name == "missing_fields":
                 continue
             value = getattr(payload, name)
+            if name in {"kjpindex", "nbindex"}:
+                payload_fields[name] = _validated_numeric_summary(
+                    f"payload.{name}", value, expected_shape=(),
+                )
+                continue
             if name in required_payload_fields and value is None:
                 raise ValueError(f"Required retained-tail payload field is missing: {name}")
-            expected_shape = (npts, 2) if name == "lalo" else ((npts,) if name in vector_fields else None)
+            expected_shape = source_shapes.get(name)
+            if name in source_shapes and expected_shape is None and value is not None:
+                raise ValueError(f"Retained payload field {name} is present but its builder source is absent")
+            if name in vector_fields:
+                expected_shape = (npts,)
             payload_fields[name] = _validated_numeric_summary(
                 f"payload.{name}", value, expected_shape=expected_shape,
-                npts=(npts if name not in vector_fields and name not in {"lalo", "kjpindex", "nbindex"} else None),
+                npts=None if name in source_shapes or name in vector_fields else npts,
             )
         if int(payload.kjpindex) != npts or int(payload.nbindex) != npts:
             raise ValueError("Retained static payload point counts differ from the admitted land point")
