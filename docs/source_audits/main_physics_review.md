@@ -1,6 +1,6 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-15。**本轮没有发现已确认的 main 生产物理实现 bug；
+核查日期：2026-10-16。**本轮没有发现已确认的 main 生产物理实现 bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -28,7 +28,13 @@ JAX16136/Fortran16137；该步humrel的门槛距离分别为−1e-8和7.67388810
 去重后的1个时刻完成两次完整65参数真实输入重放，均通过；Fortran输入的8个有效
 叶层及两类根候选严格通过，GPP最大误差2.9869266926163215e-15。
 父级工件核验47/47通过；最后报告复用已完成journal，新增调用0。
-下一优先方向为该步humrel创建/传递链的上游来源；局部同输入闭合不能确定全年NPP因果。
+第十一阶段已用保存值及成对源码追溯该链：窗口内最早可见的上游应力差异在
+offset7（JAX16135/Fortran16136）的STOMATE入口vegstress；实际TRANS humrel首次
+差异在下一步offset8。入口字段虽名humrel，实际是HYDROL vegstress，不能混用。
+两步的非零值之比符合有条件的0.8源关系，但关键步的原生液水、根、mask及写读桥
+未保存，尚不能确认具体根因。下一唯一优先观测是offset7 HYDROL创建/写入→offset8
+DIFFUCO读取，保留48步邻域；已准备字段、插入点、命令和资源方案，尚未实现或执行。
+局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认源级错误。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
@@ -85,6 +91,12 @@ JAX16136/Fortran16137；该步humrel的门槛距离分别为−1e-8和7.67388810
   本checkout。相对`638253db`仅本页报告改变，历史JAX数值身份不重标；
   [恢复回执](../../outputs/reviews/main-physics-20261013/319-gpp-subdaily-capture/access-restored-20261014.json)
   保存已有授权、初始剩余5304秒及图覆盖限制。
+- 第十一阶段从第十阶段已接受并推送的
+  `6e9a60311d994f6fef1098d9f10b1ba461da1477` 的干净main继续；cwd、分支及实际
+  module导入路径确认。相对数值producer `638253db` 仅本页报告变化；只分析保存值、
+  当前精确源码和命名producer的只读来源，未新增积分、生产函数重放、构建或分配。
+  新证据集中在[Stage11入口](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/README.md)，
+  第十阶段目录保持只读。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -1026,6 +1038,105 @@ Stage8 LPJ实际raw/PP是`38201e…`/`e0a548…`；移除六段旧观测日志�
 采用精确源码和保存产物补足，未重索引或声称全覆盖。仅版本化更新本页，其他新产物均在原Stage10 outputs根，
 执行方未stage/commit/push、改生产物理/配置/容差/其他研究树、发跨聊天消息或启用自动化。
 
+## 第十一阶段：humrel上游链及最小下一观测
+
+本阶段复用已接受的第十阶段48步捕获、34/34严格自身准入、9项解析恢复、47项工件
+核验及两个完整65参数真实调用，不重跑上述检查或模型。离线结果见
+[保存值分析](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/analysis/results.md)、
+[48步CSV](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/data/humrel-48steps.csv)及
+[候选与反证矩阵](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/analysis/candidate-evidence.md)。
+
+### 实际参数、创建、写回和下步读取
+
+[JAX成对链](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/jax/humrel-state-chain.md)
+核对实际compact/module-JIT/local-JIT路径；四份生产文件Git blob与数值producer相同，
+观测器字节与接受的执行身份一致。
+[Fortran链](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/fortran/humrel-chain.md)及
+[取证回执](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/fortran/retrieval-receipt.json)
+记录一次严格主机验证的SSH只读检索：只取第十阶段命名producer树的HYDROL/SECHIBA
+raw和PP四文件，无远程写入。旧编译日志确认这些PP路径被编译、对应对象被链接；
+旧producer回执未记录这四份文件的构建时内容hash，因此当前命名树到历史二进制的
+字节闭合仍有限。下表Fortran行号为该取回raw，PP对应行号见链表，非自动以本地源码
+代替实际执行来源。
+
+| 边界 | JAX精确来源与行为 | Fortran取回来源与行为 |
+| --- | --- | --- |
+| TRANS实参 | `orchestration.py:6084–6160/3485–3514`从前一步state逐字段按diffuco→hydrol→slowproc选取；`diffuco.py:3888–3906`取PFT14列13，humrel无缺省零填充 | `sechiba.f90:998–1006`向DIFFUCO传入模块humrel，在本步HYDROL之前 |
+| 原生创建输入 | `hydrol.py:10391–10756/6931–7020`以最终修正的mc重新构造mcl，再形成液水sm及阈值层剖面 | `hydrol.f90:6474–6562`形成水分诊断；`6565–6672`计算分层应力/根加权 |
+| clip/zero/求和 | `hydrol.py:7023–7184/7772–7933`保留旧/新应力、动态根、PFT缺席、under-mcr与tile分支，humrel与vegstress分别归约 | `hydrol.f90:6658–6668`为旧应力分支，`6688–6714`缺席/under-mcr清零，`9006–9044/9103–9110`作tile掩码、求和及非负floor |
+| 写回→下一步 | `orchestration.py:5913–5939/2947–2966`把HYDROL humrel写入hydrol与diffuco carry；下一compact读取这两个副本 | `sechiba.f90:1027–1056`在DIFFUCO后调用CWRR HYDROL，其inout humrel供下步DIFFUCO使用 |
+| 同步入口的另一量 | `orchestration.py:5879–5885`把当前HYDROL vegstress以humrel字段送STOMATE | `sechiba.f90:1184–1187`传vegstress，经`slowproc.f90:346/399/973–976`的humrel形参送STOMATE；`stomate.f90:2483/3032`为形参及实际观测写出 |
+
+此改名链的slowproc为有界本地源码回退，SECHIBA/slowproc构建时字节未绑定；
+STOMATE观测写出的raw/PP hash则与job124444469实际compiler-input回执相同。
+原生输入语义的源关联与各文件的历史字节证明分开记录，不扩大取回四文件的证明范围。
+
+实际compiled外层代表metadata `day_index=2/start_tstep=48`、内层`tstep=47/48`
+不是Day337物理时间。接受的观测器使用动态science_day/offset，记录16128–16175；
+未来插入点必须沿用这些tokens。日缓存`_compiled_diffuco_day_inputs`不含humrel，
+而各compact步有前一步restart读取。DIFFUCO COMB虽可在TRANS之后按`qsatt<qair`
+清零humrel，之后HYDROL仍写回carry；两处源码均反对直接把本次零值归为冻结日缓存
+或COMB残留，但未观测的内部写读桥仍不能据此完全排除。
+
+### 首个可见上游信号及保存状态边界
+
+| Day337 offset | JAX tstep / Fortran kjit | 实际TRANS humrel：JAX / Fortran | 同步STOMATE入口vegstress：JAX / Fortran |
+| --- | --- | --- | --- |
+| 0–6 | 16128–16134 / 16129–16135 | 0 / 0 | 0 / 0 |
+| 7 | 16135 / 16136 | 0 / 0 | 0 / `6.1471104814109476e-6` |
+| 8 | 16136 / 16137 | 0 / `7.683888101763685e-6` | 0 / 0 |
+| 9–47 | 16137–16175 / 16138–16176 | 0 / 0 | 0 / 0 |
+
+这是选定窗口中实际TRANS参数首次exact及strict差异；窗口其他输入/状态在offset0
+已经不同，不能称为年度首次分叉。`entry_payload.fields.humrel`是vegstress的改名，
+不是当步DIFFUCO humrel。47个相邻入口→下步TRANS对的零/正号均相容；Fortran唯一
+非零对的比值为`0.7999999999999999`，`vegstress−0.8*next_humrel`为
+`−8.470329472543003e-22`。相关非peat旧应力分支令
+`A=(sm-smw_tmp)*(smf-smw)/(smf_tmp-smw_tmp)^2`，则相关分支为
+`us=clip(A/pcent)*nroot`、`vegstressv=sum(clip(A)*nroot)`；同层、根、mask一致且
+两式均不饱和时才有`vegstress=pcent*humrel`。保存配置12个pcent均为0.8。
+这是有条件的离线桥，支持正常一步流向，不能当作原生humrel观测或证明全部前提。
+
+保存的真实JAX日初/末七组件state含humrel、humrelv、us、nroot和原生mc/mcl；
+两边界的humrelv/us均零，PFT14的JAX nroot仅在Fortran编号第6层为1，
+不能称根不存在或推断实际Fortran根。边界别名/归约8项精确相等，只证明这些边界，
+不覆盖offset7内部。state.tstep未序列化，逻辑日界依实际observer位置确定。
+入口soil_mc是聚合总水量，不能代替原生tile液水mcl。历史case001相关hydrol-v9的
+144条tile行及1200条系数行仅作命名辅助，不提升为319当前轨迹证据。
+
+有效配置有`NEW_WATSTRESS=FALSE`、`dyn_nroot_larix=TRUE`、`OK_FREEZE_CWRR=TRUE`。
+参数`PEAT_HYDRO=TRUE`与HYDROL的private、无初始化器的`LOGICAL,SAVE peat_hydro`
+是不同作用域，取回PP仍保留其运行期分支；JAX soil-local显式False、历史case001
+trace为False均不能证明319本次Fortran局部值。该值仍缺失，尚未确认配置不匹配。
+原生液水/阈值、动态根、clip、tile缺席及under-mcr均是未决区分量。最终比较器两侧
+min均为1e-8，Fortran正margin为`7.673888101763685e-6`，不是末端ulp量级差；
+更上游相消/阈值敏感性仍待观测，不调整dtype、mask、公式或容差。
+
+### 唯一下一步：原生HYDROL创建→carry→TRANS读取
+
+[最小观测方案](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/plans/minimal-observation.md)、
+[字段/维度/准入合同](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/plans/minimal-observation.json)、
+[插入点草稿](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/plans/observer-hooks.draft.txt)及
+[具体argv](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/plans/commands.prepared.json)
+已准备，当前并非可运行的新捕获器。轻量记录覆盖全部48步的humrel/vegstress、tile
+输出和写读副本；重记录仅offset6–8及前一Day336日界，核心桥为offset7 HYDROL
+最终液水/层阈值/根更新/mask→原生humrel及写入副本→offset8实际读取。记录运行期
+局部开关、native dtype/shape、tile/PFT/层号和生产完成/下步消费时间；未命名的
+inline clip前表达式只能由保存操作数离线推导，不能标为原生观测。
+
+默认保留两侧原1961 cold-start前缀及365日调度。JAX完整日初state仅是未验收的
+短restart候选；Fortran无已核定Day336 restart，年末restart不能倒置使用。
+后续须在新隔离来源中加入纯观测、绑定未来raw/PP HYDROL和SECHIBA构建字节，
+沿用原strict数值限`1e-8+1e-10*abs(ref)`及精确离散/shape，比较原365日四通量、
+9个NPP输入、48组65参数/分支/输出、日边界及累计/send/reset，证明轨迹保留。
+
+资源仅为未来提案：原成功数值job构建369秒、模型89秒、分配495秒；新增观测开销
+未知，估计500–900秒，拟硬上限1200秒、单节点8CPU/16GiB，最多2.6667 requested
+CPU-hours，若用满则余额由3846降为2646秒。JAX历史本地252.189秒另记，拟250–600秒、
+本地cap900秒；货币费率未知。本阶段实际新增分配/构建/模型/生产重放均0，未提交
+这些命令，未重跑旧验收。原年度NPP科学失败、存储诊断和年度因果问题继续开放，
+无已确认生产bug。交付主控手动审阅此聚焦观测方案后决定后续执行。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -1078,7 +1189,9 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    48步中唯一活动/GPP分支差在JAX16136/Fortran16137；JAX humrel=0使其活动门槛关闭，
    Fortran该步跨过门槛。去重后的1个真实时刻、2次完整65参数生产重放均通过，
    Fortran输入的8个有效叶层及两类根候选提供局部同输入证据；跨侧有效交集仍为0。
-   父级47项工件核验通过。下一唯一优先方向是追溯该时刻humrel创建与传递的上游输入/状态。
+   父级47项工件核验通过。第十一阶段保存值进一步定位到前一步offset7的vegstress差异，
+   成对源链支持HYDROL创建→下步TRANS；关键原生输入/写读桥缺失。下一唯一优先方向为
+   已准备的offset6–8原生HYDROL/carry观测及48步轻量上下文，不另做孤立光合作用重放。
    humrel创建来源及年度因果未定；原NPP核心回放与本次局部证据均不扩展为全分支正确性证明。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
@@ -1298,4 +1411,25 @@ Stage10累计1458秒，加Stage8共3354秒、剩余3846秒；本次收尾新增�
 48步分析及选定时刻的完整65参数重放记录，复用执行方47项工件核验，接受第十阶段交付。
 默认文本精度造成的额外GPP检查失败已解释；同输入光合作用局部比较通过，仍未确认生产
 物理代码错误。原年度NPP失败及humrel上游来源继续开放，本次验收未新增模型积分或重放。
-本轮仅提交本页报告，保持手动跟进；下一阶段的上游追溯尚未启动。
+本轮仅提交本页报告，保持手动跟进；该次第十阶段验收时，上游追溯尚未启动。
+
+第十一阶段从`6e9a60311d994f6fef1098d9f10b1ba461da1477`继续，复用原执行者完成
+JAX/Fortran创建与写读源链、48步保存值/原生日边界分析、候选反证矩阵及准备态
+下一观测方案；父级核对实际工件及新报告。命令与范围见
+[Stage11命令记录](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/commands.md)，
+29项离线数据/来源检查通过，见
+[离线核验](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/verification/verification.json)；
+最终链接、报告身份、Git范围、只读来源及工件索引见
+[交付核验](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/verification/delivery.json)。
+采用Verify图层，generation为`2026-10-14T11:04:08Z`；Python metadata_changed及
+Fortran/outputs排除范围以精确源/工件补足，未重索引或声称全覆盖。一次命名只读取证
+无远程写入，原Stage10证据及7份受保护handoff文件保留，原34/9/47和真实调用不重跑。
+本阶段新增积分/生产重放/构建/分配均0，余额仍3846秒，未改生产物理/配置/容差、
+其他研究树或原产物。执行方未暂存、提交、推送、跨聊天发消息或启用自动化；交付主控
+手动审阅，下一次原生观测尚未实现或执行。原年度NPP失败及存储诊断继续开放。
+
+主控于2026-10-16核对报告差异、48步实际保存值、来源身份限制及下一观测合同，
+复用29项离线和17项交付检查，接受第十一阶段有界调查。offset7入口vegstress与
+offset8实际TRANS humrel分别记录；条件性的0.8关系不替代原生HYDROL写读观测，
+也不证明根因。下一方案仍为准备态，须实现观测器并验证自身轨迹后才有新科学证据。
+本次验收未新增积分、重放、构建或分配；仅提交本页报告，保持手动跟进和原科学失败。
