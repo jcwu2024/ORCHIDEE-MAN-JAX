@@ -67,7 +67,8 @@ raw meteorology. Do not replace it with1967 forcing or relabel the1961 template.
 The saved run_def path contains landpoints/291.0-087.0; that is a path identity,
 not the actual domain coordinates above. Initial-state SHA256 remains
 54d01d0f376b0ceed8a843740328dba9d61d2a8989507436bda1a0d16c624f5d.
-The scientific appropriateness of this cross-identity setup is unassessed.
+The bounded field audit below resolves the selected dynamic-input bindings;
+broader scientific calibration of retained structural constants is unassessed.
 
 ## Isolated asset recovery and CPU preparation boundary
 
@@ -113,6 +114,55 @@ scientific or input-data changes. Focused local regressions passed19 tests in
 The CPU checkout also borrows a833f987 Git objects; retain that dependency.
 No GPU authorization is restored by these completed preparation checks.
 
+## Effective sampled inputs: bounded source and CPU audit
+
+The subsequent test01 audit exited0 within timeout180s; outer SSH wall time
+123.17926955s includes startup. It used actual input assembly,
+Adapter._dynamic_day_inputs and driver transition-input construction without
+mocking overrides, at source f2242fc5a7657a3f3061d85a5e1b998663c8f944.
+Script audit_shared_current_T7_input_binding.py SHA256 is
+a336ef37ac9a0acd63106d59c804b2ef4f4a3e068864972cbe8df24ac7010a56.
+Seven saved canonical day states supplied previous/token inputs: this is input
+coverage, not a predicted recurrent trajectory. Physical/neural calls, JIT,
+model traces/compiles/calls and loss evaluation were not run. Neither the19-test
+nor144-test suite was rerun for this audit.
+
+| Effective input / boundary | Source and bounded evidence |
+|---|---|
+| Sample CO2 | All seven days are1967/day203–209 with annual CO2 321.62ppm; annual conditions feed the input token at strong_baseline_architecture.py:1211. Base354.47ppm is not that token value. |
+| Daily weather | Six daily weather fields are recomputed from the native sampled records, then deterministically override _retained_tail_fast_target and the daily fold. research/daily_coarse_graining/canonical_retained_tail.py:273–285 installs half-hour/daily-fold/okleak replay; generic scan replacement is not the exclusion argument. |
+| Coordinates / landpoint fields | Effective metadata.lalo=[[-21,165]]. Twenty landpoint fields match sampled overrides exactly across seven days,140/140 checks. The base domain111/−3 remains distinguishable metadata. |
+| Date / season state | Dynamic day_index feeds science_daynumber, julian_diff, GDD and end-year paths. The1991 runtime year remains only for base bundle reads at this boundary. Prepared day inputs replace old restart/season templates, then named season fields are replaced by prior state; actual forecast flags/transitions were not executed. |
+| Base weather/CO2 exclusion | orchestration.py:1578–1623→coupled.py:1330–1422,1229–1283 constructs entry-source weather, but the returned boundary carries only clay/bulk-density/poor-soil plus routing into okleak inputs, and contfrac into output inputs. Entry source is not returned. orchestration.py:8746–8772 reads only veget_max/zsoil/zfsoil/carbon-old/prod10/prod100/contfrac/one-day boundary fields. |
+| Active fixed constants | Old-context PFT/config flags/run scalars and vertical grids diaglev/zlt/znt remain active structural/scientific constants, not merely shapes. The shared context/contract declares fixed layout/parameters; every constant was not independently recalibrated. |
+
+Source paths for the abbreviated references above and below:
+`orchestration.py` = `jax_orchidee/driver/orchestration.py`;
+`coupled.py` = `jax_orchidee/coupled.py`;
+`strong_baseline_architecture.py` =
+`research/daily_coarse_graining/daily_operator/strong_baseline_architecture.py`;
+`state-JVP runner` = `scripts/hpc/probe_shared_latent_T7_state_jvp.py`;
+`precision_assets.py` = `scripts/hpc/shared_current_T7_precision_assets.py`;
+`shared_latent_T7_raw_neural_jvp.py` =
+`scripts/hpc/shared_latent_T7_raw_neural_jvp.py`.
+
+Thus the canonical1991 recovery restores template readability. Source closure
+and real input construction establish, for this fixed sampled boundary, that
+the1991 weather/354.47ppm base values and1961 template exogenous values do not
+feed the retained loss inputs in place of the sampled weather/CO2/coordinates/
+day fields. No such exogenous contamination was found and no behavioral repair
+is indicated by this audit. This is not broad scientific acceptance or proof
+that all structural constants are appropriate; the earlier false appropriateness
+flag denoted unassessed scope, not a demonstrated year-mismatch error.
+
+FP32 full-B1 state completion uses the same context/public objective with
+sample3=299 (state-JVP runner:54–64,378–394,431–444); the current loader rebuilds
+the same public case (precision_assets.py:157–198). The original pair identity
+itself names artifact742; sampling[3] supplies299. The raw-neural prefix ignores
+retained inputs (shared_latent_T7_raw_neural_jvp.py:35–56), so it supplies no
+independent retained-loss exclusion evidence. Historical raw forcing bytes were
+not pinned; shared case/context identity does not remove that provenance limit.
+
 ## Immutable execution history and evidence
 
 Executed a833f987ac65e12748f50d4ee9cfd05cbc69d839, fresh one-shot approval
@@ -136,4 +186,6 @@ input consumption; cpu-remote-receipts/argument-chain.json records parser/argv
 propagation and its execution limits. Remote CPU outputs remain under
 runtime/outputs/diagnostics/T7-current-model-retained-input-cpu-20261016.
 cpu-local-tests.txt preserves the actual19-test stdout.
+input-binding/remote/input-binding.json preserves the seven-day input audit,
+its code/script identity and no-transition scope.
 [NEXT_STEPS](../../NEXT_STEPS.md) owns the current stopped diagnostic boundary.

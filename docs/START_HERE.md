@@ -12,11 +12,14 @@ gates unmeasured, state20 unwaived. This is input failure, not numerical rejecti
 Sampled peak345MiB; groups cleaned, selected UUID release0MiB/0%/no processes,
 ledger closed. Scheduler estimate CNY0.0964444444, actual bill unknown.
 Preserve three identities:1967 sampled T7,1991 retained owner,1961 serialized
-first-bundle template; their scientific appropriateness is unassessed. Isolated
+first-bundle template; broader structural-constant calibration is unassessed. Isolated
 canonical1991/CO2 byte-matched recovery and explicit-root CPU preparation do not
 establish GPU/scientific admission. Actual test01 ordinary-wrapper dry-run passed
 retained-input consumption at f2242fc5 (CO2 354.47, finite payload/missing[],
 case/state unchanged); no transition, trace/compile/calls or attempts, all0.
+A subsequent real seven-day input audit verifies sample CO2 321.62/weather/
+coordinates/day and140/140 landpoint overrides, excluding1991/1961 template
+exogenous substitution at this boundary; no model trajectory or broad science pass.
 Both job15895454 and earlier15866925 grants are consumed. This precision/FD line
 is stopped: no new proposal, retry/GPU/training/watcher. Retain dependent checkouts.
 Evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/terminal/.
