@@ -33,7 +33,14 @@ offset7（JAX16135/Fortran16136）的STOMATE入口vegstress；实际TRANS humrel
 差异在下一步offset8。入口字段虽名humrel，实际是HYDROL vegstress，不能混用。
 两步的非零值之比符合有条件的0.8源关系，但关键步的原生液水、根、mask及写读桥
 未保存，尚不能确认具体根因。下一唯一优先观测是offset7 HYDROL创建/写入→offset8
-DIFFUCO读取，保留48步邻域；已准备字段、插入点、命令和资源方案，尚未实现或执行。
+DIFFUCO读取，保留48步邻域；第十一阶段已准备字段、插入点、命令和资源方案。
+第十二阶段两侧原cold-start365日捕获均完成。JAX直接Stage10自身准入11990项、
+另行绑定Stage6的365日四通量1460项、原生链614项，以及Fortran自身准入7152项均通过；
+266项配对核对通过，分析新增模型/核调用0。offset7/tile4/layer6中Fortran原生液水略高于
+共同萎蔫阈值，创建humrel=7.683888101763685e-6，JAX仍低于阈值并创建0；下一步TRANS
+精确读取各自前一步值。两侧进入土壤更新前液态水已不同，剩余边界在创建器上游状态/历史，
+不能据此认定同输入土壤求解器缺陷或年度首次分歧。Fortran三次分配共1247秒、余额2599秒，
+无pending作业；原年度NPP科学失败继续开放。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认源级错误。**
@@ -97,6 +104,11 @@ DIFFUCO读取，保留48步邻域；已准备字段、插入点、命令和资�
   当前精确源码和命名producer的只读来源，未新增积分、生产函数重放、构建或分配。
   新证据集中在[Stage11入口](../../outputs/reviews/main-physics-20261015/319-humrel-upstream/README.md)，
   第十阶段目录保持只读。
+- 第十二阶段从已接受的`91a1a79b3bf021f7fcae38e668c62d88f52c8d6a`的干净main开始；
+  cwd、分支及实际module导入再次确认。后续授权覆盖观测器实施及两侧原365日轨迹捕获，
+  第十一阶段的准备态限制不用于禁止这次执行。全部新实现/产物限于
+  [Stage12目录](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/README.md)，
+  仅本页允许版本化修改；旧第十/十一阶段工件只读，不暂存、提交或推送。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -419,8 +431,9 @@ maintenance 的负残差方向相反**。98.9% 是局部输入效应，不能解
 也不支持据此修改 THERMOSOIL；全天或年度因果均未闭合，当前首偏差日未确定。
 
 [PEAT 审计](../../outputs/reviews/main-physics-20261011/319-npp-local/peat-scope/audit.json)
-保留 raw 配置与 HYDROL 局部 SAVE 的区别；319 有效 Fortran 局部值仍未核定，
-未据 case001 False trace 改开关。**本阶段没有确认可达源级物理错误或提出生产修复。**
+保留 raw 配置与 HYDROL 局部 SAVE 的区别；该阶段尚未核定319有效Fortran局部值，
+未据case001 False trace改开关。第十二阶段已直接观察选定重样本的局部值False，范围见下节。
+**本阶段没有确认可达源级物理错误或提出生产修复。**
 分段诊断把优先范围进一步收窄至 **Day199–365 的年度维持呼吸负差贡献**。
 保存的晚年日值/分量已在第五阶段盘点；观测缺口和具体后续捕获方案见下节。
 现有同输入 Oracle 与当前前缀状态可复用。
@@ -1107,8 +1120,8 @@ STOMATE观测写出的raw/PP hash则与job124444469实际compiler-input回执相
 有效配置有`NEW_WATSTRESS=FALSE`、`dyn_nroot_larix=TRUE`、`OK_FREEZE_CWRR=TRUE`。
 参数`PEAT_HYDRO=TRUE`与HYDROL的private、无初始化器的`LOGICAL,SAVE peat_hydro`
 是不同作用域，取回PP仍保留其运行期分支；JAX soil-local显式False、历史case001
-trace为False均不能证明319本次Fortran局部值。该值仍缺失，尚未确认配置不匹配。
-原生液水/阈值、动态根、clip、tile缺席及under-mcr均是未决区分量。最终比较器两侧
+trace为False均不能证明319本次Fortran局部值。第十一阶段该值仍缺失，尚未确认配置不匹配；
+第十二阶段随后直接观察选定重样本的局部值False及创建操作数。最终比较器两侧
 min均为1e-8，Fortran正margin为`7.673888101763685e-6`，不是末端ulp量级差；
 更上游相消/阈值敏感性仍待观测，不调整dtype、mask、公式或容差。
 
@@ -1137,6 +1150,141 @@ CPU-hours，若用满则余额由3846降为2646秒。JAX历史本地252.189秒�
 这些命令，未重跑旧验收。原年度NPP科学失败、存储诊断和年度因果问题继续开放，
 无已确认生产bug。交付主控手动审阅此聚焦观测方案后决定后续执行。
 
+## 第十二阶段：原生HYDROL捕获与配对诊断
+
+本阶段实施第十一阶段最小观测合同，保留319.0-057.0、1961、PFT14、cold-start365日
+及JAX block7/半小时scan/local-JIT。轻量原生记录覆盖Day337全部48步和前一Day336
+offset47边界；重记录仅该边界与Day337 offsets6–8。新捕获器与记录见
+[Stage12入口](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/README.md)和
+[命令记录](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/commands.md)。
+原年度NPP科学失败、原存储诊断和年度因果问题继续开放。
+
+### JAX实际执行与自身准入
+
+[预检](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/jax/jax-preflight.json)
+16项通过；两次实际2日production-route预检均完成模型路线，保留后处理/namespace
+绑定失败记录。修正读出复用已保存journal及有界真实packet/JIT检查，没有第三次模型预检。
+[唯一年度启动](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/jax/launch.json)
+完成365日，实际258.600996秒，低于900秒进程树上限，无自动年度重试。
+四份新增overlay剥除精确observer与身份参数后，与原生产AST相等；原scan、算术及JIT
+边界保留。其磁盘工件核验见
+[22项核验](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/verification/jax-artifacts.json)。
+
+[直接Stage10自身准入](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/jax-own-parity.json)
+11990项通过，最大绝对误差0，严格限仍为`1e-8+1e-10*abs(reference)`。
+范围含48组65参数/活动/输出/叶层候选、入口、9个原生NPP输入、保存日界、
+有序累计/send/reset及365日统计；离散/shape/dtype精确一致。非finite候选仅验证原生
+坐标/符号与mask保留，不把它们当成有效物理解。
+
+Stage10未保存完整365日日值向量，因此另以有独立身份的Stage6直接post-NPP日值为
+参照，[365×4逐日比较](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/jax-daily-stage6-parity.json)
+1460项全部通过、最大误差0。11项身份检查核对生产源码/config无diff、实际数值argv、
+JAX/import、run.def及共享36输入manifest：该小清单hash等于Stage6绑定hash，各输入
+当前size/mtime签名逐项一致，Stage8已接受来源桥相同。没有为此重跑基准年或重新hash
+大数据文件；不把Stage6日值改称Stage10直接观测。
+
+### JAX原生创建与写读
+
+[原生capture](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/jax/native-capture.json)
+有227条：reader、HYDROL输出、state_write各49条（48选定步+1前日边界），
+soil输入/最终各4条，三个逐tile重阶段各24条。
+[保存值核对](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/jax-native-analysis.json)
+614项通过，48对HYDROL输出→两份carry/finalize→下一步reader精确一致，同步STOMATE
+入口等于本步vegstress。offset7/tile4/layer6的原生`sm=3.0802668141645855`、
+`smw_tmp=3.0826979486351997`；离线差为`−0.0024311344706142712`。
+原生old factor与root denominator均0，根fallback保留该层权重1，`us/humrel/vegstress`
+均0，下一步TRANS读0。该结果闭合JAX选定桥，配对Fortran证据见下节。
+
+JAX未单独emit实际`mask_soiltile`局部量；实际absence、under-mcr、active-layer及
+root-support mask已捕获。由保存tile fraction/vegetmax恢复的tile mask，以及未命名的
+inline preclip表达式，均仅可标为离线推导。本阶段上述分析和工件核验新增生产函数调用0。
+
+### Fortran实际执行与严格自身准入
+
+原cold-start365日Fortran模型已在第三次实际分配job124575036完成，调度状态
+COMPLETED/0:0，Slurm ElapsedRaw417秒；内部build296秒、run95秒、script403秒不另加。
+实际native capture解析得到1259条非空记录、47个不同label，全部schema label均存在；
+原生KIND记录为real8/integer4/logical4，这些是kind编号，不笼统解释为字节数。
+source reversal及1259条合成记录解析预检只证明工具行为，真实准入另见下述回执。
+父级源码复核已纠正观测器的`us(1,:,jst,:)`切片，并补齐tile入口mc/mcl及原生
+`mask_soiltile`。原HYDROL-private未初始化`peat_hydro`只观察，不初始化或修复。
+
+真实解析首先拒绝schema将`znt`声明为11项：原始24条heavy记录各有32项。
+原schema、首次失败及raw均保留，修订契约完整保留32项，实际47个label的shape/count已核对。
+高精度文本读出还暴露目标`ncdump -p17,17`对float32的格式问题：
+四通量各5110个空槽、veget14个空槽，而365个time及730个bounds有实际值，见
+[导出诊断](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/fortran-export-format-diagnostic.json)。
+同一SHA的NetCDF原生实读确认veget为float32、14项1–14、无mask；相同目标ncdump的
+`-p9,17`可正常显示。[完整7变量侧文件](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/fortran/retrieved/attempt-3b/annual-fluxes-p9-17-124575036.cdl)
+按实际float32语义解码，并由相邻receipt绑定真实argv、原CDL/source receipt、
+同一NetCDF/ncdump及独立reader身份。9位有效数字支持float32往返，double读出仍17位；
+原文件、生产dtype及严格数值限保持原样。该读出修复没有新增模型年。
+
+[Fortran自身准入](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/fortran-own-parity.json)
+7152项通过、失败0，严格限仍为`1e-8+1e-10*abs(reference)`。准入绑定原Stage10
+raw/parsed/schema/source/高精度CDL/验收身份，核对365×14×4原生日值、48组65参数与
+活动/输出、9个NPP原生输入、原始记录顺序/重复、mask/nonfinite/root9999 sentinel，
+以及有序累计/send/reset。新增Stage10 raw与已接受原raw逐字节相同。
+原source receipt的time_counter="UNLIMITED"是header文字，准入使用实际坐标；
+source-receipt402秒、worker403秒与Slurm417秒分别保留，不混用。
+
+三次分配均为单节点8CPU/16GiB/最多1200秒，按实际Slurm整项计时一次：
+
+| job | 节点 | 终态 / ExitCode | 分配秒数 | 实际结果 |
+|---|---|---|---:|---|
+|124550126|h12r2n14|FAILED /124:0|814|720秒编译子进程超时，模型未启动|
+|124558362|g03r4n17|FAILED /1:0|16|FCM既存build lock退出，模型未启动|
+|124575036|a02r1n11|COMPLETED /0:0|417|增量编译及原365日模型完成|
+
+累计Stage12分配1247秒；原7200秒减去前阶段3354秒及本阶段1247秒，余额2599秒，
+无pending分配。本地JAX另计，货币费率未知。实际回执与身份以
+[Fortran账本](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/fortran/resources.json)
+及[父级资源汇总](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/resources.json)绑定。
+两次失败、各自冻结worker及原部分构建保留；空FCM锁在确认作业/相关进程结束后，按原
+bytes/mode/uid/gid/size/mtime归档核对并移除，成功读回确认原锁不存在。
+
+attempt3只staged，两个提交路线在自设idle/empty-queue门槛前退出，未sbatch或消费marker；
+不能据此归因于资源不可用。独立attempt3b复用原source/flags/部分构建，实际选中
+MIXED节点a02r1n11，准入快照为18可用CPU、77500MiBSlurm内存余量、62972MiBFreeMem、
+归一化负载0.38。冻结脚本实际使用负载上限1.0及首个合格IDLE/MIXED，未实现方案中的
+0.5/idle优先；所选节点实际负载满足0.5，该源码差异保留，不以之后快照补称当时无idle。
+第二次本地launcher源码曾被误改、原bytes未恢复，当前文件不充作历史原件；该作业身份
+由原冻结worker、submission/consumed/admission/job及终态回执绑定。
+
+### 配对创建阈值、根与下一步读取
+
+[配对保存值分析](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/paired-native-analysis.json)
+266项通过、失败0、新增模型/核调用0；详细解释、49条轻样本及24条重样本见
+[原生结果](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/analysis/native-results.md)。
+offset7/tile4/Fortran编号layer6的直接原生值为：
+
+| 量 | Fortran | JAX |
+|---|---:|---:|
+|积分液水`sm`|3.0827141294163454|3.0802668141645855|
+|萎蔫阈值`smw_tmp`|3.0826979486351997|3.0826979486351997|
+|`sm-smw_tmp`（离线推导）|+1.6180781145624934e-5|−0.0024311344706142712|
+|原生`us`/创建humrel|7.683888101763685e-6|0|
+|原生创建vegstress|6.1471104814109476e-6|0|
+|原生最终layer6根权重|1|1|
+
+Fortran旧clip factor及根归一化分母是离线推导；JAX同名factor/denominator为已保存原生
+局部量且均0。JAX真实零分母fallback仍保留根权重1，不能称无根。offset8两侧新创建值
+均0，但Fortran实际TRANS reader精确收到offset7的正humrel。两侧各48对相邻
+producer→next-reader均通过；选定Day337内最早创建/vegstress差在offset7，最早TRANS
+读取差在offset8。原STOMATE入口名为humrel的字段是本步HYDROL vegstress，不混作TRANS值。
+
+offset7进入土壤更新前，两侧tile4的`mcl`最大差已为0.004301499804477013；前一Day336
+边界已有0.006137724021737706差。因此本轮解释的是不同液水状态越过阈值及一步carry，
+下一待查边界在观测创建器上游的pre-soil状态/历史，不能认定同输入土壤求解器错误、
+年度首次分歧或年度唯一原因。全部24条重样本的冻结水profile最大值及`mc-mcl`最大值均0；
+有效peat=false、new_watstress=false、dyn_nroot_larix=true、soilclass3、pcent0.8。
+Fortran实际HYDROL-private未初始化peat_hydro在原位置被观察，未初始化/修复；WRITE中
+PFT存在/缺席条件是对源操作数的条件求值，不称为既有mask局部量。
+
+本轮有界捕获、自身准入及配对诊断已完成，原年度NPP失败仍为
+`0.0008192662350707258 > 0.0003951849734783173`。没有生产修复或新的生产bug确认。
+下一步缩小液态水状态/历史差异需要另行指定源依据与观测范围，不在本次自动续跑。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -1145,8 +1293,8 @@ stage6 2/3 代表点结果，不能把该旧 false 直接当作当前实现失�
 证书已有另一套 arm 分类/owner 路由，不是 4,732 个未实现过程。
 HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 reachability
 为 inactive，并给出了 audited runtime `peat_hydro=F` 的来源理由；其 regression-only
-不能脱离有效配置解释成可达缺口。该 False 的点位范围须保留：第三阶段仅确认
-所关联 case001 trace；对 319 的有效 Fortran 局部值尚未建立身份桥，见上节。
+不能脱离有效配置解释成可达缺口。该False的范围须保留：第三阶段仅确认关联case001 trace；
+第十二阶段直接确认319本次选定24条重样本的HYDROL-private值False，不扩展为全年分支证明。
 更一般的潜在输入域仍受原交付合同约束。
 
 下列四项按下一步价值排序；它们是检查对象，非四个待修 bug。
@@ -1190,9 +1338,11 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    Fortran该步跨过门槛。去重后的1个真实时刻、2次完整65参数生产重放均通过，
    Fortran输入的8个有效叶层及两类根候选提供局部同输入证据；跨侧有效交集仍为0。
    父级47项工件核验通过。第十一阶段保存值进一步定位到前一步offset7的vegstress差异，
-   成对源链支持HYDROL创建→下步TRANS；关键原生输入/写读桥缺失。下一唯一优先方向为
-   已准备的offset6–8原生HYDROL/carry观测及48步轻量上下文，不另做孤立光合作用重放。
-   humrel创建来源及年度因果未定；原NPP核心回放与本次局部证据均不扩展为全分支正确性证明。
+   成对源链支持HYDROL创建→下步TRANS。第十二阶段已实施offset6–8原生HYDROL/carry
+   及48步轻量观测，两侧全年捕获和严格自身准入均完成。配对记录直接显示offset7
+   Fortran液水略高于共同阈值、JAX低于阈值；两侧根权重均1，下一步精确读取各自创建值。
+   进入土壤更新前液态水已不同，优先边界转为创建器上游状态/历史；该有界解释与原NPP
+   核心回放均不扩展为全年因果或全分支正确性证明。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
@@ -1431,5 +1581,38 @@ Fortran/outputs排除范围以精确源/工件补足，未重索引或声称全�
 主控于2026-10-16核对报告差异、48步实际保存值、来源身份限制及下一观测合同，
 复用29项离线和17项交付检查，接受第十一阶段有界调查。offset7入口vegstress与
 offset8实际TRANS humrel分别记录；条件性的0.8关系不替代原生HYDROL写读观测，
-也不证明根因。下一方案仍为准备态，须实现观测器并验证自身轨迹后才有新科学证据。
+也不证明根因。该验收时下一方案仍为准备态，须实现观测器并验证自身轨迹后才有新科学证据。
 本次验收未新增积分、重放、构建或分配；仅提交本页报告，保持手动跟进和原科学失败。
+
+第十二阶段从`91a1a79b3bf021f7fcae38e668c62d88f52c8d6a`继续，复用原执行者完成两侧
+原365日轨迹的原生HYDROL/carry/TRANS观测。JAX唯一全年运行258.600996秒，
+11990项直接Stage10、另行身份绑定的1460项Stage6日值、614项原生链核对及22项工件
+核验均通过；Fortran三次分配814/16/417秒，前两次无模型，第三次成功完成增量构建和
+原365日模型，实际1259条记录、47个label、7152项严格自身准入及24项工件核验通过。
+配对266项保存值检查通过，新增生产函数/核调用0；父级读取实际准入、配对、来源、
+编译/PP/binary、读出修复及终态回执，不重复模型或原有昂贵核验。
+
+实际命令、读出失败/修复和资源结算见
+[Stage12命令](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/commands.md)，
+实际Fortran来源/终态绑定见
+[Fortran工件核验](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/fortran/retrieved/attempt-3b/fortran-artifact-verification-124575036.json)，
+最终文档、旧15份工件、HEAD/main、仅本页未暂存差异、资源/链接及联合索引见
+[Stage12交付核验](../../outputs/reviews/main-physics-20261016/319-humrel-native-capture/verification/delivery.json)。
+图层为Verify，已取generation`2026-10-16T01:53:45Z`、12152nodes/72230edges；
+后续刷新为Transport closed，Python metadata_changed及Fortran/outputs排除范围以
+已读精确源码/实际工件补足，不重索引或声称fresh/full覆盖。
+
+Stage12累计分配1247秒，原额度7200秒减前3354秒后余额2599秒，无pending分配；
+本地JAX另计，货币费率未知。只更新本页和Stage12新目录，旧产物及生产源码/配置/
+精度/mask/容差保留，交付未暂存、提交、推送、跨聊天发消息或启用自动化。
+所选阈值/一步读取桥已解释，但进入土壤更新前液水已不同，原年度科学失败及上游
+状态/历史原因继续开放。本阶段交付不授权新的观测、计算或生产修复。
+
+主控于2026-10-16核对本轮报告差异、原生选定步记录、双方自身轨迹准入、来源/读出
+身份及实际资源账本，复用执行者已完成的49项交付核验，接受第十二阶段有界捕获与
+配对解释。Fortran的offset7创建值与offset8实际reader直接一致，JAX选定链均为0；
+原生液水位于共同阈值两侧，但进入土壤更新前的状态已经不同，不能把该比较当作
+同输入求解器反例，也尚不能区分更早的浮点累积、状态历史或实现差异。JAX未单独
+捕获的tile mask仍为明确限制，不据此追加全年捕获。下一唯一优先方向为利用现有
+保存状态与成对源码，界定pre-soil液态水差异的上游来源和最小缺项。本次验收未新增
+模型、核重放、构建或分配，仅提交本页报告；原年度NPP失败及手动跟进方式保留。
