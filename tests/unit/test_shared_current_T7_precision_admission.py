@@ -58,6 +58,7 @@ def test_source_cache_default_and_explicit_override(tmp_path):
                  'dataset-manifest', 'saved-identity-receipt', 'state-input-metadata',
                  'turnover-overlay', 'output'):
         required.extend(['--'+name, str(output if name == 'output' else tmp_path/name)])
+    required.extend(['--retained-data-root', str(tmp_path/'retained-inputs')])
     assert probe.parser().parse_args(['--stage', 'dry-run', *required]).source_cache is None
     assert probe.resolve_source_cache(output) == output.parent/'source-cache'
     configured = tmp_path/'shared'/'source-cache'
@@ -143,6 +144,7 @@ def test_direct_execute_rejected_before_gpu_bootstrap(tmp_path, monkeypatch):
     for name in ('parameters', 'prepared-context', 'training-prepared-manifest', 'dataset-manifest',
                  'saved-identity-receipt', 'state-input-metadata', 'turnover-overlay', 'output'):
         arguments += ['--'+name, str(tmp_path/name)]
+    arguments += ['--retained-data-root', str(tmp_path/'retained-inputs')]
     monkeypatch.setattr(probe.sys, 'argv', arguments)
     monkeypatch.setattr(probe, 'check_approval', lambda args: {'approved': True})
     monkeypatch.delenv('ORCJAX_CURRENT_T7_SUPERVISED', raising=False)

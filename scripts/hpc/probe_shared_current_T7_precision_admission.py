@@ -43,6 +43,8 @@ def parser():
     for name in ('approval-report', 'runtime-preflight', 'fp32-reference'):
         p.add_argument('--' + name, type=Path)
     p.add_argument('--source-cache', type=Path)
+    p.add_argument('--retained-data-root', type=Path, required=True,
+                   help='verified ORCHIDEE_DATA_ROOT for retained-tail forcing and annual CO2')
     return p
 
 
@@ -392,9 +394,12 @@ def main():
             raise ValueError('approval-only requires execute stage')
         print(json.dumps({'approval_checked': True, 'GPU_executed': False}))
         return 0
+    if args.stage == 'execute' and os.environ.get('ORCJAX_CURRENT_T7_SUPERVISED') != '1':
+        raise PermissionError('execute requires the owned current-T7 supervisor before GPU bootstrap')
+    from scripts.hpc.prepare_shared_current_T7_retained_inputs import validate_data_root
+    retained_data_root, _ = validate_data_root(args.retained_data_root)
+    os.environ['ORCHIDEE_DATA_ROOT'] = str(retained_data_root)
     if args.stage == 'execute':
-        if os.environ.get('ORCJAX_CURRENT_T7_SUPERVISED') != '1':
-            raise PermissionError('execute requires the owned current-T7 supervisor before GPU bootstrap')
         from scripts.hpc.orcjax_gpu_runtime import initialize_gpu_backend
         jax, _ = initialize_gpu_backend()
     else:
@@ -416,6 +421,8 @@ def main():
                     training_prepared_manifest=args.training_prepared_manifest, dataset_manifest=args.dataset_manifest,
                     saved_identity_receipt=args.saved_identity_receipt)
                 fp32 = load_fp32_reference(args.fp32_reference, full=True) if approval else None
+            from scripts.hpc.prepare_shared_current_T7_retained_inputs import consume_retained_inputs
+            retained_input_consumption = consume_retained_inputs(assets, retained_data_root)
             metadata = json.loads(args.state_input_metadata.read_text(encoding='utf-8'))
             rows = {int(r['coordinate']): r for r in metadata['rows'] if r.get('sample') == 3 and r.get('artifact_id') == 299}
             plans = {str(c): predeclared_fd_plan(c, float(assets['case'][0][c]), float(rows[c]['continuous_scale'])) for c in COORDINATES}
@@ -430,6 +437,7 @@ def main():
                 'binding': binding, 'historical_expert_source': historical_expert,
                 'historical_expert_source_cache': str(source_cache.resolve()),
                 'context_widening': context_widening, 'fd_plans': plans,
+                'retained_input_consumption': retained_input_consumption,
                 'entry_sha256': sha(__file__), 'stage_caps': CAPS, 'total_seconds': TOTAL_SECONDS,
                 'full_model_calls': 0, 'full_model_traces': 0, 'full_model_compiles': 0,
                 'full_model_call_attempts': 0, 'full_model_trace_attempts': 0, 'full_model_compile_attempts': 0,
