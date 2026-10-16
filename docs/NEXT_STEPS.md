@@ -16,8 +16,10 @@ case/state unchanged); no transition, trace/compile/calls or attempts, all0.
 A subsequent real seven-day input audit verifies sample CO2 321.62/weather/
 coordinates/day and140/140 landpoint overrides, excluding1991/1961 template
 exogenous substitution at this boundary; no model trajectory or broad science pass.
-Both job15895454 and earlier15866925 grants are consumed. This precision/FD line
-is stopped: no new proposal, retry/GPU/training/watcher. Retain dependent checkouts.
+Both job15895454 and earlier15866925 grants are consumed. Repairs and the bounded
+input audit are accepted; the [input-ready proposal](../outputs/T7-current-model-precision-input-ready-proposal-20261016/REVIEW.md)
+awaits a separate execution decision. No GPU execution, automatic retry, training
+or watcher is authorized. Retain dependent checkouts.
 Evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/terminal/.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
@@ -95,8 +97,10 @@ propagation and completed real test01 retained forcing/CO2/bundle/static-payload
 consumption checks, with case/state unchanged and no model graph/transition. Preserve original
 root data/a833f987/source-cache and both dependent checkout/object stores.
 
-This precision/FD line and both one-shot grants are closed. No new proposal,
-GPU run/retry, training, replacement forcing or watcher is authorized. Saved
+Both historical one-shot grants are consumed. The input-ready proposal reuses
+f2242fc5 and verified explicit retained-data-root inputs, with independent future
+output/approval/result paths; execution awaits a separate decision. No GPU run,
+automatic retry, training, replacement forcing or watcher is authorized. Saved
 terminal evidence owns accounting/release; do not continue live-status monitoring.
 The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns historical affine paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole

@@ -1,0 +1,23 @@
+# 输入就绪方案：待用户决定
+
+修复及固定T7输入核查已验收；没有新GPU批准，不自动恢复执行。旧两次单次批准已用，不能复用；本轮未提交、未创建approval/scope，未改旧结果和执行身份。
+
+固定执行源码 `f2242fc5a7657a3f3061d85a5e1b998663c8f944`；复用已有干净不可变 cwd：`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016`。保留其借用的a833f987及旧20261014-v2 Git对象依赖，不重新复制部署。source-cache复用 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache`，已核实在本checkout/outputs内，不随新输出搬迁。
+
+独立新输出 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016`；future approval/result及完整wrapper→CPU supervisor argv见JSON。显式 `--retained-data-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs` 使用已验证资产。proposal SHA256：`492be6285b4491104019a5556d12c3aba9831c3a7ad30b9e95d0c40fdebbb2f4`。
+
+精确预定提交命令，当前不得执行：
+
+```bash
+sbatch --job-name T7-input-ready --partition gnall --nodes 1 --ntasks 1 --cpus-per-task 4 --gres gpu:1 --time 01:30:00 --no-requeue --chdir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016 --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/slurm-%j.stdout.txt --error /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/slurm-%j.stderr.txt --wrap 'exec bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/scripts/hpc/run_shared_current_T7_precision_admission.sh --stage execute --parameters /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl --prepared-context /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl --training-prepared-manifest /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json --dataset-manifest /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json --saved-identity-receipt /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json --state-input-metadata /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json --turnover-overlay /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py --fp32-reference /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json --source-cache /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache --approval-report /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/approval.v2.json --runtime-preflight /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/runtime-preflight.v2.json --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/result.v2.json --retained-data-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs'
+```
+
+本轮在test01只读核对SHA/clean/import路径、目标Bash词展开、通用wrapper `--dry-run`（仅打印）和probe parser（仅解析）。通过后没有执行probe `--stage dry-run`，它会真实读取数据；没有重跑数据消费、trace/JIT、模型或GPU。新输出尚不存在，无远程写入。首次本地检查的NUL分隔编码错误发生于创建Bash子进程前，已改用逐行打印；不涉及模型。
+
+原两次失败分别是旧固定节点耦合和外部数据缺失，均无梯度结果。复用144/19项CPU回归、真实目标shell数据根传播、attempt3 forcing/CO2和静态payload消费、七天140/140覆盖及命名消费者源码证据，不重跑。固定路径旧模板天气/CO2/地块替代疑点已关闭；缺文件修复恢复模板可读性，实际1967样本绑定不变。
+
+边界不变：gnall单node/task、4实际SlurmCPU/1V100、非独占、自动选节点/允许正常排队，90分钟、24GiB、一次compile/单次作业、no-requeue、不重试。CPU0.07/GPU2.20元每小时相加，上限估算 `(4×0.07+2.20)×1.5=3.72元`，账单未知。队列等待不算分配后5400秒执行预算，保留原180秒保存释放预留。
+
+同66,123,713参数B1/artifact299/window0/T7公共loss、原case/权重、完整3854状态、四方向六步FD和52调用（16native+36FD）、rtol1e-5/atol1e-6，state20独立严格失败不补值不豁免。FP64仅诊断。期望给出native与独立FD一致/不一致/不可判定；可能仍不能区分全部原因，FP64通过不等于FP32 B4或训练通过。固定常量校准/长期精度是原有科学边界，不另设无限前置门槛。
+
+获新批准后才创建新输出与fresh exact-argv approval，并从gln01唯一提交；不重部署、不重提旧job。allocation内执行既定discovery/preflight和保存释放，按科学JSON解释可能state20导致的exit3。当前无新GPU结果、无watcher/heartbeat或自动执行。
