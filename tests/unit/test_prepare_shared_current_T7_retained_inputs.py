@@ -29,8 +29,10 @@ def _assets(tmp_path, monkeypatch):
     monkeypatch.setattr(admission, "CONFIG_SHA256", admission.sha256(config))
     domain = SimpleNamespace(
         forcing_indices_zero_based=np.asarray([[145, 46]], dtype=np.int64),
-        lon=np.asarray([111.0]), lat=np.asarray([-3.0]), nbindex=1,
+        lon=np.asarray([[111.0]]), lat=np.asarray([[-3.0]]), nbindex=1,
+        kindex=np.asarray([1], dtype=np.int32), lalo=np.asarray([[-3.0, 111.0]]),
         area=np.asarray([1.0]), contfrac_land=np.asarray([1.0]),
+        resolution=None, neighbours=None, corners=None, seglength=None,
     )
     context = SimpleNamespace(
         config_path=config,
@@ -84,8 +86,9 @@ def test_consumption_runs_dynamic_step_bundle_then_static_payload_and_restores_d
         ("Tair", "PSurf", "Qair", "Wind_E", "Wind_N", "Rainf", "Snowf", "SWdown", "LWdown", "Areas", "contfrac"))}
     forcing_values.update(Height_Lev1=2.0, Height_Levuv=10.0)
     forcing = SimpleNamespace(**forcing_values)
+    vegetation = SimpleNamespace(veget_max=np.ones((1, 2)), veget=None, soiltile=np.ones((1, 2)))
     bundle = SimpleNamespace(year=1991, tstep=48, co2_ppm=350.0, ccanopy=np.asarray([350.0]),
-        domain=context.first_step_bundle.domain, forcing=forcing)
+        domain=context.first_step_bundle.domain, forcing=forcing, vegetation=vegetation)
     calls = []
 
     def read_bundle(received_context, *, year, tstep):
@@ -106,10 +109,16 @@ def test_consumption_runs_dynamic_step_bundle_then_static_payload_and_restores_d
                 values[name] = None
             elif name in {"kjpindex", "nbindex"}:
                 values[name] = 1
-            elif name == "lalo":
-                values[name] = np.asarray([[111.0, -3.0]])
-            elif name in {"veget_max", "soiltile"}:
-                values[name] = np.ones((1, 2))
+            elif name in {"kindex", "lalo", "lon", "lat", "contfrac"}:
+                values[name] = getattr(bundle.domain, {
+                    "contfrac": "contfrac_land",
+                }.get(name, name))
+            elif name in {"resolution", "neighbours", "corners", "seglength"}:
+                values[name] = getattr(bundle.domain, name)
+            elif name in {"ccanopy"}:
+                values[name] = bundle.ccanopy
+            elif name in {"veget_max", "veget", "soiltile"}:
+                values[name] = getattr(bundle.vegetation, name)
             else:
                 values[name] = np.ones((1,))
         return SimpleNamespace(**values)
@@ -132,6 +141,8 @@ def test_consumption_runs_dynamic_step_bundle_then_static_payload_and_restores_d
         field.name for field in fields(IntersurfFirstStepPayload) if field.name != "missing_fields"
     }
     assert report["static_intersurf_payload_missing_fields"] == ["soilclass"]
+    assert report["static_intersurf_payload_fields"]["lon"]["shape"] == [1, 1]
+    assert report["static_intersurf_payload_fields"]["kjpindex"]["finite"] is True
     assert report["forcing_heights_m"] == {"Height_Lev1": 2.0, "Height_Levuv": 10.0}
     assert __import__("os").environ["ORCHIDEE_DATA_ROOT"] == "old-root"
 

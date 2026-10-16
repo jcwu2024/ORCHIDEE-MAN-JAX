@@ -1,19 +1,21 @@
 # Current Work Order
 
-Updated: 2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
-is RUNNING at the saved startup snapshot: fresh human-approved sole job15895454,
-exact a833f987, start10:34:48+08 on ibc13b02n01,4CPU/1V100/5400s/nonexclusive/
-no-requeue/CNY3.72 ceiling. At10:36:12 raw allocation validation and GPU discovery
-passed; synthetic preflight passed60.71884s with real_model_checked=false.
-The probe started; result.v2.json was absent, so real-model compile/call counts
-and FP64/FD/full3854/physics gates are not established. State20 is unwaived.
-No automatic watcher/wait/repeated query; manual status/output review may follow.
-Scientific child exit3 requires result JSON interpretation, not an automatic
-outer runtime_failed label. No resubmission, training or new experiment.
-The new checkout shares old Git objects: retain the old checkout directory.
-[Job15866925](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-remains closed FAILED1:0/8s before discovery; its consumed grant was not reused.
-Actual evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/.
+Updated:2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
+is terminal: job15895454 FAILED1:0/140 allocated seconds/n01/4CPU/1GPU.
+Discovery/synthetic preflight passed; first lower/trace attempt failed opening
+missing1991 retained forcing. Completed traces/compiles/calls0; new scientific
+gates unmeasured, state20 unwaived. This is input failure, not numerical rejection.
+Sampled peak345MiB; groups cleaned, selected UUID release0MiB/0%/no processes,
+ledger closed. Scheduler estimate CNY0.0964444444, actual bill unknown.
+Preserve three identities:1967 sampled T7,1991 retained owner,1961 serialized
+first-bundle template; their scientific appropriateness is unassessed. Isolated
+canonical1991/CO2 byte-matched recovery and explicit-root CPU preparation do not
+establish GPU/scientific admission. Actual test01 ordinary-wrapper dry-run passed
+retained-input consumption at f2242fc5 (CO2 354.47, finite payload/missing[],
+case/state unchanged); no transition, trace/compile/calls or attempts, all0.
+Both job15895454 and earlier15866925 grants are consumed. This precision/FD line
+is stopped: no new proposal, retry/GPU/training/watcher. Retain dependent checkouts.
+Evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/terminal/.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation, diagnostic FP64 context and one combined native state
@@ -21,7 +23,7 @@ VJP/JVP ABI. Program-coordinate FD permits computational-only2621; unknown
 internal branches are interpretation limits. Local tests/dry-run do not certify
 full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
 earlier proposal was submitted once as15866925 and failed before model execution.
-The separate repaired attempt above has fresh approval. Historical GPU
+The separate repaired attempt above also ended without scientific admission. Historical GPU
 scopes remain closed/consumed.
 The actual test01 CPU outer dry-run and full saved B1/begin endpoint inspection
 pass at committed30d7eb7, with exact full case/state and four projections.
@@ -77,21 +79,21 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-Fresh explicit approval now binds the repaired current66,123,713-parameter
-latent32/private-reader64 B1/artifact299/window0/T7 public-loss precision/FD
-attempt to a833f987 and sole job15895454. The saved snapshot is RUNNING with
-validated actual allocation/discovery and synthetic preflight passed; the probe
-is in flight and no scientific result JSON was present. One compile/52 calls
-remain caps, not observed results. Four directions434/2382/2621/control200 and
-strict separate gates remain;2621 is computational-coordinate only. Unconverged
-FD is inconclusive. State20 is not waived and B4 local repair remains no-go.
+The repaired current66M B1/artifact299/window0/T7 precision/FD attempt15895454
+is closed after missing retained1991 forcing caused first-lower failure. One
+trace attempt, zero completed traces/compiles/calls; no new precision/derivative
+or full3854/physics admission. Strict state20 remains separate and unwaived.
 
-No automatic watcher/wait/repeated query is active. Manual review can read
-squeue/scontrol/sacct and the new output directory; use result.v2.json plus
-supervisor records to distinguish expected scientific exit3 from runtime failure.
-Retain the sole job and both dependent checkouts; no retry/resubmit, training,
-new experiment, precision adoption or derivative-reference acceptance follows.
-The earlier15866925 attempt and its authorization remain closed historical facts.
+Root cause and asset recovery preserve1967 sampled-window,1991 retained-owner
+and1961 first-bundle identities; their scientific appropriateness is unassessed.
+Explicit-root CPU input preparation is separate, with successful actual argument
+propagation and completed real test01 retained forcing/CO2/bundle/static-payload
+consumption checks, with case/state unchanged and no model graph/transition. Preserve original
+root data/a833f987/source-cache and both dependent checkout/object stores.
+
+This precision/FD line and both one-shot grants are closed. No new proposal,
+GPU run/retry, training, replacement forcing or watcher is authorized. Saved
+terminal evidence owns accounting/release; do not continue live-status monitoring.
 The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns historical affine paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole
 n04/4allocatedSlurmCPU/1V100 job15822347. It completed0:0 after110 allocated

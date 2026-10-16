@@ -36,9 +36,9 @@ def test_actual_slurm_dryrun_source_cache_and_wrapper_forwarding():
     assert argv[1] == '-B' and argv[2].endswith('/scripts/hpc/run_shared_current_T7_precision_admission.py')
     assert argv[3:] == command[2:]
     from scripts.hpc.probe_shared_current_T7_precision_admission import parser
-    parsed = parser().parse_args(argv[3:])
-    assert parsed.stage == 'execute' and parsed.source_cache.as_posix() == source_cache
-    assert parsed.output.name == 'result.v2.json'
+    with pytest.raises(SystemExit) as error:
+        parser().parse_args(argv[3:])
+    assert error.value.code == 2
 
 
 def test_wrapper_preserves_explicit_source_cache_with_spaces():

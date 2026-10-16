@@ -1,20 +1,27 @@
 # Code Map
 
-Updated: 2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
-is RUNNING at the saved startup snapshot: fresh human-approved sole job15895454,
-exact a833f987, start10:34:48+08 on ibc13b02n01,4CPU/1V100/5400s/nonexclusive/
-no-requeue/CNY3.72 ceiling. At10:36:12 raw allocation validation and GPU discovery
-passed; synthetic preflight passed60.71884s with real_model_checked=false.
-The probe started; result.v2.json was absent, so real-model compile/call counts
-and FP64/FD/full3854/physics gates are not established. State20 is unwaived.
-No automatic watcher/wait/repeated query; manual status/output review may follow.
-Scientific child exit3 requires result JSON interpretation, not an automatic
-outer runtime_failed label. No resubmission, training or new experiment.
-The new checkout shares old Git objects: retain the old checkout directory.
-[Job15866925](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-remains closed FAILED1:0/8s before discovery; its consumed grant was not reused.
-Actual evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/.
+Updated:2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
+is terminal: job15895454 FAILED1:0/140 allocated seconds/n01/4CPU/1GPU.
+Discovery/synthetic preflight passed; first lower/trace attempt failed opening
+missing1991 retained forcing. Completed traces/compiles/calls0; new scientific
+gates unmeasured, state20 unwaived. This is input failure, not numerical rejection.
+Sampled peak345MiB; groups cleaned, selected UUID release0MiB/0%/no processes,
+ledger closed. Scheduler estimate CNY0.0964444444, actual bill unknown.
+Preserve three identities:1967 sampled T7,1991 retained owner,1961 serialized
+first-bundle template; their scientific appropriateness is unassessed. Isolated
+canonical1991/CO2 byte-matched recovery and explicit-root CPU preparation do not
+establish GPU/scientific admission. Actual test01 ordinary-wrapper dry-run passed
+retained-input consumption at f2242fc5 (CO2 354.47, finite payload/missing[],
+case/state unchanged); no transition, trace/compile/calls or attempts, all0.
+Both job15895454 and earlier15866925 grants are consumed. This precision/FD line
+is stopped: no new proposal, retry/GPU/training/watcher. Retain dependent checkouts.
+Evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/terminal/.
 [Current precision preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
+now also uses `prepare_shared_current_T7_retained_inputs.py` from the normal
+precision probe dry-run: mandatory explicit retained data-root, actual driver
+forcing/annual-CO2/bundle/static-payload consumption and preserved case/state
+identities. This CPU input gate creates no model graph or GPU authorization.
+The original preparation
 links `scripts/hpc/shared_current_T7_precision_assets.py` (exact single299 public
 case), `shared_current_T7_precision_guard.py` (transactional full-neural context),
 `shared_current_T7_fd_guard.py` (program-coordinate FD/native combined ABI),
