@@ -4,22 +4,20 @@ New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
 
-Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-records sole job15866925 FAILED1:0 before discovery/preflight/model execution:
-8 allocated seconds, four CPUs/one GPU on ibc13b02n03. A legacy helper retained
-old fixed-node allocation identity despite current automatic node selection.
-The actual RUNNING response was not saved; terminal scontrol was purged, so
-exact lost fields are not reconstructed. All new FP64/FD/full3854/physics gates
-remain unmeasured; this is a launcher failure, not a numerical counterexample.
-Allocation:0.002222222222 card-hours/0.008888888889 CPU-hours, estimated
-CNY0.005511111111, bill unknown. Slurm terminal; no owned GPU children started,
-no UUID sample and no UUID-release-pass claim. State20 remains unwaived.
-The single attempt is used and this precision/FD line is STOPPED. Bounded local
-launcher repair passes144 scoped CPU tests in2.03s; supervisor audit found no
-additional legacy time/scope/output defect. This supplies no GPU/gradient admission;
-no GPU authorization, deployment, resubmission, training, automation or watching.
-Actual captures: outputs/T7-current-model-precision-admission-execution-20261015/terminal/,
-including terminal-summary.json and local-validation-receipt.json.
+Updated: 2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
+is RUNNING at the saved startup snapshot: fresh human-approved sole job15895454,
+exact a833f987, start10:34:48+08 on ibc13b02n01,4CPU/1V100/5400s/nonexclusive/
+no-requeue/CNY3.72 ceiling. At10:36:12 raw allocation validation and GPU discovery
+passed; synthetic preflight passed60.71884s with real_model_checked=false.
+The probe started; result.v2.json was absent, so real-model compile/call counts
+and FP64/FD/full3854/physics gates are not established. State20 is unwaived.
+No automatic watcher/wait/repeated query; manual status/output review may follow.
+Scientific child exit3 requires result JSON interpretation, not an automatic
+outer runtime_failed label. No resubmission, training or new experiment.
+The new checkout shares old Git objects: retain the old checkout directory.
+[Job15866925](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+remains closed FAILED1:0/8s before discovery; its consumed grant was not reused.
+Actual evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 delivers the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation and focused CPU tests.
@@ -33,7 +31,7 @@ One combined native FP64 state VJP/JVP graph is prepared; the attempt allocated
 8 seconds but GPU discovery/model execution and precision/runtime admission
 remain unperformed. The bounded
 90-minute/CNY3.72 proposal was explicitly approved and submitted; the terminal
-launcher failure above ends this attempt. Prior
+launcher failure of15866925 remains closed history; the repaired attempt has fresh approval. Prior
 [B4 local repair](research/daily_coarse_graining/T7_batching_repair_decision_20261014.md)
 remains no-go, and state20 nonfinite is still a separate strict failure. The
 [dated handoff](research/daily_coarse_graining/daily_speed_handoff_20261010.md)
@@ -53,7 +51,7 @@ launch, preflight, scope opening or ledger reservation occurred: zero occupied
 GPU seconds/card-hours/CNY0, and the one-shot is unconsumed. Approval persists;
 this task stops without further polling, automatic monitoring or training.
 
-The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
+The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns historical affine paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole
 n04/4allocatedSlurmCPU/1V100 job15822347. It completed0:0 after110 allocated
 seconds. Discovery, preflight and the unchanged affine12measurements/91arrays/

@@ -1,28 +1,27 @@
 # Current Work Order
 
-Updated: 2026-10-15. [Current-model precision/FD execution outcome](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
-records sole job15866925 FAILED1:0 before discovery/preflight/model execution:
-8 allocated seconds, four CPUs/one GPU on ibc13b02n03. A legacy helper retained
-old fixed-node allocation identity despite current automatic node selection.
-The actual RUNNING response was not saved; terminal scontrol was purged, so
-exact lost fields are not reconstructed. All new FP64/FD/full3854/physics gates
-remain unmeasured; this is a launcher failure, not a numerical counterexample.
-Allocation:0.002222222222 card-hours/0.008888888889 CPU-hours, estimated
-CNY0.005511111111, bill unknown. Slurm terminal; no owned GPU children started,
-no UUID sample and no UUID-release-pass claim. State20 remains unwaived.
-The single attempt is used and this precision/FD line is STOPPED. Bounded local
-launcher repair passes144 scoped CPU tests in2.03s; supervisor audit found no
-additional legacy time/scope/output defect. This supplies no GPU/gradient admission;
-no GPU authorization, deployment, resubmission, training, automation or watching.
-Actual captures: outputs/T7-current-model-precision-admission-execution-20261015/terminal/,
-including terminal-summary.json and local-validation-receipt.json.
+Updated: 2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
+is RUNNING at the saved startup snapshot: fresh human-approved sole job15895454,
+exact a833f987, start10:34:48+08 on ibc13b02n01,4CPU/1V100/5400s/nonexclusive/
+no-requeue/CNY3.72 ceiling. At10:36:12 raw allocation validation and GPU discovery
+passed; synthetic preflight passed60.71884s with real_model_checked=false.
+The probe started; result.v2.json was absent, so real-model compile/call counts
+and FP64/FD/full3854/physics gates are not established. State20 is unwaived.
+No automatic watcher/wait/repeated query; manual status/output review may follow.
+Scientific child exit3 requires result JSON interpretation, not an automatic
+outer runtime_failed label. No resubmission, training or new experiment.
+The new checkout shares old Git objects: retain the old checkout directory.
+[Job15866925](research/daily_coarse_graining/T7_current_model_precision_admission_execution_results_20261015.md)
+remains closed FAILED1:0/8s before discovery; its consumed grant was not reused.
+Actual evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
 asset/case preparation, diagnostic FP64 context and one combined native state
 VJP/JVP ABI. Program-coordinate FD permits computational-only2621; unknown
 internal branches are interpretation limits. Local tests/dry-run do not certify
 full-model precision/runtime or numerical acceptance. The90-minute/CNY3.72
-proposal was submitted once and failed before model execution; the attempt is used. Historical GPU
+earlier proposal was submitted once as15866925 and failed before model execution.
+The separate repaired attempt above has fresh approval. Historical GPU
 scopes remain closed/consumed.
 The actual test01 CPU outer dry-run and full saved B1/begin endpoint inspection
 pass at committed30d7eb7, with exact full case/state and four projections.
@@ -78,29 +77,22 @@ unselected. A precision/reference change is not selected by the JVP result.
 
 ## Current action and next gate
 
-The latest delegated target replaced the generic AD baseline with fixed
-66,123,713 latent32/reader64 B1 artifact299/window0/T7 public-loss FP64 plus
-independent program-coordinate FD, compared with existing FP32 evidence.
-The clarified target is the exposed program partial derivative, permitting
-single-coordinate2621 with an explicit computational-only label. No carbon
-pools are silently coordinated. Four directions and separate native/mean/state20
-gates remain; unknown internal branches limit interpretation, and unconverged
-FD is inconclusive. The integrated90-minute/CNY3.72 proposal was explicitly
-approved for immutable30d7eb7, one V100/four allocated CPUs/5400s/24GiB,
-one compile and52 calls. The actual single attempt job15866925 FAILED1:0 before
-discovery/preflight/model execution after8 allocated seconds. All new scientific
-gates remain unmeasured. This precision/FD line is STOPPED: no retry/resubmit,
-new GPU proposal, deployment, remote write, training, automation or watching.
-The bounded local launcher/helper repair passed144 CPU regressions in2.03s;
-it preserves legacy defaults and raw diagnostics and does not restore execution
-authorization. Supervisor dependency review found no additional time/path defect.
-The earlier busy-GPU submission block was wrong; normal queueing was allowed.
-Historical pending/start estimates are superseded by actual terminal accounting.
-B4 local repair remains no-go,
-and state20 remains a separate strict failure. Accepted CPU preparation and old
-FP32 evidence are retained; neither supplies new FP64 scientific acceptance.
+Fresh explicit approval now binds the repaired current66,123,713-parameter
+latent32/private-reader64 B1/artifact299/window0/T7 public-loss precision/FD
+attempt to a833f987 and sole job15895454. The saved snapshot is RUNNING with
+validated actual allocation/discovery and synthetic preflight passed; the probe
+is in flight and no scientific result JSON was present. One compile/52 calls
+remain caps, not observed results. Four directions434/2382/2621/control200 and
+strict separate gates remain;2621 is computational-coordinate only. Unconverged
+FD is inconclusive. State20 is not waived and B4 local repair remains no-go.
 
-The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns the latest paid evidence:
+No automatic watcher/wait/repeated query is active. Manual review can read
+squeue/scontrol/sacct and the new output directory; use result.v2.json plus
+supervisor records to distinguish expected scientific exit3 from runtime failure.
+Retain the sole job and both dependent checkouts; no retry/resubmit, training,
+new experiment, precision adoption or derivative-reference acceptance follows.
+The earlier15866925 attempt and its authorization remain closed historical facts.
+The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns historical affine paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole
 n04/4allocatedSlurmCPU/1V100 job15822347. It completed0:0 after110 allocated
 seconds. Discovery, preflight and the unchanged affine12measurements/91arrays/
