@@ -1,5 +1,14 @@
 # Project Start Here
 
+Updated2026-10-18: input-ready job **15941021** submitted once under the user's
+“继续。” instruction and supervisor's same-scope execution arrangement.
+Snapshot00:41:07 Asia/Shanghai: **PENDING (Priority)**, no GPU allocation or numerical
+results yet. Slurm continues; no retry, watcher or automatic follow-up.
+[Execution record](research/daily_coarse_graining/T7_current_model_precision_input_ready_execution_20261018.md)
+owns the current status, exact authorization and manual recheck commands.
+Execution SHA remains `f2242fc5`; historical failed jobs/grants below stay closed.
+
+
 New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_graining/SUPERVISOR_HANDOFF.md)
 and [opening prompt](research/daily_coarse_graining/NEW_PROJECT_PROMPT.md).
 These describe the post-maintenance entry and do not reopen closed GPU scopes.
@@ -21,7 +30,8 @@ A subsequent real seven-day input audit verifies sample CO2 321.62/weather/
 coordinates/day and140/140 landpoint overrides, excluding1991/1961 template
 exogenous substitution at this boundary; no model trajectory or broad science pass.
 Both job15895454 and earlier15866925 grants are consumed. This precision/FD line
-is stopped: no new proposal, retry/GPU/training/watcher. Retain dependent checkouts.
+was closed for the historical grants; the2026-10-18 input-ready submission above
+is the separately authorized continuation. Retain dependent checkouts.
 Evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/terminal/.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 delivers the actual fixed66M B1/artifact299/T7 public callable, exact original

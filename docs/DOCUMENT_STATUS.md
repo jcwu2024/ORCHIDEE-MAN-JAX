@@ -1,5 +1,14 @@
 # Documentation Authority
 
+Updated2026-10-18: input-ready job **15941021** submitted once under the user's
+“继续。” instruction and supervisor's same-scope execution arrangement.
+Snapshot00:41:07 Asia/Shanghai: **PENDING (Priority)**, no GPU allocation or numerical
+results yet. Slurm continues; no retry, watcher or automatic follow-up.
+[Execution record](research/daily_coarse_graining/T7_current_model_precision_input_ready_execution_20261018.md)
+owns the current status, exact authorization and manual recheck commands.
+Execution SHA remains `f2242fc5`; historical failed jobs/grants below stay closed.
+
+
 Updated: 2026-10-16. Current entry pages replace progress chronology. Dated
 reports retain their experimental scope; old plans grant no execution authority.
 [NEXT_STEPS.md](NEXT_STEPS.md) owns current action and resource boundaries.

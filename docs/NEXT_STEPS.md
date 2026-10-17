@@ -1,5 +1,14 @@
 # Current Work Order
 
+Updated2026-10-18: input-ready job **15941021** submitted once under the user's
+“继续。” instruction and supervisor's same-scope execution arrangement.
+Snapshot00:41:07 Asia/Shanghai: **PENDING (Priority)**, no GPU allocation or numerical
+results yet. Slurm continues; no retry, watcher or automatic follow-up.
+[Execution record](research/daily_coarse_graining/T7_current_model_precision_input_ready_execution_20261018.md)
+owns the current status, exact authorization and manual recheck commands.
+Execution SHA remains `f2242fc5`; historical failed jobs/grants below stay closed.
+
+
 Updated:2026-10-16. [Repaired precision execution](research/daily_coarse_graining/T7_current_model_precision_admission_repaired_execution_20261016.md)
 is terminal: job15895454 FAILED1:0/140 allocated seconds/n01/4CPU/1GPU.
 Discovery/synthetic preflight passed; first lower/trace attempt failed opening
@@ -18,8 +27,8 @@ coordinates/day and140/140 landpoint overrides, excluding1991/1961 template
 exogenous substitution at this boundary; no model trajectory or broad science pass.
 Both job15895454 and earlier15866925 grants are consumed. Repairs and the bounded
 input audit are accepted; the [input-ready proposal](../outputs/T7-current-model-precision-input-ready-proposal-20261016/REVIEW.md)
-awaits a separate execution decision. No GPU execution, automatic retry, training
-or watcher is authorized. Retain dependent checkouts.
+was subsequently authorized for the single2026-10-18 submission above. No
+automatic retry, training or watcher is authorized. Retain dependent checkouts.
 Evidence: outputs/T7-current-model-precision-admission-repaired-execution-20261016/terminal/.
 [Current-model precision/FD preparation](research/daily_coarse_graining/T7_current_model_precision_admission_preparation_20261014.md)
 integrates the actual fixed66M B1/artifact299/T7 public callable, exact original
@@ -99,8 +108,8 @@ root data/a833f987/source-cache and both dependent checkout/object stores.
 
 Both historical one-shot grants are consumed. The input-ready proposal reuses
 f2242fc5 and verified explicit retained-data-root inputs, with independent future
-output/approval/result paths; execution awaits a separate decision. No GPU run,
-automatic retry, training, replacement forcing or watcher is authorized. Saved
+output/approval/result paths; the single authorized job15941021 is pending above. No
+additional GPU run, automatic retry, training, replacement forcing or watcher is authorized. Saved
 terminal evidence owns accounting/release; do not continue live-status monitoring.
 The [v2 GPU terminal result](research/daily_coarse_graining/T7_paid_v2_GPU_execution_results_20261013.md) owns historical affine paid evidence:
 human delegation plus supervisor approval bound immutable7efe4b44 to sole

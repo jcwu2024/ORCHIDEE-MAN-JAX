@@ -1,0 +1,6 @@
+ibc13b02n04
+2026-10-18T00:38:43+0800
+bash: sinfo: command not found
+bash: squeue: command not found
+bash: scontrol: command not found
+bash: scontrol: command not found

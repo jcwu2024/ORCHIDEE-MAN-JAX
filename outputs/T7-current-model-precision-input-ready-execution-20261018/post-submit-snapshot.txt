@@ -1,0 +1,37 @@
+2026-10-18T00:40:20+0800
+JobId=15941021 JobName=T7-input-ready
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=PENDING Reason=Priority Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:00 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-18T00:39:59 EligibleTime=2026-10-18T00:39:59
+   AccrueTime=2026-10-18T00:39:59
+   StartTime=Unknown EndTime=Unknown Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-18T00:40:12 Scheduler=Main
+   Partition=gnall AllocNode:Sid=ibc13b02n04:93379
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=
+   NumNodes=1-1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,mem=312.50G,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=(null)
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/slurm-15941021.stderr.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/slurm-15941021.stdout.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+             JOBID     STATE       TIME TIME_LIMIT NODELIST(REASON)
+          15941021   PENDING       0:00    1:30:00 (Priority)
+total 24
+-rw-r--r-- 1 liwei users 7188 Oct 18 00:38 approval-cpu-validation.json
+-rw-r--r-- 1 liwei users 6854 Oct 18 00:38 approval.v2.json
+-rw-r--r-- 1 liwei users 3106 Oct 18 00:39 submission-intent.json
+-rw-r--r-- 1 liwei users 3187 Oct 18 00:39 submission-receipt.json
