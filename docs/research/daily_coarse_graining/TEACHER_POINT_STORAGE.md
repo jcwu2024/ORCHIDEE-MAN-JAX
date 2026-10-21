@@ -105,3 +105,51 @@ files before pins. Report measured removed/added files and directories, deductin
 all actual maintenance receipts, ledger, code checkouts, retained originals and
 other artifacts. Account quota snapshots alone do not prove a project reduction.
 No full migration or source retirement is implied by a successful reader proof.
+
+## Accepted bounded result
+
+Point `087.0-109.0` has completed production migration at deployed commit
+`98fcc1a6fda8640fd27e46d50e9726c198eb1efe`. All 200 objects were restored with
+exact bytes/mode/nsmtime, all 50 annual production readers matched, and the
+shadow missing-file proof passed through real sample/window/training adapters.
+After technical review, exactly those 200 originals were retired. Actual-root
+reads of all 200 logical objects, all 50 checkpoints, all three temporal splits
+and the full 33450-reference existence scan passed. All 103 original control
+files retained their hashes and file attributes.
+
+The package SHA256 is
+`22eaa71afc03f98987e77bf7676732e96be8ad737fab46821e94a72090e66ea8`;
+the accepted reader proof SHA256 is
+`c8a4e536fc24bf88c841063b9e42e2472a0d7732d668408bdff3c6877292a25e`.
+Dataset files changed from133903 to133705, a net reduction of198. Two obsolete
+code checkouts (4980 files/148 directories) were verified into one archive and
+removed. The retained active checkout has2490 files and maintenance has25;
+including six observed deployment Git pack/index files gives a scoped net
+increase of2323 files for this bounded stage. No pre-deployment Git-object
+inventory exists, so that attribution is limited to the observed deployment
+window; it is not a whole-account or whole-project before/after claim.
+
+The first new package took6.364s. Proof took114.632s, including27.103s for the
+first-only full index scan. Excluding that scan, package+proof projects17.42h
+for668 remaining points before retirement/storage variation. This diagnostic
+used test03, nice15, two-CPU affinity and one BLAS thread; it does not establish
+stable one-CPU throughput. Peak RSS was about1.46GiB.
+
+The concrete pending production proposal uses cnmix, one CPU,36h hard wall
+time and35h30m soft admission budget, max669 points with completed points
+skipped. At the project rate0.07, the ceiling is CNY2.52. The fixed submission
+wrapper overrides the generic launcher's12h directive with36h; target Bash
+syntax/argument expansion and parser dry-runs passed. No paid job was submitted.
+Fresh dependency/pin admission and explicit user resource approval remain
+required before the fixed command runs.
+
+Local reviewable evidence is in
+`E:/ORCHIDEE-MAN-JAX/outputs/maintenance/20261016/server-file-count/TEACHER-POINT-20261021/RESULT.md`.
+The remote maintenance namespace of the same suffix contains `RESULT.md`,
+`INDEX.json`, `file-count.json`, the durable ledger, exact reader/retirement
+proofs, restoration instructions, verified source archives and the complete
+Git bundle. Its fixed command is:
+
+```bash
+bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/maintenance/teacher-point-storage-20261021/submit-full-migration.sh --submit
+```

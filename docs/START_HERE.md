@@ -1,6 +1,6 @@
 # Project Start Here
 
-Teacher storage maintenance: [point packages and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md) document the integrated reader and bounded migration tools. This maintenance does not change scientific architecture or authorize training/paid execution.
+Teacher storage: [accepted point migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Point087.0-109.0 is migrated and verified after retirement of200 originals; dataset files net−198. Remaining668 points await explicit approval of the fixed cnmix1CPU/36h/CNY2.52 proposal. Scientific architecture/training scope is unchanged.
 
 Updated2026-10-18: input-ready job **15941021** submitted once under the user's
 “继续。” instruction and supervisor's same-scope execution arrangement.
