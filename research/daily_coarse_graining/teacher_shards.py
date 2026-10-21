@@ -295,7 +295,10 @@ def load_plan(path: Path, *, require_inputs: bool = False, verify_release_source
         if data_release.dataset_id != dataset_id:
             raise ValueError("coherent generation plan dataset ID differs from release")
         if data_release.teacher_config != teacher_config:
-            raise ValueError("coherent generation plan Teacher config differs from release")
+            if (verify_release_sources or
+                    _sha256_file(teacher_config) != data_release.raw["runtime"]["config"]["sha256"] or
+                    _sha256_file(data_release.teacher_config) != data_release.raw["runtime"]["config"]["sha256"]):
+                raise ValueError("coherent generation plan Teacher config differs from release")
         if data_release.typed_contract.dataset_manifest_schema not in {
             LEGACY_COHERENT_DATASET_SCHEMA_VERSION,
             COHERENT_DATASET_SCHEMA_VERSION,

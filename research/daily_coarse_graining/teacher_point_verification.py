@@ -84,9 +84,6 @@ def prove_point(migration: Migration, point: str, *, scan_full_index=False) -> d
     if record is None or record["stage"] not in {"published","reader_verified"}:
         raise ValueError("published complete point required for proof")
     view = safe_path(migration.work / (point + ".proof-view"))
-    restore_start = time.monotonic()
-    restoration = migration.restore(point,view)
-    restoration_seconds = time.monotonic()-restore_start
     root = migration.root
     contract = dm.daily_markov_contract_from_metadata(migration.manifest["markov_contract"])
     typed_contract = typed.load_typed_sidecar_contract(typed.COHERENT_CONTRACT_PATH)
@@ -100,6 +97,9 @@ def prove_point(migration: Migration, point: str, *, scan_full_index=False) -> d
     if plan.plan_sha256 != migration.manifest["plan_sha256"]:
         raise ValueError("original generation-plan identity drift")
     entries = {(r.landpoint_id,r.year):r for r in plan.entries}
+    restore_start = time.monotonic()
+    restoration = migration.restore(point,view)
+    restoration_seconds = time.monotonic()-restore_start
     for r in record["records"]:
         a = dm.load_markov_shard(root/r["shard"],contract=contract)
         b = dm.load_markov_shard(view/r["shard"],contract=contract)
@@ -194,6 +194,7 @@ def prove_point(migration: Migration, point: str, *, scan_full_index=False) -> d
             "historical_producer_source_revalidated":False,"release_self_hash_and_contracts_verified":True,
             "generation_plan_sha256":plan.plan_sha256,"actual_annual_input_hashes_verified":True,
             "release_noncode_sources":noncode,
+            "original_plan_config_path":str(plan.teacher_config),"resolved_release_config_path":str(plan.data_release.teacher_config),
             "annual_records":annual,"all_200_original_objects_byte_verified":True,
             "restoration":restoration,"restore_seconds":restoration_seconds,"annual_comparison_seconds":annual_seconds,
             "absence_probes":probes,"absence_seconds":absence_seconds,

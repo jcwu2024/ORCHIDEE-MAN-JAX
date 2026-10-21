@@ -107,9 +107,11 @@ def test_historical_plan_inspection_keeps_default_source_gate_and_noncode_hashes
     from research.daily_coarse_graining.teacher_point_verification import verify_release_noncode
     release_path = _release_manifest(tmp_path)
     raw = json.loads(release_path.read_bytes())
+    alias = tmp_path/"original-plan-config.yaml"
+    alias.write_bytes(Path(raw["runtime"]["config"]["path"]).read_bytes())
     plan_path = tmp_path/"historical-plan.json"
     plan_path.write_text(json.dumps({"schema_version":teacher_shards.COHERENT_PLAN_SCHEMA_VERSION,
-        "dataset_id":raw["dataset_id"],"teacher_config":raw["runtime"]["config"]["path"],
+        "dataset_id":raw["dataset_id"],"teacher_config":str(alias),
         "data_release":str(release_path),"production_scope":"full","entries":[{
             "landpoint_id":"001.0-071.0","year":1961,"days":365,"spatial_split":"train","temporal_split":"train",
             "run_def":str(tmp_path/"run.def"),"reference_run_dir":str(tmp_path/"reference"),
@@ -118,6 +120,9 @@ def test_historical_plan_inspection_keeps_default_source_gate_and_noncode_hashes
     with pytest.raises(ValueError,match="source-tree hash drift"):
         teacher_shards.load_plan(plan_path)
     plan = teacher_shards.load_plan(plan_path,verify_release_sources=False)
+    alias.write_bytes(b"conflicting alias")
+    with pytest.raises(ValueError,match="config differs"):
+        teacher_shards.load_plan(plan_path,verify_release_sources=False)
     assert set(verify_release_noncode(plan.data_release)) == {"teacher_config","pft_catalog","typed_contract"}
     Path(raw["runtime"]["pft_catalog"]["path"]).write_text('{"drift":true}')
     with pytest.raises(ValueError,match="pft_catalog"):
