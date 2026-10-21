@@ -265,7 +265,14 @@ def _validate_landpoint_run_def_binding(entry: PlanEntry) -> None:
         )
 
 
-def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
+def load_plan(path: Path, *, require_inputs: bool = False, verify_release_sources: bool = True) -> GenerationPlan:
+    """Load a generation plan; generation retains strict source verification.
+
+    An already-generated immutable release may be inspected with explicit
+    ``verify_release_sources=False`` when the current checkout differs from its
+    historical producer. Release self-hash/contracts and plan validation remain
+    enforced; this mode does not admit a new generation run.
+    """
     path = path.resolve()
     raw = json.loads(path.read_text(encoding="utf-8"))
     schema_version = raw.get("schema_version")
@@ -284,7 +291,7 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         release_path = raw.get("data_release")
         if not release_path:
             raise ValueError("coherent generation plan requires data_release")
-        data_release = load_teacher_data_release(_resolve(release_path))
+        data_release = load_teacher_data_release(_resolve(release_path),verify_sources=verify_release_sources)
         if data_release.dataset_id != dataset_id:
             raise ValueError("coherent generation plan dataset ID differs from release")
         if data_release.teacher_config != teacher_config:

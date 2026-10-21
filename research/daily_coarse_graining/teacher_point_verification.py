@@ -50,6 +50,24 @@ def _cleanup_owned_view(view: Path, expected_files: dict[str,tuple]):
     view.rmdir()
 
 
+def verify_release_noncode(release) -> dict:
+    """Keep every non-Python source gate in historical-output inspection."""
+    from .teacher_data_release import _resolve
+    raw = release.raw
+    identities = {"teacher_config":raw["runtime"]["config"],
+                  "pft_catalog":raw["runtime"]["pft_catalog"],
+                  "typed_contract":raw["contracts"]["typed_supplement"]}
+    result = {}
+    for name,identity in identities.items():
+        path = safe_path(_resolve(identity["path"]))
+        before = fingerprint(path)
+        digest = loose_sha256(path)
+        if digest != identity["sha256"] or fingerprint(path) != before:
+            raise ValueError("release non-code hash drift: "+name)
+        result[name] = {"path":str(path),"sha256":digest}
+    return result
+
+
 def prove_point(migration: Migration, point: str, *, scan_full_index=False) -> dict:
     """Restore once, compare every annual reader, then exercise actual absence.
 
@@ -73,7 +91,12 @@ def prove_point(migration: Migration, point: str, *, scan_full_index=False) -> d
     contract = dm.daily_markov_contract_from_metadata(migration.manifest["markov_contract"])
     typed_contract = typed.load_typed_sidecar_contract(typed.COHERENT_CONTRACT_PATH)
     annual = []; reader_start = time.monotonic()
-    plan = teacher.load_plan(Path(migration.manifest["plan"]))
+    # This reads accepted historical outputs. The current source checkout is
+    # deliberately different from the frozen producer; do not relabel it as
+    # the historical source. Release self-hash/contracts remain enforced and
+    # _completed_metadata below verifies each record's actual input identities.
+    plan = teacher.load_plan(Path(migration.manifest["plan"]),verify_release_sources=False)
+    noncode = verify_release_noncode(plan.data_release)
     if plan.plan_sha256 != migration.manifest["plan_sha256"]:
         raise ValueError("original generation-plan identity drift")
     entries = {(r.landpoint_id,r.year):r for r in plan.entries}
@@ -168,6 +191,9 @@ def prove_point(migration: Migration, point: str, *, scan_full_index=False) -> d
     return {"status":"PRODUCTION_POINT_READERS_AND_ABSENT_LOOSE_PASS","landpoint_id":point,
             "container_sha256":record["container"]["sha256"],"snapshot_sha256":record["snapshot_sha256"],
             "dataset_manifest_sha256":migration.manifest_sha256,"source_modules":sources,"git_commit":commit,
+            "historical_producer_source_revalidated":False,"release_self_hash_and_contracts_verified":True,
+            "generation_plan_sha256":plan.plan_sha256,"actual_annual_input_hashes_verified":True,
+            "release_noncode_sources":noncode,
             "annual_records":annual,"all_200_original_objects_byte_verified":True,
             "restoration":restoration,"restore_seconds":restoration_seconds,"annual_comparison_seconds":annual_seconds,
             "absence_probes":probes,"absence_seconds":absence_seconds,

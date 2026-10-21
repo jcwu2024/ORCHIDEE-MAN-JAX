@@ -103,6 +103,27 @@ def test_data_release_binds_teacher_config_contract_and_producer_sources(tmp_pat
         load_teacher_data_release(path)
 
 
+def test_historical_plan_inspection_keeps_default_source_gate_and_noncode_hashes(tmp_path):
+    from research.daily_coarse_graining.teacher_point_verification import verify_release_noncode
+    release_path = _release_manifest(tmp_path)
+    raw = json.loads(release_path.read_bytes())
+    plan_path = tmp_path/"historical-plan.json"
+    plan_path.write_text(json.dumps({"schema_version":teacher_shards.COHERENT_PLAN_SCHEMA_VERSION,
+        "dataset_id":raw["dataset_id"],"teacher_config":raw["runtime"]["config"]["path"],
+        "data_release":str(release_path),"production_scope":"full","entries":[{
+            "landpoint_id":"001.0-071.0","year":1961,"days":365,"spatial_split":"train","temporal_split":"train",
+            "run_def":str(tmp_path/"run.def"),"reference_run_dir":str(tmp_path/"reference"),
+            "initialization_mode":teacher_shards.COLD_START_BOOTSTRAP}]}))
+    (Path(raw["teacher_source"]["path"])/"model.py").write_text("VALUE=2\n")
+    with pytest.raises(ValueError,match="source-tree hash drift"):
+        teacher_shards.load_plan(plan_path)
+    plan = teacher_shards.load_plan(plan_path,verify_release_sources=False)
+    assert set(verify_release_noncode(plan.data_release)) == {"teacher_config","pft_catalog","typed_contract"}
+    Path(raw["runtime"]["pft_catalog"]["path"]).write_text('{"drift":true}')
+    with pytest.raises(ValueError,match="pft_catalog"):
+        verify_release_noncode(plan.data_release)
+
+
 def test_release_freezer_is_deterministic_and_rejects_historical_contract(tmp_path):
     teacher_root = tmp_path / "teacher"
     teacher_root.mkdir()

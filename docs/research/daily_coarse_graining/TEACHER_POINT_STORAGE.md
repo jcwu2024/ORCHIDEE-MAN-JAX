@@ -43,6 +43,12 @@ full exact restoration. A separate shadow release then physically lacks all 200
 loose members and exercises actual index/sample/window/training adapter readers.
 It records the deployed Git commit and seven source module hashes. This proof
 does not execute Teacher transitions or neural training.
+The frozen release's self-hash/contracts and original plan hash are verified;
+each annual completion check verifies actual input hashes. The historical
+producer source tree is not revalidated against today's different checkout.
+The config, PFT catalog and typed contract file byte hashes remain strict gates.
+`load_plan` exposes this explicit inspection option; generation defaults retain
+strict source verification. The real proof reports this provenance limitation.
 
 Retirement additionally requires an internal review token and a current dependency
 audit JSON with `dataset_manifest_sha256`, `active_queued_audit_complete: true`,
