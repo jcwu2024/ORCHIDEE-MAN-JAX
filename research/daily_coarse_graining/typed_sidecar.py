@@ -19,6 +19,13 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_flux_capture import CAPTURE_LABEL_PATHS
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
+from research.daily_coarse_graining.teacher_assets import (
+    asset_is_file,
+    asset_read_text,
+    asset_sha256,
+    open_asset,
+    reject_asset_write,
+)
 from research.daily_coarse_graining.markov_dataset import (
     ORCHIDEE_UNDEFINED_THRESHOLD,
     MarkovDatasetIndex,
@@ -59,11 +66,7 @@ def _contract_sha256(raw: Mapping[str, Any]) -> str:
 
 
 def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return asset_sha256(path)
 
 
 @dataclass(frozen=True)
@@ -108,7 +111,7 @@ def load_typed_sidecar_contract(
     path: str | Path = DEFAULT_CONTRACT_PATH,
 ) -> TypedSidecarContract:
     path = Path(path).resolve()
-    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw = json.loads(asset_read_text(path, encoding="utf-8"))
     schema_version = str(raw.get("schema_version", ""))
     if schema_version in COHERENT_DATASET_SCHEMAS:
         actual_hash = _contract_sha256(raw)
@@ -117,7 +120,7 @@ def load_typed_sidecar_contract(
         label_identity = raw.get("label_schema", {})
         label_path = ROOT / str(label_identity.get("path", ""))
         if (
-            not label_path.is_file()
+            not asset_is_file(label_path)
             or _sha256_file(label_path) != label_identity.get("sha256")
         ):
             raise ValueError("typed-supplement label-schema file hash mismatch")
@@ -153,7 +156,7 @@ def load_typed_sidecar_contract(
     inventory_hash = _sha256_file(inventory_path)
     if raw["inventory"].get("sha256") != inventory_hash:
         raise ValueError("typed-sidecar inventory hash mismatch")
-    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    inventory = json.loads(asset_read_text(inventory_path, encoding="utf-8"))
     if inventory.get("schema_version") != raw["inventory"].get("schema_version"):
         raise ValueError("typed-sidecar inventory schema mismatch")
 
@@ -355,6 +358,8 @@ def _resolve_coherent_typed_shard(
     root: Path,
     name: str,
     resolved_directories: dict[Path, Path],
+    *,
+    verify_files: bool = True,
 ) -> Path:
     """Resolve shared directories once, retaining per-file symlink checks."""
     candidate = root / name
@@ -364,7 +369,7 @@ def _resolve_coherent_typed_shard(
             path.relative_to(root)
         except ValueError as error:
             raise ValueError(f"typed shard path escapes dataset root: {path}") from error
-        if not path.is_file():
+        if verify_files and not asset_is_file(path):
             raise FileNotFoundError(path)
         return path
     directory = candidate.parent
@@ -373,6 +378,16 @@ def _resolve_coherent_typed_shard(
         resolved_directory = directory.resolve()
         resolved_directories[directory] = resolved_directory
     path = resolved_directory / candidate.name
+    if not verify_files:
+        # Post-acceptance index reopening may retain references whose assets
+        # are deliberately not present in this checkout. Keep containment and
+        # any existing symlink resolution independent of the existence scan.
+        path = path.resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as error:
+            raise ValueError(f"typed shard path escapes dataset root: {path}") from error
+        return path
     try:
         mode = os.lstat(path).st_mode
     except FileNotFoundError:
@@ -380,6 +395,10 @@ def _resolve_coherent_typed_shard(
             path.relative_to(root)
         except ValueError as error:
             raise ValueError(f"typed shard path escapes dataset root: {path}") from error
+        # Published asset maps can retain the logical path after loose files
+        # are retired. Directory resolution and root checks still apply.
+        if asset_is_file(path):
+            return path
         raise FileNotFoundError(path) from None
     if stat.S_ISLNK(mode):
         path = path.resolve()
@@ -412,7 +431,7 @@ def load_typed_sidecar_index(
         raise ValueError("typed-sidecar parent contract hash mismatch")
 
     manifest_path = Path(manifest_path).resolve()
-    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    raw = json.loads(asset_read_text(manifest_path, encoding="utf-8"))
     if raw.get("schema_version") != SIDECAR_DATASET_SCHEMA_VERSION:
         raise ValueError("unsupported typed-sidecar dataset schema")
     parent_manifest_hash = _sha256_file(parent_manifest_path)
@@ -453,7 +472,7 @@ def load_typed_sidecar_index(
             path.relative_to(root)
         except ValueError as error:
             raise ValueError(f"sidecar path escapes dataset root: {path}") from error
-        if not path.is_file():
+        if not asset_is_file(path):
             raise FileNotFoundError(path)
         expected_hash = str(item["sidecar_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
@@ -486,12 +505,18 @@ def load_coherent_typed_sidecar_index(
     *,
     contract_path: str | Path = COHERENT_CONTRACT_PATH,
     verify_hashes: bool = True,
+    verify_files: bool = True,
 ) -> TypedSidecarIndex:
-    """Load co-generated base and typed shards from one release manifest."""
+    """Load co-generated base and typed shards from one release manifest.
+
+    ``verify_files=False`` is for post-acceptance reopening of a bound manifest;
+    selected assets are still opened by sample/window consumers. Hash checking
+    remains independent and reads every declared asset when enabled.
+    """
 
     contract = load_typed_sidecar_contract(contract_path)
     manifest_path = Path(manifest_path).resolve()
-    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    raw = json.loads(asset_read_text(manifest_path, encoding="utf-8"))
     if raw.get("schema_version") != contract.dataset_manifest_schema:
         raise ValueError(
             "coherent typed reader requires the manifest schema bound by its contract"
@@ -504,7 +529,9 @@ def load_coherent_typed_sidecar_index(
     if release.get("typed_contract_sha256") != contract.sha256:
         raise ValueError("coherent Teacher typed contract drift")
 
-    parent_index = load_dataset_index(manifest_path, verify_hashes=verify_hashes)
+    parent_index = load_dataset_index(
+        manifest_path, verify_hashes=verify_hashes, verify_files=verify_files
+    )
     if parent_index.dataset_id != contract.parent_dataset_id:
         raise ValueError("coherent Teacher dataset family mismatch")
     if parent_index.contract_sha256 != contract.parent_contract_sha256:
@@ -520,7 +547,8 @@ def load_coherent_typed_sidecar_index(
         key = (str(item["landpoint_id"]), int(item["year"]))
         parent = parent_by_key[key]
         path = _resolve_coherent_typed_shard(
-            root, str(item["typed_shard"]), resolved_directories
+            root, str(item["typed_shard"]), resolved_directories,
+            verify_files=verify_files,
         )
         expected_hash = str(item["typed_shard_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
@@ -573,6 +601,7 @@ def write_typed_sidecar_shard(
     """Write one lossless sidecar shard without changing any parent asset."""
 
     path = Path(path)
+    reject_asset_write(path)
     expected = set(contract.fields_by_path)
     if set(values) != expected or set(defined) != expected:
         raise ValueError("typed-sidecar fields do not match the frozen contract")
@@ -637,7 +666,7 @@ def read_typed_sidecar_shard(
     expected_days: int | None = None,
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], np.ndarray]:
     path = Path(path)
-    with np.load(path, allow_pickle=False) as stored:
+    with open_asset(path) as handle, np.load(handle, allow_pickle=False) as stored:
         arrays = {name: stored[name] for name in stored.files}
     if "day_index" not in arrays:
         raise ValueError("typed-sidecar shard is missing day_index")
@@ -1011,7 +1040,7 @@ def load_typed_sidecar_statistics(
     index: TypedSidecarIndex | None = None,
 ) -> TypedSidecarStatistics:
     metadata_path = Path(path).resolve()
-    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    payload = json.loads(asset_read_text(metadata_path, encoding="utf-8"))
     if payload.get("schema_version") != SIDECAR_STATISTICS_SCHEMA_VERSION:
         raise ValueError("unsupported typed-sidecar statistics schema")
     if payload.get("selection") != {
@@ -1046,7 +1075,7 @@ def load_typed_sidecar_statistics(
         )
         if identity != expected:
             raise ValueError("typed-sidecar statistics dataset identity mismatch")
-    with np.load(arrays_path, allow_pickle=False) as stored:
+    with open_asset(arrays_path) as handle, np.load(handle, allow_pickle=False) as stored:
         arrays = {name: stored[name] for name in stored.files}
     fields = {}
     expected_arrays = set()

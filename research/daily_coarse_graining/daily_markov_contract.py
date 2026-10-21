@@ -20,6 +20,8 @@ import jax.numpy as jnp
 import numpy as np
 import yaml
 
+from research.daily_coarse_graining.teacher_assets import asset_sha256, open_asset
+
 from jax_orchidee.driver import domain as forcing_domain
 from jax_orchidee.driver.bundle import ccanopy_from_co2
 from jax_orchidee.driver.domain import read_annual_co2
@@ -123,11 +125,7 @@ def _sha256_bytes(value: bytes) -> str:
 
 
 def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return asset_sha256(path)
 
 
 @dataclass(frozen=True)
@@ -1924,7 +1922,7 @@ def reconstruct_compiled_forcing_window(
 def load_markov_shard(
     path: Path, *, contract: DailyMarkovContract | None = None
 ) -> MarkovShard:
-    with np.load(path, allow_pickle=False) as payload:
+    with open_asset(path) as handle, np.load(handle, allow_pickle=False) as payload:
         arrays = {name: payload[name] for name in payload.files}
     required = {
         "state_trajectory",

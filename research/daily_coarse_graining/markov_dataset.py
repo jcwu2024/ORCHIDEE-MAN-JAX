@@ -13,6 +13,12 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence
 import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
+from research.daily_coarse_graining.teacher_assets import (
+    asset_is_file,
+    asset_read_text,
+    asset_sha256,
+    open_asset,
+)
 
 LEGACY_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
@@ -51,11 +57,7 @@ def defined_numeric_mask(values: np.ndarray) -> np.ndarray:
 
 
 def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return asset_sha256(path)
 
 
 @dataclass(frozen=True)
@@ -270,7 +272,7 @@ def load_dataset_index(
     """
 
     manifest_path = Path(manifest_path).resolve()
-    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    raw = json.loads(asset_read_text(manifest_path, encoding="utf-8"))
     schema_version = raw.get("schema_version")
     if schema_version not in SUPPORTED_DATASET_SCHEMA_VERSIONS:
         raise ValueError(
@@ -312,7 +314,7 @@ def load_dataset_index(
             path.relative_to(root)
         except ValueError as error:
             raise ValueError(f"shard path escapes dataset root: {path}") from error
-        if verify_files and not path.is_file():
+        if verify_files and not asset_is_file(path):
             raise FileNotFoundError(path)
         expected_hash = str(item["shard_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
@@ -476,7 +478,7 @@ def load_training_statistics(
     index: MarkovDatasetIndex | None = None,
 ) -> TrainingStatistics:
     metadata_path = Path(path).resolve()
-    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    payload = json.loads(asset_read_text(metadata_path, encoding="utf-8"))
     if payload.get("schema_version") != STATISTICS_SCHEMA_VERSION:
         raise ValueError(f"statistics schema must be {STATISTICS_SCHEMA_VERSION!r}")
     expected_validity = {
@@ -498,7 +500,7 @@ def load_training_statistics(
         expected = (index.dataset_id, index.teacher_git_head, index.contract_sha256)
         if identity != expected:
             raise ValueError("training statistics dataset identity mismatch")
-    with np.load(arrays_path, allow_pickle=False) as stored:
+    with open_asset(arrays_path) as handle, np.load(handle, allow_pickle=False) as stored:
         values = {name: stored[name] for name in stored.files}
     result = {}
     observations = {}

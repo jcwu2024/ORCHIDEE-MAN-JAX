@@ -48,6 +48,15 @@ from research.daily_coarse_graining.teacher_data_release import (
     TeacherDataRelease,
     load_teacher_data_release,
 )
+from research.daily_coarse_graining.teacher_assets import (
+    asset_is_file,
+    asset_read_text,
+    asset_sha256,
+    open_asset,
+    reject_asset_write,
+    reject_release_write,
+    reject_scientific_manifest_write,
+)
 from research.daily_coarse_graining.typed_capture_masks import (
     build_defined_masks,
     capability_masks_from_context,
@@ -163,11 +172,7 @@ def _sha256_bytes(value: bytes) -> str:
 
 
 def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return asset_sha256(path)
 
 
 def _process_memory_bytes(
@@ -437,6 +442,8 @@ def assigned_entries(plan: GenerationPlan, worker_index: int, worker_count: int)
 
 
 def _atomic_json(path: Path, value: Any) -> None:
+    reject_scientific_manifest_write(path)
+    reject_asset_write(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
     try:
@@ -452,6 +459,7 @@ def _atomic_json(path: Path, value: Any) -> None:
 
 
 def _atomic_pickle(path: Path, value: Any) -> None:
+    reject_asset_write(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
     try:
@@ -466,6 +474,7 @@ def _atomic_pickle(path: Path, value: Any) -> None:
 
 
 def _atomic_npz(path: Path, arrays: dict[str, np.ndarray]) -> None:
+    reject_asset_write(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
     try:
@@ -1029,13 +1038,13 @@ def _completed_metadata(
     typed_path = _entry_typed_path(worker_root, entry)
     required_typed = plan.data_release is not None
     if not (
-        shard.exists()
-        and metadata.exists()
-        and checkpoint.exists()
-        and (not required_typed or typed_path.exists())
+        asset_is_file(shard)
+        and asset_is_file(metadata)
+        and asset_is_file(checkpoint)
+        and (not required_typed or asset_is_file(typed_path))
     ):
         return None
-    payload = json.loads(metadata.read_text(encoding="utf-8"))
+    payload = json.loads(asset_read_text(metadata, encoding="utf-8"))
     expected = {
         "schema_version": SHARD_SCHEMA_VERSION,
         "plan_sha256": plan_sha256,
@@ -1257,6 +1266,10 @@ def _write_entry(
     previous_state,
     preceding_checkpoint_sha256: str | None,
 ) -> tuple[dict[str, Any], Any]:
+    # A published package owns these logical assets even while loose copies
+    # remain during verification. Reject regeneration before Teacher work.
+    for path in (*_entry_paths(worker_root, entry), _entry_typed_path(worker_root, entry)):
+        reject_asset_write(path)
     entry_started = time.perf_counter()
     memory_before = _process_memory_bytes()
     cache_before = _compiled_cache_entries()
@@ -1518,7 +1531,7 @@ def _write_entry(
 
 def _load_checkpoint(worker_root: Path, metadata: dict[str, Any]):
     path = worker_root / metadata["checkpoint"]
-    with path.open("rb") as handle:
+    with open_asset(path) as handle:
         payload = pickle.load(handle)
     if payload.get("teacher_git_head") != metadata["teacher_git_head"]:
         raise ValueError(f"checkpoint provenance mismatch at {path}")
@@ -1594,9 +1607,9 @@ def audit_worker_progress(
         declared_complete = False
         completed_set: set[str] = set()
         manifest_sha256 = None
-        if manifest_path.is_file():
+        if asset_is_file(manifest_path):
             try:
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest = json.loads(asset_read_text(manifest_path, encoding="utf-8"))
                 manifest_sha256 = _sha256_file(manifest_path)
                 if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
                     errors.append("worker manifest schema mismatch")
@@ -1641,7 +1654,7 @@ def audit_worker_progress(
                         ):
                             path = worker_root / str(record.get(path_key, ""))
                             expected_hash = record.get(hash_key)
-                            if not path.is_file():
+                            if not asset_is_file(path):
                                 errors.append(f"{key} missing {path_key}")
                             elif _sha256_file(path) != expected_hash:
                                 errors.append(f"{key} {path_key} hash mismatch")
@@ -1664,7 +1677,7 @@ def audit_worker_progress(
         elif lock_path.exists():
             status = "running"
             active_workers.append(index)
-        elif manifest_path.exists():
+        elif asset_is_file(manifest_path):
             status = "partial"
             recovery_candidates.append(index)
         else:
@@ -1717,6 +1730,9 @@ def generate_worker(
     max_entries: int | None = None,
     max_new_entries: int | None = None,
 ) -> dict[str, Any]:
+    # Complete published releases retain their original scientific manifests;
+    # even a zero-new-entry resume would otherwise rewrite runtime metadata.
+    reject_release_write(output_root)
     git_head = _clean_git_head()
     worker_root = output_root / "workers" / f"worker-{worker_index:03d}-of-{worker_count:03d}"
     selected = assigned_entries(plan, worker_index, worker_count)
@@ -1855,6 +1871,8 @@ def aggregate_workers(
     dataset_id: str | None = None,
     manifest_name: str = "dataset_manifest.json",
 ) -> dict[str, Any]:
+    if manifest_name == "dataset_manifest.json":
+        reject_release_write(output_root)
     all_landpoints = {entry.landpoint_id for entry in plan.entries}
     selected_landpoints = (
         all_landpoints
@@ -1886,11 +1904,11 @@ def aggregate_workers(
         worker_root = output_root / "workers" / f"worker-{index:03d}-of-{worker_count:03d}"
         manifest_path = worker_root / "manifest.json"
         lock_path = worker_root / "generation.lock"
-        if not manifest_path.exists():
+        if not asset_is_file(manifest_path):
             raise FileNotFoundError(f"missing worker manifest {manifest_path}")
         if included_landpoints is None and lock_path.exists():
             raise ValueError(f"worker {index} still has an active generation lock")
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = json.loads(asset_read_text(manifest_path, encoding="utf-8"))
         manifest_schema = manifest.get("schema_version")
         if manifest_schema not in {
             LEGACY_MANIFEST_SCHEMA_VERSION,
@@ -1964,7 +1982,7 @@ def aggregate_workers(
                 metadata_path = worker_root / record["metadata"]
                 if _sha256_file(metadata_path) != record["metadata_sha256"]:
                     raise ValueError(f"metadata hash mismatch for {key}")
-                shard = json.loads(metadata_path.read_text(encoding="utf-8"))
+                shard = json.loads(asset_read_text(metadata_path, encoding="utf-8"))
                 for name in (
                     "landpoint_id",
                     "year",
@@ -2012,7 +2030,7 @@ def aggregate_workers(
                     contract=plan.data_release.typed_contract,
                     expected_days=int(shard["transition_count"]),
                 )
-                with np.load(shard_path) as parent_arrays:
+                with open_asset(shard_path) as handle, np.load(handle) as parent_arrays:
                     if not np.array_equal(typed_days, parent_arrays["day_index"]):
                         raise ValueError(f"typed shard day inventory drift for {key}")
             contract = shard.get("markov_contract")
