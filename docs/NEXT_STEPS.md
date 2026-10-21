@@ -1,6 +1,6 @@
 # Current Work Order
 
-Teacher storage: [accepted point migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Point087.0-109.0 is migrated and verified after retirement of200 originals; dataset files net−198. Remaining668 points await explicit approval of the fixed cnmix1CPU/36h/CNY2.52 proposal. Scientific architecture/training scope is unchanged.
+Teacher storage: [production migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Approved job16007307 is RUNNING on cnmix1CPU/36h/CNY2.52 ceiling;14:48:33+08:00 snapshot has2/669 points retired, including first new point001.0-071.0 with200 originals retired and reader proof PASS. No automatic second submission or training is authorized.
 
 Updated2026-10-18: input-ready job **15941021** submitted once under the user's
 “继续。” instruction and supervisor's same-scope execution arrangement.

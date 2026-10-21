@@ -135,20 +135,33 @@ for668 remaining points before retirement/storage variation. This diagnostic
 used test03, nice15, two-CPU affinity and one BLAS thread; it does not establish
 stable one-CPU throughput. Peak RSS was about1.46GiB.
 
-The concrete pending production proposal uses cnmix, one CPU,36h hard wall
+The approved production job16007307 uses cnmix, one CPU,36h hard wall
 time and35h30m soft admission budget, max669 points with completed points
 skipped. At the project rate0.07, the ceiling is CNY2.52. The fixed submission
 wrapper overrides the generic launcher's12h directive with36h; target Bash
-syntax/argument expansion and parser dry-runs passed. No paid job was submitted.
-Fresh dependency/pin admission and explicit user resource approval remain
-required before the fixed command runs.
+syntax/argument expansion and parser dry-runs passed. The user subsequently
+approved this exact allocation and command. It was submitted once and started
+at2026-10-21 14:44:38+08:00 on automatically selected ibc11b11n11, affinity CPU6.
+Slurm confirms cpu=1,node=1,billing=1, no GRES, no requested/excluded nodes,
+36h and the approved cwd/command. The fresh finite dependency audit expires
+at Unix1792737760.1845274 (48h audit window), with no known related pins in the
+scoped project queue/free-node checks. An expired audit stops further admission.
+
+At2026-10-21 14:48:33+08:00 the ledger has2 retired points: the accepted087 point
+and newly completed001.0-071.0, each200 original objects. The new point has
+embedded reader proof PASS; its completion log records157.851s. Point001.0-073.0
+is published and in proof. This is startup evidence; terminal/full-migration
+acceptance remains pending. No retry or second paid allocation is authorized.
 
 Local reviewable evidence is in
 `E:/ORCHIDEE-MAN-JAX/outputs/maintenance/20261016/server-file-count/TEACHER-POINT-20261021/RESULT.md`.
+The count above is the pre-submission snapshot; it is not a live running count.
 The remote maintenance namespace of the same suffix contains `RESULT.md`,
 `INDEX.json`, `file-count.json`, the durable ledger, exact reader/retirement
 proofs, restoration instructions, verified source archives and the complete
-Git bundle. Its fixed command is:
+Git bundle. `production-submission.json` and the local production allocation/
+ledger/log receipts retain the approved submission and startup evidence. The
+following fixed command was executed once; do not repeat it:
 
 ```bash
 bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/maintenance/teacher-point-storage-20261021/submit-full-migration.sh --submit
