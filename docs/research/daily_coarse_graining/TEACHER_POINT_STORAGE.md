@@ -165,9 +165,9 @@ direct `Path.open`/`np.load` consumers still need integrated code or exact resto
 
 This startup deployment adds2519 checkout files/33188494 bytes, two attributable
 Git files with305822 net Git bytes (including FETCH_HEAD+49), and seven maintenance
-files/197448 bytes. Against the previous bounded scope this adds2528 files and
-33691764 bytes:5827 retained files/168419089439 bytes, net128076 fewer files and
-871252929 additional bytes against the original scope. Whole-account quota is
+files/197620 bytes. Against the previous bounded scope this adds2528 files and
+33691936 bytes:5827 retained files/168419089611 bytes, net128076 fewer files and
+871253101 additional bytes against the original scope. Whole-account quota is
 not inferred; unchanged Git objects and previously archived checkouts get no
 new credit. Detailed file inventories/cutoffs are retained in the startup report.
 
@@ -176,7 +176,8 @@ Evidence root:
 `startup-summary.json`, raw production-readers-v3.jsonl, terminal-readers.json and
 post-read-integrity.json own this acceptance. Earlier incomplete terminal reports
 remain historical; their fresh-reader startup limitation is superseded here.
-GitHub proxy/direct pushes were unavailable; a verified134949-byte incremental
-code bundle is retained locally and remotely, requiring old98fcc1a6fda8 objects.
+Initial GitHub proxy/direct pushes failed; the final bounded push succeeded.
+Reviewed code and documentation are on origin. A verified134949-byte incremental
+code bundle remains locally/remotely, requiring old98fcc1a6fda8 objects.
 No new paid job, retry of migration, restoration/deletion, data write, Teacher
 generation, training or merge to main follows. Scientific work remains in NEXT_STEPS.
