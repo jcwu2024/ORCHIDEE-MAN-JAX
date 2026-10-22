@@ -25,6 +25,8 @@ from research.daily_coarse_graining.teacher_assets import (
     asset_sha256,
     open_asset,
     reject_asset_write,
+    resolve_index_asset,
+    with_asset_index_admission,
 )
 from research.daily_coarse_graining.markov_dataset import (
     ORCHIDEE_UNDEFINED_THRESHOLD,
@@ -500,6 +502,7 @@ def load_typed_sidecar_index(
     )
 
 
+@with_asset_index_admission
 def load_coherent_typed_sidecar_index(
     manifest_path: str | Path,
     *,
@@ -543,13 +546,14 @@ def load_coherent_typed_sidecar_index(
     references = []
     root = manifest_path.parent
     resolved_directories: dict[Path, Path] = {}
+    def resolve_loose(name: str) -> Path:
+        return _resolve_coherent_typed_shard(
+            root, name, resolved_directories, verify_files=verify_files)
     for item in raw.get("shards", ()):
         key = (str(item["landpoint_id"]), int(item["year"]))
         parent = parent_by_key[key]
-        path = _resolve_coherent_typed_shard(
-            root, str(item["typed_shard"]), resolved_directories,
-            verify_files=verify_files,
-        )
+        path = resolve_index_asset(root, str(item["typed_shard"]),
+                                   verify_files=verify_files, loose_resolver=resolve_loose)
         expected_hash = str(item["typed_shard_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
             raise ValueError(f"typed shard hash mismatch for {key[0]}:{key[1]}")

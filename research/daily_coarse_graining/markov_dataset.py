@@ -18,6 +18,8 @@ from research.daily_coarse_graining.teacher_assets import (
     asset_read_text,
     asset_sha256,
     open_asset,
+    resolve_index_asset,
+    with_asset_index_admission,
 )
 
 LEGACY_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
@@ -257,6 +259,7 @@ class _FiniteMoments:
         )
 
 
+@with_asset_index_admission
 def load_dataset_index(
     manifest_path: str | Path,
     *,
@@ -309,13 +312,7 @@ def load_dataset_index(
             raise ValueError(f"contract drift for {key[0]}:{key[1]}")
         if item_contract not in {None, contract_sha256}:
             raise ValueError(f"contract drift for {key[0]}:{key[1]}")
-        path = (root / item["shard"]).resolve()
-        try:
-            path.relative_to(root)
-        except ValueError as error:
-            raise ValueError(f"shard path escapes dataset root: {path}") from error
-        if verify_files and not asset_is_file(path):
-            raise FileNotFoundError(path)
+        path = resolve_index_asset(root, str(item["shard"]), verify_files=verify_files)
         expected_hash = str(item["shard_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
             raise ValueError(f"shard hash mismatch for {key[0]}:{key[1]}")

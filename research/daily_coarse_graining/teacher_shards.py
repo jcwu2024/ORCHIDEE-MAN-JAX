@@ -275,6 +275,16 @@ def load_plan(path: Path, *, require_inputs: bool = False, verify_release_source
     """
     path = path.resolve()
     raw = json.loads(path.read_text(encoding="utf-8"))
+    # Annual entries reuse each point's run.def and reference directory. Keep
+    # normal _resolve semantics (including leaf symlinks), but perform them
+    # once per identical input in this load; never retain paths across loads.
+    resolved_paths: dict[str | Path, Path] = {}
+
+    def resolve(value: str | Path) -> Path:
+        if value not in resolved_paths:
+            resolved_paths[value] = _resolve(value)
+        return resolved_paths[value]
+
     schema_version = raw.get("schema_version")
     if schema_version not in {SCHEMA_VERSION, COHERENT_PLAN_SCHEMA_VERSION}:
         raise ValueError(
@@ -285,13 +295,13 @@ def load_plan(path: Path, *, require_inputs: bool = False, verify_release_source
     block_size = int(raw.get("block_size", 7))
     if block_size < 2:
         raise ValueError("block_size must be at least two")
-    teacher_config = _resolve(raw["teacher_config"])
+    teacher_config = resolve(raw["teacher_config"])
     data_release = None
     if schema_version == COHERENT_PLAN_SCHEMA_VERSION:
         release_path = raw.get("data_release")
         if not release_path:
             raise ValueError("coherent generation plan requires data_release")
-        data_release = load_teacher_data_release(_resolve(release_path),verify_sources=verify_release_sources)
+        data_release = load_teacher_data_release(resolve(release_path),verify_sources=verify_release_sources)
         if data_release.dataset_id != dataset_id:
             raise ValueError("coherent generation plan dataset ID differs from release")
         if data_release.teacher_config != teacher_config:
@@ -311,7 +321,7 @@ def load_plan(path: Path, *, require_inputs: bool = False, verify_release_source
         raise ValueError("legacy generation plan cannot declare data_release")
     else:
         production_scope = "legacy"
-    output_root = _resolve(raw.get("output_root", f"outputs/training/{dataset_id}"))
+    output_root = resolve(raw.get("output_root", f"outputs/training/{dataset_id}"))
     entries = []
     seen = set()
     spatial_by_landpoint: dict[str, str] = {}
@@ -355,14 +365,14 @@ def load_plan(path: Path, *, require_inputs: bool = False, verify_release_source
             days=days,
             spatial_split=spatial_split,
             temporal_split=temporal_split,
-            run_def=_resolve(item["run_def"]),
-            reference_run_dir=_resolve(item["reference_run_dir"]),
-            state_cache=None if state_cache is None else _resolve(state_cache),
+            run_def=resolve(item["run_def"]),
+            reference_run_dir=resolve(item["reference_run_dir"]),
+            state_cache=None if state_cache is None else resolve(state_cache),
             initialization_mode=initialization_mode,
             acceptance_checkpoint=(
                 None
                 if acceptance_checkpoint is None
-                else _resolve(acceptance_checkpoint)
+                else resolve(acceptance_checkpoint)
             ),
         )
         previous = previous_by_landpoint.get(landpoint_id)
