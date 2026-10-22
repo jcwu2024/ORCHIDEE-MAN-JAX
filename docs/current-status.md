@@ -1,6 +1,6 @@
 # Current Project Status
 
-Teacher storage: [production migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired and103 controls unchanged. Dataset133903→773 files; bounded net reduction after code/maintenance/log/Git overhead130604. Terminal integrity passes using existing full proofs and unchanged package identities. Fresh reader sampling remains incomplete behind slow full-index/plan startup, the next maintenance issue. No new paid work/training/Teacher generation.
+Teacher storage: [production migration, verified readers and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired,103 controls unchanged. Dataset133903→773 files; bounded net reduction after both retained checkouts/maintenance/log/Git overhead128076. Startup repair7d14adb passes ordinary full33450 base/typed indices and plan, plus9 annual readers/adapters with T1/T7/T30. First base122.09s; subsequent warm typed11.37s; plan2.09s. Post-read integrity passes. No new paid work/training/Teacher generation.
 
 Updated2026-10-22: job **15941021** is terminal **FAILED124:0**, not pending.
 It ran2026-10-18 09:46:46–09:54:25 Asia/Shanghai on ibc13b03n03(4CPU/1V100),459s.
