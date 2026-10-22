@@ -106,63 +106,94 @@ all actual maintenance receipts, ledger, code checkouts, retained originals and
 other artifacts. Account quota snapshots alone do not prove a project reduction.
 No full migration or source retirement is implied by a successful reader proof.
 
-## Accepted bounded result
+## Accepted terminal migration and startup limitation
 
-Point `087.0-109.0` has completed production migration at deployed commit
-`98fcc1a6fda8640fd27e46d50e9726c198eb1efe`. All 200 objects were restored with
-exact bytes/mode/nsmtime, all 50 annual production readers matched, and the
-shadow missing-file proof passed through real sample/window/training adapters.
-After technical review, exactly those 200 originals were retired. Actual-root
-reads of all 200 logical objects, all 50 checkpoints, all three temporal splits
-and the full 33450-reference existence scan passed. All 103 original control
-files retained their hashes and file attributes.
+Sole approved job16007307 completed0:0 at2026-10-22 12:31:24+08:00 on
+ibc11b11n11, after21h46m46s (78406 allocated one-CPU seconds). The batch
+processed668 points, skipped the previously accepted point, and reported
+`stop_reason=complete` after78385.347746s. Batch MaxRSS was1438780K.
+The project-rate estimate is CNY1.524561 (0.07/core-hour), below the approved
+CNY2.52 ceiling; the actual bill is unknown. No retry/second allocation occurred.
 
-The package SHA256 is
-`22eaa71afc03f98987e77bf7676732e96be8ad737fab46821e94a72090e66ea8`;
-the accepted reader proof SHA256 is
-`c8a4e536fc24bf88c841063b9e42e2472a0d7732d668408bdff3c6877292a25e`.
-Dataset files changed from133903 to133705, a net reduction of198. Two obsolete
-code checkouts (4980 files/148 directories) were verified into one archive and
-removed. The retained active checkout has2490 files and maintenance has25;
-including six observed deployment Git pack/index files gives a scoped net
-increase of2323 files for this bounded stage. No pre-deployment Git-object
-inventory exists, so that attribution is limited to the observed deployment
-window; it is not a whole-account or whole-project before/after claim.
+Terminal integrity evidence confirms669 retired points,669 actual packages
+matching the map/ledger,133800 members and removed retirement rows,200 per
+point, no pins/remaining originals/locks/incomplete stages/proof views.
+All103 original manifest/progress files retain their SHA256 and stat identities.
+Every package retains the exact dev/inode/size/nsmtime/nsctime fingerprint from
+its full byte verification at retirement. Map/ledger package and snapshot
+hashes/member sets agree. Full per-package metadata/BLOB verification is reused,
+not rerun. Embedded proofs cover133800 exact byte/mode/nsmtime restorations,
+33450 annual base/typed/window/checkpoint/completion comparisons, and three
+absent-loose temporal-split training-adapter probes per point.
 
-The first new package took6.364s. Proof took114.632s, including27.103s for the
-first-only full index scan. Excluding that scan, package+proof projects17.42h
-for668 remaining points before retirement/storage variation. This diagnostic
-used test03, nice15, two-CPU affinity and one BLAS thread; it does not establish
-stable one-CPU throughput. Peak RSS was about1.46GiB.
+Current availability evidence combines the unchanged original control hashes,
+all133800 map/ledger members,669 actual packages and exact retirement
+fingerprints, the complete namespace inventory, and the full embedded annual
+proofs. No new full production index constructor completed. The default
+`verify_files=True` and `verify_files=False` constructors both remained
+incomplete in bounded probes and are not marked PASS. A final harness avoided
+full index path resolution but retained the production full-plan loader; it
+returned no annual results before its identity-guarded stop at300.95s. The
+active phase was not instrumented. The planned9-point/9-annual reader
+sample (spatial×temporal3×3, T1/T7/T30, typed/checkpoint/completion/adapters)
+was not completed and is not claimed as new evidence. Exact observed scope,
+times and owned-process exit confirmations are in `terminal-final.json`.
+The migration's full per-point proofs remain valid through the unchanged
+package/control identities. These checks execute no Teacher transitions or
+neural training and establish no new scientific/Fortran-equivalence result.
 
-The approved production job16007307 uses cnmix, one CPU,36h hard wall
-time and35h30m soft admission budget, max669 points with completed points
-skipped. At the project rate0.07, the ceiling is CNY2.52. The fixed submission
-wrapper overrides the generic launcher's12h directive with36h; target Bash
-syntax/argument expansion and parser dry-runs passed. The user subsequently
-approved this exact allocation and command. It was submitted once and started
-at2026-10-21 14:44:38+08:00 on automatically selected ibc11b11n11, affinity CPU6.
-Slurm confirms cpu=1,node=1,billing=1, no GRES, no requested/excluded nodes,
-36h and the approved cwd/command. The fresh finite dependency audit expires
-at Unix1792737760.1845274 (48h audit window), with no known related pins in the
-scoped project queue/free-node checks. An expired audit stops further admission.
+Measured dataset accounting:133903→773 files (net−133130),2300→2301
+directories excluding the root,167547836510→167872273962 logical bytes
+(+324437452). The773 files are669 packages,103 unchanged controls and one
+central map. The BLOBs retain their original bytes; packaging does not promise
+compression. After deducting all29 maintenance files (including the terminal
+report),2490 active-checkout files, one job log and six previously observed
+deployment Git files, the bounded net reduction is130604 files. The earlier
+4980 archived obsolete-checkout files are not credited again. Git attribution
+is limited to the recorded deployment window, since no before-object inventory
+exists. No whole-account/project quota reduction is claimed. Final namespace
+bytes/cutoff are in the terminal report; `file-count.json` stays historical.
 
-At2026-10-21 14:48:33+08:00 the ledger has2 retired points: the accepted087 point
-and newly completed001.0-071.0, each200 original objects. The new point has
-embedded reader proof PASS; its completion log records157.851s. Point001.0-073.0
-is published and in proof. This is startup evidence; terminal/full-migration
-acceptance remains pending. No retry or second paid allocation is authorized.
+Use the normal integrated readers at the unchanged dataset path/manifest,
+from immutable98fcc1a6fda8640fd27e46d50e9726c198eb1efe or a compatible
+descendant. No environment switch is needed. Legacy direct annual `Path.open`
+or `np.load` consumers require integrated code or explicit exact restoration
+into a new directory using the command above/INDEX. Do not restore the full
+loose dataset merely for routine reading or regenerate Teacher data. Preserve
+the immutable checkout/shared Git objects, old Teacher pilot, archives and all
+recovery evidence.
 
-Local reviewable evidence is in
-`E:/ORCHIDEE-MAN-JAX/outputs/maintenance/20261016/server-file-count/TEACHER-POINT-20261021/RESULT.md`.
-The count above is the pre-submission snapshot; it is not a live running count.
-The remote maintenance namespace of the same suffix contains `RESULT.md`,
-`INDEX.json`, `file-count.json`, the durable ledger, exact reader/retirement
-proofs, restoration instructions, verified source archives and the complete
-Git bundle. `production-submission.json` and the local production allocation/
-ledger/log receipts retain the approved submission and startup evidence. The
-following fixed command was executed once; do not repeat it:
+The next maintenance issue is full-index startup cost. The default probe was
+still incomplete after1271.47s and stopped by exact PID/start identity. This
+was shared test03 with audit and reader IO overlapping at adjacent points;
+it is not an independent stable benchmark. Elapsed/IO evidence is retained.
+The subsequent `verify_files=False` constructor remained incomplete at620.80s
+and was also stopped with exact identity and exit confirmation, without opening
+a container at the final observed snapshot.
+The real manifest has669 consecutive point runs of50 years, not year-wise
+point thrashing. Static simulation of8-entry LRU gives669 misses per complete
+traversal and2007 for the original three constructor traversals; this is a
+sequence-derived count, not an instrumented counter. Parsed map lookup is
+cached, but hits still stat paths/manifest identities, and new container opens
+read/check200 metadata rows. Low CPU/page-read waits support a metadata/IO
+bottleneck hypothesis without quantitatively isolating the cause. Independently,
+even `verify_files=False` still resolves each shard path in the full base
+constructor; missing loose-path resolution can cost filesystem metadata work
+before a container opens. No production
+optimization or repeated full benchmark is claimed in this maintenance stage.
+The production plan loader also resolves every entry's run-definition/reference
+directory even with `require_inputs=False`; this is another plausible startup
+cost in the final harness, not a measured phase attribution. Its incomplete sampling is an explicit remaining
+check to perform after startup costs are fixed or a bounded selected-plan path
+is reviewed. No fourth reader probe was launched in this closeout.
 
-```bash
-bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/maintenance/teacher-point-storage-20261021/submit-full-migration.sh --submit
-```
+Evidence root:
+`E:/ORCHIDEE-MAN-JAX/outputs/maintenance/20261016/server-file-count/TEACHER-POINT-20261021/`.
+`RESULT.md`, `server-evidence/terminal-final.json`, original terminal scheduler/
+log receipts, terminal ledger audit and reader receipt own the final facts.
+The matching remote maintenance namespace has updated RESULT/INDEX, one
+compact terminal report, durable ledger/embedded proofs, historical submission/
+count records, verified recovery archives and the complete Git bundle.
+Storage migration is complete; startup performance is an explicit open issue.
+No automatic paid job, retry, cancellation, training, regeneration or merge to
+main follows. Scientific work and closed scopes remain in `NEXT_STEPS.md`.

@@ -1,6 +1,6 @@
 # Current Project Status
 
-Teacher storage: [production migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Approved job16007307 is RUNNING on cnmix1CPU/36h/CNY2.52 ceiling;14:48:33+08:00 snapshot has2/669 points retired, including first new point001.0-071.0 with200 originals retired and reader proof PASS. No automatic second submission or training is authorized.
+Teacher storage: [production migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired and103 controls unchanged. Dataset133903→773 files; bounded net reduction after code/maintenance/log/Git overhead130604. Terminal integrity passes using existing full proofs and unchanged package identities. Fresh reader sampling remains incomplete behind slow full-index/plan startup, the next maintenance issue. No new paid work/training/Teacher generation.
 
 Updated2026-10-18: input-ready job **15941021** submitted once under the user's
 “继续。” instruction and supervisor's same-scope execution arrangement.
