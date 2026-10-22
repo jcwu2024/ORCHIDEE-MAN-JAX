@@ -26,6 +26,7 @@ def cli_args(stage='execute', output=None):
         '--turnover-overlay', 'turnover.py',
         '--approval-report', str(output.parent / 'approval.json'),
         '--runtime-preflight', 'preflight.json',
+        '--retained-data-root', 'retained-inputs',
         '--output', str(output),
     ]
 
@@ -222,7 +223,7 @@ def _plan(tmp_path):
             'caps': dict(runner.CAPS, total_seconds=runner.TOTAL_SECONDS,
                 release_reserve_seconds=runner.CAPS['reserve'], memory_limit_mib=24576,
                 load_seconds=runner.CAPS['load'], preflight_seconds=runner.CAPS['preflight'],
-                lower_seconds=runner.CAPS['lower'], compile_seconds=runner.CAPS['compile'],
+                graph_seconds=runner.CAPS['graph'],
                 calls_seconds=runner.CAPS['calls'])},
         'checkout': str(tmp_path), 'output': str(output),
         'ledger': str(output.with_suffix('.ledger.json')),
@@ -336,6 +337,9 @@ def test_phase_forwards_stage_identity_allocation_start_and_supervised_marker(
     supervisor = runner.CurrentSupervisor(plan, watchdog=False, clock=lambda: 0)
     environment = {'CUDA_VISIBLE_DEVICES': expected_cvd}
     assert supervisor.phase(phase_name, 20, environment=environment) == ('passed', 0)
+    if phase_name == 'probe':
+        end = float(captured['environment'].pop('CURRENT_T7_PROBE_DEADLINE_EPOCH'))
+        assert 0 < end - runner.time.time() <= 20
     assert captured['environment'] == {
         'CUDA_VISIBLE_DEVICES': expected_cvd, 'ORCJAX_CURRENT_T7_SUPERVISED': '1',
         'CURRENT_T7_SHELL_STARTED_EPOCH': '1800000000'}
@@ -398,3 +402,17 @@ def test_no_inherited_paid_run_is_used(monkeypatch, tmp_path):
     from scripts.hpc import shared_affine_cuda_identity
     monkeypatch.setattr(shared_affine_cuda_identity, 'binding_report_passes', lambda *args: True)
     assert PassingSupervisor(plan, watchdog=False, clock=lambda: 0).run() == 0
+
+
+def test_probe_child_deadline_is_clipped_to_outer_work_remaining(monkeypatch, tmp_path):
+    plan = _plan(tmp_path)
+    plan['scope']['gpu_uuid'] = 'GPU-00000000-0000-0000-0000-000000000001'
+    monkeypatch.setenv('ORCJAX_SLURM_VISIBLE_DEVICES', '0')
+    captured = {}
+    monkeypatch.setattr(runner.paid.PaidSupervisor, 'phase', lambda self, name, seconds, **kwargs:
+        captured.update(kwargs['environment']) or ('passed', 0))
+    supervisor = runner.CurrentSupervisor(plan, watchdog=False, clock=lambda: 100)
+    supervisor.work_deadline = 150
+    monkeypatch.setattr(runner.time, 'time', lambda: 1000)
+    assert supervisor.phase('probe', 4980) == ('passed', 0)
+    assert float(captured['CURRENT_T7_PROBE_DEADLINE_EPOCH']) == 1050

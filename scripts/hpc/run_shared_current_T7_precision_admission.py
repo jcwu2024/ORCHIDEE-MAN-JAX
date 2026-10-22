@@ -25,7 +25,7 @@ from scripts.hpc.shared_affine_gpu_admission import AffineScopeLock, SCOPE_LOCK
 
 ROOT = probe.ROOT
 TOTAL_SECONDS = 5400
-CAPS = dict(load=300, preflight=240, lower=300, compile=3000, calls=1380, reserve=180)
+CAPS = dict(probe.CAPS)
 WORK_SECONDS = TOTAL_SECONDS - CAPS['reserve']
 MAX_COST_CNY = 3.72
 GPU_PYTHON = '/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python'
@@ -182,7 +182,7 @@ def build_plan(args, argv):
         gpu_host_index=None, gpu_uuid=None, caps=dict(CAPS, total_seconds=TOTAL_SECONDS,
         release_reserve_seconds=CAPS['reserve'], memory_limit_mib=24576,
         load_seconds=CAPS['load'], preflight_seconds=CAPS['preflight'],
-        lower_seconds=CAPS['lower'], compile_seconds=CAPS['compile'], calls_seconds=CAPS['calls']))
+        graph_seconds=CAPS['graph'], calls_seconds=CAPS['calls']))
     return dict(scope=scope, checkout=str(ROOT), output=str(output), ledger=str(ledger),
         supervisor_output=str(supervisor_output), preflight_output=str(preflight_output),
         discovery_output=str(discovery_output), allocation_diagnostic_output=str(allocation_diagnostic_output),
@@ -220,6 +220,10 @@ class CurrentSupervisor(paid.PaidSupervisor):
         environment['ORCJAX_CURRENT_T7_SUPERVISED'] = '1'
         started = self.plan.get('shell_started_epoch', self.plan['allocation']['start_epoch'])
         environment['CURRENT_T7_SHELL_STARTED_EPOCH'] = str(int(started))
+        if name == 'probe':
+            # Sent through the container: imports and GPU bootstrap consume it too.
+            remaining = min(seconds, self.work_deadline - self.clock())
+            environment['CURRENT_T7_PROBE_DEADLINE_EPOCH'] = str(time.time() + remaining)
         kwargs['environment'] = environment
         return super().phase(name, seconds, **kwargs)
 

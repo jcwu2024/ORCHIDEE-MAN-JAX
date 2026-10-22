@@ -47,3 +47,15 @@ def test_wrapper_preserves_explicit_source_cache_with_spaces():
                             capture_output=True, text=True, check=True)
     argv = shlex.split(result.stdout.strip())
     assert argv[3:] == ['--source-cache', value]
+
+
+@pytest.mark.parametrize('value,expected', [('1792288108.2933187', 0), ('', 2), ('nan', 2), ('1;exit 0', 2)])
+def test_container_deadline_export_rejects_missing_or_malformed_value(value, expected):
+    import os
+    source = WRAPPER.read_text()
+    start = source.index('  if [[ $ENTRY == "$CODE/scripts/hpc/probe_shared_current_T7_precision_admission.py" ]]; then', source.index('export SINGULARITYENV_CURRENT_T7_SHELL_STARTED_EPOCH'))
+    end = source.index('  fi', start) + len('  fi')
+    code = source[start:end] + '\n[[ $SINGULARITYENV_CURRENT_T7_PROBE_DEADLINE_EPOCH == "$CURRENT_T7_PROBE_DEADLINE_EPOCH" ]]'
+    env = dict(os.environ, CODE='/code', ENTRY='/code/scripts/hpc/probe_shared_current_T7_precision_admission.py', CURRENT_T7_PROBE_DEADLINE_EPOCH=value)
+    result = subprocess.run([bash(), '-c', code], env=env, capture_output=True, text=True)
+    assert result.returncode == expected

@@ -7,7 +7,7 @@ external allocation approval; this module neither creates nor migrates scopes.
 from __future__ import annotations
 
 import argparse
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack, nullcontext, contextmanager
 import gzip
 import hashlib
 import importlib
@@ -20,6 +20,7 @@ import re
 import sys
 import time
 import subprocess
+import threading
 
 import numpy as np
 
@@ -27,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 COORDINATES = (434, 2382, 2621, 200)
-CAPS = dict(load=300, preflight=240, lower=300, compile=3000, calls=1380, reserve=180)
+CAPS = dict(load=300, preflight=240, graph=3300, calls=1380, reserve=180)
 TOTAL_SECONDS = 5400
 FP32_REPORT_SHA = '01f9dcc7e4ff2d61a76c8067514169a238cd081d613ae87a599bbf7ed981709c'
 
@@ -88,13 +89,65 @@ def json_value(value):
     return str(value)
 
 
+def remaining_probe_seconds(environment=None, *, now=None):
+    """Allocation/startup and outer phase time cannot be renewed by imports."""
+    environment = os.environ if environment is None else environment
+    now = time.time() if now is None else now
+    allocation_start = float(environment['CURRENT_T7_SHELL_STARTED_EPOCH'])
+    outer_end = float(environment['CURRENT_T7_PROBE_DEADLINE_EPOCH'])
+    if not np.isfinite([allocation_start, outer_end, now]).all() or allocation_start > now:
+        raise ValueError('finite original allocation and probe deadline required')
+    return min(allocation_start + TOTAL_SECONDS - CAPS['reserve'], outer_end) - now
+
+
 def strict_journal_class(base):
     class StrictJournal(base):
+        def __init__(self, output, wall_seconds):
+            # Base resource_snapshot can itself take time: do not renew its clock.
+            self.work_deadline = time.monotonic() + max(0., wall_seconds)
+            super().__init__(output, max(0., wall_seconds))
+            self.timer.cancel()
+            remaining = self.work_deadline - time.monotonic()
+            if remaining <= 0:
+                self.expire('wall')
+            self.timer = threading.Timer(remaining, lambda: self.expire('wall'))
+            self.timer.daemon = True
+            self.timer.start()
+
         def emit(self, stage, **values):
             self.report.update(stage=stage, elapsed_seconds=time.monotonic()-self.started)
             self.report['stage_events'].append({'stage': stage, 'elapsed_seconds': self.report['elapsed_seconds'], **values})
             save_json(self.output, self.report)
             print(json.dumps(json_value({'stage': stage, **values}), allow_nan=False), flush=True)
+
+        def begin_graph(self):
+            # One deadline for lowering, artifact saving and backend compilation.
+            if hasattr(self, 'graph_deadline'):
+                raise RuntimeError('shared graph deadline cannot be renewed')
+            self.graph_deadline = min(time.monotonic() + CAPS['graph'],
+                                      self.work_deadline - CAPS['calls'])
+            self.report['timing_budget'] = dict(graph_seconds=CAPS['graph'],
+                graph_deadline_elapsed_seconds=self.graph_deadline-self.started,
+                work_deadline_elapsed_seconds=self.work_deadline-self.started,
+                calls_reserved_seconds=CAPS['calls'], release_reserved_seconds=CAPS['reserve'])
+
+        @contextmanager
+        def deadline(self, seconds, phase):
+            end = min(time.monotonic() + seconds, self.work_deadline)
+            if phase in ('lower', 'compile'):
+                end = min(end, self.graph_deadline)
+            remaining = end - time.monotonic()
+            if remaining <= 0:
+                self.expire(phase)
+            timer = threading.Timer(remaining, lambda: self.expire(phase))
+            timer.daemon = True
+            timer.start()
+            try:
+                yield
+                if time.monotonic() >= end:
+                    self.expire(phase)
+            finally:
+                timer.cancel()
     return StrictJournal
 
 
@@ -410,57 +463,58 @@ def main():
     from scripts.hpc.shared_current_T7_fd_guard import make_combined
     from scripts.hpc.shared_current_T7_fd_guard import predeclared_fd_plan
     from scripts.hpc.probe_shared_leaf_full_state_cuda import Journal
-    journal = strict_journal_class(Journal)(args.output, sum(CAPS.values()) - CAPS['reserve']) if approval else None
+    journal = strict_journal_class(Journal)(args.output, remaining_probe_seconds()) if approval else None
     try:
         with ExitStack() as stack:
-            from scripts.hpc.shared_current_T7_precision_guard import historical_expert_source_context
-            source_cache = resolve_source_cache(args.output, args.source_cache)
-            historical_expert = stack.enter_context(historical_expert_source_context(ROOT, source_cache))
             with journal.deadline(CAPS['load'], 'asset_load') if journal else nullcontext():
+                from scripts.hpc.shared_current_T7_precision_guard import historical_expert_source_context
+                source_cache = resolve_source_cache(args.output, args.source_cache)
+                historical_expert = stack.enter_context(historical_expert_source_context(ROOT, source_cache))
                 assets = load_assets(jax, parameters=args.parameters, prepared_context=args.prepared_context,
                     training_prepared_manifest=args.training_prepared_manifest, dataset_manifest=args.dataset_manifest,
                     saved_identity_receipt=args.saved_identity_receipt)
                 fp32 = load_fp32_reference(args.fp32_reference, full=True) if approval else None
-            from scripts.hpc.prepare_shared_current_T7_retained_inputs import consume_retained_inputs
-            retained_input_consumption = consume_retained_inputs(assets, retained_data_root)
-            metadata = json.loads(args.state_input_metadata.read_text(encoding='utf-8'))
-            rows = {int(r['coordinate']): r for r in metadata['rows'] if r.get('sample') == 3 and r.get('artifact_id') == 299}
-            plans = {str(c): predeclared_fd_plan(c, float(assets['case'][0][c]), float(rows[c]['continuous_scale'])) for c in COORDINATES}
-            from scripts.hpc.shared_current_T7_precision_guard import widen_context
-            prepared_context, context_widening = widen_context({'context': assets['context'], 'candidate_head': assets['candidate_head']})
-            assets.update(prepared_context)
-            objective, binding = bind_real_objective(assets, args, stack)
-            arguments = widened_inputs(jax, assets)
-            combined = make_combined(jax, objective)
-            report = {'schema_version': 'current_T7_precision_preparation_v2', 'status': 'real_callable_prepared_unexecuted',
-                'asset_identity': assets['manifest_metadata'], 'original_assets': assets['original_assets'],
-                'binding': binding, 'historical_expert_source': historical_expert,
-                'historical_expert_source_cache': str(source_cache.resolve()),
-                'context_widening': context_widening, 'fd_plans': plans,
-                'retained_input_consumption': retained_input_consumption,
-                'entry_sha256': sha(__file__), 'stage_caps': CAPS, 'total_seconds': TOTAL_SECONDS,
-                'full_model_calls': 0, 'full_model_traces': 0, 'full_model_compiles': 0,
-                'full_model_call_attempts': 0, 'full_model_trace_attempts': 0, 'full_model_compile_attempts': 0,
-                'state20': {'raw': str(np.asarray(arguments[1])[20]), 'strict_failure': True, 'new_trajectory_audited': False},
-                'full_FP32_state_comparison_performed': False, 'production_adoption': False}
-            import jax_orchidee
-            report['source_checkout'] = {'root': str(ROOT), 'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-                'jax_orchidee_import': jax_orchidee.__file__, 'diagnostic_entry': str(Path(__file__).resolve()),
-                'current_checkout_distinct_from_historical_asset_source': True}
-            if args.fp32_reference is not None:
-                report['FP32_reference'] = load_fp32_reference(args.fp32_reference)
-            if args.stage == 'dry-run':
-                save_json(args.output, report)
-                print(json.dumps({'status': report['status'], 'output': str(args.output)}))
-                return 0
-            journal.report.update(report, status='running', approval_sha256=sha(args.approval_report))
-            if args.runtime_preflight is None:
-                raise ValueError('actual deployed runtime preflight required')
-            preflight = json.loads(args.runtime_preflight.read_text())
-            if preflight.get('passed') is not True or preflight.get('actual_backend') != 'gpu' or preflight.get('jax_version') != '0.4.38' or len(jax.devices()) != 1 or jax.default_backend() != 'gpu':
-                raise RuntimeError('single GPU/deployed runtime preflight not admitted')
+                from scripts.hpc.prepare_shared_current_T7_retained_inputs import consume_retained_inputs
+                retained_input_consumption = consume_retained_inputs(assets, retained_data_root)
+                metadata = json.loads(args.state_input_metadata.read_text(encoding='utf-8'))
+                rows = {int(r['coordinate']): r for r in metadata['rows'] if r.get('sample') == 3 and r.get('artifact_id') == 299}
+                plans = {str(c): predeclared_fd_plan(c, float(assets['case'][0][c]), float(rows[c]['continuous_scale'])) for c in COORDINATES}
+                from scripts.hpc.shared_current_T7_precision_guard import widen_context
+                prepared_context, context_widening = widen_context({'context': assets['context'], 'candidate_head': assets['candidate_head']})
+                assets.update(prepared_context)
+                objective, binding = bind_real_objective(assets, args, stack)
+                arguments = widened_inputs(jax, assets)
+                combined = make_combined(jax, objective)
+                report = {'schema_version': 'current_T7_precision_preparation_v2', 'status': 'real_callable_prepared_unexecuted',
+                    'asset_identity': assets['manifest_metadata'], 'original_assets': assets['original_assets'],
+                    'binding': binding, 'historical_expert_source': historical_expert,
+                    'historical_expert_source_cache': str(source_cache.resolve()),
+                    'context_widening': context_widening, 'fd_plans': plans,
+                    'retained_input_consumption': retained_input_consumption,
+                    'entry_sha256': sha(__file__), 'stage_caps': CAPS, 'total_seconds': TOTAL_SECONDS,
+                    'full_model_calls': 0, 'full_model_traces': 0, 'full_model_compiles': 0,
+                    'full_model_call_attempts': 0, 'full_model_trace_attempts': 0, 'full_model_compile_attempts': 0,
+                    'state20': {'raw': str(np.asarray(arguments[1])[20]), 'strict_failure': True, 'new_trajectory_audited': False},
+                    'full_FP32_state_comparison_performed': False, 'production_adoption': False}
+                import jax_orchidee
+                report['source_checkout'] = {'root': str(ROOT), 'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+                    'jax_orchidee_import': jax_orchidee.__file__, 'diagnostic_entry': str(Path(__file__).resolve()),
+                    'current_checkout_distinct_from_historical_asset_source': True}
+                if args.fp32_reference is not None:
+                    report['FP32_reference'] = load_fp32_reference(args.fp32_reference)
+                if args.stage == 'dry-run':
+                    save_json(args.output, report)
+                    print(json.dumps({'status': report['status'], 'output': str(args.output)}))
+                    return 0
+                journal.report.update(report, status='running', approval_sha256=sha(args.approval_report))
+                if args.runtime_preflight is None:
+                    raise ValueError('actual deployed runtime preflight required')
+                preflight = json.loads(args.runtime_preflight.read_text())
+                if preflight.get('passed') is not True or preflight.get('actual_backend') != 'gpu' or preflight.get('jax_version') != '0.4.38' or len(jax.devices()) != 1 or jax.default_backend() != 'gpu':
+                    raise RuntimeError('single GPU/deployed runtime preflight not admitted')
             options = {'xla_gpu_enable_llvm_module_compilation_parallelism': True, 'xla_gpu_force_compilation_parallelism': 4}
-            with journal.deadline(CAPS['lower'], 'lower'):
+            journal.begin_graph()
+            with journal.deadline(CAPS['graph'], 'lower'):
                 journal.report['full_model_trace_attempts'] = 1
                 journal.emit('sole_lower_started')
                 lowered = jax.jit(combined).lower(*arguments, unit_direction(434))
@@ -472,7 +526,7 @@ def main():
                 journal.report['lowered'] = {'path': str(hlo), 'sha256': sha(hlo)}
                 if re.search(r'(?:\bf(?:16|32)\b|\bbf16\b)', text):
                     raise RuntimeError('residual low precision in diagnostic lowering; no compile')
-            with journal.deadline(CAPS['compile'], 'compile'):
+            with journal.deadline(CAPS['graph'], 'compile'):
                 journal.report['full_model_compile_attempts'] = 1
                 journal.emit('sole_compile_started')
                 executable = lowered.compile(compiler_options=options)
