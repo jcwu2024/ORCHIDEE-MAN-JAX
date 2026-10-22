@@ -1,0 +1,4346 @@
+{
+  "schema_version": "current_T7_precision_preparation_v2",
+  "status": "incomplete_timeout",
+  "scientific_acceptance": false,
+  "adoption": false,
+  "stage_events": [
+    {
+      "stage": "sole_lower_started",
+      "elapsed_seconds": 50.685064075514674
+    },
+    {
+      "stage": "deadline_exceeded",
+      "elapsed_seconds": 350.6903873048723,
+      "phase": "lower"
+    }
+  ],
+  "results": [],
+  "resources": {
+    "pid": 57691,
+    "CUDA_VISIBLE_DEVICES": "GPU-879c5488-3ad4-ea9e-f480-dbe67318d5c2",
+    "sched_getaffinity": [
+      32,
+      88,
+      87,
+      31
+    ],
+    "getloadavg": [
+      4.59,
+      6.37,
+      7.3
+    ],
+    "nvidia_smi": "Sun Oct 18 09:48:32 2026       \n+-----------------------------------------------------------------------------+\n| NVIDIA-SMI 525.85.12    Driver Version: 525.85.12    CUDA Version: 12.0     |\n|-------------------------------+----------------------+----------------------+\n| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |\n|                               |                      |               MIG M. |\n|===============================+======================+======================|\n|   0  Tesla V100-SXM2...  Off  | 00000000:89:00.0 Off |                    0 |\n| N/A   40C    P0    59W / 300W |    337MiB / 32768MiB |      4%      Default |\n|                               |                      |                  N/A |\n+-------------------------------+----------------------+----------------------+\n                                                                               \n+-----------------------------------------------------------------------------+\n| Processes:                                                                  |\n|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |\n|        ID   ID                                                   Usage      |\n|=============================================================================|\n|    0   N/A  N/A     57691      C   ...nvs/orcjax_gpu/bin/python      334MiB |\n+-----------------------------------------------------------------------------+\n"
+  },
+  "asset_identity": {
+    "saved_B1_mathematical_identity": {
+      "source_git_head": "c599236bcf57b745e9bafed678298010f4c3b58f",
+      "manifest_sha256": "252d610a8df4b78963111244edf7ef3414471883bdfe126f436275beaef57bc4",
+      "input_bundle_sha256": "fc7bb9b62665ba3f89eceb8f3070c60cf182af51c90c40046588ea8942aba973",
+      "prepared_context_sha256": "ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026",
+      "compiler_options": {
+        "xla_gpu_enable_llvm_module_compilation_parallelism": true,
+        "xla_gpu_force_compilation_parallelism": 4
+      },
+      "neural_module_sha256": {
+        "shared_transformer.py": "aad25a9879de3fe5d79cf213f665998b921ba8b3599e4b577d8c4c49673c9b96",
+        "shared_latent_reader.py": "02f44b30109664504f158cc55d6bed1e325b6782dcfdd35df626e6fcba5eeb20"
+      },
+      "scientific_functions": {
+        "make_shared_recurrent_objective": {
+          "sha256": "a454600cd82a9091cc21e18288bce42dc6366c378f6205374001af7dd03abd40",
+          "source_file": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1/research/daily_coarse_graining/daily_operator/shared_recurrent_training.py",
+          "source_line": 152
+        },
+        "make_canonical_step": {
+          "sha256": "dac8bc553e75139f06cde89e63238b71519bad9e1cf3aa28585881acbbf66e7a",
+          "source_file": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1/research/daily_coarse_graining/daily_operator/canonical_rollout.py",
+          "source_line": 26
+        },
+        "make_rollout_loss": {
+          "sha256": "c370da5c61def5b00f234b1b3657163c2c7a76a71393fe1f6a552450af6a9520",
+          "source_file": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/shared-split-width-v1/research/daily_coarse_graining/daily_operator/rollout_loss.py",
+          "source_line": 278
+        }
+      },
+      "historical_source_admission": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-recurrent-checkpoint-policy-20260930-v2-T7-reference.json",
+        "sha256": "328fc407f1cd18e51263b294cfa5311dcecfe05eda2bdf836ae51954ecc5501b",
+        "corrected_pair_reference": false
+      },
+      "input_case_sha256": "1763dcdeed74b9ef46020d4dc8f290a4d03f19ca15b53ab85d5a26a22b583b5c",
+      "artifact_id": 742,
+      "horizon": 7,
+      "method": {
+        "configuration": {
+          "all_parameters_trainable": true,
+          "checkpoint_interval": 25,
+          "checkpoint_selection": "declared_final_update_500_no_best_panel_selection",
+          "daily_microbatch_size": 4,
+          "daily_rows_per_update": 32,
+          "fit_artifact_count": 8,
+          "fit_selection": "first_eight_training_artifacts_window0_T7_T30",
+          "gradient_accumulation": "mean_32_daily_gradients_evaluated_in_micro4_plus_T7_plus_T30_then_one_AdamW_update",
+          "gradient_memory_limit_gib": 24,
+          "initialization": "fresh_model_seed_and_fresh_AdamW_no_exploratory_weights",
+          "joint_protocol": "shared_split_recurrent_admission_v1.json",
+          "learning_stop_rule": "no_early_scientific_stop_or_loss_reweighting_based_on_noisy_batch_losses",
+          "max_updates": 500,
+          "milestones": [
+            0,
+            100,
+            250,
+            500
+          ],
+          "model_protocol": "shared_transformer_split_width_v1.json",
+          "paid_submission": false,
+          "purpose": "bounded_fresh_split_width_joint_learning_after_numerical_and_efficiency_admission",
+          "recurrent_window_index": 0,
+          "recurrent_windows_per_horizon": 1,
+          "sampling_seed": 20260922,
+          "schema_version": "shared_learning_v2",
+          "scientific_acceptance": false,
+          "sealed_test_access": false,
+          "selection": "seeded_permutation_of_sorted_existing_TRAIN_artifact_ids_without_replacement",
+          "stopping": "stop_on_nonfinite_or_physical_failure_or_resource_limit_preserve_last_checkpoint",
+          "teacher_regeneration": false,
+          "validation": "reuse_all_48_fresh_method_validation_20260921_windows_separate_temporal_spatial_joint",
+          "validation_role": "held_out_development_not_sealed_test"
+        },
+        "daily_protocol": {
+          "admission": {
+            "daily_microbatch_size": 4,
+            "direction": "normalized_full_parameter_gradient",
+            "direction_atol": 1e-06,
+            "direction_rtol": 0.01,
+            "gradient_memory_limit_gib": 24,
+            "paid_submission": false,
+            "progression": [
+              "CPU_shape_and_TRAIN_scales",
+              "GPU_one_day_forward",
+              "GPU_one_day",
+              "GPU_T7",
+              "GPU_T30",
+              "real_daily32_micro4_joint_timing"
+            ],
+            "scientific_acceptance": false,
+            "sealed_test_access": false,
+            "teacher_regeneration": false,
+            "updates": 2,
+            "warm_repeats": 5
+          },
+          "architecture": {
+            "all_parameters_trainable": true,
+            "attention": "fp32_unit_L2_qk_logits_cosine_times_sqrt_head_width",
+            "backbone_blocks": 8,
+            "context_bridge": "shared_token_local_affine_after_lawful_family_pooling_remask_after_bias",
+            "decoder_blocks": 2,
+            "decoder_execution": "gather_dynamic_reuse",
+            "decoder_ffn_width": 1536,
+            "decoder_heads": 8,
+            "decoder_rematerialization": false,
+            "decoder_width": 384,
+            "ffn_width": 3072,
+            "heads": 8,
+            "inherited_weights": false,
+            "outgoing_center": "existing_v6_TRAIN_mean_in_logit_space",
+            "outgoing_center_floor": 1e-08,
+            "parameter_count": 64884481,
+            "persistent_output_coordinates": "day_start_train_delta_v3",
+            "query_chunk_size": 64,
+            "source_bare_cimean": true,
+            "thermal_transform": "train_centered",
+            "width": 768
+          },
+          "calibration": {
+            "artifact_count": 16,
+            "claim": "bounded_admission_scales_not_final_global_training_statistics",
+            "flux_floor_gC_m2_day": 0.01,
+            "scale": "extracted_physical_TRAIN_RMS",
+            "selection": "deterministic_metadata_only",
+            "split": "train/train",
+            "stock_change_floor_gC_m2_day": 0.01
+          },
+          "objective": {
+            "checkpoint_source": "none",
+            "group_weights": [
+              0.3333333333333333,
+              0.3333333333333333,
+              0.3333333333333333
+            ],
+            "groups": [
+              "process_day",
+              "flux",
+              "stock"
+            ],
+            "living_nonliving_stock_weights": [
+              0.5,
+              0.5
+            ],
+            "prefix_denominator": "TRAIN_daily_RMS_times_sqrt_elapsed_days",
+            "science_penalty": "pseudo_huber_delta1"
+          },
+          "optimizer": {
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "clip_norm": 1.0,
+            "epsilon": 1e-08,
+            "learning_rate": 1e-05,
+            "name": "AdamW",
+            "weight_decay": 0.0
+          },
+          "purpose": "bounded_fresh_split_width_coordinate_admission_not_scientific_acceptance",
+          "schema_version": "shared_transformer_split_width_v1",
+          "seed": 20260921
+        },
+        "initialization": "fresh_declared_seed_no_exploratory_weights",
+        "joint_protocol": {
+          "ad": "native_JAX_checkpointed_daily_scan",
+          "artifact_selection": "first_two_existing_daily_calibration_artifacts",
+          "complete_joint_updates": 2,
+          "daily_protocol": "shared_transformer_split_width_v1.json",
+          "direction_atol": 1e-06,
+          "direction_rtol": 0.01,
+          "gpu_requires_completed_v3_daily_AD_admission": true,
+          "gradient_memory_limit_gib": 24,
+          "horizons": [
+            7,
+            30
+          ],
+          "initialization": "fresh_from_daily_protocol_seed_no_checkpoint_weights",
+          "joint_daily_coefficients": [
+            0.3333333333333333,
+            0.1111111111111111,
+            0.1111111111111111
+          ],
+          "joint_recurrent_flux_stock_coefficients": [
+            0.1111111111111111,
+            0.1111111111111111
+          ],
+          "paid_submission": false,
+          "purpose": "bounded_split_width_daily_T7_T30_admission_not_production_training",
+          "scale_source": "reuse_split_width_daily_admission_TRAIN_calibration_report",
+          "schema_version": "shared_recurrent_admission_v1",
+          "scientific_acceptance": false,
+          "sealed_test_access": false,
+          "teacher_regeneration": false,
+          "window_indices": [
+            0
+          ]
+        },
+        "scales": {
+          "flux_scales": {
+            "gpp": 2.8469192339758003,
+            "growth_respiration": 0.5251428250656419,
+            "heterotrophic_respiration": 0.01,
+            "maintenance_respiration": 1.2682401621719321
+          },
+          "stock_change_scales": {
+            "aboveground_biomass_carbon": 0.6077563453759248,
+            "aboveground_litter_carbon": 0.13312905833814273,
+            "belowground_biomass_carbon": 0.26317360602122764,
+            "belowground_litter_carbon": 0.22567804980275358,
+            "canopy_interception_organic_carbon": 7.840437027809832,
+            "dissolved_organic_carbon": 0.5612065233296684,
+            "soil_particulate_organic_carbon": 0.01
+          }
+        },
+        "schema_version": "shared_split_technical_timing_method_identity_v1",
+        "technical_updates": 2,
+        "training_plan": {
+          "fit_artifact_ids": [
+            742,
+            275,
+            482,
+            299,
+            339,
+            916,
+            794,
+            479
+          ],
+          "prepared_manifest_identity": {
+            "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+            "schedule_sha256": "ee1ff380a18e1ff3ea919c579455db5895fa95116f2f95d144d21a852da9e2a5",
+            "source_git_head": "a243029e6043d71820c86eeb52a9a42215f9fa91",
+            "training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b"
+          },
+          "summary": {
+            "available_artifacts": 750,
+            "daily_draws": 16000,
+            "is_epoch": false,
+            "runtime_years": [
+              1961,
+              1962,
+              1963,
+              1964,
+              1965,
+              1966,
+              1967,
+              1968,
+              1969,
+              1970,
+              1971,
+              1972,
+              1973,
+              1974,
+              1975,
+              1976,
+              1977,
+              1978,
+              1979,
+              1980,
+              1981,
+              1982,
+              1983,
+              1984,
+              1985,
+              1986,
+              1987,
+              1988,
+              1989,
+              1990,
+              1991,
+              1992,
+              1993,
+              1994,
+              1995,
+              1996,
+              1997,
+              1998,
+              1999,
+              2000,
+              2001,
+              2002,
+              2003,
+              2004
+            ],
+            "sampling_seed": 20260922,
+            "selected_artifacts": 500,
+            "unique_daily_rows": null,
+            "unique_day_coverage_requires_array_schedule_inspection": true,
+            "windows_per_horizon": 500
+          },
+          "training_artifact_ids": [
+            742,
+            275,
+            482,
+            299,
+            339,
+            916,
+            794,
+            479,
+            731,
+            553,
+            511,
+            967,
+            616,
+            675,
+            926,
+            427,
+            673,
+            455,
+            847,
+            990,
+            665,
+            749,
+            947,
+            666,
+            771,
+            269,
+            667,
+            585,
+            728,
+            262,
+            540,
+            368,
+            833,
+            484,
+            520,
+            668,
+            263,
+            350,
+            265,
+            764,
+            785,
+            475,
+            326,
+            402,
+            690,
+            353,
+            425,
+            807,
+            473,
+            625,
+            970,
+            571,
+            943,
+            809,
+            647,
+            879,
+            678,
+            719,
+            873,
+            835,
+            607,
+            602,
+            651,
+            674,
+            993,
+            960,
+            432,
+            711,
+            493,
+            491,
+            362,
+            746,
+            695,
+            890,
+            891,
+            276,
+            490,
+            550,
+            381,
+            400,
+            564,
+            271,
+            594,
+            762,
+            285,
+            363,
+            687,
+            712,
+            587,
+            871,
+            572,
+            341,
+            601,
+            534,
+            314,
+            476,
+            397,
+            555,
+            862,
+            700,
+            816,
+            981,
+            638,
+            347,
+            991,
+            635,
+            429,
+            701,
+            565,
+            477,
+            705,
+            763,
+            360,
+            859,
+            846,
+            896,
+            900,
+            374,
+            526,
+            260,
+            532,
+            474,
+            503,
+            413,
+            325,
+            837,
+            298,
+            393,
+            252,
+            469,
+            403,
+            375,
+            606,
+            536,
+            856,
+            588,
+            404,
+            692,
+            776,
+            753,
+            272,
+            983,
+            504,
+            797,
+            313,
+            417,
+            561,
+            395,
+            320,
+            629,
+            790,
+            723,
+            921,
+            741,
+            394,
+            730,
+            605,
+            740,
+            725,
+            815,
+            451,
+            537,
+            805,
+            733,
+            253,
+            446,
+            778,
+            401,
+            255,
+            399,
+            547,
+            501,
+            781,
+            953,
+            886,
+            392,
+            471,
+            478,
+            604,
+            905,
+            268,
+            560,
+            293,
+            998,
+            767,
+            611,
+            870,
+            836,
+            980,
+            922,
+            329,
+            671,
+            996,
+            652,
+            542,
+            481,
+            304,
+            442,
+            613,
+            619,
+            258,
+            726,
+            254,
+            649,
+            590,
+            861,
+            940,
+            894,
+            872,
+            575,
+            691,
+            946,
+            600,
+            766,
+            777,
+            592,
+            650,
+            683,
+            842,
+            744,
+            470,
+            699,
+            376,
+            704,
+            893,
+            312,
+            803,
+            988,
+            939,
+            1000,
+            596,
+            584,
+            824,
+            364,
+            366,
+            659,
+            888,
+            462,
+            346,
+            688,
+            546,
+            463,
+            984,
+            972,
+            465,
+            524,
+            772,
+            385,
+            987,
+            303,
+            514,
+            827,
+            438,
+            430,
+            505,
+            551,
+            336,
+            880,
+            306,
+            747,
+            735,
+            800,
+            386,
+            617,
+            717,
+            702,
+            578,
+            340,
+            324,
+            580,
+            881,
+            959,
+            332,
+            318,
+            937,
+            751,
+            956,
+            822,
+            383,
+            734,
+            876,
+            697,
+            577,
+            920,
+            510,
+            942,
+            284,
+            720,
+            706,
+            850,
+            302,
+            798,
+            694,
+            435,
+            322,
+            899,
+            885,
+            843,
+            445,
+            274,
+            597,
+            500,
+            714,
+            352,
+            757,
+            745,
+            391,
+            453,
+            527,
+            538,
+            866,
+            456,
+            748,
+            421,
+            447,
+            944,
+            563,
+            817,
+            317,
+            812,
+            831,
+            459,
+            930,
+            581,
+            997,
+            431,
+            533,
+            801,
+            658,
+            487,
+            489,
+            729,
+            818,
+            251,
+            924,
+            703,
+            906,
+            636,
+            591,
+            439,
+            958,
+            301,
+            661,
+            918,
+            648,
+            297,
+            464,
+            978,
+            656,
+            422,
+            640,
+            654,
+            685,
+            433,
+            979,
+            545,
+            436,
+            868,
+            977,
+            380,
+            440,
+            907,
+            710,
+            941,
+            626,
+            915,
+            507,
+            415,
+            974,
+            802,
+            530,
+            660,
+            789,
+            883,
+            495,
+            311,
+            460,
+            287,
+            448,
+            328,
+            579,
+            387,
+            903,
+            806,
+            494,
+            367,
+            621,
+            713,
+            418,
+            786,
+            327,
+            457,
+            908,
+            912,
+            289,
+            932,
+            521,
+            929,
+            307,
+            543,
+            663,
+            372,
+            686,
+            925,
+            416,
+            290,
+            707,
+            737,
+            759,
+            853,
+            628,
+            928,
+            655,
+            630,
+            539,
+            976,
+            615,
+            634,
+            738,
+            467,
+            825,
+            378,
+            966,
+            975,
+            388,
+            892,
+            936,
+            398,
+            412,
+            796,
+            593,
+            855,
+            951,
+            359,
+            895,
+            426,
+            672,
+            857,
+            614,
+            599,
+            867,
+            902,
+            792,
+            756,
+            343,
+            681,
+            486,
+            954,
+            698,
+            557,
+            321,
+            914,
+            919,
+            884,
+            582,
+            541,
+            989,
+            774,
+            830,
+            308,
+            810,
+            680,
+            811,
+            424,
+            727,
+            709,
+            754,
+            901,
+            838,
+            337,
+            354,
+            516,
+            898,
+            820,
+            736,
+            371,
+            528,
+            379,
+            848,
+            851,
+            724,
+            458,
+            300,
+            676,
+            323,
+            934,
+            338,
+            644,
+            913,
+            443,
+            485,
+            410,
+            519,
+            821,
+            434,
+            296,
+            950,
+            449,
+            277,
+            963
+          ]
+        },
+        "validation_panel_sha256": "2198ff35f0daef2162e316a376e4708ab84d56515deb32abc912ff7c11bf67f8"
+      },
+      "prepared_context_identity": {
+        "schema_version": "shared_expert_real_daily_context_v1",
+        "source_git_head": "c599236bcf57b745e9bafed678298010f4c3b58f",
+        "method": {
+          "configuration": {
+            "all_parameters_trainable": true,
+            "checkpoint_interval": 25,
+            "checkpoint_selection": "declared_final_update_500_no_best_panel_selection",
+            "daily_microbatch_size": 4,
+            "daily_rows_per_update": 32,
+            "fit_artifact_count": 8,
+            "fit_selection": "first_eight_training_artifacts_window0_T7_T30",
+            "gradient_accumulation": "mean_32_daily_gradients_evaluated_in_micro4_plus_T7_plus_T30_then_one_AdamW_update",
+            "gradient_memory_limit_gib": 24,
+            "initialization": "fresh_model_seed_and_fresh_AdamW_no_exploratory_weights",
+            "joint_protocol": "shared_split_recurrent_admission_v1.json",
+            "learning_stop_rule": "no_early_scientific_stop_or_loss_reweighting_based_on_noisy_batch_losses",
+            "max_updates": 500,
+            "milestones": [
+              0,
+              100,
+              250,
+              500
+            ],
+            "model_protocol": "shared_transformer_split_width_v1.json",
+            "paid_submission": false,
+            "purpose": "bounded_fresh_split_width_joint_learning_after_numerical_and_efficiency_admission",
+            "recurrent_window_index": 0,
+            "recurrent_windows_per_horizon": 1,
+            "sampling_seed": 20260922,
+            "schema_version": "shared_learning_v2",
+            "scientific_acceptance": false,
+            "sealed_test_access": false,
+            "selection": "seeded_permutation_of_sorted_existing_TRAIN_artifact_ids_without_replacement",
+            "stopping": "stop_on_nonfinite_or_physical_failure_or_resource_limit_preserve_last_checkpoint",
+            "teacher_regeneration": false,
+            "validation": "reuse_all_48_fresh_method_validation_20260921_windows_separate_temporal_spatial_joint",
+            "validation_role": "held_out_development_not_sealed_test"
+          },
+          "daily_protocol": {
+            "admission": {
+              "daily_microbatch_size": 4,
+              "direction": "normalized_full_parameter_gradient",
+              "direction_atol": 1e-06,
+              "direction_rtol": 0.01,
+              "gradient_memory_limit_gib": 24,
+              "paid_submission": false,
+              "progression": [
+                "CPU_shape_and_TRAIN_scales",
+                "GPU_one_day_forward",
+                "GPU_one_day",
+                "GPU_T7",
+                "GPU_T30",
+                "real_daily32_micro4_joint_timing"
+              ],
+              "scientific_acceptance": false,
+              "sealed_test_access": false,
+              "teacher_regeneration": false,
+              "updates": 2,
+              "warm_repeats": 5
+            },
+            "architecture": {
+              "all_parameters_trainable": true,
+              "attention": "fp32_unit_L2_qk_logits_cosine_times_sqrt_head_width",
+              "backbone_blocks": 8,
+              "context_bridge": "shared_token_local_affine_after_lawful_family_pooling_remask_after_bias",
+              "decoder_blocks": 2,
+              "decoder_execution": "gather_dynamic_reuse",
+              "decoder_ffn_width": 1536,
+              "decoder_heads": 8,
+              "decoder_rematerialization": false,
+              "decoder_width": 384,
+              "ffn_width": 3072,
+              "heads": 8,
+              "inherited_weights": false,
+              "outgoing_center": "existing_v6_TRAIN_mean_in_logit_space",
+              "outgoing_center_floor": 1e-08,
+              "parameter_count": 64884481,
+              "persistent_output_coordinates": "day_start_train_delta_v3",
+              "query_chunk_size": 64,
+              "source_bare_cimean": true,
+              "thermal_transform": "train_centered",
+              "width": 768
+            },
+            "calibration": {
+              "artifact_count": 16,
+              "claim": "bounded_admission_scales_not_final_global_training_statistics",
+              "flux_floor_gC_m2_day": 0.01,
+              "scale": "extracted_physical_TRAIN_RMS",
+              "selection": "deterministic_metadata_only",
+              "split": "train/train",
+              "stock_change_floor_gC_m2_day": 0.01
+            },
+            "objective": {
+              "checkpoint_source": "none",
+              "group_weights": [
+                0.3333333333333333,
+                0.3333333333333333,
+                0.3333333333333333
+              ],
+              "groups": [
+                "process_day",
+                "flux",
+                "stock"
+              ],
+              "living_nonliving_stock_weights": [
+                0.5,
+                0.5
+              ],
+              "prefix_denominator": "TRAIN_daily_RMS_times_sqrt_elapsed_days",
+              "science_penalty": "pseudo_huber_delta1"
+            },
+            "optimizer": {
+              "beta1": 0.9,
+              "beta2": 0.999,
+              "clip_norm": 1.0,
+              "epsilon": 1e-08,
+              "learning_rate": 1e-05,
+              "name": "AdamW",
+              "weight_decay": 0.0
+            },
+            "purpose": "bounded_fresh_split_width_coordinate_admission_not_scientific_acceptance",
+            "schema_version": "shared_transformer_split_width_v1",
+            "seed": 20260921
+          },
+          "initialization": "fresh_declared_seed_no_exploratory_weights",
+          "joint_protocol": {
+            "ad": "native_JAX_checkpointed_daily_scan",
+            "artifact_selection": "first_two_existing_daily_calibration_artifacts",
+            "complete_joint_updates": 2,
+            "daily_protocol": "shared_transformer_split_width_v1.json",
+            "direction_atol": 1e-06,
+            "direction_rtol": 0.01,
+            "gpu_requires_completed_v3_daily_AD_admission": true,
+            "gradient_memory_limit_gib": 24,
+            "horizons": [
+              7,
+              30
+            ],
+            "initialization": "fresh_from_daily_protocol_seed_no_checkpoint_weights",
+            "joint_daily_coefficients": [
+              0.3333333333333333,
+              0.1111111111111111,
+              0.1111111111111111
+            ],
+            "joint_recurrent_flux_stock_coefficients": [
+              0.1111111111111111,
+              0.1111111111111111
+            ],
+            "paid_submission": false,
+            "purpose": "bounded_split_width_daily_T7_T30_admission_not_production_training",
+            "scale_source": "reuse_split_width_daily_admission_TRAIN_calibration_report",
+            "schema_version": "shared_recurrent_admission_v1",
+            "scientific_acceptance": false,
+            "sealed_test_access": false,
+            "teacher_regeneration": false,
+            "window_indices": [
+              0
+            ]
+          },
+          "scales": {
+            "flux_scales": {
+              "gpp": 2.8469192339758003,
+              "growth_respiration": 0.5251428250656419,
+              "heterotrophic_respiration": 0.01,
+              "maintenance_respiration": 1.2682401621719321
+            },
+            "stock_change_scales": {
+              "aboveground_biomass_carbon": 0.6077563453759248,
+              "aboveground_litter_carbon": 0.13312905833814273,
+              "belowground_biomass_carbon": 0.26317360602122764,
+              "belowground_litter_carbon": 0.22567804980275358,
+              "canopy_interception_organic_carbon": 7.840437027809832,
+              "dissolved_organic_carbon": 0.5612065233296684,
+              "soil_particulate_organic_carbon": 0.01
+            }
+          },
+          "schema_version": "shared_split_technical_timing_method_identity_v1",
+          "technical_updates": 2,
+          "training_plan": {
+            "fit_artifact_ids": [
+              742,
+              275,
+              482,
+              299,
+              339,
+              916,
+              794,
+              479
+            ],
+            "prepared_manifest_identity": {
+              "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+              "schedule_sha256": "ee1ff380a18e1ff3ea919c579455db5895fa95116f2f95d144d21a852da9e2a5",
+              "source_git_head": "a243029e6043d71820c86eeb52a9a42215f9fa91",
+              "training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b"
+            },
+            "summary": {
+              "available_artifacts": 750,
+              "daily_draws": 16000,
+              "is_epoch": false,
+              "runtime_years": [
+                1961,
+                1962,
+                1963,
+                1964,
+                1965,
+                1966,
+                1967,
+                1968,
+                1969,
+                1970,
+                1971,
+                1972,
+                1973,
+                1974,
+                1975,
+                1976,
+                1977,
+                1978,
+                1979,
+                1980,
+                1981,
+                1982,
+                1983,
+                1984,
+                1985,
+                1986,
+                1987,
+                1988,
+                1989,
+                1990,
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004
+              ],
+              "sampling_seed": 20260922,
+              "selected_artifacts": 500,
+              "unique_daily_rows": null,
+              "unique_day_coverage_requires_array_schedule_inspection": true,
+              "windows_per_horizon": 500
+            },
+            "training_artifact_ids": [
+              742,
+              275,
+              482,
+              299,
+              339,
+              916,
+              794,
+              479,
+              731,
+              553,
+              511,
+              967,
+              616,
+              675,
+              926,
+              427,
+              673,
+              455,
+              847,
+              990,
+              665,
+              749,
+              947,
+              666,
+              771,
+              269,
+              667,
+              585,
+              728,
+              262,
+              540,
+              368,
+              833,
+              484,
+              520,
+              668,
+              263,
+              350,
+              265,
+              764,
+              785,
+              475,
+              326,
+              402,
+              690,
+              353,
+              425,
+              807,
+              473,
+              625,
+              970,
+              571,
+              943,
+              809,
+              647,
+              879,
+              678,
+              719,
+              873,
+              835,
+              607,
+              602,
+              651,
+              674,
+              993,
+              960,
+              432,
+              711,
+              493,
+              491,
+              362,
+              746,
+              695,
+              890,
+              891,
+              276,
+              490,
+              550,
+              381,
+              400,
+              564,
+              271,
+              594,
+              762,
+              285,
+              363,
+              687,
+              712,
+              587,
+              871,
+              572,
+              341,
+              601,
+              534,
+              314,
+              476,
+              397,
+              555,
+              862,
+              700,
+              816,
+              981,
+              638,
+              347,
+              991,
+              635,
+              429,
+              701,
+              565,
+              477,
+              705,
+              763,
+              360,
+              859,
+              846,
+              896,
+              900,
+              374,
+              526,
+              260,
+              532,
+              474,
+              503,
+              413,
+              325,
+              837,
+              298,
+              393,
+              252,
+              469,
+              403,
+              375,
+              606,
+              536,
+              856,
+              588,
+              404,
+              692,
+              776,
+              753,
+              272,
+              983,
+              504,
+              797,
+              313,
+              417,
+              561,
+              395,
+              320,
+              629,
+              790,
+              723,
+              921,
+              741,
+              394,
+              730,
+              605,
+              740,
+              725,
+              815,
+              451,
+              537,
+              805,
+              733,
+              253,
+              446,
+              778,
+              401,
+              255,
+              399,
+              547,
+              501,
+              781,
+              953,
+              886,
+              392,
+              471,
+              478,
+              604,
+              905,
+              268,
+              560,
+              293,
+              998,
+              767,
+              611,
+              870,
+              836,
+              980,
+              922,
+              329,
+              671,
+              996,
+              652,
+              542,
+              481,
+              304,
+              442,
+              613,
+              619,
+              258,
+              726,
+              254,
+              649,
+              590,
+              861,
+              940,
+              894,
+              872,
+              575,
+              691,
+              946,
+              600,
+              766,
+              777,
+              592,
+              650,
+              683,
+              842,
+              744,
+              470,
+              699,
+              376,
+              704,
+              893,
+              312,
+              803,
+              988,
+              939,
+              1000,
+              596,
+              584,
+              824,
+              364,
+              366,
+              659,
+              888,
+              462,
+              346,
+              688,
+              546,
+              463,
+              984,
+              972,
+              465,
+              524,
+              772,
+              385,
+              987,
+              303,
+              514,
+              827,
+              438,
+              430,
+              505,
+              551,
+              336,
+              880,
+              306,
+              747,
+              735,
+              800,
+              386,
+              617,
+              717,
+              702,
+              578,
+              340,
+              324,
+              580,
+              881,
+              959,
+              332,
+              318,
+              937,
+              751,
+              956,
+              822,
+              383,
+              734,
+              876,
+              697,
+              577,
+              920,
+              510,
+              942,
+              284,
+              720,
+              706,
+              850,
+              302,
+              798,
+              694,
+              435,
+              322,
+              899,
+              885,
+              843,
+              445,
+              274,
+              597,
+              500,
+              714,
+              352,
+              757,
+              745,
+              391,
+              453,
+              527,
+              538,
+              866,
+              456,
+              748,
+              421,
+              447,
+              944,
+              563,
+              817,
+              317,
+              812,
+              831,
+              459,
+              930,
+              581,
+              997,
+              431,
+              533,
+              801,
+              658,
+              487,
+              489,
+              729,
+              818,
+              251,
+              924,
+              703,
+              906,
+              636,
+              591,
+              439,
+              958,
+              301,
+              661,
+              918,
+              648,
+              297,
+              464,
+              978,
+              656,
+              422,
+              640,
+              654,
+              685,
+              433,
+              979,
+              545,
+              436,
+              868,
+              977,
+              380,
+              440,
+              907,
+              710,
+              941,
+              626,
+              915,
+              507,
+              415,
+              974,
+              802,
+              530,
+              660,
+              789,
+              883,
+              495,
+              311,
+              460,
+              287,
+              448,
+              328,
+              579,
+              387,
+              903,
+              806,
+              494,
+              367,
+              621,
+              713,
+              418,
+              786,
+              327,
+              457,
+              908,
+              912,
+              289,
+              932,
+              521,
+              929,
+              307,
+              543,
+              663,
+              372,
+              686,
+              925,
+              416,
+              290,
+              707,
+              737,
+              759,
+              853,
+              628,
+              928,
+              655,
+              630,
+              539,
+              976,
+              615,
+              634,
+              738,
+              467,
+              825,
+              378,
+              966,
+              975,
+              388,
+              892,
+              936,
+              398,
+              412,
+              796,
+              593,
+              855,
+              951,
+              359,
+              895,
+              426,
+              672,
+              857,
+              614,
+              599,
+              867,
+              902,
+              792,
+              756,
+              343,
+              681,
+              486,
+              954,
+              698,
+              557,
+              321,
+              914,
+              919,
+              884,
+              582,
+              541,
+              989,
+              774,
+              830,
+              308,
+              810,
+              680,
+              811,
+              424,
+              727,
+              709,
+              754,
+              901,
+              838,
+              337,
+              354,
+              516,
+              898,
+              820,
+              736,
+              371,
+              528,
+              379,
+              848,
+              851,
+              724,
+              458,
+              300,
+              676,
+              323,
+              934,
+              338,
+              644,
+              913,
+              443,
+              485,
+              410,
+              519,
+              821,
+              434,
+              296,
+              950,
+              449,
+              277,
+              963
+            ]
+          },
+          "validation_panel_sha256": "2198ff35f0daef2162e316a376e4708ab84d56515deb32abc912ff7c11bf67f8"
+        },
+        "initial_checkpoint": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-split-profile-c599236.updates.update-000000.checkpoint.pkl",
+        "artifact_id": 742,
+        "daily_rows": 4
+      },
+      "sources": {
+        "field_expert_adapter": {
+          "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_decoder_expert_execution.py",
+          "sha256": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d"
+        },
+        "backbone_adapter": {
+          "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_backbone_execution.py",
+          "sha256": "ebf730e0b9e9dc38f5e9d5b7791c4475913064c88db498e9a7ee1313ae31ba65"
+        },
+        "siblings": {
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_decoder_dense.py": "7956d2cc7e78b50c41b2469f700c17481f072c21aabc5ad6e40e0a32f90e61a2",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_decoder_macro_packed.py": "689baa917ab518e87eae809af22900979d04ebed06825f8ff12f83f200e7158d",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_decoder_expert_execution.py": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_backbone_projection_reuse.py": "9084ca10b0e43f4d9636acdd7f15cba839f6d19b31a66ea3175c1e722650be11",
+          "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-combined-recurrent-20260926/shared_backbone_execution.py": "ebf730e0b9e9dc38f5e9d5b7791c4475913064c88db498e9a7ee1313ae31ba65"
+        }
+      },
+      "turnover_base_sha256": "bb8674f3d2ceadb28df907346d18f6300dd87f46d09ff6010c795f72dbee6485",
+      "turnover_sha256": "f6240cf5ce64a47b9bbe0647b5e5715305e9a9230ea77f2bd9f42981ae35a93c",
+      "native_AD_argnums": [
+        0,
+        1
+      ],
+      "precision": "FP32_neural_FP64_physics",
+      "training_updates": 0,
+      "jax_version": "0.4.38",
+      "architecture": "shared_latent32x384_reader64x2",
+      "parameter_count": 66123713,
+      "parameter_leaves": 355,
+      "actual_execution": {
+        "decoder_execution": "field",
+        "decoder_chunk_size": 64,
+        "backbone_execution": "source_reuse"
+      },
+      "parameter_provenance": {
+        "artifact": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+        "sha256": "4f95d18d97d2feb4dcab8e1dda6caeb242a4869f044a00b6a7ae6bc689806c14",
+        "initialization": "fresh_public_whole_tree",
+        "identity": {
+          "source_head": "c599236bcf57b745e9bafed678298010f4c3b58f",
+          "artifact_id": 742,
+          "input_source_method": {
+            "configuration": {
+              "all_parameters_trainable": true,
+              "checkpoint_interval": 25,
+              "checkpoint_selection": "declared_final_update_500_no_best_panel_selection",
+              "daily_microbatch_size": 4,
+              "daily_rows_per_update": 32,
+              "fit_artifact_count": 8,
+              "fit_selection": "first_eight_training_artifacts_window0_T7_T30",
+              "gradient_accumulation": "mean_32_daily_gradients_evaluated_in_micro4_plus_T7_plus_T30_then_one_AdamW_update",
+              "gradient_memory_limit_gib": 24,
+              "initialization": "fresh_model_seed_and_fresh_AdamW_no_exploratory_weights",
+              "joint_protocol": "shared_split_recurrent_admission_v1.json",
+              "learning_stop_rule": "no_early_scientific_stop_or_loss_reweighting_based_on_noisy_batch_losses",
+              "max_updates": 500,
+              "milestones": [
+                0,
+                100,
+                250,
+                500
+              ],
+              "model_protocol": "shared_transformer_split_width_v1.json",
+              "paid_submission": false,
+              "purpose": "bounded_fresh_split_width_joint_learning_after_numerical_and_efficiency_admission",
+              "recurrent_window_index": 0,
+              "recurrent_windows_per_horizon": 1,
+              "sampling_seed": 20260922,
+              "schema_version": "shared_learning_v2",
+              "scientific_acceptance": false,
+              "sealed_test_access": false,
+              "selection": "seeded_permutation_of_sorted_existing_TRAIN_artifact_ids_without_replacement",
+              "stopping": "stop_on_nonfinite_or_physical_failure_or_resource_limit_preserve_last_checkpoint",
+              "teacher_regeneration": false,
+              "validation": "reuse_all_48_fresh_method_validation_20260921_windows_separate_temporal_spatial_joint",
+              "validation_role": "held_out_development_not_sealed_test"
+            },
+            "daily_protocol": {
+              "admission": {
+                "daily_microbatch_size": 4,
+                "direction": "normalized_full_parameter_gradient",
+                "direction_atol": 1e-06,
+                "direction_rtol": 0.01,
+                "gradient_memory_limit_gib": 24,
+                "paid_submission": false,
+                "progression": [
+                  "CPU_shape_and_TRAIN_scales",
+                  "GPU_one_day_forward",
+                  "GPU_one_day",
+                  "GPU_T7",
+                  "GPU_T30",
+                  "real_daily32_micro4_joint_timing"
+                ],
+                "scientific_acceptance": false,
+                "sealed_test_access": false,
+                "teacher_regeneration": false,
+                "updates": 2,
+                "warm_repeats": 5
+              },
+              "architecture": {
+                "all_parameters_trainable": true,
+                "attention": "fp32_unit_L2_qk_logits_cosine_times_sqrt_head_width",
+                "backbone_blocks": 8,
+                "context_bridge": "shared_token_local_affine_after_lawful_family_pooling_remask_after_bias",
+                "decoder_blocks": 2,
+                "decoder_execution": "gather_dynamic_reuse",
+                "decoder_ffn_width": 1536,
+                "decoder_heads": 8,
+                "decoder_rematerialization": false,
+                "decoder_width": 384,
+                "ffn_width": 3072,
+                "heads": 8,
+                "inherited_weights": false,
+                "outgoing_center": "existing_v6_TRAIN_mean_in_logit_space",
+                "outgoing_center_floor": 1e-08,
+                "parameter_count": 64884481,
+                "persistent_output_coordinates": "day_start_train_delta_v3",
+                "query_chunk_size": 64,
+                "source_bare_cimean": true,
+                "thermal_transform": "train_centered",
+                "width": 768
+              },
+              "calibration": {
+                "artifact_count": 16,
+                "claim": "bounded_admission_scales_not_final_global_training_statistics",
+                "flux_floor_gC_m2_day": 0.01,
+                "scale": "extracted_physical_TRAIN_RMS",
+                "selection": "deterministic_metadata_only",
+                "split": "train/train",
+                "stock_change_floor_gC_m2_day": 0.01
+              },
+              "objective": {
+                "checkpoint_source": "none",
+                "group_weights": [
+                  0.3333333333333333,
+                  0.3333333333333333,
+                  0.3333333333333333
+                ],
+                "groups": [
+                  "process_day",
+                  "flux",
+                  "stock"
+                ],
+                "living_nonliving_stock_weights": [
+                  0.5,
+                  0.5
+                ],
+                "prefix_denominator": "TRAIN_daily_RMS_times_sqrt_elapsed_days",
+                "science_penalty": "pseudo_huber_delta1"
+              },
+              "optimizer": {
+                "beta1": 0.9,
+                "beta2": 0.999,
+                "clip_norm": 1.0,
+                "epsilon": 1e-08,
+                "learning_rate": 1e-05,
+                "name": "AdamW",
+                "weight_decay": 0.0
+              },
+              "purpose": "bounded_fresh_split_width_coordinate_admission_not_scientific_acceptance",
+              "schema_version": "shared_transformer_split_width_v1",
+              "seed": 20260921
+            },
+            "initialization": "fresh_declared_seed_no_exploratory_weights",
+            "joint_protocol": {
+              "ad": "native_JAX_checkpointed_daily_scan",
+              "artifact_selection": "first_two_existing_daily_calibration_artifacts",
+              "complete_joint_updates": 2,
+              "daily_protocol": "shared_transformer_split_width_v1.json",
+              "direction_atol": 1e-06,
+              "direction_rtol": 0.01,
+              "gpu_requires_completed_v3_daily_AD_admission": true,
+              "gradient_memory_limit_gib": 24,
+              "horizons": [
+                7,
+                30
+              ],
+              "initialization": "fresh_from_daily_protocol_seed_no_checkpoint_weights",
+              "joint_daily_coefficients": [
+                0.3333333333333333,
+                0.1111111111111111,
+                0.1111111111111111
+              ],
+              "joint_recurrent_flux_stock_coefficients": [
+                0.1111111111111111,
+                0.1111111111111111
+              ],
+              "paid_submission": false,
+              "purpose": "bounded_split_width_daily_T7_T30_admission_not_production_training",
+              "scale_source": "reuse_split_width_daily_admission_TRAIN_calibration_report",
+              "schema_version": "shared_recurrent_admission_v1",
+              "scientific_acceptance": false,
+              "sealed_test_access": false,
+              "teacher_regeneration": false,
+              "window_indices": [
+                0
+              ]
+            },
+            "scales": {
+              "flux_scales": {
+                "gpp": 2.8469192339758003,
+                "growth_respiration": 0.5251428250656419,
+                "heterotrophic_respiration": 0.01,
+                "maintenance_respiration": 1.2682401621719321
+              },
+              "stock_change_scales": {
+                "aboveground_biomass_carbon": 0.6077563453759248,
+                "aboveground_litter_carbon": 0.13312905833814273,
+                "belowground_biomass_carbon": 0.26317360602122764,
+                "belowground_litter_carbon": 0.22567804980275358,
+                "canopy_interception_organic_carbon": 7.840437027809832,
+                "dissolved_organic_carbon": 0.5612065233296684,
+                "soil_particulate_organic_carbon": 0.01
+              }
+            },
+            "schema_version": "shared_split_technical_timing_method_identity_v1",
+            "technical_updates": 2,
+            "training_plan": {
+              "fit_artifact_ids": [
+                742,
+                275,
+                482,
+                299,
+                339,
+                916,
+                794,
+                479
+              ],
+              "prepared_manifest_identity": {
+                "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+                "schedule_sha256": "ee1ff380a18e1ff3ea919c579455db5895fa95116f2f95d144d21a852da9e2a5",
+                "source_git_head": "a243029e6043d71820c86eeb52a9a42215f9fa91",
+                "training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b"
+              },
+              "summary": {
+                "available_artifacts": 750,
+                "daily_draws": 16000,
+                "is_epoch": false,
+                "runtime_years": [
+                  1961,
+                  1962,
+                  1963,
+                  1964,
+                  1965,
+                  1966,
+                  1967,
+                  1968,
+                  1969,
+                  1970,
+                  1971,
+                  1972,
+                  1973,
+                  1974,
+                  1975,
+                  1976,
+                  1977,
+                  1978,
+                  1979,
+                  1980,
+                  1981,
+                  1982,
+                  1983,
+                  1984,
+                  1985,
+                  1986,
+                  1987,
+                  1988,
+                  1989,
+                  1990,
+                  1991,
+                  1992,
+                  1993,
+                  1994,
+                  1995,
+                  1996,
+                  1997,
+                  1998,
+                  1999,
+                  2000,
+                  2001,
+                  2002,
+                  2003,
+                  2004
+                ],
+                "sampling_seed": 20260922,
+                "selected_artifacts": 500,
+                "unique_daily_rows": null,
+                "unique_day_coverage_requires_array_schedule_inspection": true,
+                "windows_per_horizon": 500
+              },
+              "training_artifact_ids": [
+                742,
+                275,
+                482,
+                299,
+                339,
+                916,
+                794,
+                479,
+                731,
+                553,
+                511,
+                967,
+                616,
+                675,
+                926,
+                427,
+                673,
+                455,
+                847,
+                990,
+                665,
+                749,
+                947,
+                666,
+                771,
+                269,
+                667,
+                585,
+                728,
+                262,
+                540,
+                368,
+                833,
+                484,
+                520,
+                668,
+                263,
+                350,
+                265,
+                764,
+                785,
+                475,
+                326,
+                402,
+                690,
+                353,
+                425,
+                807,
+                473,
+                625,
+                970,
+                571,
+                943,
+                809,
+                647,
+                879,
+                678,
+                719,
+                873,
+                835,
+                607,
+                602,
+                651,
+                674,
+                993,
+                960,
+                432,
+                711,
+                493,
+                491,
+                362,
+                746,
+                695,
+                890,
+                891,
+                276,
+                490,
+                550,
+                381,
+                400,
+                564,
+                271,
+                594,
+                762,
+                285,
+                363,
+                687,
+                712,
+                587,
+                871,
+                572,
+                341,
+                601,
+                534,
+                314,
+                476,
+                397,
+                555,
+                862,
+                700,
+                816,
+                981,
+                638,
+                347,
+                991,
+                635,
+                429,
+                701,
+                565,
+                477,
+                705,
+                763,
+                360,
+                859,
+                846,
+                896,
+                900,
+                374,
+                526,
+                260,
+                532,
+                474,
+                503,
+                413,
+                325,
+                837,
+                298,
+                393,
+                252,
+                469,
+                403,
+                375,
+                606,
+                536,
+                856,
+                588,
+                404,
+                692,
+                776,
+                753,
+                272,
+                983,
+                504,
+                797,
+                313,
+                417,
+                561,
+                395,
+                320,
+                629,
+                790,
+                723,
+                921,
+                741,
+                394,
+                730,
+                605,
+                740,
+                725,
+                815,
+                451,
+                537,
+                805,
+                733,
+                253,
+                446,
+                778,
+                401,
+                255,
+                399,
+                547,
+                501,
+                781,
+                953,
+                886,
+                392,
+                471,
+                478,
+                604,
+                905,
+                268,
+                560,
+                293,
+                998,
+                767,
+                611,
+                870,
+                836,
+                980,
+                922,
+                329,
+                671,
+                996,
+                652,
+                542,
+                481,
+                304,
+                442,
+                613,
+                619,
+                258,
+                726,
+                254,
+                649,
+                590,
+                861,
+                940,
+                894,
+                872,
+                575,
+                691,
+                946,
+                600,
+                766,
+                777,
+                592,
+                650,
+                683,
+                842,
+                744,
+                470,
+                699,
+                376,
+                704,
+                893,
+                312,
+                803,
+                988,
+                939,
+                1000,
+                596,
+                584,
+                824,
+                364,
+                366,
+                659,
+                888,
+                462,
+                346,
+                688,
+                546,
+                463,
+                984,
+                972,
+                465,
+                524,
+                772,
+                385,
+                987,
+                303,
+                514,
+                827,
+                438,
+                430,
+                505,
+                551,
+                336,
+                880,
+                306,
+                747,
+                735,
+                800,
+                386,
+                617,
+                717,
+                702,
+                578,
+                340,
+                324,
+                580,
+                881,
+                959,
+                332,
+                318,
+                937,
+                751,
+                956,
+                822,
+                383,
+                734,
+                876,
+                697,
+                577,
+                920,
+                510,
+                942,
+                284,
+                720,
+                706,
+                850,
+                302,
+                798,
+                694,
+                435,
+                322,
+                899,
+                885,
+                843,
+                445,
+                274,
+                597,
+                500,
+                714,
+                352,
+                757,
+                745,
+                391,
+                453,
+                527,
+                538,
+                866,
+                456,
+                748,
+                421,
+                447,
+                944,
+                563,
+                817,
+                317,
+                812,
+                831,
+                459,
+                930,
+                581,
+                997,
+                431,
+                533,
+                801,
+                658,
+                487,
+                489,
+                729,
+                818,
+                251,
+                924,
+                703,
+                906,
+                636,
+                591,
+                439,
+                958,
+                301,
+                661,
+                918,
+                648,
+                297,
+                464,
+                978,
+                656,
+                422,
+                640,
+                654,
+                685,
+                433,
+                979,
+                545,
+                436,
+                868,
+                977,
+                380,
+                440,
+                907,
+                710,
+                941,
+                626,
+                915,
+                507,
+                415,
+                974,
+                802,
+                530,
+                660,
+                789,
+                883,
+                495,
+                311,
+                460,
+                287,
+                448,
+                328,
+                579,
+                387,
+                903,
+                806,
+                494,
+                367,
+                621,
+                713,
+                418,
+                786,
+                327,
+                457,
+                908,
+                912,
+                289,
+                932,
+                521,
+                929,
+                307,
+                543,
+                663,
+                372,
+                686,
+                925,
+                416,
+                290,
+                707,
+                737,
+                759,
+                853,
+                628,
+                928,
+                655,
+                630,
+                539,
+                976,
+                615,
+                634,
+                738,
+                467,
+                825,
+                378,
+                966,
+                975,
+                388,
+                892,
+                936,
+                398,
+                412,
+                796,
+                593,
+                855,
+                951,
+                359,
+                895,
+                426,
+                672,
+                857,
+                614,
+                599,
+                867,
+                902,
+                792,
+                756,
+                343,
+                681,
+                486,
+                954,
+                698,
+                557,
+                321,
+                914,
+                919,
+                884,
+                582,
+                541,
+                989,
+                774,
+                830,
+                308,
+                810,
+                680,
+                811,
+                424,
+                727,
+                709,
+                754,
+                901,
+                838,
+                337,
+                354,
+                516,
+                898,
+                820,
+                736,
+                371,
+                528,
+                379,
+                848,
+                851,
+                724,
+                458,
+                300,
+                676,
+                323,
+                934,
+                338,
+                644,
+                913,
+                443,
+                485,
+                410,
+                519,
+                821,
+                434,
+                296,
+                950,
+                449,
+                277,
+                963
+              ]
+            },
+            "validation_panel_sha256": "2198ff35f0daef2162e316a376e4708ab84d56515deb32abc912ff7c11bf67f8"
+          },
+          "seed": 20260921,
+          "candidate_config": {
+            "width": 768,
+            "attention_heads": 8,
+            "ffn_width": 3072,
+            "backbone_blocks": 8,
+            "coordinate_blocks": 2,
+            "readout_width": 256,
+            "output_chunk_size": 64,
+            "normalization_epsilon": 1e-06,
+            "decoder_execution": "gather_dynamic_reuse",
+            "decoder_architecture": "latent_reader",
+            "latent_reader_execution": "field",
+            "input_width": 384,
+            "input_attention_heads": 8,
+            "input_ffn_width": 1536,
+            "forcing_width": 256,
+            "forcing_heads": 8,
+            "forcing_ffn_width": 1024,
+            "forcing_blocks": 2,
+            "axial_blocks": 1,
+            "decoder_width": 384,
+            "decoder_ffn_width": 1536,
+            "decoder_attention_heads": 8
+          },
+          "candidate_source_sha256": {
+            "shared_transformer.py": "aad25a9879de3fe5d79cf213f665998b921ba8b3599e4b577d8c4c49673c9b96",
+            "shared_latent_reader.py": "02f44b30109664504f158cc55d6bed1e325b6782dcfdd35df626e6fcba5eeb20"
+          },
+          "source_reuse_assembler_sha256": "ebf730e0b9e9dc38f5e9d5b7791c4475913064c88db498e9a7ee1313ae31ba65",
+          "source_reuse_projection_sha256": "9084ca10b0e43f4d9636acdd7f15cba839f6d19b31a66ea3175c1e722650be11"
+        }
+      }
+    },
+    "sampling": {
+      "artifact_id": 299,
+      "window_index": 0,
+      "horizon": 7,
+      "landpoint_id": "345.0-069.0",
+      "year": 1967,
+      "start_row": 202,
+      "stop_row_exclusive": 209,
+      "day_indices": [
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209
+      ],
+      "teacher_day_keys": [
+        [
+          "345.0-069.0",
+          1967,
+          202
+        ],
+        [
+          "345.0-069.0",
+          1967,
+          203
+        ],
+        [
+          "345.0-069.0",
+          1967,
+          204
+        ],
+        [
+          "345.0-069.0",
+          1967,
+          205
+        ],
+        [
+          "345.0-069.0",
+          1967,
+          206
+        ],
+        [
+          "345.0-069.0",
+          1967,
+          207
+        ],
+        [
+          "345.0-069.0",
+          1967,
+          208
+        ]
+      ],
+      "calendar": "365_day_noleap",
+      "day_index_base": 1,
+      "model_date_labels": [
+        "1967-07-22",
+        "1967-07-23",
+        "1967-07-24",
+        "1967-07-25",
+        "1967-07-26",
+        "1967-07-27",
+        "1967-07-28"
+      ],
+      "model_start_date": "1967-07-22",
+      "model_end_date": "1967-07-28",
+      "spatial_split": "train",
+      "temporal_split": "train",
+      "prepared_artifact": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/chunks/251-438/update-0299.pkl.gz",
+      "prepared_artifact_sha256": "ee7fa6e0f537fcd75dc8d02bbf4aa4f0438119f1ca73368e8f7f9d64af1f18aa",
+      "parent_shard_sha256": "03942e7dd64d10a15f1956fe3a22a49d1cac9c56561be075f0af93f3085d0d12",
+      "typed_shard_sha256": "22d7b94be21a0c457ca0c91c01bbfed175cfc5da928d197abcf40e747214f4fc",
+      "initial_state_source": "prepared seven_day.inputs.continuous_state[window0,day0]",
+      "case_sha256": "8c0ed07cd295a28a2f0ca0a9ae46b1904fc59328863aa4c89af9e6f83e820448"
+    },
+    "case_identity": {
+      "case_sha256": "8c0ed07cd295a28a2f0ca0a9ae46b1904fc59328863aa4c89af9e6f83e820448",
+      "initial_state_sha256": "54d01d0f376b0ceed8a843740328dba9d61d2a8989507436bda1a0d16c624f5d",
+      "initial_state_shape": [
+        3854
+      ],
+      "initial_state_dtype": "float64"
+    },
+    "source_git_head_is_asset_provenance": true,
+    "current_git_head_not_overridden": true
+  },
+  "original_assets": {
+    "parameters": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+      "sha256": "4f95d18d97d2feb4dcab8e1dda6caeb242a4869f044a00b6a7ae6bc689806c14",
+      "size_bytes": 264518171,
+      "mtime_ns": 1791132844000000000
+    },
+    "prepared_context": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl",
+      "sha256": "ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026",
+      "size_bytes": 14465399,
+      "mtime_ns": 1790331822000000000
+    },
+    "training_prepared_manifest": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json",
+      "sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+      "size_bytes": 350163,
+      "mtime_ns": 1787659839000000000
+    },
+    "dataset_manifest": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json",
+      "sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+      "size_bytes": 60610898,
+      "mtime_ns": 1786080669000000000
+    },
+    "saved_identity_receipt": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json",
+      "sha256": "5254cad5507607f68ed7e0bc6dde712b27a2d9ec5982ee2853da667b0e938eaf",
+      "size_bytes": 163955,
+      "mtime_ns": 1791611552000000000
+    },
+    "prepared_artifact299": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/chunks/251-438/update-0299.pkl.gz",
+      "sha256": "ee7fa6e0f537fcd75dc8d02bbf4aa4f0438119f1ca73368e8f7f9d64af1f18aa",
+      "size_bytes": 3391246,
+      "mtime_ns": 1787634026000000000
+    }
+  },
+  "binding": {
+    "precision": {
+      "enabled": true,
+      "modules": [
+        {
+          "module": "research.daily_coarse_graining.daily_operator.input_conditioning",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/input_conditioning.py",
+          "source_sha256": "8530bd0340f8c29c9e201c29cf799a453eb775a48a09743eaa3fe518367327f1",
+          "fp32_dtype_lines_changed": [
+            14
+          ],
+          "functions_recompiled": [
+            "standardize_continuous"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.strong_baseline_architecture",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/strong_baseline_architecture.py",
+          "source_sha256": "dab19c9e3079d2139a1c1e68ea726fce0d3f865f57d148912978c0a20b515ca6",
+          "fp32_dtype_lines_changed": [
+            730,
+            731,
+            737,
+            762,
+            763,
+            764,
+            765,
+            864,
+            868,
+            872,
+            877,
+            887,
+            891,
+            904,
+            936,
+            959,
+            963,
+            977,
+            978,
+            979,
+            1003,
+            1004,
+            1005,
+            1007,
+            1137,
+            1227,
+            1283,
+            1284,
+            1294,
+            1295,
+            1412,
+            1509,
+            1513
+          ],
+          "functions_recompiled": [
+            "_attention",
+            "_attention_parameters",
+            "_condition_pool",
+            "_factorized_axial_tokens",
+            "_ffn",
+            "_ffn_parameters",
+            "_field_raw_output",
+            "_forcing_tokens",
+            "_layer_norm",
+            "_linear",
+            "_linear_parameters",
+            "_local_state_indices",
+            "_mask_inactive_pft_elements",
+            "_masked_summary",
+            "_normal",
+            "_output_state_owner",
+            "_pft_state_indices",
+            "_residual_block_parameters",
+            "_reverse_members",
+            "_source_axis_pool",
+            "_stable_head_l2_normalize",
+            "_standardize",
+            "_state_layout",
+            "assemble_strong_baseline_context",
+            "build_strong_baseline_layout",
+            "encode_strong_baseline_experts",
+            "initialize_strong_baseline_parameters",
+            "strong_baseline_field_context",
+            "strong_baseline_parameter_count",
+            "strong_baseline_process_outputs"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_transformer.py",
+          "source_sha256": "aad25a9879de3fe5d79cf213f665998b921ba8b3599e4b577d8c4c49673c9b96",
+          "fp32_dtype_lines_changed": [
+            324,
+            514,
+            691,
+            693,
+            695,
+            806,
+            826,
+            952,
+            975,
+            984,
+            1048,
+            1052,
+            1060,
+            1142,
+            1142,
+            1206
+          ],
+          "functions_recompiled": [
+            "_attention_from_projected_segments",
+            "_carbon_tokens",
+            "_decode_field",
+            "_decoder_dynamic_plan",
+            "_decoder_dynamic_tokens",
+            "_decoder_projection_cache",
+            "_field_active_and_pft_owner",
+            "_field_coordinate_inputs",
+            "_field_dynamic_projection_cache",
+            "_initialize_tokenizer_parameters",
+            "_normalized_attention",
+            "_normalized_local_state",
+            "_project_decoder_context",
+            "_project_key_value",
+            "_run_blocks",
+            "_run_coordinate_blocks_reusing_projections",
+            "_source_family_bank",
+            "_static_field_coordinate_indices",
+            "_tokenizer_config",
+            "_validate_carbon_layout_parameters",
+            "assemble_shared_transformer_context",
+            "decoder_width",
+            "initialize_shared_transformer_parameters",
+            "shared_transformer_output_masks",
+            "shared_transformer_parameter_count",
+            "shared_transformer_raw_outputs",
+            "shared_transformer_static_coordinate_indices"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_dense",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_decoder_dense.py",
+          "source_sha256": "7956d2cc7e78b50c41b2469f700c17481f072c21aabc5ad6e40e0a32f90e61a2",
+          "fp32_dtype_lines_changed": [],
+          "functions_recompiled": [
+            "_attention_message",
+            "_map_dense_rows",
+            "_projected_dynamic",
+            "_readout",
+            "_validate_fields",
+            "packed_decode_fields",
+            "reference_decode_fields"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_decoder_macro_packed.py",
+          "source_sha256": "689baa917ab518e87eae809af22900979d04ebed06825f8ff12f83f200e7158d",
+          "fp32_dtype_lines_changed": [],
+          "functions_recompiled": [
+            "_decode_mapped_rows",
+            "_validate_fields",
+            "expert_decode_fields",
+            "packed_decode_fields",
+            "reference_decode_fields"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache/e8db045/shared_decoder_expert_execution.py",
+          "source_sha256": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d",
+          "fp32_dtype_lines_changed": [
+            131
+          ],
+          "functions_recompiled": [
+            "shared_transformer_raw_outputs_expert128"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_projection_reuse",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_backbone_projection_reuse.py",
+          "source_sha256": "9084ca10b0e43f4d9636acdd7f15cba839f6d19b31a66ea3175c1e722650be11",
+          "fp32_dtype_lines_changed": [
+            48
+          ],
+          "functions_recompiled": [
+            "run_backbone_with_shared_source_projection"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_execution",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_backbone_execution.py",
+          "source_sha256": "ebf730e0b9e9dc38f5e9d5b7791c4475913064c88db498e9a7ee1313ae31ba65",
+          "fp32_dtype_lines_changed": [],
+          "functions_recompiled": [
+            "assemble_shared_transformer_context_with_source_reuse"
+          ]
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_latent_reader.py",
+          "source_sha256": "02f44b30109664504f158cc55d6bed1e325b6782dcfdd35df626e6fcba5eeb20",
+          "fp32_dtype_lines_changed": [
+            72,
+            73,
+            261,
+            277,
+            290,
+            329,
+            330,
+            386
+          ],
+          "functions_recompiled": [
+            "_decode_expert_group",
+            "_decode_field",
+            "_decode_reader_rows",
+            "_field_reader_projections",
+            "_latent_block_parameters",
+            "_prepare_field",
+            "_reader_config",
+            "_restore_field",
+            "build_expert_latents",
+            "initialize_latent_reader_parameters",
+            "reader_attention",
+            "reader_projection_cache",
+            "shared_latent_reader_config",
+            "shared_latent_reader_raw_outputs"
+          ]
+        }
+      ],
+      "alias_bindings": [
+        {
+          "module": "research.daily_coarse_graining.daily_operator.neural_architecture",
+          "name": "standardize_continuous"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.strong_baseline_architecture",
+          "name": "standardize_continuous"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "standardize_continuous"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_residual_block_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "_stable_head_l2_normalize"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_transformer",
+          "name": "assemble_strong_baseline_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_dense",
+          "name": "_attention_from_projected_segments"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_dense",
+          "name": "_run_coordinate_blocks_reusing_projections"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_dense",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_dense",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_dense",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed",
+          "name": "_attention_from_projected_segments"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed",
+          "name": "_run_coordinate_blocks_reusing_projections"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_macro_packed",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "expert_decode_fields"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_carbon_tokens"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_decode_field"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_decoder_dynamic_plan"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_decoder_dynamic_tokens"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_decoder_projection_cache"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_field_active_and_pft_owner"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_field_coordinate_inputs"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_field_dynamic_projection_cache"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_project_decoder_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_source_family_bank"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+          "name": "_static_field_coordinate_indices"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_field_raw_output"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "_residual_block_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "encode_strong_baseline_experts"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "initialize_strong_baseline_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "strong_baseline_field_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_field_raw_output"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "encode_strong_baseline_experts"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "strong_baseline_field_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention",
+          "name": "_field_raw_output"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention",
+          "name": "encode_strong_baseline_experts"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.mechanistic_process_head",
+          "name": "assemble_strong_baseline_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.mechanistic_process_head",
+          "name": "build_strong_baseline_layout"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.mechanistic_process_head",
+          "name": "strong_baseline_process_outputs"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "_residual_block_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "encode_strong_baseline_experts"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "initialize_strong_baseline_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "strong_baseline_field_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_attention",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_source_shaped_maintenance",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_source_shaped_maintenance",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_source_shaped_maintenance",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "_residual_block_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_maintenance",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "standardize_continuous"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_residual_block_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "_standardize"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "standardize_continuous"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "_residual_block_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_carbon_feedback",
+          "name": "strong_baseline_parameter_count"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_process_head",
+          "name": "assemble_shared_transformer_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_process_head",
+          "name": "initialize_shared_transformer_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_process_head",
+          "name": "shared_transformer_raw_outputs"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_projection_reuse",
+          "name": "_stable_head_l2_normalize"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_projection_reuse",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_projection_reuse",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_projection_reuse",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_execution",
+          "name": "run_backbone_with_shared_source_projection"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_execution",
+          "name": "_tokenizer_config"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_execution",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_backbone_execution",
+          "name": "assemble_strong_baseline_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_carbon_tokens"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_decoder_dynamic_plan"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_decoder_dynamic_tokens"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_field_active_and_pft_owner"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_field_coordinate_inputs"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_normalized_attention"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_project_decoder_context"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_project_key_value"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_run_coordinate_blocks_reusing_projections"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_source_family_bank"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_static_field_coordinate_indices"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_attention_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_ffn"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_ffn_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_layer_norm"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_linear"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_linear_parameters"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_normal"
+        },
+        {
+          "module": "research.daily_coarse_graining.daily_operator.shared_latent_reader",
+          "name": "_residual_block_parameters"
+        }
+      ],
+      "real_package_supported": true,
+      "current_graph_admitted": false,
+      "coverage": "Loaded top-level neural functions and package aliases; two dtype getters and exact R4 bridge. Full graph unverified.",
+      "exact_physical_constant_bridge": [
+        {
+          "module": "jax_orchidee.stomate.season",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/jax_orchidee/stomate/season.py",
+          "symbol": "FORTRAN_EPSILON_R4",
+          "original_dtype": "float32",
+          "prepared_dtype": "float64",
+          "original_value": 1.1920928955078125e-07,
+          "prepared_value": 1.1920928955078125e-07,
+          "exact_value_unchanged": true,
+          "epsilon_defaults": [],
+          "process_code_unchanged": true
+        },
+        {
+          "module": "jax_orchidee.stomate.permafrost",
+          "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/jax_orchidee/stomate/permafrost.py",
+          "symbol": "FORTRAN_EPSILON_R4",
+          "original_dtype": "float32",
+          "prepared_dtype": "float64",
+          "original_value": 1.1920928955078125e-07,
+          "prepared_value": 1.1920928955078125e-07,
+          "exact_value_unchanged": true,
+          "epsilon_defaults": [
+            "microactem_temperature_control",
+            "moyano_peat_moisture_lookup",
+            "microactem"
+          ],
+          "process_code_unchanged": true
+        }
+      ]
+    },
+    "physics": {
+      "sha256": "f6240cf5ce64a47b9bbe0647b5e5715305e9a9230ea77f2bd9f42981ae35a93c",
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py",
+      "mode": "identical_corrected_function_already_loaded"
+    },
+    "public_functions": {
+      "make_shared_recurrent_objective": {
+        "sha256": "a454600cd82a9091cc21e18288bce42dc6366c378f6205374001af7dd03abd40",
+        "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_recurrent_training.py"
+      },
+      "make_canonical_step": {
+        "sha256": "dac8bc553e75139f06cde89e63238b71519bad9e1cf3aa28585881acbbf66e7a",
+        "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/canonical_rollout.py"
+      },
+      "make_rollout_loss": {
+        "sha256": "c370da5c61def5b00f234b1b3657163c2c7a76a71393fe1f6a552450af6a9520",
+        "source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/rollout_loss.py"
+      }
+    },
+    "execution_sources": {
+      "shared_backbone_execution": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_backbone_execution.py",
+        "sha256": "ebf730e0b9e9dc38f5e9d5b7791c4475913064c88db498e9a7ee1313ae31ba65"
+      },
+      "shared_backbone_projection_reuse": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_backbone_projection_reuse.py",
+        "sha256": "9084ca10b0e43f4d9636acdd7f15cba839f6d19b31a66ea3175c1e722650be11"
+      },
+      "shared_decoder_dense": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_decoder_dense.py",
+        "sha256": "7956d2cc7e78b50c41b2469f700c17481f072c21aabc5ad6e40e0a32f90e61a2"
+      },
+      "shared_decoder_macro_packed": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_decoder_macro_packed.py",
+        "sha256": "689baa917ab518e87eae809af22900979d04ebed06825f8ff12f83f200e7158d"
+      },
+      "shared_decoder_expert_execution": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache/e8db045/shared_decoder_expert_execution.py",
+        "sha256": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d"
+      },
+      "diffuco_host_mask_cache": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/jax_orchidee/sechiba/diffuco.py",
+        "sha256": "42073dd14f427db8ed78803c90cd5a64b677bf822d1edf6b6fbed7aa97166a14",
+        "function_sha256": "a14352eb484bf2ee2ec5870c1d21c177ad0efa8097204652a6ac3667011734ef",
+        "difference_from_historical_base": "Function-preserving immutable NumPy Boolean PFT mask cache replaces cached JAX tracer. Whole-file historical SHA equality is not claimed."
+      }
+    },
+    "loss": "(flux+stock)/9",
+    "native_B1_scale": 1.0
+  },
+  "historical_expert_source": {
+    "module": "research.daily_coarse_graining.daily_operator.shared_decoder_expert_execution",
+    "old_source_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/research/daily_coarse_graining/daily_operator/shared_decoder_expert_execution.py",
+    "old_source_sha256": "28a4007bfc5a2b71fe2575100946a044d3d963c0faf3bca7be4c638204657660",
+    "source_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache/e8db045/shared_decoder_expert_execution.py",
+    "source_sha256": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d",
+    "git_revision": "e8db045",
+    "git_path": "research/daily_coarse_graining/daily_operator/shared_decoder_expert_execution.py",
+    "module_functions": [
+      "shared_transformer_raw_outputs_expert128"
+    ],
+    "redirected_aliases": [],
+    "sibling_modules_reloaded": false,
+    "classes_redefined": false
+  },
+  "historical_expert_source_cache": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache",
+  "context_widening": [
+    {
+      "path": "context.context.template.static_owner.context.first_step_bundle.domain.lon",
+      "shape": [
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "be34d9eefd70ce5521d9d91b54f52556e7fa1f8799f4527b1aea0cb579a546d8",
+      "prepared_sha256": "c7224044a11d65bc7985e9ccfef3d4f839d45a0cf03be964ea2a5d21a30d71b4"
+    },
+    {
+      "path": "context.context.template.static_owner.context.first_step_bundle.domain.lat",
+      "shape": [
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "71426d210d52fa91812d0a39251aa75ded92519c3d746b8ced4e5a02ec97960d",
+      "prepared_sha256": "2cdb43f2665162582ae25d3182a7ed9d1ed757dcc7313e246cbff53cb38a0614"
+    },
+    {
+      "path": "context.context.template.static_owner.context.first_step_bundle.domain.lalo",
+      "shape": [
+        1,
+        2
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "ff3bd5b8f4cd4f9d14d403ddf46b0aede2c33fde524a09709c7ddc18be766a5f",
+      "prepared_sha256": "41921c5bae9ff6330a8d7077dd16c17c007c19d460bc5a4e813a09eae22b4e91"
+    },
+    {
+      "path": "context.context.template.static_owner.context.first_step_bundle.domain.contfrac",
+      "shape": [
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "9a8208635e00348ab64aac2b759e76391fd47089e9a749bbcec770d9eb5c6421",
+      "prepared_sha256": "e4319a2d73934f7c5fcec97280687f50b66a4335ae57a4ae90f3920400c8f976"
+    },
+    {
+      "path": "context.context.template.static_owner.context.first_step_bundle.domain.contfrac_land",
+      "shape": [
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "9a8208635e00348ab64aac2b759e76391fd47089e9a749bbcec770d9eb5c6421",
+      "prepared_sha256": "e4319a2d73934f7c5fcec97280687f50b66a4335ae57a4ae90f3920400c8f976"
+    },
+    {
+      "path": "context.context.template.day_inputs.metadata.lalo",
+      "shape": [
+        1,
+        2
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "ff3bd5b8f4cd4f9d14d403ddf46b0aede2c33fde524a09709c7ddc18be766a5f",
+      "prepared_sha256": "41921c5bae9ff6330a8d7077dd16c17c007c19d460bc5a4e813a09eae22b4e91"
+    },
+    {
+      "path": "context.context.template.day_inputs.landpoint_payload.contfrac",
+      "shape": [
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "9a8208635e00348ab64aac2b759e76391fd47089e9a749bbcec770d9eb5c6421",
+      "prepared_sha256": "e4319a2d73934f7c5fcec97280687f50b66a4335ae57a4ae90f3920400c8f976"
+    },
+    {
+      "path": "context.context.template.day_inputs.landpoint_payload.lalo",
+      "shape": [
+        1,
+        2
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "ff3bd5b8f4cd4f9d14d403ddf46b0aede2c33fde524a09709c7ddc18be766a5f",
+      "prepared_sha256": "41921c5bae9ff6330a8d7077dd16c17c007c19d460bc5a4e813a09eae22b4e91"
+    },
+    {
+      "path": "context.context.template.day_inputs.landpoint_payload.lat",
+      "shape": [
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "71426d210d52fa91812d0a39251aa75ded92519c3d746b8ced4e5a02ec97960d",
+      "prepared_sha256": "2cdb43f2665162582ae25d3182a7ed9d1ed757dcc7313e246cbff53cb38a0614"
+    },
+    {
+      "path": "context.context.template.day_inputs.landpoint_payload.lon",
+      "shape": [
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "be34d9eefd70ce5521d9d91b54f52556e7fa1f8799f4527b1aea0cb579a546d8",
+      "prepared_sha256": "c7224044a11d65bc7985e9ccfef3d4f839d45a0cf03be964ea2a5d21a30d71b4"
+    },
+    {
+      "path": "context.context.daily4.day_inputs.metadata.lalo",
+      "shape": [
+        4,
+        1,
+        2
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "6af66e17fc60e22973c06406dd87c41d31f2714598c7a67f9710089c08e2c020",
+      "prepared_sha256": "4ff453bb5e71c8da68c4f55081744a2051afce5def3547a0a59c845ac2fe277a"
+    },
+    {
+      "path": "context.context.daily4.day_inputs.landpoint_payload.contfrac",
+      "shape": [
+        4,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "fed51496ba096200c2947b80b9adcdb4363439a2045a0e9f8201ab78073f9e81",
+      "prepared_sha256": "7d8591c9d6ff7e78a698e77adda649f7fdd9e060923c8d79ff89737ef36d1d88"
+    },
+    {
+      "path": "context.context.daily4.day_inputs.landpoint_payload.lalo",
+      "shape": [
+        4,
+        1,
+        2
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "6af66e17fc60e22973c06406dd87c41d31f2714598c7a67f9710089c08e2c020",
+      "prepared_sha256": "4ff453bb5e71c8da68c4f55081744a2051afce5def3547a0a59c845ac2fe277a"
+    },
+    {
+      "path": "context.context.daily4.day_inputs.landpoint_payload.lat",
+      "shape": [
+        4,
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "63b96c71baa0876eddd7db8863965ed4a546ce7a20c5215505911a7e6e92a041",
+      "prepared_sha256": "344398308a2da81029ac3bb1349965e8b20e1bc1e1d00228675cf0dbde515759"
+    },
+    {
+      "path": "context.context.daily4.day_inputs.landpoint_payload.lon",
+      "shape": [
+        4,
+        1,
+        1
+      ],
+      "original_dtype": "float32",
+      "prepared_dtype": "float64",
+      "exact_widen": true,
+      "original_bits_preserved": true,
+      "original_sha256": "c85dd49cc2f12aec272aeb86bfc149dc9e673082be3f129f6e7b636dc6660e9e",
+      "prepared_sha256": "2f10767cf92a2c58b5a25756374faf6b7f05ebd6800c682730dda430a601cc24"
+    }
+  ],
+  "fd_plans": {
+    "434": {
+      "coordinate": 434,
+      "coordinate_name": "profil_froz_hydro_ns",
+      "raw_value": 0.0,
+      "scale": 1.7021657286023486e-07,
+      "mode": "right",
+      "steps": [
+        2.1277071607529357e-08,
+        7.0923572025097855e-09,
+        2.3641190675032617e-09,
+        7.880396891677539e-10,
+        2.626798963892513e-10,
+        8.755996546308378e-11
+      ],
+      "domain": {
+        "kind": "fraction",
+        "lower_bound": 0.0,
+        "upper_bound": 1.0
+      },
+      "certificate": {
+        "status": "known",
+        "lower_bound": 0.0,
+        "upper_bound": 1.0,
+        "raw_value": 0.0,
+        "source": "scalar-coordinate-domain:fraction"
+      },
+      "computational_only": true,
+      "physical_reachability": "not_established",
+      "native_direction_length": null,
+      "native_direction_scaling": null,
+      "internal_branch_limits": "fingerprints are diagnostic only; unexposed internal branches remain unknown"
+    },
+    "2382": {
+      "coordinate": 2382,
+      "coordinate_name": "carbon_32l",
+      "raw_value": 3.2240574942557214e-08,
+      "scale": 4.424219757180787e-07,
+      "mode": "central",
+      "steps": [
+        3.2240574942557217e-09,
+        1.0746858314185738e-09,
+        3.58228610472858e-10,
+        1.19409536824286e-10,
+        3.980317894142866e-11,
+        1.3267726313809555e-11
+      ],
+      "domain": {
+        "kind": "nonnegative_stock",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "certificate": {
+        "status": "known",
+        "lower_bound": 0.0,
+        "upper_bound": null,
+        "raw_value": 3.2240574942557214e-08,
+        "source": "scalar-coordinate-domain:nonnegative_stock"
+      },
+      "computational_only": true,
+      "physical_reachability": "not_established",
+      "native_direction_length": null,
+      "native_direction_scaling": null,
+      "internal_branch_limits": "fingerprints are diagnostic only; unexposed internal branches remain unknown"
+    },
+    "2621": {
+      "coordinate": 2621,
+      "coordinate_name": "deepC_peat",
+      "raw_value": 6.329964314218272e-07,
+      "scale": 6.206373199989962e-06,
+      "mode": "central",
+      "steps": [
+        6.329964314218272e-08,
+        2.109988104739424e-08,
+        7.0332936824647464e-09,
+        2.3444312274882485e-09,
+        7.814770758294162e-10,
+        2.6049235860980543e-10
+      ],
+      "domain": {
+        "kind": "nonnegative_stock",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "certificate": {
+        "status": "known",
+        "lower_bound": 0.0,
+        "upper_bound": null,
+        "raw_value": 6.329964314218272e-07,
+        "source": "scalar-coordinate-domain:nonnegative_stock"
+      },
+      "computational_only": true,
+      "physical_reachability": "not_established",
+      "native_direction_length": null,
+      "native_direction_scaling": null,
+      "internal_branch_limits": "fingerprints are diagnostic only; unexposed internal branches remain unknown"
+    },
+    "200": {
+      "coordinate": 200,
+      "coordinate_name": "canopy2ground",
+      "raw_value": 0.0,
+      "scale": 0.0003509934243405619,
+      "mode": "right",
+      "steps": [
+        4.387417804257024e-05,
+        1.4624726014190079e-05,
+        4.874908671396693e-06,
+        1.6249695571322308e-06,
+        5.416565190440769e-07,
+        1.8055217301469235e-07
+      ],
+      "domain": {
+        "kind": "nonnegative_flow",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "certificate": {
+        "status": "known",
+        "lower_bound": 0.0,
+        "upper_bound": null,
+        "raw_value": 0.0,
+        "source": "scalar-coordinate-domain:nonnegative_flow"
+      },
+      "computational_only": true,
+      "physical_reachability": "not_established",
+      "native_direction_length": null,
+      "native_direction_scaling": null,
+      "internal_branch_limits": "fingerprints are diagnostic only; unexposed internal branches remain unknown"
+    }
+  },
+  "retained_input_consumption": {
+    "status": "retained_inputs_consumed",
+    "scope": "CPU forcing read, year-specific CO2 read, and retained-tail static payload construction; no neural or physical transition",
+    "sampling_identity": {
+      "artifact_id": 299,
+      "window_index": 0,
+      "horizon": 7,
+      "landpoint_id": "345.0-069.0",
+      "year": 1967,
+      "day_indices": [
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209
+      ],
+      "model_date_labels": [
+        "1967-07-22",
+        "1967-07-23",
+        "1967-07-24",
+        "1967-07-25",
+        "1967-07-26",
+        "1967-07-27",
+        "1967-07-28"
+      ],
+      "case_sha256": "8c0ed07cd295a28a2f0ca0a9ae46b1904fc59328863aa4c89af9e6f83e820448",
+      "initial_state_sha256": "54d01d0f376b0ceed8a843740328dba9d61d2a8989507436bda1a0d16c624f5d"
+    },
+    "retained_template_identity": {
+      "config_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/configs/orchidee_man_250919.yaml",
+      "config_sha256": "3e3ec5c4518ebf4d470c60eda3e9bd6ddfd22e5c6dee473694f2409f17e619af",
+      "runtime_year": 1991,
+      "model_tstep": 48,
+      "result_day_index": 2,
+      "serialized_first_step_bundle_year": 1961,
+      "forcing_indices_zero_based": [
+        [
+          145,
+          46
+        ]
+      ],
+      "longitude_latitude": [
+        [
+          111.0,
+          -3.0
+        ]
+      ],
+      "domain_nbindex": 1
+    },
+    "data_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs",
+    "inputs": {
+      "forcing_1991": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs/forcing/cruncep_twodeg_1991.nc",
+        "sha256": "bf2e53a34b77e55badf4f4527c36a7c1c9da61636d9317b43288080ad28e790d",
+        "size_bytes": 851746768
+      },
+      "co2_annual": {
+        "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs/INPUTDIR_ZZ/global_co2_ann_1700_2017.txt",
+        "sha256": "ad5e96976dd89d8e3ddf9cbc57293acdab8d07a33a8e016f3285055a3df02c31",
+        "size_bytes": 3816
+      }
+    },
+    "resolved_annual_co2_ppm": 354.47,
+    "annual_co2_ppm_finite": true,
+    "ccanopy": {
+      "shape": [
+        1
+      ],
+      "dtype": "float64",
+      "finite": true,
+      "sha256": "70c10b4867c38ee97f27de9e5a25fd1205cae75284f921d1f4ad464f65cb1ce6"
+    },
+    "forcing_step_fields": {
+      "Tair": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "0337281524413b29552a08ffabf068c9c51a40f0880772f98d65315a1fa87b99"
+      },
+      "PSurf": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "753d9189a9d91446e864505781784e27ac9f709531f27ae7bbe8756f4cc471e0"
+      },
+      "Qair": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "947f69eb9dbfc8edbcaf6b40376450ed92de8c7976580504c5f92c7caaa39bc8"
+      },
+      "Wind_E": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "986afaa0737280ee8d1bbbe5e67c1ee7dcd15ad1d6bad38f6c3ba1996cda85a8"
+      },
+      "Wind_N": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "559f3af0d8edb5b53d04010ed4b46ce7e6cd4e4dd7d15831aaff38e5656c36ce"
+      },
+      "Rainf": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "cb8a6fe4ca4582801c9d5986776bde1d543ad88fa537774d0513b48bf4d850d6"
+      },
+      "Snowf": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+      },
+      "SWdown": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "e90c844dc54659482dde2f545fe88a41157314084e9186f83bfdb3818d8bede2"
+      },
+      "LWdown": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "b87d8c25106e6d571513bc8cb2e0bc0eb7044afeef599c17a10d0682fef43b0a"
+      },
+      "Areas": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "a3c1c3a66330b8120c635a070a9b22c4adffdf034c9ff31e2f8363c28adec61d"
+      },
+      "contfrac": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "e4319a2d73934f7c5fcec97280687f50b66a4335ae57a4ae90f3920400c8f976"
+      }
+    },
+    "forcing_heights_m": {
+      "Height_Lev1": 2.0,
+      "Height_Levuv": 10.0
+    },
+    "retained_domain_fields": {
+      "area": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "e34db37ec3213998ed948f3febd69cb4839d4122cf86c5149ea96469d7c1972c"
+      },
+      "contfrac_land": {
+        "shape": [
+          1
+        ],
+        "dtype": "float32",
+        "finite": true,
+        "sha256": "9a8208635e00348ab64aac2b759e76391fd47089e9a749bbcec770d9eb5c6421"
+      }
+    },
+    "static_intersurf_payload_fields": {
+      "kjpindex": {
+        "shape": [],
+        "dtype": "int64",
+        "finite": true,
+        "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8"
+      },
+      "nbindex": {
+        "shape": [],
+        "dtype": "int64",
+        "finite": true,
+        "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8"
+      },
+      "kindex": {
+        "shape": [
+          1
+        ],
+        "dtype": "int32",
+        "finite": true,
+        "sha256": "67abdd721024f0ff4e0b3f4c2fc13bc5bad42d0b7851d456d88d203d15aaa450"
+      },
+      "lalo": {
+        "shape": [
+          1,
+          2
+        ],
+        "dtype": "float32",
+        "finite": true,
+        "sha256": "ff3bd5b8f4cd4f9d14d403ddf46b0aede2c33fde524a09709c7ddc18be766a5f"
+      },
+      "lon": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float32",
+        "finite": true,
+        "sha256": "be34d9eefd70ce5521d9d91b54f52556e7fa1f8799f4527b1aea0cb579a546d8"
+      },
+      "lat": {
+        "shape": [
+          1,
+          1
+        ],
+        "dtype": "float32",
+        "finite": true,
+        "sha256": "71426d210d52fa91812d0a39251aa75ded92519c3d746b8ced4e5a02ec97960d"
+      },
+      "contfrac": {
+        "shape": [
+          1
+        ],
+        "dtype": "float32",
+        "finite": true,
+        "sha256": "9a8208635e00348ab64aac2b759e76391fd47089e9a749bbcec770d9eb5c6421"
+      },
+      "resolution": {
+        "shape": [
+          1,
+          2
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "6d0e070f14adfec5a8a1fceed9ffa12ee39bbe05330566781ed386299c8fda3c"
+      },
+      "neighbours": {
+        "shape": [
+          1,
+          8
+        ],
+        "dtype": "int32",
+        "finite": true,
+        "sha256": "af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051"
+      },
+      "corners": {
+        "shape": [
+          1,
+          4,
+          2
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "14d4a08b7c84c4d3daa68635036742222b2f75b30ca631ef9ec937fc9cf3b767"
+      },
+      "seglength": {
+        "shape": [
+          1,
+          4
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "2286e28b6235210f964bf56227323ce6454e3dadc5f713cc121ed689c6ee9fba"
+      },
+      "zlev": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "3f710ac088db33363087de2b9a657541fe5447821debaa9fe5cbd538eb1a5f29"
+      },
+      "zlevuv": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "24b1f4ef66b650ff816e519b01742ff1753733d36e1b4c3e3b52743168915b1f"
+      },
+      "u": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "a2248dc3712f98519cc339ff548bd499fadbe8cadb2f22f7f226752b585e6940"
+      },
+      "v": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "0a496d15d3e3f2f553080c2595ba4767d650355408da9b22b207c48c441d2a90"
+      },
+      "qair": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "947f69eb9dbfc8edbcaf6b40376450ed92de8c7976580504c5f92c7caaa39bc8"
+      },
+      "temp_air": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "0337281524413b29552a08ffabf068c9c51a40f0880772f98d65315a1fa87b99"
+      },
+      "pb": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "a065943981056a261b8eb0b690dc99b820edcd0dffff0da794c2a6863edf32c0"
+      },
+      "precip_rain": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "8a64a7f53fc840b85e911106938dbf50e5abcc9973ce9a2b554f400bfb917821"
+      },
+      "precip_snow": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+      },
+      "lwdown": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "b87d8c25106e6d571513bc8cb2e0bc0eb7044afeef599c17a10d0682fef43b0a"
+      },
+      "swdown": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "e90c844dc54659482dde2f545fe88a41157314084e9186f83bfdb3818d8bede2"
+      },
+      "ccanopy": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "70c10b4867c38ee97f27de9e5a25fd1205cae75284f921d1f4ad464f65cb1ce6"
+      },
+      "veget_max": {
+        "shape": [
+          1,
+          14
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "46d02936c71b96d60ae75679bd7c1946786d46a72f6844a5024454045989c544"
+      },
+      "veget": {
+        "shape": [
+          1,
+          14
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "46d02936c71b96d60ae75679bd7c1946786d46a72f6844a5024454045989c544"
+      },
+      "soiltile": {
+        "shape": [
+          1,
+          6
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "7ecc5af3f5ac21533722bd1f0e17a8500230b219ca9acf871a179d655de685ce"
+      },
+      "njsc": {
+        "shape": [
+          1
+        ],
+        "dtype": "int32",
+        "finite": true,
+        "sha256": "67abdd721024f0ff4e0b3f4c2fc13bc5bad42d0b7851d456d88d203d15aaa450"
+      },
+      "clay_frac": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "08b692737eb97187a7b002758702c69e0415b1b9055ead3800770dbdce5c1d78"
+      },
+      "sand_frac": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "5d6dc890cf51dad7497b3d578b7fd01dd884029f62c6de54eacb5301e9aa61f9"
+      },
+      "silt_frac": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "287422b473b5f2cdf6c7eb9236f2b46cb970116c23685ff41ce606f73da31d00"
+      },
+      "bulk_dens": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "d1671e341a8b60654737ad950b3b844bb9877913cc1144297295c4940d2fca4e"
+      },
+      "soil_ph": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "c0598e90c1cf9cd690fa5316f6a48172e8bbef18e7fb20819010c7f7c00a371d"
+      },
+      "poor_soils": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+      },
+      "soilclass_sub_index": {
+        "shape": [
+          1,
+          2,
+          2
+        ],
+        "dtype": "int32",
+        "finite": true,
+        "sha256": "babaa2427b18a32515b2aa4bb7fdd600783f1bc50925f268cfec50c3416c96db"
+      },
+      "soilclass_sub_area": {
+        "shape": [
+          1,
+          2
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "88defb044e8331fbcbcac46f4b757970a0e635fbadac3c1d3293c4ed16fe4823"
+      },
+      "soilclass": {
+        "shape": [
+          1,
+          12
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "3c7b52ece6929cc935563827b426407e03d4fafb0a1a835a5cd1aeaa6dac2f15"
+      },
+      "salinity": {
+        "shape": [
+          1
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "67c7029da65e8f874a81947cf0a1dfa9df5e1898c24a482373a0285af2959ade"
+      },
+      "tide_height": {
+        "shape": [
+          1,
+          584
+        ],
+        "dtype": "float64",
+        "finite": true,
+        "sha256": "75a6c1326034c9879680d886c6c388a4ab2c0ff8a8b0a9531aff7109d80bc222"
+      }
+    },
+    "static_intersurf_payload_missing_fields": [],
+    "original_prepared_case_unchanged": true,
+    "scientific_template_target_appropriateness_assessed": false,
+    "historical_forcing_sha256_pin": null
+  },
+  "entry_sha256": "4db6e3209fa693136673792c7a7a99802555c33e43dfe4c0f5e2240507e1cad8",
+  "stage_caps": {
+    "load": 300,
+    "preflight": 240,
+    "lower": 300,
+    "compile": 3000,
+    "calls": 1380,
+    "reserve": 180
+  },
+  "total_seconds": 5400,
+  "full_model_calls": 0,
+  "full_model_traces": 0,
+  "full_model_compiles": 0,
+  "full_model_call_attempts": 0,
+  "full_model_trace_attempts": 1,
+  "full_model_compile_attempts": 0,
+  "state20": {
+    "raw": "nan",
+    "strict_failure": true,
+    "new_trajectory_audited": false
+  },
+  "full_FP32_state_comparison_performed": false,
+  "production_adoption": false,
+  "source_checkout": {
+    "root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016",
+    "head": "f2242fc5a7657a3f3061d85a5e1b998663c8f944",
+    "jax_orchidee_import": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/jax_orchidee/__init__.py",
+    "diagnostic_entry": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/scripts/hpc/probe_shared_current_T7_precision_admission.py",
+    "current_checkout_distinct_from_historical_asset_source": true
+  },
+  "FP32_reference": {
+    "report": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json",
+    "report_sha256": "01f9dcc7e4ff2d61a76c8067514169a238cd081d613ae87a599bbf7ed981709c",
+    "full_state_previous_validation": {
+      "passed": false,
+      "values": 3854,
+      "numeric_leaf_count": 1,
+      "failed": 3,
+      "nonfinite": 0,
+      "max_abs_error": 13.40054601430893,
+      "max_error_over_allowance": 4.078513515349512,
+      "failed_leaves": [
+        {
+          "path": "root",
+          "failed": 3,
+          "nonfinite": 0
+        }
+      ],
+      "static_none_count": 0,
+      "rtol": 1e-05,
+      "atol": 1e-06,
+      "failed_positions": [
+        {
+          "path": "root",
+          "index": [
+            33
+          ]
+        },
+        {
+          "path": "root",
+          "index": [
+            180
+          ]
+        },
+        {
+          "path": "root",
+          "index": [
+            2621
+          ]
+        }
+      ]
+    },
+    "native_jvp": {
+      "434": 6.144825223097045,
+      "2382": 11.485809273858125,
+      "2621": 0.014724918825140258,
+      "200": 0.8292021854184574
+    },
+    "native_vjp_projections": {
+      "434": 6.144945732317865,
+      "2382": 11.486008867284372,
+      "2621": 0.014722302556037903,
+      "200": 0.8292030199055885
+    },
+    "full_state_loaded": false,
+    "full_state_comparison": "not_performed"
+  },
+  "approval_sha256": "030ba559b24ab0d64cefd57983288155880d784db6c8d3cc1a9ef5ba71c8b2dd",
+  "stage": "deadline_exceeded",
+  "elapsed_seconds": 350.6903873048723,
+  "deadline_phase": "lower"
+}

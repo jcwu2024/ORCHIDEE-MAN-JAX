@@ -1,0 +1,22 @@
+{
+  "source_commit": "96978caf04c9a56273ea7e9b9031f57aebf999ac",
+  "python": "C:/Users/admin/.conda/envs/ORCJAX/python.exe",
+  "test_command": "python -B -m pytest -q -p no:cacheprovider tests/unit/test_current_T7_precision_deadlines.py tests/unit/test_run_shared_current_T7_precision_admission.py tests/unit/test_shared_current_T7_precision_admission.py tests/unit/test_shared_current_T7_precision_shell.py tests/unit/test_prepare_shared_current_T7_retained_inputs.py --tb=short",
+  "result": "59 passed, 1 warning in 5.08s",
+  "warning": "Unknown config option: cache_dir (cacheprovider disabled)",
+  "bash_syntax": "passed: C:/Program Files/Git/bin/bash.exe -n scripts/hpc/run_shared_current_T7_precision_admission.sh",
+  "python_AST": "passed: both modified Python entries",
+  "GPU_executed": false,
+  "sbatch_submitted": false,
+  "new_execution_approval_created": false,
+  "budget_seconds": {
+    "load": 300,
+    "preflight": 240,
+    "graph": 3300,
+    "calls": 1380,
+    "reserve": 180,
+    "total": 5400
+  },
+  "graph_shared_deadline": true,
+  "old_execution_source": "f2242fc5a7657a3f3061d85a5e1b998663c8f944"
+}

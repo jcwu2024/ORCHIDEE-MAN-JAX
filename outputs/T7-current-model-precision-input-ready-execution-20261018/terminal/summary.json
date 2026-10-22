@@ -1,0 +1,73 @@
+{
+  "job_id": 15941021,
+  "state": "FAILED",
+  "exit_code": "124:0",
+  "start_Beijing": "2026-10-18T09:46:46+08:00",
+  "end_Beijing": "2026-10-18T09:54:25+08:00",
+  "node": "ibc13b03n03",
+  "allocated_cpus": 4,
+  "gpu_count": 1,
+  "sacct_seconds": 459,
+  "scientific_result_status": "incomplete_timeout",
+  "deadline_phase": "lower",
+  "stage_events": [
+    {
+      "stage": "sole_lower_started",
+      "elapsed_seconds": 50.685064075514674
+    },
+    {
+      "stage": "deadline_exceeded",
+      "elapsed_seconds": 350.6903873048723,
+      "phase": "lower"
+    }
+  ],
+  "counts": {
+    "full_model_calls": 0,
+    "full_model_traces": 0,
+    "full_model_compiles": 0,
+    "full_model_call_attempts": 0,
+    "full_model_trace_attempts": 1,
+    "full_model_compile_attempts": 0
+  },
+  "results": [],
+  "state20": {
+    "raw": "nan",
+    "strict_failure": true,
+    "new_trajectory_audited": false
+  },
+  "retained_input_consumption": {
+    "status": "retained_inputs_consumed",
+    "static_intersurf_payload_missing_fields": [],
+    "original_prepared_case_unchanged": true
+  },
+  "release_verified": true,
+  "process_groups_released": true,
+  "active_owned_groups": [],
+  "release_observation": {
+    "epoch": 1792288464.9398339,
+    "host_index": 0,
+    "gpu_uuid": "GPU-879c5488-3ad4-ea9e-f480-dbe67318d5c2",
+    "name": "Tesla V100-SXM2-32GB",
+    "memory_mib": 0,
+    "utilization_percent": 0,
+    "processes": []
+  },
+  "sampled_peak_mib": 345,
+  "occupied_seconds": 458.93985390663147,
+  "cost": {
+    "allocation_seconds": 458.93985390663147,
+    "cpu_hours": 0.5099331710073683,
+    "gpu_hours": 0.1274832927518421,
+    "cpu_cny": 0.03569532197051579,
+    "gpu_cny": 0.2804632440540526,
+    "allocation_cost_estimate_cny": 0.3161585660245684,
+    "approved_cost_ceiling_cny": 3.72,
+    "ceiling_exposure_cny": 0.3161585660245684,
+    "actual_bill_known": false
+  },
+  "sacct_cost_estimate_CNY": 0.31620000000000004,
+  "old_execution_source": "f2242fc5a7657a3f3061d85a5e1b998663c8f944",
+  "remote_output": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016",
+  "remote_files_byte_hashes_verified": true,
+  "no_new_GPU_submission": true
+}

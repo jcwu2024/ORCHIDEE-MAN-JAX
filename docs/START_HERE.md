@@ -2,13 +2,18 @@
 
 Teacher storage: [production migration and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired and103 controls unchanged. Dataset133903→773 files; bounded net reduction after code/maintenance/log/Git overhead130604. Terminal integrity passes using existing full proofs and unchanged package identities. Fresh reader sampling remains incomplete behind slow full-index/plan startup, the next maintenance issue. No new paid work/training/Teacher generation.
 
-Updated2026-10-18: input-ready job **15941021** submitted once under the user's
-“继续。” instruction and supervisor's same-scope execution arrangement.
-Snapshot00:41:07 Asia/Shanghai: **PENDING (Priority)**, no GPU allocation or numerical
-results yet. Slurm continues; no retry, watcher or automatic follow-up.
-[Execution record](research/daily_coarse_graining/T7_current_model_precision_input_ready_execution_20261018.md)
-owns the current status, exact authorization and manual recheck commands.
-Execution SHA remains `f2242fc5`; historical failed jobs/grants below stay closed.
+Updated2026-10-22: job **15941021** is terminal **FAILED124:0**, not pending.
+It ran2026-10-18 09:46:46–09:54:25 Asia/Shanghai on ibc13b03n03(4CPU/1V100),459s.
+The old300s lower deadline expired:1trace attempt,0completed traces/compiles/calls;
+all52 planned numerical calls unstarted. Retained inputs consumed/case unchanged;
+state20 rawNaN remains an independent strict failure. Release verified,0MiB/0%/no
+processes;345MiB is sampled peak only. Estimated cost¥0.3162, actual bill unknown.
+[Execution/terminal evidence](research/daily_coarse_graining/T7_current_model_precision_input_ready_execution_20261018.md)
+and [shared-budget repair](research/daily_coarse_graining/T7_precision_shared_graph_budget_repair_20261022.md)
+separate runtime timeout from scientific acceptance. The one-shot grant is consumed;
+local repair is prepared only, with no new GPU job or retry authorization.
+Historical execution SHA remains `f2242fc5`; immutable checkout/Git dependencies retained.
+
 
 
 New fixed-worktree Codex onboarding: [supervisor handoff](research/daily_coarse_graining/SUPERVISOR_HANDOFF.md)

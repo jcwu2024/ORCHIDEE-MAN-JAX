@@ -1,0 +1,14 @@
+{
+  "schema_version": "current_T7_precision_one_shot_ledger_v1",
+  "status": "closed",
+  "reservation_seconds": 5400,
+  "actual_allocation_seconds": 458.93985390663147,
+  "allocation_cost_estimate_cny": 0.3161585660245684,
+  "approved_cost_ceiling_cny": 3.72,
+  "actual_bill_known": false,
+  "primary_status": "runtime_failed",
+  "exit_code": 124,
+  "release_verified": true,
+  "supervisor_receipt": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-input-ready-20261016/result.v2.supervisor.json",
+  "retry_allowed": false
+}

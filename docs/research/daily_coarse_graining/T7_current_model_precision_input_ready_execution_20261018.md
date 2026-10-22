@@ -1,6 +1,16 @@
 # T7 input-ready execution — 2026-10-18
 
-Job **15941021** submitted once from gln01 at **2026-10-18 00:39:59 Asia/Shanghai**. Final snapshot **00:41:07**: **PENDING / Priority**, runtime0, no assigned node. Slurm continues scheduling; no cancellation, retry, watcher or heartbeat. No model numerical results, traces, compiles or calls are available in this pending snapshot; no GPU allocation has started.
+Updated2026-10-22 from recovered raw terminal records: job **15941021 FAILED124:0**, running **2026-10-18 09:46:46–09:54:25 Asia/Shanghai**,459s,ibc13b03n03,4CPU/1V100. Earlier pending snapshots below are historical, not live status.
+
+`result.v2.json`: `incomplete_timeout / deadline_exceeded / lower`. Sole lower started at50.685064s and deadline exceeded at350.690387s, i.e. the old300s phase cap. Trace attempts1, completed traces0, compile attempts/completions0, call attempts/completions0, results=[]: all52 numerical checks unstarted. This is an engineering timeout, without new derivative/precision evidence, not numerical rejection. State20 rawNaN/strict_failure=true remains separate and unwaived.
+
+Retained inputs were actually consumed, missing static fields=[], original prepared case unchanged. Discovery passed in2.013170s and synthetic preflight in90.433149s; these do not certify real-model execution. Probe exited124 after355.530214s. Supervisor verified release and owned process-group cleanup, active groups=[], GPU0MiB/0%/no processes. Sampled peak345MiB is not full-model memory acceptance.
+
+Occupied458.939854s / estimated¥0.316158566; sacct459s / estimated¥0.3162, actual bill unknown. Ledger closed; this single approval is consumed. No retry or additional GPU submission occurred. Old source `f2242fc5a7657a3f3061d85a5e1b998663c8f944` and server checkout remain immutable.
+
+Raw result/supervisor/ledger/preflight/discovery/logs/approval/submission plus sacct are recovered under `outputs/T7-current-model-precision-input-ready-execution-20261018/terminal/`. `remote-sha256.txt` verifies all18 remote files byte-for-byte; `SHA256.json` records the initial recovery set and `summary.json` is derived. No scientific arrays exist to independently analyze because no calls completed.
+
+The [2026-10-22 timing repair](T7_precision_shared_graph_budget_repair_20261022.md) prepares a new shared3300s lower/compile deadline without changing historical results or authorizing execution. Actual required lower duration remains unknown.
 
 ## Authorization and fixed identity
 
@@ -29,6 +39,6 @@ Manual recheck (no resubmission):
 ssh gln01 '/rmprog/slurm/v22.05.7/bin/scontrol show job --details 15941021'
 ssh gln01 '/rmprog/slurm/v22.05.7/bin/sacct -j 15941021 --format=JobID,State,ExitCode,Elapsed,AllocCPUS,AllocTRES,NodeList'
 ```
-On eventual terminal state, preserve raw result/supervisor/ledger/logs, classify actual counts and numerical outcomes from scientific JSON (exit3 can reflect state20), and verify release. Preflight alone is not model acceptance. This handoff neither cancels the pending job nor declares the research stopped.
+Terminal recovery and release verification are now complete as recorded above. No numerical gate can be assessed from the empty results. Preflight alone is not model acceptance.
 
-Final stable pending snapshot at00:41:07 reports a provisional scheduler StartTime2026-10-20 13:17:59; this is an estimate, not a reservation or actual allocation start. No further polling is scheduled.
+Historical pending snapshot on2026-10-18 at00:41:07 reported a provisional scheduler StartTime2026-10-20 13:17:59; this is an estimate, not a reservation or actual allocation start. No watcher or automatic follow-up was created.

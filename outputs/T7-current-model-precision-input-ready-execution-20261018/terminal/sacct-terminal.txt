@@ -1,0 +1,5 @@
+2026-10-22T21:20:52+0800
+JobID|State|ExitCode|Start|End|Elapsed|ElapsedRaw|AllocCPUS|AllocTRES|NodeList
+15941021|FAILED|124:0|2026-10-18T09:46:46|2026-10-18T09:54:25|00:07:39|459|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n03
+15941021.batch|FAILED|124:0|2026-10-18T09:46:46|2026-10-18T09:54:25|00:07:39|459|4|cpu=4,gres/gpu=1,mem=0,node=1|ibc13b03n03
+15941021.extern|COMPLETED|0:0|2026-10-18T09:46:46|2026-10-18T09:54:25|00:07:39|459|4|billing=4,cpu=4,gres/gpu=1,node=1|ibc13b03n03
