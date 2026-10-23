@@ -55,6 +55,10 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 天数上限传入该helper；缺长期温度时tau=2的源优先级、有效tau和显式上限保持原语义。
 相关reader检查及真实三文件入口/首次状态选择回归31/31通过；未执行模型积分，
 原年度NPP失败继续保留，具体输入触发范围见第十五阶段。
+第十六阶段审查公共点/年入口、forcing/context、compiled消费者及输出归属；
+当前有界证据未形成新的绑定反例。一次替身接口捕获42个日界、869项断言通过，
+真实模型/编译/科学核调用均0。实际used-file全部静态key的跨点分母仍未验证，
+不据此宣布完整跨点缓存语义安全；有限收尾清单和停止条件见本页后部。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
@@ -136,6 +140,11 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
   [Stage15目录](../../outputs/reviews/main-physics-20261023/restart-tau-fix/README.md)，
   版本化修改限于tau reader、生产restart配置传递、相关过时docstring、两份直接回归
   及本页；旧Stage14与之前工件只读，不暂存、提交、推送或跨聊天发消息。
+- 第十六阶段从C4及文档登记已接受的`6f20117badb229dc4e871b82d7cefd586d3dd258`
+  的干净main开始；cwd/分支/ORCJAX实际导入路径确认。新工件限于
+  [Stage16目录](../../outputs/reviews/main-physics-20261023/compiled-input-binding/README.md)，
+  仅本页允许版本化修改；只审查公共入口、输入绑定、compiled块和输出归属，
+  旧Stage14/15工件只读，水分起源捕获继续暂缓。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -160,7 +169,7 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 | 独立数值 Oracle | [micro-oracle index](../../outputs/reference_mode/micro_oracles/index.json) 记录 73 个原始过程抽取、26 个 family；scientific arms 的证据路由分别含 1,243 oracle+production、2,020 owner transition、513 state IO、804 source proof | 原源码抽取本身不是执行证据；source proof、状态/IO 合同也不能泛称为每个输入的数值 Oracle。HYDROL 本轮核对了一个原始 Fortran 文件身份、命名比较和边界源码；其他 family 复用已有记录。 |
 | 生产过程/状态 | [HYDROL/THERMOSOIL](../../outputs/reference_mode/production/hydrol_thermosoil/comparison.json)、[STOMATE](../../outputs/reference_mode/production/stomate/comparison.json)、[lifecycle](../../outputs/reference_mode/production/lifecycle/comparison.json) 均记录 passed / production_execution | 有独立 Oracle 接入、同一步输入/输出及状态写回证据；HYDROL runtime witness 为 tstep0→tstep1，lifecycle 为 1961 Day1/Day2 与 1962 Day1，不能单独替代整年/669 点验收。 |
 | restart / 年接续 | [stage5](../../outputs/reference_mode/stage5_lifecycle_acceptance.json) 的 19 个 checks 通过；[restart lifecycle](../../outputs/reference_mode/restart_state_lifecycle.json) 181 字段闭合；[三点矩阵](../../outputs/performance/compiled_fast_path_acceptance/final_3point_annual_compiled.json) 覆盖 1961 全年、完整末日状态、1962 直接及三文件 split restart | 三点为 001、069、319；严格/compiled 比较与 Fortran 科学比较是不同证据。矩阵记三点 annual_scientific_tolerance_pass=true，但不证明三点各自 50 年序列均通过。 |
-| 完整七日块 / executable reuse | [14-day cold / restart、365-day 记录](../../outputs/reviews/main-physics-20261011/block-gates.json) 均 passed；[跨点 reuse](../../outputs/performance/compiled_fast_path_acceptance/reuse_3points_current.json) 全部 strict parity 通过且后续点/重复运行不新增 executable | cold 对 strict source order；restart/annual 对 compiled daily no-block，浮点 `1e-8 + 1e-10*abs(ref)`、离散/模式精确。公共 [CLI](../../jax_orchidee/cli/main.py) 注入 on / block=7；底层 multiyear 的 block=0 默认不能据此判为公共 CLI 未启用。 |
+| 完整七日块 / SECHIBA scan复用 | [14-day cold / restart、365-day 记录](../../outputs/reviews/main-physics-20261011/block-gates.json) 均 passed；[跨点 reuse](../../outputs/performance/compiled_fast_path_acceptance/reuse_3points_current.json) 的三点SECHIBA scan strict parity与callable/executable复用通过 | cold 对 strict source order；restart/annual 对 compiled daily no-block，浮点 `1e-8 + 1e-10*abs(ref)`、离散/模式精确。三点scan复用不是当前完整日块factory跨点XLA复用的直接记录。公共 [CLI](../../jax_orchidee/cli/main.py) 注入 on / block=7；底层 multiyear 的 block=0 默认不能据此判为公共 CLI 未启用。 |
 | 七个新点长期科学证据 | [七点复核记录](../../outputs/reviews/main-physics-20261011/longrun-evidence.json) 指向七个原始 `compiled_1961_2010.json` | 103.0-095.0、225.0-101.0、281.0-093.0、287.0-111.0、293.0-113.0、295.0-081.0、331.0-057.0；每点 50 年、每年 365 日、年度 truth 完整、cold-start、block=7、NumPy accumulator off。用当前 acceptance reader 读取保存值，七点均通过原年度及序列科学门槛；没有重新运行模型。 |
 
 七点 2010 最大 **原报告 `annual_reference_delta.rel_error` 指标**为
@@ -1538,6 +1547,72 @@ strict为`0.0008192662355900326`，两者均超过原门槛；不把这个produc
 第十四阶段的3/1095天反例是修复前历史证据，旧源码/AST身份不重标为修复后身份。
 水分起源调查和第十三阶段下一捕获继续暂缓。
 
+## 第十六阶段：公共入口到compiled块的输入绑定
+
+本阶段限定为公共CLI/runner的点与年，经reference/config/forcing选路、半小时插值和
+日组装，进入compiled块及最终输出归属的一条链。以精确源码及既有记录为主，
+没有重新执行模型日/年、真实XLA编译或科学核。详细来源、静态/动态表和原证据范围见
+[Stage16入口](../../outputs/reviews/main-physics-20261023/compiled-input-binding/README.md)。
+
+### 公共入口、context及forcing身份
+
+[上游来源表](../../outputs/reviews/main-physics-20261023/compiled-input-binding/upstream/upstream-binding.md)及
+[19份源/既有证据身份回执](../../outputs/reviews/main-physics-20261023/compiled-input-binding/upstream/source-receipt.json)
+明确了各个缓存与归属边界：
+
+| 边界 | 已核对的身份与限制 |
+| --- | --- |
+| 公共CLI选点 | 单次invocation选择一个landpoint，默认用其归档`used_run.def`物化点位专属run.def，并选择其reference/restart目录。显式`--run-def`优先于默认物化，但reference和输出点标签仍来自所选landpoint；标签不能单独证明显式文件与该归档case相符。 |
+| prepared context | `lru_cache(maxsize=8)`按解析后的config路径、run.def路径、reference目录或null缓存；point/year不是独立key。默认路径/目录间接携带点身份，实际年由外层year loop及逐步forcing准备传入。该key表示路径身份，不是内容哈希或显式输入配对验证。 |
+| forcing到日组装 | forcing缓存包含解析config、实际year及全局零基land indices；局部Fortran `kindex`转换为相应二维位置。`model_tstep // split + 1`及`model_tstep % split + 1`分别给出forcing记录和记录内split；日/block组装使用当前year和绝对start tstep。 |
+| Fortran时间合同 | paper来源是`dim2_driver → forcing_READ → readdim2::forcing_read_interpol`的6小时CRUNCEP/1800秒路径。`orchideedriver → forcing_getvalues → forcing_tools`仅列为另一套interval API旁证，不拼接成paper实际调用链。 |
+| 输出点/年 | 外层runner保留所选point/reference及实际year，重建每日day/tstep标签并写入逐年summary和最终JSON。块数组本身没有文本point ID，其归属必须连同上述外层绑定判断。 |
+
+旧669包审计保存669/669通过和九个varying keys：四个LIMIT边界及PFT14的
+VCMAX25、ARJV、maintenance slope、allocation minimum、residence time。
+LIMIT经domain进入forcing/landpoint数据，五个校准坐标经STOMATE四向量及DIFFUCO
+参数进入当前消费者；materializer固定本paper路径的PFT14/vegetation结构协议。
+但varying-key分母只是669份case `run.def`全部key，并非全部实际`used_run.def`的
+静态值比较；摘要没有source commit，只作原有旁证，没有重新运行该审计。
+这是真实输入分母未验证的证据缺口，不直接判成bug或排除为不受支持。
+
+### compiled消费者与连续块
+
+完整块factory的key包括config解析路径、block长度、矿质土索引界、状态component/field
+布局、边界捕获开关及projector key；它确实保留首次context和daily-carbon dispatch。
+点/年没有出现在key中本身既不能证明错误，也不能证明所有配置变化均安全。
+[当前消费者表](../../outputs/reviews/main-physics-20261023/compiled-input-binding/compiled/binding-review.md)
+逐项追踪以下九组运行时实参，而非仅核对函数签名：
+
+| 实参族 | 实际消费及写回 |
+| --- | --- |
+| 前一日状态、逐日forcing、science day | 进入完整日/半小时scan、日累计及季节/年末门控；返回当日状态与输出。 |
+| STOMATE四组参数、HYDROL十组表数组、landpoint payload | 当前case的连续参数、土表及空间/陆面值覆盖相应静态模板并传至实际消费者。 |
+| restart entry模板、season值、DIFFUCO参数 | 与要求的前一日carried字段overlay；DIFFUCO连续参数重建后进入首步及后续scan。 |
+
+`science_day_numbers`控制实际日号、季节推进和年末判断；逐日forcing已经包含实际年
+CO2及气象。内部`year=1961/day_index=2/start=48/tstep=47`作为局部源顺序metadata，
+不能据此认定后年气象被锁定到1961。每块结束从`final_values`重建previous packet，
+下一块从该状态开始；返回日标签及绝对tstep使用当前块索引。
+
+九组动态值没有覆盖全部context。时间/shape、PFT角色和结构控制、固定数值表、
+非override的参数与季节尺度等仍被闭包特化；必须结合实际paper输入不变量判断，
+不能将任何允许的case参数变化一概解释为任意配置改写。未核对的配置变化仍保留为
+证据限制，不作无条件跨配置复用认证。
+
+[一次接口捕获](../../outputs/reviews/main-physics-20261023/compiled-input-binding/compiled/transport-capture.json)
+实际调用当前factory/runner，在调用前替换jit/lower/compile、scan及首个模型边界。
+A1961、B1961、B1962共享一个替身callable，各处理2–8与9–15两个七日块；
+42个日界、869项断言通过，检查当前参数/forcing、day标签及第8→9日carry。
+真实模型步、真实编译和科学核调用均0。该结果证明Python接口传递，
+不作为真实XLA可执行文件的跨点数值等价证据。
+
+历史14日cold/restart及365日完整块A/B继续复用；旧三点记录直接证明的是
+SECHIBA scan复用和相应日/年及restart比较，不能改称本阶段完整块factory的实测。
+七点50年通过及其producer限制保留，不重跑或重标。原319年度NPP失败仍为
+`0.0008192662350707258 > 0.0003951849734783173`，水分起源捕获继续暂缓。
+本阶段未取得新的绑定bug最小反例，未提出或自动实施生产代码修复。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -1550,7 +1625,7 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
 第十二阶段直接确认319本次选定24条重样本的HYDROL-private值False，不扩展为全年分支证明。
 更一般的潜在输入域仍受原交付合同约束。
 
-下列四项按下一步价值排序；它们是检查对象，非四个待修 bug。
+下列四项保留审查对象及本阶段后的状态；它们不是四个待修bug，也不自动派发下一轮检查。
 
 1. **证据到当前物理版本的关联（证据待补）。**
    七点、source/owner 和 state 档案已有很强的通过证据，但若干原始 JSON 未内嵌
@@ -1620,19 +1695,56 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    这些结果不关闭319年度NPP失败或其年度因果。
    全部181字段仍复用原闭合结果，非本阶段逐项重审；旧运行SHA/外部RUNDEF关联限制保留。
 
-4. **七日 compiled 块跨点绑定与年输出（有通过证据，待当前入口/全点接入核对）。**
+4. **七日 compiled 块跨点绑定与年输出（当前有界源链及接口传递已查，完整静态输入分母未认证）。**
    入口为 `_paper_compiled_later_day_block_executable` 11185–11355、
    `_paper_run_compiled_later_day_blocks` 11358–11471、
    `read_forcing_model_step_cached`、`audit_paper_landpoint_binding`、
    `compute_modelout_from_fields`。账本给出 Fortran `sechiba_main` 997–1224、
    `forcing_read_interpol` 660–1687/1899–1968；本轮已核对 paper postprocessor
    48–76/115–118 的 PFT14 选择、碳库相加及 AGB/BGB `0.02` 转换。
-   已有 14/365 日 A/B、三点 executable reuse、七点 block=7 的完整 50 年科学通过。
+   已有 14/365 日完整块A/B、三点SECHIBA scan reuse、七点block=7的完整50年科学通过。
    当前 block 的 forcing/science day、参数、landpoint payload 与 restart template
    是显式动态参数，`year=1961` 的静态 metadata 本身不是锁定所有年 forcing 的证据。
-   最小办法核对缓存绑定和公共 CLI→runner 的实际参数流，复用已有 forcing transport /
-   block parity / landpoint binding 检查；669 点数据绑定审计与 669 点长期科学验收分别记录。
-   尚未完成 ee42eb1 的完整跨点消费者审计及 669 点积分验收。
+   第十六阶段补上公共CLI→runner→forcing→完整块/半小时消费者→输出的有界来源链，
+   一次替身边界捕获通过；不将其作为真实完整块XLA复用或数值等价的新执行。
+   旧669包绑定审计的varying-key分母是case `run.def`全部key，并未逐键比较全部
+   实际`used_run.def`的静态值；这一真实输入证据缺口不等于已确认bug，也不能直接
+   排除为不受支持。完整跨点静态语义安全、当前全分支及669点积分验收均未认证。
+
+## 本轮基础审查的有限收尾与停止条件
+
+本轮已覆盖的是证据地图及命名高风险边界的盘点/有界审查：Fortran分支/Oracle/生产
+档案的层次与范围，HYDROL/root及年界，三文件restart、计时/日累计/季节记忆，
+C1–C4修复/回归档案，以及本阶段公共输入到compiled消费者和输出的绑定链。
+这些记录不等同于本轮重审全部源分支或重新执行所有Oracle。
+
+本轮收尾只有下列四项必查。表中的验收条件限定本次交付，不扩展成新的调查任务：
+
+| 必查项 | 已有证据与具体剩余缺口 | 本轮验收条件 | 可否独立并行 |
+| --- | --- | --- | --- |
+| 公共入口、prepared context及forcing/输出归属 | 既有669包绑定摘要、当前CLI/runner/domain及Fortran时序源；已补context缓存身份和显式路径优先级及19份源/证据身份，旧producer和used-file分母缺口登记。 | 点/年/config/reference/run.def与forcing索引到输出的路由可逐段追溯；旧摘要无producer及未查used-file静态分母明确记录。 | 可，与下一项独立；已由两位原owner并行。 |
+| 完整块闭包、九组动态消费者及连续块carry | 当前43个精确锚点、14/365日历史A/B及一次869断言捕获；已将上游九个实际变化坐标与静态假设合并，未认证静态变化明确保留。 | 逐项说明动态值及实际消费者、捕获的静态值和未认证变化；不混同旧SECHIBA复用与当前完整块，不从缺point/year key直接判bug。 | 可，与上一项独立；最终合并依赖上游表。 |
+| 证据范围、未决项及本页结论一致 | 原319失败、历史producer限制、C4及Stage14/15记录、上述两张表。 | 无相互矛盾或扩大通过范围；若发现具体反例，只交最小反例、影响和修复计划，不自动改生产代码。 | 合并验收，依赖前两项；不需新worker。 |
+| 最终工件与工作区绑定 | baseline、源/旧证据身份、报告及delivery/index。 | 固定root/main/HEAD；仅本页未暂存修改、空index、链接/身份通过、旧45份stat及6个anchor未变，排除执行为0。结果以Stage16交付JSON为准。 | 串行，所有文档冻结后一次绑定。 |
+
+两路主表交付时，收尾估计为context/机器回执补交、报告合并及最终绑定，
+1–2轮、约10–25分钟工作时间；这是原owner按当时实际进度给出的粗估，不含主控人工
+等待。身份/链接不一致可能增加一轮返修；不为该估计启动实验，也不据此估算未来科学
+验收时长。补交实际约10–15分钟且已完成；两路来源表及报告内容已验收，最终绑定结果
+由交付JSON记录。交付与核验完成后，本执行聊天没有自动续行任务，等待主控一次审阅。
+
+以下事项**不阻塞本轮有界基础审查收尾**，仍限制更强的等价/发布结论：
+
+- 原319年度NPP科学失败`0.0008192662350707258 > 0.0003951849734783173`、
+  两条历史长链的producer缺口和年度因果继续开放；Stage13水分起源捕获继续暂缓。
+- 未查全部实际`used_run.def`静态key、未完成全部旧证据到当前物理版本的关联、
+  未重新审查全部181字段/所有分支，不能宣布完整跨点缓存语义或全分支认证。
+- 七点长期通过不替代669点最终科学门槛；绑定摘要、源码追踪、接口stub与独立Fortran
+  数值Oracle分别保留层次。C4研究分支同步由对应维护线程负责，不作为本聊天续行项。
+
+建议停止在上述四项满足、未决项如实登记且最终工件绑定通过的边界。
+不以“所有输出完全相同”或追出319全部上游历史作为本轮退出条件；后续科学结论仍须
+满足既有交付合同，本报告不降低其门槛。
 
 ## 本轮执行记录
 
@@ -1971,3 +2083,31 @@ generation仍为`2026-10-17T20:47:05Z`、12,165 nodes/72,243 edges，改动元�
 跨分支同步范围、验证和待核对状态登记为
 [共享修复C4](shared_core_branch_review.md#c4restart-tau回退的单位与配置传递2026-10-23)。
 本次未修改其他研究工作树，其同步须由对应维护线程核对。
+
+第十六阶段执行（2026-10-23）：从`6f20117badb229dc4e871b82d7cefd586d3dd258`
+干净main继续，实际root、branch和ORCJAX导入路径确认。复用原两位owner分别
+核对上游绑定与compiled闭包/消费者，父级审阅实际表、捕获脚本及JSON并维护本页。
+一次ORCJAX/`-B`接口捕获通过；其余为源码/AST、既有JSON和工件身份读取。
+既有forcing/landpoint/block测试只读来源，没有执行原套件。
+
+图层Verify确认项目`E-ORCHIDEE-MAN-JAX`、generation`2026-10-23T07:15:27Z`、
+12,173 nodes/72,343 edges；目标Python的metadata变化及排除的Fortran/outputs依靠
+精确源码/工件补足，未重索引或作全项目完整性断言。
+[最终交付核验](../../outputs/reviews/main-physics-20261023/compiled-input-binding/delivery.json)及
+[证据索引](../../outputs/reviews/main-physics-20261023/compiled-input-binding/evidence-index.json)
+绑定本页、实际源/旧证据/捕获身份与当前工作区；旧Stage14/15的45份size/mtime和
+6份anchor内容哈希受保护，stat不解释为新增bulk内容哈希。
+新增模型日/年、真实XLA编译、科学核/Oracle重放、broad pytest、SSH/服务器/调度、
+GPU/训练/付费工作及环境重建均0；历史累计4601/7200秒、余额2599秒、pending0。
+只修改本页及Stage16证据目录，不暂存、提交、推送、跨聊天发送或启用自动化；
+未改生产代码、配置、科学门槛或其他研究工作树。原319失败及已登记证据缺口保留，
+交付本聊天审阅后停止，不自动开始下一阶段。
+
+第十六阶段主控验收（2026-10-24）：已审阅实际上游/compiled两张来源表、接口捕获
+脚本与执行回执、交付JSON及本页差异；冻结报告SHA256与实文件一致，复用owner的
+869项接口断言、436项交付核验和301个链接检查，未重复执行捕获或模型。
+接受本阶段声明的有界源码/接口检查；未确认新绑定缺陷，也不将替身接口通过升级为
+完整块XLA数值等价或669点科学验收。实际used-file静态值分母、旧证据的当前版本
+适用范围及原319年度NPP失败继续保留。用户授权下一批连续检查，优先补前两项的
+本地证据，不自动重启319水分起源捕获。此次仅追加主控验收；owner冻结回执仍指向
+追加前的报告内容，保留原身份，不重新生成历史交付文件。
