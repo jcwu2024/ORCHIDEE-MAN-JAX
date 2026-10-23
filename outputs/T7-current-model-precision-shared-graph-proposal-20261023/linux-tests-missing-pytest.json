@@ -1,0 +1,24 @@
+{
+  "hostname": "ibtest01",
+  "command": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/unit/test_current_T7_precision_deadlines.py",
+    "tests/unit/test_run_shared_current_T7_precision_admission.py",
+    "tests/unit/test_shared_current_T7_precision_shell.py",
+    "--tb=short",
+    "--basetemp",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tmp"
+  ],
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python: No module named pytest\n",
+  "elapsed_seconds": 0.16273699142038822,
+  "GPU_executed": false,
+  "model_graph_constructed": false
+}

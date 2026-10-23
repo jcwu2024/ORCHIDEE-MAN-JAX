@@ -1,0 +1,90 @@
+{
+  "parameters": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+    "sha256": "4f95d18d97d2feb4dcab8e1dda6caeb242a4869f044a00b6a7ae6bc689806c14",
+    "size_bytes": 264518171,
+    "mtime_ns": 1791132844000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "prepared_context": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl",
+    "sha256": "ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026",
+    "size_bytes": 14465399,
+    "mtime_ns": 1790331822000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "training_prepared_manifest": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json",
+    "sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "size_bytes": 350163,
+    "mtime_ns": 1787659839000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "dataset_manifest": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json",
+    "sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+    "size_bytes": 60610898,
+    "mtime_ns": 1786080669000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "saved_identity_receipt": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json",
+    "sha256": "5254cad5507607f68ed7e0bc6dde712b27a2d9ec5982ee2853da667b0e938eaf",
+    "size_bytes": 163955,
+    "mtime_ns": 1791611552000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "prepared_artifact299": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/chunks/251-438/update-0299.pkl.gz",
+    "sha256": "ee7fa6e0f537fcd75dc8d02bbf4aa4f0438119f1ca73368e8f7f9d64af1f18aa",
+    "size_bytes": 3391246,
+    "mtime_ns": 1787634026000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "forcing_1991": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs/forcing/cruncep_twodeg_1991.nc",
+    "sha256": "bf2e53a34b77e55badf4f4527c36a7c1c9da61636d9317b43288080ad28e790d",
+    "size_bytes": 851746768,
+    "mtime_ns": 1792125825000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "co2_annual": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs/INPUTDIR_ZZ/global_co2_ann_1700_2017.txt",
+    "sha256": "ad5e96976dd89d8e3ddf9cbc57293acdab8d07a33a8e016f3285055a3df02c31",
+    "size_bytes": 3816,
+    "mtime_ns": 1792125981000000000,
+    "readable": true,
+    "prior_byte_identity_verified": true
+  },
+  "state_metadata": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json",
+    "sha256": "09ac17c769fdae9dd0b440747f8fb48488b863152625da54f66764212d886184",
+    "size_bytes": 22437,
+    "mtime_ns": 1791544011000000000,
+    "readable": true,
+    "prior_byte_identity_verified": false
+  },
+  "turnover_overlay": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py",
+    "sha256": "f6240cf5ce64a47b9bbe0647b5e5715305e9a9230ea77f2bd9f42981ae35a93c",
+    "size_bytes": 5510,
+    "mtime_ns": 1791191879000000000,
+    "readable": true,
+    "prior_byte_identity_verified": false
+  },
+  "fp32_reference": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json",
+    "sha256": "01f9dcc7e4ff2d61a76c8067514169a238cd081d613ae87a599bbf7ed981709c",
+    "size_bytes": 521844,
+    "mtime_ns": 1791558370000000000,
+    "readable": true,
+    "prior_byte_identity_verified": false
+  }
+}

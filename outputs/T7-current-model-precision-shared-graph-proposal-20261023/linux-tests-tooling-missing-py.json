@@ -1,0 +1,25 @@
+{
+  "hostname": "ibtest01",
+  "command": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--assert=plain",
+    "tests/unit/test_current_T7_precision_deadlines.py",
+    "tests/unit/test_run_shared_current_T7_precision_admission.py",
+    "tests/unit/test_shared_current_T7_precision_shell.py",
+    "--tb=short",
+    "--basetemp",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tmp"
+  ],
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 189, in _run_module_as_main\n  File \"<frozen runpy>\", line 148, in _get_module_details\n  File \"<frozen runpy>\", line 112, in _get_module_details\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/pytest/__init__.py\", line 8, in <module>\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/_code/__init__.py\", line 5, in <module>\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/_code/code.py\", line 43, in <module>\n    One of several things can happen:\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/_io/__init__.py\", line 3, in <module>\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/_io/terminalwriter.py\", line 19, in <module>\n  File \"/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/compat.py\", line 19, in <module>\nModuleNotFoundError: No module named 'py'\n",
+  "elapsed_seconds": 1.4996137525886297,
+  "GPU_executed": false,
+  "model_graph_constructed": false
+}

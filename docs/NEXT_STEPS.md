@@ -2,6 +2,13 @@
 
 Teacher storage: [production migration, verified readers and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired,103 controls unchanged. Dataset133903→773 files; bounded net reduction after both retained checkouts/maintenance/log/Git overhead128076. Startup repair7d14adb passes ordinary full33450 base/typed indices and plan, plus9 annual readers/adapters with T1/T7/T30. First base122.09s; subsequent warm typed11.37s; plan2.09s. Post-read integrity passes. No new paid work/training/Teacher generation.
 
+Updated2026-10-23: supervisor accepted96978ca engineering repair anddd352d7
+terminal closeout after actual-artifact review; no GPU/gradient/science acceptance.
+The [shared-graph deployment/proposal](../outputs/T7-current-model-precision-shared-graph-proposal-20261023/REVIEW.md)
+fixes source96978ca, a new clean server checkout, reused verified assets and42
+passing test01 CPU checks. Proposal approved=false; no GPU, sbatch or real approval.
+A new execution authorization is required; historical one-shot grants stay consumed.
+
 Updated2026-10-22: job **15941021** is terminal **FAILED124:0**, not pending.
 It ran2026-10-18 09:46:46–09:54:25 Asia/Shanghai on ibc13b03n03(4CPU/1V100),459s.
 The old300s lower deadline expired:1trace attempt,0completed traces/compiles/calls;

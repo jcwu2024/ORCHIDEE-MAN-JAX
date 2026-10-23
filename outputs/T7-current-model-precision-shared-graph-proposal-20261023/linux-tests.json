@@ -1,0 +1,25 @@
+{
+  "hostname": "ibtest01",
+  "command": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--assert=plain",
+    "tests/unit/test_current_T7_precision_deadlines.py",
+    "tests/unit/test_run_shared_current_T7_precision_admission.py",
+    "tests/unit/test_shared_current_T7_precision_shell.py",
+    "--tb=short",
+    "--basetemp",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tmp"
+  ],
+  "returncode": 0,
+  "stdout": "..........................................                               [100%]\n=============================== warnings summary ===============================\noutputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/config/__init__.py:1434\n  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip/_pytest/config/__init__.py:1434: PytestConfigWarning: Unknown config option: cache_dir\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n42 passed, 1 warning in 4.77s\n",
+  "stderr": "",
+  "elapsed_seconds": 7.027035243809223,
+  "GPU_executed": false,
+  "model_graph_constructed": false
+}

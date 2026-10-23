@@ -1,0 +1,15 @@
+{
+  "head": "96978caf04c9a56273ea7e9b9031f57aebf999ac",
+  "status": "",
+  "import_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/jax_orchidee/__init__.py",
+  "probe_sha256": "3db6eaebbe7e0000e93f661d3264900e4d1d8ac92efe851a667bdc7392d1c863",
+  "bundle_sha256": "9710c9ef200912424fd8e6ec2379a684c477f1de5840244420f48ea35e26b004",
+  "cache_source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache/e8db045/shared_decoder_expert_execution.py",
+  "cache_target": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache/e8db045/shared_decoder_expert_execution.py",
+  "cache_sha256": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d",
+  "cache_reuse": "Exact one-file byte copy required by per-checkout outputs containment, not regenerated",
+  "alternates": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/.git/objects\n",
+  "new_output_exists": false,
+  "old_checkout_head": "f2242fc5a7657a3f3061d85a5e1b998663c8f944",
+  "old_checkout_status": ""
+}

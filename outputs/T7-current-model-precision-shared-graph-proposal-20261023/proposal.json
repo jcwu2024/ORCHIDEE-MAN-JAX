@@ -1,0 +1,391 @@
+{
+  "schema_version": "current_T7_shared_graph_submission_proposal_v1",
+  "approved": false,
+  "status": "CPU_prepared_awaiting_new_human_execution_authorization",
+  "source_head": "96978caf04c9a56273ea7e9b9031f57aebf999ac",
+  "source_review_accepted": "Supervisor2026-10-23 accepted local engineering repair96978ca and terminal closeoutdd352d7; not GPU/science acceptance or execution authorization",
+  "cwd": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023",
+  "submission_endpoint": "gln01 after new human authorization only",
+  "submission_argv": [
+    "sbatch",
+    "--job-name",
+    "T7-shared-graph",
+    "--partition",
+    "gnall",
+    "--nodes",
+    "1",
+    "--ntasks",
+    "1",
+    "--cpus-per-task",
+    "4",
+    "--gres",
+    "gpu:1",
+    "--time",
+    "01:30:00",
+    "--no-requeue",
+    "--chdir",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023",
+    "--output",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/slurm-%j.stdout.txt",
+    "--error",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/slurm-%j.stderr.txt",
+    "--wrap",
+    "exec bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/scripts/hpc/run_shared_current_T7_precision_admission.sh --stage execute --parameters /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl --prepared-context /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl --training-prepared-manifest /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json --dataset-manifest /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json --saved-identity-receipt /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json --state-input-metadata /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json --turnover-overlay /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py --fp32-reference /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json --source-cache /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache --approval-report /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/approval.v2.json --runtime-preflight /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/runtime-preflight.v2.json --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.json --retained-data-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs"
+  ],
+  "submission_command": "sbatch --job-name T7-shared-graph --partition gnall --nodes 1 --ntasks 1 --cpus-per-task 4 --gres gpu:1 --time 01:30:00 --no-requeue --chdir /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023 --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/slurm-%j.stdout.txt --error /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/slurm-%j.stderr.txt --wrap 'exec bash /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/scripts/hpc/run_shared_current_T7_precision_admission.sh --stage execute --parameters /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl --prepared-context /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl --training-prepared-manifest /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json --dataset-manifest /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json --saved-identity-receipt /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json --state-input-metadata /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json --turnover-overlay /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py --fp32-reference /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json --source-cache /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache --approval-report /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/approval.v2.json --runtime-preflight /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/runtime-preflight.v2.json --output /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.json --retained-data-root /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs'",
+  "wrapper_argv": [
+    "bash",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/scripts/hpc/run_shared_current_T7_precision_admission.sh",
+    "--stage",
+    "execute",
+    "--parameters",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+    "--prepared-context",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl",
+    "--training-prepared-manifest",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json",
+    "--dataset-manifest",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json",
+    "--saved-identity-receipt",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json",
+    "--state-input-metadata",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json",
+    "--turnover-overlay",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py",
+    "--fp32-reference",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json",
+    "--source-cache",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache",
+    "--approval-report",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/approval.v2.json",
+    "--runtime-preflight",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/runtime-preflight.v2.json",
+    "--output",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.json",
+    "--retained-data-root",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs"
+  ],
+  "outer_cpu_supervisor_argv": [
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "-B",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/scripts/hpc/run_shared_current_T7_precision_admission.py",
+    "--stage",
+    "execute",
+    "--parameters",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+    "--prepared-context",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl",
+    "--training-prepared-manifest",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json",
+    "--dataset-manifest",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json",
+    "--saved-identity-receipt",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json",
+    "--state-input-metadata",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json",
+    "--turnover-overlay",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py",
+    "--fp32-reference",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json",
+    "--source-cache",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache",
+    "--approval-report",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/approval.v2.json",
+    "--runtime-preflight",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/runtime-preflight.v2.json",
+    "--output",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.json",
+    "--retained-data-root",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs"
+  ],
+  "probe_argv": [
+    "--stage",
+    "execute",
+    "--parameters",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+    "--prepared-context",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl",
+    "--training-prepared-manifest",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json",
+    "--dataset-manifest",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json",
+    "--saved-identity-receipt",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json",
+    "--state-input-metadata",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json",
+    "--turnover-overlay",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py",
+    "--fp32-reference",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json",
+    "--source-cache",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache",
+    "--approval-report",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/approval.v2.json",
+    "--runtime-preflight",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/runtime-preflight.v2.json",
+    "--output",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.json",
+    "--retained-data-root",
+    "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs"
+  ],
+  "resources": {
+    "partition": "gnall",
+    "nodes": 1,
+    "tasks": 1,
+    "allocated_Slurm_CPUs": 4,
+    "GPU_count": 1,
+    "GPU_model": "V100",
+    "nonexclusive": true,
+    "wall_seconds": 5400,
+    "GPU_memory_ceiling_GiB": 24,
+    "no_requeue": true
+  },
+  "rates_CNY_per_hour": {
+    "allocated_CPU": 0.07,
+    "GPU": 2.2
+  },
+  "maximum_estimated_CNY": 3.72,
+  "stage_caps": {
+    "load": 300,
+    "preflight": 240,
+    "graph": 3300,
+    "calls": 1380,
+    "reserve": 180
+  },
+  "total_seconds": 5400,
+  "compile_attempt_cap": 1,
+  "planned_calls": {
+    "native": 16,
+    "FD": 36,
+    "total": 52,
+    "per_coordinate_FD": {
+      "434": 6,
+      "2382": 12,
+      "2621": 12,
+      "200": 6
+    },
+    "same_combined_native_executable_for_FD": true
+  },
+  "one_shot": true,
+  "retry": false,
+  "queue_policy": "Slurm automatic node selection; normal Priority/Resources waiting accepted. Busy GPUs do not block future authorized submission. No nodelist/exclude/exclusive restriction.",
+  "science": {
+    "parameters": 66123713,
+    "case": "B1/artifact299/window0/T7",
+    "public_loss": "(flux+stock)/9",
+    "state_dimension": 3854,
+    "precision": "FP64 diagnostic only",
+    "directions": [
+      434,
+      2382,
+      2621,
+      200
+    ],
+    "steps_per_direction": 6,
+    "state20": "independent strict failure; no fill or waiver",
+    "new_architecture_or_graph": false,
+    "fixed_FD_grid": {
+      "434": {
+        "mode": "right",
+        "steps": [
+          2.1277071607529357e-08,
+          7.0923572025097855e-09,
+          2.3641190675032617e-09,
+          7.880396891677539e-10,
+          2.626798963892513e-10,
+          8.755996546308378e-11
+        ]
+      },
+      "2382": {
+        "mode": "central",
+        "steps": [
+          3.2240574942557217e-09,
+          1.0746858314185738e-09,
+          3.58228610472858e-10,
+          1.19409536824286e-10,
+          3.980317894142866e-11,
+          1.3267726313809555e-11
+        ]
+      },
+      "2621": {
+        "mode": "central",
+        "steps": [
+          6.329964314218272e-08,
+          2.109988104739424e-08,
+          7.0332936824647464e-09,
+          2.3444312274882485e-09,
+          7.814770758294162e-10,
+          2.6049235860980543e-10
+        ]
+      },
+      "200": {
+        "mode": "right",
+        "steps": [
+          4.387417804257024e-05,
+          1.4624726014190079e-05,
+          4.874908671396693e-06,
+          1.6249695571322308e-06,
+          5.416565190440769e-07,
+          1.8055217301469235e-07
+        ]
+      }
+    }
+  },
+  "paths": {
+    "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023",
+    "output_directory": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023",
+    "source_cache": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache",
+    "reused_cache_source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache",
+    "retained_data_root": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs",
+    "approval": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/approval.v2.json",
+    "result": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.json",
+    "runtime_preflight": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/runtime-preflight.v2.json"
+  },
+  "old_execution": {
+    "source_head": "f2242fc5a7657a3f3061d85a5e1b998663c8f944",
+    "checkout": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016",
+    "job15941021": "FAILED124:0 / lower timeout; grant consumed; no numerical calls; immutable"
+  },
+  "authorization": {
+    "approved": false,
+    "new_human_execution_authorization_required": true,
+    "old_grants_reusable": false,
+    "approval_file_created": false,
+    "scope_file_created": false
+  },
+  "GPU_executed": false,
+  "sbatch_submitted": false,
+  "probe_sha256": "3db6eaebbe7e0000e93f661d3264900e4d1d8ac92efe851a667bdc7392d1c863",
+  "deployment": {
+    "head": "96978caf04c9a56273ea7e9b9031f57aebf999ac",
+    "status": "",
+    "import_path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/jax_orchidee/__init__.py",
+    "probe_sha256": "3db6eaebbe7e0000e93f661d3264900e4d1d8ac92efe851a667bdc7392d1c863",
+    "bundle_sha256": "9710c9ef200912424fd8e6ec2379a684c477f1de5840244420f48ea35e26b004",
+    "cache_source": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/outputs/T7-current-model-retained-input-cpu-20261016/source-cache/e8db045/shared_decoder_expert_execution.py",
+    "cache_target": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023/outputs/T7-current-model-shared-graph-20261023/source-cache/e8db045/shared_decoder_expert_execution.py",
+    "cache_sha256": "5d77141bad1359d3a71174ba03eba57527d7b0e94cf3e42bce73a2dc650c740d",
+    "cache_reuse": "Exact one-file byte copy required by per-checkout outputs containment, not regenerated",
+    "alternates": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-retained-input-cpu-20261016/.git/objects\n",
+    "new_output_exists": false,
+    "old_checkout_head": "f2242fc5a7657a3f3061d85a5e1b998663c8f944",
+    "old_checkout_status": ""
+  },
+  "data_identities": {
+    "parameters": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004-T7-assembled-input.parameters.pkl",
+      "sha256": "4f95d18d97d2feb4dcab8e1dda6caeb242a4869f044a00b6a7ae6bc689806c14",
+      "size_bytes": 264518171,
+      "mtime_ns": 1791132844000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "prepared_context": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-expert-real-daily-context-c599236.pkl",
+      "sha256": "ff3fdabe755d599bc2ceee72087c03983d9a629add93166519dcda1f56be9026",
+      "size_bytes": 14465399,
+      "mtime_ns": 1790331822000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "training_prepared_manifest": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json",
+      "sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+      "size_bytes": 350163,
+      "mtime_ns": 1787659839000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "dataset_manifest": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json",
+      "sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+      "size_bytes": 60610898,
+      "mtime_ns": 1786080669000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "saved_identity_receipt": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-raw-neural-jvp-20261010.result.b1.optimized-hlo.txt.gz.identity.json",
+      "sha256": "5254cad5507607f68ed7e0bc6dde712b27a2d9ec5982ee2853da667b0e938eaf",
+      "size_bytes": 163955,
+      "mtime_ns": 1791611552000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "prepared_artifact299": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/target-oriented-prepared-1000-a243029/chunks/251-438/update-0299.pkl.gz",
+      "sha256": "ee7fa6e0f537fcd75dc8d02bbf4aa4f0438119f1ca73368e8f7f9d64af1f18aa",
+      "size_bytes": 3391246,
+      "mtime_ns": 1787634026000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "forcing_1991": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs/forcing/cruncep_twodeg_1991.nc",
+      "sha256": "bf2e53a34b77e55badf4f4527c36a7c1c9da61636d9317b43288080ad28e790d",
+      "size_bytes": 851746768,
+      "mtime_ns": 1792125825000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "co2_annual": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs/INPUTDIR_ZZ/global_co2_ann_1700_2017.txt",
+      "sha256": "ad5e96976dd89d8e3ddf9cbc57293acdab8d07a33a8e016f3285055a3df02c31",
+      "size_bytes": 3816,
+      "mtime_ns": 1792125981000000000,
+      "readable": true,
+      "prior_byte_identity_verified": true
+    },
+    "state_metadata": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-state-inputs-20261009.json",
+      "sha256": "09ac17c769fdae9dd0b440747f8fb48488b863152625da54f66764212d886184",
+      "size_bytes": 22437,
+      "mtime_ns": 1791544011000000000,
+      "readable": true,
+      "prior_byte_identity_verified": false
+    },
+    "turnover_overlay": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/shared-latent-reader-20261004/turnover_leaf_age_fall.guarded-source.py",
+      "sha256": "f6240cf5ce64a47b9bbe0647b5e5715305e9a9230ea77f2bd9f42981ae35a93c",
+      "size_bytes": 5510,
+      "mtime_ns": 1791191879000000000,
+      "readable": true,
+      "prior_byte_identity_verified": false
+    },
+    "fp32_reference": {
+      "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/shared-latent-reader-20261004/T7-B1-state-jvp-completion-20261009.independent-analysis.json",
+      "sha256": "01f9dcc7e4ff2d61a76c8067514169a238cd081d613ae87a599bbf7ed981709c",
+      "size_bytes": 521844,
+      "mtime_ns": 1791558370000000000,
+      "readable": true,
+      "prior_byte_identity_verified": false
+    }
+  },
+  "reused_scientific_evidence": "Accepted fixed case/state and seven-day input-binding evidence; no real probe/model/forcing preparation rerun in this deployment",
+  "target_CPU_validation": {
+    "host": "test01 / ibtest01",
+    "linux_tests": "42 passed, 1 warning in 4.77s; linux-tests.json",
+    "argument_chain": "argument-chain.json: actual Bash --wrap expansion and wrapper --dry-run printed exact outer argv; actual runner forwarding intercepted by CPU subprocess recorder; probe parser accepted",
+    "deadline_container_path": "Actual unchanged shell exported both original allocation epoch and CURRENT_T7_PROBE_DEADLINE_EPOCH; CPU singularity stand-in observed and emulated prefix mapping; real container/PJRT/GPU NOT validated"
+  },
+  "remaining_GPU_checks": [
+    "One UUID-bound discovery and deployed runtime preflight in any future authorized single allocation only",
+    "Actual FP64 lower/compile, compiled/runtime memory, all52 native/FD calls, physics/state/derivative results and release",
+    "Shared3300 budget may still fail; no automatic follow-up probes or extended jobs"
+  ],
+  "tooling": {
+    "pytest_missing_in_canonical_cpu_environment": true,
+    "temporary_pure_python_tooling_zip": "checkout/outputs/T7-current-model-shared-graph-20261023/cpu-validation/pytest-tooling.zip",
+    "tooling_zip_sha256": "00023589e8d42508b930e93644127b66db139265ee396a511b04260d4bf92d5c",
+    "tooling_zip_bytes": 1740712,
+    "environment_installed_or_modified": false,
+    "attempts": "Initial missing pytest; first ZIP missing py shim; completed after shim inclusion. Final42-pass receipt is authoritative."
+  },
+  "future_execution_steps": [
+    "New explicit human resource/cost/cwd/command authorization required; no old grant reuse",
+    "Refresh clean checkout/assets and absence of submission/approval/result; inspect SBATCH environment overrides and gnall queue before the single sbatch",
+    "Create fresh exact-argv approved record only after new authorization, then create new independent output directory",
+    "Submit proposal exact submission_argv once from gln01; normal Priority/Resources queueing accepted",
+    "Discovery/preflight/model all within that allocation; save actual stage/counts/raw results/release on terminal; no retries"
+  ]
+}

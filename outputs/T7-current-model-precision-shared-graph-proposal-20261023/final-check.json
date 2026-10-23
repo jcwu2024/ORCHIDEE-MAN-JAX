@@ -1,0 +1,21 @@
+{
+  "time_utc": "2026-10-23T04:20:44.030752+00:00",
+  "head": "96978caf04c9a56273ea7e9b9031f57aebf999ac",
+  "status": "",
+  "old_head": "f2242fc5a7657a3f3061d85a5e1b998663c8f944",
+  "old_status": "",
+  "new_output_exists": false,
+  "future_approval_exists": false,
+  "draft_approved": false,
+  "draft_rejected": "allocation approval differs: approved",
+  "stage_caps_match": true,
+  "runtime_paths_exist_and_executable": {
+    "CPU_python": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu/bin/python",
+    "GPU_python_path_only": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu/bin/python",
+    "nvlink": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/toolchains/cuda-nvlink-12.6.85/bin/nvlink"
+  },
+  "singularity_real_path_only": "/usr/bin/singularity",
+  "GPU_executed": false,
+  "real_container_executed": false,
+  "sbatch_submitted": false
+}
