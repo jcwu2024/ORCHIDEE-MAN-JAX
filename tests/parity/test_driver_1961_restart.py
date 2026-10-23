@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import re
+import shutil
 import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
+from netCDF4 import Dataset
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from jax_orchidee.driver.init import initialize_imposed_vegetation_state, read_run_scalars
+from jax_orchidee.driver import orchestration
 from jax_orchidee.driver.restart import (
     SECHIBA_STATIC_FIELDS,
     inventory_restart_fields,
@@ -16,6 +21,7 @@ from jax_orchidee.driver.restart import (
     read_sechiba_static_restart,
     reference_restart_path,
 )
+from jax_orchidee.driver.orchestration import read_driver_runtime_scalars
 from jax_orchidee.driver.restart_state import reference_case_first_step_restart_state
 
 
@@ -121,3 +127,144 @@ def test_reference_case_first_step_restart_state_aggregates_exact_restart_reader
     assert np.allclose(state.driver_albedo.albedo[0], [0.04526854, 0.22753724])
     assert np.allclose(state.hydrol.fwet_new, [0.0])
     assert any("Job0_bio lines 277-322" in item for item in state.provenance)
+
+
+def _reference_restart_run() -> Path:
+    driver_start = reference_restart_path(CONFIG, "driver_start.nc")
+    if not driver_start.exists():
+        pytest.skip("paper restart triplet is unavailable")
+    return driver_start.parent
+
+
+def _copy_restart_triplet(source: Path, target: Path) -> Path:
+    target.mkdir()
+    for name in ("driver_start.nc", "sechiba_start.nc", "stomate_start.nc"):
+        shutil.copyfile(source / name, target / name)
+    return target
+
+
+def _assert_readstart_states_equal(left, right) -> None:
+    for group_name in (
+        "entry_state",
+        "season_state",
+        "daily_state",
+        "gas_state",
+        "remainder_state",
+    ):
+        left_group = getattr(left, group_name)
+        right_group = getattr(right, group_name)
+        for field_name in left_group._fields:
+            np.testing.assert_array_equal(
+                getattr(left_group, field_name),
+                getattr(right_group, field_name),
+                err_msg=f"{group_name}.{field_name} changed",
+            )
+    assert left.report == right.report
+
+
+def test_first_step_tau_longterm_uses_configured_cap_at_restart_and_selector_boundary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ORCHIDEE_REPO_ROOT", str(ROOT))
+    source_run = _reference_restart_run()
+    normal_run = _copy_restart_triplet(source_run, tmp_path / "normal")
+    sentinel_run = _copy_restart_triplet(source_run, tmp_path / "sentinel")
+    missing_run = _copy_restart_triplet(source_run, tmp_path / "missing")
+
+    used_run_def = ROOT / "outputs" / "server_1961_trace_full_20260623" / "run" / "used_run.def"
+    default_used_run_def = tmp_path / "default" / "used_run.def"
+    custom_used_run_def = tmp_path / "custom" / "used_run.def"
+    default_used_run_def.parent.mkdir()
+    custom_used_run_def.parent.mkdir()
+    run_def_text = used_run_def.read_text(encoding="utf-8")
+    default_used_run_def.write_text(run_def_text, encoding="utf-8")
+    custom_text, replacement_count = re.subn(
+        r"(?m)^(\s*COEFF_TAU_LONGTERM\s*=\s*)[^\r\n]+",
+        r"\g<1>2.5",
+        run_def_text,
+        count=1,
+    )
+    assert replacement_count == 1
+    custom_used_run_def.write_text(custom_text, encoding="utf-8")
+
+    with Dataset(normal_run / "stomate_start.nc") as restart:
+        assert "t2m_longterm" in restart.variables
+        assert "tau_longterm" in restart.variables
+        valid_tau = float(restart.variables["tau_longterm"][:].reshape(-1)[0])
+        assert valid_tau == 1095.0
+    with Dataset(sentinel_run / "stomate_start.nc", "r+") as restart:
+        restart.variables["tau_longterm"][:] = 999999.0
+    with Dataset(missing_run / "stomate_start.nc", "r+") as restart:
+        restart.renameVariable("tau_longterm", "tau_longterm_missing")
+
+    normal_default = reference_case_first_step_restart_state(
+        CONFIG,
+        root=ROOT,
+        run_dir=normal_run,
+        run_def_path=default_used_run_def,
+    )
+    normal_custom = reference_case_first_step_restart_state(
+        CONFIG,
+        root=ROOT,
+        run_dir=normal_run,
+        run_def_path=custom_used_run_def,
+    )
+    assert normal_default.stomate_readstart.season_state.tau_longterm == valid_tau
+    assert normal_custom.stomate_readstart.season_state.tau_longterm == valid_tau
+    _assert_readstart_states_equal(normal_default.stomate_readstart, normal_custom.stomate_readstart)
+
+    sentinel_default = reference_case_first_step_restart_state(
+        CONFIG,
+        root=ROOT,
+        run_dir=sentinel_run,
+        run_def_path=default_used_run_def,
+    )
+    sentinel_custom = reference_case_first_step_restart_state(
+        CONFIG,
+        root=ROOT,
+        run_dir=sentinel_run,
+        run_def_path=custom_used_run_def,
+    )
+    assert sentinel_default.stomate_readstart.season_state.tau_longterm == 1095.0
+    assert sentinel_custom.stomate_readstart.season_state.tau_longterm == 912.5
+    assert "tau_longterm" in sentinel_custom.stomate_readstart.report.defaulted_fields
+    np.testing.assert_array_equal(
+        sentinel_custom.stomate_readstart.season_state.t2m_longterm,
+        normal_default.stomate_readstart.season_state.t2m_longterm,
+    )
+
+    with pytest.raises(KeyError, match="tau_longterm"):
+        reference_case_first_step_restart_state(
+            CONFIG,
+            root=ROOT,
+            run_dir=missing_run,
+            run_def_path=custom_used_run_def,
+        )
+
+    selected = {}
+
+    class SelectionCaptured(Exception):
+        pass
+
+    def capture_source_kwargs(**kwargs):
+        selected.update(kwargs)
+        raise SelectionCaptured
+
+    monkeypatch.setattr(orchestration, "paper_case_stomate_bundle_source_kwargs", capture_source_kwargs)
+    runtime = read_driver_runtime_scalars(custom_used_run_def)
+    with pytest.raises(SelectionCaptured):
+        orchestration._paper_first_step_stomate_restart_input_bundles(
+            config_path=CONFIG,
+            run_def_path=custom_used_run_def,
+            restart_state=sentinel_custom,
+            runtime=runtime,
+            tstep=int(round(runtime.dt_stomate / runtime.dt_sechiba)) - 1,
+        )
+
+    assert selected["season"] is sentinel_custom.stomate_readstart.season_state
+    assert selected["season"].tau_longterm == 912.5
+    np.testing.assert_array_equal(
+        selected["season"].t2m_longterm,
+        sentinel_custom.stomate_readstart.season_state.t2m_longterm,
+    )

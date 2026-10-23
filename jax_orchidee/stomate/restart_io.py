@@ -16,6 +16,7 @@ from typing import Mapping
 import numpy as np
 from netCDF4 import Dataset
 
+from jax_orchidee.stomate.season import SeasonTimeScales
 from jax_orchidee.parameters.pft_catalog import (
     PFTRunLayout,
     pft_layout_netcdf_attributes,
@@ -791,7 +792,7 @@ def read_stomate_readstart_states_from_template(
     undef: float = -9999.0,
     gdd_crit_estab: float = 150.0,
     precip_crit: float = 100.0,
-    tau_longterm_max: float = 3.0,
+    tau_longterm_max: float = SeasonTimeScales().tau_longterm_max,
     sla: object | None = None,
     thawed_humidity_input: float = 1.0e20,
     reset_thawed_humidity: bool = False,
@@ -815,6 +816,12 @@ def read_stomate_readstart_states_from_template(
     arrays containing only ``val_exp`` take the exact whole-array defaults in
     ``readstart``; partially initialized arrays retain their sentinel entries,
     matching Fortran's ``IF (ALL(... == val_exp))`` behavior.
+
+    ``tau_longterm_max`` is in days, including explicit overrides. The default
+    uses ``SeasonTimeScales``' coefficient times days per year, matching
+    ``stomate_data.f90`` line 700. ``stomate_io.f90`` lines 620-637 use this
+    cap only when longterm temperature exists but its tau is absent/sentinel;
+    absent/all-sentinel longterm temperature instead initializes tau to 2.
 
     The remainder state closes the additional 52-field audit list in source
     order.  A ``None`` value is a typed source-undefined contract, not a

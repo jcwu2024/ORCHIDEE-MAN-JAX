@@ -2223,9 +2223,11 @@ def stomate_restart_season_memory_state(
 ) -> SeasonMemoryState:
     """Build the explicit step state from restart-backed season memory.
 
-    ``tau_longterm`` is required because it is a Fortran SAVE scalar used by
-    ``stomate_season::season`` line 626, not a field present in the restart
-    reader currently audited for this project.
+    ``tau_longterm`` is the explicitly supplied, restart-backed scalar in
+    days, advanced by ``stomate_season::season`` line 626. It is serialized
+    and restored by ``stomate_io::writerestart/readstart``; readstart lines
+    620-637 initialize it to 2 when longterm temperature is absent, or to the
+    configured coefficient-times-year cap when only tau is absent/sentinel.
     """
 
     return SeasonMemoryState(

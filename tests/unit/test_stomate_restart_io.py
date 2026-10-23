@@ -40,6 +40,51 @@ def _minimal_restart(path: Path, *, nvm: int = 2, nslm: int = 2) -> None:
         dataset.createDimension("x", 1)
 
 
+@pytest.mark.parametrize("tau", [None, 999999.0, 123.0])
+@pytest.mark.parametrize("cap_days", [None, 42.0])
+def test_readstart_tau_fallback_and_explicit_cap_are_days(tmp_path, tau, cap_days):
+    restart = tmp_path / "tau.nc"
+    _minimal_restart(restart)
+    with Dataset(restart, "r+") as dataset:
+        dataset.createVariable("t2m_longterm", "f8", ("time", "y", "x"))[:] = 279.0
+        if tau is not None:
+            dataset.createVariable("tau_longterm", "f8", ("time",))[:] = tau
+    kwargs = {} if cap_days is None else {"tau_longterm_max": cap_days}
+    result = read_stomate_readstart_states_from_template(
+        restart, t2m=np.array([281.5]), nvm=2, nslm=2,
+        ndeep=3, nvert=6, ns=4, months_num=3, nbpools=3, **kwargs,
+    )
+    expected_cap = 1095.0 if cap_days is None else cap_days
+    assert result.season_state.tau_longterm == (
+        123.0 if tau == 123.0 else expected_cap
+    )
+    np.testing.assert_array_equal(result.season_state.t2m_longterm, [279.0])
+    if tau == 123.0:
+        assert "tau_longterm" in result.report.restart_fields
+    else:
+        assert "tau_longterm" in result.report.defaulted_fields
+
+
+@pytest.mark.parametrize("temperature", [None, 999999.0])
+@pytest.mark.parametrize("tau", [None, 999999.0, 123.0])
+def test_readstart_missing_longterm_temperature_takes_priority(tmp_path, temperature, tau):
+    restart = tmp_path / "temperature.nc"
+    _minimal_restart(restart)
+    with Dataset(restart, "r+") as dataset:
+        if temperature is not None:
+            dataset.createVariable("t2m_longterm", "f8", ("time", "y", "x"))[:] = temperature
+        if tau is not None:
+            dataset.createVariable("tau_longterm", "f8", ("time",))[:] = tau
+    result = read_stomate_readstart_states_from_template(
+        restart, t2m=np.array([281.5]), nvm=2, nslm=2,
+        ndeep=3, nvert=6, ns=4, months_num=3, nbpools=3,
+        tau_longterm_max=42.0,
+    )
+    assert result.season_state.tau_longterm == 2.0
+    np.testing.assert_array_equal(result.season_state.t2m_longterm, [281.5])
+    assert "tau_longterm" in result.report.defaulted_fields
+
+
 def test_readstart_empty_template_uses_exact_existing_contract_defaults(tmp_path: Path) -> None:
     restart = tmp_path / "empty.nc"
     _minimal_restart(restart)

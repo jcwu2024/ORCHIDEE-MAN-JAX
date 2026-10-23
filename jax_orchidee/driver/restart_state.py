@@ -147,6 +147,15 @@ def reference_case_first_step_restart_state(
         months_num = int(dataset.variables["fwet_series"].shape[1])
         nbpools = int(dataset.variables["MatrixV"].shape[1])
         nsnow = int(dataset.variables["O2_snow"].shape[2])
+    # Reuse the same configured season scales as the daily coupling. This
+    # local import avoids making the restart-state module depend on coupling
+    # initialization order. stomate_data.f90:700 converts the coefficient to
+    # days; stomate_io.f90:620-637 uses that cap for missing/sentinel tau.
+    from jax_orchidee.coupled import paper_case_season_time_scales
+
+    season_scales = paper_case_season_time_scales(
+        config_path, used_run_def=run_def_path
+    )
     readstart = read_stomate_readstart_states_from_template(
         stomate_input,
         t2m=stomate_daily.t2m_daily,
@@ -159,6 +168,7 @@ def reference_case_first_step_restart_state(
         ncarb=stomate.carbon.shape[1],
         nlitt=stomate.litter.shape[1],
         nbpools=nbpools,
+        tau_longterm_max=season_scales.tau_longterm_max,
         source_pft_layout=stomate_source_pft_layout,
         target_pft_layout=target_pft_layout,
     )
