@@ -1,0 +1,37 @@
+2026-10-24T00:45:19+0800
+JobId=16060441 JobName=T7-shared-graph
+   UserId=liwei(10341) GroupId=users(10000) MCS_label=N/A
+   Priority=1 Nice=0 Account=users QOS=defaultqos
+   JobState=PENDING Reason=Priority Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:00 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-10-24T00:45:07 EligibleTime=2026-10-24T00:45:07
+   AccrueTime=2026-10-24T00:45:07
+   StartTime=Unknown EndTime=Unknown Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-24T00:45:17 Scheduler=Main
+   Partition=gnall AllocNode:Sid=ibc13b02n04:18263
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=
+   NumNodes=1-1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,mem=312.50G,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=(null)
+   WorkDir=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/T7-current-model-shared-graph-20261023
+   StdErr=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/slurm-16060441.stderr.txt
+   StdIn=/dev/null
+   StdOut=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/slurm-16060441.stdout.txt
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+             JOBID     STATE       TIME TIME_LIMIT NODELIST(REASON)
+          16060441   PENDING       0:00    1:30:00 (Priority)
+total 17
+-rw-r--r-- 1 liwei users 7707 Oct 24 00:44 approval-cpu-validation.json
+-rw-r--r-- 1 liwei users 7369 Oct 24 00:44 approval.v2.json
+-rw-r--r-- 1 liwei users 3082 Oct 24 00:45 submission-intent.json
+-rw-r--r-- 1 liwei users 3163 Oct 24 00:45 submission-receipt.json
