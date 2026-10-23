@@ -1,6 +1,11 @@
 # 共享物理核心与研究分支核查
 
-核查日期：2026-10-11。当前结论：共同物理模型只需维护一套；研究中的共享代码
+最新修复登记：2026-10-23。C4（restart tau天数回退与配置传递）已在main独立提交为
+`4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`，供日尺度和全球效率分支后续核对同步。
+本次未检查或修改两个研究工作树；其C4同步状态均为**待维护线程核对**，不代表已同步。
+C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研究分支的最新状态。
+
+初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
 初始核查完成分类、证据复核与轻量测试。C1、C2、C3 已分别以独立提交
 `db4dd8f`、`e317fa8`、`2a3e303` 接入主分支并通过针对性回归。日尺度已有
@@ -39,6 +44,7 @@
 | C1 | DIFFUCO PFT 掩码改为缓存不可变 NumPy 数组 | 通用执行正确性修复 | main `db4dd8f`；日尺度 `120c637` 已同步且 14 项通过；全球已有同等实现 |
 | C2 | NPP 维持呼吸份额使用已有稳定比值原语 | 通用物理核 AD 修复 | main `e317fa8`，12 项通过；保留极小分母导数策略；日尺度已有，全球待同步 |
 | C3 | 叶龄周转份额消去共同叶质量因子 | 通用物理核数值修复 | main `2a3e303`，20 项通过；保留原测试、适用范围和源身份；日尺度已有，全球待同步 |
+| C4 | restart tau回退复用天数上限，并传递当前季节配置 | 通用状态读取正确性修复 | main `4b92d3d`，31项相关测试及1项默认入口补查通过；日尺度/全球均待核对同步（2026-10-23） |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
@@ -124,6 +130,39 @@ CUDA 目标坐标 VJP 对照通过原容差。全参数及前向回归通过，�
 [接入证据](../../outputs/reviews/shared-core-20261011/carbon-integration/integration-evidence.md)
 和[机器记录](../../outputs/reviews/shared-core-20261011/carbon-integration/integration-receipt.json)。
 本次复用上述已接受的有界 CPU / CUDA 证据，没有重跑历史 GPU 或完整模型任务。
+
+### C4：restart tau回退的单位与配置传递（2026-10-23）
+
+独立修复提交：`4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`。只包含三份生产文件
+`jax_orchidee/stomate/restart_io.py`、`jax_orchidee/driver/restart_state.py`、
+`jax_orchidee/coupled.py`（相关docstring）及两份直接回归
+`tests/unit/test_stomate_restart_io.py`、`tests/parity/test_driver_1961_restart.py`。
+审查报告另行提交，便于研究分支单独同步该修复。
+
+触发条件是restart中长期温度有效，但`tau_longterm`为未初始化sentinel；partial helper
+也允许tau字段缺失，而完整生产入口仍会先拒绝缺字段。原helper把系数3当成3天；
+Fortran `stomate_data.f90`697–700和`stomate_io.f90`620–637要求系数乘年天数。
+现在helper复用`SeasonTimeScales`的天数默认值（本配置1095天），生产reader传入
+已有配置解析器给出的上限。显式天数覆盖保持原单位，自定义系数2.5对应912.5天；
+有效tau原样保留，长期温度缺失/all-sentinel时仍按源优先初始化tau=2。
+
+ORCJAX一次相关检查31/31通过，包括真实三文件生产读取/首次season选择；主控针对
+新增配置解析依赖补跑原有无`run_def_path`入口测试，1项通过。验证仅涉及状态读取，
+没有重跑模型日/年或服务器任务。命令及证据见
+[Stage15入口](../../outputs/reviews/main-physics-20261023/restart-tau-fix/README.md)、
+[31项检查](../../outputs/reviews/main-physics-20261023/restart-tau-fix/checks/attempt-01.json)及
+[默认入口补查](../../outputs/reviews/main-physics-20261023/restart-tau-fix/checks/primary-default-entry.json)。
+
+所核定的319/1961第三阶段输入本来含有效tau=1095，显式旧上限3/新上限1095读取
+五组状态及report精确相同；因此不触发此缺陷，原年度NPP失败仍未关闭。
+其他触发回退的输入可能改变后续模型结果；不得把旧Teacher、prepared数据或实验
+producer改标为修复后版本，也不由这次读取检查宣称全部历史结果不变。
+
+日尺度与全球效率维护线程后续可核对并使用`git cherry-pick -x 4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`。
+同步应同时保留helper默认值、生产配置传参和相关回归，按各分支实际接口解决冲突，
+不整体覆盖共享文件或替换正在运行的checkout。核查各自有效配置和输入是否触发回退，
+通过相关状态读取回归后，将本节同步状态更新为各分支实际提交与验证结果。
+本次只登记修复，未向其他聊天发送消息或自动合并研究分支。
 
 ### I1：四行改动包含回调接口变化
 
