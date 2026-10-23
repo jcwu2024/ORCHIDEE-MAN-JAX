@@ -1,6 +1,6 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-16。**本轮没有发现已确认的 main 生产物理实现 bug；
+核查日期：2026-10-18。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -46,9 +46,14 @@ offset6→7、7→8的`mc/mcl`均精确连续，JAX前一日末与下一日初�
 offset7第6层积分液水差主要来自相邻第5节点；选定观测的`mc=mcl`且冻结profile为0。
 该结果约束这些边界上的净状态丢失及仅液水/冰水解释，尚未定位更早水分历史差异的起点。
 本阶段新增模型、核/Oracle调用、编译、SSH调查和分配均0，余额仍为2599秒。
+第十四阶段完成日末状态、三文件restart和内存跨年的计时、日累计及季节记忆有界审查。
+正常完整restart未发现所选状态丢失；确认tau读取helper的条件性默认值不符：
+有效长期温度下，未初始化tau回退3天而非配置的1095天。缺字段先被严格reader拒绝，
+sentinel字段则可进入该回退；正常writer产生的有效tau不受此回退影响。未修改生产源码，
+未执行新模型或第十三阶段下一捕获；该条件问题不作为319年度NPP偏差的原因。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
-仍未全部核定，尚未确认源级错误。**
+仍未全部核定，尚未确认该年度差异的源级原因。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
@@ -118,6 +123,10 @@ offset7第6层积分液水差主要来自相邻第5节点；选定观测的`mc=m
   cwd、分支及实际module导入路径确认。只读第十二阶段保存值和本地成对源码，所有
   新工件位于[Stage13目录](../../outputs/reviews/main-physics-20261016/319-mcl-upstream/README.md)，
   仅本页允许版本化修改；不新增积分、生产核重放、构建、SSH调查或分配。
+- 第十四阶段从第十三阶段已验收并推送的`847a5f35797613e9b6778810566187c7e4ccb9f7`
+  的干净main开始；cwd/分支/实际导入路径再次确认。新工件限于
+  [Stage14目录](../../outputs/reviews/main-physics-20261018/restart-year-state/README.md)，
+  仅本页允许版本化修改；旧Stage12/13只读，不暂存、提交、推送或跨聊天发消息。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -1402,6 +1411,58 @@ offset7的entry投影差`0.002415638674865858`，加两侧不同输入更新量�
 若前一步已有差，年度起点仍未确定。该合同不要求再观察已闭合的offset6→7/7→8
 carry，也不把移动到更早一步称为找到起源；本阶段未实现观测器或执行该捕获。
 
+## 第十四阶段：日末、三文件restart与跨年记忆
+
+本阶段从`847a5f35797613e9b6778810566187c7e4ccb9f7`的干净main开始，
+仅审查固定paper PFT14路径的三组状态；完整字段、条件、写读/首消费者和来源见
+[计时与日累计表](../../outputs/reviews/main-physics-20261018/restart-year-state/temporal/findings.md)及
+[17字段季节记忆表](../../outputs/reviews/main-physics-20261018/restart-year-state/seasonal/README.md)。
+既有181字段lifecycle闭合、`known_global_gaps: []`及schema合同继续保留；
+本阶段没有重新验收全部181字段，也不把缺少旧执行SHA解释为未实现过程。
+
+| 选定状态组 | 成对源码与写读/首消费者结论 | 条件和证据边界 |
+| --- | --- | --- |
+| `dt_days`、STOMATE `date`、`do_slow`、`EndOfYear`、driver步号 | Fortran `slowproc`586–614/653–663按秒钟日界设置事件并推进SAVE date；`stomate_io`501–506/2187–2195读写date。JAX日fold完成后写packet；新年driver rebase为−1，再从0执行，STOMATE date继续保留。EndOfYear是实际消费者事件，不由文件年份标签推定。 | 当前三份本地materialized配置均为86400秒STOMATE步，paper为365日/年、48步/日；在此配置下核对事件顺序。旧`Job0_bio`11/40从仓库外RUNDEF复制运行配置，未读取该外部文件，不能用tracked模板缺省证明旧实际步长或peat开关。 |
+| 13项序列化日累计量及3项运行时日累计量 | Fortran先使用完成日均值/极值，再于`stomate`4943–5026清零，随后writer保存。JAX显式`daily_accumulators`也是reset后状态；`humrel_daily`的NetCDF别名为`moiavail_daily`，`gpp_daily`重复副本必须一致；温度极值重设为±large_value。 | `snowfall_daily/snowmass_daily/tmc_topgrass_daily`不写此restart合同，但必须通过精确零验证，不能据缺变量称为丢失。当前本地PEAT_OCCUR=false，wet/liqwt累积分支inactive；其他配置为conditional。crop/permafrost附加日字段在此选定合同外，不因此声称相应物理过程inactive。 |
+| 17项季节/年度及logical状态 | 长期/月/周温度和tau正常保留；firstcall仅在源条件满足时初始化。年度GDD/降水先thisyear→lastyear再清零；Tseason临时和春季时钟按源EOY规则重算/清零。begin_leaves/生长时钟先由season使用，再由phenology更新；senescence仍供allocation读取。bool按≥0.5读回。 | tau单位为天，配置上限3×365=1095；当前PFT14为NATURAL、MTC2/pheno1、onset模型none。非自然GDD与若干春季/落叶分支对活动PFT14 inactive，其他表示槽保留原mask。分支分类来自源和当前配置，不冒充本轮执行了各分支。 |
+
+### 条件性tau默认值与文档反证
+
+`restart_io.py::read_stomate_readstart_states_from_template`794的
+`tau_longterm_max=3.0`默认值没有换算为配置的1095天；Fortran
+`stomate_io.f90`615–637在长期温度有效且tau缺失/为val_exp时使用配置上限。
+一次有明确缺项依据的
+[微型状态检查](../../outputs/reviews/main-physics-20261018/restart-year-state/seasonal/tau-partial-state-check.json)
+直接调用实际reader：长期温度279K时，missing/sentinel tau默认均为3，显式1095时均为1095；
+已有tau=123时两者均保留123。该检查只构造1land/2PFT的NumPy/NetCDF状态，未积分模型。
+
+缺字段与sentinel须分开：生产入口`restart_state.py`140–164先执行严格season reader，
+因此缺tau在调用helper前失败；严格reader不拒绝存在的999999 sentinel，后续helper可走3天回退。
+`restart_state.py`203返回该helper状态，`orchestration.py`1192/1522–1525选择它供restart消费者使用。
+这是helper默认值的同输入反例及条件性生产读路由，不是完整sentinel三文件回放；
+正常full writer写出的有效tau绕过该回退，既有正常完整restart证据不被此结果撤销。
+没有修复生产代码，也没有证据将此条件归因319 cold-start年度NPP失败。
+
+另有文档疑点：`coupled.py`2226–2228称tau未在reader中；实际dataclass、映射、reader/writer
+及Fortran均读写tau。该注释已过时，不能当作缺失季节记忆；本阶段仅记录，未修改生产文件。
+
+### 既有证据到当前源码的桥
+
+[版本与配置桥](../../outputs/reviews/main-physics-20261018/restart-year-state/evidence/README.md)
+核对实际producer脚本/输出合同、23个选定函数AST、11项别名/bool/时间尺度常量及四个Git快照。
+memory/firstcall、尺度adapter、season packet、日末与新年入口从`7333b46`到当前一致；
+annual完整函数从`deba027`一致，较早差异仅涉及herbivory安全分母，所选GDD/降水copy/reset未变；
+readstart/fullwriter及Stage5 run与`7eb41be`一致。该桥不代表所有传递依赖相同。
+当前YAML与`7eb41be`一致，tracked run.def自初始快照未变；三份receipt命名的本地
+`used_run.def`当前字节/配置另行绑定，不能倒推旧运行当时字节或外部RUNDEF。
+
+保留Stage5的19项通过、13 driver/93 SECHIBA/174 STOMATE精确roundtrip及1962 split/memory
+状态/输出相同；复用001/069/319矩阵的年度末态、直接跨年、三文件split及离散/模式/schema证据。
+181是lifecycle字段数，不是NetCDF变量数。旧receipt未内嵌执行SHA/完整命令/config digest，
+compiled producer当前另有block参数而旧receipt未记block；恢复的命令形式不是历史命令证明。
+这些具体限制保留，既有通过结果不重跑、不重标为当前执行，也不扩展为Fortran全年科学通过。
+原319年度NPP失败仍为`0.0008192662350707258 > 0.0003951849734783173`。
+
 ## 已确认限制与优先检查清单
 
 完整 669 点验收未完成。保存 certificate 的 `equivalent=false` 同时引用旧
@@ -1421,7 +1482,8 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    JAX producer SHA。入口为本轮 inventory 的 production_change_history、
    `scripts/dev/audit_pft14_equivalence_certificate.py::build_certificate`、
    `deba027` / PFT identity 与 restart 提交 / `5910ba9` 以及已接受 C1–C3。
-   本轮以 HYDROL 示例核对原 Fortran身份、当前函数 AST 和具体 guards。
+   本轮以 HYDROL 示例核对原 Fortran身份、当前函数 AST 和具体 guards；第十四阶段进一步
+   完成选定restart/season字段的producer、23函数/11常量及当前配置桥，见上述版本桥。
    最小后续办法是关联命名原执行记录与 Git 源片段，对有科学影响的差异选择既有
    小型 Oracle/回归；相同代码复用证据。尚未核定这些档案的完整当前版本桥，
    这不撤销原通过结果，也不要求首轮穷尽 producer 历史或重跑长序列。
@@ -1463,20 +1525,23 @@ HYDROL peat hydraulic coefficient 条目虽然命名含 conditional，但实际 
    第十三阶段118项保存profile核对进一步闭合所选两次相邻`mc/mcl`桥及JAX日界桥；
    offset7第6层积分差主要来自节点5，选定点的总水和液水相等、冻结profile为0。
    当前差异已进入carried总水历史；未取得完整同输入土壤元组，尚不能确定更早起点。
-   下一唯一对象为最早已保存步附近的前一步恢复总水→完整主更新元组/输出，
-   第十三阶段已准备字段/相位合同，实际捕获和同输入测试均未执行。
+   第十三阶段为最早已保存步附近的前一步恢复总水→完整主更新元组/输出准备了
+   字段/相位合同，实际捕获和同输入测试均未执行。第十四阶段按后续授权转查
+   restart/跨年状态合同，暂缓沿该水分起源继续追加运行。
    不从科学失败或最后半小时解释比例直接认定物理函数 bug。
    当前 HYDROL/年边界已核实的来源和反证继续有效，不从旧失败直接修改 root 或门槛。
 
-3. **当前三文件 restart 与年接续的完整状态合同（有通过证据，待版本关联）。**
+3. **当前三文件 restart 与年接续状态合同（选定计时/日累计/季节记忆已审查）。**
    入口为 `_paper_day_end_state_packet`、`paper_1961_driver_restart_year_start_day_result`、
    [restart lifecycle 合同](restart_state_lifecycle.yaml) 和 stage5 的 181 字段记录；
    Fortran writer 来源为 ledger 所记 `stomate_io.f90::writerestart` 2200–2948，
    HYDROL writer / 年初始化范围如上。已有 001/069/319 全年直接/split restart
    与离散/模式检查通过，nroot 删除疑点已排除。
-   最小办法对照 PFT identity/restart 接入后的 reader/writer/字段元数据，复用已有
-   年边界与序列化检查；只针对实际变更核对 axes、mask、时间归属和重算字段。
-   尚未独立重审全部 181 字段在 ee42eb1 的读写链，不能据此说状态缺失。
+   第十四阶段已核对上述三组状态的axes、mask、时间归属、重算和首次消费者，补上选定
+   reader/writer/函数及配置版本桥；正常完整链未发现所选状态丢失。tau helper缺失/sentinel
+   输入的3/1095天回退差异已用微型状态反例确认，源路由区分缺字段拒绝和sentinel可达；
+   正常writer有效tau不触发该条件。本阶段未修改生产代码，不能据此宣称319原因已解。
+   全部181字段仍复用原闭合结果，非本阶段逐项重审；旧运行SHA/外部RUNDEF关联限制保留。
 
 4. **七日 compiled 块跨点绑定与年输出（有通过证据，待当前入口/全点接入核对）。**
    入口为 `_paper_compiled_later_day_block_executable` 11185–11355、
@@ -1771,3 +1836,33 @@ stat签名是size/mtime变化检测，不是对185份文件新增内容哈希。
 但其前一步可能仍已带有差异，不能承诺解决年度起源；本次不自动执行新捕获。
 主控建议将该差异保留为未决项、暂缓追加运行，后续优先回到源码覆盖清单，选择尚未
 充分验证的过程开展有界检查；这是后续工作建议，尚未派发或执行。本次仅提交本页。
+
+第十四阶段从`847a5f35`继续，复用既有两位owner完成计时/日累计与季节记忆、
+历史producer/配置桥；父级读取实际表、源摘录、版本/配置工件和tau微型反例，
+核清外部RUNDEF及missing/sentinel条件，完成本页及Stage14入口收尾。
+一次ORCJAX/`-B`状态检查直接读1land/2PFT微型NetCDF，6次helper调用覆盖三种tau状态
+和默认/显式配置，未调用科学过程或积分模型；实际命令和结果见
+[状态检查执行回执](../../outputs/reviews/main-physics-20261018/restart-year-state/seasonal/execution-receipt.md)。
+其余为源、AST、JSON、Git及工件身份检查，没有重跑Stage4–13数值套件。
+
+图层Verify再次确认`2026-10-16T04:15:46Z`、12156nodes/72234edges；Python metadata_changed
+及排除的Fortran/outputs以精确当前源/工件补足，未重索引或声称全覆盖。
+[Stage14交付核验](../../outputs/reviews/main-physics-20261018/restart-year-state/verification/delivery.json)与
+[证据索引](../../outputs/reviews/main-physics-20261018/restart-year-state/verification/evidence-index.json)
+绑定最终报告、实际源/配置/AST/回执、固定HEAD/root/main、仅本页未暂存差异、空index及链接；
+保护旧Stage12/13的210份size/mtime签名与3份anchor内容哈希，stat不是新增bulk内容哈希。
+本阶段新增模型、科学核/Oracle重放、编译、SSH调查、服务器/调度分配、GPU/训练及付费工作均0；
+历史累计4601/7200秒、余额2599秒、pending0。生产源码、配置、精度、mask和容差未改，
+未暂存、提交、推送、跨聊天发消息或启用自动化；未执行Stage13下一捕获。
+正常完整restart选定状态链已有证据继续有效；tau条件性默认值差异尚未修复，
+原年度NPP科学失败及因果问题仍开放。本阶段交付本聊天手动审阅，不自动启动后续工作。
+
+主控第十四阶段验收（2026-10-23）：已审阅实际报告差异、计时/季节字段表、版本桥、
+微型NetCDF检查脚本与结果，并核对交付报告和关键工件身份。复用122项交付核验，
+没有重跑模型或原验证套件。当前源码确认长期温度有效时helper的缺失/sentinel回退
+消费`tau_longterm_max`，默认3.0与配置天数1095不符；生产入口先严格读取，再返回
+该helper状态，缺字段与sentinel的可达性须分别判断。接受这一条件性读取缺陷，
+不扩大为正常完整restart丢失状态或319年度NPP差异的原因。
+接续工作限定为修正tau读取默认值及必要的配置传递、补上相关轻量回归和过时注释，
+重点验证sentinel、有效值保留、长期温度缺失时的源初始化及显式上限；完整生产入口
+的sentinel状态检查仍需补齐。第十四阶段报告先独立提交，修复由原Sol另行交付验收。
