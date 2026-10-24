@@ -1,6 +1,6 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-23。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
+核查日期：2026-10-24。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -57,8 +57,12 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 原年度NPP失败继续保留，具体输入触发范围见第十五阶段。
 第十六阶段审查公共点/年入口、forcing/context、compiled消费者及输出归属；
 当前有界证据未形成新的绑定反例。一次替身接口捕获42个日界、869项断言通过，
-真实模型/编译/科学核调用均0。实际used-file全部静态key的跨点分母仍未验证，
-不据此宣布完整跨点缓存语义安全；有限收尾清单和停止条件见本页后部。
+真实模型/编译/科学核调用均0；当时实际used-file全部静态key的跨点分母尚未验证。
+第十七阶段已补齐原669点实际used/case/effective三方全键比较：并集3308键，
+仅四个域边界和五个既定校准键点间变化，均进入已审查的动态消费者路径；未确认
+新的静态复用缺陷。旧完整块/scan/年度/七点长期结果的成功producer与输入收据
+仍缺失，保留原通过范围而不升级为当前整链认证。基础输入/缓存/证据排查可在本批
+停止；完整块真实XLA数值、代表点科学失败及669点整体科学门槛仍分别保留。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
@@ -145,6 +149,11 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
   [Stage16目录](../../outputs/reviews/main-physics-20261023/compiled-input-binding/README.md)，
   仅本页允许版本化修改；只审查公共入口、输入绑定、compiled块和输出归属，
   旧Stage14/15工件只读，水分起源捕获继续暂缓。
+- 第十七阶段从第十六阶段主控验收后的`dd32b283188f650a3f7012fc1ee637a5be3a2487`
+  干净main继续；cwd/分支/实际ORCJAX导入路径已确认。连续完成实际输入分母、
+  旧证据适用范围及消费者/缓存对应三包；新工件限于
+  [Stage17入口](../../outputs/reviews/main-physics-20261024/input-and-evidence-closure/README.md)，
+  仅本页版本化修改，不修改生产源码、测试、配置、容差或其他工作树。
 - 实际导入：`E:/ORCHIDEE-MAN-JAX/jax_orchidee/__init__.py`；ORCJAX、
   Python 3.11.15、JAX 0.10.1。本轮 Python 均使用 `-B`。
 - 范围由 [README](../../README.md)、[交付合同](pft14_equivalence_delivery_contract.md)
@@ -2111,3 +2120,91 @@ GPU/训练/付费工作及环境重建均0；历史累计4601/7200秒、余额25
 适用范围及原319年度NPP失败继续保留。用户授权下一批连续检查，优先补前两项的
 本地证据，不自动重启319水分起源捕获。此次仅追加主控验收；owner冻结回执仍指向
 追加前的报告内容，保留原身份，不重新生成历史交付文件。
+
+## 第十七阶段：实际输入分母、历史证据与缓存消费者闭合
+
+本批连续完成A/B/C后统一交付。未确认新的生产缺陷，因此没有生产补丁或需要
+实施的修复回归；第十五阶段C4修复仍是既有成果。入口、机器汇总和实际检查命令见
+[Stage17 README](../../outputs/reviews/main-physics-20261024/input-and-evidence-closure/README.md)、
+[合并结果](../../outputs/reviews/main-physics-20261024/input-and-evidence-closure/integration/review-results.json)。
+
+**A：原669点输入分母已补齐。** 使用公共runner相同的inventory/resolver选点，
+669/669均选择raw布局的实际`z1/used_run.def`及case `run.def`；没有缺失、默认回退、
+重复key行或同布局I/S歧义。另有4点存在normalized/legacy并存目录；resolver仍按
+raw优先选定，备用case内容一致，备用布局没有used文件，未把它们隐去或重复计点。
+全程只读解析及内存字典materialization，没有生成669份运行文件或prepared context。
+
+| 比较对象 | 实际结果 |
+| --- | --- |
+| raw used / case / effective键数及并集 | 3250 / 202 / 3266；并集3308，缺失不作为默认值 |
+| 源间存在模式raw/case/effective | 42个0/1/0、16个0/1/1、3106个1/0/1、144个1/1/1；各模式在669点内一致 |
+| 点间变化 | 仅LIMIT_WEST/EAST/SOUTH/NORTH及PFT14 VCMAX25、ARJV、MAINT_RESP_SLOPE_C、ALLOC_MIN、RESIDENCE_TIME；没有新增静态或结构键 |
+| materializer语义 | 669点均`base_is_fortran_used_truth=True`，不重新套case值；25项JOB_PROTOCOL_OVERRIDES最后应用，逐键存在/变化计数另存 |
+| 年度/路径/输出 | 完整有效映射保留五个年度键，当前静态比较无点间变化；不能把完整映射误称为已剔除年度项的static projection |
+
+数值/逻辑只作保守等值分组，列表、路径、键大小写及缺失保持原区别。
+源间缺失或统一protocol变化不等于点间物理差异。全键表、点级解析路径/输入身份、
+并存布局及实际命令见
+[A输入审查](../../outputs/reviews/main-physics-20261024/input-and-evidence-closure/input/input_audit.md)。
+
+**C：九个真实变化均有动态消费者路径。** 四个LIMIT先选择当前点domain，再进入
+forcing和landpoint动态payload；四个STOMATE校准坐标进入完整参数override，
+ARJV进入DIFFUCO连续参数。其余prior-state、science-day、HYDROL数组、restart及
+season家族由当前runner供应。prepared-context键区分config/run.def/reference路径；
+外层块键只含config路径、块长、矿物边界、状态布局及capture/projector，命中后保留
+首个静态closure。内层SECHIBA键不能在外层命中后补救静态捕获，安全性不能只靠
+“内层有key”解释。本批实际完整有效映射未发现新变化的静态消费者，故没有必要
+构造额外替身探针或人工反例。详细九键表和三个缓存的命中条件见
+[C消费者审查](../../outputs/reviews/main-physics-20261024/input-and-evidence-closure/integration/consumer-review.md)。
+
+默认CLI每个进程一个点，不产生跨进程的内存缓存复用；同一点可跨年命中。
+公共Python cold-start/restart-year入口则支持同进程依次传入不同实际paper点：
+同config路径/块长/状态布局/矿物边界等条件可形成外层二次命中，当前点的九类值
+仍由runner传入。此为源码可达及数据路由结论，未执行真实XLA跨点复用；不外推到
+任意配置、同路径文件修改、所有Fortran分支或669点数值等价。
+
+**B：保留旧通过，明确当前适用边界。** 四组结果见
+[B证据边界](../../outputs/reviews/main-physics-20261024/input-and-evidence-closure/evidence/evidence-boundary.md)。
+14/365日完整块A/B、三点SECHIBA scan复用和年度/split restart、七点50年保存科学结果，
+均未在20份原件及有界相邻记录中找到成功运行的producer/argv/输入内容身份收据。
+目录时间、相似数值和最近提交不能补成生产身份；三点scan仍不当作完整块factory复用。
+source/owner/state总表保留原声明和certificate整体false，未重建或重审全部family。
+
+本批只读源码桥确认37/37 Fortran文件pin、43/43 Stage16保存的def-to-end范围相同；
+后者双方均不含decorator。首次42/43来自保存范围未含一个lru_cache decorator，
+按原范围规范化后匹配，未改变科学结果。另有C1–C4七个接受函数、31个相关常量/
+helper/注册范围、4组import绑定及两份既有config/template身份一致；复用原针对性
+回归，不重新执行。C2极小阈值按dtype计算；C4默认上限仍为3×365=1095天，
+只影响对应缺失/sentinel tau分支。Stage15已绑定319初始有效tau1095，不触发C4；
+不能据此否定所有旧结果，也不能绑定身份不明的旧长期轨迹。
+
+原319首年NPP失败`0.0008192662350707258 > 0.0003951849734783173`继续保留。
+独立科学门槛仍是当前身份的完整块/同进程跨点真实数值证明、代表点科学接受及
+669点整体接受；当前来源/接口检查不替代这些门槛或定位年度因果。水分起源调查
+继续暂停。本批新模型日/年、真实编译、科学核/Oracle、SSH/服务器/调度、GPU/
+训练/付费分配均0；历史预算4601/7200秒、余额2599秒、pending0不变。
+
+建议以本批结束基础排查，不继续追加同类清单或无目标的旧历史追索。后续最多三项：
+
+1. 主控审阅本页、A/B/C实际工件与合并结果后封存本批，约15–30分钟本地审阅；
+   本聊天交付后停止，不暂存、提交、推送或自动开启下一阶段。
+2. 若需要当前版本的compiled整链声明，另立有身份的最小完整块/跨点/restart数值
+   复核方案，约半天本地设计；旧成功收据缺失不以继续无限搜索替代。新执行资源及
+   用时须按实际编译/运行另定，本批不启动。
+3. 若恢复科学准确性调查，另立319上游保存状态最小缺项方案，约半天至一天本地
+   准备；可与第2项方案并行，但669点科学扩展须在代表点失败及当前数值准入得到
+   处理后再定。以上时间仅估本地准备，不承诺模型或付费运行时长。
+
+图证据为Verify、generation `2026-10-23T16:51:45Z`，12178nodes/72348edges；
+Python/docs的metadata_changed及排除的Fortran/outputs均以精确源/实际工件补足，
+未重索引或声称全覆盖。未重跑Stage16的869捕获、旧45-stat/6-anchor保护、旧测试
+或科学证据。Stage16冻结回执保留原报告身份，不随本页新编辑重标。合并检查只核对
+本批数据/路由一致性、实际工件和Git修改范围；仅本页未暂存修改，交付本聊天后停止。
+
+第十七阶段主控验收（2026-10-24）：已审阅A/B/C实际报告、输入比较脚本的解析/
+缺失/分组与物化逻辑、合并结果及本页差异；报告实文件与owner冻结SHA256一致，
+复用本批九项合并核验，不重新解析669份输入或重跑模型。接受实际669点配置分母
+及九个变化键的有界消费者结论；旧producer缺失、真实XLA数值和科学门槛保留。
+本批配置/历史证据收尾已完成，不继续重复同类身份搜索。用户要求更大的连续任务，
+下一批转入明确过程组的Fortran/JAX源码及接口审查；既有明确通过边界继续复用，
+原319失败和水分起源暂停状态不变。此次仅追加主控验收，owner原冻结身份不重标。
