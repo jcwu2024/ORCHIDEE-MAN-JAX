@@ -3168,6 +3168,7 @@ def thermosoil_explicit_step(
         zx1=zx1,
         ok_laidev=ok_laidev,
         veget_mask_2d=veget_mask_2d,
+        nslm=_as_float64(shumdiag_perma).shape[1],
     )
     energy_pcapa_en = getdiff.pcapa_en if pcapa_en_previous is None else pcapa_en_previous
     energy = thermosoil_energy_diagnostics(

@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "source": "Independent saved Fortran oracle; values extracted, not evaluated from JAX or duplicated formulas.",
+  "fortran_file": "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90",
+  "fortran_spans": {
+    "thermosoil_getdiff": [
+      2566,
+      2863
+    ],
+    "latent_cutoff": [
+      2742,
+      2743
+    ],
+    "natural_capacity": [
+      2760,
+      2762
+    ],
+    "thermosoil_cond_pft": [
+      2007,
+      2127
+    ],
+    "thermosoil_cond_nopft": [
+      2129,
+      2231
+    ]
+  },
+  "saved_oracle": "outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/fortran_outputs.csv",
+  "saved_csv_sha256": "66cdec176d9c431744b6d84cc3685b10392ea21e8c633cf697bbb82d6210634c",
+  "accepted_source_identities": [
+    {
+      "item": "source_file",
+      "current": "a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b",
+      "saved": "a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b",
+      "matches": true
+    },
+    {
+      "item": "thermosoil_cond_pft",
+      "lines": [
+        2007,
+        2127
+      ],
+      "current": "0f275cfaaa3552f52671ca35567f50eb6c7a0a98b8dbf234bdb0b7834ef68fe1",
+      "saved": "0f275cfaaa3552f52671ca35567f50eb6c7a0a98b8dbf234bdb0b7834ef68fe1",
+      "matches": true
+    },
+    {
+      "item": "thermosoil_getdiff",
+      "lines": [
+        2566,
+        2863
+      ],
+      "current": "7f7539579024d02cf545ff0dff192c1ebf60d1b7e5d0acb77db74a466ec2bcf9",
+      "saved": "7f7539579024d02cf545ff0dff192c1ebf60d1b7e5d0acb77db74a466ec2bcf9",
+      "matches": true
+    },
+    {
+      "item": "compile_unit_with_current_template_and_three_current_source_spans",
+      "current": "8f99e9c8a356cef544d09f02ae4ee09fe7eb1b1cc22b68efc644bed633ca0904",
+      "saved": "8f99e9c8a356cef544d09f02ae4ee09fe7eb1b1cc22b68efc644bed633ca0904",
+      "matches": true
+    }
+  ],
+  "template": "scripts/dev/oracle_lane_hydrol_thermosoil_getdiff.f90.template",
+  "template_point": 2,
+  "material_inputs": {
+    "nslm": 2,
+    "ngrnd": 4,
+    "nvm": 14,
+    "njsc": 4,
+    "pb_hpa": 900,
+    "temperature_K": 273.15,
+    "long_wetness": 0.6,
+    "mc": 0.3,
+    "refsoc": [
+      65000.0,
+      32500.0,
+      0.0,
+      0.0
+    ],
+    "dlt": [
+      0.1,
+      0.2,
+      0.5,
+      1.0
+    ],
+    "freeze": true,
+    "fr_dt": 2.0,
+    "veget_mask": "all true",
+    "original_crop_slot": 14
+  },
+  "original_natural_slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "mapping": "All 13 original natural slots have exactly identical selected outputs at each layer. Natural PFT14 uses the same source ELSE branch (ok_LAIdev false), material state and mask, role-mapped from original natural slot1, never original crop slot14.",
+  "fixture_differences": "Wrapper uses different zlt and mcl; getdiff natural capacity/supp do not read zlt with toporganic disabled or mcl. Constant mc input preserves mc_layt=.3 through humlev. Old long wetness=.6 is unchanged at273.15K; profile c=T,d=0 and zero snow fractions preserve T. Crop mass and snow properties are not compared. See test module docstring for scope.",
+  "expected": {
+    "pcapa": [
+      101696835.24,
+      101785328.99,
+      1721560.24,
+      1721560.24
+    ],
+    "pcappa_supp": [
+      100080000.0,
+      100080000.0,
+      0.0,
+      0.0
+    ]
+  },
+  "tolerance": {
+    "atol": 1e-14,
+    "rtol": 1e-12
+  },
+  "extracted_original_scalar_count": 104
+}
