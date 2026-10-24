@@ -63,6 +63,10 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 新的静态复用缺陷。旧完整块/scan/年度/七点长期结果的成功producer与输入收据
 仍缺失，保留原通过范围而不升级为当前整链认证。基础输入/缓存/证据排查可在本批
 停止；完整块真实XLA数值、代表点科学失败及669点整体科学门槛仍分别保留。
+第十八阶段完成DIFFUCO、ENERBIL、THERMOSOIL、allocation、phenology、turnover
+六包及实际生产跨过程联查，确认THERMOSOIL显式步漏传原水文层数的组件缺陷；
+只交付建议补丁，未修改生产。paper的11/32层形状条件存在，实际深层相变触发和
+年度影响未证，不能据此解释原319年度NPP失败。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
@@ -2208,3 +2212,64 @@ Python/docs的metadata_changed及排除的Fortran/outputs均以精确源/实际�
 本批配置/历史证据收尾已完成，不继续重复同类身份搜索。用户要求更大的连续任务，
 下一批转入明确过程组的Fortran/JAX源码及接口审查；既有明确通过边界继续复用，
 原319失败和水分起源暂停状态不变。此次仅追加主控验收，owner原冻结身份不重标。
+
+## 第十八阶段：六包核心过程与实际生产跨过程联查
+
+从干净 `main@1b32f66510cb00ac2d844cbf49120840bafbcb90` 继续，实际Git root、
+分支及ORCJAX模块导入确认。复用两位既有owner完成DIFFUCO、ENERBIL、THERMOSOIL
+及allocation、phenology、turnover六包；父级验看实际源比较表、有限账本、保存oracle、
+窄诊断及补丁，并联查compact/compiled生产时钟、单位和状态写回。六包结论和准确
+分母见[Stage18入口](../../outputs/reviews/main-physics-20261024/core-process-sweep/README.md)、
+[合并机器表](../../outputs/reviews/main-physics-20261024/core-process-sweep/integration/review-results.json)。
+surface为13个reachable IDs、22条比较行、30个owner/completion records及274个
+branch records/544个decision entries；carbon为3个reachable IDs，allocation、
+phenology入口、turnover分别29/28/61个ledger sites及56/42/111个decisions。
+不同账本重叠，不相加作Fortran分支总数或通过率；phenology替代onset helper另列。
+
+**确认组件缺陷S18-THERM-NSLM。** Fortran `thermosoil.f90:2742–2743` 要求原水文
+层数以下的潜热补充容量清零；JAX显式步在humlev扩到热力层数后调用getdiff时漏传
+原nslm，遂从扩展数组推断成ngrnd。冷初始化调用已正确传参。原nslm2/ngrnd4自然槽
+诊断保留104项/当前52失败/显式nslm对照0失败；活动自然PFT14按自然角色映射保存槽1
+补充8项/4失败/0失败，原oracle槽14是crop，未混同paper自然PFT14。七个direct边界
+符合源预期，当前Fortran文件、过程跨度及重建编译单元provenance为4/4匹配。
+[逐字段和边界说明](../../outputs/reviews/main-physics-20261024/core-process-sweep/surface/fixture-and-boundaries.md)
+明确可比较范围；[建议补丁](../../outputs/reviews/main-physics-20261024/core-process-sweep/surface/proposed-nslm-fix.patch)
+已通过普通应用检查，尚未应用或运行修复后的wrapper。
+
+触发须有ngrnd>nslm、冻结开启、深层活动mask、正有效长期湿度及相变温度；FR_DT=2
+时区间为含端点的272.15–274.15K。复用Stage17汇总并只构建一个代表配置的生产几何，
+得到nslm11/ngrnd32；只证明paper形状及开关条件，未测实际温湿轨迹、年度影响或669点
+触发。其余五包未确认新差错，不外推为全部PFT/selector/状态或当前整模型数值通过。
+
+[跨过程联查](../../outputs/reviews/main-physics-20261024/core-process-sweep/integration/cross-process-review.md)
+记录半小时新旧温度/热容量、同日GPP与维持呼吸不同累计、phenology→allocation→NPP→
+gap→turnover、日末reset和次日/块carry。旧热容量传递保证限后续loop及assembled-cold；
+raw-restart首步回退新容量的等价性未证，保留接口限制，未登记第二项数值缺陷。
+Fortran local SAVE ok_zimov未定义初始化的源合同及显式替代路径等限制也保留。
+未来修复/同步范围仅共享thermal显式wrapper和相关组件回归，研究分支另按固定工作树
+核对，不在本轮改动。既有C1–C4和旧冻结回执身份保留，不重新生成历史验收工件。
+
+图层Verify为generation `2026-10-24T03:49:00Z`、12179nodes/72349edges；
+metadata_changed的Python和排除的Fortran以当前精确源补足，不重索引或宣称全覆盖。
+新数值工作仅两个微型CPU thermal wrapper诊断及direct对照/七个边界，独立Fortran
+CSV复用；父级另执行一次纯几何helper。未重复原诊断、Stage17输入遍历或旧大套件。
+[命令记录](../../outputs/reviews/main-physics-20261024/core-process-sweep/surface/commands-and-results.md)
+保留初次补丁检查失败和修复后通过；
+[交付检查](../../outputs/reviews/main-physics-20261024/core-process-sweep/integration/delivery.json)
+核对JSON、实际链接、补丁及Git范围。无模型日/年、多点积分、整模型编译、
+Fortran重编译/运行、SSH/服务器/调度、GPU/训练/付费工作或环境重建。
+历史预算仍4601/7200秒、余额2599秒、pending0。原319 NPP失败
+`0.0008192662350707258 > 0.0003951849734783173`、旧producer限制、当前整链及669点
+科学门槛继续保留；水分起源调查暂停。唯一tracked修改为本页，未暂存、提交、推送、
+跨聊天发送或自动化。六包及联查工作完成，交付本聊天审阅后停止，不自动实施补丁或
+开始下一研究阶段；本段不是主控验收记录。
+
+第十八阶段主控验收（2026-10-24）：已审阅六包来源表、实际生产接口联查、逐字段
+fixture说明、保存Fortran来源回执、窄诊断脚本/结果及建议补丁，并直接核对Fortran
+2742–2743与当前getdiff/explicit-step参数传递。接受S18-THERM-NSLM为组件装配
+缺陷：原水文层数在湿度映射后丢失，深热层相变时的潜热补充容量未按源截断。
+自然PFT角色映射及比较字段限制成立；复用owner的数值和9项交付核验，未重复运行。
+其余包仅接受所声明的有界源/接口范围，不升级为全分支或整模型数值验收。
+paper11/32层及冻结开关只证明静态触发条件，实际温湿轨迹、319因果及年度影响仍未证。
+后续实施限该漏传参数及直接回归，独立登记共享修复和分支同步范围；暂不处理raw-restart
+旧容量接口未知项，不改变物理公式、精度或科学门槛。主控追加验收不重写旧诊断身份。
