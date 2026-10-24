@@ -1,8 +1,9 @@
 # 共享物理核心与研究分支核查
 
-最新修复登记：2026-10-23。C4（restart tau天数回退与配置传递）已在main独立提交为
+最新修复登记：2026-10-24。C5（THERMOSOIL原水文层数传递）已完成主控验收，独立修复提交为
+`a117cd5afc92ea55c9aeb528eec6f724de780111`。C4（restart tau天数回退与配置传递）已在main独立提交为
 `4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`，供日尺度和全球效率分支后续核对同步。
-本次未检查或修改两个研究工作树；其C4同步状态均为**待维护线程核对**，不代表已同步。
+本次未检查或修改两个研究工作树；其C4、C5同步状态均为**待维护线程核对**，不代表已同步。
 C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研究分支的最新状态。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
@@ -45,6 +46,7 @@ C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研
 | C2 | NPP 维持呼吸份额使用已有稳定比值原语 | 通用物理核 AD 修复 | main `e317fa8`，12 项通过；保留极小分母导数策略；日尺度已有，全球待同步 |
 | C3 | 叶龄周转份额消去共同叶质量因子 | 通用物理核数值修复 | main `2a3e303`，20 项通过；保留原测试、适用范围和源身份；日尺度已有，全球待同步 |
 | C4 | restart tau回退复用天数上限，并传递当前季节配置 | 通用状态读取正确性修复 | main `4b92d3d`，31项相关测试及1项默认入口补查通过；日尺度/全球均待核对同步（2026-10-23） |
+| C5 | THERMOSOIL显式步向getdiff转发原水文nslm | 通用物理装配正确性修复 | main `a117cd5`，新wrapper回归9项、既有窄检查2项通过，主控已验收；日尺度/全球均待维护线程核对（2026-10-24） |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
@@ -163,6 +165,55 @@ producer改标为修复后版本，也不由这次读取检查宣称全部历史
 不整体覆盖共享文件或替换正在运行的checkout。核查各自有效配置和输入是否触发回退，
 通过相关状态读取回归后，将本节同步状态更新为各分支实际提交与验证结果。
 本次只登记修复，未向其他聊天发送消息或自动合并研究分支。
+
+### C5：THERMOSOIL原水文层数与深层潜热容量截断（2026-10-24）
+
+状态：**最小实现、本地回归及主控验收完成；独立修复提交为
+`a117cd5afc92ea55c9aeb528eec6f724de780111`**。本轮基线为
+`04441e7d70f8e396757d79aa6dd363b4fc4eb214`，不是修复提交。Stage18已验收
+S18-THERM-NSLM的源码原因及独立Fortran保存值，详见
+[Stage18入口](../../outputs/reviews/main-physics-20261024/core-process-sweep/README.md)。
+
+Fortran `thermosoil.f90::thermosoil_getdiff` 2742–2743要求 `jg>nslm` 的
+`pcappa_supp` 清零。JAX `thermosoil_explicit_step` 在humlev已扩到ngrnd后未传
+原水文nslm，direct helper默认推断遂使用扩展层数。最小修复只在该调用转发
+`nslm=_as_float64(shumdiag_perma).shape[1]`；direct公式、默认值、精度、阈值和
+已经正确传参的cold初始化调用均保持原语义。回归必须经过实际wrapper，不能将
+Stage18的显式nslm direct comparator通过当作修复后wrapper通过。
+
+生产改动仅 `jax_orchidee/sechiba/thermosoil.py:3171` 一行。新增独立测试
+`tests/unit/test_thermosoil_nslm.py` 及小fixture
+`tests/unit/fixtures/thermosoil_nslm_fortran.json` 已随独立修复提交；运行只读取该fixture，
+不依赖ignored outputs或其诊断脚本。fixture保存4层pcapa/supp的8个独立Fortran值，
+由原104值确认自然槽1–13逐层相同后压缩；自然PFT14明确按源自然分支角色映射槽1，
+原oracle的crop槽14不作自然PFT14参考。源文件、过程跨度、编译单元及CSV身份均留存。
+
+同一新回归在旧wrapper实测2项失败：自然槽1–13为52/104不符，自然PFT14为4/8，
+浅层先行断言通过。只补传参数后新模块9项通过，涵盖相同独立比较、两个含端点相变
+边界、暖/冷区间外、长期湿度0、等水热层数及一次真实wrapper容量投影JIT。既有
+direct getdiff与wrapper composition窄检查2项通过；JIT只验证所选容量投影和traced
+原湿度形状，不升级为生产模块全部输出或完整块编译等价。原容差1e-14/1e-12保留。
+
+三次检查均在ORCJAX、Python -B、禁用pytest cacheprovider及系统TEMP下运行；TEMP
+均已清理。cacheprovider禁用后的既有cache_dir配置warning原样保留，没有据此修改
+项目配置或重跑。没有新的Fortran编译、模型日/年、服务器或研究执行。实际命令、
+旧失败/新通过日志及身份见
+[Stage19入口](../../outputs/reviews/main-physics-20261024/thermosoil-nslm-fix/README.md)、
+[实现与验证回执](../../outputs/reviews/main-physics-20261024/thermosoil-nslm-fix/implementation-and-validation.json)。
+
+日尺度和全球效率分支的潜在同步范围是这一共享thermal wrapper及其独立组件回归/
+小fixture。各维护线程可据上述独立修复提交，按实际差异核对或同步准确
+提交，保留各自执行优化和训练接口，检查是否真实经过该wrapper或独立thermal副本；
+不得整体覆盖共享文件或原地替换正在运行的checkout。本轮不操作两工作树或向其聊天
+发消息，不将旧Teacher/prepared数据改标为修复后生成。
+
+paper的nslm11/ngrnd32及冻结开启只证明静态层数条件；深层自然活动mask、正长期
+湿度及含端点相变区间是否在实际轨迹同时出现、年度影响和319 NPP因果均未证。
+原319失败及原阈值保留。raw-restart首步旧热容量回退仍是未证接口限制，不并入C5。
+
+主控验收已核对实际新测试/fixture、执行器、旧失败和新通过日志、三个当前受测文件
+身份及一行生产差异，复用执行方9+2检查，未重跑数值。原交付回执的待验收状态保留
+其交付时点身份；本节和主审查报告记录最终验收及修复SHA。
 
 ### I1：四行改动包含回调接口变化
 

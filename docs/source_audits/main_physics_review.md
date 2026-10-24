@@ -67,6 +67,8 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 六包及实际生产跨过程联查，确认THERMOSOIL显式步漏传原水文层数的组件缺陷；
 只交付建议补丁，未修改生产。paper的11/32层形状条件存在，实际深层相变触发和
 年度影响未证，不能据此解释原319年度NPP失败。
+第十九阶段已按验收结论只补传原nslm，新增独立wrapper回归先复现旧失败，修复后
+9项新回归及2项既有窄检查通过，主控验收完成，独立修复提交为 `a117cd5`，登记共享修复C5。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
@@ -2273,3 +2275,62 @@ fixture说明、保存Fortran来源回执、窄诊断脚本/结果及建议补�
 paper11/32层及冻结开关只证明静态触发条件，实际温湿轨迹、319因果及年度影响仍未证。
 后续实施限该漏传参数及直接回归，独立登记共享修复和分支同步范围；暂不处理raw-restart
 旧容量接口未知项，不改变物理公式、精度或科学门槛。主控追加验收不重写旧诊断身份。
+
+## 第十九阶段：THERMOSOIL原水文层数最小修复与C5登记
+
+从干净main `04441e7d70f8e396757d79aa6dd363b4fc4eb214` 继续；该SHA是已验收
+Stage18报告基线，不是修复提交。**本轮实现、本地验证和主控验收完成；独立修复提交为
+`a117cd5afc92ea55c9aeb528eec6f724de780111`**。生产仅在 `thermosoil_explicit_step` 的getdiff调用补
+`nslm=_as_float64(shumdiag_perma).shape[1]`（`thermosoil.py:3171`），使湿度扩层后
+仍按原水文层数执行Fortran2742–2743的深层潜热容量截断；direct公式、默认值、
+精度/阈值、正确的cold初始化及无关API未改。见
+[Stage19入口](../../outputs/reviews/main-physics-20261024/thermosoil-nslm-fix/README.md)、
+[共享修复C5](shared_core_branch_review.md#c5thermosoil原水文层数与深层潜热容量截断2026-10-24)。
+
+新增 `tests/unit/test_thermosoil_nslm.py` 和小型JSON fixture，运行不读取ignored
+outputs或导入其诊断脚本。保存的独立Fortran参考值、源文件/过程跨度/编译单元及
+CSV身份随fixture保留；原自然槽1–13逐层相同的104值压缩为8值，角色映射的自然
+PFT14不冒充原oracle的crop槽14。比较仅限pcapa/pcappa_supp，原容差仍
+atol1e-14/rtol1e-12，没有用JAX公式生成预期。
+
+同一新回归在旧wrapper真实失败：自然槽1–13有52/104不符，自然PFT14角色映射
+4/8不符，浅层先行断言通过；补传参数后新模块9项全部通过，其中包含两个原比较、
+两个含端点相变温度、暖/冷区间外、正mc但长期湿度0、等水热层数及一次wrapper
+容量投影JIT。另复用并执行既有direct getdiff及wrapper composition检查2项通过。
+这是修复后真实wrapper证据，区别于Stage18的显式nslm direct comparator。
+当前wrapper未暴露关闭冻结模式，未为测试扩展API或断言Fortran未定义的supp。
+
+父级验看实际新测试、fixture、旧失败断言、执行脚本及三份回执，复用已完成的9+2
+通过检查，没有重复数值运行。main图getdiff四个入站caller及wrapper三个入站入口
+已核对，模块入口的普通/JIT分支包装同一wrapper。JIT证据限所选容量投影，不宣称
+生产模块全输出、完整块或跨点XLA通过。图层由ready12180/72350、coverage generation
+`2026-10-24T10:29:39Z`开始；新增测试/fixture覆盖回执为
+`2026-10-24T10:41:54Z`，no_recorded_issue但metadata_changed，当前精确源/工件补足。
+Fortran排除的源真值及Stage18四项匹配provenance直接复用，不重新调查旧oracle。
+
+实际命令、exit、计时、身份和日志见
+[实现与验证](../../outputs/reviews/main-physics-20261024/thermosoil-nslm-fix/implementation-and-validation.md)、
+[机器回执](../../outputs/reviews/main-physics-20261024/thermosoil-nslm-fix/implementation-and-validation.json)。
+ORCJAX/Python -B、pytest禁用cacheprovider，三个系统TEMP均已清理；因此产生的
+既有cache_dir配置warning保留。最终范围/身份/链接检查见
+[交付核验](../../outputs/reviews/main-physics-20261024/thermosoil-nslm-fix/delivery.json)。
+Sol交付仅改一份生产文件、新增测试/fixture及两份审查文档，交付时未暂存、提交或推送。
+主控已将生产改动、测试及fixture单独提交为上述C5修复，审查文档另行提交，以便研究
+分支准确核对和同步。本轮不操作日尺度/全球工作树或向其聊天发送消息。
+
+paper11/32层且冻结开启仍只证明静态条件。实际深层活动mask、正长期湿度及相变
+温度是否同时出现、年度影响和319 NPP因果均未证。原319首年失败
+`0.0008192662350707258 > 0.0003951849734783173` 保留，水分起源调查继续暂停。
+raw-restart首步旧容量回退仍为未证接口限制，不顺带修复。无模型日/年、多点积分、
+整模型编译、Fortran重编译/运行、广泛测试、SSH/服务器/调度、GPU/训练/付费工作，
+历史预算4601/7200秒、余额2599秒、pending0不变。交付后停止，不自动开始后续研究。
+
+### 第十九阶段主控验收（2026-10-24）
+
+主控已检查实际生产差异、新回归全文、独立fixture、检查启动器、旧失败/新通过日志及
+三份执行回执；当前三个代码/fixture文件身份均与修复后受测文件一致。真实旧wrapper
+失败和同一测试修复后通过成立，9项新回归及2项既有检查证据足够支持本次参数转发修复，
+主控未重复数值运行。独立修复提交只包含这三个文件，C5登记准确SHA及两个研究分支
+待核对同步状态。图coverage generation `2026-10-24T10:41:54Z` 的相关路径均标注
+metadata_changed，验收依据当前实际差异/文件和既有成对源证据，不作完整图覆盖声明。
+接受范围仍限深层潜热容量截断的组件修复，不改变上文实际轨迹、年度影响和319因果限制。
