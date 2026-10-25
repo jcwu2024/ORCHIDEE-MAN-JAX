@@ -7585,7 +7585,12 @@ def hydrol_peat_water_table_diagnostics(
         _require_same_npts(mc, param_vp, param_kp, param_qp, param_fmax)
 
         max_layers = min(int(numlayers), nslm)
-        unfrozen_count = jnp.sum(temp_profile[:, :max_layers] >= zero_celsius, axis=1)
+        # hydrol_soil 7252-7257 stops at the first frozen node; warm nodes
+        # beneath it must not extend the surface-connected thawed prefix.
+        thawed_prefix = jnp.cumprod(
+            (temp_profile[:, :max_layers] >= zero_celsius).astype(jnp.int32), axis=1
+        )
+        unfrozen_count = jnp.sum(thawed_prefix, axis=1)
         active = unfrozen_count > 6
         unfrozen_depth = jnp.sum(jnp.where(jnp.arange(nslm)[None, :] < unfrozen_count[:, None], dh_mm[None, :], 0.0), axis=1)
         wtp_temp = jnp.zeros((npts, nstm), dtype=mc.dtype)
@@ -10096,7 +10101,10 @@ def hydrol_soil_infilt_explicit(
 
     tmci = hydrol_total_moisture_content(mc, dz_mm) if check_cwrr2 else None
     mc_out = mc
-    wat_inf_pot = jnp.maximum((sat - mc_out[:, 0]) * dz_mm[1] / two, zero)
+    # hydrol_soil_infilt 7491-7498 uses peat only for tile4/5 here;
+    # the deeper capacity/conductivity branch 7514-7540 also includes tile6.
+    top_sat = sat if peat_active and soil_tile_index in (4, 5) else mcs
+    wat_inf_pot = jnp.maximum((top_sat - mc_out[:, 0]) * dz_mm[1] / two, zero)
     wat_inf_first = jnp.minimum(wat_inf_pot, flux_infilt)
     mc_out = mc_out.at[:, 0].add(wat_inf_first * two / dz_mm[1])
 
@@ -10331,7 +10339,10 @@ def hydrol_soil_tile_explicit_step(
         dt_days=dt_days,
         free_drain_coef=free_drain_coef,
     )
-    mcl_before = hydrol_mc_to_mcl(infilt.mc, profil_froz, mcr)
+    # hydrol_soil 5901-5910 uses peat residual for liquid reconstruction on
+    # tile4/5/6; keep the original mineral mcr for later stage-specific masks.
+    liquid_mcr = PEAT_MCR if peat_active else mcr
+    mcl_before = hydrol_mc_to_mcl(infilt.mc, profil_froz, liquid_mcr)
     k_array = jnp.asarray(k_for_solve)
     if k_array.ndim == 1:
         k_bottom = k_array[None, -1]
@@ -10584,8 +10595,10 @@ def hydrol_soil_all_tiles_explicit_step(
             "mc": mc_state[:, :, tile_offset],
             "mcl": mcl_state[:, :, tile_offset],
             "profil_froz": profil_froz[:, :, tile_offset],
-            "mcr": mcr if not peat_active else jnp.full_like(mcr, PEAT_MCR),
-            "mcs": mcs if not peat_active else jnp.full_like(mcs, PEAT_MCS),
+            # Preserve mineral thresholds: source peat masks differ by stage
+            # (top/clipping/ends 4/5; deeper/coefficient/liquid stages 4/5/6).
+            "mcr": mcr,
+            "mcs": mcs,
             "dz_mm": dz_mm,
             "dt_days": dt_days,
             "free_drain_coef": free_drain_coef[:, tile_offset],
@@ -10639,7 +10652,7 @@ def hydrol_soil_all_tiles_explicit_step(
         final_mcl = hydrol_mc_to_mcl(
             result.solve.mc_final,
             profil_froz[:, :, tile_offset],
-            tile_kwargs["mcr"],
+            PEAT_MCR if peat_active else mcr,
         )
         mc_state = mc_state.at[:, :, tile_offset].set(result.solve.mc_final)
         mcl_state = mcl_state.at[:, :, tile_offset].set(final_mcl)
@@ -11730,6 +11743,7 @@ def hydrol_alt_residual_solve_step(
     resolv,
     mask_soiltile,
     k_bottom,
+    ok_freeze_cwrr=False,
     min_sechiba=1.0e-8,
 ):
     """Run HYDROL's alternate residual top-boundary solve slice.
@@ -11774,9 +11788,21 @@ def hydrol_alt_residual_solve_step(
         resolv=resolv_alt,
         initial_mcl=first.mcl,
     )
+    # Source 7044-7058 first reconstructs total moisture only when freezing
+    # is enabled (otherwise mc=mcl). The unconditional 7080-7092 assignment
+    # then reads that updated mc, rather than the original prognostic value.
+    first_mc = (
+        hydrol_mcl_to_mc_after_solve(
+            mcl_after=second.mcl,
+            mc_before=mc_before,
+            profil_froz=profil_froz,
+            mcr=mcr,
+        )
+        if ok_freeze_cwrr else second.mcl
+    )
     mc_after = hydrol_mcl_to_mc_after_solve(
         mcl_after=second.mcl,
-        mc_before=mc_before,
+        mc_before=first_mc,
         profil_froz=profil_froz,
         mcr=mcr,
     )
@@ -11997,6 +12023,7 @@ def hydrol_alt_residual_all_tiles_from_results(
             resolv=resolv[:, tile_offset],
             mask_soiltile=mask_soiltile[:, tile_offset],
             k_bottom=tile_k_bottom,
+            ok_freeze_cwrr=ok_freeze_cwrr,
             min_sechiba=min_sechiba,
         )
         saved_rhs.append(alt.saved.rhs)
@@ -12811,11 +12838,16 @@ def hydrol_soil_explicit_solve_step(
             rootsink=rootsink,
         )
     corrected = drainage_correction(dr_before_corr, check_tr_ns)
+    # hydrol_soil 6063-6075 uses peat residual on tile4/5/6. Subsequent
+    # mcs2 clipping (7985-7993) and residual end stages retain their own masks.
+    peat_active = bool(peat_hydro) and int(soil_tile_index) in tuple(int(tile) for tile in peat_tiles)
+    reconstruction_mcr = mcr_peat if peat_active else mcr
+    clipping_mcs = mcs_peat if peat_active and int(soil_tile_index) in (4, 5) else mcs
     mc_after = hydrol_mcl_to_mc_after_solve(
         mcl_after=solved.mcl,
         mc_before=mc_before,
         profil_froz=profil_froz,
-        mcr=mcr,
+        mcr=reconstruction_mcr,
     )
 
     over_mcs = None
@@ -12830,7 +12862,7 @@ def hydrol_soil_explicit_solve_step(
     if clip_over_mcs:
         if mcs is None:
             raise ValueError("mcs is required when clip_over_mcs=True")
-        over_mcs = hydrol_soil_clip_over_mcs2(mc=mc_after, mcs=mcs, dz_mm=dz_mm)
+        over_mcs = hydrol_soil_clip_over_mcs2(mc=mc_after, mcs=clipping_mcs, dz_mm=dz_mm)
         mc_final = over_mcs.mc
 
     if route_over_mcs:
@@ -12840,7 +12872,7 @@ def hydrol_soil_explicit_solve_step(
             raise ValueError("ru_ns is required when route_over_mcs=True")
         over_mcs_routing = hydrol_route_over_mcs2(
             mc=mc_after,
-            mcs=mcs,
+            mcs=clipping_mcs,
             dz_mm=dz_mm,
             ru_ns=ru_ns,
             dr_ns=corrected.dr_after,

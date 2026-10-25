@@ -170,7 +170,10 @@ def test_hydrol_explicit_solve_step_can_run_post_solve_routing_chain():
         smooth_under_mcr=True,
         zmaxh_m=2.0,
         peat_hydro=True,
-        soil_tile_index=4,
+        # Source tile6 clips at mineral mcs but water-table forcing uses peat
+        # mcs. This exercises both corrections with distinct source thresholds;
+        # tile4 would use peat mcs for both and would not trigger this clipping.
+        soil_tile_index=6,
         check_under_mcr=True,
     )
 
