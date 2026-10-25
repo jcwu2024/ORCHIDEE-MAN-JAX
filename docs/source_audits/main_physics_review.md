@@ -75,6 +75,11 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 年度影响仍未证。第二十一阶段已完成五项最小修复及49项相关检查，主控已验收：
 C6–C9提交`27ff14b`，C10独立提交`225cb95`，共享修复登记保留适用域和待同步状态。
 局部同输入闭合不能确定全年NPP因果。
+第二十二阶段已完成HYDROL、显式雪、CONDVEG及真实普通/compiled装配六包有界审查，
+汇总六项源/接口差异和三个条件候选，主控已验收其有界证据；本阶段生产、测试和配置未改。
+雪潜热常数333700与当前实现/旧harness的333600差异已由真实雪组件复现，其余发现
+分别受tile、冻结、TOPMODEL配置、非默认参数或状态选择条件限制；均不建立年度归因。
+完整main有限剩余矩阵与独立XLA/319/669科学门槛分列，详见第二十二阶段。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
@@ -2506,3 +2511,130 @@ C6–C9的九个代码/测试文件合为一个共享接口修复提交；C10四
 不在接受域；C9保留独立cutoff和既有显式接口。C10的源负库存局限继续单列，没有
 用非负截断改写Fortran行为。共享表已登记准确SHA，两个研究分支仍待其维护线程核对。
 本次接受组件/接口修复，不建立实际年度影响、319因果或历史数据重新生成的结论。
+
+## 第二十二阶段：HYDROL、显式雪、CONDVEG与真实状态联查
+
+Stage22执行方已完成六包、有具体疑点的轻量CPU核验、实际工件验看和整合，
+**主控已验收其有界源/接口差异，修复及回归另批实施**。从已接受Stage21后的干净main
+`1229de7b41711a5177d572feef5cc95f4cbc2a32`开始，cwd/Git root及ORCJAX实际导入
+仍为`E:/ORCHIDEE-MAN-JAX`。生产、tests、配置只读，唯一tracked修改为本页；
+新工件限于[Stage22入口](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/README.md)。
+执行方交付时未暂存、提交、推送或跨聊天发送；主控验收见本节末尾，以下发现尚非修复登记。
+
+| 包 | 实际来源/状态台账 | 有界范围 |
+| --- | --- | --- |
+| P1 CWRR | [27行](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/hydrol/P1-ledger.md) | 节点/边界、液水冰、系数/RHS/三对角、post-solve顺序、dummy及mask |
+| P2 水通道 | [29行](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/hydrol/P2-ledger.md) | 入渗、蒸散/根吸水/胁迫、径流排水、dt/面积/PFT/tile与配置条件 |
+| P3 雪结构 | [7边界](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/snow/p3-explicit-snow-structure.md) | snowfall、分层/再分配、粒径/压实、生灭及局部返回状态 |
+| P4 雪热/相变 | [9边界](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/snow/p4-heat-phase-flux.md) | 热库存、profile、融再冻、升华、maxmass、液热及HYDROL交接 |
+| P5 CONDVEG | [20行](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/condveg/condveg-review.md) | 雪覆盖/反照率/发射率/粗糙度、面积和PFT、配置/初始化接口 |
+| P6 生产/状态 | [20边界](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/integration/P6-ledger.md) | 实际普通/compiled body、当前雪到CONDVEG/THERMOSOIL、选定carry/init/finalize |
+
+这些行/边界是文档单元，不与数值字段、oracle cases或source arms相加成覆盖率。
+每包JSON保留源文件/过程/跨度、条件、读写状态、当前owner、证据及未核对范围；
+旧`.missing/.partial`后缀不作当前代码缺失结论。
+
+### 六项有界差异与实际可达性
+
+完整条件、独立小例、作用范围、建议最小修复与回归见
+[findings.json](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/findings.json)。
+跨包同一问题只计一次；本批不实施修复、不新分配C编号。
+
+| ID / 置信范围 | 源与当前差异 | 已得证据 / 限制 |
+| --- | --- | --- |
+| S22-SNOW-LF，高 | `constantes_var.f90:374–376`定义`2.8345e6−2.5008e6=333700 J/kg`；当前雪热/相变相关默认及旧独立harness均333600，真实snow-main无覆盖参数 | 实际HYDROL雪adapter中1kg/m²新雪热库存约−333600，源应−333700，差+100J/m²；10kg/layer eager/窄JIT差+1000J。moderate maxmass cap源1kg、当前1.00029976019kg。当前真实调用链使用该默认，但实际forcing触发量/年度影响未测 |
+| S22-TILE6-THRESHOLDS，源/实参高 | `hydrol.f90:7488–7564,7982–7993,7665–7769`的top/部分阈值只peat4/5，深层系数等用4/5/6；JAX将tile6阈值先统一换peat值 | 独立top fill .5mm对2mm，真实all_tiles seam将mineral mcs/mcr .6/.1换.9/.15。直接tile控制例后续clip抵消暂态差，未证最终runoff错误。当前paper HYDROL-local peat=False且PFT14 override4，不触发该组合 |
+| S22-FROZEN-DUMMY-ORDER，固定profile高 | `hydrol.f90:7046–7058,7078–7108`在冻结dummy中第二次重构读取已更新mc；当前helper只一次 | 固定冻结比例.5，源top .3972278481再到.3958417722，JAX停首值；dummy TMC27.990对27.985mm。非冻结控制一致，dummy随后还原；完整freeze refresh和实际温度轨迹未认证 |
+| S22-TOPMODEL-PREFIX，diagnostic API高 | `hydrol.f90:7245–7267,7308–7342`逐层止于首个冻结节点；JAX统计所有暖层 | 11层首/第4层冷、其余暖时，源连续暖层0/3≤6，fwet0；实际helper为.4875026035157896，全暖控制一致。selected TOPMODEL_NEW=False；paper普通/JIT wrapper未转发开关/四参数，true无diag时runtime entry明确停止，不能称已达paper偏差 |
+| S22-CONDVEG-Z0，实际wrapper高 | `constantes.f90:483–489`读Z0_BARE；动态bare-only源闭式为该值，当前main/wrapper未绑定此配置 | 实际eager wrapper传.01/.02均ok且有albedo，z0m均.010000000000000002；selected .01控制一致。非默认参数接口差异已证，任意配置/完整compiled/年度效果未证 |
+| S22-AE-STATE，源/状态路由高 | `hydrol.f90:5843`先ae+=subsink，9014 mask、9066乘bare fraction；当前diag8023读pre-surface split，driver2954又carry split，而finalize3102读diag | 实际surface 2+.2=2.2符合独立源；真实shared writer在split .20/diag .25 seam中，两表示均选.20。ordinary/compiled共用该writer；组合物理轨迹及年度未测。当步water2extract正确，grid总vevapnu另加subsink*vegtot，不称同一步总蒸发质量遗漏 |
+
+paper `PEAT_HYDRO=TRUE`不覆盖已接受的HYDROL-local SAVE=False判定；
+`orchestration.py:67–75,6317,6352,6382–6383`明确传local值，原paper job:141/162
+仍将PFT14设tile4。此处只界定可达性，不重开全SAVE。实际source顺序是
+DIFFUCO→ENERBIL→HYDROL→CONDVEG→THERMOSOIL，fusion仅非显式雪；
+compact:6406使用当前HYDROL雪，6444使用当前moisture/snow/CONDVEG。
+compiled nested transition:10404调用同compact并共享writer；10506–10522限定完整48步、
+JIT/forcing/cache/template/tables及not-localpeat/no-trace等条件。
+这是实际body的源级核对，没有新完整编译或compiled数值认证。
+
+### 候选、源行为与证据域
+
+三个候选单列：S22-FWET-CARRY在真实writer中观察新diag .8被旧.2覆盖，但创建器仅
+TOPMODEL_NEW、当前paper producer不准入，不能升级为已达生产错误；
+S22-DUMMY-REFRESH是源6883–6900在dummy前重算冻结profile与当前显式输入的组合缺口；
+S22-TOPMODEL-TIDE是源7281–7298按cell tile6条件向所有tile加潮汐水库与JAX只选tile6
+的source-only条件差异，尚无独立数值。这些与六项已复现/源状态路由差异分开。
+
+零雪雪温疑点已排除，见
+[完整序列补证](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/snow/zero-state-boundary.md)：
+source:222–227、JAX:4038–4042先把精确零深度雪温重置273.15，profile虽只在有雪时写
+温度，不能推出保留任意入口雪温。实际ENERBIL:1571–1577也使零深度temp_sol_add=0；
+单独API非零add与tiny容差域保持限制。该疑点只做必要静态补证，未重复数值。
+源tiny-depth gone先清depth再读mass、局部rain=0、部分清理不改所有字段等按原顺序
+保留，不另造守恒/物理修订。CONDVEG fixed-snow的fraction_veg、imposed部分临时量及
+bare roughheight有源未定义范围；selected配置不走对应支路，不能制造源数值oracle。
+
+保存雪oracle实际是10cases、17字段比较、39/39arms；旧YAML的3point/44 prose滞后。
+源procedure SHA匹配仍不能排除harness的333600依赖参数错误；原通过值保留其条件，
+不重标为实际源333700等价。旧maxmass跨层disposition以density≤750为硬界的证明不足：
+750仅是压实更新入口gate，当前source/JAX都能从749.999999更新到750以上且质量守恒。
+这只否定该硬界前提，未证paper跨层overflow已发生，需包含后续状态/restart的域证明。
+保存CONDVEG为3points、15比较行/69标量值；`mean_*`表示第二次mean-soil双波段调用，
+不是光谱平均。branch receipt仅六个具体IDs，owner的main6/6、static5/5另有分母；
+均不等于完整CONDVEG分支覆盖。
+
+### main有限剩余矩阵与交付
+
+[有限矩阵](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/remaining-main-matrix.md)
+给出12个范围条目及单列的三个数值/科学门槛，避免继续无限寻找旧证据或泛称main完成：
+
+| 范围 | 已完成/复用 | 明确剩余或不准入 |
+| --- | --- | --- |
+| 输入/上下文/669配置分母 | Stage16/17有界结论复用 | 旧完整块/长期成功producer缺项与真实XLA数值另列，不重搜/重跑 |
+| 能量/热/主要生长碳过程 | Stage18/19及C5；Stage20/21及C6–C10复用 | 不扩大到所有配置/梯度/年度因果 |
+| 本批HYDROL/雪/CONDVEG/真实装配 | 六包各声明的source/状态/小参考范围 | CWRR表构造、完整冻结dummy refresh/系数组合、TOPMODEL准入/潮汐/carry、非默认CONDVEG参数与独立producer bridges仍需限定审查 |
+| 可选检查/生命周期与证明域 | 已核对的mask、source quirks和配置gate | check/fatal callbacks、canopy未赋值/SAVE、完整active-layer/peat潮汐、雪harness参数/跨层不可达证明未全面闭合 |
+| 当前配置外或显式未支持 | localpeatFalse/TOPMODEL_NEWFalse及独立单点CWRR边界 | Choisnel/全河网/multi-nobio/部分init reject与源未定义分支分开记录，不默许支持 |
+| 独立数值与科学门槛 | 历史通过保留原适用域 | 当前完整XLA/restart准入、319失败/水分起源、669点/长期科学门槛，均不混入源码行数 |
+
+新数值仅owner的65条HYDROL组件记录、雪adapter/小helper与两处窄JIT、两次真实CONDVEG
+wrapper，以及父级shared writer两种表示各三场景。后者验证17个选定水/雪字段转发，
+不作17个独立科学oracle或完整scan通过。各包独立参考、实际脚本/收据均已验看，
+原owner数值未重复执行；9066实际赋值行号纠正仅重生成metadata。
+[命令与结果](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/commands-and-results.md)和
+[最终交付核验](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/delivery/verification-results.json)
+保留JSON/链接/Git范围/TEMP检查；metadata通过不代表科学通过。
+
+图工具启动时不可用、中途恢复，Verify project `E-ORCHIDEE-MAN-JAX`，generation
+`2026-10-25T06:02:38Z`、12323nodes/73746edges；恢复后再次确认ready并核对相关coverage。
+Python metadata_changed、Fortran excluded及nested scan漏边用当前确切源补足，
+不重索引、不宣称完整性。系统TEMP清理记录保留，无新Fortran、模型日/年、整模型编译、
+广泛suite/73oracle、SSH/服务器/调度、GPU/训练/付费、环境重建或研究工作树操作。
+
+原319年度NPP仍failed：`0.0008192662350707258 > 0.0003951849734783173`。
+C5–C10年度影响/归因未证；本批六项与该失败的因果关系也未证明。C10源负中层库存保留，
+C8 tiny跨步/negative fatal/nonfinite未闭合；两项Stage20 peat候选、完整SAVE/active-layer、
+raw-restart旧容量未知不扩大。water-origin investigation paused；旧Teacher/prepared身份
+不重标，C4–C10研究同步仍由各维护线程处理。历史服务器4601/7200秒、余额2599秒、
+pending0不变。
+
+### 主控验收与后续修复范围（2026-10-25）
+
+主控已检查六项发现的实际源码边界、独立小参考脚本与保存的数值、参数/状态转发记录，
+接受其所声明的局部不一致。复用owner已完成的检查，新增数值执行为0；交付核验
+186/186是JSON、链接、范围及TEMP等metadata检查，不是186项科学验证。
+当前main导入路径和基线身份已确认，除本页外没有tracked修改。主控图依据为
+Verify generation `2026-10-25T07:07:50Z`；Python metadata_changed、Fortran excluded
+及template not_tracked均用确切源读取补足，未宣称全图或全配置覆盖。
+
+六项均进入下一批最小修复与直接回归：雪常数及相关harness参数、tile6分阶段阈值、
+冻结dummy重复赋值、TOPMODEL连续解冻前缀、Z0_BARE传递、ae_ns更新到诊断及跨步carry。
+其中ae_ns必须补真实组件到writer的组合回归，分别验证状态加权和当步总蒸发，
+避免重复加入subsinksoil；当前分段观测不冒充完整物理轨迹。冻结修复只接受已证实的
+赋值顺序，完整profile refresh仍未闭合。TOPMODEL前缀修复不自动开放生产配置。
+三个条件候选继续单列，不作为已接受修复；原319年度失败和所有历史证据身份保留。
+详见[主控验收回执](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-sweep/primary-acceptance.json)。
+
+**唯一优先下一步：原Sol在main完成上述六项最小修复、相关组件/接口回归和共享修复登记草案，
+交主控验收后再提交。** 本次审查checkpoint不宣称修复完成、全年通过或研究分支已同步。
