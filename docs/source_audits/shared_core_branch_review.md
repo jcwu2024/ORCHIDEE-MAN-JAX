@@ -1,9 +1,12 @@
 # 共享物理核心与研究分支核查
 
-最新修复登记：2026-10-24。C5（THERMOSOIL原水文层数传递）已完成主控验收，独立修复提交为
+最新修复登记：2026-10-25。C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
+C6–C9提交为`27ff14b38aafc7df91ce52b8393642ca08952395`；C10独立提交为
+`225cb95a6a44334390d1656d85f66fd54d342a19`。实施基线`493e830`不是修复提交。
+C10源顺序修复单独分组，明确保留可能产生负剩余库存的源算法局限。C5（THERMOSOIL原水文层数传递）已完成主控验收，独立修复提交为
 `a117cd5afc92ea55c9aeb528eec6f724de780111`。C4（restart tau天数回退与配置传递）已在main独立提交为
 `4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`，供日尺度和全球效率分支后续核对同步。
-本次未检查或修改两个研究工作树；其C4、C5同步状态均为**待维护线程核对**，不代表已同步。
+本次未检查或修改两个研究工作树；其C4–C10同步状态均为**待维护线程核对**，不代表已同步。
 C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研究分支的最新状态。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
@@ -47,6 +50,11 @@ C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研
 | C3 | 叶龄周转份额消去共同叶质量因子 | 通用物理核数值修复 | main `2a3e303`，20 项通过；保留原测试、适用范围和源身份；日尺度已有，全球待同步 |
 | C4 | restart tau回退复用天数上限，并传递当前季节配置 | 通用状态读取正确性修复 | main `4b92d3d`，31项相关测试及1项默认入口补查通过；日尺度/全球均待核对同步（2026-10-23） |
 | C5 | THERMOSOIL显式步向getdiff转发原水文nslm | 通用物理装配正确性修复 | main `a117cd5`，新wrapper回归9项、既有窄检查2项通过，主控已验收；日尺度/全球均待维护线程核对（2026-10-24） |
+| C6 | TF_DOC实际producer使用半小时干沉降dt | 通用调用单位修复 | main `27ff14b`，主控已验收；实际装配/小组件carry，完整compiled模型未证；两研究分支待核对 |
+| C7 | DIC聚合仅将四个litter/soil率转步质量 | 通用过程接口修复 | main `27ff14b`，主控已验收；独立及真实混合三出口/no-flow，维护/root不重复乘dt；两研究分支待核对 |
+| C8 | 共享bulk_dens按litter→soil源时刻两次赋值 | 通用输入/装配修复 | main `27ff14b`，主控已验收；raw/normalized/边界及marker回归，tiny跨步/负值fatal未闭合；两研究分支待核对 |
+| C9 | sro_bottom默认5独立于nslm11/ndeep32 | 通用参数装配修复 | main `27ff14b`，主控已验收；普通/compiled/water/core/litter统一，已有API覆盖保留；两研究分支待核对 |
+| C10 | DOC峰值扩散第二赋值读取已更新左通量 | 通用源行为恢复，独立分组 | main `225cb95`，主控已验收；四源算例×eager/JIT，源负库存局限保留；两研究分支待核对 |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
@@ -214,6 +222,80 @@ paper的nslm11/ngrnd32及冻结开启只证明静态层数条件；深层自然�
 主控验收已核对实际新测试/fixture、执行器、旧失败和新通过日志、三个当前受测文件
 身份及一行生产差异，复用执行方9+2检查，未重跑数值。原交付回执的待验收状态保留
 其交付时点身份；本节和主审查报告记录最终验收及修复SHA。
+
+### C6：TF_DOC实际producer的半小时干沉降时钟（2026-10-25）
+
+状态：**主控已验收，修复提交`27ff14b38aafc7df91ce52b8393642ca08952395`**。`stomate.f90::stomate_main:3380–3388`
+向soilcarbon传半小时dt，`stomate_soilcarbon.f90::soilcarbon_leak:1206–1233`只在干项
+乘dt。初始化、普通fold及compiled wrapper三处改传`runtime.dt_sechiba/86400`，降水
+定义保留。leaf100/cover.4独立预期干项`.0007666666666666667`，旧为`.0368`；湿项、
+TF关闭、真实ground/storage两步carry有界通过。compiled参数/窄scan使用明确core seam，
+不宣称完整compiled模型数值等价。C6旧3失败/3控制通过；与C9同15项修复后全通过。
+实现位于`driver/orchestration.py`，回归`tests/parity/test_ok_leak_producer_contracts.py`。
+见[Stage21说明](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/implementation-and-validation.md)。
+
+### C7：DIC聚合的litter/soil率与即时maintenance/root质量（2026-10-25）
+
+状态：**主控已验收，修复提交`27ff14b38aafc7df91ce52b8393642ca08952395`**。litter源2667–2670、2740–2750、
+2778–2781及soilcarbon1671–1704返回日率，stomate3314–3315、3409–3410先乘半小时dt
+再3442–3456聚合。resp297–298的即时maintenance已含dt，stomate3258的floodroot也是
+步质量；日累计是另一消费者。`stomate_ok_leak_explicit`只将四个litter/soil聚合参数乘
+`dt_days`，保留核心rate对象，maintenance/root不再乘。新独立fixture混合三出口为
+`[.03529411764705882,.09895833333333333,.7058823529411764]`，另有真实混合组件和no-flow。
+两项旧混合失败已修复，回归/小fixture在`tests/parity/test_ok_leak_dic_units.py`及同目录
+fixtures；既有manual-chain仅同步该边界期望。未证年度效应。
+
+### C8：bulk_dens两次源赋值、共享owner与prepared marker（2026-10-25）
+
+状态：**主控已验收，修复提交`27ff14b38aafc7df91ce52b8393642ca08952395`**。litter1971–1973及soilcarbon1473–1478
+各执行一次`<500 ×1000`。raw static/map/default保留raw，controls前执行litter赋值；
+generic/same-step合并采用prepared值，adapter跳过已完成的litter后执行soil赋值，compiled
+以tracer-safe`jnp.where`尊重marker，防止tiny值第三次转换。新增`soil_properties.py`
+含精确Fortran provenance；`peat_bulk_density`分离，不在低层adsorption偷偷转换。
+同原10项旧8失败/2通过→同10通过：4真实adapter数值、2controls实参，另2仅为新增marker
+缺失的KeyError。当前20项含真实producer/controls/adapter、generic/peat及窄scan参数检查，
+最后组合全部通过。raw1.65、1650、500、.5及tiny`.0001→.1→100`有界覆盖；tiny仅证
+一次调用，未引入通用跨步bulk carry，负值源fatal/nonfinite及跨步回写仍未闭合。
+
+### C9：独立于网格层数的runoff cutoff（2026-10-25）
+
+状态：**主控已验收，修复提交`27ff14b38aafc7df91ce52b8393642ca08952395`**。源`constantes_var.f90:294`默认
+`sro_bottom=5`，独立于水文11/深层32。初始化、普通和compiled装配统一水量及core/litter
+cutoff；compiled独立static参数，排除重复packet键。已有内存API覆盖3仍可用，不新增
+run.def能力，不改11/32形状。producer哨兵水量5层55、旧11层506、覆盖3为14仅证明
+参数；真实decomposition消费捕获cutoff，独立标量layer5/6 DOC`.075/.1125`，旧compiled
+为`.075/.075`。C9旧9失败，修复后与C6同15项全通过；不是新Fortran oracle或全年验证。
+
+### C10：DOC峰值扩散顺序恢复及负剩余库存局限（2026-10-25）
+
+状态：**主控已验收，独立修复提交`225cb95a6a44334390d1656d85f66fd54d342a19`**。主控已授权按源`stomate_soilcarbon.f90::
+soilcarbon_leak:2002–2006`恢复先2005后2006；第二分母读取更新后的左通量。只改该
+分母和来源注释，WHERE/循环/非峰值/冻结保留。默认半小时D、正薄层与`[1,3,1]`
+给flux`[1.5,12/7]`，末库存`[2.5,-3/14,19/7]`。**负中央库存是源算法局限，未clamp或
+改造limiter。** 新独立fixture四算例×eager/窄JIT8项及既有直接检查通过，旧峰值两项
+失败真实保留；原simultaneous1.5/1.5期望按源改正。
+
+独立[四文件patch](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/C10-source-order.patch)
+和[分组身份](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/C10-group.json)
+仅含soilcarbon扩散hunk、旧测试期望hunk、新source-order测试与fixture，不混C7/C8。
+原交付只作正/逆向适用性检查；主控已将该四文件单独提交为上述C10修复。
+
+C6–C10最终[组合49项](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/combined-focused.json)
+exit0，绑定最后实际文件身份；[交付核验](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/verification.delivery.json)
+只作元数据/链接/Git/补丁检查，不重跑数值。fixture前置错误与有效缺陷失败分开，重叠
+检查不累加为独立覆盖率。图工具不可用，复用Stage20 Verify generation
+`2026-10-24T15:26:49Z`（Python metadata_changed、Fortran excluded），确切源补足，
+不宣称新图覆盖。两研究分支待维护线程按最终真实提交及各自接口核对，不整体覆文件、
+不替换运行checkout、不重标历史Teacher/prepared。本批无研究工作树或跨聊天操作。
+原319失败、C5实际轨迹/年度影响未证、raw-restart旧容量未知及暂停水分起源调查保留；
+两个Stage20 candidate与完整SAVE生命周期不并入，科学门槛/预算不改。详见
+[Stage21入口](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/README.md)。
+
+主控验收已复核实际代码/测试/fixture、有效旧失败和最终49项日志；14份当前受测
+文件身份一致，未重复数值运行。C6–C9共享一个九文件修复提交，C10使用另一个四文件
+提交，审查文档另行提交。执行回执中“待主控验收/SHA待定”保留原交付时点身份，
+本登记给出最终接受状态与准确提交。同步时按这两组真实差异处理，不能以整文件替换
+覆盖研究分支的独立实现，也不能把历史Teacher/prepared改标为修复后产出。
 
 ### I1：四行改动包含回调接口变化
 

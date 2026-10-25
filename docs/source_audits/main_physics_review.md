@@ -70,9 +70,10 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 第十九阶段已按验收结论只补传原nslm，新增独立wrapper回归先复现旧失败，修复后
 9项新回归及2项既有窄检查通过，主控验收完成，独立修复提交为 `a117cd5`，登记共享修复C5。
 第二十阶段完成其余碳过程六包及生产装配审查，主控确认TF干沉降时钟、DIC土壤呼吸
-单位、raw密度归一、runoff cutoff装配和扩散峰值赋值顺序五项有界差异，生产尚未修改。
+单位、raw密度归一、runoff cutoff装配和扩散峰值赋值顺序五项有界差异，该审查阶段未改生产。
 扩散项按原Fortran执行顺序判定，源算法在合成条件下的负库存局限单列；实际轨迹和
-年度影响仍未证。下一批仅实施这些已核对问题的最小修复与直接回归。
+年度影响仍未证。第二十一阶段已完成五项最小修复及49项相关检查，主控已验收：
+C6–C9提交`27ff14b`，C10独立提交`225cb95`，共享修复登记保留适用域和待同步状态。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
@@ -2437,3 +2438,71 @@ litter和maintenance各项单位的同入口核对，不能将所有项统一乘
 这不授权另造守恒限制器或修订原模型。各修复须有实际入口的旧失败/新通过回归及
 可独立运行的小型参考，完成后才登记最终修复SHA并验收。原319年度失败、C5年度影响
 未知、raw-restart旧容量未知及暂停水分起源调查均不因本次源码验收改变。
+
+## 第二十一阶段：五项OK_LEAK最小修复与实际入口回归
+
+2026-10-25，从干净main `493e830702d71b2595e972739eab89c33fa4eaee` 接续已验收
+Stage20的五项实施授权；固定工作区 `E:/ORCHIDEE-MAN-JAX`，ORCJAX实际导入该checkout。
+**C6–C10均已完成主控验收。C6–C9修复提交为
+`27ff14b38aafc7df91ce52b8393642ca08952395`；C10独立修复提交为
+`225cb95a6a44334390d1656d85f66fd54d342a19`。** 实现、同测旧失败/新通过和最终组合
+均已完成；原执行交付时未暂存/提交/推送，其回执保留交付时点身份。基线SHA不是修复SHA。
+见[Stage21入口](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/README.md)、
+[逐项实现/验证](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/implementation-and-validation.md)、
+[机器记录](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/implementation-and-validation.json)和
+[共享登记C6–C10](shared_core_branch_review.md)。
+
+| 修复 | 最小实现与源依据 | 有界证据及未证范围 |
+| --- | --- | --- |
+| C6 TF_DOC干沉降时钟 | stomate:3380–3388、soilcarbon:1206–1233；初始化/普通/compiled三处producer转发`dt_sechiba/86400`，降水定义保留 | 正leaf/cover及TF关闭、真实TF/ground/storage两步carry；参数seam和窄scan不代表完整compiled模型 |
+| C7 DIC率/步质量 | litter:2667–2670,2740–2750,2778–2781、soilcarbon:1671–1704及stomate:3314–3315,3409–3410；仅聚合处四个litter/soil率乘dt | maintenance源resp:297–298已含dt，floodroot源stomate:3258是步质量，不再乘；独立混合三出口、真实混合组件/no-flow，核心rate返回不改 |
+| C8共享bulk density | litter:1971–1973和soilcarbon:1473–1478各执行一次`<500 ×1000`；raw static保留，litter controls前准备并合并，adapter/compiled尊重prepared marker再执行soil赋值 | raw1.65/default、1650、500、.5、tiny及真实controls/adapter、窄scan；peat密度分离。tiny`.0001→.1→100`只证一次调用，跨步回写/negative fatal/nonfinite未闭合 |
+| C9独立runoff cutoff | constantes_var:294默认5；初始化/普通/compiled水量、core/litter统一，独立于nslm11/ndeep32；已有显式API覆盖保留 | producer合成水量5层55、旧11层506及override3为14；真实decomposition消费捕获cutoff，layer5/6独立预期`.075/.1125`；没有新增run.def能力 |
+| C10峰值扩散源顺序 | soilcarbon:2002–2006；第二分母读取已更新第一通量，WHERE/循环/非峰值/冻结分支保留 | 正薄层`[1,3,1]`给flux`[1.5,12/7]`、库存`[2.5,-3/14,19/7]`；四源算例×eager/窄JIT。明确源负库存局限，无clamp/新limiter |
+
+同一新回归的有效旧/新证据：C6/C9同15项为12失败/3通过→15通过；C8同原10项为
+8失败/2通过→同10通过，其中4为真实adapter数值、2为controls实参、另2为新增marker
+缺失的KeyError，后两项不冒充旧密度数值错误；C7/C10同11项为4失败/7通过，修复后
+该11项及3既有直接检查共14通过。C6/C9两次fixture/seam前置失败、C7初次z_soil
+形状错误单列保留，均不作缺陷证据。owner早期检查不认证稍后C8最终marker修改。
+
+最后协调后的[组合focused检查](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/combined-focused.json)
+exit0、49项通过（15 producer+20 density+3 DIC+8 diffusion+3既有直接检查），pytest39.40秒、
+进程43.62秒；绑定14份相关生产/测试/fixture身份，系统TEMP已清理。重叠检查不加总成
+独立覆盖率；关闭cacheprovider后的既有cache_dir warning保留。新测试只依赖自含合成
+输入或tests内小fixture，不依赖ignored outputs。实际源/测试/fixture、有效旧断言与新日志
+均经[工件验收](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/acceptance.md)。
+
+C10交付独立[四文件patch](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/C10-source-order.patch)
+和[分组身份](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/C10-group.json)，
+不含C7/C8；逆向检查及系统TEMP中基线文件的正向适用性检查均仅`--check`，未apply/stage。
+[命令记录](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/commands-and-results.md)和
+[交付核验](../../outputs/reviews/main-physics-20261025/ok-leak-core-fixes/verification.delivery.json)
+记录实际范围；最后核验仅元数据、链接、Git及工件身份，不重跑数值。
+
+MCP图工具不可用，沿用Stage20 Verify generation `2026-10-24T15:26:49Z`、12242nodes/
+73190edges；Python metadata_changed、Fortran excluded及嵌套scan/JIT漏边由当前确切源
+补足，0新图调用/0重建，不宣称完整覆盖。两项Stage20 candidate、完整active-layer/SAVE
+生命周期与raw-restart旧容量未知不并入。本轮无新Fortran编译/运行、模型日/年、整模型
+编译、广泛suite/73oracle、SSH/服务器/调度、GPU/训练/付费分配或环境重建；配置、
+精度、mask、科学门槛和容差未放宽。两个研究工作树未操作，各修复同步均待维护线程
+核对实际接口/提交，旧Teacher/prepared不重标；没有跨聊天消息或自动化。
+
+原319失败`0.0008192662350707258 > 0.0003951849734783173`继续开放；五项修复不解释
+其因果或证明年度改善。C5接受提交仍为`a117cd5afc92ea55c9aeb528eec6f724de780111`，
+实际轨迹/年度影响未证；水分起源调查暂停。历史服务器4601/7200秒、余额2599秒、
+pending0不变。执行方交付后的主控验收与真实修复SHA见本节开头和下述记录。
+
+### 第二十一阶段主控验收（2026-10-25）
+
+主控已审阅五项实际生产差异、新helper及全部新增回归/fixture、原测试期望修改、
+有效旧失败与最终49项通过日志、执行脚本和34项交付核验。当前14份受测文件身份
+均与最终组合回执一致；主控未重跑数值。接受参数捕获、真实组件数值和窄JIT各自
+声明的证据范围，不把替身入口或metadata检查当完整compiled模型认证。
+
+C6–C9的九个代码/测试文件合为一个共享接口修复提交；C10四文件另作独立源行为
+恢复提交，均未混入审查文档。C7完整核对后只转换四个litter/soil率，maintenance/root
+保留步质量；C8严格保留litter→soil两次字面赋值及prepared marker，tiny跨步回写仍
+不在接受域；C9保留独立cutoff和既有显式接口。C10的源负库存局限继续单列，没有
+用非负截断改写Fortran行为。共享表已登记准确SHA，两个研究分支仍待其维护线程核对。
+本次接受组件/接口修复，不建立实际年度影响、319因果或历史数据重新生成的结论。
