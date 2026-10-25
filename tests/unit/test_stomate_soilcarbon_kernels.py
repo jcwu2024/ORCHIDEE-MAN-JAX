@@ -2038,8 +2038,9 @@ def test_soilcarbon_leak_doc_diffusion_matches_peak_limit_and_temperature_gate()
     updated = np.asarray(result.doc)
     flux = np.asarray(result.doc_flux_diff)
 
-    assert np.allclose(flux[0, PFT14, :2, IACT, ICARBON], [1.5, 1.5])
-    assert np.allclose(updated[0, PFT14, :, IFREE, IACT, ICARBON], [2.5, 0.0, 2.5])
+    # Fortran 2005 updates f0=1.5 before 2006 computes f1=3*2/(1.5+2).
+    assert np.allclose(flux[0, PFT14, :2, IACT, ICARBON], [1.5, 12.0 / 7.0])
+    assert np.allclose(updated[0, PFT14, :, IFREE, IACT, ICARBON], [2.5, -3.0 / 14.0, 19.0 / 7.0])
     assert np.allclose(flux[1, PFT14, :, IACT, ICARBON], 0.0)
     assert np.allclose(updated[1, PFT14, :, IFREE, IACT, ICARBON], [1.0, 3.0, 1.0])
     assert np.allclose(updated[:, PFT14, :, 1, IACT, ICARBON], 77.0)

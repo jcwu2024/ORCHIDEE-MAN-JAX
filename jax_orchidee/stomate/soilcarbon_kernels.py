@@ -3548,7 +3548,10 @@ def soilcarbon_leak_doc_diffusion(
         peak_limited = (c0 < c1) & (c2 < c1) & ((f0 + f1) > old[:, :, layer + 1, :, :])
         denom = jnp.where((f0 + f1) != 0.0, f0 + f1, 1.0)
         f0_peak = old[:, :, layer + 1, :, :] * (f0 / denom)
-        f1_peak = old[:, :, layer + 1, :, :] * (f1 / denom)
+        # Source 2005 assigns f0 before 2006 evaluates the second denominator.
+        # Keep that defined order even where it produces a negative residual.
+        second_denom = jnp.where((f0_peak + f1) != 0.0, f0_peak + f1, 1.0)
+        f1_peak = old[:, :, layer + 1, :, :] * (f1 / second_denom)
         branch2 = (c0 >= c1) & (c2 < c1) & ((old[:, :, layer + 1, :, :] + f0 - f1) <= min_stomate)
         branch3 = (c0 < c1) & (c2 >= c1) & ((old[:, :, layer + 1, :, :] - f0 + f1) <= min_stomate)
         new_f0 = jnp.where(peak_limited, f0_peak, jnp.where(branch3, old[:, :, layer + 1, :, :] + f1, f0))

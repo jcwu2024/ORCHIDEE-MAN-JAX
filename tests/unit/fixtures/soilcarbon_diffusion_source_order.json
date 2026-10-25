@@ -1,0 +1,12 @@
+{
+  "provenance": "stomate_soilcarbon.f90 soilcarbon_leak 1976-2047; source 2005 executes before 2006 and the latter reads changed f0. Scalar reference arithmetic, no new Fortran run.",
+  "dt_days": 0.020833333333333332,
+  "d_doc": 0.00001,
+  "min_stomate": 0.00000001,
+  "cases": [
+    {"id": "limited_peak", "stocks": [1.0, 3.0, 1.0], "temperatures": [280.0, 280.0, 280.0], "flux": [1.5, 1.7142857142857142, 0.0], "updated": [2.5, -0.2142857142857142, 2.7142857142857144]},
+    {"id": "nonpeak_up", "stocks": [1.0, 2.0, 3.0], "temperatures": [280.0, 280.0, 280.0], "flux": [1.0, 1.0, 0.0], "updated": [2.0, 2.0, 2.0]},
+    {"id": "nonpeak_down", "stocks": [3.0, 2.0, 1.0], "temperatures": [280.0, 280.0, 280.0], "flux": [1.0, 1.0, 0.0], "updated": [2.0, 2.0, 2.0]},
+    {"id": "frozen_center", "stocks": [1.0, 3.0, 1.0], "temperatures": [280.0, 272.15, 280.0], "flux": [0.0, 0.0, 0.0], "updated": [1.0, 3.0, 1.0]}
+  ]
+}
