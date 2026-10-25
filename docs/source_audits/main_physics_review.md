@@ -1,6 +1,6 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-24。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
+核查日期：2026-10-25。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -69,6 +69,10 @@ sentinel字段则可进入该回退；正常writer产生的有效tau不受此回
 年度影响未证，不能据此解释原319年度NPP失败。
 第十九阶段已按验收结论只补传原nslm，新增独立wrapper回归先复现旧失败，修复后
 9项新回归及2项既有窄检查通过，主控验收完成，独立修复提交为 `a117cd5`，登记共享修复C5。
+第二十阶段完成其余碳过程六包及生产装配审查，主控确认TF干沉降时钟、DIC土壤呼吸
+单位、raw密度归一、runoff cutoff装配和扩散峰值赋值顺序五项有界差异，生产尚未修改。
+扩散项按原Fortran执行顺序判定，源算法在合成条件下的负库存局限单列；实际轨迹和
+年度影响仍未证。下一批仅实施这些已核对问题的最小修复与直接回归。
 局部同输入闭合不能确定全年NPP因果。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
@@ -2334,3 +2338,102 @@ raw-restart首步旧容量回退仍为未证接口限制，不顺带修复。无
 待核对同步状态。图coverage generation `2026-10-24T10:41:54Z` 的相关路径均标注
 metadata_changed，验收依据当前实际差异/文件和既有成对源证据，不作完整图覆盖声明。
 接受范围仍限深层潜热容量截断的组件修复，不改变上文实际轨迹、年度影响和319因果限制。
+
+## 第二十阶段：碳过程六包与实际OK_LEAK装配审查
+
+2026-10-24启动、2026-10-25完成。基线main
+`21fc7985d8554f120fcb149ffcc0d0c59a08145c`，工作区为
+`E:/ORCHIDEE-MAN-JAX`，ORCJAX实际导入来自该checkout。
+**本批六包审查及整合交付完成，等待主控手动验收；未实施生产修复。**
+发现五项限定条件下的源码/接口差异，不能据此宣称实际日轨迹、年度影响或319因果已证。
+总入口、逐项证据和最终范围核验见
+[Stage20 README](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/README.md)、
+[合并结果](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/review-results.json)、
+[实际工件验收](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/integration/acceptance.md)、
+[交付核验](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/delivery.json)。
+
+| 包 / 文档审查单元 | 结论与限制 |
+| --- | --- |
+| [1维护呼吸](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/maintenance/maintenance-review.md)，14行 | 11有界接受、2未覆盖/输入限制、1源未定义诊断；静态cache/stack、即时量/日累计及NPP消费者分开核对 |
+| [2gap死亡/turnover](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/gap-litter/package2-gap-ledger.md)，7行 | 6有界接受、1替代路径限制；当前自然tree14常数死亡路径，不包括DGVM/fire/增长效率等分支 |
+| [3litter](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/gap-litter/package3-litter-ledger.md)，10行 | 7有界接受、1未覆盖、2跨包确证接口；sro和density引用包5同一发现，不增唯一缺陷数 |
+| [4soil POC/DOC](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/soil-doc/package4-ledger.md)，7单元 | 相同输入下活动因子、分解、池转移及peat重分布有界接受；TF时钟/cutoff差异和SAVE/阈值边界单列 |
+| [5DOC吸附/输运/扩散/export](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/soil-doc/package5-ledger.md)，8单元 | 五项唯一确证差异、2候选及明确未覆盖范围；helper成功不清除生产装配问题 |
+| [6真实生产装配/carry](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/integration/package6-ledger.md)，12行 | 6有界接受、4跨包确证引用、2未覆盖；源时序、13个池字段路由、日LPJ输出绑定已查，完整生命周期未证 |
+
+合计58仅为有重叠的文档行/单元数，不是58个独立oracle或Fortran分支，不给合并通过率。
+包4/5每个单元可同时包含正确局部代数、错误接口及未覆盖边界。paper-selected arms、
+owner区域、oracle输出行与标量值分母分别保留，不相加；未重做669配置盘点或旧全链检查。
+
+五项确证均有当前原Fortran、实际caller/输入链和限定数值证据。精确源跨度、触发条件、
+最小修复/回归建议见
+[有界发现](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/soil-doc/findings.md)及
+[边界数值](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/soil-doc/boundary-results.json)：
+
+| 唯一差异 | 源与实际装配 | 证据及适用限制 |
+| --- | --- | --- |
+| TF_DOC干沉降dt | stomate.f90:3385传1/48日，soilcarbon:1225乘该dt；普通fold8582及compiled8367/8688传日量1 | leaf100/cover.5受控贡献当前.046，源.0009583333333333334，48倍；降水项不受此dt差异支配，实际canopy轨迹未测 |
+| DIC soil呼吸率/步质量接口 | stomate:3409–3410先乘dt再3442–3456聚合；integration:3996–4011直接传soil/floodsoil率 | 隔离soil项的runoff/flood/drain三出口均48倍；没有据此认证全部litter/maintenance项或批准统一乘dt |
+| raw bulk density归一缺失 | litter:1971–1973、soilcarbon:1473–1478将<500乘1000；raw static/default1.65沿真实输入链原样进入吸附 | 独立标量Kd/平衡公式给归一1650首层吸附.5440147884，当前raw为.0011916319；已归一trace/restart及全部669输入不作错误推断 |
+| sro_bottom与nslm混淆 | constantes_var:294固定5；普通water用11/core默认5，compiled water/core/litter均11 | 全producer限定范围未提供不同cutoff；layer6及均匀水层受控对照显示参数影响。同helper对照不是独立Fortran oracle；无routing的零flood/fastr可抑制实际效应 |
+| DOC峰值扩散赋值顺序 | soilcarbon:2005先改左flux，2006读取新左值；JAX3548–3555两者共用旧分母 | 默认半小时D、正薄层合成[1,3,1]给源flux[1.5,1.7142857143]、JAX[1.5,1.5]；真实paper几何/轨迹触发未证。源负剩余池是其确定算术，不以理想守恒改写源真值 |
+
+真实时序为前一日日turnover/bm_to_litter先供48次半小时更新，各乘1/48，再执行日LPJ，
+生成次日通量；Fortran3288–3293先于4297调用，当前完整entry的cold/restart/later-day
+路径源顺序相同。不能因旧“same-day litter”文字判bug。维护呼吸按每步t2m/stempdiag算即时
+parts并逐步累积给NPP，实际维护温度为11水文层、z_soil含零共12边界；ndeep32是另一维。
+PFT14既natural/tree又peat，PERMA_PEAT开启，不把peat重分布或runoff2peat误列为inactive。
+13个指定半小时carry字段和新日通量的源路由已核对，但旧presence测试不证明数值持久性。
+
+日LPJ的MAINT_RESP/AGR绑定对应stomate_lpj:1702–1707、2283–2294，JAX保留日NPP
+resp_maint及日累计parts。stomate:5034–5037另有半小时grid-area的radia*veget_cov_max输出，
+本轮未端到端验收。两个候选仍是连续多个peat PFT的runoff buffer和极小正库存peat_OLT
+阈值0对源1e-8；未声称已证库存/实际轨迹错误。active-layer/SAVE输入重建与carry保持
+未覆盖/输入限制，未重开Stage14–17生命周期。旧altcalc mask下INTENT(out)及bare维护
+温度/系数诊断保留源未定义，bare呼吸强制零的明确契约不变。缺完整entry的legacy
+post-NPP fallback、crop/农业/DGVM/fire/其他死亡分支、完整firstcall/cryoturbation/restart、
+任意非有限/无效数组、多元素及新梯度亦未获本批准入。
+
+数值工作只包括原owner的短CPU组件：维护一个独立保存fixture为28LAI+336parts=364值，
+两entry共12比较行全部通过，最大Fortran差1.734723475976807e-18；第二entry是内部
+cache/stack/fold一致性，不是第二个独立源oracle。gap4、turnover9、litter75输出行和
+soil-owner216行保存结果复用，相关当前源hash匹配；未重跑这些结果。soil/DOC三次短
+诊断最终含5组：4组独立标量源预期、1组同helper cutoff效果对照；exit0仅表示诊断完成，
+不把已展示差异称为parity通过。父级验看实际脚本/JSON/ledger后复用数值，原owner完成
+11/32层、最终grid-area范围、L6/L10 disposition及扩散精确行号收口，没有重复运行。
+
+图证据沿用Verify generation `2026-10-24T15:26:49Z`、12242nodes/73190edges。
+Python的metadata_changed、排除的Fortran及JIT/嵌套scan漏边由当前确切源补足。
+恢复会话MCP图工具不可用，明确记录0新图调用/0重建，不捏造新freshness或因缺工具停工。
+[精简命令记录](../../outputs/reviews/main-physics-20261024/carbon-process-sweep/commands-and-results.md)
+保留实际环境、执行范围及非数值lookup更正；系统TEMP已清理。新工件只写Stage20目录，
+本轮唯一tracked修改为本页；不暂存、commit、push、改Git/代理配置、操作其他工作树、
+跨聊天回传或建立自动化。无新Fortran运行、模型日/年、整模型编译、广泛测试、
+SSH/服务器/调度、GPU/训练/付费或环境重建。C5接受提交仍为
+`a117cd5afc92ea55c9aeb528eec6f724de780111`，实际轨迹/年度影响未证；原319失败
+`0.0008192662350707258 > 0.0003951849734783173`、raw-restart旧容量未知、暂停水分
+起源调查及科学门槛全部保留。历史服务器预算4601/7200秒、余额2599秒、pending0不变。
+
+**唯一优先下一步：主控审阅本批五项差异，决定最小共享OK_LEAK调用单位/cutoff/raw输入
+修复及直接回归批；扩散顺序须明确按原Fortran真值处理。** 本轮不自动实施、登记新共享
+修复编号、运行模型或进入科学阶段；整批交付后正常结束，等待手动验收。本段不是主控验收记录。
+
+### 第二十阶段主控验收（2026-10-25）
+
+主控已检查六包实际ledger、整合记录、诊断脚本及保存结果、执行方16项交付核验，
+并直接核对五项发现的当前Fortran语句和JAX生产参数链。图工具当前不可用，复用旧图
+回执并读取确切源码，不宣称新增图覆盖。未重复组件数值、模型或旧oracle运行。
+接受上述五项**有界源/接口差异**及两项候选、其余输入/生命周期限制的区分；58个
+文档单元和16项交付检查均不代表模型全分支或科学准确率。
+
+下一实施批限四项调用/输入修复及单独的扩散源顺序修复。TF使用实际半小时dt，
+DIC保持soil核心返回率的契约，只在需要步质量的聚合边界转换；实施前还须补齐
+litter和maintenance各项单位的同入口核对，不能将所有项统一乘dt。raw密度修复须
+核对Fortran共享bulk_dens的就地更新和调用时刻，保留已归一值，不能假定该阈值转换
+对任意数值都幂等。sro_bottom按源独立于nslm/ndeep，在普通和compiled实参中保持一致。
+
+扩散的源2005赋值后，2006读取更新后的左通量；主控决定按本项目原Fortran真值合同
+恢复此顺序，独立记录/提交，保留其在特定正输入合成例中产生负剩余库存的源算法局限。
+这不授权另造守恒限制器或修订原模型。各修复须有实际入口的旧失败/新通过回归及
+可独立运行的小型参考，完成后才登记最终修复SHA并验收。原319年度失败、C5年度影响
+未知、raw-restart旧容量未知及暂停水分起源调查均不因本次源码验收改变。
