@@ -2951,7 +2951,9 @@ def _add_hydrol_to_previous_fields(fields: dict[str, dict[str, object]], hydrol:
     fields["hydrol_previous_step_state"]["mc"] = hydrol.module.soil.mc
     fields["hydrol_previous_step_state"]["mcl"] = hydrol.module.soil.mcl
     fields["hydrol_previous_step_state"]["water2infilt"] = hydrol.module.soil.water2infilt
-    fields["hydrol_previous_step_state"]["ae_ns"] = hydrol.module.split.ae_ns
+    # hydrol.f90:5843,9014,9066: carry the post-surface, masked and
+    # bare-fraction-weighted state, as the SECHIBA finalize writer does.
+    fields["hydrol_previous_step_state"]["ae_ns"] = hydrol.diagnostics.ae_ns
     fields["hydrol_previous_step_state"]["qsintveg"] = hydrol.module.canop.qsintveg
     fields["diffuco_previous_step_state"]["qsintveg"] = hydrol.module.canop.qsintveg
     for name in ("humrel", "humrelv", "us", "evap_bare_lim", "evap_bare_lim_ns", "fwet_new"):

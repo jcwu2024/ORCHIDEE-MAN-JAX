@@ -8026,7 +8026,10 @@ def hydrol_module_diagnostics(
     if reinfiltration is None:
         reinfiltration = jnp.zeros_like(vegtot)
     grid_flux = hydrol_grid_flux_aggregates(
-        ae_ns=result.split.ae_ns,
+        # hydrol_soil 5843 adds subsinksoil at the surface; hydrol_diag_soil
+        # 9014 masks and 9066 weights that updated tile state. Total vevapnu
+        # separately accounts for subsinksoil below, so do not add it again.
+        ae_ns=jnp.stack(tuple(tile.surface.ae_ns for tile in result.soil.tile_results), axis=1),
         dr_ns=result.soil.dr_ns,
         ru_ns=result.soil.ru_ns,
         tmc=result.soil.tmc,
