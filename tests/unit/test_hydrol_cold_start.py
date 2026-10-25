@@ -38,6 +38,9 @@ from jax_orchidee.sechiba.hydrol import (  # noqa: E402
     snow3ltemp_explicit,
 )
 
+# Independent source value: constantes_var.f90:374-376, not soil lhf at569.
+_SOURCE_CHALFU0 = 2.8345e6 - 2.5008e6
+
 
 def _manual_hydrol_bucket_point(
     *,
@@ -54,7 +57,7 @@ def _manual_hydrol_bucket_point(
     snow_nobio_age,
     dt_sechiba=1800.0,
 ):
-    chalfu0 = 0.3336e6
+    chalfu0 = _SOURCE_CHALFU0
     tp_00 = 273.15
     snowcri = 1.5
     sneige = 1.5e-3
@@ -268,7 +271,7 @@ def test_explicitsnow_fall_initializes_empty_snowpack_layers_from_new_snow():
     speed = 0.1
     rhosnew = max(50.0, 109.0 + 6.0 * (268.0 - 273.15) + 26.0 * np.sqrt(speed))
     dsnowfall = precip_snow[0] / rhosnew
-    psnowhmass = precip_snow[0] * (2.106e3 * (snowtemp[0, 0] - 273.15) - 0.3336e6)
+    psnowhmass = precip_snow[0] * (2.106e3 * (snowtemp[0, 0] - 273.15) - _SOURCE_CHALFU0)
     newgrain = min(2.0e-4, np.asarray(snow3lgrain_0d_explicit(rhosnew)))
 
     np.testing.assert_allclose(np.asarray(result.rhosnew), [rhosnew])
@@ -314,7 +317,7 @@ def test_explicitsnow_fall_adds_new_snow_to_existing_top_layer_only():
     top_dz = snowdz[0, 0] + dsnowfall
     top_rho = (snowdz[0, 0] * snowrho[0, 0] + dsnowfall * rhosnew) / top_dz
     top_grain = (snowdz[0, 0] * snowgrain[0, 0] + dsnowfall * newgrain) / top_dz
-    psnowhmass = precip_snow[0] * (2.106e3 * (snowtemp[0, 0] - 273.15) - 0.3336e6)
+    psnowhmass = precip_snow[0] * (2.106e3 * (snowtemp[0, 0] - 273.15) - _SOURCE_CHALFU0)
 
     expected_dz = snowdz.copy()
     expected_dz[0, 0] = top_dz
@@ -762,7 +765,7 @@ def test_explicitsnow_transf_thin_or_new_snow_branch_preserves_source_old_dz_wei
 def _reference_melt_refrz_one_point(snowtemp, snowdz, snowrho, snowliq, snowmelt, grndflux):
     ph2o = 1000.0
     xci = 2.106e3
-    chalfu0 = 0.3336e6
+    chalfu0 = _SOURCE_CHALFU0
     tp_00 = 273.15
     dt_sechiba = 1800.0
     xsnowdmin = 1.0e-6
@@ -972,6 +975,7 @@ def test_explicitsnow_maxmass_removes_excess_from_bottom_layer_first():
 
     snowrho = np.asarray([[500.0, 500.0, 500.0]], dtype=np.float64)
     snowdz = np.asarray([[2.0, 3.0, 4.0]], dtype=np.float64)
+    # Explicit alternate-parameter coverage; source defaults are tested separately.
     chalfu0 = 0.3336e6
 
     result = explicitsnow_maxmass_step(
@@ -1013,6 +1017,7 @@ def test_explicitsnow_maxmass_can_remove_lower_layers_and_part_of_top_layer():
 def test_explicitsnow_age_ice_updates_land_age_and_ice_snow_state():
     """Fortran: explicitsnow_main lines 408-488."""
 
+    # Preserve the synthetic soil-capacity input; the melt divisor is source Lf.
     chalfu0 = 0.3336e6
     result = explicitsnow_age_ice_step(
         precip_snow=np.asarray([0.1], dtype=np.float64),
@@ -1031,7 +1036,7 @@ def test_explicitsnow_age_ice_updates_land_age_and_ice_snow_state():
     dt_days = 1800.0 / 86400.0
     expected_snow_age = (5.0 + (1.0 - 5.0 / 50.0) * dt_days) * np.exp(-0.1 / 0.2)
     ice_before_melt = 1.0 + 0.5 * (0.1 + 0.2) - 0.1
-    expected_snowmelt_ice = 0.5 * (274.15 - 273.15) * (chalfu0 * 0.2) / chalfu0
+    expected_snowmelt_ice = 0.5 * (274.15 - 273.15) * (chalfu0 * 0.2) / _SOURCE_CHALFU0
     expected_ice_snow = ice_before_melt - expected_snowmelt_ice
     d_age = (4.0 + (1.0 - 4.0 / 50.0) * dt_days) * np.exp(-0.1 / 0.2) - 4.0
     expected_ice_age = max(4.0 + d_age, 0.0)
@@ -1082,8 +1087,8 @@ def test_explicitsnow_liquid_heat_excess_limits_liquid_and_adds_ground_flux():
     )
 
     excess_mass = np.maximum(0.0, snowliq * 1000.0 - 0.10 * snowdz * snowrho)
-    expected_flux = excess_mass * 0.3336e6 / 1800.0
-    expected_liq = np.maximum(0.0, snowliq - expected_flux * 1800.0 / (1000.0 * 0.3336e6))
+    expected_flux = excess_mass * _SOURCE_CHALFU0 / 1800.0
+    expected_liq = np.maximum(0.0, snowliq - expected_flux * 1800.0 / (1000.0 * _SOURCE_CHALFU0))
     np.testing.assert_allclose(np.asarray(result.zliqheatxs), expected_flux)
     np.testing.assert_allclose(np.asarray(result.snowliq), expected_liq)
     np.testing.assert_allclose(np.asarray(result.grndflux), grndflux + expected_flux.sum(axis=1))

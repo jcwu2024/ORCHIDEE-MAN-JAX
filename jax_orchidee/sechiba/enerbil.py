@@ -351,6 +351,8 @@ class DriverAlbedoRestart(NamedTuple):
 CONDVEG_EMIS_UNITY = 1.0
 CHALSU0 = 2.8345e6
 CHALEV0 = 2.5008e6
+# constantes_var.f90:374-376; distinct from the soil-freezing lhf at569.
+CHALFU0 = CHALSU0 - CHALEV0
 C_STEFAN = 5.6697e-8
 CP_AIR = 1004.675
 TP_00 = 273.15

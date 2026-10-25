@@ -19,6 +19,7 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 
+from jax_orchidee.sechiba.enerbil import CHALFU0
 from jax_orchidee.sechiba.enerbil_bridge import (
     EnerbilToHydrolBoundaryValidation,
     validate_enerbil_to_hydrol_boundary_payload,
@@ -2446,7 +2447,7 @@ def snow3lheat_explicit(
     *,
     zero_celsius=273.15,
     xci=2.106e3,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     ph2o=1000.0,
 ):
     """Compute snow enthalpy from liquid water, density, depth, and temperature.
@@ -2475,7 +2476,7 @@ def snow3ltemp_explicit(
     *,
     zero_celsius=273.15,
     xci=2.106e3,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     one_dimensional_guard=True,
 ):
     """Diagnose snow temperature from heat content.
@@ -2510,7 +2511,7 @@ def snow3lliq_explicit(
     *,
     zero_celsius=273.15,
     xci=2.106e3,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     ph2o=1000.0,
 ):
     """Diagnose snow liquid-water content from heat and temperature.
@@ -2553,7 +2554,7 @@ def explicitsnow_fall_step(
     snowfall_b_sn=6.0,
     snowfall_c_sn=26.0,
     xci=2.106e3,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     dgrain_new_max=2.0e-4,
     zero=0.0,
 ) -> ExplicitSnowFallResult:
@@ -3157,7 +3158,7 @@ def explicitsnow_melt_refrz_step(
     min_sechiba=1.0e-8,
     zero_celsius=273.15,
     xci=2.106e3,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     ph2o=1000.0,
     xsnowdmin=1.0e-6,
 ) -> ExplicitSnowMeltRefreezeResult:
@@ -3403,7 +3404,7 @@ def explicitsnow_maxmass_step(
     snowrho,
     snowdz,
     maxmass_snow=3000.0,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
 ) -> ExplicitSnowMaxMassResult:
     """Remove excessive snow mass from the bottom layers.
 
@@ -3498,7 +3499,7 @@ def explicitsnow_age_ice_step(
     dt_sechiba=1800.0,
     one_day=86400.0,
     zero_celsius=273.15,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     max_snow_age=50.0,
     snow_trans=0.2,
     maxmass_snow=3000.0,
@@ -3593,7 +3594,7 @@ def explicitsnow_liquid_heat_excess_step(
     snowrho,
     grndflux,
     dt_sechiba=1800.0,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     ph2o=1000.0,
 ) -> ExplicitSnowLiquidHeatExcessResult:
     """Limit excessive snow liquid heat and add the excess to ground flux.
@@ -3694,7 +3695,7 @@ def hydrol_bucket_snow_step(
     dt_sechiba=1800.0,
     one_day=86400.0,
     zero_celsius=273.15,
-    chalfu0=0.3336e6,
+    chalfu0=CHALFU0,
     snowcri=1.5,
     sneige=1.5e-3,
     maxmass_snow=3000.0,

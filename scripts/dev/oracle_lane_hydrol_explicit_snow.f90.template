@@ -7,8 +7,10 @@ module explicit_snow_lane
  integer,parameter::nsnow=3,nnobio=1,iice=1,numout=6
  real(r_std),parameter::zero=0._r_std,un=1._r_std,deux=2._r_std,trois=3._r_std,undemi=.5_r_std
  real(r_std),parameter::tp_00=273.15_r_std,min_sechiba=1.e-8_r_std,one_day=86400._r_std,dt_sechiba=1800._r_std
- real(r_std),parameter::xci=2106._r_std,chalfu0=333600._r_std,ph2o=1000._r_std,cte_grav=9.80665_r_std
+ real(r_std),parameter::xci=2106._r_std,ph2o=1000._r_std,cte_grav=9.80665_r_std
  real(r_std),parameter::chalsu0=2.8345e6_r_std,chalev0=2.5008e6_r_std,xrv=6.0221367e23_r_std*1.380658e-23_r_std/18.0153e-3_r_std
+ ! constantes_var.f90:374-376: fusion derives from already-declared latent heats.
+ real(r_std),parameter::chalfu0=chalsu0-chalev0
  real(r_std),parameter::min_wind=.1_r_std,xrhosmin=50._r_std,xrhosmax=750._r_std,xsnowdmin=1.e-6_r_std
  real(r_std),parameter::snowfall_a_sn=109._r_std,snowfall_b_sn=6._r_std,snowfall_c_sn=26._r_std,dgrain_new_max=2.e-4_r_std
  real(r_std),parameter::zsnowrad_agrain=1.6e-4_r_std,zsnowrad_bgrain=1.1e-13_r_std,zdgrain_max=2.796e-3_r_std
