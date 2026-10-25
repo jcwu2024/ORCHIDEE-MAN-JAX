@@ -752,6 +752,7 @@ def condveg_initialize(
     alb_bg_modis=True,
     impaze=False,
     rough_dyn=True,
+    z0_bare=Z0_BARE,
     val_exp=999999.0,
     undef_sechiba=1.0e20,
 ) -> CondvegInitializeResult:
@@ -761,6 +762,8 @@ def condveg_initialize(
     The paper configuration selects MODIS background albedo, calculated
     emissivity, and dynamic roughness. Missing MODIS restart state reaches
     map interpolation at lines 190-193 and is rejected as an external owner.
+    ``z0_bare`` is the source scalar read by ``constantes.f90:483-489``;
+    it affects only the missing-restart roughness fallback.
     """
 
     if not bool(l_first):
@@ -835,6 +838,7 @@ def condveg_initialize(
             v=v,
             lai=lai,
             frac_snow_veg=snow_fractions.frac_snow_veg,
+            z0_bare=z0_bare,
         )
         z0m, z0h = roughness.z0m, roughness.z0h
         roughheight, roughheight_pft = roughness.roughheight, roughness.roughheight_pft
@@ -1096,6 +1100,7 @@ def condveg_main_minimal(
     emis_scal,
     impaze=False,
     rough_dyn=True,
+    z0_bare=Z0_BARE,
     ok_explicitsnow=True,
     z0_scal=None,
     roughheight_scal=None,
@@ -1130,6 +1135,8 @@ def condveg_main_minimal(
     from ``condveg_main`` lines 398-428. The active paper-case roughness path
     calls ``condveg_z0cdrag_dyn``. The non-dynamic roughness and albedo
     helpers run only when their explicit module-state inputs are supplied.
+    ``z0_bare`` carries ``constantes.f90:483-489`` into either roughness
+    helper without changing the source default or arithmetic.
     """
 
     snow_fraction = condveg_frac_snow(
@@ -1167,6 +1174,7 @@ def condveg_main_minimal(
             v=v,
             lai=lai,
             frac_snow_veg=snow_fraction.frac_snow_veg,
+            z0_bare=z0_bare,
         )
     else:
         missing = tuple(
@@ -1194,6 +1202,7 @@ def condveg_main_minimal(
             is_tree=is_tree,
             z0_over_height=z0_over_height,
             ratio_z0m_z0h=ratio_z0m_z0h,
+            z0_bare=z0_bare,
         )
 
     albedo_result = None
@@ -1407,6 +1416,9 @@ def run_condveg_first_step_module(
         "emis_scal": 1.0,
         "impaze": impaze,
         "rough_dyn": rough_dyn,
+        # Source constantes.f90:483-489 reads the scalar used by both
+        # condveg_z0cdrag(_dyn); pass it even when albedo inputs are absent.
+        "z0_bare": float(values.get("Z0_BARE", Z0_BARE)),
         "ok_explicitsnow": ok_explicitsnow,
     }
     if (not bool(impaze)) and (not bool(rough_dyn)):

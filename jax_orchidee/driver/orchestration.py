@@ -4744,6 +4744,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         v=init_payload.v,
         lai=slowproc_veg_cold.lai,
         emis_scal=1.0,
+        z0_bare=float(run_def_values.get("Z0_BARE", 0.01)),
         impaze=parse_run_def_bool(run_def_values.get("IMPOSE_AZE", "FALSE")),
         rough_dyn=parse_run_def_bool(run_def_values["ROUGH_DYN"]),
         ok_explicitsnow=parse_run_def_bool(run_def_values["OK_EXPLICITSNOW"]),
@@ -10310,6 +10311,7 @@ def _paper_compiled_sechiba_scan(
         int(context.nvm),
         int(run_scalars.nstm),
         float(context.dt_sechiba),
+        float(context.run_def_values.get("Z0_BARE", 0.01)),
         bool(context.ok_explicitsnow),
         bool(context.ok_freeze_cwrr),
         bool(context.ok_thermodynamical_freezing),
@@ -11233,6 +11235,7 @@ def _paper_compiled_later_day_block_executable(
     )
     cache_key = (
         str(context.config_path.resolve()),
+        float(context.run_def_values.get("Z0_BARE", 0.01)),
         block_size,
         mineral_imin,
         mineral_imax,
