@@ -13,6 +13,10 @@ C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研
 Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证据追溯。
 四组代码已独立提交，不代表两个研究分支已同步。
 
+累计口径：**16项已接受修复，11个代码提交**；同一提交可以包含多项修复，
+测试数量也不等于独立物理过程或完整模型覆盖率。以下总表、各项源码/回归依据及
+精确SHA共同构成修复登记。Stage24新增发现尚未修复，不计入C1–C16；其处置见下文。
+
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
 初始核查完成分类、证据复核与轻量测试。C1、C2、C3 已分别以独立提交
@@ -59,6 +63,12 @@ Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证�
 | C8 | 共享bulk_dens按litter→soil源时刻两次赋值 | 通用输入/装配修复 | main `27ff14b`，主控已验收；raw/normalized/边界及marker回归，tiny跨步/负值fatal未闭合；两研究分支待核对 |
 | C9 | sro_bottom默认5独立于nslm11/ndeep32 | 通用参数装配修复 | main `27ff14b`，主控已验收；普通/compiled/water/core/litter统一，已有API覆盖保留；两研究分支待核对 |
 | C10 | DOC峰值扩散第二赋值读取已更新左通量 | 通用源行为恢复，独立分组 | main `225cb95`，主控已验收；四源算例×eager/JIT，源负库存局限保留；两研究分支待核对 |
+| C11 | 雪融化潜热及两个harness恢复源值333700 | 通用源常数修复 | main `dd6d633`；独立土壤冻结lhf333600保留；旧参考不重标，两研究分支待核对 |
+| C12 | HYDROL不同阶段保留tile4/5与4/5/6阈值差别 | 通用条件分支修复 | main `d48b923`；不全局取消tile6泥炭行为；两研究分支待核对 |
+| C13 | 冻结dummy按源顺序执行两次含水量重构 | 通用源赋值顺序修复 | main `d48b923`；只证明固定profile片段，末态profile刷新另列Stage24；两研究分支待核对 |
+| C14 | TOPMODEL解冻深度使用地表连续暖层前缀 | 已有诊断API修复 | main `d48b923`；未开放生产TOPMODEL；两研究分支待核对 |
+| C15 | Z0_BARE贯通调用层并隔离compiled缓存 | 通用参数传递修复 | main `bbcdbf7`；真实组件、AST装配和缓存stub证据分列；两研究分支待核对 |
+| C16 | 当步surface的ae进入诊断、carry和下步split | 通用状态传递修复 | main `2f36dc7`；真实组件组合通过，不重复计算总蒸发残差；两研究分支待核对 |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
@@ -66,6 +76,43 @@ Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证�
 C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均按具体源码和
 回归单独整理，没有整体合并研究检查点；C3 原提交 `5fb886c` 包含大量其他研究
 改动，C1 原提交 `ad6c0e1` 也包含容量实验准备材料，均不应整体用于同步修复。
+
+### 累计修改位置与提交索引
+
+下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
+各项详细段落和[main审查报告](main_physics_review.md)保留修改必要性、源位置、
+修复前后证据与适用范围；这里用实际Git提交复核修改位置，不重复历史数值实验。
+
+| 编号 | 主要生产文件 | 准确代码提交 |
+| --- | --- | --- |
+| C1 | `sechiba/diffuco.py` | `db4dd8f1cc86a33dc8e343725fda2803f63fb358` |
+| C2 | `stomate/carbon_kernels.py` | `e317fa81b97b8b8c959f2e7dfdfba525bb54dec8` |
+| C3 | `stomate/carbon_kernels.py` | `2a3e303845154576c6f4b5c0b8155106e5bcc70b` |
+| C4 | `coupled.py`、`driver/restart_state.py`、`stomate/restart_io.py` | `4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99` |
+| C5 | `sechiba/thermosoil.py` | `a117cd5afc92ea55c9aeb528eec6f724de780111` |
+| C6–C9 | `coupled.py`、`driver/orchestration.py`、`stomate/integration.py`、`stomate/soil_properties.py` | `27ff14b38aafc7df91ce52b8393642ca08952395` |
+| C10 | `stomate/soilcarbon_kernels.py` | `225cb95a6a44334390d1656d85f66fd54d342a19` |
+| C11 | `sechiba/enerbil.py`、`sechiba/hydrol.py`；另有两个雪harness模板 | `dd6d6335ba5011fcd86285984136a6799f6916ac` |
+| C12–C14 | `sechiba/hydrol.py` | `d48b923e891946d3c9db77ba9b684666cb511b1d` |
+| C15 | `sechiba/condveg.py`、`driver/orchestration.py` | `bbcdbf7a661cb11f5295883e54c3b1ea9d596d39` |
+| C16 | `sechiba/hydrol.py`、`driver/orchestration.py` | `2f36dc7f7945d52387a2848aa124c043118ed45f` |
+
+### Stage24验收处置：新发现尚未列入已修复清单
+
+2026-10-25主控验看实际探针、保存值和成对源码，接受[有限审查证据](../../outputs/reviews/main-physics-20261025/main-source-closure/README.md)
+的声明范围。下一批修复按下表处理；在实现和回归验收前，不分配新的已接受C编号。
+
+| 发现ID | 已证实的范围 / 修改依据 | 下一批处置 |
+| --- | --- | --- |
+| S22-DUMMY-REFRESH | 源hydrol_soil6884–6886用normal末态mc再次刷新冻结profile；当前dummy和返回状态沿用旧profile，真实表组件对照已复现差异 | 修复刷新及状态传递；保留normal mc/mcl/tmc，补热力/线性冻结及直接调用组合回归 |
+| S24-CWRR-NONFREEZE-BIN | 源8291–8301先INT再加imin，当前先加再INT；合法浮点边界选bin16/17 | 只对齐非冻结矿物/泥炭表达式；真实表、邻近边界与窄JIT补证，冻结表达式保留；现有value-tag不证明物理幅度 |
+| S22-TOPMODEL-TIDE | 源7286–7293按cell的tile6面积为所有tile选水库；当前仅tile6选tide，显式参数组件差异已复现 | 修已有诊断API选择条件；保留生产TOPMODEL未准入，不扩展参数IO/生产支持 |
+| S24-CONDVEG-SNOWCRI | 源已生效的非默认SNOWCRI_ALB在wrapper/main/init丢失；组件20给.5而源为1/3，默认10一致 | 先补实参入口与OK_SECHIBA/IMPOSE_PARAM有效配置门控证据，再修传递/缓存及相关调用；不能直接采纳门控关闭的raw覆盖值 |
+
+fwet覆盖、其他四个参数接缝和五处检查/默认合同保持各自条件/静态证据域，
+不自动计为生产bug或修复。雪maxmass三条普遍不可达证明撤回，登记为条件域未证明；
+这次是证据登记修正，不是新的模型算法修复。319年度NPP原科学失败保留，
+C1–C16及本批新差异均未建立该年度差异的原因或修复后改善。
 
 ### C1：与 GPU 批处理无关的缓存缺陷
 

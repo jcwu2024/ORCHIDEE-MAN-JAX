@@ -1074,15 +1074,15 @@ rules:
       false: {disposition: pft14_conditional, reason: "Moderate overflow between maxmass and 1.2*maxmass uses the regular removal."}
   - branch_id: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90:349:if
     decisions:
-      true: {disposition: source_unreachable, reason: "explicitsnow_levels limits the upper two layers to 0.55 m and source density to xrhosmax=750 kg m-3; their mass stays below maxmass_snow, so bounded overflow cannot cross the bottom layer."}
-      false: {disposition: pft14_conditional, reason: "Valid bounded explicit-snow overflow remains within the bottom layer."}
+      true: {disposition: pft14_conditional, reason: "Stage24 withdraws the unconditional geometry/density proof: xrhosmax=750 is an update gate, not a post-update bound. Cross-location requires removal R>=bottom mass at the actual maxmass entry; the admitted restart/transfer/phase/sublimation domain has not proved R<bottom mass (sufficient: upper-two mass<3000). This is domain-unproven, not an observed paper trigger or confirmed arithmetic defect; see main_physics_review.md Stage24."}
+      false: {disposition: pft14_conditional, reason: "The cumulative-mass interval predicate can be false. R<bottom mass is the bottom-only condition; no universal input-domain invariant is claimed."}
   - branch_id: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90:355:if
     decisions:
-      true: {disposition: pft14_conditional, reason: "Valid bounded overflow is removed from the bottom layer with locjj=3."}
-      false: {disposition: source_unreachable, reason: "Source layer geometry and xrhosmax keep upper-layer mass below maxmass_snow, preventing valid overflow from reaching locjj<3."}
+      true: {disposition: pft14_conditional, reason: "With R<bottom mass at maxmass entry, locjj=3 removes snow from the bottom layer. This is a conditional state relation, not an all-input domain proof."}
+      false: {disposition: pft14_conditional, reason: "Stage24 withdraws the geometry/xrhosmax impossibility proof. R>=bottom mass selects locjj<3, including an equality boundary with potentially zero removal from the upper location; physical paper-path admission remains domain-unproven."}
   - branch_id: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90:360:else_if
     decisions:
-      true: {disposition: source_unreachable, reason: "This requires overflow to cross the bottom layer, excluded by source geometry, xrhosmax, and maxmass_snow bounds."}
+      true: {disposition: pft14_conditional, reason: "After locjj/=3 with locjj in {1,2,3}, locjj<3 holds. Reaching that parent branch is domain-unproven: the former geometry/xrhosmax proof was withdrawn in Stage24; no new maxmass arithmetic defect or paper trigger is claimed."}
       false: {disposition: source_unreachable, reason: "locjj is restricted to 1, 2, or 3; after locjj/=3, locjj<3 is necessarily true."}
   - branch_id: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90:422:if
     decisions:

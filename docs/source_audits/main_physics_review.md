@@ -82,6 +82,13 @@ C6–C9提交`27ff14b`，C10独立提交`225cb95`，共享修复登记保留适�
 完整main有限剩余矩阵与独立XLA/319/669科学门槛分列，详见第二十二阶段。
 第二十三阶段六项最小修复已完成主控验收，登记为C11–C16，四组代码提交见该节末尾；
 最终定向组合72项通过。三个S22候选、年度NPP失败和研究分支待同步状态保留。
+第二十四阶段有限剩余六包审查已获主控有界验收：非冻结bin索引、末态冻结
+refresh、TOPMODEL潮汐选择和非默认SNOWCRI参数四项取得有界组件数值证据；fwet覆盖
+保留为生产触发未准入的条件状态观察，五处检查/默认值差异仅按静态契约登记。
+旧雪maxmass跨层普遍不可达证明撤回为条件域未证明，未确认新的maxmass算术缺陷。
+本阶段没有生产修复；主控已补齐C1–C16累计登记，并修正三条雪分支的不可达登记。
+下一批按源码依据实施最小修复，SNOWCRI先补有效配置门控；未重跑Stage23，
+不据此宣称年度归因或完整main通过。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
@@ -2720,3 +2727,108 @@ C12–C14合为一个可同步提交，其余三组独立。提交仅暂存相�
 
 **下一步：按有限剩余矩阵收尾源码审查，优先核对CWRR表构造/冻结refresh、TOPMODEL候选及
 尚未核对的参数/生命周期边界；保留当前生产准入，不自动开启模型年或新实验。**
+
+## 第二十四阶段：有限剩余源码与条件域收尾（主控已接受有界证据）
+
+2026-10-25从干净main `cc3afe325f0bb4378b664b3a5b7e3db7486ce88b`继续，
+实际root/branch及ORCJAX导入均为固定根checkout。已先读取Stage23主控接受回执及
+版本化报告，C11–C16四组接受SHA与72项定向通过直接复用；旧delivery的pending/null
+时点记录不再作为阻塞，也不重标旧producer。本批仅新增
+[Stage24目录](../../outputs/reviews/main-physics-20261025/main-source-closure/README.md)
+中的诊断/参考/台账，并更新本页；执行方交付时没有生产修复、新C编号或共享登记修改。
+随后主控完成下述验收与累计/分支证据登记修正；仍没有新增模型代码修复。
+
+### 六包处置与数值证据域
+
+| 包 | 有界结论 | 证据和限制 |
+| --- | --- | --- |
+| P1 / M07 表/参数/插值 | 默认10个参数声明、65个标量静态一致；保留最后D区间沿用frac及AKS_POWER校验的源quirk。非冻结源`INT(scaled)+imin`与当前`INT(imin+scaled)`在浮点边界不同 | [P1台账](../../outputs/reviews/main-physics-20261025/main-source-closure/hydrol-tables-tail/P1-ledger.md)12条。默认mcr.045/mcs.43、合法mc.1682时scaled15.999999999999998，实际CPU float64 eager选bin17，独立源表达式选16；freeze=True/零冰控制按不同源表达式选17一致。value-tag表只证明索引，无物理D幅度、peat数值、JIT或编译Fortran结论 |
+| P2 / S22-DUMMY-REFRESH | 源6884–6886用normal末态mc刷新profile，随后6887–6905重建mcl/coef/setup；当前all_tiles10730–10749仍传入步初profile，返回10757也保留旧值 | [P2参考与实际观察](../../outputs/reviews/main-physics-20261025/main-source-closure/dummy-refresh/P2-ledger.md)。1点4节点6tile、明确温度/几何/default USDA和真实表，独立final-mc→profile→lookup→coef/setup→RHS/solve/两次重构：profile最大差.011622817271966679，dummy柱水量差.0296400206193006mm。实际结果匹配独立旧profile参考，传入独立新profile则匹配源刷新参考；normal solver本身未独立认证，不是paper真实步或年度触发 |
+| P3 / M08 TOPMODEL/tide/fwet | 源7286–7293按cell的tile6面积选择水库并用于所有tile，当前7597–7603只对tile6加tide；组件条件差异确认。初始化文件IO明确不支持、生产module未传flag/四参数，true缺diag时runtime返回None | [P3台账](../../outputs/reviews/main-physics-20261025/main-source-closure/topmodel/P3-ledger.md)。1点11层6tile显式四参数，tile6面积.3、wt_ab10/wt_ab_tide50mm时meanwt误差−.028m，fwet误差−.013998822588127957；无tile6、tidesoff、等水库、peatoff四控制加权量一致。未开放生产TOPMODEL |
+| P4 / M09 选定尾部/检查/入口 | 18条记录，明确check默认false、split/soil/qflux/infilt失败合同及tmc默认allowed_err差异；canopy PFT1和inactive peat-above源未赋值坐标不制造oracle | [P4台账](../../outputs/reviews/main-physics-20261025/main-source-closure/hydrol-tables-tail/P4-ledger.md)。五处是静态控制/默认值差异，未提供有效轨迹数值反例，不计为五个已触发物理bug。tail无生产caller仅入口支持；active-layer/root只审声明的初始化/动态入口，不扩到全部SAVE生命周期 |
+| P5 / M10 CONDVEG参数/init/路由 | 非默认SNOWCRI_ALB未从wrapper/main/init转发；kernel已有参数。MIN_WIND/HEIGHT_DISPLACEMENT/Z0_ICE/SNOW_DENSITY等另按source-only接口条件及分支列明 | [参数/路由台账](../../outputs/reviews/main-physics-20261025/main-source-closure/condveg/parameter-ledger.md)。源OK_SECHIBA且IMPOSE_PARAM读入非默认值、nobio雪10时，设20的真实eager wrapper仍给.5，独立源应1/3；默认10一致。probe为effective-parameter mapping，未含gate键，不是完整run.def loader/driver准入；IMPOSE_PARAM=false不触发此非默认读取分支。C15数值/AST/cache证据不重跑、不混域 |
+| P6 / M11 雪oracle/跨层证明 | 历史10cases/17fields/39arms保留333600 harness条件，原oracle生成Git身份缺项不臆造；C11独立333700与土壤333600证据复用。撤回以density≤750和早期几何推出全程不可达的证明 | [P6域台账](../../outputs/reviews/main-physics-20261025/main-source-closure/snow-domain/snow-domain.md)。旧compaction gate反例不重跑。实际maxmass入口需`R<m3`；充分条件`U=m1+m2<3000`，restart/transfer/phase/sublimation允许域尚未提供该不变量。未确认新的maxmass算术翻译缺陷 |
+
+P2源7165–7174恢复normal `mc/mcl/tmc`，**不恢复已刷新的profile**。修复时须保留
+该owner差别，不能只重算dummy后丢弃新profile，也不能把dummy积分写回normal状态。
+本批脚本对后续诊断的非mutation检查不独自证明全部restore；恢复/返回路径的结论还依赖
+精确赋值检查及已接受C13的有界证据。线性冻结也有8445–8455的mc饱和度修正依赖，
+本批未另跑该模式。P2本例旧/新profile的retry均为false；不把条件代码的存在当作
+本批已触发retry，相关旧C13有界证据仍按原域保留。
+
+S22-FWET-CARRY不再泛称未知：当前shared writer5966–5969和ordinary3471–3473会用
+priorfwet覆盖新diag，finalize3119则优先新diag。复用Stage22两种状态表示的`.8→.2`
+观察及无prior/无新diag控制；本批未重跑seam，也不将旧ae观察当作C16之后的新失败。
+新fwet只能由未准入的TOPMODELtrue路径创建，因此仍是**条件状态路由观察、生产触发
+未准入**，不是本paper已达生产缺陷。参数文件owner是源weighted reader9871–10049、
+getter9910及10003–10032的面积归一化；noweight调用873是注释，不能互换为生产依据。
+
+P4静态边界中，soil budget/minimum-mc、split守恒及qflux fatal受check_cwrr开关约束；
+infilt_tot负值/超入渗量的源fatal不受该开关约束，但未证合法输入实际触发。
+tmc直接helper在check开启且省略allowed_err时默认0，源为2e−8、比较界限2e−7；
+未找到其生产caller，不声称当前轨迹发生误拒。各行已给最小残差/状态owner和闭合条件。
+水量残差的另一源分支仅warning，不能误报缺fatal。未定义canopy/peat坐标须明确source
+赋值或consumer mask，不能以初始化零值宣称等价。
+
+P5区分direct init、实际cold构造、ordinary/compact和generic supplied-mapping入口；
+拒绝的non-MODIS/static/imposed/repeated init、不全的背景参数、fixed-snow fraction_veg
+及imposed未定义临时量分别登记。generic helper要求调用方提供当步输入，不等于run.def
+读取器或cold初始化器。参数AST实参、缓存stub和真实组件数值仍各限原证据域。
+
+P6将source349true/355false/360true从普遍`source_unreachable`撤回为
+conditional/domain-unproven；360false在loc∈{1,2,3}且loc≠3下的局部逻辑保留。
+`R=min(M−3000,k*soilcap/333700)`，M>3600时k=3，否则1；R=m3的inclusive定位
+已进入上一层但可能移除其零质量，分支可达与严格正跨层移除分开。若能证明transfer输出
+U<3000、有效phase/下渗且sublimation非负，质量论证可闭合；当前restart/forcing没有
+建立这些前提。执行方交付时共享disposition登记只读；主控验收后已将
+`pft14_arm_dispositions_sechiba.yaml`的349true/355false/360true改为现有合法分类
+`pft14_conditional`，在reason中明确domain-unproven，并修正相邻bottom-only说明。
+360false局部逻辑保持，旧生成覆盖报告保留历史身份，不宣称新39/39或全域覆盖。
+新Fortran全arm参考或物理准入跨层触发需要另批授权。
+
+### 有限矩阵、验看与下一步
+
+[更新矩阵](../../outputs/reviews/main-physics-20261025/main-source-closure/remaining-main-matrix.md)
+及机器记录给出M01–M12处置和每一真正剩余量；不再保留无边界的“全部SAVE/所有参数
+尚未核对”任务。custom runtime表参数绑定、tail实际caller/error owner、未定义输出mask、
+TOPMODEL生产支持策略和雪质量不变量保留为具体合同/证据条件。C8 tiny、C10源负库存、
+两项Stage20 peat候选和raw-restart旧容量未知均按原范围停放。
+
+新执行仅P1一个eager索引探针、P2一个真实all_tiles组合及其独立/供参dummy比较、P3五个
+显式诊断场景、P5两次wrapper；没有相加为独立oracle数或分支覆盖率。P1/P4的65个参数
+标量、源/AST、JSON/链接/Git/TEMP核验都是静态/metadata，非科学测试。父级验看owner
+真实脚本与保存值，未重复其执行；[命令与交付记录](../../outputs/reviews/main-physics-20261025/main-source-closure/commands-and-results.json)
+保留各域及收尾核验。
+
+图依据复用Verify project `E-ORCHIDEE-MAN-JAX` generation`2026-10-25T07:07:50Z`、
+12327nodes/73750edges。本批一次index_status返回Transport closed，不重复恢复或重建；
+Python metadata_changed、Fortran excluded及template not_tracked以当前确切源/rg回退，
+不宣称新成功图查询或覆盖完整。Python-B、CPU小组件、系统TEMP cache并清理；
+Stage23及73oracle/广泛suite均未重跑，无新Fortran、整模型编译、模型日/年、多点实验、
+SSH/服务器/调度、GPU/训练/付费、环境重建、研究工作树或自动化；执行方没有跨聊天消息或提交推送。
+
+V01当前完整XLA/跨点/restart数值、V02的319年度NPP失败/水分历史因果、V03的669点/
+长期科学与C4–C16维护同步仍独立。319误差仍为
+`0.0008192662350707258 > 0.0003951849734783173`，failed；water-origin暂停，
+本批差异均未证明年度影响，旧Teacher/prepared/restart身份不重标。历史服务器累计
+4601/7200秒、余额2599秒、pending0不变。
+
+### 主控验收与下一批决定
+
+2026-10-25验看实际四个探针、保存值、独立P2/P3工件审查及成对源码，复用owner
+数值验证，未重跑JAX/Fortran/模型。额外仅一次Python标量算术核对：按源先算
+`ratio=max(mc-mcr,0)/(mcs-mcr)`再乘50，本例仍为15.999999999999998、bin16；
+确认P1探针中乘除重排未改变本例结果，但下一回归须逐步写出源ratio/INT/加法顺序，
+不能依赖代数等价代表所有浮点边界。P1仍只证明索引；P2正常solver/restore、
+P3生产准入、P5门控/loader及P6物理允许域均保留上文限制。
+
+接受本批**审查证据和有限分类**，不等于新增修复已验收。共享登记已补齐16项/11个
+代码提交的总表、生产路径和准确SHA；本批新发现继续使用发现ID，不计入C1–C16。
+主控收据见[primary-acceptance.json](../../outputs/reviews/main-physics-20261025/main-source-closure/primary-acceptance.json)。
+
+**唯一优先下一步：原Sol完成末态冻结profile刷新、非冻结查表INT顺序、已有TOPMODEL
+诊断潮汐选择的最小修复，以及SNOWCRI有效配置门控补证后的参数传递修复。**
+每项须有源条件、修前失败、独立参考、修后组件/调用及必要窄JIT证据；SNOWCRI若
+实际准入合同不成立则明确停留候选，不以扩大支持或关闭门控凑修复。其他source-only
+参数、check/fatal、fwet生产准入、雪不变量不自动扩为修改。保持原科学阈值、旧数据
+身份和生产准入；不开模型日年、Fortran、服务器、训练或其他研究分支同步。
