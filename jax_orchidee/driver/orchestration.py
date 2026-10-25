@@ -259,6 +259,7 @@ from jax_orchidee.stomate.restart_io import (
     stomate_fixed_path_carry_state,
 )
 from jax_orchidee.stomate.soilcarbon_kernels import soilcarbon_leak_tf_doc_inputs
+from jax_orchidee.stomate.soil_properties import bulk_density_source_update
 from jax_orchidee.stomate.season import (
     SeasonMemoryState,
     season_surface_temperature_memory_step,
@@ -7934,7 +7935,7 @@ def _paper_ok_leak_boundary_from_sources(
         },
         tf_doc_boundary={
             "ok_tf_doc": parse_run_def_bool(run_def_values["TF_DOC"]),
-            "dt_days": runtime.dt_days,
+            "dt_days": runtime.dt_sechiba / 86400.0,
             "conc_doc_rain": parse_run_def_float(run_def_values, "CONC_DOC_RAIN"),
         },
         perma_peat_boundary=(
@@ -7953,7 +7954,8 @@ def _paper_ok_leak_boundary_from_sources(
             "dayno": dayno,
             "firstcall_soilcarbon": (int(dayno) == 1),
         },
-        soilwater_boundary={"sro_bottom": int(base.ok_leak_inputs["nslm"])},
+        # Source constantes_var.f90:294: runoff cutoff is independent of nslm.
+        soilwater_boundary={"sro_bottom": int(base.ok_leak_inputs.get("sro_bottom", 5))},
         permafrost_activity_boundary={
             "frozen_respiration_func": frozen_respiration_func,
             "perma_peat": perma_peat_enabled,
@@ -8319,6 +8321,7 @@ def _paper_compiled_ok_leak_fold(
     ok_tf_doc: bool,
     perma_peat: bool,
     conc_doc_rain: float,
+    sro_bottom: int = 5,
     retain_step_results: bool = False,
     capture_daily_transfers: bool = False,
 ):
@@ -8326,7 +8329,9 @@ def _paper_compiled_ok_leak_fold(
 
     nslm = int(nslm)
     ndeep = int(ndeep)
-    sro_bottom = nslm
+    # Source constantes_var.f90:294; explicit API overrides remain independent
+    # of the hydrology/deep-grid sizes (normally 11/32).
+    sro_bottom = int(sro_bottom)
     dt_days = float(dt_sechiba) / 86400.0
     pref_zero = jnp.asarray(pref_soil_veg_fortran, dtype=jnp.int32) - 1
     z_soil = static_inputs["z_soil"]
@@ -8339,11 +8344,19 @@ def _paper_compiled_ok_leak_fold(
         name: value
         for name, value in static_inputs.items()
         if name not in _COMPILED_OK_LEAK_DYNAMIC_NAMES
-        and name not in {"nslm", "ndeep", "perma_peat"}
+        and name not in {"nslm", "ndeep", "perma_peat", "sro_bottom"}
     }
 
     layer_thickness = jnp.diff(jnp.asarray(z_soil)[: sro_bottom + 1])
     def body(carry: DriverCompiledOkLeakCarry, step: DriverCompiledOkLeakStepInputs):
+        # C8: execute litter's shared density update before Moyano controls;
+        # integration skips this already-prepared assignment, then applies
+        # soilcarbon's separate source-ordered density update.
+        litter_bulk_dens = jnp.where(
+            jnp.asarray(static_inputs.get("bulk_dens_litter_prepared", False), dtype=bool),
+            jnp.asarray(static_inputs["bulk_dens"]),
+            bulk_density_source_update(static_inputs["bulk_dens"]),
+        )
         controls = littercalc_aboveground_controls(
             step.temp_sol,
             step.soil_mc,
@@ -8352,7 +8365,7 @@ def _paper_compiled_ok_leak_fold(
             frozen_respiration_func=frozen_respiration_func,
             moist_func_moyano=moist_func_moyano,
             zz_coef_deep=static_inputs.get("zf_soil_b"),
-            bulk_dens=static_inputs.get("bulk_dens"),
+            bulk_dens=litter_bulk_dens,
             clay=static_inputs.get("clay"),
             carbon_32l=carry.carbon_32l,
             veget_max=veget_max,
@@ -8397,6 +8410,8 @@ def _paper_compiled_ok_leak_fold(
         ok_args = dict(static_ok_inputs)
         ok_args.update(
             carry._asdict(),
+            bulk_dens=litter_bulk_dens,
+            bulk_dens_litter_prepared=True,
             bm_to_litter=bm_to_litter,
             turnover=turnover,
             rprof=rprof,
@@ -8460,6 +8475,7 @@ _paper_compiled_ok_leak_fold_jit = jax.jit(
     static_argnames=(
         "nslm",
         "ndeep",
+        "sro_bottom",
         "dt_sechiba",
         "tf_doc_dt_days",
         "frozen_respiration_func",
@@ -8579,7 +8595,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
             },
             tf_doc_boundary={
                 "ok_tf_doc": parse_run_def_bool(run_def_values["TF_DOC"]),
-                "dt_days": runtime.dt_days,
+                "dt_days": runtime.dt_sechiba / 86400.0,
                 "conc_doc_rain": parse_run_def_float(run_def_values, "CONC_DOC_RAIN"),
                 "interception_storage": current["interception_storage"],
             },
@@ -8599,7 +8615,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 "dayno": dayno,
                 "firstcall_soilcarbon": False,
             },
-            soilwater_boundary={"sro_bottom": int(step_base_inputs["nslm"])},
+            soilwater_boundary={"sro_bottom": int(step_base_inputs.get("sro_bottom", 5))},
             permafrost_activity_boundary={
                 "frozen_respiration_func": parse_run_def_int(run_def_values, "frozen_respiration_func"),
                 "perma_peat": parse_run_def_bool(run_def_values["PERMA_PEAT"]),
@@ -8667,7 +8683,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 name: value
                 for name, value in ok_args.items()
                 if name not in _COMPILED_OK_LEAK_DYNAMIC_NAMES
-                and name not in {"nslm", "ndeep"}
+                and name not in {"nslm", "ndeep", "sro_bottom"}
             }
             final_carry, last_result, daily_transfers = _paper_compiled_ok_leak_fold_jit(
                 initial=_compiled_ok_leak_carry_from_mapping(current),
@@ -8684,8 +8700,9 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 is_peat=is_peat,
                 nslm=int(ok_args["nslm"]),
                 ndeep=int(ok_args["ndeep"]),
+                sro_bottom=int(ok_args.get("sro_bottom", 5)),
                 dt_sechiba=runtime.dt_sechiba,
-                tf_doc_dt_days=runtime.dt_days,
+                tf_doc_dt_days=runtime.dt_sechiba / 86400.0,
                 frozen_respiration_func=parse_run_def_int(
                     run_def_values, "frozen_respiration_func"
                 ),

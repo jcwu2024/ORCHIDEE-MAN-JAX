@@ -18,6 +18,8 @@ config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 import numpy as np
 
+from jax_orchidee.stomate.soil_properties import bulk_density_source_update
+
 from jax_orchidee.stomate.carbon_kernels import (
     AllocationStepResult,
     ConstraintsResult,
@@ -3863,6 +3865,7 @@ def stomate_ok_leak_explicit(
     frac1=0.95,
     frac2=0.05,
     capture_transfers: bool = False,
+    bulk_dens_litter_prepared=False,
 ) -> ExplicitOkLeakResult:
     """Compose the audited OK_LEAK litter and soilcarbon path from explicit inputs.
 
@@ -3872,6 +3875,13 @@ def stomate_ok_leak_explicit(
     adapter does not derive phenology, turnover, allocation, maintenance
     respiration, hydrology, TF-DOC canopy inputs, or cryoturbation state;
     callers must supply those process-boundary values explicitly.
+
+    ``bulk_dens_litter_prepared`` marks the shared density value produced
+    before aboveground/Moyano controls by the litter boundary. With explicit
+    controls and an unprepared raw density (default), apply litter1971-1973
+    here first. Soilcarbon1476-1478 then reads that same value and applies its
+    own literal update. The marker prevents a third conversion for tiny values;
+    it does not introduce a persistent bulk-density carry or alter peat density.
     """
 
     required = {
@@ -3891,6 +3901,11 @@ def stomate_ok_leak_explicit(
     if ndeep is None:
         ndeep = jnp.asarray(carbon_32l).shape[3]
 
+    litter_bulk_dens = jnp.where(
+        jnp.asarray(bulk_dens_litter_prepared, dtype=bool),
+        jnp.asarray(bulk_dens),
+        bulk_density_source_update(bulk_dens),
+    )
     littercalc_core = littercalc_leak_core_with_controls if ok_cryoturb else littercalc_leak_core_with_controls_jit
     littercalc = littercalc_core(
         litter_above,
@@ -3931,6 +3946,7 @@ def stomate_ok_leak_explicit(
         conc_doc_max=conc_doc_max,
     )
     soilcarbon_core = soilcarbon_leak_core_step if ok_cryoturb else soilcarbon_leak_core_step_jit
+    soil_bulk_dens = bulk_density_source_update(litter_bulk_dens)
     soilcarbon = soilcarbon_core(
         carbon_32l,
         doc,
@@ -3959,7 +3975,7 @@ def stomate_ok_leak_explicit(
         littercalc.floodcarbon_input,
         tprof,
         clay,
-        bulk_dens,
+        soil_bulk_dens,
         z_soil,
         zf_soil_b,
         flux_red,
@@ -3993,13 +4009,17 @@ def stomate_ok_leak_explicit(
         frac2=frac2,
         capture_transfers=capture_transfers,
     )
+    # stomate_main converts litter rates (3314-3315) and soil rates (3409-3410)
+    # to step masses before DIC aggregation (3442-3456). Maintenance and its
+    # flooded-root share already include dt_sechiba (stomate_resp 297-298).
+    # Preserve the core result rates for their other callers and diagnostics.
     doc_export = soilcarbon_leak_doc_export_aggregate(
         soilcarbon.doc_exp,
         veget_max,
-        littercalc.resp_hetero_litter,
-        soilcarbon.resp_hetero_soil,
-        littercalc.resp_hetero_flood,
-        soilcarbon.resp_flood_soil,
+        littercalc.resp_hetero_litter * dt_days,
+        soilcarbon.resp_hetero_soil * dt_days,
+        littercalc.resp_hetero_flood * dt_days,
+        soilcarbon.resp_flood_soil * dt_days,
         resp_maint_part_radia,
         flood_root_radia,
         runoff_per_soil,

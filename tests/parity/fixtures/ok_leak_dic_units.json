@@ -1,0 +1,16 @@
+{
+  "provenance": "stomate.f90 3314-3315 and 3409-3410 convert four litter/soil day rates to half-hour mass; 3442-3456 sums those with already-integrated maintenance/root mass. Independently evaluated scalar source arithmetic.",
+  "dt_days": 0.020833333333333332,
+  "cover": 0.5,
+  "flood_fraction": 0.2,
+  "litter_above_rate": 7.0,
+  "litter_below_rate": 4.0,
+  "soil_rate": 2.0,
+  "flood_litter_rate": 3.0,
+  "flood_soil_rate": 5.0,
+  "root_step_mass": 0.125,
+  "flood_root_step_mass": 0.03125,
+  "runoff": 10.0,
+  "drainage": 20.0,
+  "expected_dic_run_flood_drain": [0.03529411764705882, 0.09895833333333333, 0.7058823529411764]
+}

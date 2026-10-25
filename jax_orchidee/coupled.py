@@ -632,7 +632,8 @@ def stomate_ok_leak_boundary_inputs(
     This is a composition helper only. It preserves the provenance of each
     source bundle and refuses overlapping fields so callers cannot silently mix
     restart, driver/static, vertical-grid, and process inputs for the same
-    Fortran argument.
+    Fortran argument. Litter-prepared bulk density explicitly supersedes its
+    raw static value, reflecting the shared source assignment before controls.
     """
 
     ok_sources: list[Mapping[str, object]] = [restart_state.ok_leak_state_inputs]
@@ -650,6 +651,14 @@ def stomate_ok_leak_boundary_inputs(
         output_sources.append(vertical.output_inputs)
         provenance.extend(vertical.provenance)
     if litter_controls is not None:
+        # Source litter1971-1973 updates the shared density before controls.
+        # Its prepared value supersedes the raw static input for soilcarbon.
+        for field in ("bulk_dens", "bulk_dens_litter_prepared"):
+            if field in litter_controls.ok_leak_inputs:
+                ok_sources = [
+                    {key: value for key, value in source.items() if key != field}
+                    for source in ok_sources
+                ]
         ok_sources.append(litter_controls.ok_leak_inputs)
         provenance.extend(litter_controls.provenance)
     if tf_doc is not None:
@@ -1017,6 +1026,9 @@ def stomate_litter_controls_ok_leak_inputs(
         raise ValueError("pref_soil_veg must be a non-empty 1D Fortran one-based vector")
     if np.any(pref < 1):
         raise ValueError("pref_soil_veg must use Fortran one-based soil tile indices")
+    from jax_orchidee.stomate.soil_properties import bulk_density_source_update
+
+    litter_bulk_dens = None if bulk_dens is None else bulk_density_source_update(bulk_dens)
     controls = littercalc_aboveground_controls(
         tsurf=tsurf,
         soil_mc=soil_mc,
@@ -1025,7 +1037,7 @@ def stomate_litter_controls_ok_leak_inputs(
         frozen_respiration_func=int(frozen_respiration_func),
         moist_func_moyano=moist_func_moyano,
         zz_coef_deep=zz_coef_deep,
-        bulk_dens=bulk_dens,
+        bulk_dens=litter_bulk_dens,
         clay=clay,
         carbon_32l=carbon_32l,
         veget_max=veget_max,
@@ -1035,6 +1047,10 @@ def stomate_litter_controls_ok_leak_inputs(
             "control_temp_above": controls.control_temp_above,
             "control_moist_above": controls.control_moist_above,
             "soil_mc_top_by_pft": controls.soil_mc_top_by_pft,
+            **(
+                {"bulk_dens": litter_bulk_dens, "bulk_dens_litter_prepared": True}
+                if litter_bulk_dens is not None else {}
+            ),
         },
     )
 
@@ -1572,6 +1588,8 @@ def stomate_same_step_ok_leak_boundary_inputs(
             z_soil=z_source,
             sro_bottom=sro_source,
         )
+        # The same source cutoff controls water volume and litter/soil routing.
+        base_ok_inputs["sro_bottom"] = sro_source
 
     permafrost_activity = None
     if permafrost_activity_boundary is not None:
@@ -1698,6 +1716,10 @@ def stomate_same_step_ok_leak_boundary_inputs(
         if bundle is None:
             continue
         ok_inputs = dict(bundle.ok_leak_inputs)
+        if bundle is litter_controls:
+            for field in ("bulk_dens", "bulk_dens_litter_prepared"):
+                if field in ok_inputs:
+                    final_base_ok_inputs.pop(field, None)
         for duplicate_allowed in ("tprof", "zi_soil", "interception_storage"):
             if duplicate_allowed in ok_inputs and duplicate_allowed in final_base_ok_inputs:
                 if not boundary_values_match(ok_inputs[duplicate_allowed], final_base_ok_inputs[duplicate_allowed]):

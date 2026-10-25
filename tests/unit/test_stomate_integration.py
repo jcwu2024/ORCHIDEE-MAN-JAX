@@ -4362,6 +4362,11 @@ def _ok_leak_inputs():
 
 def test_ok_leak_explicit_adapter_matches_manual_litter_soilcarbon_doc_chain():
     args = _ok_leak_inputs()
+    # Source litter1971-1973 followed by soilcarbon1476-1478, on the same
+    # shared value. Keep the manual composition independent of the helper.
+    soil_bulk_dens = np.asarray(args["bulk_dens"])
+    for _ in range(2):
+        soil_bulk_dens = np.where(soil_bulk_dens < 500, soil_bulk_dens * 1000, soil_bulk_dens)
 
     result = stomate_ok_leak_explicit(**args)
     littercalc = littercalc_leak_core_with_controls(
@@ -4429,7 +4434,7 @@ def test_ok_leak_explicit_adapter_matches_manual_litter_soilcarbon_doc_chain():
         littercalc.floodcarbon_input,
         args["tprof"],
         args["clay"],
-        args["bulk_dens"],
+        soil_bulk_dens,
         args["z_soil"],
         args["zf_soil_b"],
         args["flux_red"],
@@ -4444,10 +4449,10 @@ def test_ok_leak_explicit_adapter_matches_manual_litter_soilcarbon_doc_chain():
     doc_export = soilcarbon_leak_doc_export_aggregate(
         soilcarbon.doc_exp,
         args["veget_max"],
-        littercalc.resp_hetero_litter,
-        soilcarbon.resp_hetero_soil,
-        littercalc.resp_hetero_flood,
-        soilcarbon.resp_flood_soil,
+        littercalc.resp_hetero_litter * args["dt_days"],
+        soilcarbon.resp_hetero_soil * args["dt_days"],
+        littercalc.resp_hetero_flood * args["dt_days"],
+        soilcarbon.resp_flood_soil * args["dt_days"],
         args["resp_maint_part_radia"],
         args["flood_root_radia"],
         args["runoff_per_soil"],
