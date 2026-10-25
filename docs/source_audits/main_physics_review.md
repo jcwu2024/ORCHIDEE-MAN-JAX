@@ -80,6 +80,8 @@ C6–C9提交`27ff14b`，C10独立提交`225cb95`，共享修复登记保留适�
 雪潜热常数333700与当前实现/旧harness的333600差异已由真实雪组件复现，其余发现
 分别受tile、冻结、TOPMODEL配置、非默认参数或状态选择条件限制；均不建立年度归因。
 完整main有限剩余矩阵与独立XLA/319/669科学门槛分列，详见第二十二阶段。
+第二十三阶段六项最小修复已完成主控验收，登记为C11–C16，四组代码提交见该节末尾；
+最终定向组合72项通过。三个S22候选、年度NPP失败和研究分支待同步状态保留。
 命名日值 trace 的具体历史文件身份已取得；两条长期链 producer 和年度因果
 仍未全部核定，尚未确认该年度差异的源级原因。**
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
@@ -2638,3 +2640,83 @@ Verify generation `2026-10-25T07:07:50Z`；Python metadata_changed、Fortran exc
 
 **唯一优先下一步：原Sol在main完成上述六项最小修复、相关组件/接口回归和共享修复登记草案，
 交主控验收后再提交。** 本次审查checkpoint不宣称修复完成、全年通过或研究分支已同步。
+
+## 第二十三阶段：六项最小修复与组合回归（已验收）
+
+2026-10-25，在固定main根工作区从干净基线
+`c94da5b623da4f6da377520ce08436933b6ed1b7`实施上一节已授权的六项修复。
+Git root/branch及ORCJAX实际导入均已确认。**主控已验收实现与有界回归，登记为C11–C16，
+四组准确修复提交见本节末尾。** 执行方交付时未提交，原交付回执保留该时点状态。Stage22数值
+producer仍为`1229de7b41711a5177d572feef5cc95f4cbc2a32`，不得以本基线重标。
+入口为[Stage23交付](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-fixes/README.md)，
+逐项原始命令、日志、JUnit和TEMP记录均保留在该目录。
+
+| 原S22 ID | 最小修复及源依据 | 有界验证与限制 |
+| --- | --- | --- |
+| S22-SNOW-LF | `constantes_var:374–376`的共享`CHALFU0=CHALSU0−CHALEV0=333700`；8个显式雪及1个bucket默认值，两harness模板先声明依赖再求差 | 真实1kg snowfall adapter、独立热库存/部分融再冻/液热/非生物融雪、moderate/extreme cap及窄JIT；独立土壤`lhf:569=333600`和显式参数override保留；模板仅静态检查，无新Fortran |
+| S22-TILE6-THRESHOLDS | all_tiles保留mineral mcs/mcr；top/over-mcs2及部分residual用4/5，深层/系数/液水重构保留4/5/6（hydrol:7488–7564,7982–7993,7665–7769） | 真实all_tiles→tile路径，1/4/5/6、面积/无tile及localpeat=False控制；没有全局从peat移除tile6，未开放paper localpeat |
+| S22-FROZEN-DUMMY-ORDER | hydrol:7044–7058先按freeze开关重构或mc=mcl，再按7080–7092无条件重构，第二次读取第一次结果；真实caller转发开关 | 固定profile0/.5、冻结开/关、retry/未retry、resolv和原prognostic不变；未实现候选6883–6900完整profile refresh |
+| S22-TOPMODEL-PREFIX | hydrol:7245–7267只数地表连续暖层，保留numlayers上界及>6 gate、7308–7342 undef/湿地公式 | 首/第4/6/7冻层、全暖、undef和numlayers6/7/2/15；15仅验证既有JAX clamp，非越界Fortran等价；eager/窄JIT；不自动开放生产TOPMODEL |
+| S22-CONDVEG-Z0 | `constantes:483–489`的Z0_BARE经wrapper/main/init缺值回退及cold实参；两捕获context的compiled cache键含该值 | missing/.01/.02真实wrapper eager/窄JIT、main/init/restart保留；ordinary/compact/cold源call表达式只证实参组装，两实际cache构造stub只证缓存隔离，不是完整driver/compiled模型认证 |
+| S22-AE-STATE | hydrol:5843地表ae+=subsink后的真实tile结果进入diag，再按9014/9066 mask/frac加权；共享writer与finalize一致carry diag.ae | 真实模块→diag→`_runtime_next_state_from_components`→下一split，两表示及窄JIT；正/负/0残差、frac0/1/中间、无tile/无植被。water2extract与grid总vevapnu原本已正确，不重复加subsink |
+
+所有生产修改前，accepted before回执均为同一基线、相同三份生产文件SHA、空tracked
+diff，且无error/skip：A12数值失败；BCD17失败/13通过；E2失败/4通过，另2条真实
+cache选择失败；F7数值失败/2通过。F实际正残差例中旧diag tile1`.00275`、旧carry`.005`
+应为`.02475`，下一split读旧蒸发`.005`应为`.0162`。不是仅复用split=.20/diag=.25
+人工seam。F在baseline后另加强独立bare fraction和negative/no-old fallback断言，原七条
+失败断言保留。D在原30项之后补4条numlayers边界；这些增项不追认为原before证据。
+C的freeze=False/profile=.5仅为隔离赋值顺序的合成控制，源正常off路径profile为0，
+不据此声称完成非零冻结profile的实际生命周期验证。
+
+分包after为A12、原BCD30、E13、F9项通过；相关既有回归A8、BCD30、E21项通过。
+BCD旧target首轮29通过/1失败保留：原routing综合fixture将tile4 mineral clipping与peat
+forcing混用，修复后改成确有该阶段差异的tile6，保留全部positive-force/route断言；
+新tile4 clipping及原tile4 positive-force检查仍保留。雪旧test只修源常数预期，保留
+显式333600 override与任意soilcap输入；没有删除覆盖或放宽容差。详见逐项报告。
+
+最终[组合focused回执](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-fixes/combined-focused.json)
+exit0、72项通过、无失败/error/skip，进程76.38秒，TEMP已清理；覆盖四个新增文件
+及四项既有module/grid直接检查，文件身份与补丁适用性核验见交付入口。
+所有数值为轻量CPU组件或选定窄JIT，pytest计数不相加为独立oracle/分支覆盖率。
+ORCJAX Python-B、禁pytest cacheprovider，系统TEMP运行/cache目录清理，既有cache_dir
+warning保留。交付metadata核验与科学数值结论分开。
+
+Verify图基线`E-ORCHIDEE-MAN-JAX` generation`2026-10-25T07:07:50Z`、12327nodes/
+73750edges已确认ready；相关search无后页，Python metadata_changed、Fortran excluded、
+template not_tracked均确切源回退。恢复后追加的两次trace调用返回Transport closed，
+不宣称新增成功trace或完整性，无重索引。修复文件按原S22问题的hunk/测试分组交付，
+hydrol.py由唯一writer整合，driver E/F共享文件的hunk归属明确，不反复apply/revert工作树。
+
+旧显式雪10cases/17字段/39arms仍是harness333600条件下的历史结果，未重建为333700
+oracle；Teacher/prepared/restart身份和序列化类/模块身份不重标。S22-FWET-CARRY、
+S22-DUMMY-REFRESH、S22-TOPMODEL-TIDE继续开放；完整SAVE/active-layer、两项Stage20
+peat候选、C8 tiny跨步/negative fatal/nonfinite和raw-restart旧容量未知不扩大。
+C10源负库存局限保留，C4–C10准确历史SHA不变；研究同步仍待维护线程核对。
+
+319年度失败`0.0008192662350707258 > 0.0003951849734783173`不变，六修复的实际年度
+影响/因果未证，water-origin investigation paused。无新Fortran执行、整模型编译、模型
+日/年、广泛suite/73oracle、SSH/服务器/调度、GPU/训练/付费、环境重建、其他研究工作树、
+自动化或跨聊天消息。历史服务器4601/7200秒、余额2599秒、pending0保持。
+### 主控接受与可同步提交（2026-10-25）
+
+主控已审阅全部生产差异、四个新增回归文件、既有测试预期/fixture修改、有效before与
+最终after记录、实际运行器、组件组合及patch分组。接受上述六项源/接口修复；
+当前16份交付文件SHA均与manifest相符，其中三份核心生产文件也与组合运行启动快照一致。
+复用owner的72项最终定向通过和相关既有回归，主控新增数值运行0次；56项交付metadata
+核验独立于科学测试。图工具本轮返回Transport closed，使用前序图定位和本次确切源回退。
+
+| 修复编号 | 接受的代码提交 | 内容 |
+| --- | --- | --- |
+| C11 | `dd6d6335ba5011fcd86285984136a6799f6916ac` | 雪融合潜热默认、相关harness参数及回归；独立土壤lhf保留 |
+| C12–C14 | `d48b923e891946d3c9db77ba9b684666cb511b1d` | tile分阶段阈值、冻结dummy顺序、TOPMODEL前缀；共用一份回归文件 |
+| C15 | `bbcdbf7a661cb11f5295883e54c3b1ea9d596d39` | Z0_BARE参数传递及两compiled缓存隔离 |
+| C16 | `2f36dc7f7945d52387a2848aa124c043118ed45f` | surface到diag再到跨步carry的ae状态；不重复计入总蒸发 |
+
+C12–C14合为一个可同步提交，其余三组独立。提交仅暂存相应已审阅hunk，没有apply/revert
+工作树或重新运行模型。两个研究分支仍待其维护线程按实际接口核对同步，不能整文件覆盖。
+本次接受范围不包含完整年度、梯度、全配置或新Fortran oracle认证；三个S22候选继续开放。
+主控接受回执见[primary-acceptance.json](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-fixes/primary-acceptance.json)。
+
+**下一步：按有限剩余矩阵收尾源码审查，优先核对CWRR表构造/冻结refresh、TOPMODEL候选及
+尚未核对的参数/生命周期边界；保留当前生产准入，不自动开启模型年或新实验。**

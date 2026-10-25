@@ -1,13 +1,17 @@
 # 共享物理核心与研究分支核查
 
-最新修复登记：2026-10-25。C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
+最新修复登记：2026-10-25。C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
+四组准确提交及适用域见下文Stage23。此前C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
 C6–C9提交为`27ff14b38aafc7df91ce52b8393642ca08952395`；C10独立提交为
 `225cb95a6a44334390d1656d85f66fd54d342a19`。实施基线`493e830`不是修复提交。
 C10源顺序修复单独分组，明确保留可能产生负剩余库存的源算法局限。C5（THERMOSOIL原水文层数传递）已完成主控验收，独立修复提交为
 `a117cd5afc92ea55c9aeb528eec6f724de780111`。C4（restart tau天数回退与配置传递）已在main独立提交为
 `4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`，供日尺度和全球效率分支后续核对同步。
-本次未检查或修改两个研究工作树；其C4–C10同步状态均为**待维护线程核对**，不代表已同步。
+本次未检查或修改两个研究工作树；其C4–C16同步状态均为**待维护线程核对**，不代表已同步。
 C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研究分支的最新状态。
+
+Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证据追溯。
+四组代码已独立提交，不代表两个研究分支已同步。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
@@ -296,6 +300,51 @@ exit0，绑定最后实际文件身份；[交付核验](../../outputs/reviews/ma
 提交，审查文档另行提交。执行回执中“待主控验收/SHA待定”保留原交付时点身份，
 本登记给出最终接受状态与准确提交。同步时按这两组真实差异处理，不能以整文件替换
 覆盖研究分支的独立实现，也不能把历史Teacher/prepared改标为修复后产出。
+
+### Stage23：六项共享修复登记（已接受C11–C16）
+
+实施基线为main `c94da5b623da4f6da377520ce08436933b6ed1b7`，不是修复SHA；
+Stage22历史数值producer保留`1229de7b41711a5177d572feef5cc95f4cbc2a32`。
+下表不更改C4–C10的接受状态、准确提交或研究同步记录。详见
+[Stage23实现/证据/补丁入口](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-fixes/README.md)和
+[main审查Stage23](main_physics_review.md)。
+
+| 修复编号 / 原发现ID | 已接受改动 | 依赖与接受边界 |
+| --- | --- | --- |
+| C11 / S22-SNOW-LF | 共享derived333700、8显式雪+1bucket默认及两个harness参数关系 | hydrol+enerbil共享常数，原雪test预期；独立土壤lhf333600保留。12新增/8既有通过；不重建或重标旧333600 oracle |
+| C12 / S22-TILE6-THRESHOLDS | 保留mineral阈值，top/clip/部分residual仅4/5，deep/coef/liquid保留4/5/6 | hydrol各阶段hunks及旧routing fixture；BCD共用一个自含回归文件，不全局取消tile6 peat行为 |
+| C13 / S22-FROZEN-DUMMY-ORDER | freeze分支第一次赋值后无条件第二次重构，真实caller传switch | hydrol dummy helper/caller；固定profile/retry/restore有界证据，不关闭DUMMY-REFRESH候选 |
+| C14 / S22-TOPMODEL-PREFIX | 地表连续暖层前缀及numlayers边界 | hydrol diagnostic API；源>6/undef保留，不开放生产TOPMODEL或关闭潮汐/carry候选 |
+| C15 / S22-CONDVEG-Z0 | wrapper/main/init和cold绑定Z0_BARE，两compiled cache隔离 | condveg+driver E hunks；13新增/21既有通过。物理wrapper与AST实参/cache stub证据分列，不称完整compiled模型验收 |
+| C16 / S22-AE-STATE | 真实post-surface ae进入diag，shared writer carry与finalize相同diag阶段 | hydrol+driver F hunks；9项真实组件→writer→下次split通过；grid总vevapnu残差不重复加 |
+
+A12失败、BCD17失败/13通过、E2失败/4通过及2 cache失败、F7失败/2通过的before均在
+共同生产barrier前保存，无error/skip；之后原BCD30项通过并加4条numlayers边界。
+最终组合以[focused回执](../../outputs/reviews/main-physics-20261025/hydrol-snow-condveg-fixes/combined-focused.json)
+记录的72项通过为准（exit0、无error/skip，TEMP清理）；重叠测试数不当作独立oracle或
+完整覆盖。旧雪预期按源常数改；旧tile4综合routing
+夹具改为source真正有阶段阈值差异的tile6，保留原数值断言及独立tile4检查，不放宽容差。
+
+主控已验看全部生产/test改动和有效before/after，复用数值检查、没有重复积分或组件运行。
+16份交付文件身份均匹配，最终三份生产文件与组合启动时SHA一致。代码分为四组提交：
+
+| 编号 | 精确修复SHA |
+| --- | --- |
+| C11 | `dd6d6335ba5011fcd86285984136a6799f6916ac` |
+| C12–C14 | `d48b923e891946d3c9db77ba9b684666cb511b1d` |
+| C15 | `bbcdbf7a661cb11f5295883e54c3b1ea9d596d39` |
+| C16 | `2f36dc7f7945d52387a2848aa124c043118ed45f` |
+
+交付patch保留A/B/C/D/E/F问题hunk分组；B/C/D共用回归随C12–C14同一提交。
+hydrol、driver的同文件hunk不能以整文件覆盖研究分支，不自动同步daily/global。
+运行checkout、Teacher/prepared、旧Fortran输出及
+原333600 harness结果继续保留各自producer身份。
+
+三个S22候选继续开放；319年度失败、暂停water-origin、C10源负库存、C8 tiny跨步/
+negative fatal/nonfinite、两项Stage20 peat候选及raw-restart旧容量未知均保留。
+无年度改善/因果、全配置/完整compiled模型或新生产准入结论；无新Fortran、模型日年、
+服务器/GPU/训练/付费、研究工作树、自动化或跨聊天操作。执行方交付后，由主控完成上述
+接受与提交；交付时的pending/SHA null回执保留历史状态，以本登记和主控回执为后续接受依据。
 
 ### I1：四行改动包含回调接口变化
 
