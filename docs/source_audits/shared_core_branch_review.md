@@ -1,21 +1,26 @@
 # 共享物理核心与研究分支核查
 
-最新修复登记：2026-10-25。C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
+Stage25当前：四项边界修复已主控验收，登记为**C17–C20**，最终定向组合93项一次通过。
+见下方接受登记和[交付入口](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/README.md)。
+最新修复登记：2026-10-26。累计20项已接受修复、13个代码提交，仍未建立319年度归因。
+
+此前Stage23的C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
 四组准确提交及适用域见下文Stage23。此前C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
 C6–C9提交为`27ff14b38aafc7df91ce52b8393642ca08952395`；C10独立提交为
 `225cb95a6a44334390d1656d85f66fd54d342a19`。实施基线`493e830`不是修复提交。
 C10源顺序修复单独分组，明确保留可能产生负剩余库存的源算法局限。C5（THERMOSOIL原水文层数传递）已完成主控验收，独立修复提交为
 `a117cd5afc92ea55c9aeb528eec6f724de780111`。C4（restart tau天数回退与配置传递）已在main独立提交为
 `4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`，供日尺度和全球效率分支后续核对同步。
-本次未检查或修改两个研究工作树；其C4–C16同步状态均为**待维护线程核对**，不代表已同步。
+本次未检查或修改两个研究工作树；其C4–C20同步状态均为**待维护线程核对**，不代表已同步。
 C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研究分支的最新状态。
 
 Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证据追溯。
 四组代码已独立提交，不代表两个研究分支已同步。
 
-累计口径：**16项已接受修复，11个代码提交**；同一提交可以包含多项修复，
+累计口径：**20项已接受修复，13个代码提交**；同一提交可以包含多项修复，
 测试数量也不等于独立物理过程或完整模型覆盖率。以下总表、各项源码/回归依据及
-精确SHA共同构成修复登记。Stage24新增发现尚未修复，不计入C1–C16；其处置见下文。
+精确SHA共同构成修复登记。Stage24四项候选经Stage25实现与补项验收，现计入C17–C20；
+其历史处置和本批接受范围分别见下文。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
@@ -69,6 +74,10 @@ Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证�
 | C14 | TOPMODEL解冻深度使用地表连续暖层前缀 | 已有诊断API修复 | main `d48b923`；未开放生产TOPMODEL；两研究分支待核对 |
 | C15 | Z0_BARE贯通调用层并隔离compiled缓存 | 通用参数传递修复 | main `bbcdbf7`；真实组件、AST装配和缓存stub证据分列；两研究分支待核对 |
 | C16 | 当步surface的ae进入诊断、carry和下步split | 通用状态传递修复 | main `2f36dc7`；真实组件组合通过，不重复计算总蒸发残差；两研究分支待核对 |
+| C17 | normal末态mc刷新冻结profile，并传至dummy、输出和后续状态 | 通用源顺序/状态传递修复 | main `ad0d322`；保留normal mc/mcl/tmc，真实closure→writer→fallback及有限冻结控制通过；两研究分支待核对 |
+| C18 | 矿物/泥炭非冻结查表先INT再整数加imin | 通用浮点边界表达式修复 | main `ad0d322`；局部ratio屏障、真实表及CPU窄JIT通过，冻结表达式保留；两研究分支待核对 |
+| C19 | TOPMODEL诊断按cell tile6面积为所有tile选择潮汐水库 | 已有诊断API修复 | main `ad0d322`；严格阈值/多cell/控制项通过，生产TOPMODEL和fwet仍未准入；两研究分支待核对 |
+| C20 | 有效SNOWCRI_ALB贯通main/init/wrapper/cold及缓存 | 通用参数门控/传递修复 | main `f8d36e1`；源默认/gate、严格布尔输入及真实组件通过，整模型compiled未证；两研究分支待核对 |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
@@ -96,8 +105,10 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C12–C14 | `sechiba/hydrol.py` | `d48b923e891946d3c9db77ba9b684666cb511b1d` |
 | C15 | `sechiba/condveg.py`、`driver/orchestration.py` | `bbcdbf7a661cb11f5295883e54c3b1ea9d596d39` |
 | C16 | `sechiba/hydrol.py`、`driver/orchestration.py` | `2f36dc7f7945d52387a2848aa124c043118ed45f` |
+| C17–C19 | `sechiba/hydrol.py`、`driver/orchestration.py` | `ad0d322cc4951d4af158f4e8cbb6d306bdf374f3` |
+| C20 | `sechiba/condveg.py`、`driver/orchestration.py` | `f8d36e1f8c03046e12e146aed2abb8bd286403de` |
 
-### Stage24验收处置：新发现尚未列入已修复清单
+### Stage24验收时的处置（历史；四项修复现见Stage25）
 
 2026-10-25主控验看实际探针、保存值和成对源码，接受[有限审查证据](../../outputs/reviews/main-physics-20261025/main-source-closure/README.md)
 的声明范围。下一批修复按下表处理；在实现和回归验收前，不分配新的已接受C编号。
@@ -113,6 +124,64 @@ fwet覆盖、其他四个参数接缝和五处检查/默认合同保持各自条
 不自动计为生产bug或修复。雪maxmass三条普遍不可达证明撤回，登记为条件域未证明；
 这次是证据登记修正，不是新的模型算法修复。319年度NPP原科学失败保留，
 C1–C16及本批新差异均未建立该年度差异的原因或修复后改善。
+
+### Stage25接受登记：C17–C20
+
+基线main `7905b1165f6e812bf87514017765278f9df5da6d`，固定根及ORCJAX实际导入
+均为`E:/ORCHIDEE-MAN-JAX`。Stage24上表保留验收当时的处置；四项已按后续授权
+实施。2026-10-26主控已验看两补项实际代码/测试、修前失败、最终JUnit/log和八文件
+交付身份，接受下表四项，按顺序对应C17–C20。**累计20项、13个代码提交**，
+原C1–C16准确SHA完整保留。A-R1属C17状态闭合，D-R1属C20新helper合同，不另计缺陷。
+C17–C19提交`ad0d322cc4951d4af158f4e8cbb6d306bdf374f3`，C20提交
+`f8d36e1f8c03046e12e146aed2abb8bd286403de`；两研究分支同步仍待维护线程核对。
+
+| 原发现ID | 必要性与修改位置 / 补丁组 | 输入条件、修前/修后及未证域 |
+| --- | --- | --- |
+| S22-DUMMY-REFRESH | 源hydrol6884–6905按normal末态mc更新profile、7165–7174只还原normal水状态。`hydrol.py`刷新/dummy/返回及module接口，`driver/orchestration.py`四调用传实际dh和五冻结控制；A-R1实际state writer改从soil结果持久化新profile；A组，依赖已有C13 | 冻结开启、normal mc改变；thermo/linear/module/实际closure四个修前数值失败，off通过；修后独立profile/真表/RHS/两次重构与normal mc/mcl/tmc还原、diag/下游组合、linear窄JIT和缺真实输入拒绝通过。A-R1真实零雪closure→writer/packet及无THERMOSOIL fallback在初版复现.000794945001109798误差，补齐后通过并保留normal状态；普通有THERMOSOIL下步重算，不能泛化逐步影响。土壤lhf333600和固定profile低层API保留；不认证normal solver、完整thermo JIT/refSOC/模型年 |
+| S24-CWRR-NONFREEZE-BIN | 源8291–8301非冻结ratio→scale→INT→整数加imin；只修`hydrol.py`两个真实表consumer，B组。非冻结ratio局部屏障防编译重排，冻结8261/8275表达式保留 | 合法浮点边界.1682给源bin16、旧eager17；矿物/泥炭各16个边界/端点×eager/JIT及freeze控制均通过。整数顺序初版3pass1peatJITfail，局部屏障后4pass；原consumer AST隔离重放D差为4910.4347847302415/268.56503923288255mm²/day，不冒充共同修前/编译Fortran。无epsilon/生产nextafter/全局flags/容差调整；任意backend、逐位/性能未证 |
+| S22-TOPMODEL-TIDE | 源7286–7293按cell tile6面积严格阈值为所有tile选择水库，`hydrol.py`已有诊断API，C组，依赖已有C14 | 3cell含无/等于/略高阈值，tidesoff/等水库/peatoff/既有5tile组件合同，eager/JIT及连续暖层旧回归通过；修前meanwt最大差.04m。生产TOPMODEL=true、四参数IO和fwet carry仍未准入/未修 |
+| S24-CONDVEG-SNOWCRI | 源control455/495–503/550–555、intersurf2267/2302–2310/2330–2335和constantes_var129/697、constantes507–513核准effective gate/default。`condveg.py`resolver/main/init/wrapper，driver cold直接调用及两effective缓存键；D-R1补齐严格boolean输入合同；D组，依赖已有C15 | 已初始化SECHIBA且IMPOSE_PARAM=true才读raw，缺impose用源默认true，关闭gate不消费raw；explicit标量API表示已生效。有效20+雪10旧.5→源1/3；修前4fail/8controls。D-R1未知active gate改为ValueError、既有true/false及initialized-off不读raw保留，不计新物理缺陷。D50个唯一ID在新93组合通过，初版D44历史身份保留。实际组件/五call表达式×三gate情况/两个cache构造stub分列，不宣称完整driver或其他四参数/unsupported init准入 |
+
+修前共同原状27项为17有效fail/10pass，保存三生产SHA、空diff/index和实际rootimport，
+父级验看后才放行生产。初版选择61个新测试ID（保留原27，新增A2+D32）与25个直接相关
+旧回归。实际组合84pass/2fixturefail，随后仅修directmain测试函数的合法无albedo输入，
+所有断言/容差及生产保持，逆还全文件SHA证明无其他D测试修改，再仅重跑该2项为2pass。
+**86个唯一ID均有pass证据，不是单次86pass**；原失败回执保留，不登记为物理反例。
+[初版联合验证记录](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/verification-review.json)
+及原失败回执保持历史身份，原入口工件另存`history/initial-delivery/`。
+
+主控两项补充仍属Stage25。在与初版三生产SHA一致的dirty实现上先保存
+[补项修前7项](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/revision-before.json)，
+2有效fail/5pass/0error/0skip，无fixture/import/TypeError；父级验看后才改A writer和D gate。
+三tests身份不变，按原12个selectors在最终生产一次完成
+[93项全通过](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/revised-final.json)：
+旧86 ID全部保留，新增A1+D6，仍为25个直接相关旧ID；
+[补项联合验证](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/revised-verification-review.json)
+分列命令、ID、JUnit/stdout、稳定身份、rootimport和TEMP清理。未重跑共同修前27或原调查。
+B局部屏障另复用主控CPU JAX0.10.1两consumer非边界grad/vmap的8个有限观察：
+与旧consumer AST body在当前namespace/真表中重放匹配，不是历史整module或一般AD准入。
+
+三生产文件、三新测试和本两份报告组成可审修改；A–D生产hunk、联合测试和报告依赖组
+分别打包，并在系统TEMP内从基线副本依次apply/check和逐文件重构核对。
+[main报告](main_physics_review.md)的第二十五阶段及
+[交付核验](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/delivery-verification.json)
+保留具体源/当前函数与有限文件身份。执行方交付时未stage/commit/push，主控在验收后
+按上述两组提交代码及测试，接受登记单独提交；不修改或同步其他研究工作树。
+原manifest/patch保留交付时草案身份，主控接受更新不回写历史回执。
+
+后续同步按C17–C19水文组和C20参数组核对。前者在含C13/C14的基线上建立，后者承接
+C15接口/缓存；若研究线已有同等实现，先比较hunk与调用合同，不整文件替换。
+三份Stage25测试和直接相关旧回归随组核对；93项CPU组件结果不代替研究线的GPU、
+梯度、compiled运行验证。既有Teacher/prepared/restart保留原producer身份。
+
+319年度NPP仍failed、water-origin暂停，V01–V03、C8/C10/Stage20/raw-restart及旧
+Teacher/prepared/restart身份保留；本批未建立年度影响。无模型日年/完整模型编译、
+Fortran/oracle/广泛suite/SSH/服务器/GPU/训练/付费/环境重建或自动化。
+执行方复用既有Verify图generation2026-10-25T07:07:50Z及Transport closed后的精确源回退。
+主控验收时服务恢复至generation2026-10-25T14:39:20Z，定向writer/parser/调用查询配合
+coverage及当前源码核对；Python metadata_changed、Fortran excluded限制仍保留，
+没有重建图或全域覆盖声明。剩余一批有限源码边界审查及集中收尾见main报告；
+整模型科学验证另列V01–V03，不因本次修复登记而视为完成。
 
 ### C1：与 GPU 批处理无关的缓存缺陷
 

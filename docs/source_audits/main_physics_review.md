@@ -1,6 +1,10 @@
 # main 物理正确性检查入口
 
-核查日期：2026-10-25。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
+当前Stage25：四项最小边界修复已完成主控验收，登记为**C17–C20**。
+见本页末尾第二十五阶段及[交付入口](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/README.md)。
+C1–C20累计20项已接受修复、13个代码提交；最终定向组合93项一次通过，未建立年度归因。
+
+核查日期：2026-10-26。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
@@ -2832,3 +2836,97 @@ P3生产准入、P5门控/loader及P6物理允许域均保留上文限制。
 实际准入合同不成立则明确停留候选，不以扩大支持或关闭门控凑修复。其他source-only
 参数、check/fatal、fwet生产准入、雪不变量不自动扩为修改。保持原科学阈值、旧数据
 身份和生产准入；不开模型日年、Fortran、服务器、训练或其他研究分支同步。
+
+## 第二十五阶段：四项最小边界修复（主控已验收）
+
+本批从main `7905b1165f6e812bf87514017765278f9df5da6d`的干净生产/index开始，
+固定cwd与实际ORCJAX导入均为`E:/ORCHIDEE-MAN-JAX`。上节四项下一步已按本批
+授权实施；Stage24的只读/pending是历史时点。2026-10-26主控验看实际补项、
+修前失败、93项最终JUnit/log及八文件交付身份后接受本批。累计已接受口径为
+**C1–C20、20项/13个代码提交**，旧准确SHA表完整保留。
+以下四项依次登记为C17、C18、C19、C20，原发现ID保留供追溯。
+C17–C19代码及相关测试提交为`ad0d322cc4951d4af158f4e8cbb6d306bdf374f3`；
+C20为`f8d36e1f8c03046e12e146aed2abb8bd286403de`。
+A-R1完成原C17状态传递，D-R1是C20新helper的输入合同补齐，不另增物理缺陷编号。
+[主控验收回执](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/acceptance/primary-acceptance.json)
+记录接受范围、复用验证和历史回执的引用更正。
+
+### 必要性、实现和有界证据
+
+| 原发现ID | 必要修改、源条件及位置 | 修前/修后证据与输入域 |
+| --- | --- | --- |
+| S22-DUMMY-REFRESH | `hydrol.f90::hydrol_soil`6884–6905按normal末态mc刷新冻结profile，7165–7174只恢复normal mc/mcl/tmc。`hydrol.py`的all_tiles在dummy前刷新并返回新profile；module/closure及`orchestration.py`四入口传实际dh与五项冻结控制，缺温度/dh/纹理明确拒绝。A-R1补齐实际writer，从soil结果持久化新profile，不再复制输入旧profile。低层显式profile helper仍保留固定profile合同 | 共同基线thermo/linear/module/actual precall closure四个有效失败，profile最大差分别.01954419464452073/.014218757224033346/.010042066601177013/.0007949450011098258，dummy RHS亦不同；off通过。修后真实normal返回mc/mcl/tmc、独立NumPy profile/真实表/矩阵/RHS/求解/重构与下游diag/moisture均通过。A-R1真实零雪7层closure→writer/packet→无THERMOSOIL fallback在初版实现上复现旧/新profile及writer/fallback误差均.000794945001109798，补齐后通过，normal mc/mcl/tmc保留。另有1点4层6tile thermo/linear/off及4层linear窄JIT；冻结律源8332–8455，土壤lhf333600保留。normal solver本身不是独立认证 |
+| S24-CWRR-NONFREEZE-BIN | `hydrol_soil_coef`8291–8301先ratio、scale、INT再整数加imin。只改矿物/泥炭非冻结consumer，8261/8275冻结加法后INT保留；局部`jax.lax.optimization_barrier`保留ratio赋值的舍入边界 | .1682/.045/.43仍按独立逐步表达式得scaled15.999999999999998、bin16。共同基线矿物eager/泥炭eager及JIT失败，矿物JIT本来通过。仅改整数顺序后3pass/1泥炭JITfail，加入局部屏障后4pass；两family×eager/JIT、各16个边界两侧/端点输入和freeze控制，真实a/b/D/K均通过原限。原consumer AST隔离重放的D最大偏差为矿物4910.4347847302415、泥炭268.56503923288255mm²/day；K近连续。该重放不冒充共同修前或编译Fortran；无逐位等价、任意backend或屏障性能声明 |
+| S22-TOPMODEL-TIDE | `hydrol_soil`7286–7293按cell的tile6面积严格`>min_sechiba`为所有tile选潮汐/普通水库，替换当前tile索引条件 | 共同基线eager/JIT最大meanwt差.04m；修后3cell的无tile6/恰等阈值/刚超过阈值，以及tidesoff/等水库/peatoff/已有5tile组件合同均通过独立meanwt/fwet参考和窄JIT。C14连续暖层前缀10项旧回归通过。仅已有显式四参数诊断；生产TOPMODEL=true、参数IO和fwet carry仍未准入/未修 |
+| S24-CONDVEG-SNOWCRI | `control.f90`455、495–503、550–555和`intersurf.f90`2267、2302–2310、2330–2335建立SECHIBA状态及参数gate；`constantes_var.f90`129/697默认IMPOSE_PARAM=true/SNOWCRI=10，`constantes.f90`507–513读active值。新增显式initialized-state resolver；main/init/wrapper、cold直接fraction/main及两缓存键转发effective标量；D-R1补齐既有严格boolean输入合同 | gateon有效20+nobio雪10时，源893给1/3，旧wrapper仍.5，共同基线4fail/8controls。门控关闭忽略非法raw，缺IMPOSE_PARAM用源默认true；raw OK_SECHIBA不替代initialized状态。D-R1 active未知IMPOSE_PARAM从静默false改为ValueError，recognized true/false及initialized-off不读raw的5项控制保持；这是helper合同补项，不增加物理翻译缺陷。D50个唯一ID在新93项组合通过；初版D44=42pass+2夹具修正pass历史保留。数值wrapper eager/JIT、main/init/restart、五actual call表达式×三gate情况、两真实cache constructor stub分列。explicit scalar API表示已生效值；其他四个参数接缝及未支持init模式未扩展 |
+
+[HYDROL报告](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/hydrol/README.md)和
+[CONDVEG报告](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/condveg/report.md)
+保留源subroutine/行段、当前函数位置、必要性、调用依赖和有限文件身份。
+A四个driver调用到recording边界是实参装配证据；A实际closure数值另证。
+A-R1直接执行真实合法零雪closure、`_add_hydrol_to_previous_fields`和packet，再进入
+已支持的无THERMOSOIL fallback；普通有THERMOSOIL的下步会重算profile，不能由此
+宣称每步数值都受影响。仅定向查看同名字段的科学输出/诊断writer，二者原已消费soil
+新profile；这不是全状态writer完整性审计。
+D的AST调用执行真实组件，只证明装配/组件；cache stub只证明构造选择，均不宣称
+完整driver控制流或整模型compiled执行。
+
+### 共同基线、最终组合与接受登记
+
+所有生产写入前保存[共同修前回执](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/common-before.json)：
+27项=17有效fail/10pass/0error/0skip；三生产及三tests身份稳定，生产diff/index前后空，
+父级实际验看JSON/log后才放行。B/C在首断言失败后的loop不算修前已验证控制。
+原27个ID全部保留；修后增加A2+D32共34项接口/gate/cache检查，加25项直接相关旧回归，
+初版选择86个唯一ID，未重跑Stage23全72或73oracle/广泛suite。
+
+初版实际运行是**84pass/2fixturefail**；两项新directmain夹具误请求不完整albedo输入。
+仅该函数改为合法的无albedo主接口，保留全部分数/init/restart/拒绝断言和容差；
+完整D文件逆还此hunk的SHA精确等于原组合测试SHA，三生产和其余target均未变。
+随后仅该2项重跑为2pass。故86个唯一ID均有通过证据，**不是单次86pass**。
+原失败回执不覆盖，不把fixture失败登记为物理数值反例；
+[初版联合验证](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/verification-review.json)
+继续绑定初版生产/测试身份，其入口工件另存`history/initial-delivery/`。
+
+主控实际审查要求的A-R1/D-R1仍属本Stage25。先在与初版相同三生产SHA的dirty实现上
+保存[补项修前7项](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/revision-before.json)：
+2有效fail/5pass/0error/0skip，无fixture/import/TypeError；不是HEAD-clean共同基线。
+父级验看后放行两处最小生产修改，三tests保持修前身份，再按原12个selectors一次
+运行[新最终组合](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/revised-final.json)：
+**93pass/0fail/0error/0skip**，保留原86个ID并增加A1+D6，25个直接相关旧ID不变。
+[补项联合验证](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/verification/revised-verification-review.json)
+给出原/新ID映射、真实命令/rootimport、JUnit/stdout、稳定的生产/测试身份及系统TEMP清理。
+这次93通过绑定补齐后的最终生产，未重跑共同修前27、原调查或AD。
+[复用的B变换观察](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/acceptance/bin-transform-observations.json)
+仅为CPU JAX0.10.1两consumer非边界grad/vmap共8观察，与旧consumer AST body在当前
+module namespace及共享真表下重放匹配，不是历史整module重放或一般AD准入。
+[交付核验](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/delivery-verification.json)
+记录源码/测试/文档身份及补丁重构检查。
+
+补丁按A刷新/接口+driver、B非冻结bin/局部屏障、C已有诊断选择、D gate/传参/cache
+分四组；三份新测试和两份报告草案各为依赖组。A依赖已有C13、C依赖C14、D依赖C15，
+共同基线已含这些提交；同一hydrol测试文件的A/B/C分节不拆成重复测试。
+四项均已加入[已接受总表](shared_core_branch_review.md)。主控复用最终93项验证，
+没有另跑数值实验；补项修前失败与最终测试身份对应，八文件与交付manifest一致。
+实际提交分为C17–C19水文组、C20参数组；两研究分支均待维护线程核对同步。
+执行方补丁/manifest保留交付时文档草案身份，主控登记更新单独提交，不回写历史回执。
+
+仅本地ORCJAX CPU Python-B/必要窄JIT，pytest禁cacheprovider，运行/cache均位于
+系统TEMP并已清理。无epsilon/生产nextafter/全局编译开关/容差调整，未改雪算法或
+disposition、其他参数/checks、Teacher/prepared/restart身份、研究工作树；没有模型日年、
+完整模型编译、新Fortran/oracle、SSH/服务器/调度/GPU/训练/付费/环境重建/自动化或
+跨聊天回传。执行方图复用Verify `E-ORCHIDEE-MAN-JAX` generation2026-10-25T07:07:50Z、
+12327nodes/73750edges；Transport closed不重试，Python metadata_changed、Fortran
+excluded、templates not_tracked均沿用精确源回退，不宣称新图/全域覆盖。
+主控验收时图服务已恢复，generation为2026-10-25T14:39:20Z；定向查writer/parser及
+调用关系，coverage仍标记相关Python metadata_changed、Fortran excluded，结合当前
+源码/diff核对，不把服务恢复当作全域覆盖证明。
+
+319误差`.0008192662350707258 > .0003951849734783173`仍failed，water-origin暂停；
+V01–V03、C8 tiny/负值fatal/nonfinite、C10源负库存、Stage20两peat候选、raw-restart
+旧容量和维护同步边界全部保留。本批组件修复没有建立年度NPP因果或改善证据。
+
+**有限收尾计划：**下一批仅处理Stage24已列出的参数/检查合同、选定peat与restart
+边界及雪maxmass允许域，逐项给出已证一致、需修复、不支持或证据不足的处置。
+只有有效支持域内、源码与独立反例同时确认的小缺陷进入修复；未证域明确登记，
+不无限追查。完成这一批和集中验收/同步说明后结束本轮源码审查。
+V01–V03整模型/跨点/restart、319年度归因及669点/长期验证另作科学验证计划。
