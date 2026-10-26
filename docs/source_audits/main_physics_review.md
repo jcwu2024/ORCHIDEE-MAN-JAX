@@ -1,8 +1,9 @@
 # main 物理正确性检查入口
 
-当前Stage25：四项最小边界修复已完成主控验收，登记为**C17–C20**。
-见本页末尾第二十五阶段及[交付入口](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/README.md)。
-C1–C20累计20项已接受修复、13个代码提交；最终定向组合93项一次通过，未建立年度归因。
+当前Stage26：四包边界及补项S26-R1已通过主控验收，最终132项定向通过，**本轮有限源码审查收尾**。
+见本页末尾第二十六阶段及[交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)。
+新增C21–C28，累计28项已接受修复、16个代码提交；原接受证据与精确SHA保留。
+下一步为V01本地完整模型短运行与动态状态恢复验证；年度319失败尚未解释。
 
 核查日期：2026-10-26。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
@@ -2930,3 +2931,96 @@ V01–V03、C8 tiny/负值fatal/nonfinite、C10源负库存、Stage20两peat候�
 只有有效支持域内、源码与独立反例同时确认的小缺陷进入修复；未证域明确登记，
 不无限追查。完成这一批和集中验收/同步说明后结束本轮源码审查。
 V01–V03整模型/跨点/restart、319年度归因及669点/长期验证另作科学验证计划。
+
+## 第二十六阶段：最后一批有限源码边界（主控已验收）
+
+固定cwd为`E:/ORCHIDEE-MAN-JAX`，main基线
+`61c6b3170419bb2c5d22eab80f98bfe314e9fa74`。启动根目录/分支/实际ORCJAX解释器和
+`jax_orchidee`导入均已核对。本批只处理A四参数、B五check合同、C两peat及一次raw
+restart归类、D三雪臂允许域，未重开Stage25或扩大到全配置。
+
+2026-10-26主控复用已审A/B/C/D证据，验看R1实际hunk、独立修前4fail/7pass及
+最终132项JUnit/log。20个被测源码/测试身份和11个交付文件均匹配，未重跑数值。
+本批接受C21–C28共8项；四参数分别编号，fraction carry及其R1时序补项合计为C25，
+诊断默认和显式组件修复与生产轨迹影响分列，不把8项等同于8个已触发paper物理bug。
+C21–C25提交`c214e43da57c21b68002186fbf71c67d45835bae`；C26提交
+`84b5d425418a6d1b18fa6dbe080348c2faa72e13`；C27–C28提交
+`9fc87c011a4e991f1637223b0f8fb2a224000595`。
+[主控验收回执](../../outputs/reviews/main-physics-20261026/final-source-boundaries/acceptance/primary-acceptance.json)
+保留接受范围及与原changes-requested回执的关系。
+
+| 接受编号 / 原发现 | 最终有界结论 |
+|---|---|
+| C21–C24 / A-MIN_WIND、A-HEIGHT_DISPLACEMENT、A-Z0_ICE、A-SNOW_DENSITY（按此顺序） | 四参数各自源owner/default/gate及已支持入口数值差异确证，已接受。前三项constantes、密度constantes_soil自身gate；默认.1/.66/.001/330，密度保留源正值检查。main/init/wrapper、cold直接fraction/main及两真实缓存键转发有效标量；静态/其他原reject模式不开放 |
+| C25 / S26-A-FRAC-CARRY（含S26-R1） | 源sechiba SAVE及1085–1091生成的fraction在下一DIFFUCO997–1005沿用。补齐实际writer、mapper、cold映射和DIFFUCO可选字段优先；集中审查S26-R1再使restart scaffold从成功HYDROL的post雪计算fraction，避免旧fraction与新雪混合。必需restart字段不变。真实组件/调用表达式及writer/packet→mapper→assembler有独立before/after，非完整rollout |
+| C26 / S26-B-TMC-DEFAULT（P4-17） | 已有显式tmc check API的allowed_err恢复源2e-8，停止边界10倍即2e-7；真实tile迁移roundoff及阈值控制通过。未改check=false默认或显式override，不称paper数值缺陷。P4-02/03/04缺check/fatal owner，未支持；P4-05保留无条件bounds-fatal静态缺口，只建立条件有效域代数不变量，无合法触发反例/生产修复 |
+| C27 / S26-C-PEAT-ACCUM | 已有显式caller-supplied is_peat组件的连续peat buffer累积/非peat reset/累积回加恢复源1126、2102–2141；独立buffers1/3与DOC11/23最终通过。生产仍nvm14单PFT14，不开放多peat生产 |
+| C28 / S26-C-PEAT-OLT | helper/core默认min_stomate恢复源1e-8及严格>诊断，显式override保留；只证peat_OLT诊断差异，库存/转移不变，无下游物理轨迹影响声明，C10不变 |
+| C raw-restart | 证据不足并结束。实际已有restart和reader缺pcapa_en，源初始化仍有定义；唯一最小缺项是该文件/初始化控制下、首次energy前源初始化pcapa_en及producer身份，保存数组或独立验证重构均可。不造restart或同值结论 |
+| D雪允许域 | 349true/355false/360true保持pft14_conditional/domain-unproven；360false局部逻辑保留。R<m3（充分U=m1+m2<3000）须在实际maxmass入口由准入restart/forcing及transfer/phase/sublimation保持证明；这是唯一缺项。未确认新翻译错，不改雪算法/registry或构造任意高密度轨迹 |
+
+[最终M01–M12及独立V01–V03矩阵](../../outputs/reviews/main-physics-20261026/final-source-boundaries/final-matrix.md)
+逐行记录一致、确证修复、未支持/源未定义、或证据不足及最小缺项。
+四包报告、当前补丁/hunk依赖及后续同步建议由[交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)索引。
+
+初版[组合回执](../../outputs/reviews/main-physics-20261026/final-source-boundaries/verification/final-integrated.json)
+为**121pass/0fail/0error/0skip**：A新60、公共carry新7、B新9、C新8、直接旧37，历史身份保留。
+actual-call表达式与真实组件数值、两cache构造stub分别标明，不认证完整driver/compiled。
+121是初版最终单次结果；A/B/C修前26/9/8是三个独立运行，不拼成共同baseline。
+父级最初fraction参考漏改同时生效的SNOWCRI_ALB=20，原错误参考及117pass/3fixturefail
+保留，不计有效反例；正确源式下精确原公共源码重放3fail/3pass，字节恢复回执保留。
+中间120pass之后发现实际writer仍丢字段，新增真实writer-before1fail，再补两字段；
+最终121绑定该整合身份。详见[公共carry记录](../../outputs/reviews/main-physics-20261026/final-source-boundaries/fraction-carry.md)。
+没有为测试改生产公式或容差。Stage25接受的93项只复用，不整套重跑。
+
+所有数值均为本地ORCJAX CPU、Python-B及必要窄JIT；pytest禁cacheprovider，系统TEMP
+已清理，最终源码/测试身份稳定，原log/JUnit/失败均保留。
+图Verify实际恢复后调用；Python metadata_changed及Fortran excluded使用当前精确源回退，
+不宣称全覆盖。[交付核验](../../outputs/reviews/main-physics-20261026/final-source-boundaries/verification/delivery-verification.json)
+绑定当前源/测试/两报告和工件。
+
+C1–C28累计28项/16代码提交；原C17–C19的`ad0d322cc4951d4af158f4e8cbb6d306bdf374f3`、
+C20的`f8d36e1f8c03046e12e146aed2abb8bd286403de`身份保留。C4–C28研究同步仍待维护线程核对，
+本批未修改其他工作树。319 `.0008192662350707258 > .0003951849734783173`仍failed，
+water-origin暂停，V01–V03、C8 tiny/负值fatal/nonfinite、C10源负库存、TOPMODEL/fwet
+生产未准入和历史Teacher/prepared/restart/reference producer身份保留。
+无完整模型编译/日年、新Fortran/oracle、广泛suite/旧73、服务器/GPU/训练/付费、
+环境重建、同步、自动化或跨聊回传。**本轮有限源码审查已收尾；整模型科学验证
+按下面独立方案执行，不把组件验收当作整模型已通过。**
+
+### 集中审查补项S26-R1与下一步验证准备
+
+主控已复核初版121及其20个被测文件身份、三个独立before和原有限结论；仅要求修正
+restart timestep scaffold 的 CONDVEG 调用。它原本在HYDROL之后仍读取restart旧雪；
+这是既有producer问题，初版carry进一步让下一DIFFUCO保留该旧fraction，不能将全部
+影响都归于本次新增carry。没有无雪paper触发或319年度因果声明。
+
+修前新增实际调用表达式/真实CONDVEG组件11项得到
+[4有效数值fail/7pass](../../outputs/reviews/main-physics-20261026/final-source-boundaries/verification/r1-before.json)：
+mass/explicit各自的vegetation/nobio在不同pre/post雪下失败；默认未变化、无snow_state
+回退和缺显式几何控制通过。只在该调用覆盖成功HYDROL且有snow_state的六雪字段，
+包括与albedo同刻的两age；无state保持原输入，几何缺失仍报告缺输入，未扩配置。
+原7项carry的精确字节前缀保留，测试/源公式/容差未为失败调整。
+
+最新[一次132项组合](../../outputs/reviews/main-physics-20261026/final-source-boundaries/verification/r1-final.json)
+全通过，0fail/error/skip；原121全部ID+11新项，pytest35.28秒、runner39.312秒，身份稳定、
+CPU/root import正确、TEMP清理。相对旧121只有orchestration与公共carry测试两个
+被测文件变化，18个其他文件身份不变；原before/Stage25整93/调查不重跑。
+[补项报告及精确hunk](../../outputs/reviews/main-physics-20261026/final-source-boundaries/revision-r1/README.md)
+将实际实参表达式、组件及writer/packet→mapper→assembler与完整控制流分列，
+HYDROL边界数组只作合法声明输入，未运行HYDROL或完整scaffold。
+新AST核对仅restart_payload实参改变；旧121和初版交付快照均保留，R1属原carry闭合，
+不新增独立修复ID/接受编号。本次index_status实际Transport closed，沿用主控图上下文
+及当前精确源回退，不将旧generation称本次查询成功。
+
+本轮源码收尾后唯一优先是[当前代码V01短运行、状态连续性/重启方案](../../outputs/reviews/main-physics-20261026/final-source-boundaries/next-validation-plan.md)。
+该方案只读准备准确命令、冻结输入/producer、实际later-day块与日界/重启入口、
+原判据、失败分流和一次性缺项，**未执行整模型运行或XLA编译**；raw restart缺pcapa_en
+的未证范围明确保留。其后才是固定319原1961全年/原门槛的修复后回归，再到跨点/669
+长期验证；这些是独立数值/科学准入，不等于源码审查接受，也不重开water-origin或
+原年度调查。主控在源码验收后另按用户授权和实际资源安排执行。
+
+执行方交付时未stage/commit/push。主控验收后按上述三组提交代码/测试，接受登记
+另行提交；原manifest与旧回执保留交付时文档身份，不回写历史。C1–C28累计28项/
+16代码提交，所有原有限未知、C8/C10源限制、TOPMODEL/fwet未准入、319失败、
+V01–V03和历史producer身份保留。研究分支待其维护线程按准确提交核对同步。

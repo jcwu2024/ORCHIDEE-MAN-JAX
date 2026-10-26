@@ -1,8 +1,9 @@
 # 共享物理核心与研究分支核查
 
-Stage25当前：四项边界修复已主控验收，登记为**C17–C20**，最终定向组合93项一次通过。
-见下方接受登记和[交付入口](../../outputs/reviews/main-physics-20261025/main-boundary-fixes/README.md)。
-最新修复登记：2026-10-26。累计20项已接受修复、13个代码提交，仍未建立319年度归因。
+Stage26当前：四包边界及集中审查S26-R1已主控验收，最终132项定向通过，**本轮有限源码审查收尾**。
+见[Stage26交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)及下方接受分组。
+新增C21–C28；Stage25的C17–C20及93项原证据保留。
+最新修复登记：2026-10-26。累计28项已接受修复、16个代码提交，仍未建立319年度归因。
 
 此前Stage23的C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
 四组准确提交及适用域见下文Stage23。此前C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
@@ -11,16 +12,62 @@ C6–C9提交为`27ff14b38aafc7df91ce52b8393642ca08952395`；C10独立提交为
 C10源顺序修复单独分组，明确保留可能产生负剩余库存的源算法局限。C5（THERMOSOIL原水文层数传递）已完成主控验收，独立修复提交为
 `a117cd5afc92ea55c9aeb528eec6f724de780111`。C4（restart tau天数回退与配置传递）已在main独立提交为
 `4b92d3dcb5dc534f5bfba1a64b1ea9fae296da99`，供日尺度和全球效率分支后续核对同步。
-本次未检查或修改两个研究工作树；其C4–C20同步状态均为**待维护线程核对**，不代表已同步。
+本次未检查或修改两个研究工作树；其C4–C28同步状态均为**待维护线程核对**，不代表已同步。
 C1–C3的分支同步记录截至下述2026-10-11核查，不能当作两个研究分支的最新状态。
 
 Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证据追溯。
 四组代码已独立提交，不代表两个研究分支已同步。
 
-累计口径：**20项已接受修复，13个代码提交**；同一提交可以包含多项修复，
+累计口径：**28项已接受修复，16个代码提交**；同一提交可以包含多项修复，
 测试数量也不等于独立物理过程或完整模型覆盖率。以下总表、各项源码/回归依据及
 精确SHA共同构成修复登记。Stage24四项候选经Stage25实现与补项验收，现计入C17–C20；
 其历史处置和本批接受范围分别见下文。
+
+## Stage26 接受修复与接入建议（C21–C28）
+
+基线main `61c6b3170419bb2c5d22eab80f98bfe314e9fa74`；2026-10-26主控已核对
+S26-R1实际修改、独立修前及最终132项JUnit/log、20个被测文件与11个交付文件身份。
+复用既有A/B/C/D审查及验证，无主控数值重跑。以下8项加入C21–C28；R1属于C25，
+不重复编号。代码/测试按三组提交，报告接受登记单独提交，未修改两研究工作树。
+C21–C25为`c214e43da57c21b68002186fbf71c67d45835bae`，C26为
+`84b5d425418a6d1b18fa6dbe080348c2faa72e13`，C27–C28为
+`9fc87c011a4e991f1637223b0f8fb2a224000595`。
+
+| 分组 / 临时发现 | 接入依赖及证据边界 |
+|---|---|
+| C21–C24：A-MIN_WIND / A-HEIGHT_DISPLACEMENT / A-Z0_ICE / A-SNOW_DENSITY（按此顺序） | 各源owner/gate/default已独立核对；condveg有效API/main/init/wrapper、orchestration cold调用及两cache。基线已有C15/C20。A新60通过，其中实际组件/调用表达式与构造stub区分，不扩原reject/init模式或全bucket生命周期 |
+| C25：S26-A-FRAC-CARRY（含S26-R1） | 与参数组一起接入writer→mapper→assembler及cold fraction；S26-R1补齐restart scaffold从成功HYDROL的post雪生成fraction，避免旧fraction与新雪混合。必需restart变量不变。18新项=原7+补项11，含实际call/真实组件及writer/packet；完整compiled/restart跨点仍V01 |
+| C26：S26-B-TMC-DEFAULT / P4-17 | hydrol_tmc_update只恢复源allowed_err2e-8及说明，显式check API默认修复，未改算法/override/check=false。B9新+14旧通过；P4-02/03/04未支持check/fatal owner，P4-05条件不变量与静态guard缺口有界保留，无新支持入口 |
+| C27：S26-C-PEAT-ACCUM | 既有显式组件的连续buffer/非peat reset/累积回加；不开放多peat生产。当前生产仍单PFT14 |
+| C28：S26-C-PEAT-OLT | helper/core源默认1e-8，仅诊断；显式override与库存/转移保留，其他min参数及C10不变。C8新+4直接旧通过，另选C10源顺序8控制通过；两C项共用新测试文件并一组提交 |
+
+[提交分组/hunk依赖](../../outputs/reviews/main-physics-20261026/final-source-boundaries/submission-suggestions.md)
+和[当前工件核验](../../outputs/reviews/main-physics-20261026/final-source-boundaries/verification/delivery-verification.json)
+绑定五个生产文件、四个新测试及两报告。补项后最终单次132通过，0fail/error/skip；
+早期错误fraction参考的117pass/3fixturefail、正确参考下原源码重放、120pass中间版本
+及writer-before有效失败完整保留，不混作共同baseline或最终writer证据。
+原121及其manifest/被测源与测试快照保留；R1独立before为4有效fail/7pass，
+最终132保留原121全部ID，18个旧被测文件不变，仅公共orchestration/carry测试更新。
+该补项只改实际restart CONDVEG实参的六雪字段覆盖，缺state/显式几何边界保留；
+是原carry接入闭合，不另计独立修复或接受C编号。
+Stage25整93不重跑；测试数不代表全模型/全分支覆盖。
+
+raw-restart容量以唯一源初始化pcapa_en/producer身份缺项停止，不称源未定义；
+雪349true/355false/360true以入口质量不变量缺项停止，360false局部逻辑保留，无新雪补丁。
+[最终M01–M12/V01–V03矩阵](../../outputs/reviews/main-physics-20261026/final-source-boundaries/final-matrix.md)
+与本次主控验收一起结束有限源码审查；不把有限未知改成全配置已验证。
+
+[V01准确短运行/状态连续性与重启方案](../../outputs/reviews/main-physics-20261026/final-source-boundaries/next-validation-plan.md)
+仅为未执行准备，复用现存入口/冻结输入/参考和原门槛，说明真正later-day块与
+raw restart容量缺项限制；不当作整模型验证证据。源码接受后由主控另行安排实际
+资源，随后依次进行固定319原1961全年/原阈值回归及跨点/669长期验证，
+不重开water-origin或原年度调查。此次仍无模型日年/XLA/服务器运行或同步。
+
+参数及fraction carry影响非默认值和运行state字段；今后相应维护线程需按拟支持用途
+评估compiled/restart/Teacher消费者兼容性，不能用文本合并代替数值准入或整文件覆盖。
+C4–C28同步仍待维护线程核对，既有Teacher/prepared/restart/reference producer与执行版本
+分别保留。本批没有同步授权/操作。319仍failed，water-origin暂停；V01–V03、C8 tiny/
+负值fatal/nonfinite、C10源负库存、TOPMODEL/fwet未准入边界保留，无年度归因。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
@@ -78,6 +125,14 @@ Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证�
 | C18 | 矿物/泥炭非冻结查表先INT再整数加imin | 通用浮点边界表达式修复 | main `ad0d322`；局部ratio屏障、真实表及CPU窄JIT通过，冻结表达式保留；两研究分支待核对 |
 | C19 | TOPMODEL诊断按cell tile6面积为所有tile选择潮汐水库 | 已有诊断API修复 | main `ad0d322`；严格阈值/多cell/控制项通过，生产TOPMODEL和fwet仍未准入；两研究分支待核对 |
 | C20 | 有效SNOWCRI_ALB贯通main/init/wrapper/cold及缓存 | 通用参数门控/传递修复 | main `f8d36e1`；源默认/gate、严格布尔输入及真实组件通过，整模型compiled未证；两研究分支待核对 |
+| C21 | 有效MIN_WIND贯通粗糙度入口及缓存 | 通用参数传递修复 | main `c214e43`；低风速组件源公式及门控控制通过；两研究分支待核对 |
+| C22 | 有效HEIGHT_DISPLACEMENT贯通入口及缓存 | 通用参数传递修复 | main `c214e43`；保留源默认.66及非默认高度公式；两研究分支待核对 |
+| C23 | 有效Z0_ICE贯通入口及缓存 | 通用参数传递修复 | main `c214e43`；冰区动量/热粗糙度组件通过；两研究分支待核对 |
+| C24 | 有效SNOW_DENSITY贯通CONDVEG质量雪入口及缓存 | 已支持组件参数传递修复 | main `c214e43`；独立soil配置gate/正值检查，非全部密度consumer或bucket生命周期准入；两研究分支待核对 |
+| C25 | 保存雪覆盖率并修正restart入口的post-HYDROL雪时序 | 通用状态/时序传递修复 | main `c214e43`；实际call→组件→writer/packet→DIFFUCO的18项通过，原raw缺字段回退保留；两研究分支待核对 |
+| C26 | tmc可选诊断恢复源allowed_err默认2e-8 | 显式诊断API合同修复 | main `84b5d42`；接受真实迁移roundoff并保留超限停止、check关闭和显式override，不改科学门槛；两研究分支待核对 |
+| C27 | 连续peat PFT间累积DOC_RUN_2_PEAT并按源回加 | 已有显式组件源行为修复 | main `9fc87c0`；连续/隔断/单PFT控制通过，未开放多peat生产；两研究分支待核对 |
+| C28 | peat_OLT诊断采用源min_stomate默认1e-8 | 诊断默认修复 | main `9fc87c0`；阈值两侧/相等和实际core通过，库存/转移不变；两研究分支待核对 |
 | I1 | 日块可选捕捉 `daily_flux_labels` | 共同 Teacher / 数据导出接口 | 先处理回调兼容性，再与日块函数提取协调接入 |
 | R1 | 提取 `_paper_later_day_block_transition_factory` | 共同 CPU / GPU 运行接口候选 | 保持原标量路径，按既定前向合同核查提取后的行为 |
 | R2 | `global_batch.py` 的 lane 组装与 `vmap` | 全球运行能力候选 | 继续留在全球研究线；满足支持范围、生命周期和运行接口要求后可进入 main |
@@ -107,6 +162,9 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C16 | `sechiba/hydrol.py`、`driver/orchestration.py` | `2f36dc7f7945d52387a2848aa124c043118ed45f` |
 | C17–C19 | `sechiba/hydrol.py`、`driver/orchestration.py` | `ad0d322cc4951d4af158f4e8cbb6d306bdf374f3` |
 | C20 | `sechiba/condveg.py`、`driver/orchestration.py` | `f8d36e1f8c03046e12e146aed2abb8bd286403de` |
+| C21–C25 | `sechiba/condveg.py`、`sechiba/diffuco.py`、`driver/orchestration.py` | `c214e43da57c21b68002186fbf71c67d45835bae` |
+| C26 | `sechiba/hydrol.py` | `84b5d425418a6d1b18fa6dbe080348c2faa72e13` |
+| C27–C28 | `stomate/soilcarbon_kernels.py` | `9fc87c011a4e991f1637223b0f8fb2a224000595` |
 
 ### Stage24验收时的处置（历史；四项修复现见Stage25）
 
