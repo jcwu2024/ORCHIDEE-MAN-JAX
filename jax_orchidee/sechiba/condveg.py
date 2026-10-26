@@ -92,6 +92,44 @@ class CondvegInitializeBoundaryError(NotImplementedError):
     """A reachable initializer branch requires target-external structure."""
 
 
+class CondvegSourceParameters(NamedTuple):
+    """Effective source scalars; also a hashable compiled-cache identity."""
+
+    min_wind: float = MIN_WIND
+    height_displacement: float = HEIGHT_DISPLACEMENT
+    z0_ice: float = Z0_ICE
+    sn_dens: float = SN_DENS
+
+
+def resolve_condveg_source_parameters(
+    run_def_values: Mapping[str, str] | None, *, ok_sechiba: bool
+) -> CondvegSourceParameters:
+    """Read the four audited scalars under their source configuration gates.
+
+    MIN_WIND/HEIGHT_DISPLACEMENT/Z0_ICE: constantes.f90:447-497,
+    control.f90:550-555 and constantes_var.f90:460,688-694. SNOW_DENSITY:
+    constantes_soil.f90:70,157-176 and constantes_soil_var.f90:97. The soil
+    owner independently gates its read and rejects nonpositive density.
+    """
+    if not ok_sechiba:
+        return CondvegSourceParameters()
+    values = {} if run_def_values is None else run_def_values
+    impose = str(values.get("IMPOSE_PARAM", "TRUE")).strip().strip(".").upper()
+    if impose in {"F", "FALSE", "N", "NO", "0"}:
+        return CondvegSourceParameters()
+    if impose not in {"T", "TRUE", "Y", "YES", "1"}:
+        raise ValueError(f"cannot parse run.def boolean value {values.get('IMPOSE_PARAM')!r}")
+    result = CondvegSourceParameters(
+        float(values.get("MIN_WIND", MIN_WIND)),
+        float(values.get("HEIGHT_DISPLACEMENT", HEIGHT_DISPLACEMENT)),
+        float(values.get("Z0_ICE", Z0_ICE)),
+        float(values.get("SNOW_DENSITY", SN_DENS)),
+    )
+    if result.sn_dens <= 0.0:
+        raise ValueError("SNOW_DENSITY must be positive")
+    return result
+
+
 @dataclass(frozen=True)
 class CondvegInitializeResult:
     """State written by the audited PFT14 ``condveg_initialize`` path."""
@@ -777,6 +815,10 @@ def condveg_initialize(
     z0_bare=Z0_BARE,
     snowcri_alb=SNOWCRI_ALB,
     val_exp=999999.0,
+    min_wind=MIN_WIND,
+    height_displacement=HEIGHT_DISPLACEMENT,
+    z0_ice=Z0_ICE,
+    sn_dens=SN_DENS,
     undef_sechiba=1.0e20,
 ) -> CondvegInitializeResult:
     """Execute ``condveg_initialize`` for the source-audited PFT14 path.
@@ -841,6 +883,7 @@ def condveg_initialize(
         snowdz=snowdz,
         ok_explicitsnow=ok_explicitsnow,
         snowcri_alb=snowcri_alb,
+        sn_dens=sn_dens,
     )
 
     recomputed_roughness = bool(
@@ -863,6 +906,9 @@ def condveg_initialize(
             lai=lai,
             frac_snow_veg=snow_fractions.frac_snow_veg,
             z0_bare=z0_bare,
+            min_wind=min_wind,
+            height_displacement=height_displacement,
+            z0_ice=z0_ice,
         )
         z0m, z0h = roughness.z0m, roughness.z0h
         roughheight, roughheight_pft = roughness.roughheight, roughness.roughheight_pft
@@ -1127,6 +1173,10 @@ def condveg_main_minimal(
     z0_bare=Z0_BARE,
     snowcri_alb=SNOWCRI_ALB,
     ok_explicitsnow=True,
+    min_wind=MIN_WIND,
+    height_displacement=HEIGHT_DISPLACEMENT,
+    z0_ice=Z0_ICE,
+    sn_dens=SN_DENS,
     z0_scal=None,
     roughheight_scal=None,
     drysoil_frac=None,
@@ -1171,6 +1221,7 @@ def condveg_main_minimal(
         snowdz=snowdz,
         ok_explicitsnow=ok_explicitsnow,
         snowcri_alb=snowcri_alb,
+        sn_dens=sn_dens,
     )
     kjpindex = int(_as_float64(snow).shape[0])
     emis = condveg_main_emissivity(kjpindex, emis_scal=emis_scal)
@@ -1201,6 +1252,9 @@ def condveg_main_minimal(
             lai=lai,
             frac_snow_veg=snow_fraction.frac_snow_veg,
             z0_bare=z0_bare,
+            min_wind=min_wind,
+            height_displacement=height_displacement,
+            z0_ice=z0_ice,
         )
     else:
         missing = tuple(
@@ -1229,6 +1283,8 @@ def condveg_main_minimal(
             z0_over_height=z0_over_height,
             ratio_z0m_z0h=ratio_z0m_z0h,
             z0_bare=z0_bare,
+            height_displacement=height_displacement,
+            z0_ice=z0_ice,
         )
 
     albedo_result = None
@@ -1393,6 +1449,10 @@ def run_condveg_first_step_module(
     hydrol_diagnostics=None,
     run_def_values: Mapping[str, str] | None = None,
     snowcri_alb=None,
+    min_wind=None,
+    height_displacement=None,
+    z0_ice=None,
+    sn_dens=None,
     ok_explicitsnow=True,
     impaze=False,
     rough_dyn=True,
@@ -1408,9 +1468,29 @@ def run_condveg_first_step_module(
     This is a SECHIBA entry (control.f90:455; intersurf.f90:2267 establish
     ok_sechiba=true). Omitted ``snowcri_alb`` resolves the gated raw setting;
     an explicit scalar is already effective and bypasses raw resolution.
+    The four additional explicit scalars have the same effective-input
+    contract; omitted scalars follow their independently audited source read.
     """
 
     values = {} if run_def_values is None else dict(run_def_values)
+    explicit_parameters = {
+        "min_wind": min_wind, "height_displacement": height_displacement,
+        "z0_ice": z0_ice, "sn_dens": sn_dens,
+    }
+    raw_names = {"min_wind": "MIN_WIND", "height_displacement": "HEIGHT_DISPLACEMENT",
+                 "z0_ice": "Z0_ICE", "sn_dens": "SNOW_DENSITY"}
+    if any(value is None for value in explicit_parameters.values()):
+        unresolved = dict(values)
+        for name, value in explicit_parameters.items():
+            if value is not None:
+                unresolved.pop(raw_names[name], None)
+        resolved = resolve_condveg_source_parameters(unresolved, ok_sechiba=True)
+    else:
+        resolved = CondvegSourceParameters()
+    effective_parameters = {
+        name: getattr(resolved, name) if value is None else value
+        for name, value in explicit_parameters.items()
+    }
     restart = dict(restart_payload)
     driver = dict(driver_payload)
     slowproc = dict(slowproc_payload)
@@ -1429,6 +1509,7 @@ def run_condveg_first_step_module(
         )
 
     inputs = {
+        **effective_parameters,
         "snow": restart.get("snow"),
         "snow_nobio": restart.get("snow_nobio"),
         "snowrho": restart.get("snowrho"),

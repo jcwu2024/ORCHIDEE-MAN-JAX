@@ -156,6 +156,7 @@ from jax_orchidee.sechiba.condveg import (
     condveg_albedo_explicit,
     condveg_frac_snow,
     resolve_condveg_snowcri_alb,
+    resolve_condveg_source_parameters,
 )
 from jax_orchidee.sechiba.enerbil import (
     EnerbilFirstStepInputCoverage,
@@ -2938,7 +2939,8 @@ def _add_condveg_to_previous_fields(fields: dict[str, dict[str, object]], condve
         return
     condveg = condveg_module.module
     if condveg is not None:
-        for name in ("z0m", "z0h", "roughheight", "roughheight_pft"):
+        # CONDVEG's source state is reused by DIFFUCO (sechiba_main:997-1005).
+        for name in ("z0m", "z0h", "roughheight", "roughheight_pft", "frac_snow_veg", "frac_snow_nobio"):
             fields["diffuco_previous_step_state"][name] = getattr(condveg, name)
         fields["enerbil_previous_step_state"]["roughness"] = condveg.roughheight
         if condveg.albedo is not None:
@@ -3502,7 +3504,9 @@ def _diffuco_restart_payload_from_state_fields(
     payload: dict[str, object] = {}
     used: list[str] = []
     sources = (diffuco_state, hydrol_state, slowproc_state)
-    for name in DIFFUCO_FIRST_STEP_PRECALL_RESTART_FIELDS:
+    # sechiba_main:997-1005 carries CONDVEG fractions into the next DIFFUCO
+    # call. They are optional runtime state, not required serialized variables.
+    for name in (*DIFFUCO_FIRST_STEP_PRECALL_RESTART_FIELDS, "frac_snow_veg", "frac_snow_nobio"):
         for source in sources:
             if name in source:
                 payload[name] = source[name]
@@ -4625,6 +4629,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
             snowrho=hydrol_cold.explicit_snow.snowrho,
             snowdz=hydrol_cold.explicit_snow.snowdz,
             snowcri_alb=resolve_condveg_snowcri_alb(run_def_values, ok_sechiba=True),
+            sn_dens=resolve_condveg_source_parameters(run_def_values, ok_sechiba=True).sn_dens,
             ok_explicitsnow=parse_run_def_bool(run_def_values.get("OK_EXPLICITSNOW", "TRUE")),
         )
         condveg_albedo = condveg_albedo_explicit(
@@ -4760,6 +4765,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         emis_scal=1.0,
         z0_bare=float(run_def_values.get("Z0_BARE", 0.01)),
         snowcri_alb=resolve_condveg_snowcri_alb(run_def_values, ok_sechiba=True),
+        **resolve_condveg_source_parameters(run_def_values, ok_sechiba=True)._asdict(),
         impaze=parse_run_def_bool(run_def_values.get("IMPOSE_AZE", "FALSE")),
         rough_dyn=parse_run_def_bool(run_def_values["ROUGH_DYN"]),
         ok_explicitsnow=parse_run_def_bool(run_def_values["OK_EXPLICITSNOW"]),
@@ -4800,6 +4806,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
         "roughheight_pft": condveg_initial_surface.roughheight_pft,
         "z0h": condveg_initial_surface.z0h,
         "z0m": condveg_initial_surface.z0m,
+        "frac_snow_veg": condveg_initial_surface.frac_snow_veg,
+        "frac_snow_nobio": condveg_initial_surface.frac_snow_nobio,
         "humrel": hydrol_cold.humrel,
         "evap_bare_lim": hydrol_cold.evap_bare_lim,
         "drysoil_frac": np.full((payload.kjpindex,), 0.5, dtype=np.float64),
@@ -7035,7 +7043,16 @@ def paper_1961_driver_timestep_scaffold(
                 use_jit=fixed_format_trace_dir is None and static_trace_fields is None,
             )
             condveg_first_step_module = run_condveg_first_step_module(
-                restart_payload=first_step_restart_state.diffuco_precall.as_payload(),
+                restart_payload={
+                    **first_step_restart_state.diffuco_precall.as_payload(),
+                    # sechiba_main:1049-1091 updates snow before CONDVEG.
+                    **(
+                        {name: getattr(hydrol_first_step_module.snow_state, name)
+                         for name in ("snow", "snow_nobio", "snowrho", "snowdz", "snow_age", "snow_nobio_age")}
+                        if hydrol_first_step_module.ok and hydrol_first_step_module.snow_state is not None
+                        else {}
+                    ),
+                },
                 driver_payload={
                     "zlev": payload.zlev,
                     "temp_air": payload.temp_air,
@@ -10343,6 +10360,7 @@ def _paper_compiled_sechiba_scan(
         float(context.dt_sechiba),
         float(context.run_def_values.get("Z0_BARE", 0.01)),
         resolve_condveg_snowcri_alb(context.run_def_values, ok_sechiba=True),
+        resolve_condveg_source_parameters(context.run_def_values, ok_sechiba=True),
         bool(context.ok_explicitsnow),
         bool(context.ok_freeze_cwrr),
         bool(context.ok_thermodynamical_freezing),
@@ -11268,6 +11286,7 @@ def _paper_compiled_later_day_block_executable(
         str(context.config_path.resolve()),
         float(context.run_def_values.get("Z0_BARE", 0.01)),
         resolve_condveg_snowcri_alb(context.run_def_values, ok_sechiba=True),
+        resolve_condveg_source_parameters(context.run_def_values, ok_sechiba=True),
         block_size,
         mineral_imin,
         mineral_imax,

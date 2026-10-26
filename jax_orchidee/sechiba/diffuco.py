@@ -1822,6 +1822,12 @@ def assemble_diffuco_first_step_precall_payload(
         if field in restart:
             add(field, restart[field], restart_inputs)
 
+    # sechiba_main:997-1005 supplies CONDVEG's current fractions. Preserve
+    # effective source parameters without requiring new restart-file variables.
+    for field in ("frac_snow_veg", "frac_snow_nobio"):
+        if field in restart:
+            add(field, restart[field], restart_inputs)
+
     for field in DIFFUCO_FIRST_STEP_PRECALL_DRIVER_FIELDS:
         if field in driver and driver[field] is not None:
             add(field, driver[field], driver_inputs)
@@ -1871,8 +1877,10 @@ def assemble_diffuco_first_step_precall_payload(
             snowdz=payload["snowdz"],
             ok_explicitsnow=ok_explicitsnow,
         )
-        add("frac_snow_veg", as_runtime_array(snow_fraction.frac_snow_veg), source_kernel_inputs)
-        add("frac_snow_nobio", as_runtime_array(snow_fraction.frac_snow_nobio), source_kernel_inputs)
+        if "frac_snow_veg" not in payload:
+            add("frac_snow_veg", as_runtime_array(snow_fraction.frac_snow_veg), source_kernel_inputs)
+        if "frac_snow_nobio" not in payload:
+            add("frac_snow_nobio", as_runtime_array(snow_fraction.frac_snow_nobio), source_kernel_inputs)
     if river_routing is not None and nbp_glo is not None:
         routing_active = bool(river_routing) and int(nbp_glo) > 1
         if not routing_active:
