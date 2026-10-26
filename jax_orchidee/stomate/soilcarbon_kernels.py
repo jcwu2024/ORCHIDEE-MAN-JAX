@@ -2707,7 +2707,7 @@ def soilcarbon_perma_peat_redistribute(
     *,
     frac1=0.95,
     frac2=0.05,
-    min_stomate=0.0,
+    min_stomate=1.0e-8,
 ) -> SoilcarbonPermaPeatResult:
     """Apply the ``PERMA_PEAT`` soilcarbon redistribution branch.
 
@@ -2715,7 +2715,9 @@ def soilcarbon_perma_peat_redistribute(
     ``soilcarbon_leak`` lines 1375-1437, with default ``frac1``/``frac2`` from
     ``src_parameters/constantes_var.f90`` lines 1390-1391. The loop is kept
     sequential because each layer can add carbon to the next layer before that
-    next layer is tested against ``Cmax``.
+    next layer is tested against ``Cmax``. The ``min_stomate`` default is from
+    ``constantes_var.f90`` line 177 and only controls the ``peat_OLT`` scan at
+    soilcarbon lines 1428-1433; it does not clamp or redistribute inventories.
     """
 
     carbon = jnp.asarray(carbon_32l)
@@ -3727,6 +3729,9 @@ def soilcarbon_leak_doc_export(
     doc_run_2_peat_all = jnp.zeros((npts, nvm, NPOOL, ndeep, nelements), dtype=doc.dtype)
     soil_doc_corr_all = jnp.zeros((npts, nvm), dtype=doc.dtype)
     doc_work = doc
+    # soilcarbon_leak:1126 initializes once; 2108/2119 accumulate across
+    # consecutive peat PFTs, while the non-peat branch at 2130 resets it.
+    doc_run_2_peat = jnp.zeros((npts, NPOOL, ndeep, nelements), dtype=doc.dtype)
 
     for pft in range(nvm):
         tile = pref_soil_veg[pft]
@@ -3742,7 +3747,7 @@ def soilcarbon_leak_doc_export(
         soil_doc_corr_all = soil_doc_corr_all.at[:, pft].set(soil_doc_corr)
 
         runoff2peat_factor = soil_doc_corr * runoff2peat[:, tile] * 1.0e-3 / jnp.where(soilwater > 0.0, soilwater, 1.0)
-        doc_run_2_peat = jnp.zeros((npts, NPOOL, ndeep, nelements), dtype=doc.dtype)
+        doc_run_2_peat = jnp.where(is_peat[pft], doc_run_2_peat, 0.0)
         for layer in range(sro_bottom):
             loss = jnp.minimum(
                 doc_work[:, pft, layer, IFREE, :, :],
@@ -3750,7 +3755,8 @@ def soilcarbon_leak_doc_export(
             )
             loss = jnp.where((soilwater > 0.0)[:, None, None] & is_peat[pft], loss, 0.0)
             doc_run_2_peat = doc_run_2_peat.at[:, :, layer, :].add(loss)
-            doc_work = doc_work.at[:, pft, layer, IFREE, :, :].add(loss)
+            # Source 2137 adds the cumulative buffer, not only this PFT's loss.
+            doc_work = doc_work.at[:, pft, layer, IFREE, :, :].add(doc_run_2_peat[:, :, layer, :])
         doc_run_2_peat_all = doc_run_2_peat_all.at[:, pft, :, :, :].set(doc_run_2_peat)
 
         runoff_factor = soil_doc_corr * runoff_per_soil[:, tile] * 1.0e-3 / jnp.where(soilwater > 0.0, soilwater, 1.0)
@@ -3903,7 +3909,7 @@ def soilcarbon_leak_core_step(
     perma_peat_veget_mask=None,
     frac1=0.95,
     frac2=0.05,
-    min_stomate=0.0,
+    min_stomate=1.0e-8,
     capture_transfers: bool = False,
 ) -> SoilcarbonLeakCoreResult:
     """Run the source-backed ``soilcarbon_leak`` core in Fortran order.
