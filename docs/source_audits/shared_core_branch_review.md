@@ -9,7 +9,12 @@ Stage26当前：四包边界及集中审查S26-R1已主控验收，最终132项�
 [验收回执](../../outputs/validation/v01-after-stage26/primary-v01-acceptance.json)保留完整证据。
 两种day9恢复结果最大差异0；累计19模型日/4调用/3进程。原NaN及来源记录两次失败保留，
 经源码核验的定义域/路线合同另版通过。本次没有新增物理修复，28项/16代码提交不变。
-下一步为固定319点1961全年V02；原年度失败、raw重启及跨点/长期限制保留。
+**V02交付已由主控验收，年度科学验证仍未通过**：固定319点1961冷启动全年运行的
+新NPP`0.3860031827055333`，参考`0.38518497347831726`，绝对误差
+`0.000818209227216038 > 0.0003951849734783173`；AGB/BGB/GPP年度门槛通过。
+见[本次交付](../../outputs/validation/v02-after-stage26/319-1961/README.md)、
+[主控验收](../../outputs/validation/v02-after-stage26/primary-v02-acceptance.json)及下方V02结果。
+实际1模型进程/1调用/365模型日；原年度失败、raw重启及跨点/长期限制保留。
 
 此前Stage23的C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
 四组准确提交及适用域见下文Stage23。此前C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
@@ -133,13 +138,64 @@ domain-v2新增1模型进程/1调用/1日；当时连同旧source8累计2模型�
 3.9964615879614042e-12。两种恢复都经过跨进程加载，不认证未执行的同进程8+1或raw NetCDF。
 主控核对实际源码/验证器/回执及46新工件、13运行源/7取证源身份，无数值重跑。
 两次历史失败、旧producer及存储原值保留，无生产代码/参数修改、无新修复ID。
-V01只接受本次短窗路径与动态恢复；V02固定319全年和V03跨点/长期仍另列，未在本批执行。
+V01只接受本次短窗路径与动态恢复；V01批次未执行V02固定319全年或V03跨点/长期。
+随后另获授权的V02实际结果见下节，不回写V01历史回执。
 
 参数及fraction carry影响非默认值和运行state字段；今后相应维护线程需按拟支持用途
 评估compiled/restart/Teacher消费者兼容性，不能用文本合并代替数值准入或整文件覆盖。
 C4–C28同步仍待维护线程核对，既有Teacher/prepared/restart/reference producer与执行版本
 分别保留。本批没有同步授权/操作。319仍failed，water-origin暂停；V01–V03、C8 tiny/
 负值fatal/nonfinite、C10源负库存、TOPMODEL/fwet未准入边界保留，无年度归因。
+
+### V02实际结果：319点全年完成，NPP科学门槛仍失败
+
+V01验收发布后另获本批授权，固定main `876ac3bb8c49469ae9d9a9e0aff5982a1e4ebd64`
+（相对V01仅报告变化，生产源码不变），原319.0-057.0/I5/S26_69.834_0.0019_0.3980_97.918、
+1961 cold-start365日、compiled block7和原15字段/开关完整执行一次。
+[V02交付](../../outputs/validation/v02-after-stage26/319-1961/README.md)、
+[执行回执](../../outputs/validation/v02-after-stage26/319-1961/execution-receipt.json)及
+[四年度指标/完整离线统计](../../outputs/validation/v02-after-stage26/319-1961/summary.json)记录真实结果；
+旧next-validation-plan仍为历史方案，未回写成执行回执。
+
+实际ORCJAX/本工作区包/CPU进程PID53212，Python -B、持久编译缓存关闭；原CLI入口、
+config SHA3e3ec5c4518ebf4d470c60eda3e9bd6ddfd22e5c6dee473694f2409f17e619af及
+319-current/inputs/used_run.def SHA5ecb4d2615dec4d54a88f2db5444ac2820d8327ec6c10c6af16945b4ff56374a保留。
+仅改输出/checkpoint目录，未重新物化run.def。1模型进程/1调用/365模型日，无年度重试；
+365个48步日界、末tstep17519、无missing/stopped、15字段各365个有限float64(1,14)输出通过。
+runner264.5704782秒含编译/同步，CLI进程281.3368429秒另含导入/完整对象保存/汇总；不作纯吞吐对照。
+两条XLA simplifier警告保留，实际exit0。年度完整run精确回读0/0、原年汇总离线exact replay、
+checkpoint完整packet含来源0/0一致。pickle tuple/JSON list仅规范化元数据，packet门槛不放宽。
+
+实际319 legacy14/NVM14及动态/non-imposed配置支持两处roughheight_pft[0,0]的原未定义NaN；
+其余定义坐标/每日输出/capacity有限。365=1+52×7的真实完整块路线由源码helper生成来源合同并精确比较，
+未机械照搬001点元数据。源码必需合同及260数值字段shape/dtype通过；另92个额外字段的
+独立源码shape合同未完整覆盖，逐项列出并保持有限域/完整存储检查，不声称全部packet结构认证。
+
+AGB/BGB/GPP的新JAX依次为4.591235866253038、4.120666562048175、0.7776203738914573，
+年度误差依次0.000320663158555945、0.000205098119952396、0.0000388634933388143，
+均通过原`1e-5+1e-3*abs(reference)`及normalized bias/RMSE限1e-3。
+**NPP=0.3860031827055333，参考0.38518497347831726，绝对误差0.000818209227216038
+仍大于原限0.0003951849734783173**；normalized bias/RMSE均0.0021241981997049434，失败。
+因此全年完整但科学接受false；单年度统计只含一对值，不代表逐日表现。诊断atol2e-6/rtol1e-7另列且false，
+不代替科学门槛，全部字段/诊断已完成统计。
+
+原319-current producer09968cf8及同一参考/输入身份保留；原NPP失败
+`0.0008192662350707258 > 0.0003951849734783173`和旧payload直读误差末位差另列，未回写。
+新NPP比旧JAX低约1.05701e-6，仍未闭合年度偏差。旧CLI只有摘要；辅助逐日比较使用有独立身份的
+Stage6 JAX producer c7110e03，四通量最大日变化分别为GPP2.63996e-4/day218、NPP1.89971e-4/day218、
+MAINT_RESP6.23768e-7/day364和GROWTH_RESP7.38774e-5/day218，原字段单位不变。
+其窗口统计/相关性不构成修复因果，历史Fortran未补称本次producer。科学失败后继续完成离线交付，未第二次积分。
+
+本次无生产修复/参数/容差修改，28项/16代码提交及C4–C28待同步状态不变；
+两份报告更新。执行前后有限源/config/run.def/输入及历史身份一致，
+系统TEMP清理；图Transport closed下用精确源回退。V03/跨点/长期、raw NetCDF容量、TOPMODEL/fwet/
+支持域和water-origin暂停限制保留，未检查或修改两个研究工作树。
+本批[最终静态核验](../../outputs/validation/v02-after-stage26/319-1961/final-verification.json)
+记录保存工件/身份/报告链接与42行、28个修复ID原登记；无模型或统计重算。
+2026-10-27主控验收本批交付，复核33份新工件与15份当前源码身份，复用13项离线检查，
+未重复运行或重算统计；[主控验收](../../outputs/validation/v02-after-stage26/primary-v02-acceptance.json)
+保留年度科学接受false、严格诊断false及260/92字段合同边界。该验收没有新增已接受修复，
+也没有解除319科学失败、raw重启、跨点/长期或研究分支待同步限制；原交付回执保持历史身份。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
