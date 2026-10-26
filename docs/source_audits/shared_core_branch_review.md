@@ -4,6 +4,12 @@ Stage26当前：四包边界及集中审查S26-R1已主控验收，最终132项�
 见[Stage26交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)及下方接受分组。
 新增C21–C28；Stage25的C17–C20及93项原证据保留。
 最新修复登记：2026-10-26。累计28项已接受修复、16个代码提交，仍未建立319年度归因。
+**V01已主控验收通过**：001点1961年前9日的编译/普通路径与动态状态恢复通过原数值容差。
+[最终交付](../../outputs/validation/v01-after-stage26/domain-v3/README.md)及
+[验收回执](../../outputs/validation/v01-after-stage26/primary-v01-acceptance.json)保留完整证据。
+两种day9恢复结果最大差异0；累计19模型日/4调用/3进程。原NaN及来源记录两次失败保留，
+经源码核验的定义域/路线合同另版通过。本次没有新增物理修复，28项/16代码提交不变。
+下一步为固定319点1961全年V02；原年度失败、raw重启及跨点/长期限制保留。
 
 此前Stage23的C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
 四组准确提交及适用域见下文Stage23。此前C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
@@ -57,11 +63,77 @@ raw-restart容量以唯一源初始化pcapa_en/producer身份缺项停止，不�
 [最终M01–M12/V01–V03矩阵](../../outputs/reviews/main-physics-20261026/final-source-boundaries/final-matrix.md)
 与本次主控验收一起结束有限源码审查；不把有限未知改成全配置已验证。
 
-[V01准确短运行/状态连续性与重启方案](../../outputs/reviews/main-physics-20261026/final-source-boundaries/next-validation-plan.md)
-仅为未执行准备，复用现存入口/冻结输入/参考和原门槛，说明真正later-day块与
-raw restart容量缺项限制；不当作整模型验证证据。源码接受后由主控另行安排实际
-资源，随后依次进行固定319原1961全年/原阈值回归及跨点/669长期验证，
-不重开water-origin或原年度调查。此次仍无模型日年/XLA/服务器运行或同步。
+原[V01准备方案](../../outputs/reviews/main-physics-20261026/final-source-boundaries/next-validation-plan.md)
+保留历史未执行身份。主控发布后已另行授权实际V01，生产者固定
+`d5d487f101ac49c2b933c91f1cb08d42bb473bfd`，仅本地ORCJAX CPU/001点1961。
+[实际汇总](../../outputs/validation/v01-after-stage26/001-api-9day/summary.json)为一次模型调用、
+8个模型日：cold8/block7完整返回，8个48步日界、无missing/stopped、末tstep383通过，
+每日输出264个数值叶/3384个元素全部有限。末packet扫描353个数值叶/23994个元素，
+diffuco_previous_step_state及sechiba_finalize_state的`float64[1,14] roughheight_pft`
+各有一个`[0,0]=NaN`，无Inf；相同坐标/值的组件条目不计为两项独立缺陷，不作mask豁免。
+**原始尝试的V01独立有限值门槛未通过**；当时第9日续跑/恢复、普通cold9均未运行，连续性及普通/编译
+误差尚未得到，原atol1e-8/rtol1e-10未改。后续模型停止，交主控判断，不自动启动V02/V03。
+
+首段205.9292175秒含编译/同步，失败尝试208.6074725秒含导入/预检至失败，不能称完成
+19个模型日或稳态吞吐。完整结果、daily、packet/provenance、实际有限容量和原traceback
+已保存；离线0/0存储最大绝对误差0不能覆盖有限值失败。运行前后生产/输入/runner身份
+一致，系统TEMP已清理，无生产修改或模型重跑。raw NetCDF容量缺项、原319年度失败、
+TOPMODEL/fwet及原支持域限制、研究同步待核对均保留；没有年度改善/归因或raw重启准入声明。
+
+后续调查未新增整模型积分或生产修改。实际NaN为001点/PFT1 bare ground，保存末状态
+height/veget/veget_max/lai均0；冻结IMPOSE_AZE=false、ROUGH_DYN=true、
+HEIGHT_DISPLACEMENT=.66、全部OK_LAIDEV=false。Fortran condveg.f90静态1467–1472/
+动态1705–1717只赋值PFT2..nvm，INTENT(out)的PFT1未定义；JAX动态/静态初始化NaN、
+循环从索引1开始，故此处保留显式sentinel，不能称源内存必为NaN。该写法来自仓库根
+基线`7333b46c0b38650fb6c9250582876137831657b8`，Stage26前已存在；消费端safe mask来自
+`5910ba9af857a91e565d13a25e3de2e3019080d1`。末边界保存值不能确定首次NaN日/步。
+
+[调查入口及复用建议](../../outputs/validation/v01-after-stage26/nonfinite-investigation/README.md)
+核对producer/writer/两packet及ordinary、fast-layout、恢复mapper；DIFFUCO的
+`OK_LAIDEV & (index>=1)`在log/乘除/sqrt之前选择安全输入，grid标量roughheight仍有效。
+11次局部函数调用（含窄CPU JIT封装2次调用）中，三条运输/消费路线NaN0与finite123
+对照11叶/63元素均有限、maxabs0；反事实启用PFT14的守卫控制仍通过，启用列NaN
+阳性控制使3个输出数组非有限。后者是构造组件控制，不是冻结配置的科学准入；没有
+完整ordinary/compiled/restore、所有配置或AD结论，也未确定原历史producer实参。
+
+主控正式接受的合同初始仅限本次001/1961/d5d487f、legacy14/NVM14、
+IMPOSE_AZE=false/ROUGH_DYN=true的实际动态重算producer；静态控制仅机制证据。
+只检查两处命名roughheight_pft的[0,0]未定义域；保留预期raw NaN、不豁免Inf，
+全部已定义坐标及其他字段仍严格finite。imposed分支
+定义全部PFT，不可通用豁免PFT1或inactive字段。未证明新生产缺陷；本批已另建验证器，
+32窄控制及首段离线重评通过，随后按授权开始余下阶段，未重跑source8。纯验证合同改变
+用另版门槛对未变物理的旧首段结果生成派生回执，保留
+旧producer和原failed；若改物理，受影响状态/输出须新producer重生成，旧packet仅诊断。
+原17工件/索引SHA保持，新调查独立manifest、TEMP已清理；图服务本次Transport closed，
+结论依赖精确源码回退。两条第9日路线都在原进程退出后加载，须分别称完整结果重新加载续跑
+与独立packet文件恢复续跑，不宣称同进程8+1边界。C1–C28仍28项/16提交，不新增C编号。
+
+domain-v2当时只完成完整结果重新加载后的day9：tstep384–431/48步，104.8217936秒含编译/同步，
+完整结果/daily/packet/动态容量先同步保存，随后packet schema/provenance门槛失败。
+[只读差异](../../outputs/validation/v01-after-stage26/domain-v2/schema-failure-inspection.json)
+显示数值字段shape/dtype无差异，daily33叶/423元素严格finite，packet353叶/23994元素
+仅保留原两NaN；唯一结构差异为slowproc_stomate_previous_step_state的provenance从7条变6条，
+缺`stomate.f90 lines 3288-3489 half-hour OK_LEAK state writeback`，其余6条完全相同。
+生产记录生成位置为orchestration.py:2775的2条base、8213–8239的1条half-hour、9275–9333
+的4条day-end；尚不能由记录差异推断物理漏过程或科学数值错误。当时domain-v2按seed精确比较而显式失败，
+故保留[失败回执](../../outputs/validation/v01-after-stage26/domain-v2/execution-001/failure-48208.json)，
+未改验证器、生产或容差放行。在该历史停止点，独立packet恢复day9、ordinary cold9及两组路径比较未运行。
+domain-v2新增1模型进程/1调用/1日；当时连同旧source8累计2模型进程/2调用/9日，回归/离线不计模型。
+
+主控现已验收[domain-v3最终结果](../../outputs/validation/v01-after-stage26/domain-v3/execution-001/summary.json)。
+13个半小时字段经源顺序选择并覆盖写回，17组实际组装控制/221字段断言和8路线检查通过；
+这些是标记值组装证据，不是221个独立科学试验。编译块7条与later/ordinary6条来源分别由
+真实helper生成并精确核验，未全局忽略来源；12项新增拒绝控制通过，原32控制按身份复用。
+原两处roughheight未定义坐标单列，其余状态/每日输出有限，原数值容差不变。
+
+实际复用source8及旧重载day9，只新增独立packet恢复day9和ordinary cold9，共10模型日；
+累计19模型日/4调用/3进程。恢复day9的完整packet含来源和每日输出最大差异0；普通/编译
+1–9日及最终状态通过atol1e-8/rtol1e-10。每日输出maxabs2.3125945602942011e-13，
+全状态maxabs2.5588087737560272e-7位于大尺度pcapa_en且在原相对容差内；maxrel
+3.9964615879614042e-12。两种恢复都经过跨进程加载，不认证未执行的同进程8+1或raw NetCDF。
+主控核对实际源码/验证器/回执及46新工件、13运行源/7取证源身份，无数值重跑。
+两次历史失败、旧producer及存储原值保留，无生产代码/参数修改、无新修复ID。
+V01只接受本次短窗路径与动态恢复；V02固定319全年和V03跨点/长期仍另列，未在本批执行。
 
 参数及fraction carry影响非默认值和运行state字段；今后相应维护线程需按拟支持用途
 评估compiled/restart/Teacher消费者兼容性，不能用文本合并代替数值准入或整文件覆盖。

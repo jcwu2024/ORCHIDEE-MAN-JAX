@@ -3,7 +3,13 @@
 当前Stage26：四包边界及补项S26-R1已通过主控验收，最终132项定向通过，**本轮有限源码审查收尾**。
 见本页末尾第二十六阶段及[交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)。
 新增C21–C28，累计28项已接受修复、16个代码提交；原接受证据与精确SHA保留。
-下一步为V01本地完整模型短运行与动态状态恢复验证；年度319失败尚未解释。
+**V01已主控验收通过**：001点1961年前9日，编译/普通路径与动态packet恢复均通过原数值容差。
+见[最终交付](../../outputs/validation/v01-after-stage26/domain-v3/README.md)及
+[验收回执](../../outputs/validation/v01-after-stage26/primary-v01-acceptance.json)。累计19模型日、4次调用、
+3个模型进程；第9日两种恢复结果最大差异为0，逐日输出最大绝对差异约2.313e-13。
+仅对两处源未定义roughheight槽位及实际路线来源记录采用经源码核验的合同；原两次失败保留。
+本次没有新增生产代码修复，累计28项/16代码提交不变。唯一优先下一步为固定319点1961全年V02；
+原年度NPP失败尚未解释，raw NetCDF重启与跨点/长期验证限制保留。
 
 核查日期：2026-10-26。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
@@ -2988,7 +2994,7 @@ water-origin暂停，V01–V03、C8 tiny/负值fatal/nonfinite、C10源负库存
 环境重建、同步、自动化或跨聊回传。**本轮有限源码审查已收尾；整模型科学验证
 按下面独立方案执行，不把组件验收当作整模型已通过。**
 
-### 集中审查补项S26-R1与下一步验证准备
+### 集中审查补项S26-R1与V01实际验证
 
 主控已复核初版121及其20个被测文件身份、三个独立before和原有限结论；仅要求修正
 restart timestep scaffold 的 CONDVEG 调用。它原本在HYDROL之后仍读取restart旧雪；
@@ -3013,12 +3019,116 @@ HYDROL边界数组只作合法声明输入，未运行HYDROL或完整scaffold。
 不新增独立修复ID/接受编号。本次index_status实际Transport closed，沿用主控图上下文
 及当前精确源回退，不将旧generation称本次查询成功。
 
-本轮源码收尾后唯一优先是[当前代码V01短运行、状态连续性/重启方案](../../outputs/reviews/main-physics-20261026/final-source-boundaries/next-validation-plan.md)。
-该方案只读准备准确命令、冻结输入/producer、实际later-day块与日界/重启入口、
-原判据、失败分流和一次性缺项，**未执行整模型运行或XLA编译**；raw restart缺pcapa_en
-的未证范围明确保留。其后才是固定319原1961全年/原门槛的修复后回归，再到跨点/669
-长期验证；这些是独立数值/科学准入，不等于源码审查接受，也不重开water-origin或
-原年度调查。主控在源码验收后另按用户授权和实际资源安排执行。
+源码收尾时保存的[V01准备方案](../../outputs/reviews/main-physics-20261026/final-source-boundaries/next-validation-plan.md)
+保留其历史未执行身份；主控接受并发布后，另行授权本地CPU实际验证。固定生产者
+`d5d487f101ac49c2b933c91f1cb08d42bb473bfd`、main/root、ORCJAX与原001输入，实际入口
+`outputs/validation/v01-after-stage26/run_v01.py`直接由`conda run -n ORCJAX python -B`执行。
+[实际交付](../../outputs/validation/v01-after-stage26/README.md)与[机器汇总](../../outputs/validation/v01-after-stage26/001-api-9day/summary.json)
+记录一次模型调用/8个模型日，计划的19个模型日没有全部执行。
+
+首段cold8/block7完整返回：第1日普通冷入口、第2–8日实际编译块；8个日界均48步，
+无missing/stopped，末`tstep=383`。每日输出264个数值叶/3384个元素全部有限。
+末packet扫描353个数值叶/23994个元素，`diffuco_previous_step_state`及
+`sechiba_finalize_state`两处`roughheight_pft`均为`float64[1,14]`，各有一个`[0,0]=NaN`，
+没有Inf。这是相同坐标/值的两个组件条目，不据此计为两个独立缺陷；原始验证未作inactive/mask
+豁免或生产bug起源判断。**原始尝试未通过独立有限值门槛；当时第9日续跑、恢复第9日和普通9日
+均未启动**，相应连续性/普通编译误差尚无结果，原`atol=1e-8,rtol=1e-10`未放宽。
+
+实际动态`pcapa_en`为有限`float64[1,32,14]`，范围1343518.9620269747–2186328.39145471。
+完整返回、8日输出、末packet（含provenance）与容量已先落盘；离线0/0存储一致性最大
+绝对误差为0，但比较器允许匹配NaN，不能覆盖独立有限值失败。[原失败及traceback](../../outputs/validation/v01-after-stage26/001-api-9day/failure-37196.json)
+完整保留，无模型重跑。首段205.9292175秒含编译/同步；失败尝试208.6074725秒含导入/
+预检至失败，不是完整V01总量或纯模型吞吐。源码/config/run.def/runner/comparator及
+输入身份在运行前后相同，生产diff为空；本次系统TEMP子目录已验证包含关系并清理。
+
+随后仅做[有界非有限值调查](../../outputs/validation/v01-after-stage26/nonfinite-investigation/README.md)，
+未运行任何新模型积分。实际坐标为001点、Fortran PFT1/bare ground；保存末状态的height、
+veget、veget_max、lai该位置均为0，冻结配置IMPOSE_AZE=false、ROUGH_DYN=true、
+HEIGHT_DISPLACEMENT=.66，OK_LAIDEV1–14全false。保存末状态不是此前CONDVEG调用输入，
+因此不能据此确定首次出现NaN的日/步或冒充历史producer回放。
+
+Fortran condveg.f90的静态1467–1472、动态1705–1717只为jv=2..nvm赋值，
+对应INTENT(out)的PFT1未定义；不能推断实际Fortran内存必为NaN。JAX condveg.py:424/571
+显式以NaN初始化，循环从索引1开始，PFT1保留sentinel；并非该坐标除法/log失效。
+该机制在仓库根基线`7333b46c0b38650fb6c9250582876137831657b8`及Stage26直接父版本均存在，
+不是Stage26新增；消费端safe mask来自`5910ba9af857a91e565d13a25e3de2e3019080d1`。
+imposed分支会定义全部PFT，不能推广为所有PFT1字段或所有配置的豁免。
+
+已沿CONDVEG→writer→两处packet→ordinary/fast-layout/恢复mapper核对保存和运输链；
+DIFFUCO在log、乘除及sqrt前用`OK_LAIDEV & (index>=1)`选择安全roughheight_pft，
+再进入输出选择；裸地/grid标量roughheight仍被物理计算使用。共11次局部函数调用，
+其中1个窄CPU JIT封装调用2次：三条运输/消费路线的原NaN0与有限替代123对照均11叶/
+63元素有限、maxabs0；动态/静态producer有限输入控制仅未定义列保留NaN。
+反事实启用PFT14的局部守卫控制也不受NaN0影响，而向启用列注入NaN使3个输出数组
+出现NaN。这是组件与运输证据，不是实际冻结配置的替代科学验证、完整compiled/restart
+准入、所有配置或AD证明；该次调查未运行整模型第9日或普通9日。
+
+主控已在[正式裁定](../../outputs/validation/v01-after-stage26/primary-domain-decision.json)接受
+“源未定义且已审计消费者在算术前排除的坐标，未证明新生产缺陷”的有界解释及严格合同。
+合同初始仅限本次001点/1961/d5d487f、legacy14/NVM14、IMPOSE_AZE=false/ROUGH_DYN=true
+的实际动态重算producer，静态控制只作机制证据。对两处命名roughheight_pft的[0,0]单列未定义域并保留预期NaN
+sentinel，不豁免Inf；全部源已定义坐标及其他字段仍须有限，不作通用mask
+豁免或nan_to_num修复。原V01 failed/失败traceback不重标，生产物理及原脚本不变；
+本批已另建[domain-v2验证器与回执](../../outputs/validation/v01-after-stage26/domain-v2/README.md)，
+32个窄控制均得到预期接受/拒绝，旧stage1离线重评通过。按已接受的纯验证合同调整，
+未变物理计算的首段保存结果可保留原producer身份复用，
+由另版门槛生成派生回执；不能把旧failed改为passed。若修改物理代码，受影响状态/输出
+须由新producer重新生成，旧packet仅留诊断身份。主控已授权在新回归及离线重评通过后
+执行余下三段、最多增加11个模型日；不得重跑首段8日。原进程已退出，两条第9日路线分别为
+“完整结果重新加载后的续跑”和“独立packet文件恢复续跑”，不称未中断同进程8+1。
+
+domain-v2当时只完成第一条day9续跑，tstep384–431、48步，完整结果/daily/packet/动态容量均已同步落盘，
+耗时104.8217936秒含编译/同步。随后独立域验证因packet schema/provenance差异停止；
+[失败回执](../../outputs/validation/v01-after-stage26/domain-v2/execution-001/failure-48208.json)保留。
+[只读schema核对](../../outputs/validation/v01-after-stage26/domain-v2/schema-failure-inspection.json)
+确认全部数值字段shape/dtype与基线一致，每日33叶/423元素严格有限，packet353叶/23994元素
+仅原两处roughheight_pft的[0,0]为NaN；这些数值扫描不覆盖provenance失败。
+
+唯一结构差异为`provenance_by_component.slowproc_stomate_previous_step_state`从7条变6条，
+少了`stomate.f90 lines 3288-3489 half-hour OK_LEAK state writeback`；其余6条顺序和值相同。
+[原值对照](../../outputs/validation/v01-after-stage26/domain-v2/provenance-differences.json)及精确源码
+将记录生成定位到orchestration.py:2775的2条base、8213–8239的1条half-hour追加、9275–9333
+的4条day-end追加。不能仅凭此记录差异推断物理过程漏执行或数值错误；当时domain-v2合同要求
+与seed的provenance精确一致，故保留显式失败，未改已执行验证器或数值容差。
+在该历史停止点，独立packet恢复day9、ordinary cold9、两路线连续性及普通/编译比较均未运行。
+domain-v2新增1模型进程/1调用/1模型日，当时累计2模型进程/2调用/9模型日；32控制和离线读取
+不计模型积分。原source8不重跑，已完成day9保留供后续有身份复用，不自动重试或扩展。
+新调查有独立manifest，原17工件及冻结索引SHA保持；图服务本次Transport closed，
+仅用历史Verify上下文和当前精确源码回退，不称本次图覆盖成功。原raw pcapa_en、319、
+TOPMODEL/fwet、支持域及研究同步限制均不因该调查解除。
+
+### V01最终验收：001点九日及动态状态恢复
+
+主控按[来源记录裁定](../../outputs/validation/v01-after-stage26/primary-provenance-decision.json)
+复核[13字段写回证据](../../outputs/validation/v01-after-stage26/domain-v3/source-closure/README.md)：
+最终半小时OK_LEAK结果经显式daily-state选择和day-end覆盖写回，后续覆盖字段集合与其不交。
+17组真实组装控制包含221项字段断言及8项路线检查；这是有形状的标记值/组装证据，
+不计作221次模型或独立科学验证。编译块保留首日7条来源，later/ordinary末状态生成6条；
+这是本次路径的记录生成差异，没有证实数值字段漏写。
+
+domain-v3按源码生成完整路线来源映射，数值结构/类型/离散值和producer身份仍严格检查。
+12项新增路线/结构/非有限拒绝控制通过，原32项未变合同控制及11次NaN局部探针复用。
+只有两处命名roughheight_pft的[0,0]须保留预期NaN，全部已定义坐标、其他状态及每日输出
+仍有限；没有通用NaN豁免或容差调整。原strict-all-finite与domain-v2的失败回执保留。
+
+[实际最终汇总](../../outputs/validation/v01-after-stage26/domain-v3/execution-001/summary.json)
+记录复用原source8和重载day9，新运行独立packet恢复day9及ordinary cold9，共新增10模型日。
+累计19模型日/4次调用/3进程，未重复已完成阶段。两种day9均为原进程退出后加载，
+不称同进程未中断8+1；ordinary cold9为一次连续冷启动。恢复day9的完整packet（含来源）
+和每日值最大差异0；普通/编译1–9日全部每日输出及最终数值状态通过原atol1e-8/rtol1e-10。
+每日输出最大绝对差异2.3125945602942011e-13；全状态最大绝对差异
+2.5588087737560272e-7位于大尺度pcapa_en，在原相对容差内；最大相对差异
+3.9964615879614042e-12位于wat_flux。有限域、48步/日、最终tstep431、无missing/stopped均通过。
+
+新两次模型调用分别141.2581363秒和85.6985076秒，含编译/同步；新进程完整模型窗口
+249.3094987秒，不称纯吞吐或包含前三批工作的总耗时。主控验看实际验证器、runner关键调用、
+数值回执及源码，核对46项新工件、13项运行源码和7项写回取证源码身份；未重跑模型/组件。
+原17/59/43项工件保留与新保存对象0/0回读复用执行方核验。**主控接受本次有界V01通过。**
+
+本批仅增加outputs验证工具/证据及两份状态报告，没有新增生产修复，C1–C28/16代码提交不变。
+下一步为原319点/1961/365日、冻结输入和原年度门槛的V02；本次未运行V02/V03。
+raw NetCDF容量证据、319历史失败、water-origin暂停、TOPMODEL/fwet/其他支持域及研究同步
+限制保留；九日路径/动态状态验证不构成年度、跨点、长期或全配置科学接受。
 
 执行方交付时未stage/commit/push。主控验收后按上述三组提交代码/测试，接受登记
 另行提交；原manifest与旧回执保留交付时文档身份，不回写历史。C1–C28累计28项/
