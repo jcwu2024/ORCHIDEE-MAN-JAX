@@ -8460,7 +8460,7 @@ def hydrol_tmc_update(
     dz_mm,
     min_sechiba=1.0e-8,
     check_cwrr=False,
-    allowed_err=0.0,
+    allowed_err=2.0e-8,
     raise_on_water_balance_error=True,
 ):
     """Migrate HYDROL water state after vegetation fractions change.
@@ -8476,6 +8476,11 @@ def hydrol_tmc_update(
     update flags are zero-dimensional JAX booleans because the Fortran source
     decides whether to enter each migration block across the complete local
     domain, rather than independently for each land point.
+
+    The optional check retains the source module default ``allowed_err=2e-8``
+    (``hydrol.f90`` line 121), so lines 3534-3572 stop only when the absolute
+    residual exceeds ``10*allowed_err``. Explicit caller overrides and the
+    disabled-by-default ``check_cwrr`` contract are retained.
     """
 
     veget_max = _as_2d("veget_max", veget_max)
