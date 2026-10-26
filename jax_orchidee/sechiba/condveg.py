@@ -66,6 +66,28 @@ CONDVEG_INITIALIZE_PROVENANCE = (
 )
 
 
+def resolve_condveg_snowcri_alb(
+    run_def_values: Mapping[str, str] | None, *, ok_sechiba: bool
+) -> float:
+    """Resolve only the source-gated effective SNOWCRI_ALB scalar.
+
+    ``ok_sechiba`` is initialized control state, not a raw run.def key.
+    Source: control.f90:455,495-503,550-555; intersurf.f90:2267,2302-2310,
+    2330-2335; constantes_var.f90:129,697; constantes.f90:507-513.
+    Inactive parameter reads leave the source default without consuming raw
+    SNOWCRI_ALB text. No additional range policy is imposed here.
+    """
+    if not ok_sechiba:
+        return SNOWCRI_ALB
+    values = {} if run_def_values is None else run_def_values
+    impose = str(values.get("IMPOSE_PARAM", "TRUE")).strip().strip(".").upper()
+    if impose in {"F", "FALSE", "N", "NO", "0"}:
+        return SNOWCRI_ALB
+    if impose not in {"T", "TRUE", "Y", "YES", "1"}:
+        raise ValueError(f"cannot parse run.def boolean value {values.get('IMPOSE_PARAM')!r}")
+    return float(values.get("SNOWCRI_ALB", SNOWCRI_ALB))
+
+
 class CondvegInitializeBoundaryError(NotImplementedError):
     """A reachable initializer branch requires target-external structure."""
 
@@ -753,6 +775,7 @@ def condveg_initialize(
     impaze=False,
     rough_dyn=True,
     z0_bare=Z0_BARE,
+    snowcri_alb=SNOWCRI_ALB,
     val_exp=999999.0,
     undef_sechiba=1.0e20,
 ) -> CondvegInitializeResult:
@@ -817,6 +840,7 @@ def condveg_initialize(
         snowrho=snowrho,
         snowdz=snowdz,
         ok_explicitsnow=ok_explicitsnow,
+        snowcri_alb=snowcri_alb,
     )
 
     recomputed_roughness = bool(
@@ -1101,6 +1125,7 @@ def condveg_main_minimal(
     impaze=False,
     rough_dyn=True,
     z0_bare=Z0_BARE,
+    snowcri_alb=SNOWCRI_ALB,
     ok_explicitsnow=True,
     z0_scal=None,
     roughheight_scal=None,
@@ -1145,6 +1170,7 @@ def condveg_main_minimal(
         snowrho=snowrho,
         snowdz=snowdz,
         ok_explicitsnow=ok_explicitsnow,
+        snowcri_alb=snowcri_alb,
     )
     kjpindex = int(_as_float64(snow).shape[0])
     emis = condveg_main_emissivity(kjpindex, emis_scal=emis_scal)
@@ -1366,6 +1392,7 @@ def run_condveg_first_step_module(
     slowproc_payload: Mapping[str, object],
     hydrol_diagnostics=None,
     run_def_values: Mapping[str, str] | None = None,
+    snowcri_alb=None,
     ok_explicitsnow=True,
     impaze=False,
     rough_dyn=True,
@@ -1377,6 +1404,10 @@ def run_condveg_first_step_module(
     this helper still closes the same-step snow-fraction boundary needed by
     THERMOSOIL, but it reports the albedo update as missing instead of
     substituting a cold-start value.
+
+    This is a SECHIBA entry (control.f90:455; intersurf.f90:2267 establish
+    ok_sechiba=true). Omitted ``snowcri_alb`` resolves the gated raw setting;
+    an explicit scalar is already effective and bypasses raw resolution.
     """
 
     values = {} if run_def_values is None else dict(run_def_values)
@@ -1419,6 +1450,8 @@ def run_condveg_first_step_module(
         # Source constantes.f90:483-489 reads the scalar used by both
         # condveg_z0cdrag(_dyn); pass it even when albedo inputs are absent.
         "z0_bare": float(values.get("Z0_BARE", Z0_BARE)),
+        "snowcri_alb": resolve_condveg_snowcri_alb(values, ok_sechiba=True)
+        if snowcri_alb is None else snowcri_alb,
         "ok_explicitsnow": ok_explicitsnow,
     }
     if (not bool(impaze)) and (not bool(rough_dyn)):
