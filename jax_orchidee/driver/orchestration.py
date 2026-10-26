@@ -2983,10 +2983,12 @@ def _add_hydrol_to_previous_fields(fields: dict[str, dict[str, object]], hydrol:
     fields["hydrol_previous_step_state"]["run2man"] = hydrol.module.soil.run2man
     fields["hydrol_previous_step_state"]["wt_ab"] = hydrol.module.soil.wt_ab
     fields["hydrol_previous_step_state"]["wt_ab_tide"] = hydrol.module.soil.wt_ab_tide
-    for name in ("njsc", "profil_froz", "temp_hydro", "stempdiag"):
+    # hydrol.f90:6884-6886 refresh the profile; 7165-7174 restore only
+    # normal mc/mcl/tmc, so persist the refreshed soil result.
+    fields["hydrol_previous_step_state"]["profil_froz_hydro_ns"] = hydrol.module.soil.profil_froz_hydro_ns
+    for name in ("njsc", "temp_hydro", "stempdiag"):
         if name in hydrol.module_inputs:
-            target = "profil_froz_hydro_ns" if name == "profil_froz" else name
-            fields["hydrol_previous_step_state"][target] = hydrol.module_inputs[name]
+            fields["hydrol_previous_step_state"][name] = hydrol.module_inputs[name]
     if hydrol.snow_state is not None:
         for name in (
             "snow",
@@ -4203,6 +4205,11 @@ def paper_1961_next_step_hydrol_precall_scaffold(
             peat_hydro=context.hydrol_soil_peat_hydro,
             peat_hydro_water_stress=context.hydrol_soil_peat_hydro,
             ok_freeze_cwrr=context.ok_freeze_cwrr,
+            ok_thermodynamical_freezing=context.ok_thermodynamical_freezing,
+            fr_dt=context.hydrol_fr_dt,
+            froz_frac_corr=context.hydrol_froz_frac_corr,
+            smtot_corr=context.hydrol_smtot_corr,
+            max_froz_hydro=context.hydrol_max_froz_hydro,
             ok_pc=context.hydrol_ok_pc,
             ok_leak=context.hydrol_ok_leak,
             ok_ru2peat=context.hydrol_ok_ru2peat,
@@ -4931,6 +4938,11 @@ def paper_1961_driver_cold_start_first_step_coverage(
                 peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
                 peat_hydro_water_stress=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
                 ok_freeze_cwrr=parse_run_def_bool(run_def_values["OK_FREEZE_CWRR"]),
+                ok_thermodynamical_freezing=parse_run_def_bool(run_def_values["OK_THERMODYNAMICAL_FREEZING"]),
+                fr_dt=parse_run_def_float(run_def_values, "FR_DT"),
+                froz_frac_corr=parse_run_def_float(run_def_values, "FROZ_FRAC_CORR"),
+                smtot_corr=parse_run_def_float(run_def_values, "SMTOT_CORR"),
+                max_froz_hydro=parse_run_def_float(run_def_values, "MAX_FROZ_HYDRO"),
                 ok_pc=parse_run_def_bool(run_def_values["OK_PC"]),
                 ok_leak=parse_run_def_bool(run_def_values["OK_LEAK"]),
                 ok_ru2peat=parse_run_def_bool(run_def_values["OK_RU2PEAT"]),
@@ -6385,6 +6397,11 @@ def _paper_1961_next_step_runtime_result_compact(
                 peat_hydro=context.hydrol_soil_peat_hydro,
                 peat_hydro_water_stress=context.hydrol_soil_peat_hydro,
                 ok_freeze_cwrr=context.ok_freeze_cwrr,
+                ok_thermodynamical_freezing=context.ok_thermodynamical_freezing,
+                fr_dt=context.hydrol_fr_dt,
+                froz_frac_corr=context.hydrol_froz_frac_corr,
+                smtot_corr=context.hydrol_smtot_corr,
+                max_froz_hydro=context.hydrol_max_froz_hydro,
                 ok_pc=context.hydrol_ok_pc,
                 ok_leak=context.hydrol_ok_leak,
                 ok_ru2peat=context.hydrol_ok_ru2peat,
@@ -6991,6 +7008,11 @@ def paper_1961_driver_timestep_scaffold(
                 peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
                 peat_hydro_water_stress=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
                 ok_freeze_cwrr=parse_run_def_bool(run_def_values["OK_FREEZE_CWRR"]),
+                ok_thermodynamical_freezing=parse_run_def_bool(run_def_values["OK_THERMODYNAMICAL_FREEZING"]),
+                fr_dt=parse_run_def_float(run_def_values, "FR_DT"),
+                froz_frac_corr=parse_run_def_float(run_def_values, "FROZ_FRAC_CORR"),
+                smtot_corr=parse_run_def_float(run_def_values, "SMTOT_CORR"),
+                max_froz_hydro=parse_run_def_float(run_def_values, "MAX_FROZ_HYDRO"),
                 ok_pc=parse_run_def_bool(run_def_values["OK_PC"]),
                 ok_leak=parse_run_def_bool(run_def_values["OK_LEAK"]),
                 ok_ru2peat=parse_run_def_bool(run_def_values["OK_RU2PEAT"]),

@@ -1800,6 +1800,8 @@ def hydrol_soil_froz_profile(
     avan_peat=PEAT_AVAN,
     mcr_peat=PEAT_MCR,
     mcs_peat=PEAT_MCS,
+    mcr_point=None,
+    mcs_point=None,
 ) -> jnp.ndarray:
     """Compute ``profil_froz_hydro_ns`` for all HYDROL soil tiles.
 
@@ -1826,8 +1828,14 @@ def hydrol_soil_froz_profile(
     tex = njsc - 1
     nvan_point = jnp.asarray(nvan, dtype=jnp.float64)[tex]
     avan_point = jnp.asarray(avan, dtype=jnp.float64)[tex]
-    mcr_point = jnp.asarray(mcr, dtype=jnp.float64)[tex]
-    mcs_point = jnp.asarray(mcs, dtype=jnp.float64)[tex]
+    # hydrol_soil_froz8399/8416/8431 uses per-cell module thresholds.
+    # Keep the texture-array interface for existing explicit profile callers,
+    # while the soil integration forwards its effective cell values (including
+    # refSOC-adjusted porosity) without treating them as texture arrays.
+    mcr_point = jnp.asarray(mcr, dtype=jnp.float64)[tex] if mcr_point is None else _as_1d("mcr_point", mcr_point)
+    mcs_point = jnp.asarray(mcs, dtype=jnp.float64)[tex] if mcs_point is None else _as_1d("mcs_point", mcs_point)
+    mcr_point = jnp.broadcast_to(mcr_point, (npts,))
+    mcs_point = jnp.broadcast_to(mcs_point, (npts,))
     lower = zero_celsius - fr_dt / 2.0
     upper = zero_celsius + fr_dt / 2.0
 
@@ -6439,13 +6447,19 @@ def hydrol_soil_coef_mineral_profile_from_tables(
         mc_used = mcr_col + x * jnp.maximum(mc - mcr_col, 0.0)
         mc_for_k = mc_used
         bin_real = tables.imin + (tables.imax - tables.imin) * (mc_used - mcr_col) / (mcs_col - mcr_col)
+        bin_i = bin_real.astype(jnp.int32)
     else:
         mc_ratio = jnp.maximum(mc - mcr_col, 0.0) / (mcs_col - mcr_col)
+        # Keep the source ratio assignment as a rounding boundary under JIT;
+        # fusing division with the subsequent scale changes boundary bins.
+        mc_ratio = jax.lax.optimization_barrier(mc_ratio)
         mc_used = mc
         mc_for_k = mc
-        bin_real = tables.imin + (tables.imax - tables.imin) * mc_ratio
+        # hydrol_soil_coef8300-8301 truncates scaled ratio BEFORE adding imin.
+        scaled = (tables.imax - tables.imin) * mc_ratio
+        bin_i = scaled.astype(jnp.int32) + tables.imin
 
-    bin_i = jnp.maximum(tables.imin, jnp.minimum(tables.imax - 1, bin_real.astype(jnp.int32)))
+    bin_i = jnp.maximum(tables.imin, jnp.minimum(tables.imax - 1, bin_i))
     bin_offset = bin_i - tables.imin
     layer_index = jnp.broadcast_to(jnp.arange(nslm, dtype=jnp.int32)[None, :], (npts, nslm))
     point_index_2d = jnp.broadcast_to(point_index[:, None], (npts, nslm))
@@ -6506,13 +6520,18 @@ def hydrol_soil_coef_peat_profile_from_tables(
         mc_used = mcr + x * jnp.maximum(mc - mcr, 0.0)
         mc_for_k = mc_used
         bin_real = tables.imin + (tables.imax - tables.imin) * (mc_used - mcr) / (mcs - mcr)
+        bin_i = bin_real.astype(jnp.int32)
     else:
         mc_ratio = jnp.maximum(mc - mcr, 0.0) / (mcs - mcr)
+        # Same source-assignment boundary as the mineral nonfreeze branch.
+        mc_ratio = jax.lax.optimization_barrier(mc_ratio)
         mc_used = mc
         mc_for_k = mc
-        bin_real = tables.imin + (tables.imax - tables.imin) * mc_ratio
+        # hydrol_soil_coef8291-8292 has the same nonfreeze integer ordering.
+        scaled = (tables.imax - tables.imin) * mc_ratio
+        bin_i = scaled.astype(jnp.int32) + tables.imin
 
-    bin_i = jnp.maximum(tables.imin, jnp.minimum(tables.imax - 1, bin_real.astype(jnp.int32)))
+    bin_i = jnp.maximum(tables.imin, jnp.minimum(tables.imax - 1, bin_i))
     bin_offset = bin_i - tables.imin
     layer_index = jnp.broadcast_to(jnp.arange(nslm, dtype=jnp.int32)[None, :], (npts, nslm))
 
@@ -7599,7 +7618,9 @@ def hydrol_peat_water_table_diagnostics(
             tile_wtp = depth_sum / 1000.0 - unfrozen_depth / 1000.0
             if bool(peat_hydro):
                 tile_wtp = jnp.where(tile_wtp > 0.0, tile_wtp * mcs_peat, tile_wtp)
-                add_ab = wt_ab_tide if bool(tides) and nstm >= 6 and jst == 5 else wt_ab
+                # hydrol_soil7286-7293 chooses by CELL tile6 presence, for
+                # every tile in that cell, rather than by the current tile.
+                add_ab = jnp.where(soiltile[:, 5] > min_sechiba, wt_ab_tide, wt_ab) if bool(tides) and nstm >= 6 else wt_ab
                 tile_wtp = tile_wtp + add_ab / 1000.0
             else:
                 tile_wtp = jnp.where(tile_wtp > 0.0, tile_wtp * mcs, tile_wtp)
@@ -9111,6 +9132,7 @@ HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
     "mcr",
     "mcs",
     "dz_mm",
+    "dh_mm",
     "dt_days",
     "free_drain_coef",
     "resolv",
@@ -9126,6 +9148,11 @@ HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
     "peat_hydro",
     "ok_freeze_cwrr",
     "temp_hydro",
+    "ok_thermodynamical_freezing",
+    "fr_dt",
+    "froz_frac_corr",
+    "smtot_corr",
+    "max_froz_hydro",
     "zwt_force",
     "zz_mm",
     "zmaxh_m",
@@ -9148,6 +9175,7 @@ HYDROL_MODULE_JIT_STATIC_ARGNAMES = (
     "peat_hydro",
     "peat_tiles",
     "ok_freeze_cwrr",
+    "ok_thermodynamical_freezing",
     "tides",
     "ok_ru2peat",
     "ok_wt_ab",
@@ -9190,6 +9218,11 @@ def run_hydrol_first_step_module_from_precall(
     peat_hydro=False,
     peat_hydro_water_stress=None,
     ok_freeze_cwrr=True,
+    ok_thermodynamical_freezing=True,
+    fr_dt=2.0,
+    froz_frac_corr=1.0,
+    smtot_corr=2.0,
+    max_froz_hydro=1.0,
     ok_explicitsnow=True,
     ok_pc=False,
     ok_leak=False,
@@ -9260,6 +9293,7 @@ def run_hydrol_first_step_module_from_precall(
     module_inputs.update(
         {
             "dz_mm": dz_mm,
+            "dh_mm": dh_mm,
             "zz_mm": zz_mm,
             "resolv": soiltile > 0.0,
             "ks": ks,
@@ -9284,6 +9318,11 @@ def run_hydrol_first_step_module_from_precall(
             "doponds": doponds,
             "peat_hydro": peat_hydro,
             "ok_freeze_cwrr": ok_freeze_cwrr,
+            "ok_thermodynamical_freezing": ok_thermodynamical_freezing,
+            "fr_dt": fr_dt,
+            "froz_frac_corr": froz_frac_corr,
+            "smtot_corr": smtot_corr,
+            "max_froz_hydro": max_froz_hydro,
             "tides": tides,
             "ok_ru2peat": ok_ru2peat,
             "ok_wt_ab": ok_wt_ab,
@@ -9503,7 +9542,6 @@ def run_hydrol_first_step_module_from_precall(
         module, diagnostics, output_arrays, moisture_arrays = _hydrol_module_closure_core_jit(
             **selected_module_inputs,
             nroot=nroot,
-            dh_mm=dh_mm,
             peat_hydro_water_stress=peat_hydro if peat_hydro_water_stress is None else peat_hydro_water_stress,
             dyn_nroot_larix=dyn_nroot_larix,
             is_tree=tuple(bool(value) for value in np.asarray(is_tree).tolist()) if is_tree is not None else None,
@@ -10445,6 +10483,12 @@ def hydrol_soil_all_tiles_explicit_step(
     peat_tiles=(4, 5, 6),
     ok_freeze_cwrr=False,
     temp_hydro=None,
+    dh_mm=None,
+    ok_thermodynamical_freezing=True,
+    fr_dt=2.0,
+    froz_frac_corr=1.0,
+    smtot_corr=2.0,
+    max_froz_hydro=1.0,
     zwt_force=None,
     zz_mm=None,
     zmaxh_m=None,
@@ -10507,6 +10551,10 @@ def hydrol_soil_all_tiles_explicit_step(
         raise ValueError("rootsink must have shape (npts,nslm,nstm)")
 
     npts, nslm, nstm = mc_state.shape
+    if bool(ok_freeze_cwrr):
+        missing = [name for name, value in (("temp_hydro", temp_hydro), ("dh_mm", dh_mm), ("njsc", njsc)) if value is None]
+        if missing:
+            raise ValueError("hydrol_soil final-mc freeze refresh requires " + ", ".join(missing))
     crop_tiles = np.asarray(is_crop_soil, dtype=bool)
     if crop_tiles.ndim == 0:
         crop_tiles = np.full((nstm,), bool(crop_tiles), dtype=bool)
@@ -10727,6 +10775,26 @@ def hydrol_soil_all_tiles_explicit_step(
         tides=tides,
         min_sechiba=min_sechiba,
     )
+    if bool(ok_freeze_cwrr):
+        # hydrol_soil6884-6886 refreshes freezing from FINAL normal mc at
+        # unchanged actual temperature. 7165-7174 restores normal mc/mcl/tmc,
+        # but does not restore the old profile. The dummy-only liquid and
+        # transport reconstruction below therefore consumes this new profile.
+        profil_froz = hydrol_soil_froz_profile(
+            temp_hydro=temp_hydro,
+            mc=mc_state,
+            njsc=njsc,
+            dh_mm=dh_mm,
+            peat_hydro=peat_hydro,
+            peat_tiles=peat_tiles,
+            ok_thermodynamical_freezing=ok_thermodynamical_freezing,
+            fr_dt=fr_dt,
+            froz_frac_corr=froz_frac_corr,
+            smtot_corr=smtot_corr,
+            max_froz_hydro=max_froz_hydro,
+            mcr_point=mcr,
+            mcs_point=mcs,
+        )
     evap_bare_limit_alt = hydrol_alt_residual_all_tiles_from_results(
         tuple(tile_results),
         profil_froz=profil_froz,
@@ -10828,6 +10896,12 @@ def hydrol_module_explicit_step(
     peat_tiles=(4, 5, 6),
     ok_freeze_cwrr=False,
     temp_hydro=None,
+    dh_mm=None,
+    ok_thermodynamical_freezing=True,
+    fr_dt=2.0,
+    froz_frac_corr=1.0,
+    smtot_corr=2.0,
+    max_froz_hydro=1.0,
     zwt_force=None,
     zz_mm=None,
     zmaxh_m=None,
@@ -10954,6 +11028,12 @@ def hydrol_module_explicit_step(
         peat_tiles=peat_tiles,
         ok_freeze_cwrr=ok_freeze_cwrr,
         temp_hydro=temp_hydro,
+        dh_mm=dh_mm,
+        ok_thermodynamical_freezing=ok_thermodynamical_freezing,
+        fr_dt=fr_dt,
+        froz_frac_corr=froz_frac_corr,
+        smtot_corr=smtot_corr,
+        max_froz_hydro=max_froz_hydro,
         zwt_force=zwt_force,
         zz_mm=zz_mm,
         zmaxh_m=zmaxh_m,
@@ -11523,7 +11603,7 @@ def _hydrol_module_closure_core(
     tuple[jnp.ndarray, ...],
     tuple[jnp.ndarray, ...],
 ]:
-    module = hydrol_module_explicit_step(**module_inputs)
+    module = hydrol_module_explicit_step(**module_inputs, dh_mm=dh_mm)
     diagnostics = hydrol_module_diagnostics(
         module,
         nroot=nroot,
