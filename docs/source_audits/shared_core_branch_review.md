@@ -15,6 +15,13 @@ Stage26当前：四包边界及集中审查S26-R1已主控验收，最终132项�
 见[本次交付](../../outputs/validation/v02-after-stage26/319-1961/README.md)、
 [主控验收](../../outputs/validation/v02-after-stage26/primary-v02-acceptance.json)及下方V02结果。
 实际1模型进程/1调用/365模型日；原年度失败、raw重启及跨点/长期限制保留。
+**V03a数值执行检查已由项目主控验收**：同进程独立cold A8→B8→A8，
+再独立ordinary B8，4调用/32模型日。真实outer复用及点位绑定通过；B两路线沿用V01数值状态
+合同的完整比较在原限内通过。本次额外载体检查触发44项失败，其历史false保留，不称V01原科学门槛失败。
+见[合同与交付收尾](../../outputs/validation/v03a-after-stage26/contract-closure-v1/README.md)及下方V03a结果。
+此前primary-v03a-acceptance保留为执行聊天内部审查；真正的
+[项目主控最终验收](../../outputs/validation/v03a-after-stage26/controller-final-acceptance.json)另存独立回执。
+无新增生产修复，28项/16代码提交和研究分支待核对同步状态不变；不是669点或长期科学验收。
 
 此前Stage23的C11–C16六项HYDROL/雪/CONDVEG修复已主控验收，最终定向组合72项通过；
 四组准确提交及适用域见下文Stage23。此前C6–C10五项OK_LEAK修复均已完成主控验收，最终focused组合49项通过。
@@ -196,6 +203,82 @@ MAINT_RESP6.23768e-7/day364和GROWTH_RESP7.38774e-5/day218，原字段单位不�
 未重复运行或重算统计；[主控验收](../../outputs/validation/v02-after-stage26/primary-v02-acceptance.json)
 保留年度科学接受false、严格诊断false及260/92字段合同边界。该验收没有新增已接受修复，
 也没有解除319科学失败、raw重启、跨点/长期或研究分支待同步限制；原交付回执保持历史身份。
+
+### V03a实际结果：跨点复用及继承数值合同通过，额外载体检查失败保留
+
+V02验收发布后另获授权执行本地ORCJAX/CPU批次，固定main
+`a317c77750f7f2f42db21edaf05e6fa7f7a0c3a2`；生产树与V01 `d5d487f`、V02 `876ac3bb`相同。
+一次预检核定真实root包/ORCJAX Python/cpu:0及47个已有输入元数据路径，原manifest和seed保持身份。
+原config SHA `3e3ec5c4518ebf4d470c60eda3e9bd6ddfd22e5c6dee473694f2409f17e619af`不变；
+A为001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658，used-file SHA
+`f75d64dcbe321a0934368a415f1820687e00d5e6e0829f2c808bd2313e5343c2`，实际W/E/S/N −180/−178/−20/−18；
+B为原319/I5/S26_69.834_0.0019_0.3980_97.918，used-file SHA
+`5ecb4d2615dec4d54a88f2db5444ac2820d8327ec6c10c6af16945b4ff56374a`，实际138/140/−34/−32。
+实际域、PFT14五校准值及所有legacy14/NVM14/NSTM6/CONDVEG开关见
+[完整交付](../../outputs/validation/v03a-after-stage26/README.md)及[边界观测](../../outputs/validation/v03a-after-stage26/shared/cache-observations.json)，
+未用YAML示例域，未重新物化run.def。
+
+公共cold-start API的真实进程PID58044顺序运行独立cold A8→B8→A8，每次cold day1+真实block7；
+原进程中不清cache、不reload。随后独立PID59312执行ordinary B8，compiled off/block0，
+其他common flags含static daily carbon true与接受的V01普通路线一致。两进程顺序而非并发。
+四次调用全部完成8个48步日界、末tstep383、无missing/stopped；累计4调用/32模型日，
+完整run/packet/实际pcapa_en先保存并精确回读再进入下一模型调用，没有重试。
+四调用计时176.7734517/24.1930783/12.1478658/107.1586996秒含编译、同步及边界保存；
+外部进程286.9264433/156.1406413秒另含导入、验证及写盘，不作稳态吞吐声明。
+
+两个A各自对接受的V01 source8及互相比对均完整exact0；B-compiled与V02前8个完整daily差0，
+B-ordinary与同一daily最大绝对差3.5271785492341223e-13、相对差8.150827422816209e-13，均通过。
+V02没有独立day8末packet，本批没有补造。两条新B末packet则均已真实保存。
+本次B compiled/ordinary额外载体检查拒绝44个叶类型差异：43个JAX ArrayImpl对NumPy ndarray、
+1个ArrayImpl对Python float；普通模型已返回且保存，exit1来自保存后的比较断言。
+原[summary](../../outputs/validation/v03a-after-stage26/summary.json)、
+[gate/failure](../../outputs/validation/v03a-after-stage26/ordinary/failure.json)和冻结工具均不改写，
+**本次额外strict carrier false永久保留**，不伪造模型重跑通过。它不是接受的V01原科学门槛。
+
+V01实际合同由`domain-v3/domain_verifier.py::schema`的23–36行与
+`run_remaining_v01.py::execute`的118–133行实际调用的`ComparisonAccumulator.compare`（113–187行）组成：schema将数值叶用
+np.asarray记录原shape/dtype，再作数值parity，不要求数值载体类相同。历史比较器自身的float64
+误差算术不能独立证明dtype精确；本次仍保留完整键/容器、shape/dtype、离散精确及原浮点限。
+V03a冻结`validation.py::compare`的188行在数值前增加无条件type相同条件，才产生上述44个载体失败。
+公共packet/daily/lite协议的payload为object，未固定数值载体类；原pickle保留实际对象。
+compiled直接重建与ordinary合并/float(dt_days)的解释仅限已核对边界，不证明44叶完整上游历史或新的物理bug。
+
+已有[完整数值比较](../../outputs/validation/v03a-after-stage26/numeric-diagnostic-v1.json)未指定dtype地
+用np.asarray读取数值叶，不改变保存数组或其dtype；全部620数值叶/27381元素及原44个跳过叶
+均在原atol1e-8/rtol1e-10组合限内，数值超限0，6项负控制通过。因此按已接受V01数值状态合同，
+本批跨路比较结果为通过；额外载体条件仍false。仅等价这43个ArrayImpl/ndarray和1个ArrayImpl/float
+实际数值关系，不扩展为其他类型问题通用豁免，不通用忽略metadata或放宽浮点限。
+最大绝对差为pcapa_en[0,2,0]的6.644986569881439e-7：compiled1127009.884473888对ordinary
+1127009.8844732235，原限0.00011271098844732235；最大相对差为wat_flux[0,7,3]的
+2.404596709685098e-10，原绝对组合限1.0000060882007604e-8。原值、参考、字段/坐标和allowance
+逐项保存在回执。本次合同收尾复用已有完整结果、诊断和控制，无新模型/组件调用或数值重算，
+额外类型检查的原失败及全部manifest身份保持不变。
+
+每个实际对象先独立核定定义域；仅两个命名float64[1,14] roughheight_pft的精确[0,0]保留
+源未定义NaN，其余定义值/daily/动态capacity有限。同路/存储来源精确；compiled末slowproc7条与
+ordinary6条分别按精确源路线核验，不把合法来源差异当物理漏过程或全面忽略metadata。
+源码shape/dtype合同仍为260字段已分类/92额外字段未完整独立覆盖；派生成对全字段shape/dtype
+检查不消除此来源合同缺口，更不认证raw NetCDF capacity。
+
+真实prepared LRU为A miss、B miss、回A hit；A context首/回相同、B独立。实际outer key相同，
+同一executable id2183757175440由A首次创建，B和回A均按`is`命中原cache对象、cache增量0；
+三个边界保存真实caller的九类动态输入及实际域/校准值并0/0回读。原函数实参、返回对象与数值图
+保持原样。仅A-first出现一次inner factory边界，另两次外层命中可跳过它；不据此声称新的inner命中
+或XLA编译/重跟踪次数，也不把历史Stage16替身869断言升级为真实XLA证据。
+
+此前[primary-v03a-acceptance](../../outputs/validation/v03a-after-stage26/primary-v03a-acceptance.json)
+由本执行聊天生成，是执行方内部审查，生成时项目主控尚未最终验收；该文件和身份保留。
+2026-10-27项目主控已接受本次有限缓存复用、绑定和沿用V01数值状态合同的完整比较。见
+[项目主控最终验收](../../outputs/validation/v03a-after-stage26/controller-final-acceptance.json)、
+[合同与交付收尾](../../outputs/validation/v03a-after-stage26/contract-closure-v1/README.md)及
+[主控补项审查](../../outputs/validation/v03a-after-stage26/controller-review-20261027.json)。主控复用已完成
+73份工件/24份源码身份核验及执行方检查，核对新增收尾和合同来源，不重跑模型或数值统计。
+44项额外载体检查原失败永久保留；原
+[静态核验](../../outputs/validation/v03a-after-stage26/final-verification.json)保留当时报告身份，新核验单独保存。
+系统TEMP已清理，图Transport closed使用精确源回退。本批只发布两份报告，无新增已确认生产问题/修复、新C编号或两个研究工作树同步，
+42个有界登记行/28个ID、28项接受修复/16个代码提交不变。
+V01原失败、V02年度NPP/诊断失败、raw重启、TOPMODEL/fwet/支持域、water-origin暂停及
+C4–C28研究待同步均保留；本次两点1961八日不能宣称669点、年度/长期科学通过或修复因果已建立。
 
 初始核查日期：2026-10-11。当时结论：共同物理模型只需维护一套；研究中的共享代码
 差异可以拆成三项通用修复、一个可选 Teacher 接口和两项批处理运行能力。
