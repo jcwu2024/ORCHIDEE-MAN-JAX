@@ -3,12 +3,15 @@
 同步安排（2026-10-27用户决定）：**暂缓与两个研究分支对齐，优先稳固main**。
 本阶段不安排分支同步或交接包工作；28项修复/16个代码提交的登记与适用范围持续维护，
 待基础分支本轮加固后集中评估交接。C4–C28仍是待维护方核对的历史登记状态，
-并不表示本次核查过研究分支。**当前轨迹365日NPP捕获与两次Day338原组件判别已完成**，
-全年完整对象对保存V02通过原限，day365完整末packet最大差0；当前背景的局部分支放大得到验证。
-年度输出层差额已闭合到GPP/维护呼吸/生长呼吸；floor跨模型差额及上游浮点起因仍未知，年度NPP仍失败。
-见[当前批次交付](../../outputs/reviews/main-physics-20261027/npp-current-capture/README.md)及下文当前节；
-本批实际工件已由项目主控[验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，
-接受当前局部分支放大、原轨迹准入和年度输出分项核算，保留上游起因与年度因果未知。此前两次历史输入交换的
+并不表示本次核查过研究分支。**当前Day338 GPP上游定位已完成唯一compiled7块（Day338–344）**，
+Day338唯一实际活动/正GPP在offset5；生产DIFFUCO和STOMATE入口已出现4.564204140244641e-7。
+可用七日轨迹及保存NPP分支通过原限，**完整捕获因原生逐步累加器记录缺失而失败**；源代数会计单列为derived。
+独立Fortran Day338参考、humrel创建上游及年度因果仍缺证据，年度NPP仍失败。
+见[当前批次交付](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/README.md)及下文当前节；
+主控已[接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，完整捕获失败仍保留。
+上批365日捕获、当前背景局部分支放大及年度输出核算已由项目主控
+[验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，其64份清单及回执冻结。
+该接受不作为本批验收；上游起因与年度因果未知。此前两次历史输入交换的
 [主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)保留原身份。
 不新增修复或同步；原始NetCDF重启与跨年验证仍待独立裁定。
 
@@ -52,6 +55,77 @@ Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证�
 测试数量也不等于独立物理过程或完整模型覆盖率。以下总表、各项源码/回归依据及
 精确SHA共同构成修复登记。Stage24四项候选经Stage25实现与补项验收，现计入C17–C20；
 其历史处置和本批接受范围分别见下文。
+
+## 当前Day338 GPP：生产层定位与完整捕获缺口（2026-10-27）
+
+固定`E:/ORCHIDEE-MAN-JAX`、main `7acead83618e64483095e69621f11e70137a9658`及该checkout实际包，
+ORCJAX/JAX0.10.1 CPU/x64、Python-B/无持久缓存。复用上批真实end-Day337/tstep16175的packet、
+动态pcapa_en、context及原九家族，只运行一次原factory的compiled7块Day338–344；
+真实science_day_numbers跨原scan/JIT传入观察clock，原静态placeholder和独立JIT保留。
+worker PID65264，调用及保存114.391秒、监督118.074427秒/900秒硬限、exit0，TEMP已清理。
+两次prepare均0科学；年度/cold/额外组件/baseline/warmup/重试为0，唯一科学预算已用尽。
+
+| 实际证据 | 准入与限制 |
+|---|---|
+| 七日完整daily，231数值叶/2961元素 | 原atol1e-8/rtol1e-10通过，maxabs2.17010222251378e-15，0失败 |
+| 七日NPP完整九参/locals/六返回，196叶/13251元素 | 同原限通过，maxabs同上，0失败；enough/over_tax/no_alloc/negative七日精确不变 |
+| 结构及定义域 | 容器/键/shape/dtype/离散/来源精确，数值载体类不要求相同；两处源未定义NaN合同保留 |
+| Day338原生亚日记录 | Yin/canopy/C3/entry各48条、合计192；此前无同轨迹亚日内部支路可逐步比较 |
+| 完整mandatory capture | **FAIL**，缺`('accumulator',338,0)`；可用轨迹与保存NPP支路PASS单列 |
+| 新day344末packet | 已真实保存；旧day344末packet不存在，不伪造末状态新旧数值比较 |
+
+实际`PEAT_OCCUR=FALSE`、compiled runtime开启、numpy runtime关闭，走`daily.py:1432–1499`
+generic ordered loop（仍在outer compiled图内）。观察器仅挂到peat-static JIT，guard不成立而未调用，
+没有原生逐步gpp_d及累加前后记录。初次离线准入KeyError、原工具版本和错误均保留，只修离线分析，无科学重试。
+见[准入](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/admission.json)和
+[实际路线/缺口](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/accumulator-record-gap.json)。
+
+Day338/339/340/341/344 tiny GPP与上批0ULP，零/正保持；Day342差2.17010222251378e-15、
+相对差1.4355773044550261e-9、10,248,018ULP，Day343差3.809255394568358e-16、
+相对差1.9638870613581155e-10、899,435ULP。因此不称七日bitwise一致；观察/重建可能影响fusion，
+关键保存NPP支路不变及数值原限通过仅形成有界轨迹准入。
+
+Day338唯一活动/正GPP为offset5、第6个半小时、JAX零基tstep16181；Fortran kjit16182仅为时钟惯例映射。
+实际humrel3.6402170609775793e-6，距1e-8阈值3.6302170609775794e-6；
+swdown888.8902888737543、LAI1.2954020484751498>0.01、veget0.7262122337533891、veget_max1，
+temp_growth19.24361600534081在(-4,55)内，全部活动门true。其余47步humrel0、实际活动false/GPP0。
+Yin20层raw候选可正，实际8个active叶层参与积分，raw/active fallback均0；inactive raw候选不算生产正GPP。
+canopy原生assimtot7.028563100383167e-5，经salinity0.5及inundation0.6012772289745216，
+controlled_assimtot2.1130574723354817e-5，再按原式乘12e-6、veget_max和dt1800，
+得到mesh单步GPP4.564204140244641e-7。entry逐值相同，日NPP入口也为该值且与上批0ULP。
+单步单位gC m⁻²(mesh) timestep⁻¹，已经包含dt；日入口为归一化PFT日速率。
+来源为`diffuco.f90::diffuco_trans_co2`2338–2384/2884–2899及`diffuco.py`2296–2372/2648–3349。
+该步humrel并非仅差1ULP贴阈值，但更早扰动经分支放大仍未排除，其上游创建不在本批观测内。
+
+真实保存end337初始累加0、48条entry和veget_cov_max1，按源代数离线推导offset5的gpp_d
+为2.1908179873174275e-5，加权中间量0.0394347237717137，最终除86400得到4.564204140244641e-7，
+与实测NPP入口一致。`derived-accumulator-accounting.pkl`明确仅DERIVED，不能补作原生逐步累加或宣称该链完整观测闭合。
+来源`stomate.f90::stomate_main`2921–2931/3020–3032/3207–3208及`stomate_accu_*`9341–9411，
+对应JAX `daily_inputs.py:171–220`、`daily.py:1432–1499`；细节见
+[源码说明](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/accumulator-source-note.md)。
+
+命名历史证据中Stage8 Day338只有下游NPP，旧JAX GPP1.2241381168386465e-6并非当前值；
+Stage10完整65参DIFFUCO、Stage12水文carry主要为Day337，不能冒充当前Day338配对参考。
+当前绑定stomate_history_1961.nc只有time_counter1/float32年度聚合，没有该日零/正GPP锚。
+所以本批确认正值在光合生产层/entry已存在，仍不能判定翻译错误、浮点起因或年度因果。
+后续最小独立参考需Fortran Day338 kjit16177..16224、全部65输入、activity/叶层/controls/GPP/累加/交付，
+float64或17位roundtrip及精确离散，绑定end337/prefix及实际source/binary/输入。
+历史入口和非执行命令模板见[历史证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/historical-evidence.md)，
+Explore1000的arch/编译器/MPI/XIOS/NetCDF、输入与prefix、节点/资源/时限/费用仍未绑定，无已准入短重启；
+旧qhcess资源/性能不迁作新平台事实。方案见
+[下一最小事实](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/next-minimal-facts.json)，本批未执行任何远端动作。
+
+年度NPP仍0.3860031827055333对参考0.38518497347831726，误差0.000818209227216038>
+原限0.0003951849734783173；上批局部分支放大/floor0/年度会计保持其独立接受身份。
+Verify图代次2026-10-26T20:35:28Z/full/complete/best_effort，JAX元数据变化、Fortran/outputs排除，精确源回退不等于全分支覆盖。
+无生产/参数/容差修改、Fortran/SSH/远端/GPU/训练/付费/环境重建、commit/push、自动化或主控聊天消息。
+28修复/16代码提交、42行/28ID表及支持域限制不变，无新Stage/修复ID；研究分支对齐、交接继续暂停，本批无water-origin新捕获。
+交付时实际工件/两报告绑定见
+[最终静态核验](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/final-verification.json)，上批manifest/回执保持冻结。
+2026-10-27主控核对58份清单工件、交付报告SHA及实际结果，复用执行方验证，零科学/统计重跑。
+[独立主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)
+接受有限生产层/唯一活动步/humrel输入与有界七日轨迹证据；完整捕获失败、未观测累加器及上游/年度未知保持。
+下一重点是humrel创建和独立同phase参考，不为单独补日志重跑全年；本次仅发布报告，无新生产修复。
 
 ## 当前轨迹NPP：原生机制与年度输出会计（2026-10-27）
 

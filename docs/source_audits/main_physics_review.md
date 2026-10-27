@@ -2,14 +2,17 @@
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
-避免反复同步。**当前轨迹365日NPP机制捕获与两次Day338原组件判别已完成**：
-原cold1+52×7路线与保存V02全年完整返回及逐日对象通过原限，day365完整末packet最大差0。
-当前Day338仅将GPP从4.564204140244641e-7置0，NPP有符号变化+0.31553493378648245；
-该日原生floor修正为0，当前背景的局部分支放大已得到直接证据。
-全年输出层差额已闭合到GPP/维护呼吸/生长呼吸，但**floor跨模型差额、上游浮点起因及生产缺陷仍未确定**；
-年度NPP科学失败保留。见[当前批次交付](../../outputs/reviews/main-physics-20261027/npp-current-capture/README.md)
-及本页末节。本批实际工件已由项目主控[验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，
-接受当前局部分支放大、原轨迹准入和年度输出分项核算，保留上游起因与年度因果未知。
+避免反复同步。**当前Day338 GPP上游定位批次已执行唯一compiled7块（Day338–344）**：
+Day338唯一光合活动/正GPP在offset5（第6个半小时，JAX零基tstep16181），
+生产DIFFUCO输出和STOMATE入口均为4.564204140244641e-7；正值已在光合生产层出现。
+可用七日轨迹及保存NPP分支通过原限，**完整捕获未通过：原生逐步累加器记录缺失**；
+源公式推导会计单列，不能补作原生观测。当前humrel创建上游、独立Fortran Day338配对参考、
+跨模型起因与年度因果仍缺证据，年度NPP科学失败保留。
+见[当前批次交付](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/README.md)及本页末节；
+本批已由主控[接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，
+完整捕获失败仍保留，没有新增修复。上批365日捕获、当前GPP置零的局部分支放大及年度输出会计已由
+项目主控[验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，
+该批64份清单及回执保持冻结，不能把上批接受状态移作本批验收。
 此前两次历史背景交换的[主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)
 保留原身份。原始NetCDF重启与跨年连续性验证仍待独立裁定；当前科学门槛、支持域和未解决问题保持不变。
 
@@ -3592,3 +3595,119 @@ Fortran及outputs排除；沿用精确源码回退，不作图完备/全分支�
 接受当前背景的局部分支放大、观测轨迹原限内准入、全年原生机制核算与输出通量差额闭合。
 该接受不证明上游浮点起因、跨模型floor差额或年度因果归属；原年度科学失败保留，没有新增生产修复。
 本轮版本化发布仅含两份报告，原64份清单及执行回执保持冻结。
+
+## 当前Day338 GPP上游定位：生产正值已定位，完整捕获缺一项（2026-10-27）
+
+本批固定`E:/ORCHIDEE-MAN-JAX`、main `7acead83618e64483095e69621f11e70137a9658`，
+实际包为该checkout的`jax_orchidee/__init__.py`；ORCJAX/JAX0.10.1 CPU/x64、Python-B、持久缓存关闭。
+复用上批真实end-Day337/tstep16175的完整packet、动态pcapa_en、context及原executable九家族，
+仅调用一次原`_paper_compiled_later_day_block_executable`生成的compiled7块，完成Day338–344。
+原factory内部静态placeholder保留；真实science_day_numbers338..344显式进入观察clock，
+跨原47步scan及DIFFUCO独立JIT边界，未取消原JIT或改用独立科学计算。
+两次prepare均0科学调用；唯一科学worker PID65264，原调用及保存114.391秒，
+监督总118.074427秒/900秒硬限、exit0，系统TEMP已清理。0年度/cold/额外组件/baseline/warmup/重试。
+执行身份见[preflight](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/preflight.json)、
+[block-call](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/block-call.json)及
+[运行回执](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/supervisor-worker.json)。
+
+### 原轨迹比较通过，捕获完整性失败
+
+完整原始块返回先保存，再准入；`raw-block-return.pkl` SHA256为
+`07a8bce50f7901e064307baa1f814e40910139450f919eb799f3916d9bd9b47f`。
+实际保存七日完整daily、七日NPP完整九参/locals/六返回、Day338的Yin/canopy/C3/entry各48条共192条，
+以及新producer的day344末packet。没有旧day344末packet，不声称其完成新旧数值比较。
+两处roughheight源未定义NaN合同保留，其余定义域finite。
+
+| 准入项目 | 实际结果 |
+|---|---|
+| 七日完整daily：231数值叶/2961元素 | 原atol1e-8/rtol1e-10通过，maxabs2.17010222251378e-15，0数值失败 |
+| 七日NPP九参/locals/六返回：196叶/13251元素 | 同原限通过，maxabs同上，0数值失败 |
+| 容器/键/shape/dtype/离散/来源 | 精确通过；数值载体Python类不要求相同 |
+| 已保存NPP的enough/over_tax/no_alloc/negative | 七日均精确相同 |
+| 完整mandatory capture | **失败**，缺唯一键`('accumulator',338,0)`，无其他unexpected keys |
+
+实际`PEAT_OCCUR=FALSE`、`use_compiled_runtime=True`、`use_numpy_runtime=False`。
+累加观察器挂在仅peat guard成立才调用的`_stomate_daily_accumulation_fold_runtime_peat_static_jit`，
+因此没有运行；实际使用`daily.py:1432–1499`的generic ordered loop，位于原outer compiled7图内。
+该观察点选择错误导致原生逐步gpp_d及累加前后值均未保存；初次离线准入的KeyError、原工具快照及版本说明保留，
+后续只修离线分析，不重试科学块。[admission](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/admission.json)
+明确`passed=false`、`mandatory_capture_complete=false`，同时单列可用轨迹数值/保存NPP分支通过。
+新亚日内部支路此前未保存，不声称它们与上批逐步支路相同。
+
+Day338/339/340/341/344的tiny GPP与上批逐值相同、0ULP，零/正分支保持。
+Day342新1.5116582107170082e-6对旧1.5116582128871104e-6，绝对差2.17010222251378e-15、
+相对差1.4355773044550261e-9、10,248,018ULP；Day343新1.9396509446861947e-6对旧1.9396509450671202e-6，
+绝对差3.809255394568358e-16、相对差1.9638870613581155e-10、899,435ULP。
+故七日并非bitwise相同；观察/重建可能影响fusion，原限内数值通过及关键保存NPP支路精确不变仅支持上述有界准入。
+
+### Day338唯一实际正GPP的生产链
+
+Day338区间为零基tstep16176..16223。48步中仅offset5（tstep16181）实际assimilate为true、GPP为正；
+其余47步humrel为0、实际光合活动为false、生产GPP为0。对应Fortran一基kjit标签16182来自时钟惯例映射，
+并非本批Fortran实测。完整65项C3直接输入和原生内部记录见
+[production-chain](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/production-chain.json)及subdaily.pkl。
+
+| offset5实际操作数/输出 | 数值及边界 |
+|---|---|
+| humrel及活动阈值 | 3.6402170609775793e-6 > 1e-8；距离3.6302170609775794e-6 |
+| swdown | 888.8902888737543 > 1e-8 |
+| LAI / veget / veget_max | 1.2954020484751498 > 0.01 / 0.7262122337533891 / 1.0 |
+| temp_growth | 19.24361600534081，在(-4,55)内；全部活动门为true |
+| 原生canopy assimtot | 7.028563100383167e-5 |
+| salinity / inundation控制 | 0.5 / 0.6012772289745216 |
+| 原生controlled_assimtot | 2.1130574723354817e-5 |
+| 原生mesh单步GPP / entry GPP / 日NPP入口GPP | 均4.564204140244641e-7；日NPP入口与上批0ULP |
+
+Yin向量化求解器20层可产生raw正候选；实际8个active叶层参与canopy积分，active及raw fallback均0。
+inactive步或叶层的raw候选不能计作更早生产正GPP。该步humrel并非仅差1ULP贴活动阈值，
+但仍不能排除更早扰动经历史/分支放大；本批没有观察humrel上游创建过程。
+源锚为`diffuco.py`活动2296–2372、Yin2648–2783、canopy2786–2949、输出2952–3100、C3包装3103–3349；
+Fortran为`src_sechiba/diffuco.f90::diffuco_trans_co2`活动2338–2384及GPP换算2884–2899。
+原式`where(assimilate, controlled_assimtot * 12e-6 * veget_max * dt_sechiba, 0)`已含1800秒步长，
+单步单位gC m⁻²(mesh) timestep⁻¹；日NPP入口使用归一化PFT日速率，分析没有再乘一次步长。
+
+### 仅派生的日累计会计与独立参考缺项
+
+保存的真实end337初始gpp_daily=0、48条entry及veget_cov_max=1，按源码`daily_inputs.py:171–220`和
+`daily.py:1432–1499`离线代数推导：offset5的gpp_d=2.1908179873174275e-5，
+乘dt_sechiba后中间量0.0394347237717137，最终除dt_stomate86400得到4.564204140244641e-7，
+与实测NPP入口相同。数据独立保存为`derived-accumulator-accounting.pkl`，逐行标明DERIVED。
+这支持所存操作数与源代数的一致；**没有原生累加器逐步观测，不能称原生累加链完整闭合**。
+Fortran归一化来源为`stomate.f90::stomate_main`2921–2931/3020–3032/3207–3208，
+累加来源为`stomate_accu_r1d/r2d/r3d`9341–9411。实际路线及缺口见
+[累加源码说明](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/accumulator-source-note.md)。
+
+[命名历史证据表](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/historical-evidence.md)
+核对Stage8–13：Stage8 Day338为下游NPP，旧JAX GPP1.2241381168386465e-6并非当前值；
+Stage10完整65参DIFFUCO和Stage12水文carry主要是Day337，不能移作当前Day338配对参考。
+不同轨迹的状态差只约束边界，不形成同输入翻译反例。当前绑定的
+`reference/OUT/orc_calibrate_250919_sen/arg2_1.0/319.0-057.0/I5/S26_69.834_0.0019_0.3980_97.918/stomate_history_1961.nc`
+只有`time_counter=1`的float32年度聚合；[实际锚核验](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/reference-anchor.json)
+没有Day338日值，不能据其宣称当前参考当天GPP为0。
+
+最小独立Fortran方案限定Day338 kjit16177..16224、完整65输入及activity/叶层/controls/GPP/累加/交付，
+使用float64或17位roundtrip及精确离散记录，并绑定preceding end337/prefix、source/binary、有效配置与输入。
+历史入口和非执行命令模板已列入历史证据表；旧qhcess ifort/IntelMPI及用时不能直接当作Explore1000事实。
+Explore1000新工作目录须在`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/`，编译器/arch/MPI/XIOS/NetCDF、
+binary/overlay、输入部署、prefix状态、节点/资源/时限/费用均尚未绑定，也没有已准入的Fortran end337短重启。
+详见[下一最小事实](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/next-minimal-facts.json)。
+此为具体缺项及未执行方案，不构成后续运行授权；本批预算已用完。
+
+本批可以确认当前正值在光合生产层及entry已经存在；不能认定翻译错误、浮点起因、有bug/无bug或年度因果。
+原年度NPP0.3860031827055333对参考0.38518497347831726，误差0.000818209227216038>
+原限0.0003951849734783173，科学失败不变；上批局部分支放大/floor0及年度会计保持其已接受身份。
+图Verify代次2026-10-26T20:35:28Z/full/complete/best_effort已确认；目标JAX路径metadata_changed，
+Fortran和outputs排除，使用相关精确源/工件回退，不作全分支或图完备声明。
+无生产物理/参数/容差修改，无新Fortran、SSH/远端、GPU/训练/付费、环境重建、commit/push、自动化或主控聊天消息。
+28项修复/16代码提交、42行/28ID修复表不变，无新Stage或修复ID；raw NetCDF重启、跨年连续性及原支持域限制保留。
+本批未启动water-origin新捕获，研究分支对齐和交接包继续暂停。交付时实际工件与两报告绑定见
+[最终静态核验](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/final-verification.json)；
+上批64份manifest和历史待验收/主控验收回执均未回写。
+
+2026-10-27项目主控已审阅实际生产链、运行/准入、累加观察缺口、历史参考边界及两报告差异，
+核对58份清单工件与交付报告SHA，复用执行方验证，零模型/组件/统计重跑。
+[独立主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)
+接受当前Day338正GPP已在DIFFUCO生产层出现、唯一活动步及其humrel直接输入、有界七日轨迹证据；
+完整捕获失败和无原生逐步累加器记录保持原状，不以派生会计补称完成。
+后续优先追查humrel创建及独立同phase参考，不为单独补累加日志重跑全年；必要新捕获中修正实际路线观察点。
+上游浮点/实现起因、年度因果及原科学失败不变。本次仅发布两份报告，无新增生产修复。
