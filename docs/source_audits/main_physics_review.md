@@ -2,14 +2,16 @@
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
-避免反复同步。319年度NPP既有证据核查及获准的两次历史Day338单坐标GPP交换已完成：
-约1.224e-6的GPP变化可触发约0.315的局部NPP/维护呼吸跳变；严格复现另一背景的两个主要输出仅一侧通过，
-另一侧仍有约4.938e-4残差。**局部分支敏感性已证，上游差异是否来自浮点舍入及当前年度归因仍未确定。**
-见[本轮机制与结果](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/README.md)及本页末节。
-本轮局部证据已由项目主控验收，见[验收回执](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)。
-下一批落实当前源码/原输入的一次365日NPP观测，保存每日完整入口、分支、库存修正及六返回，
-以V02全年逐日对象和年末状态核对观测后的轨迹；局部机制与年度归因仍分开判断。
-其后补原始NetCDF重启与跨年连续性验证；当前科学门槛、支持域和未解决问题保持不变。
+避免反复同步。**当前轨迹365日NPP机制捕获与两次Day338原组件判别已完成**：
+原cold1+52×7路线与保存V02全年完整返回及逐日对象通过原限，day365完整末packet最大差0。
+当前Day338仅将GPP从4.564204140244641e-7置0，NPP有符号变化+0.31553493378648245；
+该日原生floor修正为0，当前背景的局部分支放大已得到直接证据。
+全年输出层差额已闭合到GPP/维护呼吸/生长呼吸，但**floor跨模型差额、上游浮点起因及生产缺陷仍未确定**；
+年度NPP科学失败保留。见[当前批次交付](../../outputs/reviews/main-physics-20261027/npp-current-capture/README.md)
+及本页末节。本批实际工件已由项目主控[验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，
+接受当前局部分支放大、原轨迹准入和年度输出分项核算，保留上游起因与年度因果未知。
+此前两次历史背景交换的[主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)
+保留原身份。原始NetCDF重启与跨年连续性验证仍待独立裁定；当前科学门槛、支持域和未解决问题保持不变。
 
 当前Stage26：四包边界及补项S26-R1已通过主控验收，最终132项定向通过，**本轮有限源码审查收尾**。
 见本页末尾第二十六阶段及[交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)。
@@ -3354,6 +3356,9 @@ V01原严格失败、V02年度NPP及严格诊断失败、raw NetCDF容量、TOPM
 
 ## NPP局部分支敏感性：两次历史输入干预已完成并主控验收（2026-10-27）
 
+本节保留上批主控验收时的证据、缺项及344日原建议；其中“未保存/未实现/未执行”是该批历史状态。
+后续已获准并完成的365日捕获与当前Day338判别见下一节，不把新tuple改称旧producer原捕获。
+
 **已证明：在两份真实历史Day338完整输入背景内，仅把PFT14 GPP在0与
 1.2241381168386465e-6之间交换，就能触发约0.315的最终NPP/维护呼吸变化。
 尚未证明：这项上游GPP差异来自浮点舍入，或它已解释当前319年度NPP失败。**
@@ -3452,3 +3457,138 @@ NPP0.3860031827055333、reference0.38518497347831726、误差0.00081820922721603
 执行方原344日/三日观测提案保持其历史身份。后续主控选择一次原365日路线，增加最后21日是为保存全年
 NPP机制记录并核对已有day365完整末状态；每日记录集中存储，不按日散建文件。该任务另行派发，
 最多一次本地CPU年度观测和两次当前输入小组件干预，保留原限；不扩展上游水文/Fortran/远端捕获。
+
+## 当前轨迹NPP：365日原生机制与两次组件判别（2026-10-27）
+
+本批已完成**1次整模型调用/365日及2次原NPP组件调用**，没有额外baseline或warmup。
+新producer固定main `84e1d8d71dd2110f35d36b525881e70a74a68f61`，cwd及实际包均在
+`E:/ORCHIDEE-MAN-JAX`；ORCJAX/JAX0.10.1、CPU/x64、Python-B、持久缓存关闭。
+原V02的model-call、runner argv、15字段和全部开关原样复用，仍为319点1961、cold1+52×7；
+没有重新物化run.def。配置SHA `3e3ec5c4518ebf4d470c60eda3e9bd6ddfd22e5c6dee473694f2409f17e619af`，
+run.def SHA `5ecb4d2615dec4d54a88f2db5444ac2820d8327ec6c10c6af16945b4ff56374a`。
+输入与实际新调用身份见[preflight](../../outputs/reviews/main-physics-20261027/npp-current-capture/preflight.json)及
+[actual-model-call](../../outputs/reviews/main-physics-20261027/npp-current-capture/actual-model-call.json)；
+新worker PID57056，不能沿用原V02 PID53212。完整原始返回先保存，再作独立准入。
+模型调用及保存245.062秒，年度监督总261.016796秒，低于900秒硬限；
+另一个组件worker PID12200在独立120秒硬限内完成两调用，监督总3.257107秒。
+这些是本批完整执行耗时，不是稳态吞吐。所有本批系统TEMP已清理。
+
+### 原轨迹准入与观测边界
+
+沿用`atol1e-8/rtol1e-10`，容器/键/shape/dtype/离散与来源合同精确；数值载体Python类不要求相同。
+[独立准入](../../outputs/reviews/main-physics-20261027/npp-current-capture/annual-admission.json)
+核验新旧完整对象及各自定义域，数值与独立验证失败均为0。
+
+| 与保存V02比较的范围 | 数值叶 / 元素 | 最大绝对差 |
+|---|---:|---:|
+| 完整年度返回 | 12401 / 178392 | 2.7755575615628914e-17 |
+| 全365日完整daily对象 | 12045 / 154395 | 2.7755575615628914e-17 |
+| day365完整末packet | 353 / 23994 | 0 |
+
+最大绝对差为Day312 NPP[0,13]，最大相对差7.332580063418541e-16；这是原限内轨迹一致，
+不能称观测对全部内部浮点计算无扰动。两处命名roughheight_pft[0,0]源未定义NaN合同保留，
+其余定义坐标仍须finite。260字段独立源码分类及92额外字段独立覆盖缺口不变。
+
+本批只在内存装载由当前精确源码生成的观察overlay；逆变换后算术AST精确相等，生产文件未修改。
+NPP源锚为`stomate_npp.f90::npp_calc`314–387/449–531，JAX核心3954–4057、
+`stomate/integration.py`1695–1714；保存的是allocation之后、后续post-NPP链之前的真实九参、
+分支/pump/reserve、pre-floor/negative/bm_create、原floor-rate操作数及六返回。
+floor-rate直接lift原`sum(bm_create)/dt_days`，不是从维护呼吸倒推。
+365条记录集中在一个[native-records.pkl](../../outputs/reviews/main-physics-20261027/npp-current-capture/native-records.pkl)，
+准确唯一顺序1..365，完整shape/dtype/finite及分支互斥通过[native准入](../../outputs/reviews/main-physics-20261027/npp-current-capture/native-record-admission.json)。
+
+动态日号从原outer scan的science_day_numbers传入model_day_number，再作为debug.callback显式操作数；
+year1961，日末零基tstep=day×48−1。原later-block路线自身选择outer_compiled_static_dispatch，
+直接调用非独立inner-jit的_daily_carbon_static_dispatch；请求的use_static_jit_daily_carbon=True未改。
+cold day1是独立执行，不把其静态日号1复用到后续日。原executable九家族实参及对象不经代理；
+逐块调用前纯观察hook取得实际end-Day330/tstep15839和end-Day337/tstep16175的完整packet、
+九输入家族、context/domain/calibration及动态pcapa_en，不能用只触发首块的factory hook冒充。
+[边界包索引](../../outputs/reviews/main-physics-20261027/npp-current-capture/boundaries.json)保存两处精确存储回读；
+day365完整packet在annual-run.pkl中。它们是新producer实际边界，不是旧V02缺失状态的补造。
+
+### 当前Day338局部分支放大
+
+当前实际GPP4.564204140244641e-7>0，原生分支为over_tax，bm_tax_max3.6513633121957125e-7、
+bm_pump0.31553499951074226、reserve_no_alloc_delta0。原生负库存为空、floor-rate=0；
+pre-floor最小值9.998478064767094e-9仍为正，源码只修正负库存，不能因其低于min_stomate判bug。
+完整不变输入控制先通过全部六返回/546元素比较，maxabs1.9852334701272664e-23；
+随后第二次调用只将gpp[0,13]置0。[冻结核验](../../outputs/reviews/main-physics-20261027/npp-current-capture/local-verification.json)
+确认另八参及其余GPP坐标逐值/shape/dtype不变。
+
+| PFT14日速率，g C m⁻² day⁻¹ | 原生当前Day338 | GPP单坐标置0后的原组件返回 |
+|---|---:|---:|
+| GPP | 4.564204140244641e-7 | 0 |
+| 维护呼吸 | 0.3155353646470735 | −2.7977620220553945e-13 |
+| 生长呼吸 | 2.5559543185369993e-8 | 0 |
+| NPP | −0.3155349337862027 | 2.7977620220553945e-13 |
+
+NPP有符号变化+0.31553493378648245，维护变化−0.31553536464735327。
+这证明当前完整背景下的局部放大，超出此前仅历史Stage8输入的证据域；不等于全年干预效应。
+反事实仅直接保存六返回，内部floor未捕获，不能把原生floor0移作反事实floor实测。
+完整输入/返回见day338-control.pkl和day338-gpp-zero.pkl，控制原限及全部坐标见
+[组件准入](../../outputs/reviews/main-physics-20261027/npp-current-capture/component-control-admission.json)。
+
+### 全年原生恒等会计与输出差额
+
+全年PFT14分支为enough302日、over_tax51日、no_alloc12日；floor共11日且均为no_alloc，
+另一no_alloc为cold day1、维护0。原生恒等式为
+`NPP = GPP − growth − masked_pre_maintenance + actual_original_floor_operand`，
+全年最大残差2.220446049250313e-16；原生NPP对实际daily输出逐日最大差0。
+原年度指标是365个**日速率的算术平均**，单位g C m⁻² day⁻¹，不是年通量sum或kg/year。
+
+| 原生项 | 365个日速率之和 | 年度日均 |
+|---|---:|---:|
+| GPP | 283.831436470382 | 0.7776203738914572 |
+| masked pre-maintenance | 87.35472959313623 | 0.23932802628256497 |
+| 原floor修正 | 3.4274549371626826 | 0.009390287499075842 |
+| 最终维护呼吸 | 83.9272746559735 | 0.22993773878348914 |
+| 生长呼吸 | 59.01300012688871 | 0.16167945240243484 |
+| NPP | 140.8911616875197 | 0.38600318270553324 |
+
+详细原操作数与逐日记录见[机制会计](../../outputs/reviews/main-physics-20261027/npp-current-capture/mechanism-accounting.json)。
+固定这些已观测操作数扣除floor项，日均为0.37661289520645747；这只是代数扣项，
+不是关闭floor重新积分的模型结果。没有全年配对Fortran原生floor/分支记录，
+所以0.009390287499075842不是floor跨模型误差、年度解释份额或可修复量。
+
+另用新年度summary和V02既有、身份绑定的参考汇总完成**输出层有符号差额**，不重算旧逐日表。
+取Δ=当前JAX−参考，原日均单位不变：
+
+| 输出项 | 有符号Δ |
+|---|---:|
+| GPP | −0.00003886349333881434 |
+| 维护呼吸 | −0.0008469903396264022 |
+| 生长呼吸 | −0.000010082380928505552 |
+| 两呼吸合计（直接） | −0.0008570727205549078 |
+| NPP | +0.000818209227216038 |
+
+`ΔNPP = ΔGPP − Δmaintenance − Δgrowth`残差−5.551115123125783e-17；
+参考输出恒等残差0，当前−5.551115123125783e-17。故年度NPP偏高在报告通量层对应较低的维护/生长呼吸，
+部分由较低GPP抵消；这已完成输出会计，仍未把差额归到native floor、上游浮点起因或某项修复。
+参考适用范围、各项原值/差额及残差见[annual-output-accounting.json](../../outputs/reviews/main-physics-20261027/npp-current-capture/annual-output-accounting.json)。
+
+新四指标与V02汇总值相同：AGB4.591235866253038、BGB4.120666562048175、GPP0.7776203738914573
+通过原年度限；NPP0.3860031827055333对参考0.38518497347831726，
+绝对误差0.000818209227216038>原限0.0003951849734783173，**年度科学失败及严格诊断false保留**。
+本批没有证明上游GPP/状态差异来自舍入，也没有新增同输入源级NPP反例；不预设有bug或无bug。
+若后续继续判别，已保存end-Day337是可复用实际边界，尚需独立Fortran producer的同phase/单位/足够精度
+上游输入与输出；历史tuple、水文阈值及旧48步记录不自动成为当前起因证据。
+见[剩余最小事实](../../outputs/reviews/main-physics-20261027/npp-current-capture/next-minimal-facts.json)；本批科学预算已用尽，无后续调用。
+
+工具首次静态dry-run的annotation表示差异失败及修复后通过均保留，两次均0科学调用。
+年度运行期间只加强未调用的offline admission，annual函数与物理observer未变；pre-component全脚本快照
+明确按该阶段命名，不伪称完整launch快照。组件前监督器补TEMP绝对父目录/prefix检查，
+旧回执不回写；细节见[工具版本说明](../../outputs/reviews/main-physics-20261027/npp-current-capture/tool-version-note.json)。
+Verify图代次2026-10-26T20:35:28Z/full/complete/best_effort，三JAX路径metadata_changed，
+Fortran及outputs排除；沿用精确源码回退，不作图完备/全分支声明。
+未修改生产物理、参数、容差；无新Fortran、SSH/远端/GPU/训练/付费或环境重建，执行方未commit/push。
+28修复/16代码提交及42行/28ID修复表不变，无新Stage27或修复ID。
+原raw NetCDF重启容量、跨年连续性、TOPMODEL/fwet/支持域限制不变；water-origin新捕获、
+两研究分支对齐及交接包继续暂停。本批工件/两报告/固定HEAD/工作区与修复登记绑定见
+[最终静态核验](../../outputs/reviews/main-physics-20261027/npp-current-capture/final-verification.json)，保留交付时的待主控状态。
+
+2026-10-27项目主控已集中审阅本批实际观测、单坐标控制、年度核算、工具版本说明与报告差异，
+核对64份清单工件及交付报告SHA，复用执行方的准入/存储/输入/源码验证，未重跑模型、组件或统计。
+[本批主控验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)
+接受当前背景的局部分支放大、观测轨迹原限内准入、全年原生机制核算与输出通量差额闭合。
+该接受不证明上游浮点起因、跨模型floor差额或年度因果归属；原年度科学失败保留，没有新增生产修复。
+本轮版本化发布仅含两份报告，原64份清单及执行回执保持冻结。
