@@ -2,16 +2,20 @@
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
-避免反复同步。**当前humrel起源与独立Fortran配对已执行**：本地原生捕获补齐960条亚日记录，
-正humrel由Day338 offset4水文写入、carry到offset5 DIFFUCO；唯一贡献为tile4/PFT14/第6层。
-同相位Fortran层水量在共同阈值下方、humrel为0；原JAX单tile水分胁迫组件在两侧实际tuple上
-分别复现各自完整返回，控制与跨侧比较maxabs均0。所测域未复现翻译差，差已在层水量输入存在。
-七日daily/NPP原限内通过；**全raw候选比较440项失败仍保留**，独立Fortran文本负零及
-Day338原生NPP/完整C3输出缺项也保留。更早水状态起因与年度因果未定，年度NPP科学失败不变。
-见[本批交付](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/README.md)及本页末节；
-主控已[接受有限机制与同输入证据](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)，
-**NPP起因定位尚未完成，继续追踪首次土壤水状态分歧**。局部水状态跨阈值机制已证实，
-但不能替代最初状态来源与年度差额归因；不认定纯浮点起因、不新增修复、不放宽原门槛。上一批已由主控
+避免反复同步。**首次土壤水分歧批已完成有界执行，原NPP起因目标尚未完成**：实际ALT0初根归一化
+源条件差异和preprofile误用层厚均已确认；只纠正后者使Day130的MC/MCL原限事件闭合，
+但年度原生NPP差额仅减少约5.294e-8，原七个分支不一致日完全保留，原年度科学失败不变。
+纠正轨迹下一未闭合边界为Day199 step25/kjit9530，土壤更新入口水差仅7.16e-11、出口增至3.751e-4；
+实际纠正轨迹的内部冻结/系数/求解tuple缺失，不能判定具体起因。两初始MC/MCL逐位相同，根并非逐位相同。
+见[本批交付](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/README.md)及下文当前节。
+本批2次本地年、3次七日块、8次组件和2次Fortran实际allocation/年轨迹已用尽。
+主控已[接受有界源差异及干预证据](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/controller-acceptance.json)，
+并[安排独立计账的续作](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/controller-followup-decision.json)：
+补齐Day199内部链，落实两处已确认修正与回归。此时生产尚未修改，修复登记仍为28项/16代码提交。
+上一批Day338跨阈值局部机制已由主控
+[接受有限机制与同输入证据](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)，
+其440项raw失败、文本负零和原生NPP/完整C3缺项保持历史身份，不能移作本批全通过或年度起因。
+不认定纯浮点起因、不放宽原门槛。再上一批已由主控
 [接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，
 其原生累加器缺失及58份清单保持原历史状态。此前365日捕获、局部分支放大及年度输出会计已由
 项目主控[验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，
@@ -138,6 +142,89 @@ refresh、TOPMODEL潮汐选择和非默认SNOWCRI参数四项取得有界组件�
 已有通过结果保留；旧结果的身份关联、当前科学失败及未核定的原因分别记录。
 本页记录有界盘点、319 历史身份、当前首年对照、局部来源及晚年保存证据核查，
 不是全模型重新验收，也不改既有科学合同。
+
+## 当前首次土壤水分歧与年度干预：起因目标未完成（2026-10-28）
+
+执行固定main `06166005e580f918f21df7e3a3ca67553e76bdb8`，实际ORCJAX导入本checkout，
+319点/1961原输入、配置和CPU/x64 cold1+52×7路线不变。没有生产源码、参数、容差、研究工作树或代码提交修改。
+交付入口为[README](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/README.md)，
+[机器摘要](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/summary.json)和
+[源/数据索引](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/source-data-index.json)。
+
+实际cold入口MC/MCL跨侧逐位相同，但根最大差`8.671324769338185e-11`，不能描述为全部初始化相同。
+全14PFT ALTmax=0、OK_LEAK=True、OK_PC=False；正ALT重启模板不是选定输入。
+Fortran `hydrol_var_init`（hydrol.f90:4097–4143）只在`znh<ALTmax`累加分母为正时归一化，
+实际分母0，保留raw根；JAX `hydrol_nroot_from_humcste`（hydrol.py:1998–2069）仍归一化全profile。
+第二原生捕获直接确认实际分母0，PFT14 raw和为1.0000000002787428；
+原JAX根控制154坐标逐位相同，孤立源guard组件对Fortran最大差`1.942890293094024e-16`。
+统一缩放可在`us/humrel`抵消，年度重要性未验证；annual-root-guard仅准备，未选定/执行。见
+[初根分析](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/initial-root-normalization-analysis.json)及
+[实际Fortran创建器](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/fortran/second/initial-root-creator-native.json)。
+
+首个MC精确差为Day1 step1/kjit2、tile4约2.78e-16；完整实际Fortran求解tuple经不变JAX求解器后
+MCL逐位复现，不支持把最初ULP事件定为求解器公式缺陷。Day4 vevapnu、Day9 transpir和Day10 sm/smt
+已有原限事件：前两项是mm/1800秒步、转日率乘48；sm/smt为层kg/m²，MC/MCL为m³/m³。
+同数字容差和时间先后不能跨量纲排序起因或影响，早期通量/根路径仍未完全排除。见
+[原单位核对](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/early-water-unit-numerics.json)。
+
+原MC/MCL序列首个原限超限在Day130 step35（从0计数），JAX tstep6227/F kjit6228，
+**point1/layer1/tile4**；`[0,0,3]`不是layer4，也不是全部water字段的首次分歧。
+Fortran `vertical_soil_init`（vertical_soil.f90:348–360）定义中心层厚dlh，
+`hydrol_var_init`（4067–4069）令dh=dlh*1000。JAX `hydrol_first_step_profil_froz_from_arrays`
+（1900–1943）却把节点间距helper结果当dh；该helper另两处dz_mm消费者正确，不能全局改helper。
+单一诊断只改preprofile dh为已有`cwrr_grid.dlh*1000`，根与其他helper消费者不变；
+未从截断zz近似重建底层权重，未硬编码case网格。6228原顶层dh0使raw冻结比例约0.5858449264
+经纠正后为0；原生F dh0.977517107mm、纠正profile`1.4939311468363007e-5`，
+洁净J干预为`1.4939311594241563e-5`。完整Day130的48×6×11 MC/MCL最大差回到`6.926953455e-11`，
+原最大差约4.27862e-7/8.61284e-7；直接观察支持dh→冻结均值/profile→导水/RHS→MCL→MC链。
+见[洁净干预](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/block128-134-grid-clean/intervention-analysis.json)及
+[跨侧阶段](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/cross-day130-native-stages.json)。
+
+三块均从真实原end127 packet/spec和全9类动态输入开始。第二块因globals复制顺序漏装嵌套观察器，
+该失败原样保留；获准第三块纠正绑定，48次11层dh直接逐位确认，回调AST/操作数/guard/计数匹配。
+原F post_drainage配J dr_before_corr，J mcl_before配F solver1_entry.mcl；两处错相位只离线纠正。
+洁净RHS仍有最大`3.0751522217542515e-8`原限失败，不能由末态通过抹掉。见
+[观察器审查](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/observer-binding-review.md)。
+
+最后一次年调用只测试同一dh来源假设。原生产NPP`0.3860031827055333`对存储参考
+`0.38518497347831726`、误差`0.000818209227216038 > 0.0003951849734783173`保持冻结。
+干预NPP`0.3860031297652873`、误差`0.0008181562869700176`仍失败；GPP科学门槛通过，
+两呼吸字段保持原诊断角色，其严格诊断仍失败。原生float64 J–F年均NPP差仅由
+`+0.0008182072511646561`变为`+0.0008181543109196312`，减少约5.294e-8。
+全365日/14PFT原生NPP掩码对原J完全不变，与F不一致仍为337/338/339/341/342/359/364七日。
+干预Days1–198对年均NPP差贡献1.177667674e-11，Days199–365贡献0.0008181542991；
+floor与七日会计是描述，不能替代起因。见
+[原科学合同](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/annual-preprofile-grid/four-flux-original-science-metrics.json)及
+[年度传播](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/annual-preprofile-grid/annual-propagation-summary.json)。
+
+纠正年Day199 step25/kjit9530，土壤更新全部6×11 MC/MCL入口最大差7.160808057626866e-11，
+出口MC最大差0.00037509996692523806。两侧在所查9527–9533窗口都于9530出现顶层冰，
+F under-MCR false、根零mask和源投影萎蔫谓词匹配，只是边界约束；实际纠正轨迹内部温度/冻结、coef/bin、
+主/虚拟/残差求解操作数缺失，旧轨迹回调不能替代。没有纠正end197完整packet。
+唯一下一行动是配对捕获kjit9529–9531上述原生内部链、全6tile/11层/14根mask，并保存真实纠正窗前packet。
+该[具体建议](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/jax/annual-preprofile-grid/day199-localization-and-next-capture.json)
+在执行方交付时**未授权/未执行**。主控现已作出上述续作决定，以新工作包单独计账；
+原批次额度不恢复，旧方案收据不回写，不能用原packet冒充纠正轨迹。
+
+原年完整carry69项失败（68 DOC+carb_mass_total）保留；365完整daily/原生NPP通过和有限水域准入
+不等于完整年准入。干预独立必需数值schema/有限性/时钟检查通过，完整配对carry仍失败；
+可选额外字段只完成清单/有限性，`all_extra_source_schema_complete=false`，不作完整源schema证明。
+固定路线动态DOC/carbon不反馈实际HYDROL/THERMOSOIL/GPP/NPP的有界源结果不能撤销carry失败。
+观察器可能影响融合，单点/年/配置及所捕相位不外推全分支。图Verify2代次2026-10-28T06:36:27Z，
+变更JAX元数据与被排除Fortran/output路径用精确源回退；早期pending审查保留其时点，最终状态以实际收据为准。
+
+实际本地年2/2、compiled7 3/3、组件8/8（science5.123s、保守监督24.32301855s），次数全耗尽。
+Fortran三次提交中126050930在pending取消、零allocation；126035813与126058424完成，
+共1136allocated秒/2.5244444444 CPUh/两条原cold365。第二捕获366字段/317748记录逐字节往返，
+399项producer检查及365×14四通量、147匹配原生字段逐位保持通过。实际写入仅私有jcwu路径，zzhao只读。
+JAX raw1,982,247,819B、保守全binary2,055,868,062B，F raw934,383,864B，均低于每侧2GiB；
+JAX406文件超过200建议目标，明确记录。TEMP清理、无本包cache；剩余秒数不恢复次数额度。见
+[总资源账](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/resource-ledger.json)及
+[静态交付核验](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/final-verification.json)。
+此前待命来自明确用户指令“等待主控指挥”，后由主控继续指令解除，预算没有重置。
+执行方未发送主控聊天消息、未commit/push。主控验收仅接受上述源差异、局部干预及未闭合边界，
+不接受年度起因已解决或新增生产修复完成；复用执行方验证，未重复积分。28项/16代码提交、42行/28ID登记不变，
+原历史失败和358份旧manifest工件冻结；分支同步/交接继续暂停，**完成证据批次不等于完成NPP起因目标**。
 
 ## 固定基线和支持范围
 
@@ -3715,7 +3802,7 @@ Fortran和outputs排除，使用相关精确源/工件回退，不作全分支�
 后续优先追查humrel创建及独立同phase参考，不为单独补累加日志重跑全年；必要新捕获中修正实际路线观察点。
 上游浮点/实现起因、年度因果及原科学失败不变。本次仅发布两份报告，无新增生产修复。
 
-## 当前humrel起源与独立Fortran配对：水分胁迫域通过，完整参考有缺项（2026-10-28）
+## 上一批humrel起源与独立Fortran配对：水分胁迫域通过，完整参考有缺项（2026-10-28）
 
 本批固定`E:/ORCHIDEE-MAN-JAX`、main `33ab88d8c636262033cd921bd58c670e8e281f7f`，
 实际导入为该checkout的`jax_orchidee/__init__.py`；ORCJAX/JAX0.10.1 CPU/x64、Python-B、持久缓存关闭。
