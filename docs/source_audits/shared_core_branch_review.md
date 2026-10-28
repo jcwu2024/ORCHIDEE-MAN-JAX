@@ -3,12 +3,16 @@
 同步安排（2026-10-27用户决定）：**暂缓与两个研究分支对齐，优先稳固main**。
 本阶段不安排分支同步或交接包工作；28项修复/16个代码提交的登记与适用范围持续维护，
 待基础分支本轮加固后集中评估交接。C4–C28仍是待维护方核对的历史登记状态，
-并不表示本次核查过研究分支。**当前Day338 GPP上游定位已完成唯一compiled7块（Day338–344）**，
-Day338唯一实际活动/正GPP在offset5；生产DIFFUCO和STOMATE入口已出现4.564204140244641e-7。
-可用七日轨迹及保存NPP分支通过原限，**完整捕获因原生逐步累加器记录缺失而失败**；源代数会计单列为derived。
-独立Fortran Day338参考、humrel创建上游及年度因果仍缺证据，年度NPP仍失败。
-见[当前批次交付](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/README.md)及下文当前节；
-主控已[接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，完整捕获失败仍保留。
+并不表示本次核查过研究分支。**当前humrel起源与独立Fortran配对已执行**：本地960条原生捕获完整，
+正值由offset4 tile4/PFT14/第6层写入，offset5 DIFFUCO读取；独立Fortran同phase为0。
+原JAX单tile胁迫组件对不变JAX tuple和实际Fortran tuple均复现完整返回，maxabs0；差已在层水量输入存在。
+七日daily/NPP通过原限；全raw候选440项失败、Fortran负零文本及Day338原生NPP/完整C3输出缺项保留。
+更早水状态及年度起因未定，年度NPP仍失败。见
+[本批交付](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/README.md)及下文当前节；
+主控已[接受有限机制与同输入证据](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)。
+**本轮NPP专项诊断收尾，不自动追加前史捕获**；首次状态分歧和年度偏差列为未解决科学问题，原失败/门槛保持。
+上一批已[接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，
+其原生累加器缺失、完整捕获失败及58份清单保持历史状态。
 上批365日捕获、当前背景局部分支放大及年度输出核算已由项目主控
 [验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，其64份清单及回执冻结。
 该接受不作为本批验收；上游起因与年度因果未知。此前两次历史输入交换的
@@ -56,7 +60,83 @@ Stage23六项修复登记为**已接受C11–C16**，原S22 IDs保留用于证�
 精确SHA共同构成修复登记。Stage24四项候选经Stage25实现与补项验收，现计入C17–C20；
 其历史处置和本批接受范围分别见下文。
 
-## 当前Day338 GPP：生产层定位与完整捕获缺口（2026-10-27）
+## 当前humrel起源与独立Fortran配对（2026-10-28）
+
+本批固定main `33ab88d8c636262033cd921bd58c670e8e281f7f`及`E:/ORCHIDEE-MAN-JAX`实际包，
+ORCJAX CPU/x64。复用原end337 packet/动态pcapa_en/context/九家族，唯一compiled7完成Day338–344，
+worker168.719秒、监督172.67159175872803秒/900秒硬限、exit0。四次prepare均0科学，TEMP已清；
+无本地annual/cold/baseline/warmup/科学重试。
+
+| 当前证据域 | 结果与限制 |
+|---|---|
+| 本地原生捕获 | mandatory完整，20类×48=960条，另七日完整NPP；含六tile、51参creator、动态根及真实generic累加器 |
+| 七日完整daily/NPP | 对原年度maxabs7.587966781058726e-16、对上批compiled7最大1.4113055444079075e-15，原限通过；四NPP分支精确 |
+| 不受限raw候选比较 | **FAIL 440项**：200离散/240浮点，全部在assimilate=false且无active叶的Yin/canopy域，原总false不改 |
+| 实际生产域 | 全48 bool门/defined C3返回/entry及唯一活动offset5全记录精确；Day338 GPP仍4.564204140244641e-7 |
+| 独立Fortran自身 | 49边界/六tile/14 PFT的native-bit域通过；全文本往返784记录/980标量signed-zero失败保留 |
+| 两次原水组件 | JAX控制与Fortran cross的完整6返回、全部相关根分支/locals均PASS/maxabs0；仅单tile stress域 |
+
+本地raw先存再准入，15 overlay逆AST通过，显式clock跨原独立JIT，append-only journal与合并结果精确。
+actual PEAT_OCCUR=false的generic ordered accumulator此次完整保存48步，最终原生值与NPP入口精确；
+旧批缺失及derived会计不回写。Day340/342/343 tiny GPP与原年度分别相隔90,326/3,583,316/1,013,089 ULP，
+绝对差均小于8e-16；不能称七日bitwise一致。新day344 packet无旧包可比较。
+原atol1e-8/rtol1e-10及结构/shape/dtype/离散/来源合同保持，连续activity额外bitwise检查与实际bool门区分。
+见[原准入/失败分类](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/admission-classification.json)。
+
+offset4 HYDROL writer/tstep16180经真实state carry到offset5 DIFFUCO/tstep16181；
+实际Fortran对应kjit16181→16182。tile4/PFT14第6层JAX sm3.0827056142277756，
+Fortran sm3.079323123859772；共同smw_tmp3.0826979486351997、smf_tmp5.7149560143648、pcent0.8。
+两侧根入/出均仅该层为1、presence1、under-MCR=false，NEW_WATSTRESS=false、DYN_NROOT_LARIX=true。
+本地factor/denom/humrelv3.6402170609775793e-6，F为0，下一步各自读取同值。
+本地正margin7.665592575811786e-6，F在阈值下方；根正denom归一化/零denom保留分支不同而最终根相同。
+浅层无根support，aggregate humrel不额外乘tilefrac；STOMATE接收的名为humrel参数实际为HYDROL vegstress。
+保存MC/MCL/DZ按原第6层积分式的代数会计与native分列，未执行内部土壤solver；更早根support形成未知。
+Fortran全48步writer/reader humrel及生产GPP均0。本步sm差0.0033824903680037544，
+由零基节点4/5/6的保存MCL差，经共同原权重贡献0.0029008678151902713/0.0004816225528136591/0，
+派生和与原生sm差残差1.7607443281164592e-16；F wilt margin为−0.0033748247754279426。
+实际end337 tile4 MC/MCL已不同（maxabs0.0016603309705315594），PFT14根精确相同；
+当前writer诊断解释不建立该更早状态差的首次起因。见
+[跨侧原生/派生会计](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/cross-state-analysis.json)。
+详见[源码/phase契约](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/source-contract.md)
+和[主报告](main_physics_review.md)本批节。
+
+独立producer为Cancon jcwu目录下`orchidee_jax_319_humrel_current_20261027`，从冻结源隔离构建，
+唯一job125893716/a14r1n19，1节点8CPU16GiB/最大2h；实际allocation500秒=1.111111 allocated CPU-hours，
+RSS约3.173GiB。编译376秒、原cold365轨迹93秒，模型exit0；事后旧send文件名检查令wrapper4/调度FAILED，
+错误回执及archive失败保留，仅取回现有文件离线验收。32项来源核验通过，实际PP源/binary/worker/输入/冻结文件绑定；
+run.def/used_run.def与冻结版相同。实际numout及有效配置1000/.5/.5、48个firstcall=false，
+仅支持旧源`den_man/weight_ven_a/b`与仓库对应literal的本case等价，原静态pending审计身份保留。
+实际四通量各365×14 float32存储值与已接受Stage12精确相同，maxabs0；Day338/PFT14 GPP0、
+NPP9.99999993922529e-9、MAINT_RESP−9.99999993922529e-9、GROWTH_RESP0。
+完整Day338原生NPP九字段guard仍337，C3虽65输入在而完整10输出缺证据；两缺项保留。
+直接TRANSFER位解码独立域与失败decimal域分列，不改文本/容差。来源、资源和捕获边界见
+[Fortran入口](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/fortran/README.md)。
+
+组件域独立准入后，PID3924唯一300秒worker实际2调用，合计1.281秒、监督4.872981071472168秒，TEMP清。
+先不变JAX完整记录214叶/4109元素及整个返回通过；再原`hydrol_water_stress_diagnostics`接实际F17参，
+完整6字段/348元素和101叶/814元素相关分支/locals均maxabs0。under-MCR增量是native前后counter之差的
+派生接口映射，部分谓词由native操作数按源IF组合并有provenance；C3整对跳过，调用0。
+见[组件域准入](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/component-domain-admission.json)及
+[实际比较](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/component-admission.json)。
+所测单tile胁迫域未复现翻译差，输入层水量差已存在；该证据不覆盖完整51参creator、内部soil solver或全年因果。
+下一最小事实是形成该end337 tile4水状态的更早实际soil-update完整入参与原生输出对应，
+现有post-solver及前entry记录不足以代替；本批不追加轨迹。
+
+原年度NPP误差0.000818209227216038仍超原限0.0003951849734783173；28修复/16代码提交、
+42行/28ID登记及原支持域不变，无新Stage/修复、生产物理/参数/阈值/容差修改。
+两研究工作树未访问/修改，对齐/交接继续暂停；无GPU/训练/环境重建、commit/push、自动化或主控聊天消息。
+图当前Transport closed，历史代次仅作历史记录，使用精确源回退。交付时待主控状态保留，
+旧58/64清单和主控回执冻结；最终工件/两报告绑定见
+[静态核验](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/final-verification.json)。
+
+2026-10-28主控核对236份实际清单工件、报告SHA及上述机制/组件/参考证据，复用执行方检查，零科学/统计重跑。
+[独立主控验收](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)
+只接受当前局部水状态跨阈值机制和所测单tile组件的同输入一致；全部raw/文本/wrapper失败与参考缺项保留。
+本轮在此收尾，不把首次状态分歧追踪自动追加为完成条件；上游浮点/实现起因和全年归因仍未知，年度NPP原失败不变。
+后续若另做前史追踪，先明确可判别问题、完整soil-update对应证据及预算。没有新增生产修复或容差调整，
+不表示重启/跨年或主分支全部科学验证通过。本次仅发布报告，28项/16代码提交及暂停研究对齐的决定保持。
+
+## 上一批Day338 GPP：生产层定位与完整捕获缺口（2026-10-27）
 
 固定`E:/ORCHIDEE-MAN-JAX`、main `7acead83618e64483095e69621f11e70137a9658`及该checkout实际包，
 ORCJAX/JAX0.10.1 CPU/x64、Python-B/无持久缓存。复用上批真实end-Day337/tstep16175的packet、
