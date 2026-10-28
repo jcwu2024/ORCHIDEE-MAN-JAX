@@ -10,7 +10,7 @@
 更早水状态及年度起因未定，年度NPP仍失败。见
 [本批交付](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/README.md)及下文当前节；
 主控已[接受有限机制与同输入证据](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)。
-**本轮NPP专项诊断收尾，不自动追加前史捕获**；首次状态分歧和年度偏差列为未解决科学问题，原失败/门槛保持。
+**NPP起因定位尚未完成，继续追踪首次土壤水状态分歧**；局部机制已知不能替代起因与年度归因，原失败/门槛保持。
 上一批已[接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，
 其原生累加器缺失、完整捕获失败及58份清单保持历史状态。
 上批365日捕获、当前背景局部分支放大及年度输出核算已由项目主控
@@ -132,9 +132,11 @@ NPP9.99999993922529e-9、MAINT_RESP−9.99999993922529e-9、GROWTH_RESP0。
 2026-10-28主控核对236份实际清单工件、报告SHA及上述机制/组件/参考证据，复用执行方检查，零科学/统计重跑。
 [独立主控验收](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)
 只接受当前局部水状态跨阈值机制和所测单tile组件的同输入一致；全部raw/文本/wrapper失败与参考缺项保留。
-本轮在此收尾，不把首次状态分歧追踪自动追加为完成条件；上游浮点/实现起因和全年归因仍未知，年度NPP原失败不变。
-后续若另做前史追踪，先明确可判别问题、完整soil-update对应证据及预算。没有新增生产修复或容差调整，
-不表示重启/跨年或主分支全部科学验证通过。本次仅发布报告，28项/16代码提交及暂停研究对齐的决定保持。
+用户进一步明确未解决问题仍需继续；主控撤回收尾安排，改为从初始状态与连续共同边界定位首次有意义分歧，
+再核对对应soil-update完整输入/输出及传播。已完成批次不等于起因定位完成，上游浮点/实现原因和全年归因仍未知。
+历史主控验收/发布回执不回写，其收尾安排由
+[后续目标更正](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-followup-decision.json)替代；有限证据仍有效。
+年度NPP原失败及门槛保持，没有新增生产修复或容差调整；28项/16代码提交及暂停研究对齐的决定保持。
 
 ## 上一批Day338 GPP：生产层定位与完整捕获缺口（2026-10-27）
 
