@@ -2,16 +2,37 @@
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
-避免反复同步。**首次土壤水分歧批已完成有界执行，原NPP起因目标尚未完成**：实际ALT0初根归一化
+避免反复同步。**Day199完整捕获与同轨迹准入已通过，原NPP起因目标仍未完成**。独立Fortran
+job126077710已COMPLETED/0:0，620,494条原生记录与实际相位、年度/共同边界保持检查通过；
+六项预设shape错误保留初失败，并由源码及旧原生数组订正。两次本地cold分别在13.944647秒的
+序列化核对和219.804041秒的首七日块观察器时钟处失败，原失败与次数保留。用户再明确授权一次
+900秒捕获；经独立审核的attempt02以355.197170秒到end204，保存真实end197 packet/两套spec/
+九家族，实际callback与原限同轨迹准入通过。限定C29/C30生产集成已完成，最终代码4项定向测试/
+6次组件调用及静态接口检查通过；
+Day199已完成RHS完整同输入核对，主要差异追到其上游surface输入；原NPP起因仍未闭合。
+主控已接受C29/C30并提交`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`，累计30项已接受修复/17代码提交。见
+[当前续作](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)及
+[Fortran证据](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/evidence-index.json)。
+以下首次分歧节保留前批已接受的有界证据：实际ALT0初根归一化
 源条件差异和preprofile误用层厚均已确认；只纠正后者使Day130的MC/MCL原限事件闭合，
 但年度原生NPP差额仅减少约5.294e-8，原七个分支不一致日完全保留，原年度科学失败不变。
 纠正轨迹下一未闭合边界为Day199 step25/kjit9530，土壤更新入口水差仅7.16e-11、出口增至3.751e-4；
-实际纠正轨迹的内部冻结/系数/求解tuple缺失，不能判定具体起因。两初始MC/MCL逐位相同，根并非逐位相同。
+前批缺少实际纠正轨迹的内部冻结/系数/求解tuple，本批已捕获并正在定位；不能仅据出口差判定起因。
+两初始MC/MCL逐位相同，根并非逐位相同。
 见[本批交付](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/README.md)及下文当前节。
 本批2次本地年、3次七日块、8次组件和2次Fortran实际allocation/年轨迹已用尽。
 主控已[接受有界源差异及干预证据](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/controller-acceptance.json)，
 并[安排独立计账的续作](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/controller-followup-decision.json)：
-补齐Day199内部链，落实两处已确认修正与回归。此时生产尚未修改，修复登记仍为28项/16代码提交。
+补齐Day199内部链，落实两处已确认修正与回归。本批已满足捕获/准入先于生产集成的顺序约束，
+唯一新增年度检查在49.085176秒因观察器dtype元数据读取的tracer→NumPy错误失败，
+只存首core/stress七条，无年度对象/末态；该1/1已消耗。隔离恢复v3已冻结，最终零模型预检和
+独立审核通过；用户随后明确授权一次独立计账的本地CPU/x64年度验证，硬限900秒，
+已按[新授权记录](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-recovery-proposal01/recovery-execution-release.json)完成。
+监督用时504.738770秒，exit0、TEMP清理；365日/end17519、52七日块及所有预期native计数完整。
+原失败不计为物理或科学精度结果；新增年度AGB/BGB/GPP通过，NPP仍失败。
+可审[恢复方案](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-recovery-proposal01/recovery-proposal-v3.json)
+及[独立审核](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/annual-recovery-independent-review.json)
+保留两份被静态拒绝的打包草案，原年度1/0与全部已执行失败证据不变。
 上一批Day338跨阈值局部机制已由主控
 [接受有限机制与同输入证据](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)，
 其440项raw失败、文本负零和原生NPP/完整C3缺项保持历史身份，不能移作本批全通过或年度起因。
@@ -23,9 +44,57 @@
 此前两次历史背景交换的[主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)
 保留原身份。原始NetCDF重启与跨年连续性验证仍待独立裁定；当前科学门槛、支持域和未解决问题保持不变。
 
-当前Stage26：四包边界及补项S26-R1已通过主控验收，最终132项定向通过，**本轮有限源码审查收尾**。
+当前C29/C30已于2026-10-29**经主控接受并提交**，准确SHA与适用范围列于
+[共享核心修复登记](shared_core_branch_review.md)，[主控验收](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/controller-acceptance.json)
+保留年度NPP与完整carry失败。C29遵循`hydrol_var_init:4126–4141`的
+`znh<ALT`累加与正和归一化条件，ALT0保留原根；C30遵循`:4065–4070`的`dlh*1000`厚度，
+显式贯通helper/restart/assembler及四个driver入口。最终4项测试/6次组件调用以17.431秒通过，
+见[最终回执](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/isolated-c29-c30/receipt-final.json)。
+Day199 RHS的unchanged-actual与完整Fortran输入两次控制亦通过原限。综合年度已完成，
+NPP新值`0.38600312976573087`对参考`0.38518497347831726`，误差`0.0008181562874136072`
+仍大于原限`0.0003951849734783173`，科学接受及严格诊断仍false；AGB/BGB/GPP通过原科学限。
+见[四指标原政策判定](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-recovery-proposal01/run/annual-modelout-policy.json)。
+上游起因未闭合，C29/C30合并干预不证明各自年度因果。
+全年五类NPP mask对旧original/dh-only的14PFT逐项不变；current Fortran详细NPP只覆盖Day199，
+presence14、negative14×12及13个有效PFT class精确，PFT1 class缺失。全年native核算仅复用已列来源的
+历史365日F参考作描述；Day199四项原生通量在严格限下各保留一个PFT14差异，不称native数值全通过。
+原七个class不一致日337/338/339/341/342/359/364仍在，不外推为current全年详细捕获。
+
+本批Day199有界定位已完成[逐相位原生配对](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/paired-actual-inner.json)：
+48步×6tile×14PFT的4,032组动态根记录覆盖11层candidate、原根、normalizer和更新根；
+tree/旧根零/正和三类分支逐项一致，under-MCR标志一致。该分支一致性不是数值全部通过。
+全日最早严格差异已在kjit9505出现：tile4 TMC差`6.440899369408726e-8`，原限
+`3.334245504772902e-8`；底层RHS差`3.1777943831912125e-8`，原限`1.706874922119386e-8`。
+目标kjit9530的主要放大另列：地表`flux_top`差`0.001186822592402357`，首层RHS差
+`0.0011868226011426536`，出口MC/MCL约`3.751e-4`。不能把它称为所有完整输入此前相同后的首次差异。
+
+[两次RHS完整控制](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/rhs-control-receipt.json)
+依次使用未改J实际tuple与完整F实际tuple，44元素返回均通过原数值限，最大误差分别
+`1.3877787807814457e-17`及`0`；这是数值通过，非44元素逐位或直接actual-return signed-zero审计。
+[独立源码审查](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/flux-top-source-review.md)
+确认main的`flux_top=water2extract`来自surface抵消，dummy另用潜在蒸发/阻力；本次与vevapnu同值
+不构成通用别名或唯一因果。现有F的AE/precisol_ns是pre-split，仍缺post-split直接tuple及
+部分split隐藏状态，不能补入J值或反算成“完整F输入”。最小surface观察补丁及
+[本地dry-run](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/next-surface-preparation/dry-run-receipt.json)
+已准备通过；执行方交付时尚未新增编译/模型/远端。主控现已
+[安排有界续作](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/controller-surface-followup.json)，
+要求在同一次新捕获中补齐surface、split及直接上游蒸发计算的完整边界；只使用既有剩余本地重放/组件额度，
+另安排既有Cancon额度内一次1节点8CPU/16GiB/最多1小时捕获，不新开本地全年运行。
+本批原综合年度检查已因观察器工具错误失败并计账，见
+[失败分析](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-failure-analysis.json)；
+随后独立获批的恢复年度已保存完整末态。required schema/来源/alias/finite检查通过，
+不作全物理域通过声明；对savedV02/original/dh-only末态的原限比较分别有1,099/1,109/69项失败，
+不称完整末态相等，原69项失败亦不回写。全年selected water对旧dh-only原限通过；
+入口mc/mcl对F soil_entry跨preprofile相位，仅描述比较，F同相位post-prefreeze输入仍缺。
+
+失败调用仍保存了首core输入根：全14×11坐标对Fortran首soil-entry的`nroot`通过原限，
+最大差`1.942890293094024e-16`，见[局部配对](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/partial-first-core-pair.json)。
+这是保留输入变量的跨相位映射；源码确认JAX中间module不接收或修改该根输入，不代表整组entry
+同相位、独立初始化callback或首冻结剖面通过。原生Fortran同相位`dh`仍缺失。
+
+Stage26历史结果：四包边界及补项S26-R1已通过主控验收，最终132项定向通过，**该轮有限源码审查收尾**。
 见本页第二十六阶段及[交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)。
-新增C21–C28，累计28项已接受修复、16个代码提交；原接受证据与精确SHA保留。
+该阶段新增C21–C28，当时累计28项已接受修复、16个代码提交；原接受证据与精确SHA保留。
 **V01已主控验收通过**：001点1961年前9日，编译/普通路径与动态packet恢复均通过原数值容差。
 见[最终交付](../../outputs/validation/v01-after-stage26/domain-v3/README.md)及
 [验收回执](../../outputs/validation/v01-after-stage26/primary-v01-acceptance.json)。累计19模型日、4次调用、

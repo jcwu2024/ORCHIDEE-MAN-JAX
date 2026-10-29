@@ -1,17 +1,42 @@
 # 共享物理核心与研究分支核查
 
 同步安排（2026-10-27用户决定）：**暂缓与两个研究分支对齐，优先稳固main**。
-本阶段不安排分支同步或交接包工作；28项修复/16个代码提交的登记与适用范围持续维护，
-待基础分支本轮加固后集中评估交接。C4–C28仍是待维护方核对的历史登记状态，
-并不表示本次核查过研究分支。**当前首次土壤水分歧批已完成有界执行，NPP起因目标仍未完成**。
+本阶段不安排分支同步或交接包工作；当前累计30项已接受修复/17个代码提交，登记与适用范围持续维护，
+待基础分支本轮加固后集中评估交接。C4–C30仍待维护方集中核对，
+并不表示本次核查过研究分支。**Day199完整捕获与同轨迹准入已通过，NPP起因目标仍未完成**。
+Fortran job126077710正常完成，620,494条native记录、实际相位和年度/共同边界保持检查通过；
+六项预设shape笔误与原失败独立保留。本地原cold和唯一追加cold分别因序列化核对、首七日块
+观察器时钟失败，均已计账并保留原失败。用户再明确授权的一次900秒attempt02以355.197170秒
+到end204，真实end197 packet/两套spec/九家族与Day199全48步已捕获，实际callback和原限
+同轨迹准入通过。限定C29/C30生产集成已完成，最终代码4项定向测试/6次组件调用及静态接口检查
+通过；C29/C30已由主控接受，准确代码提交为`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`。
+原42行/28ID登记保持，在本页另增C29/C30两行，累计30项/17代码提交。
+见[当前续作](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)。
+以下首次分歧节保留前批已接受的有界证据。
 实际ALT0初根归一化条件及preprofile层厚来源差异已确认；单独纠正层厚使Day130 MC/MCL回到原限，
 年度原生NPP差却只减少约5.294e-8，原七个分支不一致日及年度科学失败保留。
 纠正轨迹下一未闭合边界为Day199 step25/kjit9530实际土壤更新内部，入口水差7.16e-11、出口3.751e-4；
-缺少实际纠正冻结/系数/求解tuple。见
+前批缺少的实际纠正冻结/系数/求解tuple已在本批补齐，RHS完整同输入核对通过，起因继续向surface/split上游定位。见
 [本批交付](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/README.md)及下文当前节。
 本批运行次数已耗尽；主控已[接受有界源差异及干预证据](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/controller-acceptance.json)，
 并[安排单独计账续作](../../outputs/reviews/main-physics-20261028/npp-first-state-divergence/controller-followup-decision.json)：
-补齐Day199内部链、落实两处修正与回归。此时无生产修改或新增已接受修复。上一批Day338局部跨阈值机制已由主控
+补齐Day199内部链、落实两处修正与回归；当前捕获/准入门已通过，唯一年度检查在49.085176秒
+因观察器dtype读取的tracer→NumPy错误失败，1/1已计账、无retry；只存首core/stress七条，
+无年度对象/完整末态。隔离恢复v3已冻结并通过最终零模型预检及独立审核，
+见[方案](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-recovery-proposal01/recovery-proposal-v3.json)
+与[审核](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/annual-recovery-independent-review.json)。
+两份静态拒绝草案保留；用户随后明确授权一次独立计账的本地CPU/x64年度验证，硬限900秒，
+已按[新授权记录](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-recovery-proposal01/recovery-execution-release.json)完成。
+监督504.738770秒/exit0、TEMP清理，365日/end17519、52七日块及预期native计数完整。
+AGB/BGB/GPP通过原科学限，NPP新值`0.38600312976573087`、误差`0.0008181562874136072`
+仍大于原限`0.0003951849734783173`，综合科学接受及严格诊断仍false。
+见[四指标判定](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/annual-recovery-proposal01/run/annual-modelout-policy.json)。
+原年度1/0历史计账保持；新增代码修复的接受不改变NPP科学失败。
+全年五类NPP mask对旧original/dh-only的14PFT不变；current F详细NPP仅Day199，presence14、
+negative14×12及13个有效class精确，PFT1 class缺失。历史365日F参考仅作已标来源的描述比较，
+Day199四项原生通量各有一个超严格限的PFT14差异；原七个不一致日337/338/339/341/342/359/364保留，
+不替代current全年详细tuple。
+上一批Day338局部跨阈值机制已由主控
 [接受有限机制与同输入证据](../../outputs/reviews/main-physics-20261027/npp-humrel-origin-current/controller-acceptance.json)，
 其440项raw失败、文本负零及NPP/完整C3缺项保持历史身份，原失败/门槛不变。
 上一批已[接受有限生产层证据](../../outputs/reviews/main-physics-20261027/npp-gpp-origin-current/controller-acceptance.json)，
@@ -20,9 +45,41 @@
 [验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，其64份清单及回执冻结。
 该接受不作为本批验收；上游起因与年度因果未知。此前两次历史输入交换的
 [主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)保留原身份。
-不新增修复或同步；原始NetCDF重启与跨年验证仍待独立裁定。
+本轮新增接受C29/C30，研究分支同步仍暂停；原始NetCDF重启与跨年验证仍待独立裁定。
 
-Stage26当前：四包边界及集中审查S26-R1已主控验收，最终132项定向通过，**本轮有限源码审查收尾**。
+当前新增接受修正（2026-10-29）：以下两项已在main实现、通过定向回归和有界年度检查，并由主控接受。
+两项共用代码提交`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`；NPP仍失败，不能将代码接受视作年度科学接受。
+代码、实际测试日志及补丁绑定见[最终回执](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/isolated-c29-c30/receipt-final.json)和
+[执行方审查](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/production-integration-review.json)与
+[主控验收](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/controller-acceptance.json)。验收另纠正了旧spacing helper将节点间距误称冻结dh权重的文档，未改其运算。
+
+| ID | Fortran来源与触发 | main实现与验证 | 提交/接受状态 |
+| --- | --- | --- | --- |
+| C29 | `hydrol.f90::hydrol_var_init:4126–4141`；`ok_pc OR ok_leak`下只累加`znh<ALT`原始根，ALT0保留原剖面，仅正normalizer触发归一化 | `hydrol_nroot_from_humcste`；dnh几何的ALT0/正ALT/零和、多点14PFT及既有ok_pc回归通过 | 已接受；`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`；综合年度NPP仍失败，单独归因未建立 |
+| C30 | `hydrol_var_init:4065–4070`及`hydrol_soil_froz:8332–8460`；preprofile冻土入口必须使用真实`dlh*1000` | helper/restart/assembler显式`dh_mm`及四个driver调用；restart和窄JIT通过，两个既有dz消费者保持 | 已接受；`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`；综合年度NPP仍失败 |
+
+本批四项最终测试对应6次组件调用，17.431秒；此前隔离4次/12.115秒仍独立计账。Day199 RHS另有
+unchanged-actual及完整Fortran输入两次控制，完整返回通过原限；该结果仅排除所测RHS实现为本次
+输入差异的来源。地表通量与上游evapot已不同，尚未证明surface/ENERBIL内部缺陷或年度NPP起因。
+全日最早严格差异在kjit9505的TMC及底层RHS，不能称9530之前完整输入全通过；目标9530的
+主要放大为surface flux差`1.1868225924e-3`→首层RHS差`1.1868226011e-3`→MC/MCL约`3.751e-4`。
+4,032组动态根三类分支和under-MCR标志逐项一致，不等于所有连续值一致。F保存的AE/precisol_ns
+属于pre-split，尚缺完整surface/split/ENERBIL同相位输入；详见
+[独立源码审查](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/flux-top-source-review.md)。
+最小surface-only[本地准备回执](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/next-surface-preparation/dry-run-receipt.json)
+已通过零模型检查；252条/13,032字节仅为当时的拟捕获格式，无新增实际采集。
+主控已[安排续作](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/controller-surface-followup.json)，
+要求先补齐surface/split及直接上游蒸发计算的完整合同，再在同一次有界捕获中取证；不把surface-only准备冒称整条链完备。
+
+失败年度调用的[首core局部根配对](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/jax/partial-first-core-pair.json)
+覆盖14×11坐标并通过原限，最大差`1.942890293094024e-16`。该结果只映射保留的JAX输入`nroot`
+与Fortran首soil-entry根；中间JAX模块不接收该输入，不称整组entry同相位或独立初始化callback。
+同相位Fortran `dh`缺失，首冻结剖面仍未判定。新增完整末态的required schema/来源/alias/finite
+检查通过，不等于全物理域通过；对savedV02/original/dh-only的原限比较有1,099/1,109/69项失败。
+全年selected water对旧dh-only原限通过；entry mc/mcl对F soil_entry跨preprofile相位，
+只作描述比较，同相位F post-prefreeze输入仍缺，不据合并干预作root-only/freeze-only年度归因。
+
+Stage26历史结果：四包边界及集中审查S26-R1已主控验收，最终132项定向通过，**该轮有限源码审查收尾**。
 见[Stage26交付入口](../../outputs/reviews/main-physics-20261026/final-source-boundaries/README.md)及下方接受分组。
 新增C21–C28；Stage25的C17–C20及93项原证据保留。
 最新修复登记：2026-10-26。累计28项已接受修复、16个代码提交，仍未建立319年度归因。
