@@ -8,6 +8,7 @@ from jax_orchidee.sechiba.hydrol import (
     PEAT_MCR,
     USDA_MCS,
     USDA_MCR,
+    hydrol_nroot_from_humcste,
     hydrol_var_init,
 )
 
@@ -168,3 +169,44 @@ def test_permafrost_alt_branch_zeros_deep_roots_then_normalizes():
     active = inputs["znh_m"] >= 0.2
     np.testing.assert_allclose(result.nroot[0, 13, active], 0.0)
     np.testing.assert_allclose(np.sum(result.nroot[0, 13]), 1.0, atol=1.0e-12)
+
+
+def test_nroot_alt_crop_handles_zero_alt_multiple_points_and_zero_sum():
+    inputs = _inputs(npts=3)
+    zz_mm = inputs["znh_m"] * 1000.0
+    dz_mm = inputs["dnh_m"] * 1000.0
+    raw = hydrol_nroot_from_humcste(
+        humcste=inputs["humcste"], dz_mm=dz_mm, zz_mm=zz_mm
+    )
+    altmax = np.zeros((3, 14), dtype=np.float64)
+    altmax[:, 13] = [0.0, 0.2, 0.0005]
+
+    result = hydrol_nroot_from_humcste(
+        humcste=inputs["humcste"],
+        dz_mm=dz_mm,
+        zz_mm=zz_mm,
+        altmax=altmax,
+        ok_leak=True,
+    )
+
+    expected = np.broadcast_to(raw, (3, 14, len(zz_mm))).copy()
+    clipped = (altmax[:, :, None] > 0.0) & (
+        zz_mm[None, None, :] / 1000.0 >= altmax[:, :, None]
+    )
+    expected = np.where(clipped, 0.0, expected)
+    normalizer = expected.sum(axis=2, keepdims=True)
+    expected = np.divide(
+        expected,
+        normalizer,
+        out=expected,
+        where=(altmax[:, :, None] > 0.0) & (normalizer > 0.0),
+    )
+
+    assert result.shape == (3, 14, len(zz_mm))
+    np.testing.assert_allclose(result, expected, rtol=0.0, atol=1.0e-14)
+    np.testing.assert_allclose(result[0], raw[0], rtol=0.0, atol=0.0)
+    assert np.sum(result[1, 13]) == pytest.approx(1.0, abs=1.0e-12)
+    assert np.all(result[1, 13, zz_mm / 1000.0 >= 0.2] == 0.0)
+    np.testing.assert_array_equal(result[2, 13], np.zeros(len(zz_mm)))
+
+    assert raw.shape == (1, 14, len(zz_mm))

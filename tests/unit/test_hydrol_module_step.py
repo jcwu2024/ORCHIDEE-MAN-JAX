@@ -25,6 +25,7 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
 )
 from jax_orchidee.driver.stomate_boundary import paper_case_cwrr_vertical_soil_grid_from_used_run_def  # noqa: E402
 from jax_orchidee.driver.trace import read_static_fields_from_fixed_format_trace_dir  # noqa: E402
+from jax_orchidee.sechiba import hydrol as hydrol_module  # noqa: E402
 from jax_orchidee.sechiba.hydrol import (  # noqa: E402
     HYDROL_FIRST_STEP_PRECALL_REQUIRED_FIELDS,
     PEAT_MCR,
@@ -123,6 +124,7 @@ def _module_inputs():
         "mcr": np.asarray([0.057], dtype=np.float64),
         "mcs": np.asarray([0.50], dtype=np.float64),
         "dz_mm": dz_mm,
+        "dh_mm": np.asarray([1.0, 3.0, 6.0, 8.0, 10.0, 12.0, 14.0], dtype=np.float64),
         "dt_days": 1.0 / 48.0,
         "free_drain_coef": np.ones((npts, nstm), dtype=np.float64),
         "resolv": np.ones((npts, nstm), dtype=bool),
@@ -238,7 +240,9 @@ def _module_diagnostic_inputs(result, inputs):
     }
 
 
-def _explicit_snow_module_precall(*, omit_restart_field: str | None = None):
+def _explicit_snow_module_precall(
+    *, omit_restart_field: str | None = None, use_jit: bool = False
+):
     inputs = _module_inputs()
     npts = inputs["veget_max"].shape[0]
     nvm = inputs["veget_max"].shape[1]
@@ -342,13 +346,52 @@ def _explicit_snow_module_precall(*, omit_restart_field: str | None = None):
         throughfall_by_pft=np.full(nvm, 30.0, dtype=np.float64),
         humcste=np.ones(nvm, dtype=np.float64),
         zz_mm=inputs["zz_mm"],
+        dh_mm=inputs["dh_mm"],
         diaglev_m=inputs["zz_mm"] / 1000.0,
         peat_hydro=False,
         ok_dgvm=False,
         ok_freeze_cwrr=True,
         dt_days=inputs["dt_days"],
+        use_jit=use_jit,
     )
     return precall, inputs
+
+
+def test_first_step_freezing_uses_supplied_hydrol_layer_thickness(monkeypatch):
+    inputs = _module_inputs()
+    observed = []
+    source = hydrol_module.hydrol_soil_froz_profile
+
+    def record_dh_mm(*, dh_mm, **kwargs):
+        observed.append(np.asarray(dh_mm).copy())
+        return source(dh_mm=dh_mm, **kwargs)
+
+    monkeypatch.setattr(hydrol_module, "hydrol_soil_froz_profile", record_dh_mm)
+    thermosoil_restart = SimpleNamespace(
+        ptn=np.full((1, 7, 4), 268.0, dtype=np.float64)
+    )
+    direct = hydrol_first_step_profil_froz_from_restart_thermosoil(
+        thermosoil_restart=thermosoil_restart,
+        veget_max=inputs["veget_max"],
+        mc=inputs["mc"],
+        njsc=inputs["njsc"],
+        zz_mm=inputs["zz_mm"],
+        dh_mm=inputs["dh_mm"],
+        diaglev_m=inputs["zz_mm"] / 1000.0,
+    )
+    assert direct[0].shape == inputs["mc"].shape
+    np.testing.assert_array_equal(observed[0], inputs["dh_mm"])
+
+    assembled, _ = _explicit_snow_module_precall()
+    assert assembled.ok
+    np.testing.assert_array_equal(observed[1], inputs["dh_mm"])
+
+
+def test_first_step_freezing_jit_assembly_accepts_explicit_layer_thickness():
+    assembled, inputs = _explicit_snow_module_precall(use_jit=True)
+
+    assert assembled.ok
+    assert np.asarray(assembled.payload["profil_froz"]).shape == inputs["mc"].shape
 
 
 def test_hydrol_runoff_to_peat_without_tides_matches_fortran_tile4_branch():
@@ -540,6 +583,7 @@ def test_hydrol_first_step_precall_assembly_closes_enerbil_boundary_without_fabr
     assert scaffold.diffuco_first_step_precall is not None
     assert scaffold.first_step_restart_state is not None
     nvm = scaffold.first_step_restart_state.slowproc.lai.shape[1]
+    cwrr_grid = paper_case_cwrr_vertical_soil_grid_from_used_run_def(USED_RUN_DEF)
     assembly = assemble_hydrol_first_step_precall_payload(
         enerbil_payload=scaffold.enerbil_first_step_local.payload,
         hydrol_restart=scaffold.first_step_restart_state.hydrol,
@@ -554,6 +598,7 @@ def test_hydrol_first_step_precall_assembly_closes_enerbil_boundary_without_fabr
         throughfall_by_pft=parse_run_def_indexed_vector(values, "PERCENT_THROUGHFALL_PFT", nvm),
         humcste=parse_run_def_indexed_vector(values, "HYDROL_HUMCSTE", nvm),
         zz_mm=scaffold.stomate_pre_step.pre_step.boundary_inputs.ok_leak_inputs["z_soil"][1:] * 1000.0,
+        dh_mm=cwrr_grid.dlh * 1000.0,
         diaglev_m=scaffold.stomate_pre_step.pre_step.boundary_inputs.ok_leak_inputs["z_soil"][1:],
         peat_hydro=parse_run_def_bool(values["PEAT_HYDRO"]),
         ok_dgvm=parse_run_def_bool(values["STOMATE_OK_DGVM"]),
@@ -615,6 +660,7 @@ def test_hydrol_first_step_precall_assembly_closes_enerbil_boundary_without_fabr
         mc=assembly.payload["mc"],
         njsc=scaffold.first_step_restart_state.hydrol.njsc,
         zz_mm=scaffold.stomate_pre_step.pre_step.boundary_inputs.ok_leak_inputs["z_soil"][1:] * 1000.0,
+        dh_mm=cwrr_grid.dlh * 1000.0,
         diaglev_m=scaffold.stomate_pre_step.pre_step.boundary_inputs.ok_leak_inputs["z_soil"][1:],
         ok_explicitsnow=parse_run_def_bool(values["OK_EXPLICITSNOW"]),
         peat_hydro=parse_run_def_bool(values["PEAT_HYDRO"]),

@@ -1689,13 +1689,13 @@ def hydrol_refsoc_1d_thresholds(
 
 
 def hydrol_layer_thickness_from_zz_mm(zz_mm):
-    """Build HYDROL ``dh`` layer thicknesses from node depths.
+    """Reconstruct adjacent-node spacings from the supplied HYDROL depths.
 
-    Fortran provenance: ``hydrol.f90::hydrol_soil_setup`` line 4069 assigns
-    ``dh(jsl)=dlh(jsl)*mille`` after the vertical grid has built the CWRR soil
-    layer thicknesses. For the restart-aligned CWRR grid used here, adjacent
-    ``zz`` node spacings are the exact ``dh`` weights consumed by
-    ``hydrol_soil_froz`` lines 8440-8449.
+    This legacy helper serves ``dz_mm`` payloads, not the centered layer
+    thickness ``dh``. Fortran ``hydrol_var_init`` lines 4065-4070 assigns
+    ``dz=dnh*1000`` and ``dh=dlh*1000`` separately. Freeze-profile callers must
+    receive the actual grid's ``dlh*1000``; clipped node depths cannot recover
+    the original grid weights exactly.
     """
 
     zz_mm = jnp.asarray(zz_mm, dtype=jnp.float64)
@@ -1904,6 +1904,7 @@ def hydrol_first_step_profil_froz_from_arrays(
     mc,
     njsc,
     zz_mm,
+    dh_mm,
     diaglev_m=None,
     snow=None,
     snowdz=None,
@@ -1915,9 +1916,18 @@ def hydrol_first_step_profil_froz_from_arrays(
     smtot_corr=2.0,
     max_froz_hydro=1.0,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    """Derive first-step HYDROL freezing state from THERMOSOIL arrays."""
+    """Derive first-step freezing state using the source CWRR layer thickness.
+
+    Fortran provenance: ``hydrol_var_init`` lines 4065-4070 converts
+    ``dlh`` to ``dh`` in ``hydrol.f90``; ``hydrol_soil_froz`` lines 8332-8460
+    consumes that thickness. The active path requires ``dh_mm`` explicitly;
+    it is not inferred from ``zz_mm``.
+    """
 
     zz_mm = jnp.asarray(zz_mm, dtype=jnp.float64)
+    dh_mm = jnp.asarray(dh_mm, dtype=jnp.float64)
+    if dh_mm.shape != zz_mm.shape:
+        raise ValueError("dh_mm and zz_mm must have the same HYDROL layer axis")
     diaglev_m = zz_mm / 1000.0 if diaglev_m is None else jnp.asarray(diaglev_m, dtype=jnp.float64)
     stempdiag = thermosoil_diaglev_from_ptn(ptn=ptn, veget_max=veget_max, nslm=zz_mm.shape[0])
     temp_hydro = hydrol_calculate_temp_hydro_profile(
@@ -1932,7 +1942,7 @@ def hydrol_first_step_profil_froz_from_arrays(
         temp_hydro=temp_hydro,
         mc=mc,
         njsc=njsc,
-        dh_mm=hydrol_layer_thickness_from_zz_mm(zz_mm),
+        dh_mm=dh_mm,
         peat_hydro=peat_hydro,
         ok_thermodynamical_freezing=ok_thermodynamical_freezing,
         fr_dt=fr_dt,
@@ -1963,6 +1973,7 @@ def hydrol_first_step_profil_froz_from_restart_thermosoil(
     mc,
     njsc,
     zz_mm,
+    dh_mm,
     diaglev_m=None,
     snow=None,
     snowdz=None,
@@ -1974,7 +1985,7 @@ def hydrol_first_step_profil_froz_from_restart_thermosoil(
     smtot_corr=2.0,
     max_froz_hydro=1.0,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-    """Derive first-step HYDROL freezing state from THERMOSOIL restart state."""
+    """Derive first-step freezing state from restart arrays and exact ``dh_mm``."""
 
     return hydrol_first_step_profil_froz_from_arrays(
         ptn=thermosoil_restart.ptn,
@@ -1982,6 +1993,7 @@ def hydrol_first_step_profil_froz_from_restart_thermosoil(
         mc=mc,
         njsc=njsc,
         zz_mm=zz_mm,
+        dh_mm=dh_mm,
         diaglev_m=diaglev_m,
         snow=snow,
         snowdz=snowdz,
@@ -2056,9 +2068,10 @@ def hydrol_nroot_from_humcste(
 
     if bool(ok_pc) or bool(ok_leak):
         znh_m = zz_mm / 1000.0
-        active = (altmax[:, :, None] > 0.0) & (znh_m[None, None, :] >= altmax[:, :, None])
-        nroot = jnp.where(active, 0.0, nroot)
-        normalizer = jnp.sum(nroot, axis=2)
+        above_alt = znh_m[None, None, :] < altmax[:, :, None]
+        alt_positive = altmax[:, :, None] > 0.0
+        nroot = jnp.where(alt_positive & ~above_alt, 0.0, nroot)
+        normalizer = jnp.sum(jnp.where(above_alt, nroot, 0.0), axis=2)
         positive_normalizer = normalizer > 0.0
         safe_normalizer = jnp.where(positive_normalizer, normalizer, 1.0)
         nroot = jnp.where(
@@ -5160,6 +5173,7 @@ def assemble_hydrol_first_step_precall_payload(
     throughfall_by_pft=None,
     humcste=None,
     zz_mm=None,
+    dh_mm=None,
     diaglev_m=None,
     peat_hydro=False,
     ok_dgvm=False,
@@ -5178,7 +5192,9 @@ def assemble_hydrol_first_step_precall_payload(
 
     This helper validates only the first-step boundary. It does not run
     ``hydrol_main`` and it keeps HYDROL-internal process inputs missing unless
-    an exact upstream/restart/source-backed value is supplied.
+    an exact upstream/restart/source-backed value is supplied. When THERMOSOIL
+    freezing reconstruction is active, the source CWRR ``dh_mm`` is required;
+    missing thickness is a hard input error with no ``zz_mm`` fallback.
     """
 
     payload: dict[str, object] = {}
@@ -5315,6 +5331,8 @@ def assemble_hydrol_first_step_precall_payload(
         and getattr(hydrol_restart, "njsc", None) is not None
         and zz_mm is not None
     ):
+        if dh_mm is None:
+            raise ValueError("dh_mm is required for first-step THERMOSOIL freezing")
         snow = payload.get("snow")
         snowdz = payload.get("snowdz")
         profil_froz_kernel = (
@@ -5328,6 +5346,7 @@ def assemble_hydrol_first_step_precall_payload(
             mc=payload["mc"],
             njsc=hydrol_restart.njsc,
             zz_mm=zz_mm,
+            dh_mm=dh_mm,
             diaglev_m=diaglev_m,
             snow=snow,
             snowdz=snowdz,
