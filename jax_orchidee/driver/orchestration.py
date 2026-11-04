@@ -837,7 +837,10 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object]) -
     """Extract source-backed next-step state from closed cold-start payloads."""
 
     fields = _empty_previous_step_state_fields()
-    _add_enerbil_local_to_previous_fields(fields, payloads.get("enerbil_first_step_local"))
+    _add_enerbil_local_to_previous_fields(
+        fields, payloads.get("enerbil_first_step_local"),
+        thermosoil_module=payloads.get("thermosoil_first_step_module"),
+    )
     _add_diffuco_local_to_previous_fields(fields, payloads.get("diffuco_first_step_local_enerbil_precall"))
     _add_diffuco_saved_controls_to_previous_fields(
         fields,
@@ -2779,11 +2782,13 @@ def _previous_step_state_provenance() -> dict[str, tuple[str, ...]]:
             "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90::enerbil_main lines 456-467 and 927-1651",
             "fortran_source/ORCHIDEE/src_sechiba/hydrol.f90::hydrol_main lines 1041-1063 and 9106-9155",
             "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90::slowproc_main lines 1103-1128",
+            "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90::thermosoil_main lines 1041-1050 grid temperature writeback",
         ),
         "enerbil_previous_step_state": (
             "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_end lines 3114-3140",
             "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90::thermosoil_main lines 998-1032 and 1103-1139",
             "fortran_source/ORCHIDEE/src_sechiba/condveg.f90::condveg_main lines 398-435",
+            "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90::thermosoil_main lines 1041-1050 grid temperature writeback",
         ),
         "hydrol_previous_step_state": (
             "fortran_source/ORCHIDEE/src_sechiba/hydrol.f90::hydrol_main lines 1206-1296",
@@ -2805,6 +2810,7 @@ def _previous_step_state_provenance() -> dict[str, tuple[str, ...]]:
         "sechiba_finalize_state": (
             "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_initialize lines 561-679",
             "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_finalize lines 1800-1923",
+            "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90::thermosoil_main lines 1041-1050 grid temperature writeback",
         ),
     }
 
@@ -2845,10 +2851,19 @@ def _packet_from_previous_step_fields(*, tstep: int, fields: dict[str, dict[str,
     )
 
 
-def _add_enerbil_local_to_previous_fields(fields: dict[str, dict[str, object]], enerbil_local: EnerbilFirstStepLocalAssembly | None) -> None:
+def _add_enerbil_local_to_previous_fields(
+    fields: dict[str, dict[str, object]],
+    enerbil_local: EnerbilFirstStepLocalAssembly | None,
+    *,
+    thermosoil_module: ThermosoilFirstStepModuleClosure | None = None,
+) -> None:
     if enerbil_local is None:
         return
     payload = enerbil_local.payload
+    # thermosoil_main:1041-1050 updates the grid temperature after ENERBIL.
+    # Reuse that closed value without changing ENERBIL diagnostics or PFTs.
+    if thermosoil_module is not None and thermosoil_module.ok:
+        payload = {**payload, "temp_sol_new": thermosoil_module.downstream_payload["temp_sol_new"]}
     for source_name, target_name in (
         ("temp_sol_new", "temp_sol"),
         ("temp_sol_new_pft", "temp_sol_pft"),
@@ -3096,7 +3111,7 @@ def _sechiba_finalize_state_from_components(
         "rstruct": d.result.payload.payload["rstruct"],
         "q_cdrag_pft": d.result.boundary.drag.q_cdrag_pft,
         "leaf_ci": _updated_leaf_ci(previous["leaf_ci"], d),
-        "temp_sol": ep["temp_sol_new"],
+        "temp_sol": downstream["temp_sol_new"],
         "temp_sol_pft": ep["temp_sol_new_pft"],
         "qsurf": ep["qsurf"],
         "evapot": ep["evapot"],
@@ -3171,6 +3186,9 @@ def _sechiba_finalize_state_from_components(
         )
         for name in updates
     }
+    update_provenance["temp_sol"] += (
+        "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90::thermosoil_main lines 1041-1050",
+    )
     carry_provenance = {
         name: (
             "fortran_source/ORCHIDEE/src_sechiba component SAVE/static state; owner audited in sechiba_restart_field_owners.json",
@@ -3231,7 +3249,10 @@ def driver_previous_step_state_from_timestep_scaffold(
     """
 
     fields = _empty_previous_step_state_fields()
-    _add_enerbil_local_to_previous_fields(fields, scaffold.enerbil_first_step_local)
+    _add_enerbil_local_to_previous_fields(
+        fields, scaffold.enerbil_first_step_local,
+        thermosoil_module=scaffold.thermosoil_first_step_module,
+    )
     _add_diffuco_local_to_previous_fields(fields, scaffold.diffuco_first_step_local_enerbil_precall)
     _add_diffuco_saved_controls_to_previous_fields(
         fields,
@@ -3367,7 +3388,10 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
     if not scaffold.ready_for_next_state:
         raise ValueError("next-step HYDROL scaffold must close HYDROL, CONDVEG, and THERMOSOIL before state extraction")
     fields = _empty_previous_step_state_fields()
-    _add_enerbil_local_to_previous_fields(fields, scaffold.enerbil.enerbil_local)
+    _add_enerbil_local_to_previous_fields(
+        fields, scaffold.enerbil.enerbil_local,
+        thermosoil_module=scaffold.thermosoil_module,
+    )
     _add_diffuco_local_to_previous_fields(fields, scaffold.enerbil.diffuco_local_enerbil_precall)
     _add_diffuco_saved_controls_to_previous_fields(
         fields,
@@ -4299,6 +4323,8 @@ def paper_1961_next_step_hydrol_precall_scaffold(
                 snowrho=hydrol_module.snow_state.snowrho,
                 snowtemp=hydrol_module.snow_state.snowtemp,
                 snowdz=hydrol_module.snow_state.snowdz,
+                snow=hydrol_module.snow_state.snow,
+                ok_explicitsnow=context.ok_explicitsnow,
                 njsc=hydrol_prev["njsc"],
                 veget_max=slowproc_state["veget_max"],
                 pb=enerbil.payload.pb,
@@ -5031,6 +5057,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
                         snowrho=hydrol_module.snow_state.snowrho,
                         snowtemp=hydrol_module.snow_state.snowtemp,
                         snowdz=hydrol_module.snow_state.snowdz,
+                        snow=hydrol_module.snow_state.snow,
+                        ok_explicitsnow=parse_run_def_bool(run_def_values["OK_EXPLICITSNOW"]),
                         njsc=payload.njsc,
                         veget_max=slowproc_veg_cold.vegetation.veget_max,
                         pb=payload.pb,
@@ -5957,7 +5985,9 @@ def _runtime_next_state_from_components(
     """Extract source-backed next-step state from compact runtime components."""
 
     fields = _empty_previous_step_state_fields()
-    _add_enerbil_local_to_previous_fields(fields, enerbil_local)
+    _add_enerbil_local_to_previous_fields(
+        fields, enerbil_local, thermosoil_module=thermosoil_module,
+    )
     _add_diffuco_local_to_previous_fields(fields, diffuco_local)
     if diffuco_day_static_cache is not None:
         _add_diffuco_saved_controls_to_previous_fields(
@@ -6498,6 +6528,8 @@ def _paper_1961_next_step_runtime_result_compact(
                     snowrho=hydrol_module.snow_state.snowrho,
                     snowtemp=hydrol_module.snow_state.snowtemp,
                     snowdz=hydrol_module.snow_state.snowdz,
+                    snow=hydrol_module.snow_state.snow,
+                    ok_explicitsnow=context.ok_explicitsnow,
                     njsc=hydrol_prev["njsc"],
                     veget_max=slowproc_state["veget_max"],
                     pb=payload.pb,
@@ -7089,9 +7121,12 @@ def paper_1961_driver_timestep_scaffold(
                     thermosoil_restart=first_step_restart_state.thermosoil,
                     enerbil_payload=enerbil_first_step_local.payload,
                     condveg_result=condveg_first_step_module.module,
-                    snowrho=first_step_restart_state.diffuco_precall.snowrho,
-                    snowtemp=first_step_restart_state.diffuco_precall.snowtemp,
-                    snowdz=first_step_restart_state.diffuco_precall.snowdz,
+                    # sechiba_main:1049-1118 supplies current post-HYDROL snow.
+                    snowrho=hydrol_first_step_module.snow_state.snowrho,
+                    snowtemp=hydrol_first_step_module.snow_state.snowtemp,
+                    snowdz=hydrol_first_step_module.snow_state.snowdz,
+                    snow=hydrol_first_step_module.snow_state.snow,
+                    ok_explicitsnow=parse_run_def_bool(run_def_values["OK_EXPLICITSNOW"]),
                     njsc=first_step_restart_state.hydrol.njsc,
                     veget_max=first_step_restart_state.diffuco_precall.veget_max,
                     pb=payload.pb,

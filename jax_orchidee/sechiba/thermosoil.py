@@ -3582,6 +3582,19 @@ def run_thermosoil_first_step_module(
         else:
             module = thermosoil_no_explicit_snow_step(**boundary.kwargs)
     downstream = thermosoil_downstream_payload(module)
+    # thermosoil.f90::thermosoil_main lines 1041-1050: this is the final
+    # grid-only writeback, after the thermal solve, with current HYDROL snow.
+    # Keep the earlier ENERBIL payload and PFT temperatures at their source
+    # phase; all driver writers consume this single closed downstream value.
+    downstream["temp_sol_new"] = (
+        thermosoil_explicit_snow_surface_clamp(
+            temp_sol_new=enerbil_payload["temp_sol_new"],
+            snowdz=snowdz,
+            ok_explicitsnow=ok_explicitsnow,
+        )
+        if bool(ok_explicitsnow)
+        else enerbil_payload["temp_sol_new"]
+    )
     return ThermosoilFirstStepModuleClosure(
         module=module,
         boundary_payload=boundary.advertised_payload,
