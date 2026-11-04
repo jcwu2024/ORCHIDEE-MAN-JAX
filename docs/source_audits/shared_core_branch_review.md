@@ -1,25 +1,40 @@
 # 共享物理核心与研究分支核查
 
 同步安排（2026-10-27用户决定）：**暂缓与两个研究分支对齐，优先稳固main**。
-本阶段不安排分支同步或交接包工作；当前累计30项已接受修复/17个代码提交，登记与适用范围持续维护，
-待基础分支本轮加固后集中评估交接。C4–C30仍待维护方集中核对，
-并不表示本次核查过研究分支。**Day199完整捕获与同轨迹准入已通过，NPP起因目标仍未完成**。
+本阶段不安排分支同步或交接包工作；当前累计31项已接受修复/18个代码提交，登记与适用范围持续维护，
+待基础分支本轮加固后集中评估交接。C4–C31仍待维护方集中核对，
+并不表示本次核查过研究分支。**C31已由主控验收；319点1961年度四指标通过原限，原NPP超限在该算例闭合**。
 Fortran job126077710正常完成，620,494条native记录、实际相位和年度/共同边界保持检查通过；
 六项预设shape笔误与原失败独立保留。本地原cold和唯一追加cold分别因序列化核对、首七日块
 观察器时钟失败，均已计账并保留原失败。用户再明确授权的一次900秒attempt02以355.197170秒
 到end204，真实end197 packet/两套spec/九家族与Day199全48步已捕获，实际callback和原限
 同轨迹准入通过。限定C29/C30生产集成已完成，最终代码4项定向测试/6次组件调用及静态接口检查
 通过；C29/C30已由主控接受，准确代码提交为`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`。
-原42行/28ID登记保持，在本页另增C29/C30两行，累计30项/17代码提交。
+原42行/28ID登记保持，上一批增C29/C30两行后为30项/17代码提交；本轮C31另增一行。
 见[上一批交付](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)。
 [完整surface/split/蒸发producer调查](../../outputs/reviews/main-physics-20261029/npp-surface-flux-origin/README.md)
 已完成原生捕获、七日准入和8个完整同输入对照；累计24组件调用额度已用完。
-新增冻结轨迹显雪grid温度clamp未装配的源证据、实际反例和隔离候选补丁，尚未改生产或接受新修复。
-局部蒸发至top-RHS传播有界闭合，clamp至drag及年度NPP改善未验证；原NPP起因仍未闭合。
-C29/C30接受、30项/17代码提交与分支同步暂停安排保持。
+该取证批次新增冻结轨迹显雪grid温度clamp遗漏的源证据、实际反例和隔离候选补丁，当时尚未改生产或接受新修复。
+当时局部蒸发至top-RHS传播有界闭合，clamp至drag及年度NPP改善未验证。
+此前C29/C30接受时为30项/17代码提交，既有证据与分支同步暂停安排保持。
 2026-11-04主控已接受上述有界取证，直接源码核对确认当前main同样缺温度clamp调用；
-仅授权这处源接线的生产集成、定向回归及本地年度影响验证，见[续作决定](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-decision.json)。
-新修复编号待实现和验证后验收；研究分支同步继续暂停，既有30项登记保持。
+本轮[最小修复与验证](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/README.md)
+已在共享THERMOSOIL返回产生一次grid温度clamp，四个调用端补齐effective显雪开关、当前post-HYDROL雪状态，
+各writer/finalize消费该闭合值，PFT与较早ENERBIL返回不改。31项最终定向通过；旧driver五个packet路径及两个调用端控制均预期失败。
+冻结dh-only＋仅此修复的唯一七日回放完成，实际9529→9530温度写回逐位正确，
+目标蒸发/flux_top差降至约1.17e-13，9529–9531所测四核完整tuple通过原限。
+本轮唯一当前C29/C30＋修复cold365已完成（418.937秒worker/434.560秒监督），AGB/BGB/GPP/NPP原science、normalized及诊断均通过。
+NPP误差由8.18156e-4降至1.81954e-9，原限3.9518497e-4不变；原七个PFT14分支不一致日现为空。
+当前年度288个实际Day199求解tuple确认9530 top-RHS残差8.8996e-12和求解后MC差7.1782e-11通过；
+深层两坐标RHS仍超严格限，必需末态数值schema通过不等于92个额外字段或所有物理域准入，旧carry失败保留。
+主控已[正式接受C31](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-acceptance.json)，代码提交
+`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`；累计31项/18代码提交。原44行保持，新增后为45行/31ID。
+研究分支同步继续暂停；下一优先项是真实NetCDF重启与跨年连续性的有界验证。
+
+| 编号 | 源合同与改动 | 验证与适用范围 | 接受及同步状态 |
+| --- | --- | --- | --- |
+| C31 | `thermosoil_main:1041–1050`；共享THERMOSOIL结束时计算显雪grid温度clamp，四个caller传有效gate/当前HYDROL雪，writer/finalize消费闭合值 | 31项定向回归、隔离七日传播及319/1961原cold365通过；PFT/早期ENERBIL相位保留；不认证完整bucket/restart生命周期或全点/长期，深层RHS两严格残差保留 | 已接受；`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`；生产文件为`driver/orchestration.py`和`sechiba/thermosoil.py`，配套`tests/unit/test_driver_snow_temperature_clamp.py`；两研究分支待集中核对 |
+
 以下首次分歧节保留前批已接受的有界证据。
 实际ALT0初根归一化条件及preprofile层厚来源差异已确认；单独纠正层厚使Day130 MC/MCL回到原限，
 年度原生NPP差却只减少约5.294e-8，原七个分支不一致日及年度科学失败保留。
@@ -53,9 +68,9 @@ Day199四项原生通量各有一个超严格限的PFT14差异；原七个不一
 [验收](../../outputs/reviews/main-physics-20261027/npp-current-capture/controller-acceptance.json)，其64份清单及回执冻结。
 该接受不作为本批验收；上游起因与年度因果未知。此前两次历史输入交换的
 [主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)保留原身份。
-本轮新增接受C29/C30，研究分支同步仍暂停；原始NetCDF重启与跨年验证仍待独立裁定。
+上一批新增接受C29/C30；该批历史结果保留，原始NetCDF重启与跨年验证仍待独立裁定。
 
-当前新增接受修正（2026-10-29）：以下两项已在main实现、通过定向回归和有界年度检查，并由主控接受。
+上一批接受修正（2026-10-29，未含C31）：以下两项已在main实现、通过定向回归和有界年度检查，并由主控接受。
 两项共用代码提交`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`；NPP仍失败，不能将代码接受视作年度科学接受。
 代码、实际测试日志及补丁绑定见[最终回执](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/isolated-c29-c30/receipt-final.json)和
 [执行方审查](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/production-integration-review.json)与

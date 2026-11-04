@@ -2,25 +2,40 @@
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
-避免反复同步。**Day199完整捕获与同轨迹准入已通过，原NPP起因目标仍未完成**。独立Fortran
+避免反复同步。**C31已由主控验收；319点1961年度AGB/BGB/GPP/NPP全部通过原标准，原NPP超限在该算例闭合**。
+当前累计31项已接受修复/18个代码提交，C31代码提交为`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`。
+见[本轮主控验收](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-acceptance.json)；
+单点单年结论不外推全域/长期，下一优先项是真实NetCDF重启与跨年连续性的有界验证。此前独立Fortran
 job126077710已COMPLETED/0:0，620,494条原生记录与实际相位、年度/共同边界保持检查通过；
 六项预设shape错误保留初失败，并由源码及旧原生数组订正。两次本地cold分别在13.944647秒的
 序列化核对和219.804041秒的首七日块观察器时钟处失败，原失败与次数保留。用户再明确授权一次
 900秒捕获；经独立审核的attempt02以355.197170秒到end204，保存真实end197 packet/两套spec/
 九家族，实际callback与原限同轨迹准入通过。限定C29/C30生产集成已完成，最终代码4项定向测试/
 6次组件调用及静态接口检查通过；
-Day199已完成RHS完整同输入核对，主要差异追到其上游surface输入；原NPP起因仍未闭合。
-主控已接受C29/C30并提交`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`，累计30项已接受修复/17代码提交。见
+前批Day199已完成RHS完整同输入核对，主要差异追到其上游surface输入；当时原NPP起因仍未闭合。
+此前主控已接受C29/C30并提交`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`，当时累计30项已接受修复/17代码提交。见
 [上一批交付](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)及
 [Fortran证据](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/evidence-index.json)。
 新[完整surface/split/蒸发producer调查](../../outputs/reviews/main-physics-20261029/npp-surface-flux-origin/README.md)
 已完成唯一Fortran捕获、七日回放准入及8个完整同输入对照；288个split分支一致。
 冻结轨迹发现THERMOSOIL显雪grid温度clamp辅助函数未接入；已交付实际反例与隔离候选补丁，
 局部drag/湿度替换可复现9530蒸发返回，top-RHS差的flux项残差约8.74e-12。
-clamp至drag及年度NPP改善尚未验证；本批取证未改生产物理/参数/容差，候选补丁未接受，30项/17代码提交状态保持。
+clamp至drag及年度NPP改善在该取证批次尚未验证；该批未改生产物理/参数/容差，30项/17代码提交状态保持。
 2026-11-04主控已[接受本批有界取证和源接线遗漏证据](../../outputs/reviews/main-physics-20261029/npp-surface-flux-origin/controller-acceptance.json)，
-并直接核对当前main仍缺该调用。用户继续授权后，已[安排原Sol完成最小生产接入、回归及本地年度影响验证](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-decision.json)。
-冻结dh-only诊断与当前C29/C30生产身份分列；修复接受与年度NPP归因分开，不新增远端捕获或研究分支同步。
+并直接核对当前main仍缺该调用。用户继续授权后的[本轮修复与验证](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/README.md)
+已将既有helper接入共享THERMOSOIL闭合返回，四个调用端显式传递effective显雪开关及当步post-HYDROL雪状态，
+各writer/finalize消费同一次grid温度更新；PFT温度和较早ENERBIL返回保留其源相位。
+31项最终定向测试通过；隔离旧driver的五个packet路径及两个实际调用端控制均按预期失败。
+冻结dh-only＋仅此修复的唯一七日回放成功，9529温度273.36460775880676→273.15并逐位写回下一消费者，
+9530实际蒸发/flux_top对F差降至约1.17e-13，9529–9531所测四核完整同相位tuple通过原限。
+本轮当前C29/C30＋修复的唯一cold365以418.937秒worker/434.560秒监督完成，原AGB/BGB/GPP/NPP及normalized/诊断政策全部通过。
+NPP0.3851849752978598对参考0.38518497347831726，误差1.81954e-9（此前8.18156e-4），原限3.9518497e-4未改；
+原七个PFT14分支不一致日现为空。当前年度直接捕获288个Day199求解tuple，9530实际top-RHS残差8.8996e-12、
+求解后MC最大差7.1782e-11通过；11层RHS第10–11层仍有两坐标超严格限，最大3.1814e-8，不称全层闭合。
+365日四通量/完整末态已保存，必需数值schema通过；92个额外字段源schema未穷尽，旧carry失败及单点/年限制保留。
+主控复用上述验证，核对最终生产/测试文件与实际测试及年度producer身份一致后，正式接受C31。
+隔离干预和当前年度共同支持这处遗漏对该算例偏差的解释；深层严格残差、92字段源schema和真实restart限制继续开放。
+冻结诊断与当前生产身份分列，修复接受与年度NPP归因分开，不新增远端捕获或研究分支同步。
 以下首次分歧节保留前批已接受的有界证据：实际ALT0初根归一化
 源条件差异和preprofile误用层厚均已确认；只纠正后者使Day130的MC/MCL原限事件闭合，
 但年度原生NPP差额仅减少约5.294e-8，原七个分支不一致日完全保留，原年度科学失败不变。
@@ -52,7 +67,7 @@ clamp至drag及年度NPP改善尚未验证；本批取证未改生产物理/参�
 此前两次历史背景交换的[主控验收](../../outputs/reviews/main-physics-20261027/npp-gpp-swap-approved/controller-acceptance.json)
 保留原身份。原始NetCDF重启与跨年连续性验证仍待独立裁定；当前科学门槛、支持域和未解决问题保持不变。
 
-当前C29/C30已于2026-10-29**经主控接受并提交**，准确SHA与适用范围列于
+以下为未含C31的C29/C30历史版本结果。C29/C30已于2026-10-29**经主控接受并提交**，准确SHA与适用范围列于
 [共享核心修复登记](shared_core_branch_review.md)，[主控验收](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/controller-acceptance.json)
 保留年度NPP与完整carry失败。C29遵循`hydrol_var_init:4126–4141`的
 `znh<ALT`累加与正和归一化条件，ALT0保留原根；C30遵循`:4065–4070`的`dlh*1000`厚度，
@@ -125,7 +140,7 @@ raw NetCDF重启与跨点/长期验证限制保留。
 此前primary-v03a-acceptance保留为执行聊天内审；真正最终接受范围见本次独立回执。
 无新增生产问题或修复，28项/16代码提交不变；669点/年度/长期科学验收仍未完成。
 
-核查日期：2026-10-28。**本轮尚未确认可解释319年度偏差的生产物理过程bug；
+历史核查（2026-10-28及此前；当前C31验收见页首）：**当时尚未确认可解释319年度偏差的生产物理过程bug；
 第三阶段已复现有当前 producer 身份的 319 cold-start 首年 NPP 科学超限，
 第四阶段已定位年度主要分量；第五阶段确认保存观测不足以继续分配晚年负差；
 第六阶段完成唯一获准的全年日值捕获并将暂定负差定位到交替脉冲窗口，
