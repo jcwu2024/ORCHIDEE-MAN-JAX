@@ -11,8 +11,16 @@ job126077710已COMPLETED/0:0，620,494条原生记录与实际相位、年度/�
 6次组件调用及静态接口检查通过；
 Day199已完成RHS完整同输入核对，主要差异追到其上游surface输入；原NPP起因仍未闭合。
 主控已接受C29/C30并提交`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`，累计30项已接受修复/17代码提交。见
-[当前续作](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)及
+[上一批交付](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)及
 [Fortran证据](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/fortran/evidence-index.json)。
+新[完整surface/split/蒸发producer调查](../../outputs/reviews/main-physics-20261029/npp-surface-flux-origin/README.md)
+已完成唯一Fortran捕获、七日回放准入及8个完整同输入对照；288个split分支一致。
+冻结轨迹发现THERMOSOIL显雪grid温度clamp辅助函数未接入；已交付实际反例与隔离候选补丁，
+局部drag/湿度替换可复现9530蒸发返回，top-RHS差的flux项残差约8.74e-12。
+clamp至drag及年度NPP改善尚未验证；本批取证未改生产物理/参数/容差，候选补丁未接受，30项/17代码提交状态保持。
+2026-11-04主控已[接受本批有界取证和源接线遗漏证据](../../outputs/reviews/main-physics-20261029/npp-surface-flux-origin/controller-acceptance.json)，
+并直接核对当前main仍缺该调用。用户继续授权后，已[安排原Sol完成最小生产接入、回归及本地年度影响验证](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-decision.json)。
+冻结dh-only诊断与当前C29/C30生产身份分列；修复接受与年度NPP归因分开，不新增远端捕获或研究分支同步。
 以下首次分歧节保留前批已接受的有界证据：实际ALT0初根归一化
 源条件差异和preprofile误用层厚均已确认；只纠正后者使Day130的MC/MCL原限事件闭合，
 但年度原生NPP差额仅减少约5.294e-8，原七个分支不一致日完全保留，原年度科学失败不变。

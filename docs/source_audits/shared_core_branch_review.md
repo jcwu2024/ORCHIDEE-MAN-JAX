@@ -11,7 +11,15 @@ Fortran job126077710正常完成，620,494条native记录、实际相位和年�
 同轨迹准入通过。限定C29/C30生产集成已完成，最终代码4项定向测试/6次组件调用及静态接口检查
 通过；C29/C30已由主控接受，准确代码提交为`ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69`。
 原42行/28ID登记保持，在本页另增C29/C30两行，累计30项/17代码提交。
-见[当前续作](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)。
+见[上一批交付](../../outputs/reviews/main-physics-20261028/npp-day199-soil-update/README.md)。
+[完整surface/split/蒸发producer调查](../../outputs/reviews/main-physics-20261029/npp-surface-flux-origin/README.md)
+已完成原生捕获、七日准入和8个完整同输入对照；累计24组件调用额度已用完。
+新增冻结轨迹显雪grid温度clamp未装配的源证据、实际反例和隔离候选补丁，尚未改生产或接受新修复。
+局部蒸发至top-RHS传播有界闭合，clamp至drag及年度NPP改善未验证；原NPP起因仍未闭合。
+C29/C30接受、30项/17代码提交与分支同步暂停安排保持。
+2026-11-04主控已接受上述有界取证，直接源码核对确认当前main同样缺温度clamp调用；
+仅授权这处源接线的生产集成、定向回归及本地年度影响验证，见[续作决定](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-decision.json)。
+新修复编号待实现和验证后验收；研究分支同步继续暂停，既有30项登记保持。
 以下首次分歧节保留前批已接受的有界证据。
 实际ALT0初根归一化条件及preprofile层厚来源差异已确认；单独纠正层厚使Day130 MC/MCL回到原限，
 年度原生NPP差却只减少约5.294e-8，原七个分支不一致日及年度科学失败保留。
