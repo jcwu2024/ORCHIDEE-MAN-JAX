@@ -1,0 +1,3 @@
+{"stage": "sole_lower_started"}
+{"stage": "sole_compile_started"}
+{"stage": "deadline_exceeded", "phase": "compile"}

@@ -1,6 +1,14 @@
 # T7 shared-graph execution — 2026-10-24
 
-Job **16060441** was submitted exactly once from gln01 at **2026-10-24 00:45:07 Asia/Shanghai**. Snapshot **00:45:19**: **PENDING / Priority**, no assigned node, runtime0. No model numerical results or completed measurement counts exist yet. Slurm continues independently; no cancellation, repeat submission, watcher, heartbeat or automatic follow-up.
+Job **16060441** is terminal **FAILED124:0**, recovered2026-11-11.
+Actual allocation2026-10-26 11:20:43–12:17:52 Asia/Shanghai,3429s on
+ibc13b03n03(4CPU/1V100). Result `incomplete_timeout`, phase **compile**:
+one completed lower, zero completed compiles/calls. All52 numerical checks
+unstarted. Raw state20 NaN remains an independent strict failure.
+Saved lowered MLIR and all recovered remote bytes are SHA256 verified.
+GPU/process groups released; sampled peak1525MiB is not memory admission.
+Estimated cost¥2.3622, actual bill unknown. See [terminal evidence](terminal/SUMMARY.md).
+The exact one-shot approval is consumed; no retry or additional computation.
 
 ## Authorization and immutable proposal
 
@@ -26,11 +34,9 @@ Local raw records: `outputs/T7-current-model-precision-shared-graph-execution-20
 
 Remote output retains planned date identity:
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023`.
-Retained-data-root `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs`; source-cache is the accepted copy under the new checkout's outputs. GPU discovery/preflight/model will all run within this same single allocation, not separately.
+Retained-data-root `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/T7-current-model-forcing-asset-recovery-20261016/inputs`; source-cache is the accepted copy under the new checkout's outputs. GPU discovery/preflight/model ran within this same single allocation, not separately.
 
-Manual recheck (no submission):
-```bash
-ssh gln01 '/rmprog/slurm/v22.05.7/bin/scontrol show job --details 16060441'
-ssh gln01 '/rmprog/slurm/v22.05.7/bin/sacct -j 16060441 --format=JobID,State,ExitCode,Start,End,Elapsed,AllocCPUS,AllocTRES,NodeList -P'
-```
-At real terminal state, retain raw JSON/logs/arrays/HLO/gradients, actual stage/attempt/completed counts/timing, cost and GPU/process release. Distinguish runtime/resource exit from numerical outcomes: exit3 may accompany completed direction results plus independent strict state20 failure. Preserve and report those results. If this shared budget still yields no result, report the actual blocked phase and stop; no additional GPU job or longer probe is authorized.
+Terminal recovery is complete. Raw result/supervisor/ledger, scheduler receipt,
+stdout/stderr, approval/submission and lowered MLIR are retained in `terminal/`.
+No native/FD arrays or gradients exist from this run because calls never started.
+No cancellation, resubmission, watcher, graph or training was performed during recovery.

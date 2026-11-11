@@ -1,0 +1,91 @@
+{
+  "job_id": 16060441,
+  "state": "FAILED",
+  "exit_code": "124:0",
+  "start_Beijing": "2026-10-26T11:20:43+08:00",
+  "end_Beijing": "2026-10-26T12:17:52+08:00",
+  "sacct_job_seconds": 3429,
+  "extern_seconds": 3430,
+  "node": "ibc13b03n03",
+  "CPUs": 4,
+  "GPUs": 1,
+  "execution_source": "96978caf04c9a56273ea7e9b9031f57aebf999ac",
+  "status": "incomplete_timeout",
+  "stage": "deadline_exceeded",
+  "deadline_phase": "compile",
+  "events": [
+    {
+      "stage": "sole_lower_started",
+      "elapsed_seconds": 37.64066290296614
+    },
+    {
+      "stage": "sole_compile_started",
+      "elapsed_seconds": 466.21822570450604
+    },
+    {
+      "stage": "deadline_exceeded",
+      "elapsed_seconds": 3337.6412547882646,
+      "phase": "compile"
+    }
+  ],
+  "timing_budget": {
+    "graph_seconds": 3300,
+    "graph_deadline_elapsed_seconds": 3337.640330646187,
+    "work_deadline_elapsed_seconds": 4975.8813865389675,
+    "calls_reserved_seconds": 1380,
+    "release_reserved_seconds": 180
+  },
+  "counts": {
+    "full_model_calls": 0,
+    "full_model_traces": 1,
+    "full_model_compiles": 0,
+    "full_model_call_attempts": 0,
+    "full_model_trace_attempts": 1,
+    "full_model_compile_attempts": 1
+  },
+  "numerical_results": [],
+  "native": null,
+  "fd": null,
+  "state20": {
+    "raw": "nan",
+    "strict_failure": true,
+    "new_trajectory_audited": false
+  },
+  "lowered": {
+    "path": "/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/result.v2.lowered.mlir.gz",
+    "sha256": "552ffd1aeb52385261801dbc3e592b0e853db5789936a68097c0a170ead2a1fc"
+  },
+  "retained_input_consumption": {
+    "status": "retained_inputs_consumed",
+    "static_intersurf_payload_missing_fields": [],
+    "original_prepared_case_unchanged": true
+  },
+  "occupied_seconds": 3428.5966811180115,
+  "cost": {
+    "allocation_seconds": 3428.5966811180115,
+    "cpu_hours": 3.8095518679089015,
+    "gpu_hours": 0.9523879669772254,
+    "cpu_cny": 0.2666686307536231,
+    "gpu_cny": 2.0952535273498962,
+    "allocation_cost_estimate_cny": 2.3619221581035195,
+    "approved_cost_ceiling_cny": 3.72,
+    "ceiling_exposure_cny": 2.3619221581035195,
+    "actual_bill_known": false
+  },
+  "sacct_cost_estimate_CNY": 2.3622,
+  "release_verified": true,
+  "process_groups_released": true,
+  "active_owned_groups": [],
+  "release_observation": {
+    "epoch": 1792988271.5966609,
+    "host_index": 0,
+    "gpu_uuid": "GPU-9f90ddc6-3d46-bd60-0619-0c3a4e162288",
+    "name": "Tesla V100-SXM2-32GB",
+    "memory_mib": 0,
+    "utilization_percent": 0,
+    "processes": []
+  },
+  "sampled_peak_mib": 1525,
+  "all_remote_file_hashes_verified": true,
+  "no_rerun": true
+}

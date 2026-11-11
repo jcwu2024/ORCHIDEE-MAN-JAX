@@ -2,14 +2,18 @@
 
 Teacher storage: [production migration, verified readers and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired,103 controls unchanged. Dataset133903→773 files; bounded net reduction after both retained checkouts/maintenance/log/Git overhead128076. Startup repair7d14adb passes ordinary full33450 base/typed indices and plan, plus9 annual readers/adapters with T1/T7/T30. First base122.09s; subsequent warm typed11.37s; plan2.09s. Post-read integrity passes. No new paid work/training/Teacher generation.
 
-Updated2026-10-24: shared-graph job **16060441** submitted once at00:45:07
-Asia/Shanghai. Snapshot00:45:19: **PENDING (Priority)**, no model numerical results.
-Supervisor approved this exact616faa7 proposal under the user's continuing delegated
-authority and2026-10-24 instruction; separate fresh approval is recorded, original
-approved=false proposal unchanged. Source96978ca /1V100/4CPU/90min/max¥3.72.
+Updated2026-11-11: recovered terminal evidence for shared-graph job **16060441**.
+Actual allocation2026-10-26 11:20:43–12:17:52 Asia/Shanghai,3429s,
+**FAILED124:0 / incomplete_timeout / compile**. Source96978ca; lower1,
+completed compile0/calls0; all52 numerical checks unstarted. Saved lowered MLIR
+and raw receipts are byte-verified in [terminal evidence](../outputs/T7-current-model-precision-shared-graph-execution-20261024/terminal/SUMMARY.md).
+State20 rawNaN remains an independent strict failure, with no new trajectory audit.
+GPU/process release verified; sampled peak1525MiB is not model-memory admission.
+Estimated CPU+GPU cost¥2.3622, actual bill unknown. The exact one-shot approval
+is consumed; no retry, longer probe, watcher or training follows.
 [Execution record](research/daily_coarse_graining/T7_current_model_precision_shared_graph_execution_20261024.md)
-owns current status/authorization/evidence. No repeat job or automatic monitoring;
-Slurm continues independently. Historical consumed grants remain consumed.
+owns authorization and terminal detail. [Current method audit](../outputs/long_horizon_review_20261111/current_method_audit.md)
+separates existing daily/T7/T30 support from unaccepted long-horizon accuracy.
 
 Updated2026-10-23: supervisor accepted96978ca engineering repair anddd352d7
 terminal closeout after actual-artifact review; no GPU/gradient/science acceptance.
