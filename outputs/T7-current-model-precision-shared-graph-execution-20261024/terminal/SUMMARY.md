@@ -2,7 +2,7 @@
 
 Recovered read-only on2026-11-11; no rerun. Authoritative compact fields are in
 [summary.json](summary.json), scheduler receipt in [sacct-terminal.txt](sacct-terminal.txt),
-and original logs/result/supervisor/ledger beside them. All copied remote files
+and retained original logs/result/ledger beside them. All copied remote files
 match [remote-sha256.txt](remote-sha256.txt).
 
 - Source `96978caf04c9a56273ea7e9b9031f57aebf999ac`; node ibc13b03n03,4CPU/1V100.
@@ -26,3 +26,19 @@ match [remote-sha256.txt](remote-sha256.txt).
 The one-shot approval is consumed. No retry, longer graph, watcher or training
 is authorized by this recovery. This is a compile-time resource outcome, not a
 numerical acceptance or rejection of the52 unexecuted checks.
+
+## Bulk evidence storage correction
+
+The two bulk originals remain locally beside this summary and remotely under
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/T7-current-model-precision-shared-graph-20261023/`:
+
+- `result.v2.lowered.mlir.gz` (10,915,956 bytes), SHA256
+  `552ffd1aeb52385261801dbc3e592b0e853db5789936a68097c0a170ead2a1fc`.
+- `result.v2.supervisor.json`, SHA256
+  `2da7f068a864b7ab1d3821508d2f558edb9268b7ccacadfddcd8fc9925960978`.
+
+Both local originals were hash-verified again before removing only their Git
+tracking. Their exact names are locally ignored; compact summary/hash receipts
+remain tracked instead of these bulk files. No local or remote original was
+deleted or modified. Commit4991be50 previously included both objects; this normal
+follow-up commit does not remove them from Git history or rewrite that history.
