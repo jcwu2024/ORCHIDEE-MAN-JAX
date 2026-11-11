@@ -1,5 +1,12 @@
 # Current Work Order
 
+Current discussion (2026-11-11): the user requested a project recap and a
+literature-backed review of long-rollout drift and long-sequence training.
+The [supervisor research review](research/daily_coarse_graining/long_horizon_training_review_20261111.md)
+recommends retaining the physical daily boundary and designing explicit annual/
+multiannual training signals and validation. This is a recommendation for discussion,
+not an adopted loss/architecture change or authorization for a new experiment.
+
 Teacher storage: [production migration, verified readers and exact restoration](research/daily_coarse_graining/TEACHER_POINT_STORAGE.md). Job16007307 completed0:0;669 points/133800 originals retired,103 controls unchanged. Dataset133903→773 files; bounded net reduction after both retained checkouts/maintenance/log/Git overhead128076. Startup repair7d14adb passes ordinary full33450 base/typed indices and plan, plus9 annual readers/adapters with T1/T7/T30. First base122.09s; subsequent warm typed11.37s; plan2.09s. Post-read integrity passes. No new paid work/training/Teacher generation.
 
 Updated2026-11-11: recovered terminal evidence for shared-graph job **16060441**.

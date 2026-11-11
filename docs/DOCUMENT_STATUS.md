@@ -1,5 +1,10 @@
 # Documentation Authority
 
+The [2026-11-11 long-horizon research review](research/daily_coarse_graining/long_horizon_training_review_20261111.md)
+is a supervisor recommendation based on code and primary literature, pending
+scientific discussion. It does not supersede active mathematical contracts or
+authorize training. Current-method and primary-source audits are linked within it.
+
 Updated2026-11-11: recovered terminal evidence for shared-graph job **16060441**.
 Actual allocation2026-10-26 11:20:43–12:17:52 Asia/Shanghai,3429s,
 **FAILED124:0 / incomplete_timeout / compile**. Source96978ca; lower1,
