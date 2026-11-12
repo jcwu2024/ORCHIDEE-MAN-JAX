@@ -9,7 +9,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 from jax_orchidee.driver.dim2 import Dim2DriverRestart
-from jax_orchidee.driver.restart_export import stomate_restart_states_from_day_end_packet
+from jax_orchidee.driver.restart_export import stomate_full_restart_states_from_day_end_packet
 from jax_orchidee.driver.restart_file_io import write_dim2_driver_restart
 from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.sechiba.restart_export import paper_sechiba_restart_state_from_finalize_state
@@ -85,23 +85,13 @@ def paper_restart_bundle_state_from_day_end_packet(
             f"day-end packet SECHIBA finalize denominator must be 93, got {len(finalize)}"
         )
     slowproc = components.get("slowproc_stomate_previous_step_state", {})
-    entry, season, daily, _ = stomate_restart_states_from_day_end_packet(
-        slowproc,
-        base_entry=base_stomate.entry_state,
-        base_season=base_stomate.season_state,
-        base_daily=base_stomate.daily_state,
+    stomate, _ = stomate_full_restart_states_from_day_end_packet(
+        slowproc, base_states=base_stomate,
     )
     return PaperRestartBundleState(
         driver=Dim2DriverRestart(**{name: driver_fields[name] for name in driver_names}),
         sechiba=paper_sechiba_restart_state_from_finalize_state(finalize, kjit=int(kjit)),
-        stomate=StomateReadstartStates(
-            entry_state=entry,
-            season_state=season,
-            daily_state=daily,
-            gas_state=base_stomate.gas_state,
-            remainder_state=base_stomate.remainder_state,
-            report=base_stomate.report,
-        ),
+        stomate=stomate,
     )
 
 
