@@ -1,32 +1,29 @@
 # main 物理正确性检查入口
 
-2026-11-12 主控已接受本批受限源码/接口修复，登记为 **C32–C38七项修正、三个代码提交；累计38项已接受修正/21个代码提交**。完整重启科学连续性仍未通过，DOC原严格失败保留。
-当前5份生产文件和4份测试保持上轮已审阅版本；复用六文件59项集中回归及独立审核，本轮未新增生产改动。
-九条原候选合并为七项：active初始化与first_B growth统一为C36；e_soil_lat接口补齐归入C34热生命周期，Fortran readjust唯一调用已注释，不单列物理bug或宣称Ecorr已启用。
+2026-11-13 主控已验收本批有界年度结果与剩余覆盖清单：**319/1961原年度科学门通过；001/1961四指标数值门失败且同初态身份未证；319/1962内存/三文件全年输出严格门通过，完整末态严格门仍失败**。这是实际完成的证据验收，不是整个main或完整重启通过。
+基线为已发布的 `e2a9d9f2d5aabca2e2d391400f14559f0dbf8c09`，C32–C38已接受；累计38项修正/21代码提交不变。本包生产源码、公式、参数、阈值和JIT签名/闭包冻结。
 
-已执行授权的本地CPU/x64三次启动、三模型日，各有900秒硬限且无重试：319点A从原C31末态内存续接1962首日，B从当前writer生成的三文件readstart运行同日；001点从已有paper initial restart运行1961首日。
-三路分别约121.12、112.15、116.12秒，均exit0、到end_tstep47，日结果完整，clock/schema/源整数owner通过；无远端、Fortran、GPU或训练。
-319 A/B的4项primary、26项modelout_fields及3项clock通过原限`abs(B-A)<=1e-8+1e-10*abs(A)`，共33个实际leaf及4个结构行。
-352条必需科学路径均在A/B中存在；完整状态比较仍仅DOC超限，8个坐标，最大绝对差`7.4254221358316386e-6`，最差坐标`[0,13,6,0,0,0]`；原门槛及旧8日严格失败保留，日输出通过不替代完整状态接受。
-001无本包Fortran数值比较；冻结runner因只为319启用精确sentinel判定而保留`nonfinite=false`。
-离线独立审核确认其仅两条既定roughheight路径的`float64(1,14)[0,0]`为NaN、其余坐标有限，源/config/PFT/provenance局部守卫延续，是既有001源定义sentinel机制的当前实例；不称新增物理NaN、全值有限或历史整producer verifier通过。
+四路各365日均exit0，保存完整daily、annual及年末态，完成/clock/精确sentinel域/352必需路径门通过；本地CPU/x64串行共4启动/1460模型日，监督1000.065913秒，各900秒硬限，无技术重试，strict预留未用。远端、Fortran、GPU、训练及环境重建均0。
+319/1961使用原C31 cold配置/forcing及block7，但由本包当前源码重新生成；四指标science、normalized bias/NRMSE和原diagnostic均通过，NPP=0.3851849752983813，对原参考误差1.8200640439225424e-9。
+001使用已有三文件paper初态，不能称cold。实际年度AGB/BGB/GPP/NPP分别为95.53856107292744/35.6935233880042/3.5915083703644863/1.2927737620595396，参考分别为4.656111240386963/4.1311354637146/1.5009596347808838/0.5990213751792908；四项science/normalized/diagnostic均失败。
+001三份输入身份已锁定，但现有Fortran launch记录不能证明消费同一初态；`initial_identity_confirmed=false`，数值失败直接保留，尚未归因为新生产代码缺陷。旧/新首日结果一致及初态量级说明不替代同相位真值，也不建立唯一原因；该身份缺项不触发strict预留。
 
-实际Python边界保存了三路热初始化三字段；319 A/B三字段逐字节相同，B和001各捕获2次active首步及1次growth handoff，无观察错误。
-三路均未触发compiled firstcall；该分支复用上轮完整binder在start0/start48的组件证据，本轮不声称日积分覆盖。
-真实三文件codec最终300项通过。启动前6项harness边界误判原样保留，只在声明的source-local、整数source owner及固定float32物理clock wire边界修正，未重写NC或强制cast实际A/B末态。
-启动后原required helper对17条`daily_accumulators.*`路径误用直接键，原comparison保留；独立存盘后处理逐段解析后352/352路径具备，未改冻结runner或增加模型启动。
-缺字段base逐项来自独立empty-NC生产readstart默认，不从A动态状态补缺；C31缺四项gas的历史连续性限制保持。整数集成仍限精确整数USDA12，FAO3 helper不代表driver全支持。
+1962 A/B只使用本包新319年末producer，未替用旧C31：A正式内存跨年，B由同一新态经当前writer生成三文件并readstart。
+A/B全年12045个实际daily leaf（365×33；每日报3clock、4primary及26字段）和全部26年度均值＋4公式输出通过`abs(B-A)<=1e-8+1e-10*abs(A)`，shape/dtype/mask/discrete/clock精确。
+四主输出最大日差依次为6.2883e-13/9.8410e-13/8.4021e-11/6.0493e-11；本次自然A/B伴随DOC状态差异，主要输出仍通过原门，不外推全部长期输出或唯一DOC因果。
+当前保存的353个末态数值leaf（352科学字段及tstep）中两项超限：DOC有78坐标，maxabs=2.2346858610422515e-4；`carb_mass_total`为float64[1]，A=3646437.5217957343、B=3646437.4925577655，差0.02923796884715557，大于原限0.00036465375217957345。**完整重启状态连续性不接受**，旧1日/8日严格失败亦保留。
+DOC存储坐标瞬时和从共同年初11.008376301051934到A年末22.196673650634743、B年末22.193809422179136；该原始坐标和不等于质量守恒账本。正式26字段未暴露DOC通量，通量证据仍缺，不从每日库存求和或库存差推造通量。
 
-实际结果、受影响候选映射、独立审核及更新后的4组提交元数据见
-[本轮交付](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/README.md)、
-[结果摘要](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/summary.json)和
-[提交草案](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/submission.json)；源码登记沿用
-[原候选草案](../../outputs/reviews/main-physics-20261112/restart-candidates-acceptance/fix-registry-draft.json)，旧包封存不改。
-原交付包保留其提交前31项/18代码提交及九条候选的历史身份；正式接纳映射与准确SHA见[主控接纳记录](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-acceptance.json)和[累计修复索引](shared_core_branch_review.md#累计修改位置与提交索引)。C32–C33为`77c3ac7d30ddf466a3cc2b4d6824824713a632b1`，C34–C37为`fd0fe51495626b39ce42d50dec29b3a6cef744b3`，C38为`45654fea50aec6edf7774ac0f0b90170eea617db`。daily/global同步仍暂停，C4–C38待集中核对，C1–C3保持历史核查日期。
-下一优先项是最终版本的001/319代表点年度回归、基于新319年末态的跨年比较，以及已支持路径的剩余源码/状态覆盖核对。上述运行尚未执行；不继续追DOC唯一底层指令，也不将本轮一天结果外推为年度或全域通过。
-原C31年度输入保留C29/C30＋当时dirty C31的producer身份，不将后来接受的commit重标为实际运行HEAD；本轮未重跑1961全年。
-此前[原A实际编译上下文局部证据](../../outputs/reviews/main-physics-20261112/restart-doc-native-context/README.md)仍只支持相同dz常量绑定足以复现局部1ULP差，不认定整链唯一原因；zero-interface候选未采用。
-三路均有XLA algebraic_simplifier 50轮警告，均正常结束，未改编译flags或算法。本轮三路TEMP清理有回执；历史被拒绝的TEMP删除未重试。
+新三文件codec300/300通过，保留source-local两flag、INTEGER owner和固定float32物理clock wire约定；旧17条dotted路径误报已在离线准入正确逐段解析，旧原始失败不改写。旧001 `nonfinite=false`与当前精确源sentinel判定分列，不称历史整producer verifier当前通过。
+**本轮确认一处局部readstart缺字段gas默认值源码差异**：Fortran `constantes_var.f90:1467–1468` 声明O2=298.3、CH4=0.001267，`stomate_io::readstart:1177–1199` 据此填缺；当前JAX reader默认均为0，本次empty-NC确实走该值。codec只证明这份zero-base读写一致，不能据此称Fortran默认正确。
+当前OK_PC=false/CH4_CALCUL=false使四gas无活动科学消费者；Fortran仍无条件持久化它们，而本次新cold packet仍缺四字段，完整cold gas carry保持开放，不归因001或DOC/主输出差异。
+已保存仅改两默认值的隔离补丁及4次真实reader最小验证（缺字段、存储值保持、显式override），均通过；0模型/物理/Fortran调用，六份保护文件哈希不变。候选未应用，未改本次正式源码、NC或四年度producer，不分配新C编号。
+
+可冻结的有界证据为当前319/1961 cold年度原门回归，以及同一当前producer下319/1962两路线365日的逐日及年度输出比较；001完整执行与其数值失败也有独立存盘证据。两代表点不构成669点或全分支等价性。
+剩余五项优先边界为：DOC/`carb_mass_total`严格状态及通量证据、首次energy前热初值独立Fortran真值、inactive gas源默认与完整cold carry、显雪maxmass条件域、001参考初态身份。C38 compiled firstcall本轮缺直接运行见证，不能据未插observer称整年未执行；原start0/start48 binder组件证据保留，该限制未关闭。
+详见[本轮结果](../../outputs/reviews/main-physics-20261112/main-stability-validation/README.md)、[摘要](../../outputs/reviews/main-physics-20261112/main-stability-validation/summary.json)、[覆盖与最小下一行动](../../outputs/reviews/main-physics-20261112/main-stability-validation/coverage.md)及[隔离候选](../../outputs/reviews/main-physics-20261112/main-stability-validation/gas-default-candidate.patch)。
+本轮[主控验收](../../outputs/reviews/main-physics-20261112/main-stability-validation/controller-acceptance.json)保留所有失败与初态身份限制；原源码修复映射见[此前接纳](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-acceptance.json)及[发布记录](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-publication.json)。本轮只发布报告，无新C编号或生产修复。daily/global继续暂停同步，C4–C38待后续维护方集中核对，C1–C3保留历史日期。旧冻结包、累计索引和旧TEMP清理拒绝记录保持，不重试旧删除。
+下一批明确转入gas默认值及cold/day-end持久状态补齐、001原Fortran初态消费身份与匹配比较，并作热初始化首次能量消费的有界源相位核查。此前四次年度运行不重复；新运行与源码变更另立身份和预算，不将本批差异预设为新的过程公式错误。
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
