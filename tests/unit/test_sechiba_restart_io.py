@@ -121,6 +121,30 @@ def test_sechiba_writer_requires_exact_file_field_denominator(tmp_path: Path) ->
         )
 
 
+def test_file_restart_normalizer_restores_integer_owners_without_mutation(tmp_path: Path) -> None:
+    from jax_orchidee.sechiba.restart_io import sechiba_finalize_source_state_from_restart
+    template = _template()
+    original = read_sechiba_restart_state(template)
+    fields = dict(original.fields)
+    fields["njsc"] = np.full_like(fields["njsc"], 12.0)
+    # IMPOSE_VEG leaves this owner undefined in Fortran; do not invent a year range.
+    fields["veget_year"] = np.full_like(fields["veget_year"], -1.0)
+    changed = SechibaRestartState(fields, original.provenance_by_field)
+    path = tmp_path / "integer_owners.nc"
+    write_sechiba_restart_state(path, state=changed, physical_state=_physical(template))
+    wire = read_sechiba_restart_state(path)
+    source = sechiba_finalize_source_state_from_restart(wire)
+    for name, value in (("njsc",12),("veget_year",-1)):
+        assert source[name].dtype == np.int32
+        np.testing.assert_array_equal(source[name], np.full_like(source[name],value))
+        assert wire.fields[name].dtype.kind == "f"
+    assert len(source) == 93
+    invalid = dict(wire.fields)
+    invalid["njsc"] = np.asarray([1.5])
+    with pytest.raises(ValueError, match="exactly integral"):
+        sechiba_finalize_source_state_from_restart(SechibaRestartState(invalid,wire.provenance_by_field))
+
+
 def test_seven_finalize_owners_assemble_exact_93_field_denominator() -> None:
     original = read_sechiba_restart_state(_template())
     packets = {

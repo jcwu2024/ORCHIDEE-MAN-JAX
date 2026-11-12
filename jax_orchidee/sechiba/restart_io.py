@@ -130,13 +130,44 @@ class SechibaRestartState:
     provenance_by_field: Mapping[str, tuple[str, ...]]
 
 
+def restore_sechiba_integer_source_fields(
+    source: Mapping[str, object], *, njsc_class_count: int = 12,
+) -> dict[str, np.ndarray]:
+    """Restore INTEGER owners from the real-valued restart representation.
+
+    Fortran slowproc.f90:122,210,1232,1251-1254,1655-1664 declares
+    INTEGER owners and stores njsc as REAL. This supported codec accepts only
+    exactly integral, finite values; it never rounds corrupt fractional input.
+    njsc ranges from 1 to active nscm (USDA12/FAO3, control.f90:83-87;
+    constantes_soil_var.f90:70-77). veget_year has no calendar range here:
+    slowproc_init:1603-1644 leaves it undefined when IMPOSE_VEG is active.
+    Both public source owners use a signed 32-bit integer representation.
+    """
+    restored = {name: np.asarray(value) for name, value in source.items()}
+    limits = np.iinfo(np.int32)
+    if njsc_class_count not in (3, 12):
+        raise ValueError("njsc_class_count must be the supported active FAO3 or USDA12 count")
+    for name in ("njsc", "veget_year"):
+        if name not in restored:
+            continue
+        value = restored[name]
+        if value.dtype.kind not in "fiu" or not np.all(np.isfinite(value)):
+            raise ValueError(f"{name} must contain finite integer values")
+        if not np.all(value == np.trunc(value)) or np.any(value < limits.min) or np.any(value > limits.max):
+            raise ValueError(f"{name} must contain exactly integral signed 32-bit values")
+        if name == "njsc" and (np.any(value < 1) or np.any(value > njsc_class_count)):
+            raise ValueError(f"njsc must be in 1..{njsc_class_count}")
+        restored[name] = value.astype(np.int32)
+    return restored
+
+
 def sechiba_finalize_source_state_from_restart(
     state: SechibaRestartState,
 ) -> dict[str, np.ndarray]:
     """Translate serialized restart names back to component-finalize names.
 
-    This is a name normalization only. It neither fills missing fields nor
-    changes values. The resulting mapping is the exact input contract of
+    This normalizes names and restores validated INTEGER owner dtypes without
+    filling missing fields or changing values. The resulting mapping is the exact input contract of
     :func:`paper_sechiba_restart_state_from_finalize_state`.
 
     Fortran provenance: ``sechiba.f90::sechiba_initialize`` lines 561-679 and
@@ -163,7 +194,7 @@ def sechiba_finalize_source_state_from_restart(
         )
     if len(source) != 93:
         raise ValueError(f"SECHIBA finalize source-state denominator must be 93, got {len(source)}")
-    return source
+    return restore_sechiba_integer_source_fields(source)
 
 
 def sechiba_restart_state_from_finalize_packets(

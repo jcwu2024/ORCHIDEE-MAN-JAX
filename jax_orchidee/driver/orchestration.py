@@ -107,6 +107,8 @@ from jax_orchidee.driver.restart_state import (
     REFERENCE_CASE_INITIAL_STATE_MODE,
     ReferenceCaseFirstStepRestartState,
     reference_case_first_step_restart_state,
+    restart_thermosoil_initial_fields,
+    restart_thermosoil_initialization_supported,
 )
 from jax_orchidee.driver.sechiba_boundary import (
     IntersurfFirstStepPayload,
@@ -147,6 +149,7 @@ from jax_orchidee.sechiba.restart_io import (
     SECHIBA_RESTART_COMPONENT_FIELDS,
     SECHIBA_RESTART_TO_SOURCE_NAMES,
     sechiba_finalize_source_state_from_restart,
+    restore_sechiba_integer_source_fields,
 )
 from jax_orchidee.sechiba.restart_lifecycle import (
     transition_sechiba_finalize_source_state,
@@ -3269,6 +3272,11 @@ def driver_previous_step_state_from_timestep_scaffold(
         stomate = scaffold.first_step_restart_state.stomate
         if scaffold.diffuco_first_step_precall is not None and "height" in scaffold.diffuco_first_step_precall.payload:
             fields["diffuco_previous_step_state"]["height"] = scaffold.diffuco_first_step_precall.payload["height"]
+        # stomate_init 2238-2261 initializes temp_growth from restored
+        # t2m_month; stomate_main 5049 updates it only at the daily boundary.
+        # Preserve the actual first consumer value for the remaining substeps.
+        if scaffold.diffuco_first_step_precall is not None and "temp_growth" in scaffold.diffuco_first_step_precall.payload:
+            fields["slowproc_stomate_previous_step_state"]["temp_growth"] = scaffold.diffuco_first_step_precall.payload["temp_growth"]
         fields["diffuco_previous_step_state"]["soilalbedo_bg"] = scaffold.first_step_restart_state.diffuco_precall.soilalbedo_bg
         for name in ("free_drain_coef", "zwt_force", "wt_ab", "wt_ab_tide", "njsc", "fwet_new"):
             value = getattr(scaffold.first_step_restart_state.hydrol, name, None)
@@ -3279,6 +3287,10 @@ def driver_previous_step_state_from_timestep_scaffold(
             and "refSOC" not in fields["thermosoil_previous_step_state"]
         ):
             fields["thermosoil_previous_step_state"]["refSOC"] = scaffold.first_step_restart_state.thermosoil.refsoc
+        # thermosoil_initialize 595-598 restores this OK_ECORR memory and
+        # finalize 1113-1116 persists it. readjust 2508-2536 describes its
+        # consumer, but the source call at 1510-1512 is commented out.
+        fields["thermosoil_previous_step_state"]["e_soil_lat"] = scaffold.first_step_restart_state.thermosoil.e_soil_lat
         for name in ("veget", "veget_max", "lai", "frac_nobio", "height", "frac_age"):
             fields["slowproc_stomate_previous_step_state"][name] = getattr(slowproc, name)
             if name != "frac_age":
@@ -5440,6 +5452,45 @@ def _enerbil_soil_thermal_payload_from_thermosoil_cold_coef(thermosoil_cold_coef
     }
 
 
+def _paper_first_step_slowproc_initial_fields(
+    *, restart_state: ReferenceCaseFirstStepRestartState,
+    run_scalars: RunScalars, run_def_values: dict[str, str],
+):
+    """Initialize the active/inactive SLOWPROC branch before first DIFFUCO.
+
+    Fortran: slowproc_initialize 275-302; stomate_init 2238-2261;
+    stomate_var_init 9302-9319; slowproc_init 1685-1707. Active STOMATE
+    preserves readstart assimilation and restart height, recomputes deadleaf
+    cover, and derives growth temperature from restored monthly temperature.
+    """
+    from jax_orchidee.stomate.initialize import stomate_var_init_carbon_owner
+    from jax_orchidee.stomate.daily_inputs import stomate_veget_cov_max
+    slow = restart_state.slowproc
+    nvm = int(slow.lai.shape[1])
+    result = slowproc_derivvar_explicit(
+        veget=slow.veget, lai=slow.lai,
+        vcmax_fix=_select_run_def_pft_vector(run_def_values, "VCMAX_FIX", run_scalars, nvm=nvm),
+        height_presc=_select_run_def_pft_vector(run_def_values, "SLOWPROC_HEIGHT", run_scalars, nvm=nvm),
+        qsintcst=parse_run_def_float(run_def_values, "SECHIBA_QSINT"),
+    )
+    if not parse_run_def_bool(run_def_values.get("STOMATE_OK_STOMATE", "TRUE")):
+        return result
+    state = restart_state.stomate_readstart.entry_state
+    veget_cov_max = stomate_veget_cov_max(
+        slow.veget_max, jnp.sum(jnp.asarray(slow.frac_nobio), axis=1)
+    )
+    initialized = stomate_var_init_carbon_owner(
+        assim_param=state.assim_param, leaf_age=state.leaf_age,
+        leaf_frac=state.leaf_frac, dead_leaves=state.dead_leaves,
+        veget_cov_max=veget_cov_max, sla_calc=state.sla_calc, val_exp=999999.0,
+    )
+    return result._replace(
+        assim_param=initialized.assim_param, height=slow.height,
+        deadleaf_cover=initialized.deadleaf_cover,
+        temp_growth=jnp.asarray(restart_state.stomate_readstart.season_state.t2m_month) - 273.15,
+    )
+
+
 def _paper_first_step_restart_entry_sources(
     *,
     restart_state: ReferenceCaseFirstStepRestartState,
@@ -5451,16 +5502,8 @@ def _paper_first_step_restart_entry_sources(
     """Build exact restart/init sources for first-step ``stomate_main``."""
 
     nvm = int(restart_state.slowproc.lai.shape[1])
-    derivvar = slowproc_derivvar_explicit(
-        veget=restart_state.slowproc.veget,
-        lai=restart_state.slowproc.lai,
-        vcmax_fix=_select_run_def_pft_vector(
-            run_def_values, "VCMAX_FIX", run_scalars, nvm=nvm
-        ),
-        height_presc=_select_run_def_pft_vector(
-            run_def_values, "SLOWPROC_HEIGHT", run_scalars, nvm=nvm
-        ),
-        qsintcst=parse_run_def_float(run_def_values, "SECHIBA_QSINT"),
+    derivvar = _paper_first_step_slowproc_initial_fields(
+        restart_state=restart_state, run_scalars=run_scalars, run_def_values=run_def_values,
     )
     no_lcc = slowproc_no_lcc_entry_state(
         veget_max=restart_state.slowproc.veget_max,
@@ -6851,6 +6894,18 @@ def paper_1961_driver_timestep_scaffold(
             driver_z0_for_wind=first_step_restart_state.driver_albedo.z0,
             dt_sechiba=runtime.dt_sechiba,
         )
+        # sechiba_initialize calls ENERBIL and HYDROL initialization before
+        # THERMOSOIL initialization (640-643, 666-729). Rebuild the latter's
+        # nonpersisted memory from the restored pre-main state, before any
+        # same-step process can change surface temperature, moisture or snow.
+        from jax_orchidee.sechiba.restart_io import sechiba_finalize_source_state_from_restart
+        restart_thermal_fields = {}
+        if restart_thermosoil_initialization_supported(context):
+            restart_thermal_fields = restart_thermosoil_initial_fields(
+                sechiba_finalize_source_state_from_restart(first_step_restart_state.sechiba_restart_state),
+                context=context, payload=payload,
+                altmax=first_step_restart_state.stomate.altmax,
+            )
         driver_source = stomate_driver_entry_source(payload, kjit=int(tstep) + 1)
         routing_source = stomate_no_routing_entry_source(
             kjpindex=payload.kjpindex,
@@ -6913,14 +6968,9 @@ def paper_1961_driver_timestep_scaffold(
             h_agr_max_pn=parse_run_def_float(run_def_values, "H_AGR_MAX_PN"),
             pft_index=_paper_mangrove_pft_index(step.run_scalars),
         )
-        slowproc_derivvar = slowproc_derivvar_explicit(
-            veget=first_step_restart_state.slowproc.veget,
-            lai=first_step_restart_state.slowproc.lai,
-            vcmax_fix=parse_run_def_indexed_selection(run_def_values, "VCMAX_FIX", fortran_pft_ids),
-            height_presc=parse_run_def_indexed_selection(
-                run_def_values, "SLOWPROC_HEIGHT", fortran_pft_ids
-            ),
-            qsintcst=parse_run_def_float(run_def_values, "SECHIBA_QSINT"),
+        slowproc_derivvar = _paper_first_step_slowproc_initial_fields(
+            restart_state=first_step_restart_state, run_scalars=step.run_scalars,
+            run_def_values=run_def_values,
         )
         diffuco_first_step_precall = assemble_diffuco_first_step_precall_payload(
             driver_or_intersurf_payload={
@@ -7118,7 +7168,10 @@ def paper_1961_driver_timestep_scaffold(
             if condveg_first_step_module.ok:
                 thermosoil_first_step_module = run_thermosoil_first_step_module(
                     moisture=hydrol_first_step_module.thermosoil_moisture,
-                    thermosoil_restart=first_step_restart_state.thermosoil,
+                    thermosoil_restart=(SimpleNamespace(**{
+                        **first_step_restart_state.thermosoil._asdict(),
+                        **restart_thermal_fields,
+                    }) if restart_thermal_fields else first_step_restart_state.thermosoil),
                     enerbil_payload=enerbil_first_step_local.payload,
                     condveg_result=condveg_first_step_module.module,
                     # sechiba_main:1049-1118 supplies current post-HYDROL snow.
@@ -7204,6 +7257,7 @@ def paper_1961_driver_timestep_scaffold(
             payload=payload,
             used_run_def_path=run_def_path,
             root=root,
+            run_dir=first_step_restart_state.run_dir,
         )
         daily_accumulators = first_step_restart_state.stomate_readstart.daily_state
         stomate_first_step_daily_accumulation = stomate_first_step_daily_accumulation_from_entry(
@@ -11622,9 +11676,32 @@ def paper_1961_driver_restart_year_start_day_result(
             missing_components=_runtime_missing_from_gaps(gaps, extra=("year_handoff_state",)),
             daily_process_fold=None,
         )
+    rebased = rebase_driver_state_for_year_start(previous_year_end_state)
+    # The memory and file routes share the same public INTEGER owner contract;
+    # preserve the source-undefined veget_year value without inventing a year.
+    if "sechiba_finalize_state" in rebased.fields_by_component:
+        rebased.fields_by_component["sechiba_finalize_state"] = restore_sechiba_integer_source_fields(
+            rebased.fields_by_component["sechiba_finalize_state"],
+            njsc_class_count=3 if context.run_def_values.get("SOILTYPE_CLASSIF", "usda").lower() == "fao" else 12,
+        )
+    step = _paper_1961_step_bundle_from_context(context, year=year, tstep=0)
+    payload = build_intersurf_first_step_payload(
+        step, driver_z0_for_wind=_driver_wind_z0_from_previous_state(rebased),
+        dt_sechiba=context.dt_sechiba,
+    )
+    if restart_thermosoil_initialization_supported(context):
+        initial_thermal = restart_thermosoil_initial_fields(
+            rebased.fields_by_component["sechiba_finalize_state"],
+            context=context, payload=payload,
+            altmax=rebased.fields_by_component["slowproc_stomate_previous_step_state"]["altmax"],
+        )
+        rebased.fields_by_component["thermosoil_previous_step_state"].update(initial_thermal)
+        # hydrol_init 2617-2619 initializes this nonrestart temporary; the first
+        # hydrol_main 5677-5680 recomputes it from restored ptn/stempdiag.
+        rebased.fields_by_component["hydrol_previous_step_state"].pop("temp_hydro", None)
     return paper_1961_driver_later_day_runtime_result(
         config_path,
-        previous_state=rebase_driver_state_for_year_start(previous_year_end_state),
+        previous_state=rebased,
         day_index=1,
         year=year,
         start_tstep=0,

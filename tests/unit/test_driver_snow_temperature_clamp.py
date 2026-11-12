@@ -206,8 +206,8 @@ def test_incomplete_thermosoil_does_not_publish_final_clamp():
     np.testing.assert_array_equal(fields["diffuco_previous_step_state"]["temp_sol"], temp)
 
 
-@pytest.mark.parametrize("explicit", [False, True])
-def test_restart_scaffold_calls_thermal_owner_with_current_hydrol_snow_and_gate(monkeypatch, explicit):
+@pytest.mark.parametrize("explicit,audited", [(False, False), (True, False), (True, True)])
+def test_restart_scaffold_calls_thermal_owner_with_current_hydrol_snow_and_gate(monkeypatch, explicit, audited):
     """Traverse the actual first/restart caller with upstream processes stubbed.
 
     Stop at the THERMOSOIL call: no forcing/restart IO or integration is run.
@@ -230,10 +230,12 @@ def test_restart_scaffold_calls_thermal_owner_with_current_hydrol_snow_and_gate(
         enerbil_thermal=NS(as_coverage_payload=lambda: {}),
         stomate=NS(biomass=np.zeros((2, 1, 1, 1)), altmax=grid),
         diffuco_precall=restart_snow, slowproc=NS(veget=tile, lai=tile),
-        hydrol=NS(njsc=grid, run2peat=grid, run2man=grid), thermosoil=NS(),
+        hydrol=NS(njsc=grid, run2peat=grid, run2man=grid), thermosoil=NS(_asdict=lambda: {"original_coefficient": grid}), sechiba_restart_state=object(),
     )
     values = defaultdict(lambda: "FALSE", {"OK_EXPLICITSNOW": "TRUE" if explicit else "FALSE"})
+    values.update({name: "TRUE" if audited else "FALSE" for name in ("USE_SOILC_TEMPDIFF", "use_refSOC")})
     context = NS(run_def_path=Path("unused.def"), runtime=NS(dt_sechiba=1800.0),
+                 hydrol_ok_pc=False, hydrol_ok_leak=True,
                  run_def_values=values, dt_sechiba=1800.0, first_step_restart_state=restart)
     step = NS(run_scalars=NS(fortran_pft_ids=(14,), pref_soil_veg=tile,
                             is_tree=(False,), z0_over_height=0.1, ratio_z0m_z0h=1.0))
@@ -253,6 +255,7 @@ def test_restart_scaffold_calls_thermal_owner_with_current_hydrol_snow_and_gate(
         "assemble_pft14_control_salinity_first_step": NS(),
         "assemble_pft14_control_inundation_first_step": NS(),
         "slowproc_derivvar_explicit": NS(qsintmax=tile, assim_param=tile, height=tile, temp_growth=tile),
+        "_paper_first_step_slowproc_initial_fields": NS(qsintmax=tile, assim_param=tile, height=tile, temp_growth=tile),
         "assemble_diffuco_first_step_precall_payload": NS(ok=True, payload={}),
         "run_pft14_local_enerbil_precall_from_first_step_precall": diffuco,
         "run_enerbil_first_step_local_from_precall": enerbil,
@@ -269,11 +272,26 @@ def test_restart_scaffold_calls_thermal_owner_with_current_hydrol_snow_and_gate(
     class ReachedThermalOwner(Exception):
         pass
 
+    import jax_orchidee.sechiba.restart_io as restart_io
+    restored_source = {"temp_sol": grid}
+    monkeypatch.setattr(restart_io, "sechiba_finalize_source_state_from_restart", lambda state: restored_source)
+    def initialize(source, **kwargs):
+        assert audited and source is restored_source
+        assert kwargs["payload"] is payload
+        return {"temp_sol_beg": grid, "pcapa_en": tile}
+    monkeypatch.setattr(driver, "restart_thermosoil_initial_fields", initialize)
+
     def check_call(**kwargs):
         for name in ("snow", "snowrho", "snowtemp", "snowdz"):
             assert kwargs[name] is getattr(hydrol.snow_state, name)
         assert kwargs["ok_explicitsnow"] is explicit
         assert kwargs["moisture"] is hydrol.thermosoil_moisture
+        if audited:
+            assert kwargs["thermosoil_restart"].original_coefficient is grid
+            assert kwargs["thermosoil_restart"].temp_sol_beg is grid
+            assert kwargs["thermosoil_restart"].pcapa_en is tile
+        else:
+            assert kwargs["thermosoil_restart"] is restart.thermosoil
         raise ReachedThermalOwner
 
     monkeypatch.setattr(driver, "run_thermosoil_first_step_module", check_call)

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
+
+import numpy as np
 
 from netCDF4 import Dataset
 
@@ -50,6 +53,113 @@ FIRST_STEP_RESTART_STATE_PROVENANCE = (
 
 REFERENCE_CASE_INITIAL_STATE_MODE = "restart_backed_reference_case"
 COLD_START_INITIAL_STATE_MODE = "cold_start_no_restart"
+
+
+def restart_thermosoil_initialization_supported(context: object) -> bool:
+    """Limit the new lifecycle reconstruction to its audited source path."""
+    from jax_orchidee.driver.init import parse_run_def_bool
+    values = context.run_def_values
+    flags_enabled = all(parse_run_def_bool(values.get(name, "FALSE")) for name in (
+        "OK_EXPLICITSNOW", "USE_SOILC_TEMPDIFF", "use_refSOC",
+    ))
+    # thermosoil_initialize 337-374 reads the soil-carbon switches only
+    # inside this source gate; raw run.def flags alone do not activate them.
+    freeze_thermix = parse_run_def_bool(values.get(
+        "OK_FREEZE_THERMIX", values.get("OK_FREEZE", "FALSE")
+    ))
+    return flags_enabled and (
+        (freeze_thermix and context.hydrol_ok_pc) or context.hydrol_ok_leak
+    )
+
+
+def restart_thermosoil_initial_fields(
+    source: Mapping[str, object], *, context: object, payload: object, altmax: object
+) -> dict[str, object]:
+    """Rebuild nonpersisted thermal memory before the first restarted step.
+
+    This composes existing kernels only. Fortran provenance:
+    sechiba_initialize 640-643, 703-729; enerbil_initialize 241,259-261;
+    hydrol_var_init 3946-4644; thermosoil_initialize 572-573,719-744;
+    thermosoil_var_init 1309-1320. The complete restart coefficient group is
+    retained; pcapa_en/temp_sol_beg are not written at finalize 1122-1126.
+    """
+    from jax_orchidee.driver.init import parse_run_def_bool
+    from jax_orchidee.sechiba.hydrol import (
+        hydrol_var_init, hydrol_cold_start_thermosoil_moisture_inputs,
+    )
+    from jax_orchidee.sechiba.thermosoil import (
+        thermosoil_humlev, thermosoil_getdiff_explicit,
+        thermosoil_getdiff_thinsnow, thermosoil_soilc_tempdiff_fraction,
+        thermosoil_diaglev_from_ptn,
+    )
+    values = context.run_def_values
+    flag = lambda name, default: parse_run_def_bool(values.get(name, default))
+    if not restart_thermosoil_initialization_supported(context):
+        raise ValueError("restart thermal initialization requires the audited explicit-snow/refSOC path")
+    freeze_thermix = flag("OK_FREEZE_THERMIX", "TRUE" if flag("OK_FREEZE", "FALSE") else "FALSE")
+    effective_wetdiag = flag("OK_WETDIAGLONG", "FALSE") or (
+        freeze_thermix and context.hydrol_ok_pc
+    ) or context.hydrol_ok_leak
+    if not effective_wetdiag:
+        raise ValueError("restart thermal initialization requires effective long-term wet diagnostics")
+    hydro = hydrol_var_init(
+        veget=source["veget"], veget_max=source["veget_max"],
+        soiltile=context.first_step_bundle.vegetation.soiltile,
+        njsc=source["njsc"], znh_m=context.cwrr_grid.znh,
+        dnh_m=context.cwrr_grid.dnh, dlh_m=context.cwrr_grid.dlh,
+        humcste=context.hydrol_humcste,
+        altmax=altmax,
+        mc=source["mc"], mcl=source["mcl"],
+        water2infilt=source["water2infilt"], resdist=source["resdist"],
+        vegtot_old=source["vegtot_old"], qsintveg=source["qsintveg"],
+        drysoil_frac=source["drysoil_frac"],
+        ok_pc=context.hydrol_ok_pc, ok_leak=context.hydrol_ok_leak,
+        peat_hydro=context.hydrol_soil_peat_hydro,
+        tides=context.hydrol_tides, agri_peat=context.hydrol_agri_peat,
+        ok_freeze_cwrr=context.ok_freeze_cwrr,
+        zmaxh=context.hydrol_depth_max_h,
+    )
+    moisture = hydrol_cold_start_thermosoil_moisture_inputs(
+        hydro, pref_soil_veg=context.run_scalars.pref_soil_veg,
+        dz_mm=context.hydrol_dz_mm, dh_mm=context.hydrol_dh_mm,
+        njsc=source["njsc"], mcs=hydro.mcs,
+        peat_hydro=context.hydrol_soil_peat_hydro,
+    )
+    humlev = thermosoil_humlev(
+        **{name: getattr(moisture, name) for name in (
+            "shumdiag_perma", "mc_layh", "mcl_layh", "tmc_layh",
+            "mc_layh_pft", "mcl_layh_pft", "tmc_layh_pft",
+        )},
+        znt=context.cwrr_grid.znt, zlt=context.cwrr_grid.zlt,
+        dz5=context.cwrr_grid.dz5, satsoil=context.thermosoil_satsoil,
+    )
+    zx1, _ = thermosoil_soilc_tempdiff_fraction(refsoc=source["refsoc"], nvm=context.nvm)
+    getdiff = thermosoil_getdiff_explicit(
+        ptn=source["ptn"], njsc=source["njsc"], veget_max=source["veget_max"],
+        shum_ngrnd_permalong=source["shum_ngrnd_permalong"],
+        mc_layt=humlev.mc_layt, tmc_layt_pft=humlev.tmc_layt_pft,
+        snowrho=source["snowrho"], snowtemp=source["snowtemp"], pb=payload.pb,
+        dlt=context.cwrr_grid.dlt, zx1=zx1, ok_laidev=context.ok_laidev,
+        ok_freeze_thermix=freeze_thermix,
+        brk_flag=int(values.get("BEDROCK_FLAG", "0")),
+        nslm=len(context.cwrr_grid.znh),
+    )
+    thin = thermosoil_getdiff_thinsnow(
+        ptn=source["ptn"], shum_ngrnd_permalong=source["shum_ngrnd_permalong"],
+        snowdz=source["snowdz"], pcapa=getdiff.pcapa,
+        pcapa_en=getdiff.pcapa_en, pkappa=getdiff.pkappa,
+        profil_froz=getdiff.profil_froz,
+        veget_mask_2d=np.ones_like(np.asarray(source["veget_max"]), dtype=bool),
+        zlt=context.cwrr_grid.zlt,
+    )
+    return {
+        "temp_sol_beg": source["temp_sol"],
+        "pcapa_en": thin.pcapa_en,
+        "stempdiag": thermosoil_diaglev_from_ptn(
+            ptn=source["ptn"], veget_max=source["veget_max"],
+            nslm=len(context.cwrr_grid.znh),
+        ),
+    }
 
 
 @dataclass(frozen=True)
