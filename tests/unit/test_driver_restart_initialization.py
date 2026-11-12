@@ -131,6 +131,18 @@ def test_restart_integer_owner_contract_preserves_values_and_declares_kind():
     with pytest.raises(ValueError):restore_sechiba_integer_source_fields(source,njsc_class_count=3)
 
 
+def test_compiled_forcing_template_never_reads_a_sentinel_year(monkeypatch):
+    """Execute the production compiled-forcing branch up to the next owner."""
+    tree=ast.parse(inspect.getsource(orch._paper_1961_later_day_transition_inputs))
+    branch=next(node for node in ast.walk(tree) if isinstance(node,ast.If)
+        and ast.unparse(node.test)=="compiled_forcing_series is not None")
+    binding=object(); context=SimpleNamespace(first_step_bundle=binding,dt_sechiba=1800.)
+    observed={}
+    def build(bundle,**kwargs):observed["bundle"]=bundle;return "template"
+    env=dict(context=context,compiled_landpoint_payload=None,build_intersurf_first_step_payload=build)
+    exec(compile(ast.Module(body=branch.body,type_ignores=[]),"<actual-compiled-template-prefix>","exec"),env)
+    assert observed["bundle"] is binding
+    assert env["compiled_base_payload_template"]=="template"
 
 
 def test_first_step_thermal_alias_carries_nonzero_restored_memory():
@@ -170,6 +182,35 @@ def test_thermal_initialization_obeys_source_soilcarbon_enable_gate(freeze,pc,le
     assert restart_thermosoil_initialization_supported(context) is expected
 
 
+@pytest.mark.parametrize("start", [0,48])
+def test_compiled_day_cache_binds_actual_series_coordinates_without_weather_reads(monkeypatch,start):
+    """Run the complete production day-input binder; process owners are stubbed."""
+    static_salinity=np.asarray([1.]); static_tide=np.asarray([2.])
+    actual_salinity=np.asarray([[31.]]); actual_tide=np.asarray([[7.]])
+    scalars=SimpleNamespace(pref_soil_veg=np.ones((1,1)),nstm=1)
+    bundle=SimpleNamespace(run_scalars=scalars)
+    context=SimpleNamespace(run_def_values={},cwrr_grid=SimpleNamespace(znh=np.ones(2)),
+        first_step_bundle=bundle,dt_sechiba=1800.,runtime=SimpleNamespace(dt_sechiba=1800.),
+        ext_coeff_vegetfrac=np.ones(1),hydrol_throughfall_by_pft=np.ones(1),
+        hydrol_humcste=np.ones(1),stomate_ok_dgvm=False,run_def_path="unused.def")
+    state=SimpleNamespace(fields_by_component={"slowproc_stomate_previous_step_state":{"lai":np.ones((1,1))}})
+    monkeypatch.setattr(orch,"_hydrol_state_namespace_from_previous_state",lambda state:(SimpleNamespace(),None))
+    monkeypatch.setattr(orch,"hydrol_static_precall_template_from_slowproc",lambda **kw:object())
+    monkeypatch.setattr(orch,"_driver_wind_z0_from_previous_state",lambda state:.1)
+    monkeypatch.setattr(orch,"build_intersurf_first_step_payload",lambda *a,**kw:SimpleNamespace(salinity=static_salinity,tide_height=static_tide))
+    def unexpected_weather(*a,**kw):pytest.fail("compiled series must not request static sentinel-year weather")
+    monkeypatch.setattr(orch,"_paper_1961_step_bundle_from_context",unexpected_weather)
+    observed={}
+    def cache(*args,**kwargs):observed.update(kwargs);return kwargs
+    monkeypatch.setattr(orch,"_paper_diffuco_day_static_cache_from_firstcall_inputs",cache)
+    monkeypatch.setattr(orch,"_paper_diffuco_day_static_cache_from_previous_state",cache)
+    result=orch._paper_1961_later_day_transition_inputs(context=context,current_state=state,year=-999,
+        start=start,steps_per_stomate=48,fixed_format_trace_dir=None,static_trace_fields=None,
+        prebuild_day_payloads=False,prebound_hydrol_runtime_static_tables=object(),
+        compiled_forcing_series=SimpleNamespace(salinity=actual_salinity,tide_height=actual_tide))
+    assert result.day_start_bundle is bundle
+    np.testing.assert_array_equal(observed["salinity"],actual_salinity[0])
+    np.testing.assert_array_equal(observed["tide_height"],actual_tide[0])
 
 
 def test_first_extractor_carries_growth_and_thermal_alias_to_next_real_consumer(monkeypatch):

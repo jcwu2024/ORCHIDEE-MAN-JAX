@@ -10093,11 +10093,10 @@ def _paper_1961_later_day_transition_inputs(
     half_hour_inputs: tuple[DriverRuntimeHalfHourInput, ...] = ()
     compiled_base_payload_template = None
     if compiled_forcing_series is not None:
-        day_start_bundle = _paper_1961_step_bundle_from_context(
-            context,
-            year=year,
-            tstep=48,
-        )
+        # The compiled series supplies every year-varying meteorological
+        # coordinate below. Use the declared context for the static payload
+        # template; a static executable's sentinel year must never open weather.
+        day_start_bundle = context.first_step_bundle
         compiled_base_payload_template = build_intersurf_first_step_payload(
             day_start_bundle,
             driver_z0_for_wind=0.1,
@@ -10170,8 +10169,10 @@ def _paper_1961_later_day_transition_inputs(
             diffuco_day_static_cache = _paper_diffuco_day_static_cache_from_firstcall_inputs(
                 context,
                 current_state,
-                salinity=day_start_payload.salinity,
-                tide_height=day_start_payload.tide_height,
+                salinity=(compiled_forcing_series.salinity[0]
+                          if compiled_forcing_series is not None else day_start_payload.salinity),
+                tide_height=(compiled_forcing_series.tide_height[0]
+                             if compiled_forcing_series is not None else day_start_payload.tide_height),
             )
         else:
             diffuco_day_static_cache = _paper_diffuco_day_static_cache_from_previous_state(
