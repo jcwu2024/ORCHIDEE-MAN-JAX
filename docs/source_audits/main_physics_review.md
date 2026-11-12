@@ -1,9 +1,37 @@
 # main 物理正确性检查入口
 
+2026-11-12 主控已接受本批受限源码/接口修复，登记为 **C32–C38七项修正、三个代码提交；累计38项已接受修正/21个代码提交**。完整重启科学连续性仍未通过，DOC原严格失败保留。
+当前5份生产文件和4份测试保持上轮已审阅版本；复用六文件59项集中回归及独立审核，本轮未新增生产改动。
+九条原候选合并为七项：active初始化与first_B growth统一为C36；e_soil_lat接口补齐归入C34热生命周期，Fortran readjust唯一调用已注释，不单列物理bug或宣称Ecorr已启用。
+
+已执行授权的本地CPU/x64三次启动、三模型日，各有900秒硬限且无重试：319点A从原C31末态内存续接1962首日，B从当前writer生成的三文件readstart运行同日；001点从已有paper initial restart运行1961首日。
+三路分别约121.12、112.15、116.12秒，均exit0、到end_tstep47，日结果完整，clock/schema/源整数owner通过；无远端、Fortran、GPU或训练。
+319 A/B的4项primary、26项modelout_fields及3项clock通过原限`abs(B-A)<=1e-8+1e-10*abs(A)`，共33个实际leaf及4个结构行。
+352条必需科学路径均在A/B中存在；完整状态比较仍仅DOC超限，8个坐标，最大绝对差`7.4254221358316386e-6`，最差坐标`[0,13,6,0,0,0]`；原门槛及旧8日严格失败保留，日输出通过不替代完整状态接受。
+001无本包Fortran数值比较；冻结runner因只为319启用精确sentinel判定而保留`nonfinite=false`。
+离线独立审核确认其仅两条既定roughheight路径的`float64(1,14)[0,0]`为NaN、其余坐标有限，源/config/PFT/provenance局部守卫延续，是既有001源定义sentinel机制的当前实例；不称新增物理NaN、全值有限或历史整producer verifier通过。
+
+实际Python边界保存了三路热初始化三字段；319 A/B三字段逐字节相同，B和001各捕获2次active首步及1次growth handoff，无观察错误。
+三路均未触发compiled firstcall；该分支复用上轮完整binder在start0/start48的组件证据，本轮不声称日积分覆盖。
+真实三文件codec最终300项通过。启动前6项harness边界误判原样保留，只在声明的source-local、整数source owner及固定float32物理clock wire边界修正，未重写NC或强制cast实际A/B末态。
+启动后原required helper对17条`daily_accumulators.*`路径误用直接键，原comparison保留；独立存盘后处理逐段解析后352/352路径具备，未改冻结runner或增加模型启动。
+缺字段base逐项来自独立empty-NC生产readstart默认，不从A动态状态补缺；C31缺四项gas的历史连续性限制保持。整数集成仍限精确整数USDA12，FAO3 helper不代表driver全支持。
+
+实际结果、受影响候选映射、独立审核及更新后的4组提交元数据见
+[本轮交付](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/README.md)、
+[结果摘要](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/summary.json)和
+[提交草案](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/submission.json)；源码登记沿用
+[原候选草案](../../outputs/reviews/main-physics-20261112/restart-candidates-acceptance/fix-registry-draft.json)，旧包封存不改。
+原交付包保留其提交前31项/18代码提交及九条候选的历史身份；正式接纳映射与准确SHA见[主控接纳记录](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-acceptance.json)和[累计修复索引](shared_core_branch_review.md#累计修改位置与提交索引)。C32–C33为`77c3ac7d30ddf466a3cc2b4d6824824713a632b1`，C34–C37为`fd0fe51495626b39ce42d50dec29b3a6cef744b3`，C38为`45654fea50aec6edf7774ac0f0b90170eea617db`。daily/global同步仍暂停，C4–C38待集中核对，C1–C3保持历史核查日期。
+下一优先项是最终版本的001/319代表点年度回归、基于新319年末态的跨年比较，以及已支持路径的剩余源码/状态覆盖核对。上述运行尚未执行；不继续追DOC唯一底层指令，也不将本轮一天结果外推为年度或全域通过。
+原C31年度输入保留C29/C30＋当时dirty C31的producer身份，不将后来接受的commit重标为实际运行HEAD；本轮未重跑1961全年。
+此前[原A实际编译上下文局部证据](../../outputs/reviews/main-physics-20261112/restart-doc-native-context/README.md)仍只支持相同dz常量绑定足以复现局部1ULP差，不认定整链唯一原因；zero-interface候选未采用。
+三路均有XLA algebraic_simplifier 50轮警告，均正常结束，未改编译flags或算法。本轮三路TEMP清理有回执；历史被拒绝的TEMP删除未重试。
+
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
 避免反复同步。**C31已由主控验收；319点1961年度AGB/BGB/GPP/NPP全部通过原标准，原NPP超限在该算例闭合**。
-当前累计31项已接受修复/18个代码提交，C31代码提交为`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`。
+截至C31接纳时累计31项已接受修复/18个代码提交，C31代码提交为`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`；当前总数及C32–C38见文首。
 见[本轮主控验收](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-acceptance.json)；
 单点单年结论不外推全域/长期，下一优先项是真实NetCDF重启与跨年连续性的有界验证。此前独立Fortran
 job126077710已COMPLETED/0:0，620,494条原生记录与实际相位、年度/共同边界保持检查通过；

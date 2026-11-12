@@ -1,8 +1,36 @@
 # 共享物理核心与研究分支核查
 
+2026-11-12 主控已接受本批受限源码/接口修复，登记为 **C32–C38七项修正、三个代码提交；累计38项已接受修正/21个代码提交**。完整重启科学连续性仍未通过，DOC原严格失败保留。
+当前5份生产文件和4份测试保持上轮已审阅版本；复用六文件59项集中回归及独立审核，本轮未新增生产改动。
+九条原候选合并为七项：active初始化与first_B growth统一为C36；e_soil_lat接口补齐归入C34热生命周期，Fortran readjust唯一调用已注释，不单列物理bug或宣称Ecorr已启用。
+
+已执行授权的本地CPU/x64三次启动、三模型日，各有900秒硬限且无重试：319点A从原C31末态内存续接1962首日，B从当前writer生成的三文件readstart运行同日；001点从已有paper initial restart运行1961首日。
+三路分别约121.12、112.15、116.12秒，均exit0、到end_tstep47，日结果完整，clock/schema/源整数owner通过；无远端、Fortran、GPU或训练。
+319 A/B的4项primary、26项modelout_fields及3项clock通过原限`abs(B-A)<=1e-8+1e-10*abs(A)`，共33个实际leaf及4个结构行。
+352条必需科学路径均在A/B中存在；完整状态比较仍仅DOC超限，8个坐标，最大绝对差`7.4254221358316386e-6`，最差坐标`[0,13,6,0,0,0]`；原门槛及旧8日严格失败保留，日输出通过不替代完整状态接受。
+001无本包Fortran数值比较；冻结runner因只为319启用精确sentinel判定而保留`nonfinite=false`。
+离线独立审核确认其仅两条既定roughheight路径的`float64(1,14)[0,0]`为NaN、其余坐标有限，源/config/PFT/provenance局部守卫延续，是既有001源定义sentinel机制的当前实例；不称新增物理NaN、全值有限或历史整producer verifier通过。
+
+实际Python边界保存了三路热初始化三字段；319 A/B三字段逐字节相同，B和001各捕获2次active首步及1次growth handoff，无观察错误。
+三路均未触发compiled firstcall；该分支复用上轮完整binder在start0/start48的组件证据，本轮不声称日积分覆盖。
+真实三文件codec最终300项通过。启动前6项harness边界误判原样保留，只在声明的source-local、整数source owner及固定float32物理clock wire边界修正，未重写NC或强制cast实际A/B末态。
+启动后原required helper对17条`daily_accumulators.*`路径误用直接键，原comparison保留；独立存盘后处理逐段解析后352/352路径具备，未改冻结runner或增加模型启动。
+缺字段base逐项来自独立empty-NC生产readstart默认，不从A动态状态补缺；C31缺四项gas的历史连续性限制保持。整数集成仍限精确整数USDA12，FAO3 helper不代表driver全支持。
+
+实际结果、受影响候选映射、独立审核及更新后的4组提交元数据见
+[本轮交付](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/README.md)、
+[结果摘要](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/summary.json)和
+[提交草案](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/submission.json)；源码登记沿用
+[原候选草案](../../outputs/reviews/main-physics-20261112/restart-candidates-acceptance/fix-registry-draft.json)，旧包封存不改。
+原交付包保留其提交前31项/18代码提交及九条候选的历史身份；正式接纳映射与准确SHA见[主控接纳记录](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-acceptance.json)和[累计修复索引](shared_core_branch_review.md#累计修改位置与提交索引)。C32–C33为`77c3ac7d30ddf466a3cc2b4d6824824713a632b1`，C34–C37为`fd0fe51495626b39ce42d50dec29b3a6cef744b3`，C38为`45654fea50aec6edf7774ac0f0b90170eea617db`。daily/global同步仍暂停，C4–C38待集中核对，C1–C3保持历史核查日期。
+下一优先项是最终版本的001/319代表点年度回归、基于新319年末态的跨年比较，以及已支持路径的剩余源码/状态覆盖核对。上述运行尚未执行；不继续追DOC唯一底层指令，也不将本轮一天结果外推为年度或全域通过。
+原C31年度输入保留C29/C30＋当时dirty C31的producer身份，不将后来接受的commit重标为实际运行HEAD；本轮未重跑1961全年。
+此前[原A实际编译上下文局部证据](../../outputs/reviews/main-physics-20261112/restart-doc-native-context/README.md)仍只支持相同dz常量绑定足以复现局部1ULP差，不认定整链唯一原因；zero-interface候选未采用。
+三路均有XLA algebraic_simplifier 50轮警告，均正常结束，未改编译flags或算法。本轮三路TEMP清理有回执；历史被拒绝的TEMP删除未重试。
+
 同步安排（2026-10-27用户决定）：**暂缓与两个研究分支对齐，优先稳固main**。
-本阶段不安排分支同步或交接包工作；当前累计31项已接受修复/18个代码提交，登记与适用范围持续维护，
-待基础分支本轮加固后集中评估交接。C4–C31仍待维护方集中核对，
+本阶段不安排分支同步或交接包工作；当前累计38项已接受修正/21个代码提交，登记与适用范围持续维护，
+待基础分支本轮加固后集中评估交接。C4–C38仍待维护方集中核对，
 并不表示本次核查过研究分支。**C31已由主控验收；319点1961年度四指标通过原限，原NPP超限在该算例闭合**。
 Fortran job126077710正常完成，620,494条native记录、实际相位和年度/共同边界保持检查通过；
 六项预设shape笔误与原失败独立保留。本地原cold和唯一追加cold分别因序列化核对、首七日块
@@ -800,6 +828,15 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 
 ### 累计修改位置与提交索引
 
+登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C38，共38项已接受修正、21个代码提交。
+本批九条重启候选已正式合并为C32–C38；原候选草案保留历史身份。未来新增候选继续单列，正式接纳前不计入已接受总数。
+每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
+同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
+同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C38仍待集中核对，
+不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
+
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
 各项详细段落和[main审查报告](main_physics_review.md)保留修改必要性、源位置、
 修复前后证据与适用范围；这里用实际Git提交复核修改位置，不重复历史数值实验。
@@ -822,6 +859,27 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C21–C25 | `sechiba/condveg.py`、`sechiba/diffuco.py`、`driver/orchestration.py` | `c214e43da57c21b68002186fbf71c67d45835bae` |
 | C26 | `sechiba/hydrol.py` | `84b5d425418a6d1b18fa6dbe080348c2faa72e13` |
 | C27–C28 | `stomate/soilcarbon_kernels.py` | `9fc87c011a4e991f1637223b0f8fb2a224000595` |
+| C29–C30 | `sechiba/hydrol.py`、`driver/orchestration.py` | `ea86d3fbe97b3a1ecf5c5d8dda931aea5ea2ae69` |
+| C31 | `sechiba/thermosoil.py`、`driver/orchestration.py` | `cb4f76817acd852cde8cd8d4195e1e52bfd8c770` |
+| C32–C33 | `driver/restart_bundle.py`、`driver/restart_export.py` | `77c3ac7d30ddf466a3cc2b4d6824824713a632b1` |
+| C34–C37 | `driver/restart_state.py`、`driver/orchestration.py`、`sechiba/restart_io.py` | `fd0fe51495626b39ce42d50dec29b3a6cef744b3` |
+| C38 | `driver/orchestration.py` | `45654fea50aec6edf7774ac0f0b90170eea617db` |
+
+### C32–C38重启修正登记（2026-11-12已接受）
+
+以下为七项概念修正，不等同七个活跃物理公式错误；源码依据、修前反例、完整测试及原九条候选到正式编号的映射见文首主控接纳记录和两份owner审计。59项回归绑定三个提交的最终组合，中间提交未分别运行。两研究分支均待以后实际核对。
+
+| 编号 | 必要改动与源合同 | 验证及适用范围 |
+| --- | --- | --- |
+| C32 | `stomate_io::writerestart`持久化字段由当前packet所有；bundle与standalone共用完整gas/remainder合并 | 真实NC修前失败及写读回归；缺字段保持独立声明base。旧C31缺四gas，历史gas连续性仍未证明 |
+| C33 | `stomate_lpj:1545–1548`、`stomate_init:1586–1589`：缺失total由实际合并pool重建，显式不一致值交writer拒绝 | 三项旧merge→真实writer负例及当前正负控制；不自动修平显式不一致数据 |
+| C34 | `thermosoil_initialize:337–374,572–744`：源gate下在main前重建非持久热状态、保留递推系数；同时携带持久`e_soil_lat`接口 | 限显雪/refSOC/soil-carbon-temp路径；三路实测热字段、A/B相同。alias不单列物理修复，readjust调用仍注释 |
+| C35 | 首步STOMATE readstart使用显式恢复目录 | 真实调用表达式→boundary→NC reader正负控制，以及实际B路径绑定；未做逐文件deny审计 |
+| C36 | `slowproc_initialize:275–302`、`stomate_init:2238–2261`及`stomate_main:5049`：active首步沿用恢复assim/height、正确重算deadleaf、月温初始化growth并保持到日更新 | active/inactive组件控制与B/001真实首步及后继growth消费；初始化和保持归一项，不扩大全部sentinel配置支持 |
+| C37 | `njsc/veget_year`遵守Fortran INTEGER owner，NC REAL wire在运行时恢复有限精确int32 | 真93字段NC读取、非法值拒绝及A/B末态类型通过；driver只认证USDA12，veget_year不发明日历范围 |
+| C38 | compiled静态模板与实际年forcing分离，start0盐度/潮位使用实际series首样本 | 完整binder start0/start48及禁止sentinel天气读取的组件控制；本轮三条单日路线未触发compiled firstcall，不称整年覆盖 |
+
+七项接受不关闭DOC原严格失败，不认证当前版本的多点/年度/完整重启；001仅接受精确源sentinel实例分类及首日完成，原nonfinite=false和historical verifier限制保留。
 
 ### Stage24验收时的处置（历史；四项修复现见Stage25）
 
