@@ -1,5 +1,7 @@
 # 共享物理核心与研究分支核查
 
+2026-11-14主控已接受C44冷启动热参数与静态碳输入绑定，代码／测试提交`9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2`，累计**44项修正／24个代码提交**。源默认、控制门、静态读取及cold／首步参数统一，尚未绑定变体提前返回明确缺项；C42及物理kernel不改。50项新纯适配器检查一次通过，主控核对实际文件、源条件和回执并复用独立终审。IOIPSL源／库／link及独立current-reference cold输入取证获有界接受，原001／原生clock等缺项保持；两clock候选及生产日历未集成。详见[主控记录](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/controller-acceptance.json)及下方C44条目。本包无模型／物理／Fortran或服务器计算；daily/global工作树未动且同步继续暂停，DOC／热真值／maxmass／历史身份限制保留。
+
 2026-11-13 主控已接受C41有效OK_PC、C42 restart use_refSOC缺省、C43 compiled context缓存隔离／强引用；代码及测试提交`8a772de6f4977018a875093d535b6088317716c8`，累计**43项修正／23个代码提交**。C43同时更新开发快照读者及三项旧cache测试；等价独立context可能额外编译。同实例复用和8项FIFO保持。50项相关pytest与11项纯日历检查一次组合通过；主控核对实际文件和回执，未重复执行。接受仅及源参数／适配器／缓存语义，未运行物理kernel、真实JIT、模型或Fortran。详见[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)及下方累计索引；研究分支同步继续暂停。
 
 完整日历设计已覆盖source clock、Jan1／Jan2分支、pre-STOMATE顺序、once-only、双镜像及compiled／IO接线需求；本地缺IOIPSL原noleap起点与重启约定的可验证桥，故只接受设计和精确缺证，未改生产日历或应用旧日末部分补丁，不分配C44。[来源登记](correction_origins.md)区分C41／C43的复查前遗漏与C42由`fd0fe514`新增的helper默认边界遗漏，不把它们全称旧翻译问题或标准算例回归。独立cold refSOC gate／IO、热真值、DOC严格状态及守恒缺证均保留；旧producer接受不自动认证新生产路径。下一包核实原时钟来源及cold初始化合同，不启动未审完的模型运行方案。
@@ -863,12 +865,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C43，共43项已接受修正、23个代码提交。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C44，共44项已接受修正、24个代码提交。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C43仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C44仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -903,6 +905,13 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C41 | `driver/orchestration.py` | `8a772de6f4977018a875093d535b6088317716c8` |
 | C42 | `driver/restart_state.py` | `8a772de6f4977018a875093d535b6088317716c8` |
 | C43 | `driver/orchestration.py`；开发cache读者同步适配 | `8a772de6f4977018a875093d535b6088317716c8` |
+| C44 | `driver/orchestration.py` | `9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2` |
+
+### C44冷启动热参数与静态碳输入绑定（2026-11-14已接受）
+
+源`thermosoil.f90:202–204,338–371,563–567`要求fresh-module默认与条件读取，两个cold caller原先各自缺省FALSE，会跳过应读取的refSOC并传错系数控制。一个不可变控制对象现统一有效soil-C／refSOC／freeze／satsoil／bedrock及静态输入，复用配置声明的reader，并将相同satsoil传给初始化和首步。形状／有限性检查及现有数据错误保持；未绑定的modeled/mineral/toporganic等消费者在物理初始化前返回精确缺项，未新增这些物理分支的支持。相关支持域详见[当前报告](main_equivalence_remaining_work.md)。
+
+一组接口修复对应一个代码提交，多字段／两处默认／多个caller不重复计数。旧AST缺省反例为读取0／flag FALSE，修后读取1／TRUE，显式TRUE对照保持；`tests/unit/test_cold_thermal_inputs.py`50项一次通过，含真实early guard和实际caller／carry表达式。静态reader和物理消费者使用替身，不认证完整cold路径或独立热数值。主控未重复运行。cold默认遗漏有`7cae3e02`及`7333b46c`基线证据；依赖C41的有效OK_PC resolver，C42为独立restart helper并未改变。后续同步须包含本提交的控制resolver、reader、caller、支持域检查及测试，并保留研究线自己的改动。时钟候选不计入C44，本次研究分支未同步。
 
 ### C41–C43参数／缓存修正（2026-11-13已接受）
 

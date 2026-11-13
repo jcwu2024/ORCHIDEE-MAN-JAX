@@ -1,5 +1,21 @@
 # PFT14 剩余源码与状态覆盖
 
+## C44冷启动输入已接受；原时钟源码已恢复、原生边界仍待验证
+
+2026-11-14主控已接受基线`0ae8ecdf491b5a8d9b6523704fb0d23f14b67a15`上的C44冷启动参数／静态碳输入绑定修复，代码与测试提交`9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2`。累计**44项／24个代码提交**，C42不重复计数。接受范围及实际核验见[主控记录](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/controller-acceptance.json)；[原交付包](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/README.md)保留封存身份与交付时状态。时钟源码、构建／link和已识别参考输入证据获有界接受，原生边界及历史身份仍缺证；生产日历未接入，仍不满足PFT14等价发布合同。
+
+cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，以同一个不可变fresh-module控制对象驱动解析、静态输入、初始化及首步satsoil。Fortran `thermosoil.f90:202–204,338–371`的准确语义是：模块初值soil-C／refSOC为TRUE，配置门`(freeze AND effective_PC) OR LEAK`内先把soil-C设FALSE再读取；仅soil-C为TRUE时读取可选use_refSOC，缺键TRUE。门外保留模块初值；门内soil-C为FALSE时也保留refSOC的TRUE，静态读取`563–567`只看refSOC。它不是简单的gate与raw值合取，亦不等同于C42的有界restart准入helper。
+
+已有reader的分辨率、配置／文件／变量错误保持，返回静态数组须具备正确形状和有限值；没有补造refsoc、soilc_total、zx1或系数。源码有效控制与adapter支持域分列：当前cold消费者仅准入source gate有效、soil-C／refSOC／显雪／freeze为TRUE、toporganic为FALSE、bedrock为0的已选路径。modeled-carbon、mineral、toporganic、无显雪、非freeze、bedrock及未绑定文件别名等分支在物理初始化前返回精确missing coverage。显式SOIL_REFSOC_FILE必须与声明的绝对配置身份一致，未知相对别名不冒充已绑定输入。缺外部数据仍是reader错误，不能与缺配置键或不支持的源分支混称。
+
+唯一一次新cold专项组合验证为**50／50通过**，包含两个保存基线AST对照：缺省use_refSOC时旧读取0次／系数flag FALSE，新读取1次／TRUE；显式TRUE前后保持。16次静态reader spy和2次系数关键字表达式spy不是物理调用；测试还覆盖实际early guard、首步／carry表达式与cold-day缺项退出。原始回执及源码／测试SHA见[验证结果](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/verification-results.json)。未重跑上一包50＋11、旧gas／DOC或43项来源审计；没有行为重试，系统TEMP已清理。
+
+时钟溯源仅查两个已命名build/source根，主动窗口约20分31秒，五次SSH只读源／构建／运行元数据检查。已恢复IOIPSL SVN工作副本8295及各文件版本／SHA／局部修改、精确calendar／flinopen／restini语义、两根相同静态库哈希和已保存实际link记录；源码明确one_year为天、noleap从year0起、Gregorian为Lilian日数。已识别2026-10-27 current-reference job125893716的日志直接给出date0/date0_rest=715765、dt=1800、split=12、首source istp=1，used_run为1961且三restart NONE。这一数值与noleap一致，**日志未直接观测calendar返回值，也不是历史case001 producer**。详见[权威矩阵](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/clock-authority.json)和[源码／观测说明](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/clock-authority.md)。
+
+精确剩余项为源码／object到静态库构建证明、原001初始1961实际producer／输入身份、原生clock边界返回值及命名年重启tuple。本包另外暴露两个未集成的Python clock前提：year_length以one_year天除dt秒，替代了源`tlen2itau('1Y',...)`；Gregorian helper使用astronomical JD而非所恢复IOIPSL的Lilian约定。均保持为候选设计缺项，不能用2001 stub、49→50年restart或通用CF推算补称原观测。有限后续[原生clock验证方案](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/clock-validation-plan.json)已准备但未执行；完整日历owner／compiled动态payload／once-only／双镜像／IO设计继续复用，87项归一＋5项缺证／92及93字段分母不因此改计。
+
+本包C44及clock候选的有限来源见[原来源证据](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/cold-candidate-origins.json)和[正式登记](correction_origins.md)。C44的cold默认遗漏在复查前基线已存在，不把C42重复登记，也不由当前未跟踪Fortran源码推断历史Git身份或标准算例数值回归。主控核对实际代码／测试、成对源条件、完整回执绑定与选定原始clock证据，复用50项通过及独立终审，未重跑测试、模型或SSH。图服务不可用，使用有界直接源码证据，不宣称穷尽覆盖。模型步／日／积分、物理kernel、真实compiled、Fortran执行、服务器计算／作业、GPU／训练／付费及环境重建均0；五次授权只读SSH与远程计算分开记录。公式／容差、主控计划／合同及研究工作树不改；DOC严格状态／守恒、独立热真值、maxmass条件域和历史身份限制保留，daily/global同步继续暂停。下一包以已识别的当前库开展有界原生标量clock／重启元数据对照，再落实源依据完整的clock helper修复；历史001身份单列，不作为反复追查或重跑整模型的理由。
+
 ## C41–C43参数修复已接受；实际源clock日历修复仍开放
 
 2026-11-13，主控已接受基线`61ad247f5d40d5c784c60fdf009e597dcb43504f`上的三项参数／缓存修复，代码与测试提交为`8a772de6f4977018a875093d535b6088317716c8`。正式登记C41=P-CTX-OKPC、C42=P-REFSOC-DEFAULT、C43=P-COMPILED-CLOSURE；累计C1–C43／43项／23个代码提交，**尚不满足PFT14等价发布合同**。[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)限定为源码／适配器／缓存语义接受；[原交付包](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/README.md)保留交付时身份、原回执及待审状态，不重写历史证据。

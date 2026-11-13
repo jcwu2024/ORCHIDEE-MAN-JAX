@@ -1,8 +1,8 @@
-# C1–C43修正来源登记（2026-11-13）
+# C1–C44修正来源登记（2026-11-14）
 
-当前累计43项修正、23个代码提交。原C1–C40的40项复查前来源审计完整保留于下节；新增C41／C43也在复查前`7cae3e02`存在，C42则是本轮`fd0fe51495626b39ce42d50dec29b3a6cef744b3`新增restart准入helper的默认边界遗漏。当前合计42项有复查前JAX证据、1项属复查期新helper遗漏，不能称43项全是旧翻译错误；也未由C42推出标准算例数值回归。
+当前累计44项修正、24个代码提交。原C1–C40的40项复查前来源审计完整保留于下节；C41／C43及C44的cold默认遗漏也在复查前`7cae3e02`存在，C42则是本轮`fd0fe51495626b39ce42d50dec29b3a6cef744b3`新增restart准入helper的默认边界遗漏。当前合计43项有复查前JAX证据、1项属复查期新helper遗漏，不能称44项全是旧翻译错误；也未由C42推出标准算例数值回归。
 
-C41–C43共同修复提交为`8a772de6f4977018a875093d535b6088317716c8`，当前接受限定在源码／适配器／缓存语义。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)。日历接线遗漏仍未修复，保留候选而不进入43项分母。
+C41–C43共同修复提交为`8a772de6f4977018a875093d535b6088317716c8`，C44为`9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2`；新增接受限定在源码／适配器／缓存语义。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)、[C41–C43接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)和[C44接受记录](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/controller-acceptance.json)。日历接线及两个clock helper候选仍未修复，不进入44项分母。
 
 ## 原C1–C40来源审计快照
 
@@ -77,3 +77,15 @@ C34非持久热初始化、C35显式目录、C36 active初始化及growth保持�
 | `P-REFSOC-DEFAULT` | 复查期间新helper缺少源默认 | helper及缺键`FALSE`回退由`fd0fe51495626b39ce42d50dec29b3a6cef744b3`于2026-11-12引入。当前本地Fortran `thermosoil.f90:337–374`在可选override前将`use_refSOC`初始化为true；该源文件未跟踪，历史限制同上。此项是新增restart准入边界默认遗漏，不证明热初始化数值错误或标准算例回归。 |
 
 这四组不应统一描述为“旧翻译遗留”或标准案例回归。前三组只确认JAX行为已存在于复查前Git边界；准确初始作者提交在可用历史中未知。第四组属于新加入helper的默认遗漏。原C1–C40的40项／22提交接受范围保持不变；新增C41–C43共享上述一个代码提交。所有生产修复的准确提交、验证范围和研究同步状态以累计登记为准。
+
+## C44及两个未修clock候选的来源
+
+本节的COLD-THERMAL-INPUT已接纳为C44；两个clock设计候选仍未修。原C1–C43的来源审计不重做。详细边界和哈希见交付时的[机器记录](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/cold-candidate-origins.json)及[说明](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/cold-candidate-origins.md)，候选ID保留以供追溯。
+
+| 草案ID | 来源分类 | 有界结论 |
+| --- | --- | --- |
+| `COLD-THERMAL-INPUT` | 复查前已存在的cold source-default/static-input adapter遗漏 | 两个cold `use_refSOC`缺键`FALSE`分别用于静态读取门及cold initializer实参，均由`git blame`追到初始JAX基线`7333b46c`，且存在于`7cae3e02`。新restart helper的C42是另一个review-era问题，已在C41–C43接受提交中修复，不在本候选重复计数。当前Fortran source未跟踪；无标准case数值回归结论。 |
+| `CLOCK-YEAR-LENGTH-DESIGN` | 复查前JAX表达式用day单位`one_year`除以second单位`dt_sechiba`，与恢复IOIPSL duration语义不同，活动影响未定 | JAX用`rint(one_year / dt_sechiba)`；恢复的IOIPSL `tlen2itau('1Y',dt,date0,...)`按实际日期转换。noleap、Jan1、dt=1800的源算术为17520步，JAX表达式为0；这是公式推导，不是运行观察。历史001的date0/calendar仍缺。 |
+| `CLOCK-GREGORIAN-EPOCH-DESIGN` | 复查前JAX Gregorian helper与恢复IOIPSL日序epoch不同，活动影响未定 | JAX用astronomical Julian split；恢复的IOIPSL Gregorian日期路径使用Lilian日数及`2299160`偏置。历史001的date0及source-to-archive桥仍缺。 |
+
+上述cold项现为C44，按一组cold控制／静态输入接口修复登记，相关satsoil传参和多caller不重复计数。clock两项仍为未修候选，没有生产日历修复或原输出失败结论；既有C1–C43的接受范围保持不变。
