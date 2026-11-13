@@ -73,6 +73,10 @@ DEFAULT_STOMATE_RESTART_SCHEMA = (
 # depending on whether PFT precedes or follows another scientific dimension.
 # Both STOMATE and SECHIBA paper schemas use these exact names.
 PAPER_RESTART_PFT_DIMENSIONS = frozenset({"z_a", "l_d"})
+# constantes_var.f90 1467-1468; stomate_io.f90::readstart 1177-1199.
+STOMATE_O2_INIT_CONC = 298.3
+STOMATE_CH4_INIT_CONC = 0.001267
+STOMATE_GAS_FIELDS = ("O2_soil", "CH4_soil", "O2_snow", "CH4_snow")
 STOMATE_REMAINDER_PFT_AXES = {
     **{
         name: 1
@@ -190,6 +194,33 @@ class StomateFixedPathCarryState:
 
     fields: Mapping[str, object]
     provenance_by_field: Mapping[str, tuple[str, ...]]
+
+
+def stomate_cold_start_gas_state(
+    *,
+    npts: int,
+    nvm: int,
+    ndeep: int = 32,
+    nsnow: int = 3,
+    o2_init_conc: float = STOMATE_O2_INIT_CONC,
+    ch4_init_conc: float = STOMATE_CH4_INIT_CONC,
+) -> StomateOkPcRestartGasState:
+    """Initialize the four persisted gas arrays, including inactive OK_PC.
+
+    Fortran stomate_initialize calls readstart unconditionally at stomate.f90
+    1510-1559. Missing/all-sentinel arrays use constantes_var.f90 1467-1468
+    via stomate_io.f90 1177-1199; writerestart 2801-2812 persists them even
+    when their two deep_carbcycle consumers are guarded by OK_PC=false.
+    """
+
+    if min(int(npts), int(nvm), int(ndeep), int(nsnow)) < 1:
+        raise ValueError("gas state dimensions must be positive")
+    return StomateOkPcRestartGasState(
+        O2_soil=np.full((int(npts), int(ndeep), int(nvm)), o2_init_conc, dtype=np.float64),
+        CH4_soil=np.full((int(npts), int(ndeep), int(nvm)), ch4_init_conc, dtype=np.float64),
+        O2_snow=np.full((int(npts), int(nsnow), int(nvm)), o2_init_conc, dtype=np.float64),
+        CH4_snow=np.full((int(npts), int(nsnow), int(nvm)), ch4_init_conc, dtype=np.float64),
+    )
 
 
 STOMATE_FIXED_PATH_CARRY_FIELDS = (
@@ -797,8 +828,8 @@ def read_stomate_readstart_states_from_template(
     thawed_humidity_input: float = 1.0e20,
     reset_thawed_humidity: bool = False,
     nsnow: int = 3,
-    o2_init_conc: float = 0.0,
-    ch4_init_conc: float = 0.0,
+    o2_init_conc: float = STOMATE_O2_INIT_CONC,
+    ch4_init_conc: float = STOMATE_CH4_INIT_CONC,
     nvert: int = 171,
     ns: int = 151,
     scmax: float = 500.0,
@@ -1018,14 +1049,12 @@ def read_stomate_readstart_states_from_template(
         provenance[field] = "fortran_source/ORCHIDEE/src_stomate/stomate.f90 lines 8181-8321"
 
     gas: dict[str, np.ndarray] = {}
-    gas_specs = {
-        "O2_soil": ((t2m_array.size, int(ndeep), int(nvm)), float(o2_init_conc)),
-        "CH4_soil": ((t2m_array.size, int(ndeep), int(nvm)), float(ch4_init_conc)),
-        "O2_snow": ((t2m_array.size, int(nsnow), int(nvm)), float(o2_init_conc)),
-        "CH4_snow": ((t2m_array.size, int(nsnow), int(nvm)), float(ch4_init_conc)),
-    }
-    for field, (shape, initial_value) in gas_specs.items():
-        fallback = np.full(shape, initial_value, dtype=np.float64)
+    gas_defaults = stomate_cold_start_gas_state(
+        npts=t2m_array.size, nvm=nvm, ndeep=ndeep, nsnow=nsnow,
+        o2_init_conc=float(o2_init_conc), ch4_init_conc=float(ch4_init_conc),
+    )
+    for field in STOMATE_GAS_FIELDS:
+        fallback = getattr(gas_defaults, field)
         if field in present:
             gas[field], status = _resolve_readstart_value(
                 read_restart_pft_vertical_field(restart_path, field),

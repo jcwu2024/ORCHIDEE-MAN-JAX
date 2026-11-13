@@ -264,6 +264,8 @@ from jax_orchidee.stomate.reference import (
 )
 from jax_orchidee.stomate.restart_io import (
     STOMATE_FIXED_PATH_CARRY_FIELDS,
+    STOMATE_GAS_FIELDS,
+    stomate_cold_start_gas_state,
     stomate_fixed_path_carry_state,
 )
 from jax_orchidee.stomate.soilcarbon_kernels import soilcarbon_leak_tf_doc_inputs
@@ -947,6 +949,12 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object]) -
     if season is not None:
         for name, value in season._asdict().items():
             fields["slowproc_stomate_previous_step_state"][name] = value
+    gas = payloads.get("stomate_cold_start_gas_state")
+    if gas is not None:
+        # readstart 1177-1199 initializes these even with OK_PC=false;
+        # writerestart 2801-2812 writes the same persisted arrays.
+        for name in STOMATE_GAS_FIELDS:
+            fields["slowproc_stomate_previous_step_state"][name] = getattr(gas, name)
     cold_entry = payloads.get("stomate_cold_start_entry_state")
     forcing_t2m = payloads.get("forcing_t2m_for_stomate")
     if cold_entry is not None and forcing_t2m is not None:
@@ -1265,6 +1273,7 @@ def _paper_cold_start_stomate_input_bundles(
     payloads = first_step_coverage.initialized_payloads
     required = (
         "stomate_cold_start_entry_state",
+        "stomate_cold_start_gas_state",
         "stomate_cold_start_season_state",
         "stomate_cold_start_daily_accumulators",
         "slowproc_cold_start_vegetation",
@@ -3500,6 +3509,7 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
         "deepC_peat",
         "depth_deepsoil",
         "t2m_14",
+        *STOMATE_GAS_FIELDS,
     ):
         if name in prior_slowproc:
             fields["slowproc_stomate_previous_step_state"][name] = prior_slowproc[name]
@@ -4720,6 +4730,11 @@ def paper_1961_driver_cold_start_first_step_coverage(
         date=0,
         sla=parse_run_def_indexed_selection(run_def_values, "SLA", fortran_pft_ids),
     )
+    stomate_cold_gas = stomate_cold_start_gas_state(
+        npts=payload.kjpindex, nvm=nvm,
+        ndeep=np.asarray(stomate_cold_entry.carbon_32l).shape[3],
+        nsnow=np.asarray(hydrol_cold.explicit_snow.snowdz).shape[1],
+    )
     thermosoil_cold_coef = thermosoil_cold_start_coef_closure(
         ptn=ptn_constant,
         moisture=hydrol_cold_moisture,
@@ -5208,6 +5223,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
             "season_memory_cold_start_initialization",
             "daily_accumulator_cold_start_initialization",
             "carbon_litter_doc_initial_state_zero_fallbacks",
+            "persisted_gas_readstart_source_defaults",
         ),
     }
     missing = {
@@ -5374,6 +5390,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         "stomate_cold_start_daily_accumulators": stomate_cold_daily,
         "stomate_cold_start_season_state": stomate_cold_season,
         "stomate_cold_start_entry_state": stomate_cold_entry,
+        "stomate_cold_start_gas_state": stomate_cold_gas,
         "thermosoil_refSOC": refsoc,
         "thermosoil_refSOC_overlap": refsoc_overlap,
         "hydrol_refSOC_1d": hydrol_refsoc_1d,

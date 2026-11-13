@@ -372,6 +372,26 @@ source_aliases:
 # caller passes the SAVE daily accumulator ``resp_hetero_d``.  It must never
 # be confused with an instantaneous heterotrophic-respiration diagnostic.
 restart_field_contracts:
+  O2_soil: &persisted_gas
+    cold_owner: jax_orchidee.stomate.restart_io.stomate_cold_start_gas_state
+    cold_extraction_owner: jax_orchidee.driver.orchestration._previous_step_state_from_cold_start_payloads
+    restart_extraction_owner: jax_orchidee.driver.orchestration.driver_previous_step_state_from_timestep_scaffold
+    half_hour_owner: jax_orchidee.driver.orchestration._runtime_next_state_from_components
+    first_day_scaffold_half_hour_owner: jax_orchidee.driver.orchestration.driver_previous_step_state_from_next_step_hydrol_scaffold
+    compiled_carry: fast_state layout retains the same gas coordinates from the previous packet
+    day_end_owner: jax_orchidee.driver.orchestration._paper_day_end_state_packet
+    default_policy: stored arrays always retain priority, including partial sentinels; absent or ALL(val_exp) uses API concentration overrides when supplied, otherwise source constants
+    initialization_constants: {O2_init_conc: 298.3, CH4_init_conc: 0.001267}
+    inactive_consumer_guard: OK_PC=false; OK_LEAK does not activate the gas dynamics
+    historical_producer_limit: pre-gas-carry cold packets lacking these fields remain incomplete; never retroactively filled in saved packets
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+      subroutine: readstart/writerestart
+      lines: 1177-1199, 2801-2812
+    constants_provenance: fortran_source/ORCHIDEE/src_parameters/constantes_var.f90 1467-1468
+  CH4_soil: *persisted_gas
+  O2_snow: *persisted_gas
+  CH4_snow: *persisted_gas
   resp_hetero:
     fortran_state_symbol: resp_hetero_d
     restart_variable_name: resp_hetero
