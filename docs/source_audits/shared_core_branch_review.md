@@ -1,6 +1,22 @@
 # 共享物理核心与研究分支核查
 
-2026-11-13 主控已验收本轮两条8日运行和C1–C40来源审计，**最终gas运行缺项已补齐；40项所修问题均有复查前基线证据**。本轮无生产源码或测试修改，累计仍为**40项已接受修正/22个代码提交**，daily/global同步继续暂停。
+2026-11-13 主控已验收DOC／碳核算离线分析：**不能把累计诊断差0.029237968847称作碳损失。** 旧producer `e2a9d9f2d5aabca2e2d391400f14559f0dbf8c09`的319/1962 memory−files审计独立库终态差为**0.00286422847186 gC/m²陆地**，其中DOC为0.00286422845561，其余约1.6251e-11；共同年初/A年末/B年末总量为527.245664208/529.312346246/529.309482018。详细[库存与分项](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/accounting-results.md)、[源单位/相位合同](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/source-accounting.md)及[独立审核](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/independent-review.md)属于本次离线包，不是新模型运行。
+
+DOC按点/PFT/32层/两相/7来源池/碳元素统计，保存值已是逐层面积库存，乘实际`veget_max`一次，不再乘层厚或水文tile面积。冠层`interception_storage`是独立DOC碳库而非水，producer已含面积权重；deepC_peat/soilc_total及替代分支量不重复计入。实际PFT14=1、产品全年零均有caller/carry/更新源路径证据，不只依靠端点推断。原DOC78坐标/maxabs2.234685861e-4及累计诊断原限0.0003646537522的严格失败保持。
+
+源`carb_mass_total`在旧SAVE/restart值上跨日累加`11*活体+前11层litter/POC/DOC深度比项+154*产品`，无dt；其variation也非真实库存变化。相同终态公式的差0.000110307646694275不是已观测末日增量，末日D_old未保存。全年可重建活体诊断贡献差−1.39637836891e-7，产品贡献零；剩余0.0292381084849925由未保存的逐日litter/POC/DOC及运算舍入构成，不能唯一归因DOC，不是质量残差。
+
+对齐365日及面积后，GPP/NPP/maintenance/growth的A总量为86.4620357003/−18.2809084295/94.5023231438/10.2406209860 gC/m²，对应A−B约−1.03935e-10/−6.05936e-11/−1.56513e-11/−2.76887e-11。DOC差/GPP为3.3127007e-5，仅供量级比较；缺真实边界DOC、大气/DIC呼吸分区和floor/约束碳增减，年度异养呼吸与真正质量残差均null。主输出通过、库存差及守恒缺证必须分开，不排除真实通量或长期影响。
+
+本包未确证新的源语义遗漏或生产代码缺陷；既有近零水/排水分支的局部浮点敏感性证据保留，尚未解释的全年余项仍列未知。当前累计仍**40项已接受修正/22个代码提交**；无新编号、生产/参数/容差变更、commit/push或daily/global同步。新增模型积分/模型日、远程、Fortran执行、GPU、训练及付费均0。
+
+三文件核心数组、独立标量/轴/掩码/非单位权重及非均匀冠层控制已完成；独立审核没有重复重算全部非DOC库。必要的[捕获准备](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/capture-plan.md)仅离线检验：拟普通CPU首日A/B各1日、须过原第1日4+26字段严格准入，与历史compiled scan不同；缺晚1962完整起点，不默认全年回放。硬杀只保留最后完成的host checkpoint，不含进行中的调用；本包不执行该方案。最终交付见[离线包入口](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/README.md)。
+
+主控接纳范围与保留限制见[验收记录](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/controller-acceptance.json)。只发布上述两份审查报告，不新增修复；下一包转入有限源码／状态覆盖对账，准备中的DOC捕获不执行。
+
+## 此前已接受的gas运行与来源审计
+
+上一包（2026-11-13）主控已验收两条8日运行和C1–C40来源审计，**最终gas运行缺项已补齐；40项所修问题均有复查前基线证据**。该包无生产源码或测试修改，累计仍为**40项已接受修正/22个代码提交**，daily/global同步继续暂停。
 验收范围与保留限制见[主控接纳记录](../../outputs/reviews/main-physics-20261113/final-gas-runtime-and-fix-origins/controller-acceptance.json)；复用执行方验证与独立终审，主控未重复模型、测试或全套来源调查。
 
 本轮另以明确复查前边界`7cae3e02adad23674767a590fdf4d27f239ce065`逐项核对[C1–C40来源](correction_origins.md)：40项所修的错误表达式或源合同遗漏均已存在于该基线；未在这40项中证实复查期间引入的新回归，最初引入提交仍未知。性质分别为13项源过程计算/常数/单位/顺序、20项默认/参数/状态/restart接口、4项显式诊断API和3项执行缓存/AD稳定性；不将40项等同40条独立且活动的物理公式bug。C40初版未闭合既有首日carry遗漏属于不完整修复，不新增编号或倒推为新回归。
