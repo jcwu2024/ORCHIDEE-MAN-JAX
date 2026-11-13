@@ -1,6 +1,30 @@
 # PFT14 剩余源码与状态覆盖
 
-## S-NEXT-01：当前状态／参数合同交付
+## C41–C43参数修复已接受；实际源clock日历修复仍开放
+
+2026-11-13，主控已接受基线`61ad247f5d40d5c784c60fdf009e597dcb43504f`上的三项参数／缓存修复，代码与测试提交为`8a772de6f4977018a875093d535b6088317716c8`。正式登记C41=P-CTX-OKPC、C42=P-REFSOC-DEFAULT、C43=P-COMPILED-CLOSURE；累计C1–C43／43项／23个代码提交，**尚不满足PFT14等价发布合同**。[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)限定为源码／适配器／缓存语义接受；[原交付包](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/README.md)保留交付时身份、原回执及待审状态，不重写历史证据。
+
+| 候选ID | 本地修复与实际范围 | 本包验证界限 |
+| --- | --- | --- |
+| P-CTX-OKPC | 统一按源`control.f90:261–278`解析有效`OK_PC = raw_PC AND NOT OK_LEAK`；prepared context、cold首步和restart首步实参使用同一resolver，普通／compact／scan消费者沿用有效context | 四组合、无关context字段和实际caller关键字表达式检查；物理scaffold未执行 |
+| P-REFSOC-DEFAULT | 新restart准入helper在显雪／soil-C和原freeze-PC或leak门下，对缺键use_refSOC采用源`thermosoil.f90:362–371`的TRUE；显式FALSE与不支持域拒绝保持 | 缺键／T／F、各门和已有显式TRUE路径；不认证热初始化数值 |
+| P-COMPILED-CLOSURE | later-day block cache按prepared context实例分区；typed entry显式强引用context及executable，8项FIFO淘汰；构造体读写、类型和开发审计直接读者一并适配，外部`(executable,spec)`返回不变 | 同实例复用、不同不可变FR_DT2／3的fresh／cached一致、等价独立实例分区、无闭包保活／释放及确定性淘汰；编译／物理delegate均为替身 |
+
+实例分区会让等价但独立创建的context额外编译；同一不可变实例保持复用。三项旧CONDVEG cache测试仅调整later-day的共享约定，SECHIBA scan按有效scalar共享的规则不变。daily-carbon dispatch和projector的其余闭包语义合同仍单列，不借本包推定任意callable可互换。
+
+一次组合验证为**50／50相关pytest case、11／11纯日历检查通过，0错误**；其中日历10项正常断言、1项预期IO元数据缺口。旧三项参数反例回执复用，未重跑旧15项、gas、DOC或来源40项审计。实际关键词表达式／fake constructor检查不等于完整caller执行；微小真实JAX编译本次也未使用。原始回执、静态collect、源码／测试SHA与TEMP清理见[验证结果](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/verification-results.json)。
+
+日历部分已补齐源顺序、全部Jan2 `dynpeat_PC/JUDGE_PC/PC_lim`分支、pre-STOMATE温度、Jan1午夜／首个active半小时、once-only及两镜像的设计和纯原型；**没有完整生产日历补丁或接线，也没有应用旧day-end-only部分补丁**。实际DIM2绑定`ioconf_startdate(date0_rest)`和`istp`，offline offset为0；paper forcing声明noleap，但本地没有IOIPSL `flinopen/restini/ioconf_startdate/itau2ymds`的原实现或同输入原生clock桥。已有time oracle明确使用2001起点的synthetic primitive stub，不能证明paper1961起始／年重启约定；49→50年归档restart也不能冒充初始1961时钟。
+
+解除这一精确缺项需要实际IOIPSL版本／源实现，或包含原`date0_rest/istp`并覆盖cold初始化／首active Jan1、Jan2、午夜和年重启的已审时钟观测。完整调用端、compiled动态日历payload、fast cursor及三文件IO／兼容性改动见[日历设计](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/calendar-design.md)。显式clock原型拒绝未提供authority的非Gregorian输入；其synthetic provider、host codec及纯检查不认证历史时钟、JIT接线或物理结果。字段分母仍为87项源合同归一＋5项精确缺证／92，原93字段carry与canonical126／lifecycle181不因此增减。
+
+独立cold refSOC audit／IO边界保留：cold orchestrator的两处FALSE回退与restart helper不同，还需联动源effective soil-C gate、分辨率及refSOC静态读取；当前closure在active soil-C缺`refsoc/soilc_total/zx1`时返回明确missing coverage，未凭空生成系数。本包未修改它，不宣称所有cold默认或热真值已闭合。
+
+四组来源只作有限核查：C41、C43及选定driver日历遗漏在JAX的`7cae3e02`边界已存在；可用仓库初始提交`7333b46c`不能证明更早作者。C42 helper及FALSE回退由`fd0fe51495626b39ce42d50dec29b3a6cef744b3`新增，是本轮重启准入逻辑的边界遗漏。当前Fortran源文件未受Git跟踪，其当前跨度／SHA不证明复查前Fortran文件身份。详见[修正来源登记](correction_origins.md)。不据这些接口结论宣称已通过标准算例发生数值回归。
+
+本包模型步／日／积分、完整物理kernel、真实compiled物理块、Fortran、远端／GPU／训练／付费／环境重建均0；公式和容差不改，研究工作树未改。主控核对实际最终文件与回执绑定并复用50＋11项结果，未重跑测试。后续[有界运行方案](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/runtime-validation-plan.json)尚缺完整状态／同进程cache harness，不据本次接受自动运行。热独立真值、maxmass条件域、001历史身份、外部IOIPSL、DOC严格状态及真正质量残差缺证继续保留；旧producer的数值接受不自动成为新修复的物理准入。下一包优先核实原IOIPSL时钟来源与实际绑定，同时完成独立cold refSOC默认／gate／静态输入合同；不猜时钟、不应用部分日历补丁。
+
+## S-NEXT-01：上一包状态／参数合同交付快照
 
 2026-11-13，基线main `8f3c7dbab3ce22af5cd2a828d1ea5416b0489035`。主控已接受本包92字段逐行处置、三个选定入口的有效参数合同及有界接口反例；**尚不满足PFT14等价发布合同**。92个身份全部复用，新增身份0；87项在选定源域内合同归一，5项保留精确缺证。纯适配器检查复现4组源／接口语义矛盾，尚未修复生产；C1–C40／22个代码提交保持原接受范围。逐项工件、原始回执与候选补丁见[本包目录](../../outputs/reviews/main-physics-20261113/state-parameter-contracts/README.md)。
 

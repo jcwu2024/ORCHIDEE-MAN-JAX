@@ -1,4 +1,10 @@
-# C1–C40修正来源审计（2026-11-13）
+# C1–C43修正来源登记（2026-11-13）
+
+当前累计43项修正、23个代码提交。原C1–C40的40项复查前来源审计完整保留于下节；新增C41／C43也在复查前`7cae3e02`存在，C42则是本轮`fd0fe51495626b39ce42d50dec29b3a6cef744b3`新增restart准入helper的默认边界遗漏。当前合计42项有复查前JAX证据、1项属复查期新helper遗漏，不能称43项全是旧翻译错误；也未由C42推出标准算例数值回归。
+
+C41–C43共同修复提交为`8a772de6f4977018a875093d535b6088317716c8`，当前接受限定在源码／适配器／缓存语义。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)。日历接线遗漏仍未修复，保留候选而不进入43项分母。
+
+## 原C1–C40来源审计快照
 
 以明确的复查前边界 `7cae3e02adad23674767a590fdf4d27f239ce065` 为准，**40项的错误表达式或源合同遗漏均能直接在该基线中定位**。这支持“这40项所修的问题在本轮共同核心复查前已存在”，但不支持“40条独立、当时均激活的物理公式bug”。没有在这40项中证实复查期间新引入的回归；未审计所有未接纳候选或每个中间实现。
 
@@ -58,3 +64,16 @@ C40的三个边界需分清：基线已没有cold gas producer/extractor，且�
 C34非持久热初始化、C35显式目录、C36 active初始化及growth保持、C37 INTEGER解码、C38静态模板/实际forcing绑定，均在基线已有对应入口且缺少所修合同；不是仅凭2026-11修复时间判作新增接口遗漏。C32/C33的bundle/standalone packet合并和派生total接口也直接存在于基线。C15/C20–C24新增参数接线是在修补基线已有component/helper与caller的断接；不能因修复增加签名或resolver就反推缺陷由复查新增接口造成。
 
 此表只审计来源和性质；数值、运行覆盖、活动gate、历史参考producer及研究分支同步状态仍以原登记和[主报告](main_physics_review.md)为准。没有由源码存在性推出年度影响、所有分支通过或gas动力学激活。
+
+## C41–C43及未修日历候选的有界来源核查
+
+本节新增来源核查与上方原40项快照分开。主控已将P-CTX-OKPC、P-REFSOC-DEFAULT、P-COMPILED-CLOSURE分别接纳为C41、C42、C43；FIELD-CANDIDATE-01仍未修复。完整JAX提交边界、精确源码跨度、当前未跟踪Fortran文件SHA256及限制见交付时的[机器记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/candidate-origins.json)和[说明](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/candidate-origins.md)，原交付候选ID保留以便追溯。
+
+| 候选ID | 有界来源分类 | 结论与限制 |
+| --- | --- | --- |
+| `P-CTX-OKPC` | 复查前已存在的JAX参数接口遗漏 | `7cae3e02`仍把raw `OK_PC`复制进context；初始仓库提交`7333b46c`已出现该表达式。当前本地Fortran `control.f90:255–278`要求`OK_LEAK`有效时将`ok_pc`置false，但该源文件不受Git跟踪，不能声称它在复查前边界的Git历史中存在。 |
+| `P-COMPILED-CLOSURE` | 复查前已存在的JAX缓存／闭包绑定遗漏 | `7cae3e02`已有跨context复用compiled constructor缓存的路径，缓存闭包可捕获首个context；初始仓库提交`7333b46c`已包含该路径。已接受反例替换了编译与物理delegate，不是实际compiled物理数值失败。 |
+| `FIELD-CANDIDATE-01` | 复查前已存在的选定driver日历owner接线遗漏 | `7cae3e02`已有JAX `slowproc_main_pft14_step`日历owner，但选定orchestration未调用；day-end adapter也未接入Jan-1 reset、Jan-2 `peatC_ok`写入及普通日末`growth_day`增量。当前本地Fortran `slowproc.f90:556–594`给出对应顺序，文件未跟踪，不能据此恢复Fortran的Git历史。普通日末部分patch仍不完整，未应用。 |
+| `P-REFSOC-DEFAULT` | 复查期间新helper缺少源默认 | helper及缺键`FALSE`回退由`fd0fe51495626b39ce42d50dec29b3a6cef744b3`于2026-11-12引入。当前本地Fortran `thermosoil.f90:337–374`在可选override前将`use_refSOC`初始化为true；该源文件未跟踪，历史限制同上。此项是新增restart准入边界默认遗漏，不证明热初始化数值错误或标准算例回归。 |
+
+这四组不应统一描述为“旧翻译遗留”或标准案例回归。前三组只确认JAX行为已存在于复查前Git边界；准确初始作者提交在可用历史中未知。第四组属于新加入helper的默认遗漏。原C1–C40的40项／22提交接受范围保持不变；新增C41–C43共享上述一个代码提交。所有生产修复的准确提交、验证范围和研究同步状态以累计登记为准。

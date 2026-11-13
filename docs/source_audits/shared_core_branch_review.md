@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+2026-11-13 主控已接受C41有效OK_PC、C42 restart use_refSOC缺省、C43 compiled context缓存隔离／强引用；代码及测试提交`8a772de6f4977018a875093d535b6088317716c8`，累计**43项修正／23个代码提交**。C43同时更新开发快照读者及三项旧cache测试；等价独立context可能额外编译。同实例复用和8项FIFO保持。50项相关pytest与11项纯日历检查一次组合通过；主控核对实际文件和回执，未重复执行。接受仅及源参数／适配器／缓存语义，未运行物理kernel、真实JIT、模型或Fortran。详见[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)及下方累计索引；研究分支同步继续暂停。
+
+完整日历设计已覆盖source clock、Jan1／Jan2分支、pre-STOMATE顺序、once-only、双镜像及compiled／IO接线需求；本地缺IOIPSL原noleap起点与重启约定的可验证桥，故只接受设计和精确缺证，未改生产日历或应用旧日末部分补丁，不分配C44。[来源登记](correction_origins.md)区分C41／C43的复查前遗漏与C42由`fd0fe514`新增的helper默认边界遗漏，不把它们全称旧翻译问题或标准算例回归。独立cold refSOC gate／IO、热真值、DOC严格状态及守恒缺证均保留；旧producer接受不自动认证新生产路径。下一包核实原时钟来源及cold初始化合同，不启动未审完的模型运行方案。
+
 2026-11-13 主控已验收DOC／碳核算离线分析：**不能把累计诊断差0.029237968847称作碳损失。** 旧producer `e2a9d9f2d5aabca2e2d391400f14559f0dbf8c09`的319/1962 memory−files审计独立库终态差为**0.00286422847186 gC/m²陆地**，其中DOC为0.00286422845561，其余约1.6251e-11；共同年初/A年末/B年末总量为527.245664208/529.312346246/529.309482018。详细[库存与分项](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/accounting-results.md)、[源单位/相位合同](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/source-accounting.md)及[独立审核](../../outputs/reviews/main-physics-20261113/doc-carbon-accounting/independent-review.md)属于本次离线包，不是新模型运行。
 
 DOC按点/PFT/32层/两相/7来源池/碳元素统计，保存值已是逐层面积库存，乘实际`veget_max`一次，不再乘层厚或水文tile面积。冠层`interception_storage`是独立DOC碳库而非水，producer已含面积权重；deepC_peat/soilc_total及替代分支量不重复计入。实际PFT14=1、产品全年零均有caller/carry/更新源路径证据，不只依靠端点推断。原DOC78坐标/maxabs2.234685861e-4及累计诊断原限0.0003646537522的严格失败保持。
@@ -859,12 +863,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C40，共40项已接受修正、22个代码提交。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C43，共43项已接受修正、23个代码提交。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C40仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C43仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -896,6 +900,19 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C38 | `driver/orchestration.py` | `45654fea50aec6edf7774ac0f0b90170eea617db` |
 | C39 | `stomate/restart_io.py` | `76e406e0e0e75402d221bb281908fa4260bc5d66` |
 | C40 | `stomate/restart_io.py`、`driver/orchestration.py` | `76e406e0e0e75402d221bb281908fa4260bc5d66` |
+| C41 | `driver/orchestration.py` | `8a772de6f4977018a875093d535b6088317716c8` |
+| C42 | `driver/restart_state.py` | `8a772de6f4977018a875093d535b6088317716c8` |
+| C43 | `driver/orchestration.py`；开发cache读者同步适配 | `8a772de6f4977018a875093d535b6088317716c8` |
+
+### C41–C43参数／缓存修正（2026-11-13已接受）
+
+| ID | 源依据、必要性与触发边界 | 修复及验证范围 |
+| --- | --- | --- |
+| C41 | `control.f90:261–278`在OK_LEAK开启时覆盖OK_PC=false；raw两者为true时旧context及独立首步实参错误 | 共享有效flag resolver覆盖prepared、cold和restart入口；四布尔组合、context字段及四caller实际关键字表达式通过；AST表达式回放不等于物理caller执行 |
+| C42 | `thermosoil.f90:362–371`在可选读取前初始化use_refSOC=true；新restart准入helper缺键时错误拒绝 | 源soil-C门内缺键TRUE，显式FALSE和原禁用门保持；缺键／T／F及门控通过。依赖C34的helper，独立cold默认与静态IO未因此闭合；非热数值真值接受 |
+| C43 | compiled later-day闭包捕获prepared context，但旧key漏其身份；同config／layout、不可变FR_DT2／3的缓存B曾向spy转发A参数 | context实例分区、typed强引用entry及8项FIFO；同实例复用、不同实例隔离、fresh／cached、无闭包保活／clear／淘汰通过；等价独立实例额外编译是已接受代价 |
+
+三项共享一个代码提交，相关回归为`tests/unit/test_parameter_context_repairs.py`、三个stage23／25／26 cache测试及既有restart gate测试；直接读者为`scripts/dev/audit_compiled_fast_path_acceptance.py`。一次50项pytest与11项日历原型检查通过（10正常＋1预期缺证）；旧红例及独立终审复用。C41／C43在`7cae3e02`已存在，C42是`fd0fe514`新增helper的缺省遗漏，不能统称复查前bug。日历未修、无新C号；物理／真实compiled／年度科学和原严格状态门均未升级。后续同步需同时核对caller、cache读者与测试依赖，保持研究分支自身改动；本次未同步。
 
 ### C1–C40来源年代与性质（2026-11-13）
 
