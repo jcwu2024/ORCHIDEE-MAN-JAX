@@ -1,34 +1,43 @@
 # main 物理正确性检查入口
 
-2026-11-13 主控已验收本批有界年度结果与剩余覆盖清单：**319/1961原年度科学门通过；001/1961四指标数值门失败且同初态身份未证；319/1962内存/三文件全年输出严格门通过，完整末态严格门仍失败**。这是实际完成的证据验收，不是整个main或完整重启通过。
-基线为已发布的 `e2a9d9f2d5aabca2e2d391400f14559f0dbf8c09`，C32–C38已接受；累计38项修正/21代码提交不变。本包生产源码、公式、参数、阈值和JIT签名/闭包冻结。
+2026-11-13 主控已验收本批gas修复与有界运行，正式登记**C39源默认值、C40完整持久状态传递**；累计**40项已接受修正/22个代码提交**，daily/global同步继续暂停。
+两项共同代码提交为 `76e406e0e0e75402d221bb281908fa4260bc5d66`；复用16项定向回归、真实三文件写读及独立终审，主控未重复模型运行。
+基线为main `488424df2618f209bb4d0d1bf3d8d9cba23602d1`；最终源码overlay以[修复版冻结](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/gas-freeze-v2.json)登记。先前发布的319年度结果保持原`e2a9d9f2…` producer。
 
-四路各365日均exit0，保存完整daily、annual及年末态，完成/clock/精确sentinel域/352必需路径门通过；本地CPU/x64串行共4启动/1460模型日，监督1000.065913秒，各900秒硬限，无技术重试，strict预留未用。远端、Fortran、GPU、训练及环境重建均0。
-319/1961使用原C31 cold配置/forcing及block7，但由本包当前源码重新生成；四指标science、normalized bias/NRMSE和原diagnostic均通过，NPP=0.3851849752983813，对原参考误差1.8200640439225424e-9。
-001使用已有三文件paper初态，不能称cold。实际年度AGB/BGB/GPP/NPP分别为95.53856107292744/35.6935233880042/3.5915083703644863/1.2927737620595396，参考分别为4.656111240386963/4.1311354637146/1.5009596347808838/0.5990213751792908；四项science/normalized/diagnostic均失败。
-001三份输入身份已锁定，但现有Fortran launch记录不能证明消费同一初态；`initial_identity_confirmed=false`，数值失败直接保留，尚未归因为新生产代码缺陷。旧/新首日结果一致及初态量级说明不替代同相位真值，也不建立唯一原因；该身份缺项不触发strict预留。
+初版真实319cold2和001paper-start2均完成且各66个daily leaf通过原严格门，最大日差分别7.66053886991358e-15和8.881784197001252e-16，clock/domain/352既有必需路径通过；**两路均缺四gas，生命周期失败**。
+真实首日`driver_previous_step_state_from_next_step_hydrol_scaffold`有独立carry清单，遗漏四字段；仅在compact runtime检查carry不足以证明该入口。现只补`STOMATE_GAS_FIELDS`，不扩展其它carry或动力学。
+两份原run/receipt/freeze与可重建源码patch完整保留，不把初版数值通过称为最终版本回归。直接非默认cold/restart反例在旧源码均因gas缺项失败，修复后16项定向测试通过，覆盖该真实入口、普通/FastState接口、日末及底值故意置错的真实三文件写读。
 
-1962 A/B只使用本包新319年末producer，未替用旧C31：A正式内存跨年，B由同一新态经当前writer生成三文件并readstart。
-A/B全年12045个实际daily leaf（365×33；每日报3clock、4primary及26字段）和全部26年度均值＋4公式输出通过`abs(B-A)<=1e-8+1e-10*abs(A)`，shape/dtype/mask/discrete/clock精确。
-四主输出最大日差依次为6.2883e-13/9.8410e-13/8.4021e-11/6.0493e-11；本次自然A/B伴随DOC状态差异，主要输出仍通过原门，不外推全部长期输出或唯一DOC因果。
-当前保存的353个末态数值leaf（352科学字段及tstep）中两项超限：DOC有78坐标，maxabs=2.2346858610422515e-4；`carb_mass_total`为float64[1]，A=3646437.5217957343、B=3646437.4925577655，差0.02923796884715557，大于原限0.00036465375217957345。**完整重启状态连续性不接受**，旧1日/8日严格失败亦保留。
-DOC存储坐标瞬时和从共同年初11.008376301051934到A年末22.196673650634743、B年末22.193809422179136；该原始坐标和不等于质量守恒账本。正式26字段未暴露DOC通量，通量证据仍缺，不从每日库存求和或库存差推造通量。
+Fortran `constantes_var.f90:1467–1468`及`stomate_io::readstart:1177–1199`规定O2=298.3、CH4=0.001267的全数组sentinel回退；已有有效或部分sentinel数组优先，显式API参数只覆盖缺字段/全sentinel回退。
+四字段`O2_soil/CH4_soil/O2_snow/CH4_snow`现从cold/restart初始化、首提取、首日专用跨步、普通/compiled布局保持到日末与写盘接通；旧缺项pickle/NC未补填。OK_PC/CH4_CALCUL活动gas动力学仍关闭，不将gas修复归因DOC或001主指标差异。
 
-新三文件codec300/300通过，保留source-local两flag、INTEGER owner和固定float32物理clock wire约定；旧17条dotted路径误报已在离线准入正确逐段解析，旧原始失败不改写。旧001 `nonfinite=false`与当前精确源sentinel判定分列，不称历史整producer verifier当前通过。
-**本轮确认一处局部readstart缺字段gas默认值源码差异**：Fortran `constantes_var.f90:1467–1468` 声明O2=298.3、CH4=0.001267，`stomate_io::readstart:1177–1199` 据此填缺；当前JAX reader默认均为0，本次empty-NC确实走该值。codec只证明这份zero-base读写一致，不能据此称Fortran默认正确。
-当前OK_PC=false/CH4_CALCUL=false使四gas无活动科学消费者；Fortran仍无条件持久化它们，而本次新cold packet仍缺四字段，完整cold gas carry保持开放，不归因001或DOC/主输出差异。
-已保存仅改两默认值的隔离补丁及4次真实reader最小验证（缺字段、存储值保持、显式override），均通过；0模型/物理/Fortran调用，六份保护文件哈希不变。候选未应用，未改本次正式源码、NC或四年度producer，不分配新C编号。
+原额度内剩余唯一001cold1961/365日使用修复版独立冻结身份，未重试两个短窗口。完整年度对象SHA `77198fddc77be777240dd30a4337dbc0c343ddfe3d27f77060be93b4aa25e361`；最终gas门**通过**，原整体science/normalized/diagnostic为**通过/通过/通过**。完整daily及末态留在新包run.pkl；四主指标如下：
 
-可冻结的有界证据为当前319/1961 cold年度原门回归，以及同一当前producer下319/1962两路线365日的逐日及年度输出比较；001完整执行与其数值失败也有独立存盘证据。两代表点不构成669点或全分支等价性。
-剩余五项优先边界为：DOC/`carb_mass_total`严格状态及通量证据、首次energy前热初值独立Fortran真值、inactive gas源默认与完整cold carry、显雪maxmass条件域、001参考初态身份。C38 compiled firstcall本轮缺直接运行见证，不能据未插observer称整年未执行；原start0/start48 binder组件证据保留，该限制未关闭。
-详见[本轮结果](../../outputs/reviews/main-physics-20261112/main-stability-validation/README.md)、[摘要](../../outputs/reviews/main-physics-20261112/main-stability-validation/summary.json)、[覆盖与最小下一行动](../../outputs/reviews/main-physics-20261112/main-stability-validation/coverage.md)及[隔离候选](../../outputs/reviews/main-physics-20261112/main-stability-validation/gas-default-candidate.patch)。
-本轮[主控验收](../../outputs/reviews/main-physics-20261112/main-stability-validation/controller-acceptance.json)保留所有失败与初态身份限制；原源码修复映射见[此前接纳](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-acceptance.json)及[发布记录](../../outputs/reviews/main-physics-20261112/restart-candidates-validation/controller-publication.json)。本轮只发布报告，无新C编号或生产修复。daily/global继续暂停同步，C4–C38待后续维护方集中核对，C1–C3保留历史日期。旧冻结包、累计索引和旧TEMP清理拒绝记录保持，不重试旧删除。
-下一批明确转入gas默认值及cold/day-end持久状态补齐、001原Fortran初态消费身份与匹配比较，并作热初始化首次能量消费的有界源相位核查。此前四次年度运行不重复；新运行与源码变更另立身份和预算，不将本批差异预设为新的过程公式错误。
+| 指标 | 新001cold年度 | 原年度参考 | 原annual门 |
+| --- | --- | --- | --- |
+| AGB | 4.656111406026477 | 4.656111240386963 | 通过 |
+| BGB | 4.131135638281122 | 4.1311354637146 | 通过 |
+| GPP | 1.5009596523801692 | 1.5009596347808838 | 通过 |
+| NPP | 0.5990213772418084 | 0.5990213751792908 | 通过 |
+
+全包实际3启动/369模型日，监督570.064392秒，各900秒硬限、串行CPU/x64、0技术重试；远端/新Fortran/GPU/训练/付费/环境重建均0，自己的system TEMP已清理。每路源码/运行器/input身份独立且不混称同一producer。
+原annual `1e-5+1e-3*abs(F)`、normalized `1e-3`、diagnostic `2e-6+1e-7*abs(F)`及严格比较`1e-8+1e-10*abs(A)`均未改变；shape/dtype/mask/discrete/clock仍精确。
+
+001通用及点专用Job0脚本在i=0/1961明确三输入NONE，i=1才切换刚产生的start文件；本地归档start时钟858480/date17885属于2010边界，不是脚本规定的1961输入。新cold协议在年度前已按源固定。
+实际`slowproc(ok_stomate)→stomate_initialize→readstart`链及biomass/deepC/gas条件回退已取证；外部IOIPSL restini/restget实现不在本地，不能据caller推证NONE时的实际默认数值。历史001/1961 used_run/实际输入producer仍缺，年度数值比较不补称历史身份真值；旧paper-start四指标失败完整保留。
+
+C34有界相位审查未发现已准入USDA/default-knob、显雪/refSOC、完整系数路径的新接线遗漏。三字段在首次main ENERBIL前初始化，但ENERBIL直接消费soilcap/soilflx；stempdiag随后供HYDROL，pcapa_en/temp_sol_beg供THERMOSOIL能量检查。
+完整系数重启最终var_init的薄雪状态与cold/缺系数随后coef覆盖相位分开。既有319A/B数组相同仅为JAX producer证据，独立Fortran初始化/首次真实消费者数值真值仍缺；本包未改热物理或新增trace。
+
+剩余优先边界为DOC/carb_mass_total严格状态及DOC通量、上述独立热真值、显雪maxmass条件域、001历史实际输入与IOIPSL外部语义。旧DOC78坐标maxabs2.234685861e-4及carb_mass_total差0.02923796885超原限0.0003646537522继续保留，不接受完整重启连续性，不把原始库存坐标和充作质量/通量。
+最终版本未重跑两路短窗口；非默认restart链由组件/真实codec核对，年度只证明新001cold路径。FastState单元段是Python接口证据；compiled firstcall仍无直接observer见证，不能据缺observer断言整年未调用。两点/单年不外推669点、全分支、AD或长期接受。
+
+详见[本批交付](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/README.md)、[机器摘要](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/summary.json)、[001协议](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/initial-protocol.md)及[热相位审查](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/thermal-phase-review.md)。此前四年度包及C1–C38登记保持原身份；冻结交付仍记录接纳前的38项/21提交，本次正式编号、范围与限制见[主控验收](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/controller-acceptance.json)，准确代码提交见[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
 避免反复同步。**C31已由主控验收；319点1961年度AGB/BGB/GPP/NPP全部通过原标准，原NPP超限在该算例闭合**。
-截至C31接纳时累计31项已接受修复/18个代码提交，C31代码提交为`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`；当前总数及C32–C38见文首。
+截至C31接纳时累计31项已接受修复/18个代码提交，C31代码提交为`cb4f76817acd852cde8cd8d4195e1e52bfd8c770`；当前总数及C32–C40见文首和累计索引。
 见[本轮主控验收](../../outputs/reviews/main-physics-20261104/npp-snow-temperature-clamp/controller-acceptance.json)；
 单点单年结论不外推全域/长期，下一优先项是真实NetCDF重启与跨年连续性的有界验证。此前独立Fortran
 job126077710已COMPLETED/0:0，620,494条原生记录与实际相位、年度/共同边界保持检查通过；
