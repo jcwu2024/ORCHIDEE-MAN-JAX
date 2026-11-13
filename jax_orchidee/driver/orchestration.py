@@ -437,6 +437,15 @@ def _domain_override_from_run_def_values(values: Mapping[str, str]) -> dict[str,
     return {target: parse_run_def_float(values, source) for source, target in key_map.items()}
 
 
+def _effective_hydrol_ok_pc(values: Mapping[str, str]) -> bool:
+    """Resolve materialized flags after control.f90:261-278's OK_LEAK override.
+
+    These driver adapters require explicit materialized keys. Source getin
+    defaults remain the upstream materializer's responsibility.
+    """
+    return parse_run_def_bool(values["OK_PC"]) and not parse_run_def_bool(values["OK_LEAK"])
+
+
 def _effective_thermosoil_wetdiaglong(values: Mapping[str, str]) -> bool:
     """Return Fortran's initialized long-term-humidity switch.
 
@@ -649,7 +658,7 @@ def _prepare_paper_1961_driver_context_cached(
         hydrol_max_froz_hydro=parse_run_def_float(values, "MAX_FROZ_HYDRO"),
         hydrol_depth_max_h=parse_run_def_float(values, "DEPTH_MAX_H"),
         hydrol_do_ponds=parse_run_def_bool(values["DO_PONDS"]),
-        hydrol_ok_pc=parse_run_def_bool(values["OK_PC"]),
+        hydrol_ok_pc=_effective_hydrol_ok_pc(values),
         hydrol_ok_leak=parse_run_def_bool(values["OK_LEAK"]),
         hydrol_ok_ru2peat=parse_run_def_bool(values["OK_RU2PEAT"]),
         hydrol_ok_wt_ab=parse_run_def_bool(values["OK_WT_AB"]),
@@ -5012,7 +5021,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
                 froz_frac_corr=parse_run_def_float(run_def_values, "FROZ_FRAC_CORR"),
                 smtot_corr=parse_run_def_float(run_def_values, "SMTOT_CORR"),
                 max_froz_hydro=parse_run_def_float(run_def_values, "MAX_FROZ_HYDRO"),
-                ok_pc=parse_run_def_bool(run_def_values["OK_PC"]),
+                ok_pc=_effective_hydrol_ok_pc(run_def_values),
                 ok_leak=parse_run_def_bool(run_def_values["OK_LEAK"]),
                 ok_ru2peat=parse_run_def_bool(run_def_values["OK_RU2PEAT"]),
                 ok_wt_ab=parse_run_def_bool(run_def_values["OK_WT_AB"]),
@@ -7130,7 +7139,7 @@ def paper_1961_driver_timestep_scaffold(
                 froz_frac_corr=parse_run_def_float(run_def_values, "FROZ_FRAC_CORR"),
                 smtot_corr=parse_run_def_float(run_def_values, "SMTOT_CORR"),
                 max_froz_hydro=parse_run_def_float(run_def_values, "MAX_FROZ_HYDRO"),
-                ok_pc=parse_run_def_bool(run_def_values["OK_PC"]),
+                ok_pc=_effective_hydrol_ok_pc(run_def_values),
                 ok_leak=parse_run_def_bool(run_def_values["OK_LEAK"]),
                 ok_ru2peat=parse_run_def_bool(run_def_values["OK_RU2PEAT"]),
                 ok_wt_ab=parse_run_def_bool(run_def_values["OK_WT_AB"]),
@@ -10280,7 +10289,17 @@ _COMPILED_INTERSURF_PAYLOAD_FIELDS = tuple(
 )
 assert not (_COMPILED_HALF_HOUR_FORCING_FIELDS & set(_COMPILED_INTERSURF_PAYLOAD_FIELDS))
 _COMPILED_SECHIBA_SCAN_CACHE: dict[object, object] = {}
-_COMPILED_LATER_DAY_BLOCK_CACHE: dict[object, object] = {}
+
+
+@dataclass(frozen=True)
+class _CompiledLaterDayBlockCacheEntry:
+    """Own the captured context independently of the executable's lifetime rules."""
+
+    context: Paper1961PreparedDriverContext
+    executable: object
+
+
+_COMPILED_LATER_DAY_BLOCK_CACHE: dict[tuple[object, ...], _CompiledLaterDayBlockCacheEntry] = {}
 
 
 def _compiled_half_hour_forcing(item: DriverRuntimeHalfHourInput) -> DriverCompiledHalfHourForcing:
@@ -11376,7 +11395,12 @@ def _paper_compiled_later_day_block_executable(
     training_output_projector=None,
     training_output_projector_key: str | None = None,
 ):
-    """Compile one reusable block of complete later-day state transitions."""
+    """Compile a block specialized to one immutable prepared-context instance.
+
+    Remaining context fields are captured by ``transition`` rather than passed
+    as dynamic packs. Equivalent but distinct contexts therefore compile
+    separately; repeated use of the same prepared context still shares a block.
+    """
 
     if training_output_projector is not None:
         if not capture_pre_daily_training_boundaries:
@@ -11394,6 +11418,7 @@ def _paper_compiled_later_day_block_executable(
         context.first_step_restart_state.stomate_readstart.season_state.provenance
     )
     cache_key = (
+        id(context),
         str(context.config_path.resolve()),
         float(context.run_def_values.get("Z0_BARE", 0.01)),
         resolve_condveg_snowcri_alb(context.run_def_values, ok_sechiba=True),
@@ -11408,7 +11433,7 @@ def _paper_compiled_later_day_block_executable(
     )
     cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
     if cached is not None:
-        return cached, initial.spec
+        return cached.executable, initial.spec
 
     def transition(
         values_by_component,
@@ -11533,7 +11558,11 @@ def _paper_compiled_later_day_block_executable(
         _COMPILED_LATER_DAY_BLOCK_CACHE.pop(
             next(iter(_COMPILED_LATER_DAY_BLOCK_CACHE))
         )
-    _COMPILED_LATER_DAY_BLOCK_CACHE[cache_key] = executable
+    # Keep identity alive even if an actual XLA executable drops its Python
+    # closure. The bounded FIFO eviction above releases both owners together.
+    _COMPILED_LATER_DAY_BLOCK_CACHE[cache_key] = _CompiledLaterDayBlockCacheEntry(
+        context=context, executable=executable,
+    )
     return executable, initial.spec
 
 

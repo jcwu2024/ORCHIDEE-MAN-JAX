@@ -253,13 +253,19 @@ def test_actual_cache_constructors_capture_four_effective_parameters(monkeypatch
             assert actual_spec is spec
             return executable
 
-    default = build(_cache_context({}))
+    default_context = _cache_context({})
+    default = build(default_context)
+    assert build(default_context) is default
     names = {"MIN_WIND": ".4", "HEIGHT_DISPLACEMENT": ".5", "Z0_ICE": ".002", "SNOW_DENSITY": "660"}
-    assert build(_cache_context({"IMPOSE_PARAM": "FALSE", **{name: "not-read" for name in names}})) is default
+    inactive = build(_cache_context({"IMPOSE_PARAM": "FALSE", **{name: "not-read" for name in names}}))
+    assert (inactive is default) is (entry == "sechiba-scan")
     for name, value in names.items():
-        distinct = build(_cache_context({name: value}))
+        distinct_context = _cache_context({name: value})
+        distinct = build(distinct_context)
         assert distinct is not default, name
-        assert build(_cache_context({name: str(float(value))})) is distinct
+        assert build(distinct_context) is distinct
+        equivalent = build(_cache_context({name: str(float(value))}))
+        assert (equivalent is distinct) is (entry == "sechiba-scan")
 
 
 @pytest.mark.parametrize("producer", ["ordinary", "compact", "cold-wrapper", "cold-main", "cold-frac"])

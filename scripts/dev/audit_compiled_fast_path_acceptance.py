@@ -329,7 +329,9 @@ def _annual_outputs(run: Any) -> dict[str, Any]:
 
 def _scan_cache_snapshot() -> dict[str, object]:
     callables = tuple(orchestration._COMPILED_SECHIBA_SCAN_CACHE.values())
-    block_executables = tuple(orchestration._COMPILED_LATER_DAY_BLOCK_CACHE.values())
+    block_executables = tuple(
+        entry.executable for entry in orchestration._COMPILED_LATER_DAY_BLOCK_CACHE.values()
+    )
     return {
         "structural_entries": len(callables),
         "callable_ids": [id(value) for value in callables],

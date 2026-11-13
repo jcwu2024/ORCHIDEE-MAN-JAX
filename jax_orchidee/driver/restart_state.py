@@ -59,9 +59,12 @@ def restart_thermosoil_initialization_supported(context: object) -> bool:
     """Limit the new lifecycle reconstruction to its audited source path."""
     from jax_orchidee.driver.init import parse_run_def_bool
     values = context.run_def_values
-    flags_enabled = all(parse_run_def_bool(values.get(name, "FALSE")) for name in (
-        "OK_EXPLICITSNOW", "USE_SOILC_TEMPDIFF", "use_refSOC",
-    ))
+    flags_enabled = (
+        parse_run_def_bool(values.get("OK_EXPLICITSNOW", "FALSE"))
+        and parse_run_def_bool(values.get("USE_SOILC_TEMPDIFF", "FALSE"))
+        # thermosoil.f90:362-371 initializes TRUE before optional use_refSOC.
+        and parse_run_def_bool(values.get("use_refSOC", "TRUE"))
+    )
     # thermosoil_initialize 337-374 reads the soil-carbon switches only
     # inside this source gate; raw run.def flags alone do not activate them.
     freeze_thermix = parse_run_def_bool(values.get(

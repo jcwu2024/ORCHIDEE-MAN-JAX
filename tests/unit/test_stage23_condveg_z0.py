@@ -142,11 +142,18 @@ def test_real_compiled_cache_construction_isolates_nondefault_bare_roughness(mon
             assert actual_spec is spec
             return executable
 
-    default = build(_cache_context(0.01))
-    assert build(_cache_context("0.010")) is default
-    nondefault = build(_cache_context(0.02))
+    default_context = _cache_context(0.01)
+    default = build(default_context)
+    assert build(default_context) is default
+    equivalent = build(_cache_context("0.010"))
+    # Complete-day closures own a context instance; the SECHIBA scan retains
+    # its existing effective-scalar sharing contract.
+    assert (equivalent is default) is (entry == "sechiba-scan")
+    nondefault_context = _cache_context(0.02)
+    nondefault = build(nondefault_context)
     assert nondefault is not default, "different captured Z0_BARE must not reuse default executable"
-    assert build(_cache_context(0.02)) is nondefault
+    assert build(nondefault_context) is nondefault
+    assert (build(_cache_context(0.02)) is nondefault) is (entry == "sechiba-scan")
 
 
 @pytest.mark.parametrize("z0_bare", [0.01, 0.02])

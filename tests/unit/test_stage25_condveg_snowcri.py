@@ -247,15 +247,23 @@ def test_real_cache_construction_uses_effective_snowcri(monkeypatch, entry):
             assert actual_spec is spec
             return executable
 
-    default = build(_cache_context({}))
+    default_context = _cache_context({})
+    default = build(default_context)
+    assert build(default_context) is default
     for raw in ({"SNOWCRI_ALB": "10"},
                 {"IMPOSE_PARAM": "FALSE", "SNOWCRI_ALB": "20"},
                 {"IMPOSE_PARAM": ".FALSE.", "SNOWCRI_ALB": "30"},
                 {"IMPOSE_PARAM": "FALSE", "SNOWCRI_ALB": "not-read"}):
-        assert build(_cache_context(raw)) is default
-    nondefault = build(_cache_context({"SNOWCRI_ALB": "20"}))
+        equivalent_context = _cache_context(raw)
+        equivalent = build(equivalent_context)
+        assert build(equivalent_context) is equivalent
+        assert (equivalent is default) is (entry == "sechiba-scan")
+    nondefault_context = _cache_context({"SNOWCRI_ALB": "20"})
+    nondefault = build(nondefault_context)
     assert nondefault is not default, "different effective SNOWCRI_ALB must isolate executable"
-    assert build(_cache_context({"IMPOSE_PARAM": "TRUE", "SNOWCRI_ALB": "20.0"})) is nondefault
+    assert build(nondefault_context) is nondefault
+    equivalent = build(_cache_context({"IMPOSE_PARAM": "TRUE", "SNOWCRI_ALB": "20.0"}))
+    assert (equivalent is nondefault) is (entry == "sechiba-scan")
 
 
 @pytest.mark.parametrize("producer", ["ordinary", "compact", "cold-wrapper", "cold-main", "cold-frac"])
