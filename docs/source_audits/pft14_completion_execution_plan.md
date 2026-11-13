@@ -4,6 +4,70 @@ Scope: ORCHIDEE-MAN JAX rebuild for the PFT14 mangrove target, with source-drive
 coverage beyond the active paper-case path only where the branch is PFT14
 relevant.
 
+## Current Controller Decision (2026-11-13)
+
+This section and the execution order below govern current main hardening.
+The July implementation notes retained below are historical evidence, not a
+current-source acceptance claim or an instruction to restart completed work.
+The release authority remains the
+[PFT14 equivalence contract](pft14_equivalence_delivery_contract.md).
+
+The user requests source-semantic equivalence and maintainable repairs. Keep
+the existing process/driver/runner architecture and the explicit JAX state
+design. Functional state, pytrees, JIT and other necessary JAX restructuring
+are acceptable when they preserve the source contract. No general rewrite of
+JAX or cleanup of original Fortran is planned.
+
+The main engineering risk to reduce is drift between parameter/state owners
+at cold start, first day, ordinary steps, compiled steps, day/year boundaries
+and restart I/O. A repair should close the relevant real paths, not only a
+helper. Consolidate genuinely shared field/default/adapter rules locally;
+keep intentional phase-specific behavior explicit. Do not introduce one
+unconditional state copier across different Fortran phases.
+
+For each accepted repair retain source necessity, a reproducible old failure
+and new pass, caller/writeback coverage, exact commit, and evidence limits in
+the existing correction records. Keep structural cleanup separable from
+semantic changes. Avoid point-specific exceptions, silent fallback defaults,
+parameter tuning and tolerance changes that conceal lost or incorrect state.
+Maintain relevant provenance and update stale nearby documentation.
+
+Natural floating-point sensitivity is a separate finding from a translation
+defect. Once the native observations, source conditions and bounded same-input
+checks support that conclusion, record its scope and stop reopening the same
+causal question without new contradictory evidence. Do not require bit identity
+or a unique machine-instruction explanation. A small unexplained difference is
+not automatically roundoff; a bounded numeric attribution does not make a
+failed strict-state or scientific gate pass. Keep these acceptance results
+separate and retain the original thresholds.
+
+### Starting Point And Immediate Work
+
+- Published baseline for this decision: main
+  `73c942b9f086e6ac8255c5fc03ac21155e896376`. C1-C40 and their existing
+  evidence are reused, not re-audited from scratch. Their scopes and historical
+  producer identities remain in [the current review](main_physics_review.md),
+  [the correction index](shared_core_branch_review.md) and
+  [the origins audit](correction_origins.md).
+- The existing Sol owner continues the assigned offline DOC/carbon accounting
+  of saved 319/1962 memory/file-restart outputs. That assignment has zero new
+  model integrations or remote runs. Determine physical units, geometry,
+  weighting, stock differences and missing flux observations; do not turn a
+  raw coordinate sum into physical mass or infer unrecorded fluxes.
+- Retain the open DOC/full-restart-state limits, independent thermal
+  initialization/first-consumer numerical truth, explicit-snow maxmass domain,
+  and historical 001 input/IOIPSL identity limits. These are not all confirmed
+  bugs. Source/schema gaps retained in the current review must also be included
+  in the remaining-work reconciliation; this short list is not exhaustive.
+- The next execution package reconciles the existing source/state ledgers with
+  accepted evidence into one finite remaining-work table. Reuse accepted gas
+  lifecycle and original-bug provenance work. Independent source checks need
+  not wait for another DOC trajectory or for unavailable historical identity.
+- Continue manual coordination through the existing Sol owner. The controller
+  owns scope, scientific judgments and acceptance. Finish coherent packages
+  rather than stopping after each small finding. Daily/global synchronization
+  remains paused until main reaches the agreed handoff checkpoint.
+
 ## Non-Negotiables
 
 - Fortran source is the process truth.
@@ -22,9 +86,8 @@ relevant.
   It must not be used to defer source-driven audit and equivalence of PFT14
   branches that could activate after changing forcing data, landpoint state,
   hydrological/salinity/tide conditions, or continuous model parameters.
-- The one-week execution focus is PFT14 semantic closure, not expanding the
-  paper mosaic execution layer. The 669 cases validate and assemble the paper
-  product after the source-backed PFT14 branch ledger is closed; they do not
+- The current execution focus is PFT14 semantic closure. The 669 cases validate
+  and assemble the paper product after source and state closure; they do not
   multiply the amount of model process logic to port.
 - Do not spend near-term implementation effort on branches that require
   non-mangrove PFT roles or unrelated management switches and cannot activate
@@ -32,45 +95,65 @@ relevant.
 
 ## Execution Order
 
-1. Close one active paper-case PFT14 single-landpoint path from forcing through
-   annual modelout and restart/year handoff, using short, checkpointed
-   validation gates and the existing 1961-2010 reference/modelout targets.
-2. Generalize that closed single-landpoint path into the paper mosaic runner:
-   enumerate the 669 landpoint case definitions, keep each case as `nbp_glo=1`,
-   preserve the Fortran run.def/forcing/static selection for each case, and
-   aggregate outputs only after each one-cell run has passed its local gates.
-3. Run a small representative landpoint subset before the full 669-case
-   mosaic. Use failures to return to source-backed process/branch ledgers, not
-   to invent landpoint-specific fixes.
-4. Complete source-backed SECHIBA/STOMATE structural branches that can affect
-   PFT14 under changed land point, forcing data source, hydrological/salinity
-   regime, or continuous parameters:
-   HYDROL runoff/tide/peat routing, DIFFUCO salinity/tide controls, ENERBIL
-   active snow/energy boundaries, THERMOSOIL recurrence state, OK_LEAK/TF-DOC,
-   OK_PC/dynamic peat, LD_DOC, DGVM/PFT in-out, and PFT14 LCC/agripeat.
-5. Complete source-backed STOMATE structural branches that can affect PFT14:
-   LCC, harvest, age-class movement, product pools, DGVM/PFT in-out, and
-   annual-memory state.
-6. Audit restart/SAVE/annual-memory fields as a ledger before chasing later
-   years or new grid/forcing cases.
-7. Build source-driven branch coverage from Fortran `IF`, `WHERE`,
-   configuration switches, PFT masks, time branches, and state masks, then
-   classify each branch as `PFT14 active`, `PFT14 conditional`, or
-   `Non-PFT14 natural trigger`.
-8. Design minimal micro-cases for uncovered PFT14-relevant branches; do not rely
-   on long single-point runs to discover them.
-9. Optimize performance before scaling from the representative subset to all
-   669 cases if runtime would otherwise make validation impractical. Keep every
-   optimization behind profile evidence, A/B timing, and semantic checks.
-10. Use long annual or multiyear runs, including the 2010 paper CSV target, as
-   validation gates for the active paper path and final 669-case mosaic after
-   the relevant source-backed branch work and performance work are complete.
-11. After the 669-case paper mosaic closes, continue the PFT14-relevant
-    branch ledger before treating the model as generally equivalent for new
-    forcing products or retuned parameters. Long runs may confirm the ledger,
-    but must not replace it.
+1. **Reconcile the remaining coverage.** Reuse `pft14_reachable_ledger.yaml`,
+   source-owner/arm-disposition ledgers, branch micro-case matrices,
+   `restart_state_lifecycle.yaml`, compiled-state records and accepted reviews.
+   For each relevant source branch/state edge record its existing evidence
+   level, actual production owner/caller, producer identity, supported domain,
+   missing evidence and next smallest action. Distinguish confirmed defects,
+   untested paths, numeric sensitivities and unavailable reference identity.
+   Do not inflate coverage from a test count or an old generic `verified` label.
+2. **Close state and parameter seams first.** Check effective configuration,
+   source defaults, units, shapes/axes, update phase, masks, integer/index rules,
+   and writeback from cold/restart initialization through the real first-day,
+   ordinary, compiled, day-end/year-end and file writer/reader paths. Use
+   nondefault distinguishable inputs so defaults cannot hide omissions. Make
+   shared contracts executable where feasible, retaining phase-specific rules.
+   This complements, rather than repeats, the accepted gas lifecycle cases.
+3. **Complete module semantic coverage.** Work through driver/forcing/parameters,
+   HYDROL/DIFFUCO/ENERBIL/THERMOSOIL, STOMATE including carbon/DOC, and
+   restart/modelout. Select only unresolved entries from step 1. Pair source
+   conditions, sequential mutations, callers and returned state with original
+   Fortran micro-drivers or audited immutable boundaries. Use legal cases on
+   both sides of thresholds, zero/nonzero and mask/configuration combinations;
+   do not wait for long runs to happen to trigger them. Validate complete
+   same-input tuples before attributing cross-trajectory differences to code.
+4. **Protect each closure automatically.** As steps 2-3 land, add lightweight
+   core regressions and ledger/ownership checks to CI, alongside the existing
+   CLI/configuration smoke checks. Exercise the production compiled route at
+   the appropriate bounded gate; Python helper or JAX-vs-JAX passes alone do
+   not supply Fortran truth. Keep external-data/Fortran/long-running gates
+   separate from fast CI. Every repair carries its targeted regression and
+   source rationale; do not defer all protection until the final sweep.
+5. **Validate integration on a declared release candidate.** Choose a small
+   representative set from the branch/state coverage map, including cold start,
+   nondefault file restart, day/year handoff and relevant hydrology/snow/carbon
+   regimes. Compare declared outputs, carried state and unit-consistent balance
+   checks at matching boundaries. Reuse unchanged evidence with an explicit
+   source/input bridge; historical runs keep their original producer. Only
+   after source/state closure and representative gates, run the contract's
+   complete 669-case independent-single-landpoint acceptance when assets and
+   execution resources are available. This plan does not launch that workload.
 
-## Current Near-Term Track
+### Progress And Completion
+
+The next coverage reconciliation must publish counts against a stated source
+and state denominator: classified entries, each evidence level, missing
+production edges, confirmed unfixed defects, and numerical/reference limits.
+Report both the counts closed and the remaining work after each coherent
+package; do not estimate a completion percentage from the number of bugs fixed.
+
+The stopping condition is the release gates in the equivalence contract:
+reachable branches classified and production-verified, no missing/ambiguous
+required state edges, and the declared integration/scientific checks passed.
+Accepted floating-point effects retain their bounded status; unresolved or
+failed gates remain visible. Completion is a claim about the declared PFT14
+domain, not a guarantee covering every original ORCHIDEE configuration or all
+possible real-valued inputs. A missing historical producer may bound a
+historical comparison without blocking unrelated source work; a new identified
+Fortran reference cannot retroactively supply that historical identity.
+
+## Historical Implementation Track (Through 2026-07-09)
 
 1. LCC local dispatcher and state writeback are source-backed through
    `gross_glcc_firstday_fh` allocation, receiver application, product-pool
@@ -240,13 +323,19 @@ PFT14 branch closure first, performance before routine long mosaics, and full
    grassland management, and fire. These do not naturally activate by changing
    PFT14 forcing/grid/continuous parameters and are not current closure targets.
 
-## Stop And Report Conditions
+## Execution Boundaries And Escalation
 
-- A new server trace or Fortran run is required.
-- A source ambiguity affects the implementation direction.
-- A validation result reveals a semantic mismatch in an already claimed path.
-- A real stage closes, such as LCC local dispatcher closure or restart ledger
-  completion.
+- A roadmap entry is not a new model-run or resource grant. Apply the current
+  package's existing authorization; prepare any genuinely out-of-scope capture
+  or compute request concretely before asking the user to decide.
+- Routine in-scope fixes, validation and related documentation should finish
+  within their assigned coherent package. Source ambiguity that changes the
+  intended model semantics goes to the controller before choosing a behavior.
+- Report a confirmed defect in an accepted path with its affected evidence and
+  a minimal regression; do not discard unrelated completed validation.
+- Delivery includes actual artifacts, checks performed, remaining uncertainty
+  and one prioritized next package. Follow-up is manual, with no scheduled
+  messages or unsolicited reports sent back to the controller chat.
 
 ## Performance Rule
 

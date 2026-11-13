@@ -5,6 +5,11 @@ be described as equivalent to the Fortran PFT14 model. It supersedes any
 earlier use of `verified` that meant only that a source citation or JAX test
 existed.
 
+The current implementation and maintainability policy is recorded in the
+[completion execution plan](pft14_completion_execution_plan.md), updated by the
+controller on 2026-11-13. It reuses accepted evidence and prioritizes outstanding
+source/state coverage; it does not replace or waive the release gates below.
+
 ## Target
 
 The target is every process path reachable for PFT14 when changing an
@@ -82,6 +87,14 @@ The PFT14 equivalence claim is allowed only when all of the following are true:
 Floating-point equality is governed by
 `docs/source_audits/numeric_tolerance_ledger.md`. Bit identity may be retained
 as a diagnostic aid, but it is not substituted for source and state closure.
+
+Source-semantic equivalence permits necessary JAX restructuring while retaining
+the source formulas, conditions, units, masks, integer rules, update order and
+state ownership. A supported natural floating-point attribution may close its
+bounded causal investigation without demanding a unique machine-instruction
+explanation. Record that conclusion separately from strict numerical continuity
+and scientific acceptance: it does not turn a failing gate into a pass or
+authorize a tolerance change.
 
 ## Execution Order
 
