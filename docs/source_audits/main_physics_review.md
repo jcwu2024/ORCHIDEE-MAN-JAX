@@ -1,5 +1,7 @@
 # main 物理正确性检查入口
 
+2026-11-13 主控已验收[剩余源码／状态覆盖清单](main_equivalence_remaining_work.md)：已分别对齐52个过程条目、308个精确owner片段、26,428个源分支臂及5,555条重叠状态／输入视图记录。92／92历史额外字段身份已关联，完整单位／mask／默认／相位和数值schema仍未完成；保存的oracle与当前合同层级分列，不宣称PFT14等价。四gas已接受的真实compiled／IO证据通过未改生产源码桥复用；下一最小包为有效参数与92字段源相位合同补齐。详见[本包工件](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/README.md)和[主控接受范围](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/controller-acceptance.json)。扫描与缺证计数不是待修bug数，不撤销既有有界接受。本包零模型／Fortran／远端执行，不改生产、原容差或C1–C40／22提交；此前DOC接受与严格状态／守恒限制保持。
+
 2026-11-13 主控已验收DOC／碳核算离线结果：**原`carb_mass_total`差0.029237968847不是等量碳损失；审计范围的真实年末库存A−B为0.00286422847186 gC/m²陆地，其中DOC贡献0.00286422845561。** 本包只读取旧producer `e2a9d9f2d5aabca2e2d391400f14559f0dbf8c09`的共同年初及319/1962两条年度保存物，新增模型积分/模型日均0，未改生产、参数或原容差。执行边界为main `73c942b9f086e6ac8255c5fc03ac21155e896376`；当前报告不把旧保存物改称新producer。
 
 单位与符号统一为gC/m²陆地、A(memory)−B(files)。DOC的六轴为点/PFT/32层/自由与吸附相/7来源池/元素；取碳元素、全层与两相求和，按实际`veget_max`加权一次，不额外乘层厚或soil-tile面积。实际PFT14=1及`frac_nobio=0`的全年不变性已由所用caller与表面更新规则证明。独立冠层碳库`interception_storage`已经由producer包含面积权重，直接求和；deepC_peat/soilc_total及替代分支表示不重复加入。本表是有界独立库核算，不是全生态系统守恒证明。
