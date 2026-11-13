@@ -816,3 +816,13 @@ restart_file_scope:
   validation: complete five-state read-write-read plus exact dimensions, variable order, dtype, metadata, chunking, and endian checks
 
 known_global_gaps: []
+
+# S-NEXT-01 historical-extra source contracts (documentation only)
+historical_extra_field_cross_view:
+  schema_version: 1
+  denominator: 92
+  canonical_contract: docs/source_audits/sechiba_state_field_contract.yaml#historical_extra_field_source_contracts
+  lifecycle_denominator_unchanged: 181
+  kind: documentation_only_cross_view_not_new_STOMATE_fields
+  boundary: original STOMATE axis groups and lifecycle stages remain authoritative; EXTRA92 is a separate view
+  numerical_acceptance: false

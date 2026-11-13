@@ -1,5 +1,52 @@
 # PFT14 剩余源码与状态覆盖
 
+## S-NEXT-01：当前状态／参数合同交付
+
+2026-11-13，基线main `8f3c7dbab3ce22af5cd2a828d1ea5416b0489035`。主控已接受本包92字段逐行处置、三个选定入口的有效参数合同及有界接口反例；**尚不满足PFT14等价发布合同**。92个身份全部复用，新增身份0；87项在选定源域内合同归一，5项保留精确缺证。纯适配器检查复现4组源／接口语义矛盾，尚未修复生产；C1–C40／22个代码提交保持原接受范围。逐项工件、原始回执与候选补丁见[本包目录](../../outputs/reviews/main-physics-20261113/state-parameter-contracts/README.md)。
+
+当前字段域为PFT14／USDA12／CWRR／显式雪／IMPOSE_VEG，分开记录cold、restart、首日、普通、compiled、日年界与IO相位。上一包92项身份关联及26项精确合同候选是有效的局部证据，并未认证这92项的全部七维源语义；本包不把它们重计为“此前全部未知”，也不据此推算完成百分比。
+
+| 字段合同维度 | 选定源域已解析 | 精确缺项 |
+| --- | ---: | ---: |
+| 单位 | 91 | 1 |
+| dtype | 92 | 0 |
+| 轴 | 92 | 0 |
+| mask／活动条件 | 92 | 0 |
+| 默认／sentinel优先级 | 91 | 1 |
+| 更新相位 | 90 | 2 |
+| 实际生产／carry路径 | 90 | 2 |
+
+两份YAML的消费者为开发审计／测试，选定运行入口不加载它们；本次只改文档合同。已有静态validator首次发现3个实际producer漏列，补入`frac_snow_nobio`、`frac_snow_veg`、`e_soil_lat`的既有producer合同后，canonical SECHIBA条目由123增至126，STOMATE lifecycle仍181。`cgrnd/dgrnd`四条canonical记录改为实际`ngrnd−1`接口轴，源递推单位分别为K／无量纲；q_sol_pot、tsol_rad及带dt水量等按公式归一，原磁盘注释作为冲突证据保留，没有运行时换算或生产修改。
+
+有效参数范围为`prepare_paper_1961_driver_context`→cached实际体、`_paper_compiled_later_day_block_executable`、`restart_thermosoil_initial_fields`及其可达resolver／override／consumer／cache闭包：**179个canonical knob，103个indexed family按族各计一次**。179项均保留精确resolver及adapter投影和单位处置；177项有可执行initializer／MTC链，另2项命名边界保留，独立物理／真实compiled数值认证为0／179。必需materialized键缺失必须报错，其源默认归上游materializer负责；不把旧3,266个used_run键扩张为本包分母。READ_LAI与源LAI_MAP的域外别名、固定NLEAFAGES及SECHIBA_VEGMAX／SLOPE源setvar责任分别记录。
+
+| 已复现的语义矛盾组 | 同输入源期望与当前接口观察 | 当前交付／限制 |
+| --- | --- | --- |
+| SLOWPROC日历记忆 | Jan1的growth_day `[7,8,9]`应清零而实际carry不变；Jan2的peatC_ok应置1而仍0；日末pre-STOMATE温度`[6,5,−2]`应使growth变为`[8,8,9]`而仍`[7,8,9]`。源写入在DYN_PEAT判断之前，不能以该开关false排除 | 一组、两个字段、三个反例；实际calendar owner未接入选定driver。仅提供普通日末增量的**部分补丁**；Jan1／Jan2仍需真实clock接线，不能猜tstep取模 |
+| P-CTX-OKPC | OK_LEAK／OK_PC均true时，`control.f90:261–278`要求有效OK_PC=false，cached context仍保留raw true | 候选override补丁；未应用／执行 |
+| P-REFSOC-DEFAULT | 有效雪／soil-C／leak门下，源`thermosoil.f90:365–374`先置use_refSOC=true；当前缺键回退false而拒绝，显式true对照可进入 | 候选默认补丁；不关闭热初始化独立真值缺项 |
+| P-COMPILED-CLOSURE | 同config／layout、两个不同且不变的run.def，FR_DT分别2／3；缓存B仍向spy传A的2，fresh B传3 | 使用真实Python构造体，JIT／lower／compile／scan及物理delegate全部替换为spy；非真实compiled数值失败。候选按context实例分区并显式强引用保活，等价独立context可能少共享编译 |
+
+参数补丁覆盖三项接口问题，并列出同context复用、不同context分区、默认正负控制及weakref／淘汰回归方案。其余daily-carbon dispatch与projector callable闭包责任另列。prepared-context的path cache遵守不可变输入约定，**仅path作为key本身未被判为缺陷**。两份候选补丁均只保存在outputs中；字段补丁不构成完整日历修复。
+
+| 仍开放的5个字段 | 精确缺证／下一最小动作 |
+| --- | --- |
+| growth_day | 绑定源month／day／sec及pre-STOMATE temp_growth，使Jan1 reset和日末增量在cold／普通／compiled／年重启的实际路径中各执行一次；已有`lifecycle_completion.intersurf_time`为源clock权威，当前payload尚未绑定 |
+| peatC_ok | 同一真实clock接入Jan2首步且`!dynpeat_PC`的源写回，并把结果传入finalize镜像 |
+| vegstress | 原Fortran缺restart分支对sentinel直接累加的疑点，尚非确认翻译缺陷；需原restget缺字段观测及后续hydrol_var_init／首消费者证据 |
+| veget_year | 当前IMPOSE_VEG分支无科学年值定义；保留sentinel／int32 codec，需map-vegetation协议再认证科学含义 |
+| peqAcoef | 选定非relaxed零系数明确；非零大气relaxation的rate／单位约定需原耦合合同，不能从当前零值推定 |
+
+检查最终逻辑集合为15／15：11项正常assertion及4项预期反例。只运行过一次组合及两次因新失败而进行的定向复查：初次14／15；第一次定向schema通过、validator失败且runner误派参数产生1个TypeError（参数检查体未执行）；修正source span和派发后，最后仅validator复查通过。13项未受影响的初次通过结果复用；最终记录按每项原始receipt／模块SHA绑定，**不是声称最后版本整套重跑**。三份原始回执及全部失败／错误保留，系统TEMP均清理。
+
+本包模型步／模型日／积分、完整物理kernel、真实compiled物理块、Fortran、远端、GPU、训练、付费及环境重建均0。生产／参数／容差／CI未改，未新增C号、未commit/push、未动研究工作树；独立审核仅接受有界合同和接口反例，不是生产数值或等价认证。热边界独立真值、maxmass域限、001历史身份、外部IOIPSL、旧oracle到当前源码／compiled的桥，以及既有gas／DOC严格状态与守恒限制继续开放。下一最小代码动作是主控审核候选参数修复及纯回归方案；字段完整修复须先绑定真实clock。任何后续实际物理／compiled验证另按合同准入。
+
+主控已核对成对源条件、候选补丁、消费者审计、实际逐项回执与独立审核，复用已执行检查，未重复模型或测试；[接受记录](../../outputs/reviews/main-physics-20261113/state-parameter-contracts/controller-acceptance.json)只接受合同和接口反例，不接受未运行的补丁。下一包落实三项参数／缓存修复及回归，同时完成真实源clock的日历接线方案；普通日末部分补丁不得当作完整修复合入。
+
+来源补充：`P-REFSOC-DEFAULT`所在准入helper于2026-11-12提交`fd0fe51495626b39ce42d50dec29b3a6cef744b3`新增，该提交已含缺键回退FALSE。它属于本轮重启修复新增逻辑的缺省边界遗漏，不应算作复查前缺陷；尚无由此导致已通过标准算例数值回归的证据。其余三组的最早来源待限定追溯，不能统一称为旧翻译遗留；C1–C40既有来源结论仍只适用于原40项修正。
+
+## 上包已接受的覆盖快照
+
 2026-11-13：主控已验收本次既有源码、状态台账和接受记录的有限对账；**尚不满足 PFT14 等价发布合同**。本包新增确认的待修语义缺陷为0，缺少验证的条目仍需逐项处理。C1–C40／22个代码提交保持原接受范围。
 
 基线为main `034733109e015ec7330adbf1f75c39c616d9b804`。依据[当前执行计划](pft14_completion_execution_plan.md)和[等价交付合同](pft14_equivalence_delivery_contract.md)，本包只做本地源码／保存证据分析，模型积分、模型日、Fortran执行、远端、GPU、训练和付费均为0；不改生产、参数、容差、CI或修复编号，不commit/push。详细工件、可复现脚本和独立审核见[交付目录](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/README.md)。
