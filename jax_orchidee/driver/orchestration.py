@@ -446,6 +446,126 @@ def _effective_hydrol_ok_pc(values: Mapping[str, str]) -> bool:
     return parse_run_def_bool(values["OK_PC"]) and not parse_run_def_bool(values["OK_LEAK"])
 
 
+@dataclass(frozen=True)
+class _FreshColdThermosoilControls:
+    """Controls for the first initialization of a fresh Fortran module only."""
+
+    source_config_gate: bool
+    use_soilc_tempdiff: bool
+    use_refsoc: bool
+    use_toporganiclayer_tempdiff: bool
+    ok_freeze_thermix: bool
+    ok_explicitsnow: bool
+    satsoil: bool
+    bedrock_flag: int
+    refsoc_file_override: str | None
+
+
+def _fresh_cold_thermosoil_controls(values: Mapping[str, str]) -> _FreshColdThermosoilControls:
+    """Resolve fresh cold initialization, not an arbitrary module restart.
+
+    Fortran thermosoil.f90:202-204 starts toporganic FALSE, soilC/refSOC TRUE.
+    initialize:338-371 reads soilC (default FALSE) only inside the source
+    freeze/effective-PC/LEAK gate, and refSOC (default TRUE) only if soilC is
+    then TRUE. Outside either read gate the module initial value survives.
+    constantes_soil.f90::config_soil_parameters:324-364 initializes freezing;
+    control.f90:247-253 initializes explicit snow. BEDROCK_FLAG:304-315 and
+    satsoil:206,331-337 in thermosoil are independent fresh-module controls.
+    Required PC/LEAK keys remain the materialized driver's responsibility.
+    """
+    freeze = parse_run_def_bool(values.get(
+        "OK_FREEZE_THERMIX", values.get("OK_FREEZE", "FALSE")
+    ))
+    gate = (freeze and _effective_hydrol_ok_pc(values)) or parse_run_def_bool(values["OK_LEAK"])
+    soilc, refsoc, toporganic = True, True, False
+    if gate:
+        toporganic = parse_run_def_bool(values.get("USE_TOPORGANICLAYER_TEMPDIFF", "FALSE"))
+        soilc = parse_run_def_bool(values.get("USE_SOILC_TEMPDIFF", "FALSE"))
+        if soilc:
+            toporganic = False
+            refsoc = parse_run_def_bool(values.get("use_refSOC", "TRUE"))
+    return _FreshColdThermosoilControls(
+        source_config_gate=bool(gate), use_soilc_tempdiff=soilc,
+        use_refsoc=refsoc, use_toporganiclayer_tempdiff=toporganic,
+        ok_freeze_thermix=freeze,
+        ok_explicitsnow=parse_run_def_bool(values.get("OK_EXPLICITSNOW", "FALSE")),
+        satsoil=parse_run_def_bool(values.get("satsoil", "FALSE")),
+        bedrock_flag=int(values.get("BEDROCK_FLAG", "0")),
+        refsoc_file_override=values.get("SOIL_REFSOC_FILE"),
+    )
+
+
+def _fresh_cold_thermosoil_refsoc_file_bound(controls, configured_refsoc_file) -> bool:
+    """Accept the existing config mapping, including an identical explicit path.
+
+    Relative Fortran filename aliases require independent run-directory/link
+    evidence; resolving them against this checkout would invent that binding.
+    """
+    if controls.refsoc_file_override is None:
+        return True
+    if configured_refsoc_file is None:
+        return False
+    override = Path(controls.refsoc_file_override)
+    configured = Path(configured_refsoc_file)
+    return override.is_absolute() and configured.is_absolute() and override == configured
+
+
+def _fresh_cold_thermosoil_missing_inputs(
+    controls: _FreshColdThermosoilControls, *, configured_refsoc_file=None,
+) -> tuple[str, ...]:
+    """Keep the selected refSOC-only cold consumers inside their audited domain.
+
+    thermosoil_getdiff:2631-2687 selects toporganic/mineral/modeled-carbon
+    inputs, whereas run_thermosoil_first_step_module currently supplies refSOC
+    alone. Nondefault freezing/bedrock also lack that downstream binding.
+    These are adapter gaps, not substitutes for those source branches.
+    """
+    missing = []
+    for supported, reason in (
+        (controls.source_config_gate, "source_freeze_effective_PC_or_LEAK_gate"),
+        (controls.use_soilc_tempdiff, "mineral_thermal_fraction_consumer_binding"),
+        (controls.use_refsoc, "modeled_soilc_total_or_zx1_consumer_binding"),
+        (not controls.use_toporganiclayer_tempdiff, "toporganiclayer_consumer_binding"),
+        (controls.ok_explicitsnow, "non_explicit_snow_cold_coefficient_binding"),
+        (controls.ok_freeze_thermix, "nonfreezing_first_step_consumer_binding"),
+        (controls.bedrock_flag == 0, "bedrock_first_step_consumer_binding"),
+        (_fresh_cold_thermosoil_refsoc_file_bound(controls, configured_refsoc_file), "SOIL_REFSOC_FILE_config_static_identity_binding"),
+    ):
+        if not supported:
+            missing.append(reason)
+    return tuple(missing)
+
+
+def _fresh_cold_thermosoil_refsoc_input(
+    config_path: str | Path, *, controls: _FreshColdThermosoilControls, domain,
+    npts: int, ngrnd: int,
+):
+    """Bind the source cold refSOC read without replacing absent external data.
+
+    thermosoil_initialize:534,563-567 reads refSOC after missing restart when
+    use_refSOC alone is TRUE, even when soilC is FALSE. read_refSOCfile:3278-
+    3392 is owned by the existing config-bound static reader. Arbitrary
+    SOIL_REFSOC_FILE overrides need their own identity binding first.
+    """
+    if not controls.use_refsoc:
+        return None, None
+    if controls.refsoc_file_override is not None:
+        configured = load_case_config(config_path).get("static_inputs", {}).get("refsoc_3d_file")
+        if not _fresh_cold_thermosoil_refsoc_file_bound(controls, configured):
+            raise ValueError("cold-start SOIL_REFSOC_FILE override is not bound to config static_inputs.refsoc_3d_file")
+    if domain.resolution is None:
+        raise ValueError("cold-start use_refSOC requires explicit driver resolution")
+    refsoc, metadata = read_paper_thermosoil_refsoc_static_field(
+        config_path, lalo=domain.lalo, resolution_m=domain.resolution,
+    )
+    values = np.asarray(refsoc)
+    if values.shape != (int(npts), int(ngrnd)):
+        raise ValueError(f"cold-start refSOC must have shape {(int(npts), int(ngrnd))}, got {values.shape}")
+    if not np.all(np.isfinite(values)):
+        raise ValueError("cold-start refSOC must contain only finite values")
+    return refsoc, metadata
+
+
 def _effective_thermosoil_wetdiaglong(values: Mapping[str, str]) -> bool:
     """Return Fortran's initialized long-term-humidity switch.
 
@@ -4433,6 +4553,19 @@ def paper_1961_driver_cold_start_first_step_coverage(
         else default_used_run_def_path(config_path)
     )
     run_def_values = prepared_context.run_def_values if prepared_context is not None else parse_run_def(run_def_path)
+    cold_thermal_controls = _fresh_cold_thermosoil_controls(run_def_values)
+    cold_thermal_missing = _fresh_cold_thermosoil_missing_inputs(
+        cold_thermal_controls,
+        configured_refsoc_file=config.get("static_inputs", {}).get("refsoc_3d_file"),
+    )
+    if cold_thermal_missing:
+        return ColdStartFirstStepStateCoverage(
+            mode=COLD_START_INITIAL_STATE_MODE,
+            covered_by_component={},
+            missing_by_component={"thermosoil": cold_thermal_missing},
+            initialized_payloads={"thermosoil_fresh_cold_controls": cold_thermal_controls},
+            notes=("Source-valid cold control variants lack the selected adapter binding; no physical initialization was entered. Missing external files/configuration are separate reader errors.",),
+        )
     dt_sechiba = (
         prepared_context.dt_sechiba
         if prepared_context is not None
@@ -4649,16 +4782,10 @@ def paper_1961_driver_cold_start_first_step_coverage(
         soiltile=slowproc_veg_cold.vegetation.soiltile,
         dz_mm=cwrr_grid.dnh * 1000.0,
     )
-    refsoc = None
-    refsoc_overlap = None
-    if parse_run_def_bool(run_def_values.get("use_refSOC", "FALSE")):
-        if step.domain.resolution is None:
-            raise ValueError("cold-start use_refSOC requires explicit driver resolution")
-        refsoc, refsoc_overlap = read_paper_thermosoil_refsoc_static_field(
-            config_path,
-            lalo=step.domain.lalo,
-            resolution_m=step.domain.resolution,
-        )
+    refsoc, refsoc_overlap = _fresh_cold_thermosoil_refsoc_input(
+        config_path, controls=cold_thermal_controls, domain=step.domain,
+        npts=payload.kjpindex, ngrnd=len(cwrr_grid.znt),
+    )
     hydrol_refsoc_1d = None
     hydrol_refsoc_1d_overlap = None
     if parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")):
@@ -4765,8 +4892,11 @@ def paper_1961_driver_cold_start_first_step_coverage(
         frac_snow_nobio=np.zeros_like(vegetation.frac_nobio),
         totfrac_nobio=vegetation.totfrac_nobio,
         refsoc=refsoc,
-        use_refSOC=parse_run_def_bool(run_def_values.get("use_refSOC", "FALSE")),
-        use_soilc_tempdiff=parse_run_def_bool(run_def_values.get("USE_SOILC_TEMPDIFF", "FALSE")),
+        use_refSOC=cold_thermal_controls.use_refsoc,
+        use_soilc_tempdiff=cold_thermal_controls.use_soilc_tempdiff,
+        ok_freeze_thermix=cold_thermal_controls.ok_freeze_thermix,
+        satsoil=cold_thermal_controls.satsoil,
+        brk_flag=cold_thermal_controls.bedrock_flag,
         ok_laidev=np.asarray(
             [
                 parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{fortran_id:05d}", "FALSE"))
@@ -5109,7 +5239,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
                             parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{fortran_id:05d}", "FALSE"))
                             for fortran_id in fortran_pft_ids
                         ],
-                        satsoil=parse_run_def_bool(run_def_values["satsoil"]),
+                        satsoil=cold_thermal_controls.satsoil,
                         ok_shum_ngrnd_permalong=_effective_thermosoil_wetdiaglong(run_def_values),
                     )
 
@@ -5402,6 +5532,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         "stomate_cold_start_gas_state": stomate_cold_gas,
         "thermosoil_refSOC": refsoc,
         "thermosoil_refSOC_overlap": refsoc_overlap,
+        "thermosoil_fresh_cold_controls": cold_thermal_controls,
         "hydrol_refSOC_1d": hydrol_refsoc_1d,
         "hydrol_refSOC_1d_overlap": hydrol_refsoc_1d_overlap,
         "thermosoil_cold_start_coef": thermosoil_cold_coef,
