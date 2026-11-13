@@ -1,8 +1,16 @@
 # main 物理正确性检查入口
 
-2026-11-13 主控已验收本批gas修复与有界运行，正式登记**C39源默认值、C40完整持久状态传递**；累计**40项已接受修正/22个代码提交**，daily/global同步继续暂停。
-两项共同代码提交为 `76e406e0e0e75402d221bb281908fa4260bc5d66`；复用16项定向回归、真实三文件写读及独立终审，主控未重复模型运行。
-基线为main `488424df2618f209bb4d0d1bf3d8d9cba23602d1`；最终源码overlay以[修复版冻结](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/gas-freeze-v2.json)登记。先前发布的319年度结果保持原`e2a9d9f2…` producer。
+2026-11-13 主控已验收本轮两条8日运行和C1–C40来源审计，**最终gas运行缺项已补齐；40项所修问题均有复查前基线证据**。本轮无生产源码或测试修改，累计仍为**40项已接受修正/22个代码提交**，daily/global同步继续暂停。
+验收范围与保留限制见[主控接纳记录](../../outputs/reviews/main-physics-20261113/final-gas-runtime-and-fix-origins/controller-acceptance.json)；复用执行方验证与独立终审，主控未重复模型、测试或全套来源调查。
+
+本轮另以明确复查前边界`7cae3e02adad23674767a590fdf4d27f239ce065`逐项核对[C1–C40来源](correction_origins.md)：40项所修的错误表达式或源合同遗漏均已存在于该基线；未在这40项中证实复查期间引入的新回归，最初引入提交仍未知。性质分别为13项源过程计算/常数/单位/顺序、20项默认/参数/状态/restart接口、4项显式诊断API和3项执行缓存/AD稳定性；不将40项等同40条独立且活动的物理公式bug。C40初版未闭合既有首日carry遗漏属于不完整修复，不新增编号或倒推为新回归。
+
+两项共同代码提交为 `76e406e0e0e75402d221bb281908fa4260bc5d66`；此前验收复用16项定向回归、真实三文件写读及独立终审，主控当时未重复模型运行。
+此前gas修复包基线为main `488424df2618f209bb4d0d1bf3d8d9cba23602d1`；最终源码overlay以[修复版冻结](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/gas-freeze-v2.json)登记。先前发布的319年度结果保持原`e2a9d9f2…` producer。
+
+本轮直接使用已发布main `765c75fc51af981b1f687f8e36b05f8dd382dc77`，完成**319-cold8和001-restart-nondefault8**，无生产源码或测试改动。每路与已保存前8日日输出比较均为289行/264数值叶、0失败、最大绝对差0；原严格门`1e-8+1e-10*abs(reference)`及shape/dtype/mask/discrete/clock精确合同保持。实际host见证均记录首日tstep47、`jax._src.stages.Compiled`完整days2–8调用/返回、末tstep383与四gas逐坐标精确保持；实际日末packet经当前三文件writer→reader通过，独立base的gas故意置错仍由packet正确覆盖。
+
+001仅复制原三份NC，且只改四gas为事先固定的有限、正、非默认、坐标可区分数组；其余schema/属性/值/mask及原件身份均核验保持。实际首STOMATE reader读取新复制目录已见证。这是2010归档边界在1961forcing下的人工接口夹具，不认证1961历史初始化或年度科学真值。新包共**2启动/16模型日/393.869341监督秒**，各900秒硬限、串行CPU/x64、备用启动未用；任务TEMP清理，原16项回归与001cold365证据复用。详见[本轮已审交付](../../outputs/reviews/main-physics-20261113/final-gas-runtime-and-fix-origins/README.md)及[实际运行证据](../../outputs/reviews/main-physics-20261113/final-gas-runtime-and-fix-origins/runtime-results.json)。
 
 初版真实319cold2和001paper-start2均完成且各66个daily leaf通过原严格门，最大日差分别7.66053886991358e-15和8.881784197001252e-16，clock/domain/352既有必需路径通过；**两路均缺四gas，生命周期失败**。
 真实首日`driver_previous_step_state_from_next_step_hydrol_scaffold`有独立carry清单，遗漏四字段；仅在compact runtime检查carry不足以证明该入口。现只补`STOMATE_GAS_FIELDS`，不扩展其它carry或动力学。
@@ -11,7 +19,7 @@
 Fortran `constantes_var.f90:1467–1468`及`stomate_io::readstart:1177–1199`规定O2=298.3、CH4=0.001267的全数组sentinel回退；已有有效或部分sentinel数组优先，显式API参数只覆盖缺字段/全sentinel回退。
 四字段`O2_soil/CH4_soil/O2_snow/CH4_snow`现从cold/restart初始化、首提取、首日专用跨步、普通/compiled布局保持到日末与写盘接通；旧缺项pickle/NC未补填。OK_PC/CH4_CALCUL活动gas动力学仍关闭，不将gas修复归因DOC或001主指标差异。
 
-原额度内剩余唯一001cold1961/365日使用修复版独立冻结身份，未重试两个短窗口。完整年度对象SHA `77198fddc77be777240dd30a4337dbc0c343ddfe3d27f77060be93b4aa25e361`；最终gas门**通过**，原整体science/normalized/diagnostic为**通过/通过/通过**。完整daily及末态留在新包run.pkl；四主指标如下：
+原gas包额度内剩余唯一001cold1961/365日使用修复版独立冻结身份，当时未重试两个短窗口。完整年度对象SHA `77198fddc77be777240dd30a4337dbc0c343ddfe3d27f77060be93b4aa25e361`；最终gas门**通过**，原整体science/normalized/diagnostic为**通过/通过/通过**。完整daily及末态保留在原gas包`001-cold365/run.pkl`；四主指标如下：
 
 | 指标 | 新001cold年度 | 原年度参考 | 原annual门 |
 | --- | --- | --- | --- |
@@ -20,7 +28,7 @@ Fortran `constantes_var.f90:1467–1468`及`stomate_io::readstart:1177–1199`�
 | GPP | 1.5009596523801692 | 1.5009596347808838 | 通过 |
 | NPP | 0.5990213772418084 | 0.5990213751792908 | 通过 |
 
-全包实际3启动/369模型日，监督570.064392秒，各900秒硬限、串行CPU/x64、0技术重试；远端/新Fortran/GPU/训练/付费/环境重建均0，自己的system TEMP已清理。每路源码/运行器/input身份独立且不混称同一producer。
+此前gas包实际3启动/369模型日，监督570.064392秒，各900秒硬限、串行CPU/x64、0技术重试；其记录冻结，本轮另按上述2启动/16日独立计账。两包远端/新Fortran/GPU/训练/付费/环境重建均0，任务system TEMP已清理。每路源码/运行器/input身份独立且不混称同一producer。
 原annual `1e-5+1e-3*abs(F)`、normalized `1e-3`、diagnostic `2e-6+1e-7*abs(F)`及严格比较`1e-8+1e-10*abs(A)`均未改变；shape/dtype/mask/discrete/clock仍精确。
 
 001通用及点专用Job0脚本在i=0/1961明确三输入NONE，i=1才切换刚产生的start文件；本地归档start时钟858480/date17885属于2010边界，不是脚本规定的1961输入。新cold协议在年度前已按源固定。
@@ -30,9 +38,9 @@ C34有界相位审查未发现已准入USDA/default-knob、显雪/refSOC、完�
 完整系数重启最终var_init的薄雪状态与cold/缺系数随后coef覆盖相位分开。既有319A/B数组相同仅为JAX producer证据，独立Fortran初始化/首次真实消费者数值真值仍缺；本包未改热物理或新增trace。
 
 剩余优先边界为DOC/carb_mass_total严格状态及DOC通量、上述独立热真值、显雪maxmass条件域、001历史实际输入与IOIPSL外部语义。旧DOC78坐标maxabs2.234685861e-4及carb_mass_total差0.02923796885超原限0.0003646537522继续保留，不接受完整重启连续性，不把原始库存坐标和充作质量/通量。
-最终版本未重跑两路短窗口；非默认restart链由组件/真实codec核对，年度只证明新001cold路径。FastState单元段是Python接口证据；compiled firstcall仍无直接observer见证，不能据缺observer断言整年未调用。两点/单年不外推669点、全分支、AD或长期接受。
+原gas包未补最终版319及非默认restart的实际编译运行；本轮两条8日路线已补该缺项和直接compiled调用/返回见证。原FastState单元段仍仅为Python接口证据，旧年度只证明其001cold路径。旧保存物没有第8日完整packet参考，因此本轮不宣称该完整状态逐值相等或关闭DOC严格失败；两点及选定窗口不外推669点、全分支、AD或长期接受。
 
-详见[本批交付](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/README.md)、[机器摘要](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/summary.json)、[001协议](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/initial-protocol.md)及[热相位审查](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/thermal-phase-review.md)。此前四年度包及C1–C38登记保持原身份；冻结交付仍记录接纳前的38项/21提交，本次正式编号、范围与限制见[主控验收](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/controller-acceptance.json)，准确代码提交见[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
+此前gas修复详见[冻结交付](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/README.md)、[机器摘要](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/summary.json)、[001协议](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/initial-protocol.md)及[热相位审查](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/thermal-phase-review.md)。此前四年度包及C1–C38登记保持原身份；冻结交付仍记录接纳前的38项/21提交，C39/C40正式编号、范围与限制见[主控验收](../../outputs/reviews/main-physics-20261113/gas-carry-and-initialization/controller-acceptance.json)，准确代码提交见[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。本轮仅发布三份审查/来源报告，无新编号、生产代码提交或研究分支同步；冻结owner交付仍保留其主控接纳前身份。
 
 工作顺序（2026-10-27用户决定）：**先稳固main，暂不与日尺度和全球效率分支对齐**。
 已接受修复继续登记准确提交、触发范围、证据及限制，待基础分支这一轮加固后集中评估交接，
