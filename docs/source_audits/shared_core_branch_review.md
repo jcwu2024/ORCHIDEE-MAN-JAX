@@ -1,12 +1,12 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受 C48：生产日历接线
+## 当前：三字段源合同收口，正式登记仍为C48
 
-2026-11-14，基线 main `b5eff879e00154c936a1709d5ab91aae65f158d6` 上完成 FIELD-CANDIDATE-01。共享 source_calendar 由现有 slowproc 与实际 driver 复用；source_clock 将实际变量属性、DIM2、run 生命周期和三文件 IO 绑定至已接受 provider；packet／FastState 的独立 runtime 传递游标与 binding，原93 science 不扩展。STOMATE 入口的 julian_diff／EndOfYear 沿源时钟传递。[本包](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)保留实际矩阵、旧完整函数反例及回执。
+2026-11-14，main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f` 上完成[remaining-field-contracts](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)。仅三行账本、两份聚焦测试及当前报告变化，无生产源码修复：veget_year归为源未定义／inactive合法边界；vegstress的原生缺值规则保留精确缺证，已确定实际var_init不覆盖及selected首消费者mask；peqAcoef的selected非relaxed／非WATCHOUT零路径源定义一致，外部非零单位仍未认证。当前计数 **89归一＋1明确源未定义边界＋2精确缺证／92**。
 
-120 个唯一检查最终通过：首次112通过／7个夹具失败，仅修夹具后定向7通过，再补实际forcing host factory1项；生产 SHA 一致，首次失败保留。真实小型 JAX clock scan／compiled executable 和真实三文件 IO 仅证明所列适配器，物理 delegates 均替换；模型／完整物理／真实物理 compiled／新 Fortran／远端／GPU／训练／付费／环境重建全0。两行字段缺口归一后89＋3／92，93 science 与 numerical_acceptance=false 保持。整日 source-alignment 和 legacy policy 见[当前报告](main_equivalence_remaining_work.md)。
+19个唯一新检查最终通过，首18pass／1夹具API失败及定向修复1pass均保留；实际reader／codec、替换物理委托的完整adapter、支持域拒绝和小灌溉slice范围见[回执](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/verification-results.json)。实际JAX编译非零（91个raw live completion事件），完整物理kernel／物理compiled、模型步／日／积分、新Fortran／SSH／远端／GPU／训练／付费／环境重建全0。原120项C48和其他不变证据未重跑；原93science／126canonical／181lifecycle和numerical_acceptance=false保留。
 
-主控已接受为 **C48**，代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`，正式登记 **C1–C48／48项／26个代码提交**。[验收记录](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)保留实际审阅和原验证范围，冻结owner交付仍为验收前身份。daily/global同步暂停；以后须按准确提交整合共享owner、driver、clock IO和相关测试，不能仅复制单个slowproc文件。原001／旧构建／命名实际年重启身份、DOC严格状态／守恒、独立热真值、maxmass及整模型等价限制保留，不将旧 producer 改称本次模型验证。
+正式登记保持 **C1–C48／48项／26个生产修复提交**；C48代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a` 的[主控验收](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)不变。[三字段包主控验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)已完成，发布内容仅测试与报告，不新增修正编号，daily/global同步暂停。[最小后续方案](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)保留本包未执行身份；后续仅补读已识别restcom源码，模型运行与新原生probe另列。原001／旧构建／实际命名年重启身份、DOC严格状态／守恒、独立热真值、maxmass与整模型等价限制保留。
 
 ## 此前 C45–C47 原生 helper 接受快照
 

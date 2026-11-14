@@ -1,12 +1,12 @@
 # main 物理正确性检查入口
 
-## 当前：C48 生产日历接线已接受
+## 当前：三字段分类已接受，无新增生产修复
 
-2026-11-14，基线 main `b5eff879e00154c936a1709d5ab91aae65f158d6`。FIELD-CANDIDATE-01 已连接 forcing／restart 变量属性、DIM2 chronology、cold／first-day／ordinary／compact／compiled／年界与三文件 IO。共享 calendar owner 按 `slowproc.f90:556–610` 在 pre-STOMATE 相位更新 growth_day／peatC_ok；两镜像、once-only 和日末合并有实际适配器证据。触及的 STOMATE 参数构造器使用 bound julian_diff／EndOfYear。交付与逐路径范围见[本包](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)及[当前报告](main_equivalence_remaining_work.md)。
+2026-11-14，基线 main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f`。按[主控决策](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-decision.json)完成[三字段收口](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)：`veget_year` 属 IMPOSE_VEG 下源未定义／inactive 的明确边界，零仅为序列化 sentinel；`vegstress` 缺实际 IOIPSL restget／expval 规则，已确定 var_init 不覆盖、首灌溉消费者在选定 PFT14 下被 mask，随后 diag_soil 才确定覆盖；`peqAcoef` 选定非松弛且非 WATCHOUT 的 A=0／B=Qair 行为源定义一致，非零耦合单位仍缺外部 producer。无生产修复，不把条件性源码差异登记为 bug。
 
-120 个唯一检查最终通过：首次组合 112 通过／7 个夹具缺字段失败，仅修夹具后定向 7／7 通过，再补实际 forcing host factory 1／1。生产 SHA 不变，首次失败保留。真实小型 JAX scan／lower／executable、变化日期复用、两种年重启生命周期、真实三文件写读及旧完整函数反例均有执行证据；实际 JAX 编译非零，日志计数口径见最终回执。模型步／日／积分、完整物理 kernel、真实 compiled 物理块、新 Fortran／远端／GPU／训练／付费及环境重建均 0。
+账本为 **89 归一＋1 源未定义边界＋2 精确缺证／92**。19 个唯一新检查均有通过证据：首次18通过／1夹具 API 失败，修真实 callback spy 后仅定向1通过；失败及两份执行 SHA 保留。真实小 NC、实际 reader／codec、完整适配器与替换物理委托、早期拒绝及两个小 irrigation slice 的范围见[验证索引](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/verification-results.json)。JAX eager/import 编译日志共91个完成事件，完整物理 compiled、模型步／日／积分、新 Fortran／SSH／远端／GPU／训练／付费／环境重建均0，TEMP已清理。
 
-仅 growth_day／peatC_ok 两行按有界接线证据归一，当前 89＋3／92；原 93 science 身份与 numerical_acceptance=false 保持。主控已接受为 **C48**，代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`，正式累计 **48项／26个代码提交**；[验收记录](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)复用owner验证，无主控行为重跑。整日接口要求源日界对齐且 DT_STOMATE 等于源日长，半小时支持显式 source/local 偏移。原001／旧构建／命名实际年重启身份、DOC 严格状态／守恒、独立热真值及 maxmass 限制仍单列，研究分支同步暂停，不升级整模型数值接受。下一包核实剩余三行字段合同。
+正式接受仍为 **C48／48项／26个生产修复提交**，代码 `782535b4130f2ddc8cd30a251e0493709e1ab26a`；C48旧120项与原生41／本地80等证据复用，旧包冻结不改。[本包主控验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)已核对实际源码、测试、回执与独立审核，未重复行为测试；仅发布两份测试与五份报告／字段合同，不新增生产修正编号。原93 science／126 canonical／181 lifecycle 与 numerical_acceptance=false 保持。缺证的[最小后续观察](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)在本包未执行，下一优先项为按既有历史Fortran取证授权仅补读已识别IOIPSL源码。非零WATCHOUT域暂不扩张；原001／旧构建／命名实际年重启、DOC严格状态／守恒、独立热真值和maxmass限制仍单列，研究同步暂停。
 
 ## 此前 C45–C47 原生 clock／helper 接受快照
 

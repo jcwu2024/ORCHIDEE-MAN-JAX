@@ -1,26 +1,20 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前：C48 生产日历接线已接受，剩余三项字段合同
+## 当前：三字段收口完成，剩余为明确边界与精确外部缺证
 
-2026-11-14，执行基线 main `b5eff879e00154c936a1709d5ab91aae65f158d6`。本包完成已接受 IOIPSL provider 的生产适配器接线；[交付入口](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)、[实际路径矩阵](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/integration-evidence.json)、[IO 合同](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/clock-io-evidence.json)与[字段更新](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/field-contract-update.json)分别记录实际范围。
+2026-11-14，基线 main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f`；[新包](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)仅调查前一账本的三行，不重跑C48接线或旧完整调查。生产源码未改，当前 **89 归一＋1 源未定义边界＋2 精确缺证／92**，不是92／92数值接受。
 
-| 边界 | 当前实现与证据 |
-| --- | --- |
-| 时钟来源 | 实际 forcing／三份 restart 的 calendar、units／origin、time_steps／tstep_sec，经源优先级及 DIM2 reset／overwrite；小 NC config factory 与实际 forcing host factory 已调用，不从文件名或 modulo 猜日期 |
-| 共享 owner | Jan1 init／first-active、Jan2 全 dynpeat_PC／JUDGE_PC／PC_lim 分支含非默认等号、午夜严格 temp_growth>5；取 pre-STOMATE 温度与 peatC，位于 DYN_PEAT 外 |
-| 实际 caller | cold／first-day／ordinary／compact／scaffold／day-end 两镜像、once-only、pre/post 故意改值 spy；三个实际 STOMATE 参数构造器见证 source julian_diff／EndOfYear |
-| compiled | 每半小时八个数值 clock 叶，full FastState 携独立 runtime；真实 jit／scan／lower／executable、变化日期下同 context 复用与 binding 分区；静态 1961／48／2／47 标签不提供 chronology |
-| 年与 IO | continuous 保留首次锁／常量并独立 rebase local 标签；new_native_run 建立新 run；实际 packet→bundle→三文件→aggregate 校验属性、游标与双镜像 |
+| 字段 | 本包结论 | 最小后续条件 |
+| --- | --- | --- |
+| veget_year | slowproc1603–1644仅map且非imposed赋值；当前scientific year未定义，veget_update=0／无rotation排除活动读；JAX零为serialization sentinel，实际signed32 codec与拒绝域已验证 | 当前inactive分支无需数值观察；启用map／LCC／rotation前先声明源输入域 |
+| vegstress | 正常present值保留；原all(val_exp)累加无零重置；var_init不覆盖。首irrigation ratio在当前PFT14／OK_LAIDEV=false下被mask，diag_soil9044才全覆盖 | 实际IOIPSL缺字段／expval读体不在已存摘录；[一份SHA核验源码的只读提取](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)，本包未执行 |
+| peqAcoef | 实际非relaxed且非WATCHOUT路径每步A=0／B=Qair，非零restart读取／codec保留后在活动边界覆盖；JAX明确拒绝另两模式 | 外部WATCHOUT输入身份、producer revision／公式、A/B单位和flux／amount／dt约定；零值不能证明一般单位 |
 
-唯一全组合 **119 项：112 通过／7 失败**；7 项在夹具缺 forcing.u/v 或必需 DT_SECHIBA 时提前退出，仅修夹具后定向 **7／7 通过**。路径矩阵又定位一项尚未直接调用的 forcing host factory，补一项新检查 **1／1 通过**；最终 **120 个唯一检查**均有通过证据，生产代码在三次执行间未改。[最终验证索引](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/verification-results.json)保留首次失败与三份不可变回执。旧 b5 完整组件 builder 在同组物理替身下复现丢失／陈旧日历值，新完整 builder 修复双镜像；不以 AST 表达式替代实际 caller。22 项 source-clock／IO 与 42 项相关旧 IO 首次通过，无重跑。C45–C47 旧80／41 native、C44 专项及 gas／DOC 等复用。
+完整源、输入身份与首读／首覆盖链见[vegetation证据](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/vegetation-contract-evidence.json)、[peq单位证据](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/peq-contract-evidence.json)与[三行分类](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/three-field-dispositions.json)。数值999999不等于已观测原生缺值或NC fill mask，不能从当前mask外推crop支持，初始化后直接finalize的相等性也未被证明。不复制未定义值，不修改物理公式或容差。
 
-本地合同仅将 growth_day／peatC_ok 两行归一，**89＋3／92**；phase/path 两维各由 90＋2 改为 92＋0，其余维度不改。剩余三行是 veget_year 活动域科学定义、vegstress sentinel／初始化及 peqAcoef 耦合单位。93 science 身份、canonical／lifecycle 分母及 numerical_acceptance=false 保持；字段级接线验证不构成整模型／年度或实际物理 compiled 接受。
+19个唯一新检查最终均通过：唯一组合18pass／1fail，夹具访问不存在的step.boundary；改为真实initialize/main回调spy后仅该1项重跑通过。生产SHA相同，原失败保留，最终tested-source身份已封存；[验证回执](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/verification-results.json)单列91个JAX live编译完成日志事件（含import／eager，非独立executable计数）。执行仅纯适配器、小NC及有限synthetic slice；模型／整日／积分／完整物理／真实物理compiled、新Fortran／远端／SSH／GPU／训练／付费／环境重建全0，TEMP清理。
 
-支持域为 canonical Gregorian／noleap。整日入口在物理调用／lower 前要求源日界对齐及 DT_STOMATE=86400，半小时允许显式偏移；未知／冲突／缺失 metadata、混合版本、physical-only legacy restart、无法保真固定格式序列化等精确拒绝。严格 clock reader 默认拒绝旧载荷，native_metadata_v1 仅显式准入新 run；科学-only 旧 reader 不作时钟声明。实际 JAX 编译非零（216 个 live completion 日志事件，含 import／eager primitive；初始原始99含2个重复，口径保留），完整物理编译为0。模型步／日／积分、新 Fortran、远端作业、GPU、训练、付费与环境重建全0，TEMP cache 清理。
-
-主控已按实际源码、调用测试、三份原始回执及独立审核接受为 **C48**，代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`；正式累计 **48项／26个代码提交**。24份交付文件、30份包内证据与23份执行绑定源码均核对一致，主控未重复行为测试。详见[主控验收](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)。冻结owner交付保留验收前47／25身份，研究同步仍暂停。
-
-下一包收口剩余 `veget_year`、`vegstress`、`peqAcoef` 三行的源定义、初始化与单位合同，复用已完成路径证据；不能把源未定义、缺证或合法支持域边界直接当作翻译bug。原001 producer／初始输入、旧 source/object-to-archive manifest、命名实际年重启 tuple 仍缺，不能由合成夹具恢复，也不作为重复考古条件。DOC 严格状态／真正质量残差、独立热真值、maxmass 条件域和 PFT14 等价发布合同仍单列；本包不自动启动后续模型运行。
+C48仍已接受：代码 `782535b4130f2ddc8cd30a251e0493709e1ab26a`，累计48项／26个生产修复提交；其120项与旧41 native／80本地检查复用，冻结旧包保留原交付身份。[本包主控验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)已接受三行分类与19项有界检查，7份交付文件、26份包内证据及10份最终执行绑定路径均一致，无主控行为重跑。仅测试／报告发布，无新C号或研究同步。下一优先项按既有历史Fortran取证授权补读已识别restcom.f90，确定vegstress实际缺值规则；不启动模型／新原生probe，不扩张非零WATCHOUT域。93 science／126 canonical／181 lifecycle 与 numerical_acceptance=false不变；原001 producer／初始输入、旧source/object-to-archive manifest、命名真实年重启tuple、DOC严格状态／真实质量残差、独立热真值及maxmass域仍未由本包补足。
 
 ## 此前 C45–C47 helper 接受快照：当时生产日历尚未接线
 

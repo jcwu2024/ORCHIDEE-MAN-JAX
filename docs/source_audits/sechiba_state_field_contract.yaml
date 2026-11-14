@@ -232,9 +232,17 @@ historical_extra_field_source_contracts:
   calendar_wiring_update:
     baseline: b5eff879e00154c936a1709d5ab91aae65f158d6
     evidence: outputs/reviews/main-physics-20261114/calendar-driver-wiring/field-contract-update.json
-    status: locally_verified_pending_controller_acceptance
+    status: controller_accepted_bounded_calendar_wiring
+    controller_acceptance: outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json
     changed_rows: [sechiba_finalize_state.growth_day, sechiba_finalize_state.peatC_ok]
     domain: synthetic actual adapters, real clock-only JIT/scan and small three-file restart IO; no physical model execution
+  remaining_field_update:
+    baseline: 8fcedfb05e9de632f0d40b8ba5e717b517e3d11f
+    evidence: outputs/reviews/main-physics-20261114/remaining-field-contracts/three-field-dispositions.json
+    status: controller_accepted_bounded_source_classification
+    controller_acceptance: outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json
+    changed_rows: [sechiba_finalize_state.veget_year, sechiba_finalize_state.vegstress, driver_previous_step_state.peqAcoef]
+    domain: source reads, actual pure adapters with physical delegates replaced, small NetCDF and synthetic scalar slices; no model execution
   scope: finite historical EXTRA92; source/schema only; separate from original123 transition contracts and three source-backed
     omissions now completed
   denominator: 92
@@ -245,7 +253,9 @@ historical_extra_field_source_contracts:
     prior_identity_joins: 92
     new_identity_joins: 0
     source_contract_normalized: 89
-    precise_gap_rows: 3
+    source_undefined_inactive_boundary_rows: 1
+    precise_gap_rows: 2
+    count_policy: mutually exclusive 89 normalized + 1 source-undefined boundary + 2 exact gaps; per-dimension IO and guard contracts do not certify defined scientific values or numerical equivalence
     by_dimension_after:
       units:
         resolved_in_selected_source_domain: 91
@@ -4508,8 +4518,8 @@ historical_extra_field_source_contracts:
     runtime_dtype: cold seed int64 / restored signedint32
     axes:
     - npts
-    mask_and_inactive: paper IMPOSE_VEG=y, USDA12, noDGVM/noLCC/DYN_PEAT=false; staticsoil/peatmemory retained even inactive;
-      veget_year scientificvalue undefined on thisbranch
+    mask_and_inactive: IMPOSE_VEG=true excludes init assignment; veget_update=0 and selected OK_ROTATE=false exclude consumers;
+      map vegetation, LCC and rotation are outside this admitted domain
     default_and_sentinel: 'IMPOSE_VEG=true: source never initializes or reads scientific value; JAX cold seed0 int64 is serialization
       sentinel; current restart codec validates signedint32'
     phase_dispositions:
@@ -4555,12 +4565,17 @@ historical_extra_field_source_contracts:
       lines: 723-727
     - file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
       lines: 827-831
-    status: precise_gap
-    gaps:
-    - dimension: defined_scientific_value
-      source_reason: slowproc1603map_pft_format.AND..NOT.impveg guard excludes allsource writes/reads; currentIMPOSE_VEG=true
-      action: none for currentinactivebranch; supply declared mapvegetation protocol before activatingorcertifying calendar
-        value
+    current_evidence: outputs/reviews/main-physics-20261114/remaining-field-contracts/vegetation-contract-evidence.json#veget_year
+    status: source_undefined_inactive_explicit_boundary
+    gaps: []
+    explicit_boundary:
+      dimension: defined_scientific_value
+      source_reason: slowproc1603-1644 only defines the value under map_pft_format AND NOT impveg; current imposed branch
+        sets veget_update=0. Finalize1251-1254 still writes when map_pft_format, which does not define a scientific year.
+      serialization: JAX cold0 is an int64 serialization sentinel only; actual NC reader and finite exact signed32 codec tested;
+        no numerical equality to uninitialized Fortran storage or calendar-year range asserted
+      admission: actual slowproc init rejects nonimposed map vegetation before physical initialization; declare and verify map/LCC/rotation
+        protocol before activating that domain
     numerical_acceptance: false
   - component: sechiba_finalize_state
     field: poor_soils
@@ -4615,9 +4630,8 @@ historical_extra_field_source_contracts:
     - nvm
     mask_and_inactive: CWRR6soiltiles; mask_soiltile=soiltile>min_sechiba, mask_veget=veget_max>min_sechiba; exact peat/tide
       activecoordinate guards retained in sources; inactive carried slots never globallydeleted
-    default_and_sentinel: present restart preserved; original allmissing branch adds vegstressv to sentinel-valuedvegstress,
-      unlike humrel zero-reset; JAX selects summed us directly; local branch candidate only, final physical var_init/first-consumer
-      legality to inspect
+    default_and_sentinel: source adds vegstressv only IF ALL(restget result==val_exp), without zero reset; actual IOIPSL missing
+      return remains unobserved. JAX missing mapping selects summed us; explicit normal/all999999/partial999999 preserved.
     phase_dispositions:
       cold: source_path_bound
       restart: source_path_bound
@@ -4683,13 +4697,18 @@ historical_extra_field_source_contracts:
       lines: 5482-5486
     - file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
       lines: 6802-6806
+    current_evidence: outputs/reviews/main-physics-20261114/remaining-field-contracts/vegetation-contract-evidence.json#vegstress
+    selected_first_consumer: sechiba1048 copies old stress; hydrol1241-1274 irrigation ratio precedes hydrol_soil. Only PFT14
+      occupied and OK_LAIDEV14=false mask the selected ratio; actual small drip/flood slices also demonstrate crop-enabled sensitivity.
+    first_definitive_overwrite: hydrol_var_init3832-4650 has no vegstress input or overwrite; hydrol_diag_soil9044 zeroes whole
+      array then9090-9099 recomputes before slowproc consumer at sechiba1187. Init/finalize-before-first-step equality unaccepted.
     status: precise_gap
     gaps:
     - dimension: default_sentinel
-      source_reason: hydrol3051-3057 allmissing adds SAVE stress to sentinel; JAX owner selects stress directly; eligibility
-        externalrestget value and later overwrite must precede anyproductionbug claim
-      action: observe original IOIPSL restget absent-field result and hydrol_var_init/firstconsumer; then isolate legal initialization
-        branch. No pure source-expression counterexample or physical defect counted here
+      source_reason: hydrol3048-3057 and ioipsl_para344-372 depend on actual IOIPSL restget_opp_r2d return/expval; saved local
+        IOIPSL evidence lacks that read body. ORCHIDEE val_exp999999 is not an observed native missing return.
+      action: external-observation-plan.md specifies one SHA-checked read-only restcom.f90 extraction; not executed. No speculative
+        production edit, copying undefined values, or missing-default numerical acceptance.
     numerical_acceptance: false
   - component: sechiba_finalize_state
     field: cgrnd
@@ -5370,14 +5389,16 @@ historical_extra_field_source_contracts:
     field: peqAcoef
     owner: driver
     units: unresolved outside zero-coefficient nonrelaxed domain
-    unit_basis: dim2 qair=-peqA*vevapp*dt+peqB; exact source moisture rate convention requires atmospheric coupling protocol
+    unit_basis: ENERBIL denominator subtracts peqA from zikq; vevapp formula includes dt and history divides it out, while DIM2
+      relaxed qair=-peqA*vevapp*dt+peqB adds dt. Exact nonzero coefficient producer convention remains missing.
     source_dtype: REAL(r_std)
     runtime_dtype: float64
     axes:
     - npts
     mask_and_inactive: allselected landpoints; source DIM2 landindex gather/scatter; driver relaxed/watchout alternate domain
       not added
-    default_and_sentinel: complete restart or0 at initialization; currentforcing coupling supplies currentcoefficients
+    default_and_sentinel: actual missing restart resolves A=0; present nonzero value preserved by codec/resolver but nonrelaxed
+      nonWATCHOUT boundary overwrites A=0, B=observed Qair before coupling. WATCHOUT imports external A; RELAXATION is fatal in source.
     phase_dispositions:
       cold: source_path_bound
       restart: source_path_bound
@@ -5407,13 +5428,18 @@ historical_extra_field_source_contracts:
       lines: 1089-1093
     - file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
       lines: 1116-1120
+    current_evidence: outputs/reviews/main-physics-20261114/remaining-field-contracts/peq-contract-evidence.json
+    selected_behavior: source-defined consistent nonrelaxed nonWATCHOUT zero A/observed Qair B; actual forcing reader, driver
+      with synthetic callbacks, nonzero restart codec, missing fallback and unsupported-switch guards checked
+    unsupported_domain: JAX rejects RELAXATION and WATCHOUT; source RELAXATION default false and severity3 reject598-605;
+      source nonrelaxed WATCHOUT preserves imported A, so nonrelaxed alone must not imply zero
     status: precise_gap
     gaps:
     - dimension: units
-      source_reason: DIM2 qair=-peqA*vevapp*dt+peqB935 while ENERBIL vevapp1505 is perstep wateramount; exact relaxation convention
-        outside currentnonrelaxed domain
-      action: bind original atmosphericcoupling mode/rate contract before nonzeropeqA interpretation; currentnonrelaxed coefficientzero
-        remains defined
+      source_reason: readdim2 imports unitted PBL A; no paired external WATCHOUT producer equation/input is identified. Step-amount
+        vs rate and q_cdrag/comment conflicts permit only a conditional dimensional discrepancy, not a proven adapter bug.
+      action: bind exact WATCHOUT file, producer revision/equation, A/B units and flux/dt convention per external-observation-plan.md;
+        no external command executed, general units are not inferred from selected zero coefficients
     numerical_acceptance: false
   - component: driver_previous_step_state
     field: peqBcoef

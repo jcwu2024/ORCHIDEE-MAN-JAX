@@ -4,6 +4,12 @@
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 
+## 当前三字段分类（不新增修正编号）
+
+2026-11-14，[三字段包](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)以main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f` 为基线，没有确认可修的生产adapter缺陷或新增回归，因此仍为 **48项／26代码提交**，不分C号。`veget_year` 是Fortran imposed分支未定义的科学值，JAX零仅serialization sentinel；`vegstress` all(val_exp)表达式差异仍缺实际IOIPSL返回合同，不把条件性表达式当旧翻译bug；`peqAcoef` 的零路径已验证，非零源单位缺证在外部producer边界。账本分类89归一＋1源未定义边界＋2精确缺证／92，不改变原93／126／181与numerical_acceptance=false。
+
+新19项唯一检查均有通过证据，首18pass／1fail是本包测试夹具误读Dim2StepOutput API，改用真实callback spy后定向1pass；不是生产回归或新的物理修正。两次回执与精确源码身份、源／input／first-consumer链及[最小后续观察](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)保留；本包无模型／完整物理／原生或远端执行，C48旧120项复用。[主控已验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)并发布测试／报告阶段，不增加生产修复提交数或修改下方历史来源标签；研究同步暂停。
+
 ## C48（原 FIELD-CANDIDATE-01）生产接线已接受
 
 2026-11-14 的[接线包](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)完成共享 calendar、真实 metadata／DIM2、实际 caller／compiled／年与 IO 接线。来源沿用复查前 `7cae3e02` 已存在的 driver owner 调用遗漏。本包保存 b5 `b5eff879e00154c936a1709d5ab91aae65f158d6` 中完整 `_runtime_next_state_from_components` 函数，在相同物理替身下调用其旧 signature，复现 Jan1／Jan2 丢失／stale 日历值，再执行当前完整 builder 验证双镜像修复；fixture、原函数 SHA 与跨度见[来源绑定](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/baseline-replay-identity.json)。没有执行旧模块／旧模型，也不追认未受 Git 跟踪 Fortran 的历史身份。
