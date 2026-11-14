@@ -1,6 +1,27 @@
 # PFT14 剩余源码与状态覆盖
 
-## C44冷启动输入已接受；原时钟源码已恢复、原生边界仍待验证
+## C45–C47时钟基础接口已接受；生产日历接线仍开放
+
+2026-11-14，基线main `a5748f6aa1f1d56e06831f23f198f5d7f435e76d`。本包完成新识别IOIPSL参考库的标量时钟／合成restart元数据对照，并本地整合两个clock候选及非Gregorian小数秒截断修复。交付与逐项证据见[本包入口](../../outputs/reviews/main-physics-20261114/native-clock-helper/README.md)、[原生观测](../../outputs/reviews/main-physics-20261114/native-clock-helper/native-observed.json)和[helper合同](../../outputs/reviews/main-physics-20261114/native-clock-helper/helper-repairs.json)。主控已接受C45实际日期年长、C46 Gregorian Lilian起点、C47非Gregorian REAL秒；代码／测试／fixture提交3f7b482765b7b41339ee56a818b1f164490a5d1e，累计**47项／25个代码提交**。不重复C42／C44，仍不满足PFT14等价发布合同。
+
+原生job `127957445`在compute node `a09r1n15`使用1 CPU／1 GiB／300秒硬限，实际调度14秒、14 allocated CPU秒／2.730 CPU秒，预算预留300 CPU秒。实际仅1作业、11个原生case进程：7组clock共41条记录、3个成功metadata及1个预期缺时间轴fatal（exit1）。源预期与原生返回0差异，整数精确、real原门`abs<=1e-10, rel=0`保持。编译器、四module、相同旧archive、实际动态库、两个新executable、各自link map及输入／输出身份均保存；`calendar.o/restcom.o`的实际链接与前后源／库SHA已核验，没有重建IOIPSL或模型。
+
+| 有界原生结果 | 实际观测 |
+| --- | --- |
+| noleap1961，dt1800，初始化／首active／Jan2／午夜／年界 | native calendar明确返回noleap；date0=715765，year_length=17520 |
+| Gregorian2000／2001及2000-02-29起点 | native返回gregorian，Lilian日数2000-01-01=152385；三个date-aware年长分别17568／17520／17568 |
+| 小数起点／NINT | noleap标量锁保留900.2499952912331秒；Gregorian primitive REAL与owner NINT分列；365日／2日的182.5按源取183 |
+| 显式合成restart metadata | NONE保留caller `(7,715765,1800)`；restore由time_steps起点及tstep_sec得到`(17,716130,3600)`；overwrite TRUE保留caller；缺轴按源报错 |
+
+首次提交SSH在90秒超时且无输出；成功只读恢复确认无私有intent／对应job／运行文件后，使用同一不可删除的原子noclobber标记完成一次受控传输恢复。两次传输尝试及首超时全部保留，实际只有上述1作业，不是原生重跑。中文sha成功词“确定”造成的首14项回执解析误报保留在原账本；修正明确locale解析及补全metadata link摘录后，数字门、输入与资源均未变化。完整原始记录见[执行账本](../../outputs/reviews/main-physics-20261114/native-clock-helper/native-execution.json)。
+
+生产变更只涉及`lifecycle_completion`与窄范围纯`ioipsl_calendar`：按源`tlen2itau('1Y',dt,date0)`计算首次year_length，one_year使用天；Gregorian改用Lilian整数JDN偏移2299160；非Gregorian seconds保留REAL，Gregorian owner执行NINT。独立startdate split锁、Fortran整数截断及归一化顺序有源依据。同一run跨年继续保留首次year_length／spread；显式`date0_convention='ioipsl_calendar'`及previous binding属于适配器不可变run准入，不能冒称Fortran本身检查任意后续参数变化。旧seconds-valued year、astronomical-JD、无绑定callback／previous及未测calendar显式拒绝，不按数值猜epoch。两个旧unit调用迁移，旧2001合成oracle的TEMPLATE／CASES和历史证据保留，当前比较入口在编译前拒绝。
+
+唯一相关本地组合为**80／80通过**，与80项静态collect一致，含41条native/Python逐项对照、6项metadata-to-DIM2 reset映射、源NINT近半数／日界顺序及三个保存基线AST反例：旧day-valued year长0、Lilian解码年份错误、旧小数秒900被截断。它们是纯helper／resolver／AST检查，不执行DIM2 driver或物理。0错误／skip／行为重跑，TEMP已清理；禁用cacheprovider的一条unknown cache_dir warning保留。来源、实际caller与payload兼容性审计及完整回执见[来源记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/helper-origins.json)、[验证结果](../../outputs/reviews/main-physics-20261114/native-clock-helper/verification-results.json)。旧参数50＋日历11、C44专项50、gas／DOC／92字段证据复用，未重跑。
+
+本包新增Fortran参考执行明确为11进程／1个远程compute作业；模型步／日／积分、完整物理kernel、真实compiled物理块、显式JIT、GPU／训练、新付费服务及环境／库重建均0。没有接入生产SLOWPROC scheduling、compiled carry／fast schema或年／restart IO，growth_day／peatC_ok等5项字段缺证与87归一＋5缺证／92、原93字段分母保持。新参考不恢复历史001 producer、旧source/object到archive构建manifest或实际命名年重启tuple；这三项仍明确开放，不重复考古。独立热真值、DOC严格状态／真实守恒残差、maxmass条件域及daily/global同步暂停保持；未改主控计划／合同或研究工作树。主控已核对实际代码／测试／原始native选定记录与身份回执，复用80项检查和独立终审，未重复测试、原生任务或SSH；详见[接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。下一包完成真实源clock绑定及SLOWPROC日界／年界写回，经cold／普通／compiled／restart接口闭合；使用已接受的原生fixture，不重复历史取证或全年模型。
+
+## 此前C44接受快照：当时仅恢复原时钟源码、原生边界未验证
 
 2026-11-14主控已接受基线`0ae8ecdf491b5a8d9b6523704fb0d23f14b67a15`上的C44冷启动参数／静态碳输入绑定修复，代码与测试提交`9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2`。累计**44项／24个代码提交**，C42不重复计数。接受范围及实际核验见[主控记录](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/controller-acceptance.json)；[原交付包](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/README.md)保留封存身份与交付时状态。时钟源码、构建／link和已识别参考输入证据获有界接受，原生边界及历史身份仍缺证；生产日历未接入，仍不满足PFT14等价发布合同。
 

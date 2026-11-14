@@ -1,5 +1,11 @@
 # 共享物理核心与研究分支核查
 
+2026-11-14，主控已接受[原生clock／helper修复](../../outputs/reviews/main-physics-20261114/native-clock-helper/README.md)：正式编号C45–C47，代码／测试／fixture提交3f7b482765b7b41339ee56a818b1f164490a5d1e；累计**47项／25个代码提交**。研究分支同步继续暂停。共同生产改动仅`sechiba/lifecycle_completion.py`和新纯`sechiba/ioipsl_calendar.py`，纠正首次date-aware年长、Gregorian Lilian日数及非Gregorian小数秒；同一run跨年保留首次常量。显式日期约定、独立startdate锁及previous binding限定适配器支持域，旧seconds／astronomical／无绑定payload与未测calendar提前拒绝。两个直接unit测试迁移，旧2001合成oracle保留原TEMPLATE／CASES，仅当前比较／coverage入口在编译前拒绝；相关接口和fixture须随本次准确提交交接；[主控接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)复用原80项通过及独立终审，未重跑。
+
+新标量参考job `127957445`使用既有IOIPSL archive，1 CPU／1 GiB／300秒硬限，在compute node实际14秒完成11个进程、41条clock记录（metadata另含1个预期exit1）；源预期全部一致，原`1e-10/rel0`门不变。实际compiler／四module／动态库／两新executable与各自link map、前后SHA及原始退出均保存；首传输超时、明确absence恢复和中文locale解析误报完整保留，实际只有1个job，无原生重跑。唯一本地相关组合80／80通过，含41native对照、6项纯DIM2 reset映射、3个旧基线反例；本地无模型、物理、JIT、Fortran或remote调用，服务器标量Fortran的非零计账单列。旧50＋11、C44专项50与gas／DOC／92字段证据复用，未重复执行。
+
+没有接入生产SLOWPROC日历、compiled carry／fast schema或year-restart IO，不修改物理kernel、公式／容差、主控计划／合同或daily/global工作树。历史001 producer、旧source/object-to-archive manifest及真实命名年重启tuple仍缺；新参考不是历史producer的替代身份。DOC严格状态／真实守恒残差、独立热真值、maxmass条件域与87归一＋5缺证／92及93字段分母保持，仍不满足整模型等价合同。详见[当前剩余工作](main_equivalence_remaining_work.md)、[helper合同](../../outputs/reviews/main-physics-20261114/native-clock-helper/helper-repairs.json)和[有限来源](../../outputs/reviews/main-physics-20261114/native-clock-helper/helper-origins.json)。
+
 2026-11-14主控已接受C44冷启动热参数与静态碳输入绑定，代码／测试提交`9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2`，累计**44项修正／24个代码提交**。源默认、控制门、静态读取及cold／首步参数统一，尚未绑定变体提前返回明确缺项；C42及物理kernel不改。50项新纯适配器检查一次通过，主控核对实际文件、源条件和回执并复用独立终审。IOIPSL源／库／link及独立current-reference cold输入取证获有界接受，原001／原生clock等缺项保持；两clock候选及生产日历未集成。详见[主控记录](../../outputs/reviews/main-physics-20261113/clock-authority-cold-inputs/controller-acceptance.json)及下方C44条目。本包无模型／物理／Fortran或服务器计算；daily/global工作树未动且同步继续暂停，DOC／热真值／maxmass／历史身份限制保留。
 
 2026-11-13 主控已接受C41有效OK_PC、C42 restart use_refSOC缺省、C43 compiled context缓存隔离／强引用；代码及测试提交`8a772de6f4977018a875093d535b6088317716c8`，累计**43项修正／23个代码提交**。C43同时更新开发快照读者及三项旧cache测试；等价独立context可能额外编译。同实例复用和8项FIFO保持。50项相关pytest与11项纯日历检查一次组合通过；主控核对实际文件和回执，未重复执行。接受仅及源参数／适配器／缓存语义，未运行物理kernel、真实JIT、模型或Fortran。详见[主控接受记录](../../outputs/reviews/main-physics-20261113/parameter-repairs-calendar-design/controller-acceptance.json)及下方累计索引；研究分支同步继续暂停。
@@ -865,12 +871,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C44，共44项已接受修正、24个代码提交。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C47，共47项已接受修正、25个代码提交。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C44仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C47仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -906,6 +912,22 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C42 | `driver/restart_state.py` | `8a772de6f4977018a875093d535b6088317716c8` |
 | C43 | `driver/orchestration.py`；开发cache读者同步适配 | `8a772de6f4977018a875093d535b6088317716c8` |
 | C44 | `driver/orchestration.py` | `9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2` |
+| C45 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
+| C46 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
+| C47 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
+
+### C45–C47时钟基础接口（2026-11-14已接受）
+
+| ID | 源依据与旧反例 | 已接受修复／实际范围 |
+| --- | --- | --- |
+| C45 | intersurf:1893–1894调用calendar::tlen2itau(1Y):358–364；旧helper将年长天数直接除以步长秒，结果0 | 按实际起点日期跨年取差，源NINT；noleap1961为17520步、Gregorian2000／2001为17568／17520，首次常量在同run后续保持 |
+| C46 | calendar::ymds2ju/ju2ymds使用Lilian日数及2299160偏移；旧helper把同一值作astronomical JD，解出错误年份 | 恢复源整数运算／日期归一化，Gregorian2000-01-01=152385；显式IOIPSL origin、独立startdate锁和previous binding，禁止静默重释旧payload |
+| C47 | intersurf非Gregorian分支保留REAL sec；旧返回状态int(second)截断 | 保留原生900.2499952912331秒，区分scalar／ymds startdate；Gregorian owner仍按源次序NINT，不把primitive秒与owner秒混为一谈 |
+
+三项共享提交3f7b482765b7b41339ee56a818b1f164490a5d1e。两生产文件、两个unit文件、新native fixture及旧oracle归档guard须一起核对；后者保留原TEMPLATE／CASES，禁止用synthetic2001入口验证新helper。仅canonical Gregorian/noleap获得本次支持；旧无绑定callback／previous、seconds-valued年份及不明epoch明确拒绝。三个旧表达式均在7cae3e02及7333b46c存在，候选实现审查中的NINT near-half纠正不另计编号。
+
+原生新参考为1作业／11进程／14调度秒；41条clock与配对源码及Python一致，4个metadata进程含1个预期缺轴错误。唯一80项本地检查包含这些41条比较、6个纯DIM2映射、3个旧源码反例和相关控制，不能加总为独立多套验证。主控复用原回执和独立终审，未重跑。代码接受不认证生产日历／compiled／year-restart接线、历史001身份、实际年重启连续性或整模型数值。原DOC／热／maxmass等限制保持，本次未同步研究分支。
+
 
 ### C44冷启动热参数与静态碳输入绑定（2026-11-14已接受）
 
