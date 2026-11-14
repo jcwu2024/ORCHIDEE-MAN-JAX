@@ -89,6 +89,12 @@ from jax_orchidee.driver.fast_state import (
     fast_state_from_previous_packet,
     previous_packet_from_fast_state,
 )
+from jax_orchidee.driver.source_calendar import source_calendar_assignments
+from jax_orchidee.driver.source_clock import (
+    SourceClockError, SourceClockRuntime, SourceClockSetup,
+    source_clock_setup_from_config, source_istp_for_local_tstep,
+    validate_source_clock_runtime, rebase_source_clock_runtime,
+)
 from jax_orchidee.driver.domain import load_case_config, read_annual_co2, read_forcing_model_step_cached, read_forcing_step
 from jax_orchidee.driver.dim2 import CP_AIR, GRAVITY
 from jax_orchidee.driver.init import (
@@ -411,6 +417,7 @@ class Paper1961PreparedDriverContext:
     first_step_bundle: object | None = None
     first_step_restart_state: object | None = None
     first_step_stomate_boundary: object | None = None
+    source_clock_setup: SourceClockSetup | None = None
     provenance: tuple[str, ...] = (
         "outputs/server_1961_trace_full_20260623/run/used_run.def parsed once for driver-loop constants",
         "fortran_source/ORCHIDEE/src_parameters/vertical_soil.f90::vertical_soil_init lines 175-454",
@@ -848,18 +855,38 @@ def _prepare_paper_1961_driver_context_cached(
     )
 
 
+@lru_cache(maxsize=8)
+def _prepare_paper_1961_clock_context_cached(config_key, run_def_key, run_dir_key):
+    context = _prepare_paper_1961_driver_context_cached(config_key, run_def_key, run_dir_key)
+    return replace(context, source_clock_setup=source_clock_setup_from_config(
+        context.config_path, run_def_path=context.run_def_path,
+        run_def_values=context.run_def_values, first_step_bundle=context.first_step_bundle,
+        reference_run_dir=context.reference_run_dir,
+    ))
+
+
 def prepare_paper_1961_driver_context(
     config_path: str | Path,
     *,
     used_run_def_path: str | Path | None = None,
     reference_run_dir: str | Path | None = None,
+    run_mode: str = "new_native_run",
+    previous_runtime: SourceClockRuntime | None = None,
+    run_id: str | None = None,
 ) -> Paper1961PreparedDriverContext:
     """Prepare reusable constants for a source-backed paper-case day loop."""
 
     config_resolved = Path(config_path).resolve()
     run_def_path = Path(used_run_def_path) if used_run_def_path is not None else default_used_run_def_path(config_resolved)
     run_dir_key = None if reference_run_dir is None else str(Path(reference_run_dir).resolve())
-    return _prepare_paper_1961_driver_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key)
+    if run_mode == "new_native_run" and previous_runtime is None and run_id is None:
+        return _prepare_paper_1961_clock_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key)
+    context = _prepare_paper_1961_driver_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key)
+    return replace(context, source_clock_setup=source_clock_setup_from_config(
+        config_resolved, run_def_path=run_def_path, run_def_values=context.run_def_values,
+        first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
+        run_mode=run_mode, previous_runtime=previous_runtime, run_id=run_id,
+    ))
 
 
 def _paper_1961_step_bundle_from_context(
@@ -967,7 +994,7 @@ def _thermosoil_restart_namespace_from_cold_start(
     )
 
 
-def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object]) -> DriverPreviousStepStatePacket:
+def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object], *, source_clock_context=None, source_clock=None, active=True) -> DriverPreviousStepStatePacket:
     """Extract source-backed next-step state from closed cold-start payloads."""
 
     fields = _empty_previous_step_state_fields()
@@ -1227,13 +1254,16 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object]) -
             "cold-start SECHIBA finalize state did not close all 93 fields: "
             f"unset={unset_finalize}"
         )
-    return _packet_from_previous_step_fields(tstep=0, fields=fields)
+    state = _packet_from_previous_step_fields(tstep=0, fields=fields)
+    context = source_clock_context or payloads.get("source_clock_context")
+    clock = source_clock or _driver_source_clock_payload(context, None, tstep=0, active=active)
+    return _apply_driver_source_calendar(state, context=context, source_clock=clock)
 
 
 def _previous_step_state_from_cold_start_coverage(coverage: ColdStartFirstStepStateCoverage) -> DriverPreviousStepStatePacket | None:
     """Extract source-backed next-step state from a closed cold-start first step."""
 
-    return _previous_step_state_from_cold_start_payloads(coverage.initialized_payloads)
+    return coverage.initialized_payloads.get("cold_start_first_step_previous_state")
 
 
 @dataclass(frozen=True)
@@ -1266,6 +1296,7 @@ class DriverTimestepScaffold:
     covered_components: tuple[str, ...]
     missing_components: tuple[str, ...]
     notes: tuple[str, ...]
+    source_clock_context: Paper1961PreparedDriverContext | None = None
     provenance: tuple[str, ...] = DRIVER_TIMESTEP_ORCHESTRATION_PROVENANCE
 
     @property
@@ -1284,23 +1315,25 @@ STOMATE_MAIN_CHAIN_BUNDLE_PROVENANCE = (
 )
 
 
-def _paper_first_step_do_slow(tstep: int, runtime: DriverRuntimeScalars) -> bool:
-    """Return the first-step ``do_slow`` flag from the slowproc schedule."""
+def _paper_first_step_do_slow(source_clock: DriverSourceClockPayload | None = None):
+    """Return the source-clock last-timestep-of-day flag."""
 
-    steps_per_stomate = int(round(runtime.dt_stomate / runtime.dt_sechiba))
-    if steps_per_stomate <= 0:
-        raise ValueError("dt_stomate / dt_sechiba must be positive")
-    return (int(tstep) + 1) % steps_per_stomate == 0
+    if source_clock is None:
+        raise SourceClockError("missing numeric source-clock payload for do_slow")
+    return jnp.asarray(source_clock.active, dtype=jnp.bool_) & (jnp.asarray(source_clock.second) == 0)
 
 
-def _paper_end_of_year(tstep: int, runtime: DriverRuntimeScalars) -> bool:
-    """Return the paper-case ``EndOfYear`` flag at a ``do_slow`` boundary."""
+def _paper_end_of_year(source_clock: DriverSourceClockPayload | None = None):
+    """Return source ``EndOfYear`` at January 1 midnight."""
 
-    steps_per_stomate = int(round(runtime.dt_stomate / runtime.dt_sechiba))
-    if steps_per_stomate <= 0:
-        raise ValueError("dt_stomate / dt_sechiba must be positive")
-    steps_per_year = 365 * steps_per_stomate
-    return (int(tstep) + 1) % steps_per_year == 0
+    if source_clock is None:
+        raise SourceClockError("missing numeric source-clock payload for EndOfYear")
+    return (
+        jnp.asarray(source_clock.active, dtype=jnp.bool_)
+        & (jnp.asarray(source_clock.second) == 0)
+        & (jnp.asarray(source_clock.month) == 1)
+        & (jnp.asarray(source_clock.day) == 1)
+    )
 
 
 def _stomate_lpj_initial_cn_ind(state, *, dtype=np.float64):
@@ -1310,12 +1343,6 @@ def _stomate_lpj_initial_cn_ind(state, *, dtype=np.float64):
     return np.zeros(shape, dtype=dtype)
 
 
-def _stomate_restart_day_of_year(date: int) -> int:
-    """Return the STOMATE year-day scalar used by current paper-case STOMATE code."""
-
-    return int(date) % 365
-
-
 def _paper_first_step_stomate_restart_input_bundles(
     *,
     config_path: str | Path,
@@ -1323,6 +1350,8 @@ def _paper_first_step_stomate_restart_input_bundles(
     restart_state: ReferenceCaseFirstStepRestartState,
     runtime: DriverRuntimeScalars,
     tstep: int,
+    source_clock: DriverSourceClockPayload | None = None,
+    calendar_state: DriverPreviousStepStatePacket | None = None,
     daily_fields: dict[str, object] | None = None,
     run_def_values: dict[str, str] | None = None,
 ) -> tuple[PaperCaseStomateBundleSourceKwargs, StomateRestartInputBundles]:
@@ -1334,12 +1363,20 @@ def _paper_first_step_stomate_restart_input_bundles(
     being silently replaced by synthetic values.
     """
 
-    do_slow = _paper_first_step_do_slow(tstep, runtime)
+    do_slow = bool(np.asarray(_paper_first_step_do_slow(source_clock)))
     if not do_slow:
         raise ValueError("STOMATE main-chain bundles are only valid at a do_slow boundary")
 
     season_state = restart_state.stomate_readstart.season_state
     daily_state = restart_state.stomate_readstart.daily_state
+    slowproc_state = restart_state.slowproc
+    if calendar_state is not None:
+        calendar_fields = calendar_state.fields_by_component.get("slowproc_stomate_previous_step_state", {})
+        slowproc_values = slowproc_state._asdict()
+        for name in ("growth_day", "peatC_ok", "temp_growth", "peatC"):
+            if name in calendar_fields:
+                slowproc_values[name] = calendar_fields[name]
+        slowproc_state = SimpleNamespace(**slowproc_values)
     source_daily_state = (
         SimpleNamespace(**{**daily_state._asdict(), **daily_fields})
         if daily_fields is not None
@@ -1350,12 +1387,12 @@ def _paper_first_step_stomate_restart_input_bundles(
         season=season_state,
         daily=source_daily_state,
         entry_state=restart_state.stomate,
-        slowproc_state=restart_state.slowproc,
+        slowproc_state=slowproc_state,
         veget=restart_state.slowproc.veget,
         veget_max=restart_state.slowproc.veget_max,
         dt_days=runtime.dt_days,
-        julian_diff=_stomate_restart_day_of_year(season_state.date),
-        end_of_year=_paper_end_of_year(tstep, runtime),
+        julian_diff=source_clock.julian_diff,
+        end_of_year=_paper_end_of_year(source_clock),
         firstcall_season=True,
         used_run_def=run_def_path,
         run_def_values=run_def_values,
@@ -1383,6 +1420,8 @@ def _paper_cold_start_stomate_input_bundles(
     first_step_coverage: ColdStartFirstStepStateCoverage,
     runtime: DriverRuntimeScalars,
     tstep: int,
+    source_clock: DriverSourceClockPayload | None = None,
+    calendar_state: DriverPreviousStepStatePacket | None = None,
     daily_fold: StomateDailyProcessFold | None,
     run_def_values: dict[str, str] | None = None,
 ) -> tuple[PaperCaseStomateBundleSourceKwargs | None, StomateRestartInputBundles | None, tuple[DriverDayStateGap, ...]]:
@@ -1396,7 +1435,7 @@ def _paper_cold_start_stomate_input_bundles(
                 provenance=("fortran_source/ORCHIDEE/src_stomate/stomate.f90 lines 3187-3267",),
             ),
         )
-    do_slow = _paper_first_step_do_slow(tstep, runtime)
+    do_slow = bool(np.asarray(_paper_first_step_do_slow(source_clock)))
     if not do_slow:
         raise ValueError("cold-start STOMATE bundles are only valid at a do_slow boundary")
     payloads = first_step_coverage.initialized_payloads
@@ -1422,6 +1461,13 @@ def _paper_cold_start_stomate_input_bundles(
     entry_state = payloads["stomate_cold_start_entry_state"]
     season_state = payloads["stomate_cold_start_season_state"]
     slowproc_state = previous_state.fields_by_component["slowproc_stomate_previous_step_state"]
+    if calendar_state is not None:
+        calendar_fields = calendar_state.fields_by_component.get("slowproc_stomate_previous_step_state", {})
+        slowproc_state = {**slowproc_state, **{
+            name: calendar_fields[name]
+            for name in ("growth_day", "peatC_ok", "temp_growth", "peatC")
+            if name in calendar_fields
+        }}
     veget = payloads["slowproc_cold_start_vegetation"].vegetation.veget
     veget_max = payloads["slowproc_cold_start_vegetation"].vegetation.veget_max
     daily_state = SimpleNamespace(**daily_fold.daily_fields)
@@ -1436,12 +1482,16 @@ def _paper_cold_start_stomate_input_bundles(
             frac_age=slowproc_state["frac_age"],
             veget=veget,
             veget_max=veget_max,
+            growth_day=slowproc_state.get("growth_day"),
+            peatC_ok=slowproc_state.get("peatC_ok"),
+            temp_growth=slowproc_state.get("temp_growth"),
+            peatC=slowproc_state.get("peatC"),
         ),
         veget=veget,
         veget_max=veget_max,
         dt_days=runtime.dt_days,
-        julian_diff=_stomate_restart_day_of_year(season_state.date),
-        end_of_year=_paper_end_of_year(tstep, runtime),
+        julian_diff=source_clock.julian_diff,
+        end_of_year=bool(np.asarray(_paper_end_of_year(source_clock))),
         firstcall_season=True,
         used_run_def=run_def_path,
         run_def_values=run_def_values,
@@ -1641,6 +1691,7 @@ def _paper_later_day_stomate_input_bundles(
     previous_state: DriverPreviousStepStatePacket,
     runtime: DriverRuntimeScalars,
     tstep: int,
+    source_clock: DriverSourceClockPayload | None = None,
     daily_fold: StomateDailyProcessFold | None,
     firstcall_season: bool = False,
     run_def_values: dict[str, str] | None = None,
@@ -1659,8 +1710,8 @@ def _paper_later_day_stomate_input_bundles(
                 provenance=("fortran_source/ORCHIDEE/src_stomate/stomate.f90 lines 3187-3267",),
             ),
         )
-    do_slow = _paper_first_step_do_slow(tstep, runtime)
-    if not do_slow:
+    do_slow = _paper_first_step_do_slow(source_clock)
+    if not isinstance(do_slow, jax.core.Tracer) and not bool(np.asarray(do_slow)):
         raise ValueError("later-day STOMATE bundles are only valid at a do_slow boundary")
     entry_state, gaps = _paper_later_day_stomate_entry_state_from_previous(
         template=restart_state.stomate if stomate_restart_template is None else stomate_restart_template,
@@ -1681,11 +1732,6 @@ def _paper_later_day_stomate_input_bundles(
     if season_gaps or season_state is None:
         return None, None, season_gaps
     daily_state = SimpleNamespace(**daily_fold.daily_fields)
-    scientific_day = (
-        int(tstep // int(round(runtime.dt_stomate / runtime.dt_sechiba))) + 1
-        if model_day_number is None
-        else model_day_number
-    )
     source = paper_case_stomate_bundle_source_kwargs(
         config_path=config_path,
         season=season_state,
@@ -1698,12 +1744,16 @@ def _paper_later_day_stomate_input_bundles(
             veget=slowproc_state["veget"],
             veget_max=slowproc_state["veget_max"],
             frac_nobio=slowproc_state["frac_nobio"],
+            growth_day=slowproc_state.get("growth_day"),
+            peatC_ok=slowproc_state.get("peatC_ok"),
+            temp_growth=slowproc_state.get("temp_growth"),
+            peatC=slowproc_state.get("peatC"),
         ),
         veget=slowproc_state["veget"],
         veget_max=slowproc_state["veget_max"],
         dt_days=runtime.dt_days,
-        julian_diff=scientific_day,
-        end_of_year=jnp.equal(jnp.mod(jnp.asarray(scientific_day), 365), 0),
+        julian_diff=source_clock.julian_diff,
+        end_of_year=_paper_end_of_year(source_clock),
         firstcall_season=firstcall_season,
         used_run_def=run_def_path,
         run_def_values=run_def_values,
@@ -1873,6 +1923,7 @@ class DriverPreviousStepStatePacket:
     tstep: int
     fields_by_component: dict[str, dict[str, object]]
     provenance_by_component: dict[str, tuple[str, ...]]
+    source_clock_runtime: SourceClockRuntime | None = None
 
     @property
     def covered_fields(self) -> dict[str, tuple[str, ...]]:
@@ -1975,6 +2026,7 @@ class DriverNextStepHydrolPrecallScaffold:
     condveg_module: CondvegFirstStepModuleClosure | None
     thermosoil_module: ThermosoilFirstStepModuleClosure | None
     missing_previous_state_fields: tuple[str, ...]
+    source_clock_context: Paper1961PreparedDriverContext | None = None
 
     @property
     def ready_for_local_hydrol(self) -> bool:
@@ -2140,6 +2192,20 @@ class DriverRuntimeHalfHourInput:
 
     step: DriverStepBundle
     base_payload: IntersurfFirstStepPayload
+    source_clock: DriverSourceClockPayload | None = None
+
+
+class DriverSourceClockPayload(NamedTuple):
+    """Numeric owner-computed chronology; safe as JIT/scan dynamic leaves."""
+
+    local_tstep: object
+    istp: object
+    year: object
+    month: object
+    day: object
+    second: object
+    active: object
+    julian_diff: object
 
 
 class DriverCompiledHalfHourForcing(NamedTuple):
@@ -2159,6 +2225,7 @@ class DriverCompiledHalfHourForcing(NamedTuple):
     ccanopy: object
     salinity: object
     tide_height: object
+    source_clock: DriverSourceClockPayload | None = None
 
 
 class DriverCompiledDiffucoDayInputs(NamedTuple):
@@ -2870,6 +2937,7 @@ def driver_year_handoff_state_gaps(
 
 def rebase_driver_state_for_year_start(
     state: DriverPreviousStepStatePacket,
+    *, run_mode: str = "continuous", source_clock_setup: SourceClockSetup | None = None,
 ) -> DriverPreviousStepStatePacket:
     """Return the same dynamic state with a driver counter suitable for tstep 0.
 
@@ -2879,12 +2947,27 @@ def rebase_driver_state_for_year_start(
     contract explicit for a future next-year first-step runner.
     """
 
+    if run_mode not in {"continuous", "new_native_run"}:
+        raise SourceClockError("declare continuous or new_native_run lifecycle")
+    if run_mode == "new_native_run":
+        if source_clock_setup is None:
+            raise SourceClockError("new native run requires admitted new source-clock setup")
+        old = state.source_clock_runtime
+        if old is not None and old.binding.run_id == source_clock_setup.binding.run_id:
+            raise SourceClockError("new native run cannot silently reuse an old run binding")
+        clock_runtime = source_clock_setup.runtime
+    else:
+        if state.source_clock_runtime is None:
+            raise SourceClockError("continuous year requires source-clock runtime")
+        if source_clock_setup is not None and source_clock_setup.binding != state.source_clock_runtime.binding:
+            raise SourceClockError("continuous year changed the native run binding")
+        clock_runtime = rebase_source_clock_runtime(state.source_clock_runtime, new_local_tstep=-1)
     fields_by_component = {
         component: dict(fields)
         for component, fields in state.fields_by_component.items()
     }
     hydrol_fields = fields_by_component.get("hydrol_previous_step_state")
-    if hydrol_fields is not None:
+    if hydrol_fields is not None and run_mode == "new_native_run":
         # Fortran hydrol_end writes `us` but not dynamic `nroot` to restart
         # (hydrol.f90 lines 1730 and 1727-1748). A new executable year
         # therefore recomputes nroot in hydrol_var_init before the first
@@ -2897,11 +2980,13 @@ def rebase_driver_state_for_year_start(
         provenance_by_component={
             component: (
                 *provenance,
-                "local restart rebase: yearly driver counter resets before the next forcing year",
-                "local restart rebase: HYDROL dynamic nroot is not a Fortran restart field and is reinitialized for the new executable year",
+                f"local label rebase for {run_mode}: source chronology remains explicitly bound",
+                *(("local restart rebase: HYDROL dynamic nroot is not a Fortran restart field and is reinitialized for the new executable year",)
+                  if run_mode == "new_native_run" else ()),
             )
             for component, provenance in state.provenance_by_component.items()
         },
+        source_clock_runtime=clock_runtime,
     )
 
 
@@ -2979,17 +3064,171 @@ def _driver_wind_z0_from_previous_state(previous_state: DriverPreviousStepStateP
     return float(fallback)
 
 
-def _packet_from_previous_step_fields(*, tstep: int, fields: dict[str, dict[str, object]]) -> DriverPreviousStepStatePacket:
+def _packet_from_previous_step_fields(*, tstep: int, fields: dict[str, dict[str, object]], source_clock_runtime=None) -> DriverPreviousStepStatePacket:
     provenance = _previous_step_state_provenance()
     return DriverPreviousStepStatePacket(
-        tstep=int(tstep),
+        tstep=tstep,
         fields_by_component={key: value for key, value in fields.items() if value},
         provenance_by_component={
             key: provenance[key]
             for key, value in fields.items()
             if value
         },
+        source_clock_runtime=source_clock_runtime,
     )
+
+
+def _source_clock_setup(context) -> SourceClockSetup:
+    setup = getattr(context, "source_clock_setup", None)
+    if not isinstance(setup, SourceClockSetup):
+        raise SourceClockError("driver requires declared forcing/restart source-clock setup; no local year/tstep fallback")
+    return setup
+
+
+def _driver_source_clock_payload(context, runtime, *, tstep, active=True) -> DriverSourceClockPayload:
+    """Host admission of numeric source chronology (intersurf_time owner).
+
+    Source: dim2_driver361-401/464-529, intersurf_time and slowproc556-610.
+    This function is deliberately outside JIT; compiled callers receive its
+    numeric payload and carry the immutable binding separately.
+    """
+    setup = _source_clock_setup(context)
+    runtime = setup.runtime if runtime is None else runtime
+    validate_source_clock_runtime(runtime, setup.binding)
+    local = int(tstep)
+    if local != tstep:
+        raise SourceClockError("local tstep must be an integer")
+    istp = int(source_istp_for_local_tstep(runtime, local))
+    if active and istp < int(runtime.last_applied_istp):
+        raise SourceClockError("source clock cannot move backward")
+    clock = runtime.binding.clock_at_istp(istp)
+    return DriverSourceClockPayload(np.int64(local), np.int64(istp), np.int32(clock.year),
+        np.int32(clock.month), np.int32(clock.day), np.float64(clock.second), np.bool_(active),
+        np.float64(clock.julian_diff))
+
+
+def _calendar_controls(context):
+    # Source defaults: constantes_var496, slowproc568/1875-1876. Read declared
+    # materialized values case-insensitively; PC_LIM is not hardcoded by caller.
+    values = {key.upper(): value for key, value in context.run_def_values.items()}
+    return dict(dynpeat_pc=parse_run_def_bool(values.get("DYNPEAT_PC", "FALSE")),
+                judge_pc=parse_run_def_bool(values.get("JUDGE_PC", "FALSE")),
+                pc_lim=float(values.get("PC_LIM", 50.0)))
+
+
+def _apply_driver_source_calendar(state, *, context, source_clock, runtime=None):
+    """The single pre-STOMATE calendar write boundary for both science mirrors.
+
+    Initialization is an inactive payload. Reobserving the same source cursor
+    is a no-op. No calendar evaluation belongs in summary/day-end rebuilding.
+    """
+    setup = _source_clock_setup(context)
+    runtime = runtime if runtime is not None else getattr(state, "source_clock_runtime", None)
+    runtime = setup.runtime if runtime is None else runtime
+    if runtime.binding != setup.binding:
+        raise SourceClockError("driver source-clock binding changed; declare continuous/new-native-run lifecycle")
+    if source_clock is None:
+        raise SourceClockError("missing numeric source-clock payload")
+    istp = source_clock.istp
+    traced = any(isinstance(x, jax.core.Tracer) for x in (istp, runtime.last_applied_istp))
+    if not traced:
+        validate_source_clock_runtime(runtime, setup.binding)
+        if bool(source_clock.active) and int(istp) not in (int(runtime.last_applied_istp), int(runtime.last_applied_istp) + 1):
+            raise SourceClockError("calendar update requires consecutive source steps (or an identical observation)")
+        if int(source_istp_for_local_tstep(runtime, source_clock.local_tstep)) != int(istp):
+            raise SourceClockError("numeric source payload disagrees with admitted local/source frame")
+        expected = runtime.binding.clock_at_istp(int(istp))
+        if any(float(getattr(source_clock, name)) != float(getattr(expected, name))
+               for name in ("year", "month", "day", "second", "julian_diff")):
+            raise SourceClockError("numeric calendar date disagrees with declared source clock")
+    fields = {name: dict(value) for name, value in state.fields_by_component.items()}
+    slow = fields.setdefault("slowproc_stomate_previous_step_state", {})
+    final = fields.get("sechiba_finalize_state", {})
+    def source(name):
+        if name in slow:
+            return slow[name]
+        if name in final:
+            return final[name]
+        raise SourceClockError(f"source calendar requires authoritative pre-STOMATE {name}")
+    for name in ("growth_day", "peatC_ok"):
+        if name in slow and name in final and not traced and not any(
+            isinstance(value, jax.core.Tracer) for value in (slow[name], final[name])):
+            if not np.array_equal(np.asarray(slow[name]), np.asarray(final[name])):
+                raise SourceClockError(f"calendar science mirrors conflict: {name}")
+    active = jnp.asarray(source_clock.active) & (jnp.asarray(istp) == jnp.asarray(runtime.last_applied_istp) + 1)
+    result = source_calendar_assignments(
+        growth_day=source("growth_day"), peatC_ok=source("peatC_ok"),
+        temp_growth=source("temp_growth"), peatC=source("peatC"),
+        month=source_clock.month, day=source_clock.day, sec=source_clock.second,
+        dt_sechiba=setup.binding.dt, active=active, **_calendar_controls(context),
+    )
+    for name in ("growth_day", "peatC_ok"):
+        slow[name] = getattr(result, name)
+        if final:
+            final[name] = slow[name]
+    next_runtime = replace(runtime, last_applied_istp=jnp.where(active, istp, runtime.last_applied_istp))
+    next_tstep = jnp.where(jnp.asarray(source_clock.active), source_clock.local_tstep, state.tstep)
+    if isinstance(state, DriverFastStateBundle):
+        return fast_state_from_previous_fields(tstep=next_tstep,
+            fields_by_component=fields, provenance_by_component=state.provenance_by_component,
+            source_clock_runtime=next_runtime)
+    return replace(state, tstep=next_tstep, fields_by_component=fields,
+                   source_clock_runtime=next_runtime)
+
+
+def _calendar_snapshot_before_stomate(previous_state, current_state):
+    """Expose calendar writes to daily STOMATE without replacing its prior state."""
+    fields = {name: dict(value) for name, value in previous_state.fields_by_component.items()}
+    current = current_state.fields_by_component
+    for component in ("slowproc_stomate_previous_step_state", "sechiba_finalize_state"):
+        for name in ("growth_day", "peatC_ok"):
+            if name in current.get(component, {}):
+                fields.setdefault(component, {})[name] = current[component][name]
+    return DriverPreviousStepStatePacket(previous_state.tstep, fields,
+        previous_state.provenance_by_component, current_state.source_clock_runtime)
+
+
+def _require_source_day_alignment(context, state, *, start):
+    """Current complete-day accumulator supports only whole source days."""
+    clock = _driver_source_clock_payload(context, state.source_clock_runtime, tstep=start)
+    if float(context.runtime.dt_stomate) != _source_clock_setup(context).binding.one_day_seconds:
+        raise SourceClockError("complete-day driver requires DT_STOMATE equal to the declared source day")
+    if float(clock.second) != _source_clock_setup(context).binding.dt:
+        raise SourceClockError("complete-day driver does not support a partial source-day restart; use half-hour adapter until the next source day")
+    return clock
+
+
+def _validate_compiled_source_clock_series(context, state, forcing_series, *, whole_days=False):
+    """Host validation before a numeric series enters a compiled executable."""
+    clock = forcing_series.source_clock
+    if clock is None:
+        raise SourceClockError("compiled forcing lacks dynamic source-clock payload")
+    setup = _source_clock_setup(context)
+    if whole_days and float(context.runtime.dt_stomate) != setup.binding.one_day_seconds:
+        raise SourceClockError("compiled block requires DT_STOMATE equal to the declared source day")
+    if isinstance(clock.istp, jax.core.Tracer):
+        # Nested scans inherit the public executable's already admitted series.
+        return
+    runtime = state.source_clock_runtime
+    validate_source_clock_runtime(runtime, setup.binding)
+    leaves = [np.asarray(value) for value in clock]
+    if not leaves[0].size or any(value.shape != leaves[0].shape for value in leaves):
+        raise SourceClockError("compiled source-clock payload shapes conflict")
+    flat = [value.reshape(-1) for value in leaves]
+    expected_local = np.arange(int(state.tstep) + 1, int(state.tstep) + 1 + flat[0].size)
+    expected_source = np.arange(int(runtime.last_applied_istp) + 1,
+                                int(runtime.last_applied_istp) + 1 + flat[0].size)
+    if not np.array_equal(flat[0], expected_local) or not np.array_equal(flat[1], expected_source) or not np.all(flat[6]):
+        raise SourceClockError("compiled calendar series must be consecutive active local/source steps")
+    for i, local in enumerate(expected_local):
+        expected = _driver_source_clock_payload(context, runtime, tstep=int(local))
+        if any(actual[i] != value for actual, value in zip(flat, expected, strict=True)):
+            raise SourceClockError("compiled calendar date disagrees with declared source clock")
+    if whole_days:
+        if leaves[0].ndim != 2 or leaves[0].shape[1] * setup.binding.dt != setup.binding.one_day_seconds:
+            raise SourceClockError("compiled block requires complete source-day rows")
+        if not np.all(leaves[5][:, 0] == setup.binding.dt) or not np.all(leaves[5][:, -1] == 0):
+            raise SourceClockError("compiled block rows are not aligned with source day boundaries")
 
 
 def _add_enerbil_local_to_previous_fields(
@@ -3525,7 +3764,10 @@ def driver_previous_step_state_from_timestep_scaffold(
             ok_laidev,
         )
 
-    return _packet_from_previous_step_fields(tstep=scaffold.step.tstep, fields=fields)
+    state = _packet_from_previous_step_fields(tstep=scaffold.step.tstep, fields=fields)
+    context = scaffold.source_clock_context
+    return _apply_driver_source_calendar(state, context=context,
+        source_clock=_driver_source_clock_payload(context, None, tstep=scaffold.step.tstep))
 
 
 def driver_previous_step_state_from_next_step_hydrol_scaffold(
@@ -3665,7 +3907,15 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
     prior_driver = scaffold.enerbil.previous_state.fields_by_component.get("driver_previous_step_state", {})
     if "albedo" in prior_driver and "albedo" not in fields.get("driver_previous_step_state", {}):
         fields.setdefault("driver_previous_step_state", {})["albedo"] = prior_driver["albedo"]
-    return _packet_from_previous_step_fields(tstep=scaffold.tstep, fields=fields)
+    prior = scaffold.enerbil.previous_state
+    for name in ("growth_day", "peatC_ok", "peatC"):
+        if name in prior_slowproc:
+            fields["slowproc_stomate_previous_step_state"][name] = prior_slowproc[name]
+    state = _packet_from_previous_step_fields(tstep=scaffold.tstep, fields=fields,
+        source_clock_runtime=prior.source_clock_runtime)
+    context = scaffold.source_clock_context
+    return _apply_driver_source_calendar(state, context=context,
+        source_clock=_driver_source_clock_payload(context, prior.source_clock_runtime, tstep=scaffold.tstep))
 
 
 def _diffuco_restart_payload_from_state_fields(
@@ -4501,6 +4751,7 @@ def paper_1961_next_step_hydrol_precall_scaffold(
         condveg_module=condveg_module,
         thermosoil_module=thermosoil_module,
         missing_previous_state_fields=combined_missing,
+        source_clock_context=context,
     )
 
 
@@ -5552,7 +5803,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
         "cold_start_first_step_entry_payload": cold_start_first_step_entry_payload,
     }
     if not any(missing.values()):
-        initialized_payloads["cold_start_first_step_previous_state"] = _previous_step_state_from_cold_start_payloads(initialized_payloads)
+        initialized_payloads["source_clock_context"] = context
+        initialized_payloads["cold_start_first_step_previous_state"] = _previous_step_state_from_cold_start_payloads(initialized_payloads, source_clock_context=context)
 
     return ColdStartFirstStepStateCoverage(
         mode=COLD_START_INITIAL_STATE_MODE,
@@ -6026,7 +6278,7 @@ def _paper_next_step_runtime_entry_payload(
             + np.asarray(scaffold.enerbil.payload.v) * np.asarray(scaffold.enerbil.payload.v)
         ),
     )
-    return {
+    payload = {
         "kjit": int(scaffold.tstep) + 1,
         "lalo": scaffold.enerbil.payload.lalo,
         "precip_rain": scaffold.enerbil.payload.precip_rain,
@@ -6076,6 +6328,13 @@ def _paper_next_step_runtime_entry_payload(
         "shumdiag_man": hydrol_diag.shumdiag_man,
         "mc_man_above": hydrol_diag.mc_man_above,
     }
+    clock_context = scaffold.source_clock_context or prepared_context
+    payload["source_clock"] = _driver_source_clock_payload(
+        clock_context,
+        scaffold.enerbil.previous_state.source_clock_runtime,
+        tstep=scaffold.tstep,
+    )
+    return payload
 
 
 def _paper_next_step_runtime_entry_payload_from_components(
@@ -6119,7 +6378,7 @@ def _paper_next_step_runtime_entry_payload_from_components(
     v = array(driver_payload.v)
     wspeed = maximum(prepared_context.min_wind, sqrt(u * u + v * v))
     return {
-        "kjit": int(tstep) + 1,
+        "kjit": tstep + 1,
         "lalo": driver_payload.lalo,
         "precip_rain": driver_payload.precip_rain,
         "precip_snow": driver_payload.precip_snow,
@@ -6181,6 +6440,8 @@ def _runtime_next_state_from_components(
     condveg_module: CondvegFirstStepModuleClosure | None,
     hydrol_module: HydrolFirstStepModuleClosure | None,
     ok_laidev: tuple[bool, ...] | None = None,
+    source_clock_context=None,
+    source_clock=None,
 ) -> DriverPreviousStepStatePacket:
     """Extract source-backed next-step state from compact runtime components."""
 
@@ -6210,7 +6471,7 @@ def _runtime_next_state_from_components(
             hydrol_module=hydrol_module,
         )
     prior_slowproc = _previous_state_component_fields(previous_state, "slowproc_stomate_previous_step_state")
-    for name in STOMATE_HALF_HOUR_CARRY_FIELDS:
+    for name in (*STOMATE_HALF_HOUR_CARRY_FIELDS, "growth_day", "peatC_ok", "peatC"):
         if name in prior_slowproc:
             fields["slowproc_stomate_previous_step_state"][name] = prior_slowproc[name]
     for name in ("veget", "veget_max", "lai", "frac_nobio", "height"):
@@ -6237,12 +6498,18 @@ def _runtime_next_state_from_components(
     if "albedo" in prior_driver and "albedo" not in fields.get("driver_previous_step_state", {}):
         fields.setdefault("driver_previous_step_state", {})["albedo"] = prior_driver["albedo"]
     if hasattr(previous_state, "component_fields"):
-        return fast_state_from_previous_fields(
-            tstep=int(tstep),
+        state = fast_state_from_previous_fields(
+            tstep=tstep,
             fields_by_component=fields,
             provenance_by_component=_previous_step_state_provenance(),
+            source_clock_runtime=previous_state.source_clock_runtime,
         )
-    return _packet_from_previous_step_fields(tstep=int(tstep), fields=fields)
+    else:
+        state = _packet_from_previous_step_fields(tstep=tstep, fields=fields,
+            source_clock_runtime=previous_state.source_clock_runtime)
+    return _apply_driver_source_calendar(state, context=source_clock_context,
+        source_clock=source_clock or _driver_source_clock_payload(source_clock_context,
+            previous_state.source_clock_runtime, tstep=tstep))
 
 
 def _runtime_daily_flux_step_from_components(
@@ -6366,15 +6633,21 @@ def _paper_1961_next_step_runtime_result_compact(
     runtime_run_scalars: RunScalars | None = None,
     runtime_forcing=None,
     capture_daily_flux_step: bool = False,
+    source_clock: DriverSourceClockPayload | None = None,
 ) -> DriverRuntimeStepResult:
     """Advance one half-hour step without retaining audit scaffold objects."""
 
-    if int(tstep) < 0:
-        raise ValueError("next-step runtime requires tstep >= 0")
-    if previous_state.tstep != int(tstep) - 1:
-        raise ValueError("previous_state.tstep must be exactly tstep - 1")
-
     context = prepared_context
+    source_clock = (source_clock if source_clock is not None else
+        getattr(prebuilt_input, "source_clock", None))
+    if source_clock is None:
+        source_clock = _driver_source_clock_payload(context, previous_state.source_clock_runtime, tstep=tstep)
+    tstep = source_clock.local_tstep
+    if not isinstance(tstep, jax.core.Tracer):
+        if int(tstep) < 0:
+            raise ValueError("next-step runtime requires tstep >= 0")
+        if int(previous_state.tstep) != int(tstep) - 1:
+            raise ValueError("previous_state.tstep must be exactly tstep - 1")
     if runtime_run_scalars is not None:
         if runtime_forcing is None or prebuilt_base_payload is None:
             raise ValueError("runtime_run_scalars requires runtime_forcing and prebuilt_base_payload")
@@ -6796,7 +7069,7 @@ def _paper_1961_next_step_runtime_result_compact(
             dict.fromkeys((*combined_missing, *runtime_readiness_missing, "runtime_entry_payload"))
         )
         return DriverRuntimeStepResult(
-            tstep=int(tstep),
+            tstep=tstep,
             entry_payload=None,
             next_state=None,
             metadata=None,
@@ -6812,7 +7085,10 @@ def _paper_1961_next_step_runtime_result_compact(
         condveg_module=condveg_module,
         hydrol_module=hydrol_module,
         ok_laidev=context.ok_laidev,
+        source_clock_context=context,
+        source_clock=source_clock,
     )
+    entry_payload = {**entry_payload, "source_clock": source_clock}
     metadata = DriverRuntimeStepMetadata(
         pref_soil_veg=step.run_scalars.pref_soil_veg,
         nstm=step.run_scalars.nstm,
@@ -6822,7 +7098,7 @@ def _paper_1961_next_step_runtime_result_compact(
         npts=payload.kjpindex,
     )
     return DriverRuntimeStepResult(
-        tstep=int(tstep),
+        tstep=tstep,
         entry_payload=entry_payload,
         next_state=next_state,
         metadata=metadata,
@@ -7426,13 +7702,15 @@ def paper_1961_driver_timestep_scaffold(
             peat_occur=parse_run_def_bool(run_def_values["PEAT_OCCUR"]),
             date=1,
         )
-        if _paper_first_step_do_slow(tstep, runtime):
+        source_clock = _driver_source_clock_payload(context, None, tstep=tstep)
+        if bool(np.asarray(_paper_first_step_do_slow(source_clock))):
             stomate_bundle_source, stomate_restart_bundles = _paper_first_step_stomate_restart_input_bundles(
                 config_path=config_path,
                 run_def_path=run_def_path,
                 restart_state=first_step_restart_state,
                 runtime=runtime,
                 tstep=tstep,
+                source_clock=source_clock,
                 run_def_values=run_def_values,
             )
         covered.extend(
@@ -7539,6 +7817,7 @@ def paper_1961_driver_timestep_scaffold(
         covered_components=tuple(dict.fromkeys(covered)),
         missing_components=tuple(dict.fromkeys(missing)),
         notes=tuple(notes),
+        source_clock_context=context,
     )
 
 
@@ -7605,7 +7884,12 @@ def _paper_day_completed_entry_payloads(scaffold: DriverTimestepScaffold) -> tup
             return ()
     if scaffold.stomate_entry_assembly.partial_inputs:
         return ()
-    return (dict(scaffold.stomate_entry_assembly.payload),)
+    payload = dict(scaffold.stomate_entry_assembly.payload)
+    context = scaffold.source_clock_context
+    payload["source_clock"] = _driver_source_clock_payload(
+        context, None, tstep=scaffold.step.tstep
+    )
+    return (payload,)
 
 
 def _paper_day_daily_process_from_completed_entries(
@@ -7616,6 +7900,7 @@ def _paper_day_daily_process_from_completed_entries(
     runtime: DriverRuntimeScalars,
     tstep: int,
     entry_payloads: tuple[dict[str, object], ...],
+    calendar_state: DriverPreviousStepStatePacket | None = None,
     retain_step_results: bool = True,
     use_maintenance_jit: bool = False,
     single_pass_daily_fold: bool = False,
@@ -7632,12 +7917,14 @@ def _paper_day_daily_process_from_completed_entries(
         restart_state=restart_state,
         runtime=runtime,
         tstep=tstep,
+        source_clock=entry_payloads[-1].get("source_clock"),
+        calendar_state=calendar_state,
         run_def_values=run_def_values,
     )
     daily_state = restart_state.stomate_readstart.daily_state
     season_state = restart_state.stomate_readstart.season_state
     values = parse_run_def(run_def_path) if run_def_values is None else run_def_values
-    flags = tuple(_paper_first_step_do_slow(index, runtime) for index in range(steps_per_stomate))
+    flags = tuple(_paper_first_step_do_slow(entry.get("source_clock")) for entry in entry_payloads)
     folded = stomate_daily_process_fold_from_entries(
         entry_payloads=entry_payloads,
         accumulator_state=daily_state,
@@ -7718,7 +8005,7 @@ def _paper_later_day_daily_process_from_completed_entries(
             npts=npts,
             used_run_def=run_def_path,
         )
-    flags = tuple(_paper_first_step_do_slow(tstep, runtime) for tstep in range(int(start_tstep), int(start_tstep) + steps_per_stomate))
+    flags = tuple(_paper_first_step_do_slow(entry.get("source_clock")) for entry in entry_payloads)
     t2m_longterm = (
         slowproc_state["t2m_longterm"]
         if "t2m_longterm" in slowproc_state
@@ -7804,7 +8091,7 @@ def _paper_cold_start_day_daily_process_from_completed_entries(
         npts=int(np.asarray(slowproc_state["lai"]).shape[0]),
         used_run_def=run_def_path,
     )
-    flags = tuple(_paper_first_step_do_slow(index, runtime) for index in range(steps_per_stomate))
+    flags = tuple(_paper_first_step_do_slow(entry.get("source_clock")) for entry in entry_payloads)
     t2m_longterm = slowproc_state["t2m_longterm"] if "t2m_longterm" in slowproc_state else np.asarray(entry_payloads[0]["t2m"])
     values = parse_run_def(run_def_path)
     folded = stomate_daily_process_fold_from_entries(
@@ -8470,7 +8757,9 @@ def _paper_previous_state_with_stomate_updates(
         component: dict(component_fields)
         for component, component_fields in previous_state.fields_by_component.items()
     }
-    fields.setdefault("slowproc_stomate_previous_step_state", {}).update(dict(updates))
+    slow = fields.setdefault("slowproc_stomate_previous_step_state", {})
+    slow.update({name: value for name, value in updates.items()
+                 if name not in {"growth_day", "peatC_ok"} or name not in slow})
     provenance = {
         component: tuple(component_provenance)
         for component, component_provenance in previous_state.provenance_by_component.items()
@@ -8487,6 +8776,7 @@ def _paper_previous_state_with_stomate_updates(
         tstep=previous_state.tstep,
         fields_by_component=fields,
         provenance_by_component=provenance,
+        source_clock_runtime=previous_state.source_clock_runtime,
     )
 
 
@@ -9540,6 +9830,7 @@ def _paper_day_end_state_packet(
         for component, component_provenance in previous_state.provenance_by_component.items()
     }
     slowproc = fields.setdefault("slowproc_stomate_previous_step_state", {})
+    calendar_owned = {name: slowproc[name] for name in ("growth_day", "peatC_ok") if name in slowproc}
     for name, value in stomate_state.fields.items():
         if name == "daily_accumulators":
             slowproc[name] = value
@@ -9551,6 +9842,7 @@ def _paper_day_end_state_packet(
             slowproc[name] = value
             if name in {"lai", "frac_nobio", "veget_max", "veget", "tot_bare_soil"}:
                 fields.setdefault("diffuco_previous_step_state", {})[name] = value
+    slowproc.update(calendar_owned)
     if "sechiba_finalize_state" in fields:
         fields["sechiba_finalize_state"] = _sechiba_finalize_state_after_slowproc(
             fields["sechiba_finalize_state"], slowproc
@@ -9579,6 +9871,7 @@ def _paper_day_end_state_packet(
         tstep=previous_state.tstep,
         fields_by_component=fields,
         provenance_by_component=provenance,
+        source_clock_runtime=previous_state.source_clock_runtime,
     )
 
 
@@ -9623,6 +9916,11 @@ def paper_1961_driver_day_scaffold(
         raise ValueError("dt_stomate / dt_sechiba must be positive")
     if int(start_tstep) != 0:
         raise ValueError("current paper-case day scaffold is anchored to start_tstep=0")
+    _require_source_day_alignment(
+        context,
+        SimpleNamespace(source_clock_runtime=_source_clock_setup(context).runtime),
+        start=0,
+    )
 
     first = paper_1961_driver_timestep_scaffold(
         config_path,
@@ -9724,6 +10022,12 @@ def paper_1961_driver_day_scaffold(
                 stopped_at_tstep = next_step
                 state_gaps = _filter_day_state_gaps(DAY1_PREVIOUS_STEP_STATE_GAPS, previous_state)
                 break
+            entry_payload = {
+                **entry_payload,
+                "source_clock": _driver_source_clock_payload(
+                    context, previous_state.source_clock_runtime, tstep=next_step
+                ),
+            }
             completed_payloads.append(entry_payload)
             previous_state = driver_previous_step_state_from_next_step_hydrol_scaffold(
                 step_scaffold,
@@ -9733,7 +10037,12 @@ def paper_1961_driver_day_scaffold(
             stopped_at_tstep = None
             state_gaps = _filter_day_state_gaps(DAY1_PREVIOUS_STEP_STATE_GAPS, previous_state)
 
-    do_slow_flags = tuple(_paper_first_step_do_slow(tstep, runtime) for tstep in range(int(start_tstep), steps_per_stomate))
+    calendar_snapshot = (
+        _calendar_snapshot_before_stomate(stomate_half_hour_initial_state, previous_state)
+        if stopped_at_tstep is None and not state_gaps
+        else None
+    )
+    do_slow_flags = tuple(_paper_first_step_do_slow(entry.get("source_clock")) for entry in completed_payloads)
     daily_fold = None
     daily_carbon_boundary = None
     stomate_bundles = None
@@ -9758,6 +10067,7 @@ def paper_1961_driver_day_scaffold(
             use_maintenance_jit=maintenance_local_jit,
             single_pass_daily_fold=single_pass_daily_fold,
             run_def_values=run_def_values,
+            calendar_state=calendar_snapshot,
         )
         if daily_fold is not None:
             stomate_bundle_source, stomate_bundles = _paper_first_step_stomate_restart_input_bundles(
@@ -9766,6 +10076,8 @@ def paper_1961_driver_day_scaffold(
                 restart_state=first.first_step_restart_state,
                 runtime=runtime,
                 tstep=steps_per_stomate - 1,
+                source_clock=completed_payloads[-1].get("source_clock"),
+                calendar_state=calendar_snapshot,
                 daily_fields=daily_fold.daily_fields,
                 run_def_values=run_def_values,
             )
@@ -9801,6 +10113,8 @@ def paper_1961_driver_day_scaffold(
                     restart_state=updated_restart_state,
                     runtime=runtime,
                     tstep=steps_per_stomate - 1,
+                    source_clock=completed_payloads[-1].get("source_clock"),
+                    calendar_state=calendar_snapshot,
                     daily_fields=daily_fold.daily_fields,
                     run_def_values=run_def_values,
                 )
@@ -9862,7 +10176,7 @@ def paper_1961_driver_day_scaffold(
                     tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
                     firstcall=True,
                     latitude=first.payload.lalo[:, 0],
-                    julian_diff=1.0,
+                    julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
                 )
                 first_day_stomate_state = _paper_day_first_stomate_state_packet(
                     daily_carbon=stomate_daily_carbon,
@@ -9947,6 +10261,7 @@ def paper_1961_driver_later_day_scaffold(
     start = int(start_tstep)
     if start <= 0 or start % steps_per_stomate != 0:
         raise ValueError("later-day scaffold start_tstep must be a positive do_slow-aligned day boundary")
+    _require_source_day_alignment(context, previous_state, start=start)
 
     completed_payloads: list[dict[str, object]] = []
     current_state = previous_state
@@ -10032,6 +10347,12 @@ def paper_1961_driver_later_day_scaffold(
             stopped_at_tstep = tstep
             state_gaps = _filter_day_state_gaps(DAY1_PREVIOUS_STEP_STATE_GAPS, current_state)
             break
+        entry_payload = {
+            **entry_payload,
+            "source_clock": _driver_source_clock_payload(
+                context, current_state.source_clock_runtime, tstep=tstep
+            ),
+        }
         completed_payloads.append(entry_payload)
         current_state = driver_previous_step_state_from_next_step_hydrol_scaffold(
             step_scaffold,
@@ -10041,11 +10362,16 @@ def paper_1961_driver_later_day_scaffold(
         stopped_at_tstep = None
         state_gaps = _filter_day_state_gaps(DAY1_PREVIOUS_STEP_STATE_GAPS, current_state)
 
+    calendar_snapshot = (
+        _calendar_snapshot_before_stomate(previous_state, current_state)
+        if stopped_at_tstep is None and not state_gaps
+        else None
+    )
     daily_fold = None
     if first_step_scaffold is not None and stopped_at_tstep is None and not state_gaps:
         daily_fold = _paper_later_day_daily_process_from_completed_entries(
             first_step=first_step_scaffold,
-            previous_state=previous_state,
+            previous_state=calendar_snapshot,
             config_path=config_path,
             run_def_path=run_def_path,
             run_def_values=run_def_values,
@@ -10080,9 +10406,10 @@ def paper_1961_driver_later_day_scaffold(
             config_path=config_path,
             run_def_path=run_def_path,
             restart_state=restart_state,
-            previous_state=previous_state,
+            previous_state=calendar_snapshot,
             runtime=runtime,
             tstep=start + steps_per_stomate - 1,
+            source_clock=completed_payloads[-1].get("source_clock"),
             daily_fold=daily_fold,
             firstcall_season=int(start) == 0,
             run_def_values=run_def_values,
@@ -10157,12 +10484,13 @@ def paper_1961_driver_later_day_scaffold(
                     dt_days=runtime.dt_days,
                     tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
                     firstcall=False,
+                    julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
                 )
                 if season_memory_fields is not None and "gdd_init_date" in previous_state.fields_by_component["slowproc_stomate_previous_step_state"]:
                     season_memory_fields["gdd_init_date"] = season_update_gdd_init_date(
                         previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["gdd_init_date"],
                         latitude=first_step_scaffold.enerbil.payload.lalo[:, 0],
-                        julian_diff=float(int(start // steps_per_stomate) + 1),
+                        julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
                     )
                 day_stomate_state = _paper_day_first_stomate_state_packet(
                     daily_carbon=stomate_daily_carbon,
@@ -10272,6 +10600,7 @@ def _paper_1961_later_day_transition_inputs(
         half_hour_inputs = tuple(
             DriverRuntimeHalfHourInput(
                 step=step,
+                source_clock=_driver_source_clock_payload(context, current_state.source_clock_runtime, tstep=step.tstep),
                 base_payload=build_intersurf_first_step_payload(
                     step,
                     driver_z0_for_wind=0.1,
@@ -10451,6 +10780,7 @@ def _compiled_half_hour_forcing(item: DriverRuntimeHalfHourInput) -> DriverCompi
         ccanopy=payload.ccanopy,
         salinity=payload.salinity,
         tide_height=payload.tide_height,
+        source_clock=item.source_clock,
     )
 
 
@@ -10460,6 +10790,7 @@ def _paper_compiled_forcing_day(
     year: int,
     start_tstep: int,
     steps_per_stomate: int,
+    source_clock_runtime: SourceClockRuntime | None = None,
 ) -> DriverCompiledHalfHourForcing:
     """Stack one forcing day without constructing state-dependent process inputs."""
 
@@ -10504,6 +10835,7 @@ def _paper_compiled_forcing_day(
             ccanopy=ccanopy,
             salinity=salinity,
             tide_height=tide_height,
+            source_clock=_driver_source_clock_payload(context, source_clock_runtime, tstep=tstep),
         )
 
     half_hour_forcing = tuple(
@@ -10614,6 +10946,8 @@ def _paper_compiled_sechiba_scan(
     diffuco_parameters = context.diffuco_pft14_static_kwargs["trans_co2_pft_params"]
     diffuco_dynamic_names = tuple(name for name in diffuco_parameters if name != "ok_laidev")
     cache_key = (
+        _source_clock_setup(context).binding.binding_key,
+        tuple(sorted(_calendar_controls(context).items())),
         runtime_spec.components,
         runtime_spec.field_names_by_component,
         int(context.nvm),
@@ -10663,7 +10997,7 @@ def _paper_compiled_sechiba_scan(
     mineral_imax = int(hydrol_runtime_static_tables.mineral.imax)
 
     def transition(
-        values_by_component,
+        dynamic_state,
         forcing,
         landpoint_payload,
         hydrol_values,
@@ -10671,11 +11005,8 @@ def _paper_compiled_sechiba_scan(
         diffuco_day_inputs,
         diffuco_parameter_values,
     ):
-        dynamic_state = DriverFastStateBundle(
-            tstep=47,
-            values_by_component=values_by_component,
-            spec=runtime_spec,
-        )
+        if forcing.source_clock is None:
+            raise SourceClockError("compiled SECHIBA requires admitted dynamic source-clock payload")
         payload = replace(
             base_payload_template,
             **landpoint_payload,
@@ -10716,8 +11047,8 @@ def _paper_compiled_sechiba_scan(
         result = _paper_1961_next_step_runtime_result_compact(
             config_path,
             previous_state=dynamic_state,
-            year=1961,
-            tstep=48,
+            year=forcing.source_clock.year,
+            tstep=forcing.source_clock.local_tstep,
             fixed_format_trace_dir=None,
             static_trace_fields=None,
             used_run_def_path=context.run_def_path,
@@ -10733,6 +11064,7 @@ def _paper_compiled_sechiba_scan(
             runtime_run_scalars=run_scalars,
             runtime_forcing=runtime_forcing,
             capture_daily_flux_step=capture_daily_flux_labels,
+            source_clock=forcing.source_clock,
         )
         entry_values = tuple(result.entry_payload[name] for name in _COMPILED_STOMATE_ENTRY_FIELDS)
         outputs = (
@@ -10740,10 +11072,10 @@ def _paper_compiled_sechiba_scan(
             if capture_daily_flux_labels
             else entry_values
         )
-        return result.next_state.values_by_component, outputs
+        return result.next_state, outputs
 
     def scan_transition(
-        initial_values,
+        initial_state,
         forcing_series,
         landpoint_payload,
         hydrol_values,
@@ -10762,7 +11094,7 @@ def _paper_compiled_sechiba_scan(
                 diffuco_parameter_values,
             )
 
-        final_values, outputs = jax.lax.scan(body, initial_values, forcing_series)
+        final_values, outputs = jax.lax.scan(body, initial_state, forcing_series)
         if not capture_daily_flux_labels:
             return final_values, outputs, None
         entry_values, flux_steps = outputs
@@ -10776,10 +11108,13 @@ def _paper_compiled_sechiba_scan(
         )
 
     compiled = jax.jit(scan_transition)
+    def admitted_scan(initial_state, forcing_series, *args):
+        _validate_compiled_source_clock_series(context, initial_state, forcing_series)
+        return compiled(initial_state, forcing_series, *args)
     if len(_COMPILED_SECHIBA_SCAN_CACHE) >= 8:
         _COMPILED_SECHIBA_SCAN_CACHE.pop(next(iter(_COMPILED_SECHIBA_SCAN_CACHE)))
-    _COMPILED_SECHIBA_SCAN_CACHE[cache_key] = compiled
-    return compiled
+    _COMPILED_SECHIBA_SCAN_CACHE[cache_key] = admitted_scan
+    return admitted_scan
 
 
 def _paper_1961_later_day_half_hour_transition(
@@ -10913,6 +11248,7 @@ def _paper_1961_later_day_half_hour_transition(
             module_jit=True,
             diffuco_local_jit=True,
             capture_daily_flux_step=capture_daily_flux_labels,
+            source_clock=(None if first_compiled_forcing is None else first_compiled_forcing.source_clock),
         )
         if first_step.ok:
             runtime_state = fast_state_from_previous_packet(first_step.next_state)
@@ -10958,7 +11294,7 @@ def _paper_1961_later_day_half_hour_transition(
                 capture_daily_flux_labels=capture_daily_flux_labels,
             )
             final_values, stacked_entries, sechiba_daily_fluxes = compiled_scan(
-                runtime_state.values_by_component,
+                runtime_state,
                 forcing_series,
                 landpoint_payload,
                 hydrol_values,
@@ -10996,17 +11332,12 @@ def _paper_1961_later_day_half_hour_transition(
             for offset in range(day_inputs.steps_per_stomate - 1):
                 values = tuple(value[offset] for value in stacked_entries)
                 payload = {
-                    "kjit": first_tstep + offset + 2,
+                    "kjit": forcing_series.source_clock.local_tstep[offset] + 1,
+                    "source_clock": jax.tree_util.tree_map(lambda value: value[offset], forcing_series.source_clock),
                     **dict(zip(_COMPILED_STOMATE_ENTRY_FIELDS, values, strict=True)),
                 }
                 completed_payloads.append(payload)
-            final_state = previous_packet_from_fast_state(
-                DriverFastStateBundle(
-                    tstep=day_inputs.start + day_inputs.steps_per_stomate - 1,
-                    values_by_component=final_values,
-                    spec=runtime_state.spec,
-                )
-            )
+            final_state = previous_packet_from_fast_state(final_values)
             return DriverRuntimeDayStepTransition(
                 completed_entry_payloads=tuple(completed_payloads),
                 current_state=final_state,
@@ -11135,6 +11466,8 @@ def paper_1961_driver_later_day_runtime_result(
     steps_per_stomate = int(round(runtime.dt_stomate / runtime.dt_sechiba))
     if steps_per_stomate <= 0:
         raise ValueError("dt_stomate / dt_sechiba must be positive")
+    if float(runtime.dt_stomate) != _source_clock_setup(context).binding.one_day_seconds:
+        raise SourceClockError("complete-day driver requires DT_STOMATE equal to the declared source day")
     start = int(start_tstep)
     science_day_number = (
         int(start // steps_per_stomate) + 1
@@ -11143,10 +11476,16 @@ def paper_1961_driver_later_day_runtime_result(
     )
     if start < 0 or start % steps_per_stomate != 0:
         raise ValueError("later-day runtime start_tstep must be a non-negative do_slow-aligned day boundary")
-    if start == 0 and previous_state.tstep != -1:
-        raise ValueError("start_tstep=0 requires a rebased restart state with tstep=-1")
-    if start > 0 and previous_state.tstep != start - 1:
-        raise ValueError("later-day runtime previous_state.tstep must be start_tstep - 1")
+    if compiled_forcing_series is None:
+        if int(previous_state.tstep) != start - 1:
+            raise ValueError("later-day runtime previous_state.tstep must be start_tstep - 1")
+        _require_source_day_alignment(context, previous_state, start=start)
+    else:
+        _validate_compiled_source_clock_series(context, previous_state, compiled_forcing_series)
+        source = compiled_forcing_series.source_clock
+        if not isinstance(source.second, jax.core.Tracer):
+            if float(source.second[0]) != context.dt_sechiba or float(source.second[-1]) != 0:
+                raise SourceClockError("compiled day requires a complete source day; partial-day source restart is unsupported")
 
     current_state = previous_state
     day_transition_inputs = _paper_1961_later_day_transition_inputs(
@@ -11180,6 +11519,7 @@ def paper_1961_driver_later_day_runtime_result(
     )
     completed_payloads = half_hour_transition.completed_entry_payloads
     current_state = half_hour_transition.current_state
+    previous_state = _calendar_snapshot_before_stomate(previous_state, current_state)
     first_step_metadata = half_hour_transition.first_step_metadata
     stopped_at_tstep = half_hour_transition.stopped_at_tstep
     state_gaps = half_hour_transition.state_gaps
@@ -11385,6 +11725,7 @@ def paper_1961_driver_later_day_runtime_result(
         stomate_parameter_overrides=stomate_parameter_overrides,
         stomate_restart_template=compiled_stomate_restart_template,
         stomate_season_template=compiled_stomate_season_template,
+        source_clock=completed_payloads[-1]["source_clock"],
     )
     if stomate_bundles is None or stomate_bundle_gaps:
         return DriverRuntimeDayResult(
@@ -11440,7 +11781,7 @@ def paper_1961_driver_later_day_runtime_result(
         season_memory_fields["gdd_init_date"] = season_update_gdd_init_date(
             previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["gdd_init_date"],
             latitude=first_step_metadata.lalo[:, 0],
-            julian_diff=science_day_number,
+            julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
         )
     day_stomate_state = _paper_day_first_stomate_state_packet(
         daily_carbon=stomate_daily_carbon,
@@ -11540,6 +11881,7 @@ def _paper_compiled_later_day_block_executable(
             raise ValueError("training projection requires a stable cache key")
 
     initial = fast_state_from_previous_packet(initial_state)
+    _validate_compiled_source_clock_series(context, initial, block_forcing, whole_days=True)
     if stomate_parameter_values is None:
         stomate_parameter_values = _compiled_stomate_parameter_values(context)
     block_size = int(np.asarray(block_day_numbers).shape[0])
@@ -11549,6 +11891,8 @@ def _paper_compiled_later_day_block_executable(
         context.first_step_restart_state.stomate_readstart.season_state.provenance
     )
     cache_key = (
+        _source_clock_setup(context).binding.binding_key,
+        tuple(sorted(_calendar_controls(context).items())),
         id(context),
         str(context.config_path.resolve()),
         float(context.run_def_values.get("Z0_BARE", 0.01)),
@@ -11567,7 +11911,7 @@ def _paper_compiled_later_day_block_executable(
         return cached.executable, initial.spec
 
     def transition(
-        values_by_component,
+        initial_runtime_state,
         forcing_days,
         science_day_numbers,
         stomate_parameters,
@@ -11577,20 +11921,14 @@ def _paper_compiled_later_day_block_executable(
         stomate_season_values,
         diffuco_parameter_values,
     ):
-        def body(current_values, inputs):
+        def body(state, inputs):
             forcing, science_day_number = inputs
-            state = DriverFastStateBundle(
-                tstep=47,
-                values_by_component=current_values,
-                spec=initial.spec,
-            )
             day = paper_1961_driver_later_day_runtime_result(
                 config_path,
                 previous_state=state,
                 day_index=2,
-                # All year-varying driver inputs, including CO2, are carried
-                # by ``forcing``. Keep metadata static so one executable can
-                # serve every forcing year with the same state layout.
+                # These labels select static physical templates only. Every
+                # chronology-dependent consumer receives forcing.source_clock.
                 year=1961,
                 start_tstep=48,
                 used_run_def_path=context.run_def_path,
@@ -11648,19 +11986,21 @@ def _paper_compiled_later_day_block_executable(
                     )
                 else:
                     outputs = training_output_projector(
-                        current_values,
+                        state.values_by_component,
                         day.pre_daily_training_boundary,
                     )
-            return next_values, outputs
+            next_state = DriverFastStateBundle(packet.tstep, next_values, initial.spec,
+                                               packet.source_clock_runtime)
+            return next_state, outputs
 
         return jax.lax.scan(
             body,
-            values_by_component,
+            initial_runtime_state,
             (forcing_days, science_day_numbers),
         )
 
-    executable = jax.jit(transition).lower(
-        initial.values_by_component,
+    compiled_executable = jax.jit(transition).lower(
+        initial,
         block_forcing,
         block_day_numbers,
         stomate_parameter_values,
@@ -11670,7 +12010,7 @@ def _paper_compiled_later_day_block_executable(
                 context=context,
                 current_state=initial_state,
                 year=year,
-                start=48,
+                start=int(initial_state.tstep) + 1,
                 steps_per_stomate=int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba)),
                 fixed_format_trace_dir=None,
                 static_trace_fields=None,
@@ -11685,6 +12025,9 @@ def _paper_compiled_later_day_block_executable(
         },
         _compiled_diffuco_parameter_values(context),
     ).compile()
+    def executable(initial_runtime_state, forcing_days, *args):
+        _validate_compiled_source_clock_series(context, initial_runtime_state, forcing_days, whole_days=True)
+        return compiled_executable(initial_runtime_state, forcing_days, *args)
     if len(_COMPILED_LATER_DAY_BLOCK_CACHE) >= 8:
         _COMPILED_LATER_DAY_BLOCK_CACHE.pop(
             next(iter(_COMPILED_LATER_DAY_BLOCK_CACHE))
@@ -11751,6 +12094,7 @@ def _paper_run_compiled_later_day_blocks(
                 year=year,
                 start_tstep=(day_index - 1) * steps_per_stomate,
                 steps_per_stomate=steps_per_stomate,
+                source_clock_runtime=previous_state.source_clock_runtime,
             )
             for day_index in block_day_indices
         )
@@ -11773,7 +12117,7 @@ def _paper_run_compiled_later_day_blocks(
             )
         initial_values = fast_state_from_previous_packet(
             previous_state
-        ).values_by_component
+        )
         final_values, stacked_outputs = executable(
             initial_values,
             block_forcing,
@@ -11802,13 +12146,7 @@ def _paper_run_compiled_later_day_blocks(
                     ),
                 )
             )
-        previous_state = previous_packet_from_fast_state(
-            DriverFastStateBundle(
-                tstep=block_day_indices[-1] * steps_per_stomate - 1,
-                values_by_component=final_values,
-                spec=runtime_spec,
-            )
-        )
+        previous_state = previous_packet_from_fast_state(final_values)
         next_day_index += int(block_size)
     return previous_state, next_day_index
 
@@ -11822,6 +12160,8 @@ def paper_1961_driver_restart_year_start_day_result(
     static_trace_fields: StaticTraceFields | None = None,
     used_run_def_path: str | Path | None = None,
     prepared_context: Paper1961PreparedDriverContext | None = None,
+    run_mode: str = "new_native_run",
+    run_id: str | None = None,
     module_jit: bool = True,
     diffuco_local_jit: bool = True,
     single_pass_daily_fold: bool = False,
@@ -11839,7 +12179,10 @@ def paper_1961_driver_restart_year_start_day_result(
     SECHIBA/STOMATE dynamic state is carried forward.
     """
 
-    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    context = prepared_context or prepare_paper_1961_driver_context(
+        config_path, used_run_def_path=used_run_def_path, run_mode=run_mode,
+        previous_runtime=(None if previous_year_end_state is None or run_mode != "continuous"
+                          else previous_year_end_state.source_clock_runtime), run_id=run_id)
     steps_per_stomate = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
     gaps = driver_year_handoff_state_gaps(previous_year_end_state)
     if gaps or previous_year_end_state is None:
@@ -11854,7 +12197,22 @@ def paper_1961_driver_restart_year_start_day_result(
             missing_components=_runtime_missing_from_gaps(gaps, extra=("year_handoff_state",)),
             daily_process_fold=None,
         )
-    rebased = rebase_driver_state_for_year_start(previous_year_end_state)
+    if run_mode == "continuous":
+        setup = source_clock_setup_from_config(context.config_path,
+            run_def_path=context.run_def_path, run_def_values=context.run_def_values,
+            first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
+            run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
+            run_id=run_id)
+        context = replace(context, source_clock_setup=setup)
+    elif run_id is not None:
+        context = replace(context, source_clock_setup=source_clock_setup_from_config(
+            context.config_path, run_def_path=context.run_def_path, run_def_values=context.run_def_values,
+            first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
+            run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
+            run_id=run_id))
+    rebased = rebase_driver_state_for_year_start(previous_year_end_state,
+        run_mode=run_mode, source_clock_setup=_source_clock_setup(context))
+    _require_source_day_alignment(context, rebased, start=0)
     # The memory and file routes share the same public INTEGER owner contract;
     # preserve the source-undefined veget_year value without inventing a year.
     if "sechiba_finalize_state" in rebased.fields_by_component:
@@ -11867,7 +12225,7 @@ def paper_1961_driver_restart_year_start_day_result(
         step, driver_z0_for_wind=_driver_wind_z0_from_previous_state(rebased),
         dt_sechiba=context.dt_sechiba,
     )
-    if restart_thermosoil_initialization_supported(context):
+    if run_mode == "new_native_run" and restart_thermosoil_initialization_supported(context):
         initial_thermal = restart_thermosoil_initial_fields(
             rebased.fields_by_component["sechiba_finalize_state"],
             context=context, payload=payload,
@@ -12301,6 +12659,11 @@ def paper_1961_driver_cold_start_day_scaffold(
     if stop_step < 1:
         raise ValueError("max_steps must be positive")
     run_def_values = context.run_def_values
+    _require_source_day_alignment(
+        context,
+        SimpleNamespace(source_clock_runtime=_source_clock_setup(context).runtime),
+        start=0,
+    )
 
     first = paper_1961_driver_cold_start_first_step_coverage(
         config_path,
@@ -12324,7 +12687,12 @@ def paper_1961_driver_cold_start_day_scaffold(
             ),
         )
     else:
-        completed_payloads.append(dict(first.initialized_payloads["cold_start_first_step_entry_payload"]))
+        completed_payloads.append({
+            **dict(first.initialized_payloads["cold_start_first_step_entry_payload"]),
+            "source_clock": _driver_source_clock_payload(
+                context, previous_state.source_clock_runtime, tstep=0
+            ),
+        })
         cold_entry_state = first.initialized_payloads.get("stomate_cold_start_entry_state")
         if cold_entry_state is not None:
             carried = previous_state.fields_by_component.get("slowproc_stomate_previous_step_state", {})
@@ -12363,6 +12731,12 @@ def paper_1961_driver_cold_start_day_scaffold(
                 stopped_at_tstep = next_step
                 state_gaps = _filter_day_state_gaps(DAY1_PREVIOUS_STEP_STATE_GAPS, previous_state)
                 break
+            entry_payload = {
+                **entry_payload,
+                "source_clock": _driver_source_clock_payload(
+                    context, previous_state.source_clock_runtime, tstep=next_step
+                ),
+            }
             completed_payloads.append(entry_payload)
             previous_state = driver_previous_step_state_from_next_step_hydrol_scaffold(
                 step_scaffold,
@@ -12372,6 +12746,11 @@ def paper_1961_driver_cold_start_day_scaffold(
             stopped_at_tstep = None
             state_gaps = _filter_day_state_gaps(DAY1_PREVIOUS_STEP_STATE_GAPS, previous_state)
 
+    calendar_snapshot = (
+        _calendar_snapshot_before_stomate(stomate_half_hour_initial_state, previous_state)
+        if previous_state is not None and stopped_at_tstep is None and not state_gaps
+        else None
+    )
     daily_fold = _paper_cold_start_day_daily_process_from_completed_entries(
         first_step_coverage=first,
         config_path=config_path,
@@ -12408,6 +12787,8 @@ def paper_1961_driver_cold_start_day_scaffold(
             first_step_coverage=first,
             runtime=runtime,
             tstep=steps_per_stomate - 1,
+            source_clock=completed_payloads[-1].get("source_clock"),
+            calendar_state=calendar_snapshot,
             daily_fold=daily_fold,
             run_def_values=run_def_values,
         )
@@ -12545,7 +12926,7 @@ def paper_1961_driver_cold_start_day_scaffold(
                 tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
                 firstcall=True,
                 latitude=context.first_step_bundle.domain.lalo[:, 0],
-                julian_diff=1.0,
+                julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
             )
             first_day_stomate_state = _paper_day_first_stomate_state_packet(
                 daily_carbon=stomate_daily_carbon,

@@ -40,6 +40,16 @@ class ForcingMetadataReadError(OSError):
     """A forcing source could not be opened."""
 
 
+def read_source_forcing_clock(source):
+    """Strict declared native chronology, separate from legacy domain metadata.
+
+    IOIPSL flinopen581-665 owns time_steps/tstep_sec precedence. Missing
+    calendar/origin is unsupported here; a caller-provided year is not evidence.
+    """
+    from jax_orchidee.driver.source_clock import read_forcing_clock_metadata
+    return read_forcing_clock_metadata(source)
+
+
 @dataclass(frozen=True)
 class NetCDFVariableMetadata:
     name: str

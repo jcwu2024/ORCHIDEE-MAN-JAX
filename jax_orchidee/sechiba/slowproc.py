@@ -18,6 +18,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from jax_orchidee.driver.restart import read_restart_fields
+from jax_orchidee.driver.source_calendar import source_calendar_assignments
 from jax_orchidee.sechiba.diffuco import humcste_from_pft_to_mtc, humcste_use_from_humcste
 from jax_orchidee.stomate.main import StomateMainPFT14Switches, stomate_main_pft14_step
 
@@ -1383,19 +1384,26 @@ def slowproc_main_pft14_step(
         if name not in slow or jnp.asarray(slow[name]).shape != (nland,):
             raise ValueError(f"slow_state['{name}'] must have shape (nland,)")
 
-    # Source order: year reset, fixed dynpeat_PC Jan-2 write, then day-end growth.
-    first_ts_year = (sec == dt_sechiba) and int(month) == 1 and int(day) == 1
     growth_day = _as_float64(slow["growth_day"])
     peatC_ok = _as_float64(slow["peatC_ok"])
-    if first_ts_year:
-        growth_day = jnp.zeros_like(growth_day)
-    if (sec == dt_sechiba) and int(month) == 1 and int(day) == 2:
-        # lines 572-574 execute independently of DYN_PEAT when dynpeat_PC is false.
-        peatC_ok = jnp.ones_like(peatC_ok)
-    last_ts_day = sec == 0
-    end_of_year = last_ts_day and int(month) == 1 and int(day) == 1
-    if last_ts_day:
-        growth_day = growth_day + jnp.where(_as_float64(vegetation["temp_growth"]) > 5.0, 1.0, 0.0)
+    calendar_assignments = source_calendar_assignments(
+        growth_day=growth_day,
+        peatC_ok=peatC_ok,
+        temp_growth=_as_float64(vegetation["temp_growth"]),
+        # dynpeat_PC is fixed false for this PFT14 paper route, so peatC is unused.
+        peatC=jnp.zeros_like(peatC_ok),
+        month=month,
+        day=day,
+        sec=sec,
+        dt_sechiba=dt_sechiba,
+        active=True,
+        dynpeat_pc=False,
+    )
+    growth_day = calendar_assignments.growth_day
+    peatC_ok = calendar_assignments.peatC_ok
+    first_ts_year = calendar_assignments.first_ts_year
+    last_ts_day = calendar_assignments.last_ts_day
+    end_of_year = calendar_assignments.end_of_year
     do_slow = last_ts_day
     date_after = int(date)
     if do_slow:
@@ -1502,13 +1510,15 @@ def slowproc_main_pft14_step(
     silt = _as_float64(soil["siltfraction"])
     soil["textfrac"] = jnp.stack((clay, silt, 1.0 - clay - silt), axis=1)
 
+    slow.update(dict(getattr(stomate_result, "daily_state", {})))
+    # Calendar assignments consume pre-STOMATE inputs and remain authoritative
+    # when daily state is merged back from STOMATE.
     slow.update(
         date=date_after,
         growth_day=growth_day,
         peatC_ok=peatC_ok,
         update_peatfrac=False,
     )
-    slow.update(dict(getattr(stomate_result, "daily_state", {})))
     calendar = SlowprocMainCalendarState(
         date=date_after,
         first_ts_year=first_ts_year,

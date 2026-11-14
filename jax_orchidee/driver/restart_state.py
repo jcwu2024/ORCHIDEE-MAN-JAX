@@ -12,6 +12,7 @@ from netCDF4 import Dataset
 
 from jax_orchidee.driver.domain import load_case_config
 from jax_orchidee.driver.init import read_run_scalars
+from jax_orchidee.driver.source_clock import PREFIX, RestartClockBundle, read_source_clock_restart_bundle
 from jax_orchidee.driver.restart import SechibaStaticRestart, read_sechiba_static_restart, reference_restart_path
 from jax_orchidee.parameters.pft_catalog import (
     PFTRunLayout,
@@ -187,6 +188,11 @@ class ReferenceCaseFirstStepRestartState:
     stomate_source_pft_layout: PFTRunLayout
     sechiba_source_pft_layout: PFTRunLayout
     provenance: tuple[str, ...] = FIRST_STEP_RESTART_STATE_PROVENANCE
+    source_clock: RestartClockBundle | None = None
+
+    @property
+    def source_clock_runtime(self):
+        return None if self.source_clock is None else self.source_clock.runtime
 
 
 def reference_case_first_step_restart_state(
@@ -196,6 +202,7 @@ def reference_case_first_step_restart_state(
     run_dir: str | Path | None = None,
     run_def_path: str | Path | None = None,
     stomate_filename: str = "stomate_start.nc",
+    source_clock_legacy_policy: str | None = None,
 ) -> ReferenceCaseFirstStepRestartState:
     """Read exact first-step restart state from the local paper reference.
 
@@ -224,6 +231,17 @@ def reference_case_first_step_restart_state(
         resolved_run_dir = run_dir_path
     if not stomate_input.exists():
         raise FileNotFoundError(stomate_input)
+
+    paths = (driver_start, sechiba_start, stomate_input)
+    versioned = False
+    for path in paths:
+        with Dataset(path) as dataset:
+            versioned = versioned or any(name.startswith(PREFIX) for name in dataset.ncattrs())
+    source_clock = None
+    if versioned or source_clock_legacy_policy is not None:
+        source_clock = read_source_clock_restart_bundle(
+            paths, legacy_policy=source_clock_legacy_policy or "reject"
+        )
 
     config = load_case_config(config_path)
     catalog = load_pft_catalog(config["pft_catalog"]["path"])
@@ -332,4 +350,5 @@ def reference_case_first_step_restart_state(
         pft_layout=target_pft_layout,
         stomate_source_pft_layout=stomate_source_pft_layout,
         sechiba_source_pft_layout=sechiba_source_pft_layout,
+        source_clock=source_clock,
     )

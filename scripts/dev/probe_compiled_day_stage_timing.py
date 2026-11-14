@@ -23,6 +23,10 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     _paper_compiled_forcing_day,
     _paper_compiled_later_day_block_executable,
     _paper_daily_carbon_static_dispatch,
+    _compiled_stomate_parameter_values,
+    _compiled_hydrol_table_arrays,
+    _compiled_landpoint_payload,
+    _compiled_diffuco_parameter_values,
     prepare_paper_1961_driver_context,
 )
 from jax_orchidee.runtime import configure_jax_compilation_cache  # noqa: E402
@@ -48,6 +52,8 @@ def main() -> int:
     output = ROOT / "outputs" / "performance" / "compiled_day_stage_timing.json"
     with state_cache.open("rb") as handle:
         day1_state = pickle.load(handle)
+    if getattr(day1_state, "source_clock_runtime", None) is None:
+        raise ValueError("legacy timing state lacks admitted source-clock metadata; regenerate the state through the current driver")
     initial = fast_state_from_previous_packet(day1_state)
     context = prepare_paper_1961_driver_context(config, used_run_def_path=run_def)
     forcing = _paper_compiled_forcing_day(
@@ -55,6 +61,7 @@ def main() -> int:
         year=1961,
         start_tstep=48,
         steps_per_stomate=48,
+        source_clock_runtime=day1_state.source_clock_runtime,
     )
     prepared = _paper_1961_later_day_transition_inputs(
         context=context,
@@ -68,12 +75,7 @@ def main() -> int:
         compiled_forcing_series=forcing,
     )
 
-    def sechiba_only(values_by_component, forcing_series):
-        state = DriverFastStateBundle(
-            tstep=47,
-            values_by_component=values_by_component,
-            spec=initial.spec,
-        )
+    def sechiba_only(state, forcing_series):
         day_inputs = _paper_1961_later_day_transition_inputs(
             context=context,
             current_state=state,
@@ -101,20 +103,17 @@ def main() -> int:
             materialize_compiled_entries=False,
         )
         packet = transition.current_state
-        return tuple(
-            tuple(fields.values())
-            for fields in packet.fields_by_component.values()
-        )
+        return fast_state_from_previous_packet(packet)
 
     started = time.perf_counter()
     sechiba_executable = jax.jit(sechiba_only).lower(
-        initial.values_by_component,
+        initial,
         forcing,
     ).compile()
     sechiba_compile_seconds = time.perf_counter() - started
     sechiba_best, sechiba_repeats = _timed(
         sechiba_executable,
-        initial.values_by_component,
+        initial,
         forcing,
     )
 
@@ -134,9 +133,16 @@ def main() -> int:
     full_compile_seconds = time.perf_counter() - started
     full_best, full_repeats = _timed(
         full_executable,
-        initial.values_by_component,
+        initial,
         forcing_block,
         day_numbers,
+        _compiled_stomate_parameter_values(context),
+        _compiled_hydrol_table_arrays(prepared.hydrol_runtime_static_tables),
+        _compiled_landpoint_payload(prepared.compiled_base_payload_template),
+        context.first_step_restart_state.stomate,
+        {name: value for name, value in context.first_step_restart_state.stomate_readstart.season_state._asdict().items()
+         if name != "provenance"},
+        _compiled_diffuco_parameter_values(context),
     )
     report = {
         "status": "passed",

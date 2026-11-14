@@ -11,6 +11,11 @@ from netCDF4 import Dataset
 from jax_orchidee.driver.dim2 import Dim2DriverRestart
 from jax_orchidee.driver.restart_export import stomate_full_restart_states_from_day_end_packet
 from jax_orchidee.driver.restart_file_io import write_dim2_driver_restart
+from jax_orchidee.driver.source_clock import (
+    PREFIX, SourceClockRuntime, physical_state_with_source_clock,
+    read_source_clock_restart_bundle,
+    validate_source_clock_restart_packet,
+)
 from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.sechiba.restart_export import paper_sechiba_restart_state_from_finalize_state
 from jax_orchidee.sechiba.restart_io import SechibaRestartState, write_sechiba_restart_state
@@ -29,6 +34,7 @@ class PaperRestartBundleState:
     driver: Dim2DriverRestart
     sechiba: SechibaRestartState
     stomate: StomateReadstartStates
+    source_clock_runtime: SourceClockRuntime | None = None
 
 
 @dataclass(frozen=True)
@@ -74,6 +80,7 @@ def paper_restart_bundle_state_from_day_end_packet(
     components = getattr(packet, "fields_by_component", None)
     if components is None:
         raise TypeError("packet must expose fields_by_component")
+    runtime = validate_source_clock_restart_packet(packet, source_istp=kjit)
     driver_fields = components.get("driver_previous_step_state", {})
     driver_names = tuple(Dim2DriverRestart.__dataclass_fields__)
     missing_driver = tuple(name for name in driver_names if name not in driver_fields)
@@ -92,6 +99,7 @@ def paper_restart_bundle_state_from_day_end_packet(
         driver=Dim2DriverRestart(**{name: driver_fields[name] for name in driver_names}),
         sechiba=paper_sechiba_restart_state_from_finalize_state(finalize, kjit=int(kjit)),
         stomate=stomate,
+        source_clock_runtime=runtime,
     )
 
 
@@ -107,10 +115,16 @@ def read_restart_physical_state(path: str | Path) -> StomateRestartPhysicalState
             name: dataset.getncattr(name)
             for name in dataset.ncattrs()
         }
+        variable_attributes = {
+            name: {key: dataset.variables[name].getncattr(key)
+                   for key in dataset.variables[name].ncattrs() if key != "_FillValue"}
+            for name in fields
+        }
     return StomateRestartPhysicalState(
         **fields,
         index_g=(1,),
         global_attributes=attributes,
+        variable_attributes=variable_attributes,
     )
 
 
@@ -148,6 +162,11 @@ def write_paper_restart_start_bundle(
     existing = [path for path in paths.values() if path.exists()]
     if existing:
         raise FileExistsError(existing[0])
+    if state.source_clock_runtime is not None:
+        physical_state = PaperRestartBundlePhysicalState(**{
+            role: physical_state_with_source_clock(getattr(physical_state, role), state.source_clock_runtime)
+            for role in paths
+        })
 
     driver_report = write_dim2_driver_restart(
         paths["driver"], state=state.driver, physical_state=physical_state.driver
@@ -169,6 +188,13 @@ def write_paper_restart_start_bundle(
         remainder_state=stomate.remainder_state,
         pft_layout=pft_layout,
     )
+    # Legacy science-only writers remain explicit compatibility APIs. Whenever
+    # any versioned clock is supplied, all three actual files must agree.
+    if state.source_clock_runtime is not None or any(
+        any(name.startswith(PREFIX) for name in (getattr(physical_state, role).global_attributes or {}))
+        for role in paths
+    ):
+        read_source_clock_restart_bundle(paths)
     return PaperRestartBundleWriteReport(
         output_directory=output,
         driver=driver_report,

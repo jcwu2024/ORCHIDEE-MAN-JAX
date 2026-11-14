@@ -120,6 +120,7 @@ class StomateRestartPhysicalState:
     time_steps: object
     index_g: tuple[int, ...] = (1,)
     global_attributes: Mapping[str, object] | None = None
+    variable_attributes: Mapping[str, Mapping[str, object]] | None = None
 
 
 @dataclass(frozen=True)
@@ -1574,6 +1575,10 @@ def create_stomate_restart_skeleton_from_schema(
                 **create_kwargs,
             )
             variable.setncatts(dict(declaration.get("attributes", {})))
+            if physical_state.variable_attributes and name in physical_state.variable_attributes:
+                if name not in schema["physical_variables"]:
+                    raise ValueError("physical metadata overlay cannot modify science variables")
+                variable.setncatts(dict(physical_state.variable_attributes[name]))
 
         physical_values = {
             "nav_lon": physical_state.nav_lon,

@@ -180,9 +180,15 @@ def write_stomate_restart_from_day_end_packet(
         raise TypeError("base_states must be StomateReadstartStates")
     if not isinstance(pft_layout, PFTRunLayout):
         raise TypeError("pft_layout must be a PFTRunLayout")
+    from jax_orchidee.driver.source_clock import validate_source_clock_restart_packet
+    runtime = validate_source_clock_restart_packet(packet)
+    fields = packet if runtime is None else packet.fields_by_component["slowproc_stomate_previous_step_state"]
     merged, merge_report = stomate_full_restart_states_from_day_end_packet(
-        packet, base_states=base_states,
+        fields, base_states=base_states,
     )
+    if runtime is not None:
+        from jax_orchidee.driver.source_clock import physical_state_with_source_clock
+        physical_state = physical_state_with_source_clock(physical_state, runtime)
     write_report = write_stomate_full_writerestart_states(
         output_path,
         physical_state=physical_state,

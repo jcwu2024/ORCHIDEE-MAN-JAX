@@ -1,11 +1,10 @@
-"""Fixed-shape driver state bundle for future compiled runtime loops.
+"""Fixed-shape driver state bundle for compiled runtime loops.
 
 The current driver state contract is the audited
 ``DriverPreviousStepStatePacket`` dictionary packet.  This module provides a
 lossless intermediate representation that separates dynamic values from the
-static component/field/provenance layout.  It is intentionally not wired into
-the model runner yet; it is a safe staging point before replacing Python
-half-hour orchestration with coarser JAX loops.
+static component/field/provenance layout. The source-clock runtime is separate
+numeric metadata with an immutable binding, outside the scientific field map.
 """
 
 from __future__ import annotations
@@ -66,17 +65,19 @@ class DriverFastStateBundle:
     tstep: Any
     values_by_component: tuple[tuple[Any, ...], ...]
     spec: DriverFastStateSpec
+    source_clock_runtime: Any = None
 
     def tree_flatten(self):
-        return (self.tstep, self.values_by_component), self.spec
+        return (self.tstep, self.values_by_component, self.source_clock_runtime), self.spec
 
     @classmethod
     def tree_unflatten(cls, spec: DriverFastStateSpec, children):
-        tstep, values_by_component = children
+        tstep, values_by_component, source_clock_runtime = children
         return cls(
             tstep=tstep,
             values_by_component=tuple(tuple(values) for values in values_by_component),
             spec=spec,
+            source_clock_runtime=source_clock_runtime,
         )
 
     @property
@@ -159,21 +160,23 @@ def fast_state_from_previous_packet(
         for component in components
     )
     return DriverFastStateBundle(
-        tstep=int(packet.tstep),
+        tstep=packet.tstep,
         values_by_component=values_by_component,
         spec=DriverFastStateSpec(
             components=components,
             field_names_by_component=field_names_by_component,
             provenance_by_component=provenance_by_component,
         ),
+        source_clock_runtime=getattr(packet, "source_clock_runtime", None),
     )
 
 
 def fast_state_from_previous_fields(
     *,
-    tstep: int,
+    tstep: Any,
     fields_by_component: Mapping[str, Mapping[str, object]],
     provenance_by_component: Mapping[str, tuple[str, ...]],
+    source_clock_runtime: Any = None,
 ) -> DriverFastStateBundle:
     """Build a fast state directly from component field mappings."""
 
@@ -191,7 +194,7 @@ def fast_state_from_previous_fields(
         for component, field_names in zip(components, field_names_by_component, strict=True)
     )
     return DriverFastStateBundle(
-        tstep=int(tstep),
+        tstep=tstep,
         values_by_component=values_by_component,
         spec=DriverFastStateSpec(
             components=components,
@@ -201,6 +204,7 @@ def fast_state_from_previous_fields(
                 for component in components
             ),
         ),
+        source_clock_runtime=source_clock_runtime,
     )
 
 
@@ -227,7 +231,8 @@ def previous_packet_from_fast_state(
         provenance_by_component[component] = provenance
 
     return DriverPreviousStepStatePacket(
-        tstep=int(state.tstep),
+        tstep=state.tstep,
         fields_by_component=fields_by_component,
         provenance_by_component=provenance_by_component,
+        source_clock_runtime=state.source_clock_runtime,
     )

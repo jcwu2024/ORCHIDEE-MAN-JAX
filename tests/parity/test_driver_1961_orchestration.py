@@ -194,17 +194,33 @@ def test_driver_runtime_scalars_read_actual_used_run_def_values():
 
 
 def test_paper_end_of_year_follows_slowproc_last_timestep_of_noleap_year():
+    from jax_orchidee.driver.orchestration import DriverSourceClockPayload
+    from jax_orchidee.driver.source_clock import SourceClockBinding
+    from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
+
     runtime = read_driver_runtime_scalars(USED_RUN_DEF)
     steps_per_day = int(round(runtime.dt_stomate / runtime.dt_sechiba))
     last_tstep = 365 * steps_per_day - 1
+    date0 = IOIPSLCalendar("noleap").ymds2ju(1961, 1, 1, 0.0)
+    lock = IOIPSLCalendar.from_scalar_startdate("noleap", date0)
+    binding = SourceClockBinding("synthetic-parity-calendar", "noleap", date0,
+        runtime.dt_sechiba, lock.startdate_day, lock.startdate_second, 0)
 
-    assert _paper_first_step_do_slow(last_tstep, runtime) is True
-    assert _paper_end_of_year(last_tstep - 1, runtime) is False
-    assert _paper_end_of_year(last_tstep, runtime) is True
-    assert _paper_end_of_year(last_tstep + steps_per_day, runtime) is False
+    def payload(tstep):
+        clock = binding.clock_at_istp(tstep + 1)
+        return DriverSourceClockPayload(tstep, tstep + 1, clock.year, clock.month,
+            clock.day, clock.second, True, clock.julian_diff)
+
+    assert bool(_paper_first_step_do_slow(payload(last_tstep))) is True
+    assert bool(_paper_end_of_year(payload(last_tstep - 1))) is False
+    assert bool(_paper_end_of_year(payload(last_tstep))) is True
+    assert bool(_paper_end_of_year(payload(last_tstep + steps_per_day))) is False
 
 
 def test_year_start_rebase_drops_hydrol_nroot_without_mutating_previous_state():
+    from jax_orchidee.driver.source_clock import SourceClockBinding, SourceClockRuntime, SourceClockSetup
+    from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
+
     nroot = np.ones((1, 14, 11), dtype=np.float64)
     state = DriverPreviousStepStatePacket(
         tstep=17519,
@@ -221,9 +237,17 @@ def test_year_start_rebase_drops_hydrol_nroot_without_mutating_previous_state():
         },
     )
 
-    rebased = rebase_driver_state_for_year_start(state)
+    date0 = IOIPSLCalendar("noleap").ymds2ju(1961, 1, 1, 0.0)
+    lock = IOIPSLCalendar.from_scalar_startdate("noleap", date0)
+    binding = SourceClockBinding("synthetic-new-native-run", "noleap", date0,
+        1800.0, lock.startdate_day, lock.startdate_second, 17520)
+    runtime = SourceClockRuntime(binding, 17520, 0, 17521)
+    setup = SourceClockSetup(binding, runtime, None, None, None)
+    rebased = rebase_driver_state_for_year_start(state,
+        run_mode="new_native_run", source_clock_setup=setup)
 
     assert rebased.tstep == -1
+    assert rebased.source_clock_runtime is runtime
     assert rebased.fields_by_component is not state.fields_by_component
     assert rebased.fields_by_component["hydrol_previous_step_state"] is not state.fields_by_component[
         "hydrol_previous_step_state"

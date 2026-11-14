@@ -238,11 +238,13 @@ def _fortran_nint(value: float) -> int:
 _TIME_PART = re.compile(r"([+-]?\d+(?:\.\d*)?)([SDMY]?)", re.IGNORECASE)
 
 
-def time_length_to_forcing_steps(value: str | int, *, dt_force: float) -> int:
+def time_length_to_forcing_steps(value: str | int, *, dt_force: float,
+                                 calendar: str | None = None, date0: float | None = None) -> int:
     """Implement the documented ``tlen2itau`` DIM2 forms (lines 495-556).
 
-    Bare integers are forcing steps. S/D/M/Y suffixes use seconds, days, and
-    the documented fixed 365-day year; one month is one twelfth of that year.
+    Bare integers are forcing steps. With an explicit calendar/date0, use
+    IOIPSL calendar.f90::tlen2itau313-402 date-aware integer components.
+    The legacy unbound interface retains its fixed365 duration convention.
     """
 
     if isinstance(value, int):
@@ -250,6 +252,31 @@ def time_length_to_forcing_steps(value: str | int, *, dt_force: float) -> int:
     token = str(value).strip().upper().replace(" ", "")
     if re.fullmatch(r"[+-]?\d+", token):
         return int(token)
+    if calendar is not None:
+        # IOIPSL calendar.f90::tlen2itau313-402: each integer component
+        # is rounded separately and Y/M always use the original date.
+        from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
+        if date0 is None:
+            raise ValueError("date-aware DIM2 duration requires date0")
+        provider = IOIPSLCalendar(calendar)
+        year, month, day, sec = provider.ju2ymds(float(date0))
+        parts = re.findall(r"([+-]?\d+)([YMDS])", token)
+        if not parts or "".join(n + u for n, u in parts) != token:
+            raise ValueError("source DIM2 duration requires integer Y/M/D/S components; H source branch is unsupported")
+        if ["YMDS".index(u) for _, u in parts] != sorted(set("YMDS".index(u) for _, u in parts)):
+            raise ValueError("source DIM2 duration components must occur once in Y/M/D/S order")
+        result = 0
+        for n, unit in parts:
+            count = int(n)
+            if unit in {"Y", "M"}:
+                end = provider.ymds2ju(year + (count if unit == "Y" else 0),
+                                      month + (count if unit == "M" else 0), day, sec)
+                dd = end - float(date0)
+                seconds = int(dd) * ONE_DAY + dd - int(dd)
+            else:
+                seconds = count * (ONE_DAY if unit == "D" else 1.0)
+            result += _fortran_nint(seconds / dt_force)
+        return result
     position = 0
     seconds = 0.0
     factors = {"S": 1.0, "D": ONE_DAY, "M": 365.0 * ONE_DAY / 12.0, "Y": 365.0 * ONE_DAY}
@@ -272,6 +299,7 @@ def resolve_dim2_time_control(
     restart: Dim2RestartTime = Dim2RestartTime(),
     time_skip: str | int = 0,
     time_length: str | int | None = None,
+    calendar: str | None = None,
 ) -> Dim2TimeControl:
     """Resolve DIM2 chronology without performing IO.
 
@@ -302,12 +330,12 @@ def resolve_dim2_time_control(
         itau_dep = _fortran_nint(itau_dep * dt_rest / dt_force)
 
     for_offset = 0 if float(date0) == date0_rest else _fortran_nint((date0_rest - float(date0)) * ONE_DAY / dt_force)
-    skip_steps = time_length_to_forcing_steps(time_skip, dt_force=dt_force)
+    skip_steps = time_length_to_forcing_steps(time_skip, dt_force=dt_force, calendar=calendar, date0=date0)
     itau_dep += skip_steps
     # Lines 519 and 533: TIME_SKIP advances itau_dep while the pre-existing
     # itau_fin remains fixed, so the default integration length shrinks.
     default_length = int(forcing_length) - skip_steps
-    itau_len = default_length if time_length is None else time_length_to_forcing_steps(time_length, dt_force=dt_force)
+    itau_len = default_length if time_length is None else time_length_to_forcing_steps(time_length, dt_force=dt_force, calendar=calendar, date0=date0)
     if itau_len < 0:
         raise ValueError("TIME_LENGTH must be non-negative")
     itau_fin = itau_dep + itau_len
