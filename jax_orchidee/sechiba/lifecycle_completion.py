@@ -8,9 +8,12 @@ writeback, and CO2 aggregation follow the cited Fortran routines here.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Callable, Mapping, NamedTuple
 
 import numpy as np
+
+from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar, fortran_nint
 
 
 INTERSURF_SOURCE = "fortran_source/ORCHIDEE/src_sechiba/intersurf.f90"
@@ -20,7 +23,12 @@ SECHIBA_SOURCE = "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90"
 
 @dataclass(frozen=True)
 class IntersurfTimeState:
-    """Module time state assigned by ``intsurf_time`` lines 1884-1982."""
+    """Time state assigned by ``intsurf_time``1884-1982 plus adapter binding.
+
+    ``clock_binding`` is an immutable-run domain guard for this pure adapter,
+    not a field or a parameter-validation branch in the original Fortran.
+    Previous unbound/astronomical/seconds-valued payloads require migration.
+    """
 
     calendar: str
     one_year: float
@@ -33,47 +41,28 @@ class IntersurfTimeState:
     year: int
     month: int
     day: int
-    second: int
+    second: float
     month_length: int
     initialized: bool = True
+    clock_binding: tuple[object, ...] | None = None
 
 
-def _julian_to_gregorian(julian: float) -> tuple[int, int, int, int]:
-    """Convert an astronomical Julian day using the standard Gregorian split."""
-
-    shifted = float(julian) + 0.5
-    whole = int(np.floor(shifted))
-    frac = shifted - whole
-    alpha = int((whole - 1867216.25) / 36524.25)
-    a = whole + 1 + alpha - alpha // 4
-    b = a + 1524
-    c = int((b - 122.1) / 365.25)
-    d = int(365.25 * c)
-    e = int((b - d) / 30.6001)
-    day = b - d - int(30.6001 * e)
-    month = e - 1 if e < 14 else e - 13
-    year = c - 4716 if month > 2 else c - 4715
-    second = int(np.rint(frac * 86400.0))
-    if second == 86400:
-        return _julian_to_gregorian(float(whole) + 0.5)
-    return year, month, day, second
+def _julian_to_gregorian(julian: float) -> tuple[int, int, int, float]:
+    """IOIPSL Gregorian Lilian decode, calendar.f90::ju2ymds201-309."""
+    return IOIPSLCalendar("gregorian").ju2ymds(julian)
 
 
 def _gregorian_to_julian(year: int, month: int, day: int) -> float:
-    y, m = (year - 1, month + 12) if month <= 2 else (year, month)
-    a = y // 100
-    b = 2 - a + a // 4
-    return (
-        np.floor(365.25 * (y + 4716)) + np.floor(30.6001 * (m + 1)) + day + b - 1524.5
-    )
+    """IOIPSL Gregorian Lilian encode, calendar.f90::ymds2ju112-197."""
+    return IOIPSLCalendar("gregorian").ymds2ju(year, month, day, 0.0)
 
 
 def _gregorian_month_length(year: int, month: int) -> int:
-    leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
-    return (31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
+    """IOIPSL Gregorian ioget_mon_len calendar.f90:858-909."""
+    return IOIPSLCalendar("gregorian").month_length(year, month)
 
 
-NonGregorianYmds = Callable[[int, float], tuple[int, int, int, int]]
+NonGregorianYmds = Callable[[int, float], tuple[int, int, int, float]]
 
 
 def intersurf_time(
@@ -86,85 +75,91 @@ def intersurf_time(
     one_day: float,
     previous: IntersurfTimeState | None = None,
     non_gregorian_ymds: NonGregorianYmds | None = None,
+    clock: IOIPSLCalendar | None = None,
+    date0_convention: str | None = None,
 ) -> IntersurfTimeState:
-    """Apply the exact first-call and calendar branches of ``intsurf_time``.
+    """Apply ``intersurf.f90::intsurf_time``1884-1982 using native clock units.
 
-    ``date0`` and ``in_julian`` use IOIPSL Julian-day units.  IOIPSL's
-    calendar-specific ``itau2ymds`` is an explicit primitive for non-Gregorian
-    calendars; all subsequent scientific time values are calculated here.
+    Explicitly declare ``date0_convention='ioipsl_calendar'``: Gregorian date0
+    is Lilian (2000-01-01=152385), noleap date0 is year*365 at January 1.
+    No astronomical-JD conversion is inferred. ``one_year`` is days and
+    ``one_day`` is seconds. Only measured Gregorian/noleap providers are
+    admitted. Noleap needs an explicit locked ``clock``; that startdate is
+    independently owned by IOIPSL, not reconstructed from owner ``date0``.
 
-    Fortran provenance: ``intersurf.f90::intsurf_time`` lines 1884-1982.
+    Source first-call year_length/year_spread persist on later calls. The
+    additional previous-state binding checks restrict this adapter to one
+    immutable run; they do not claim that Fortran checks arbitrary later
+    argument changes. They prevent silent reinitialization or reinterpretation
+    of legacy payloads. The old unbound callback interface is rejected.
     """
-
+    if date0_convention != "ioipsl_calendar":
+        raise ValueError("declare date0_convention='ioipsl_calendar'; astronomical-JD/legacy origins require explicit migration")
+    if non_gregorian_ymds is not None:
+        raise ValueError("legacy non_gregorian_ymds callback is unbound; provide a locked IOIPSLCalendar")
+    if not all(math.isfinite(float(v)) for v in (date0, dt_sechiba, one_year, one_day)):
+        raise ValueError("date0, dt_sechiba, one_year, and one_day must be finite")
     if dt_sechiba <= 0 or one_day <= 0 or one_year <= 0:
         raise ValueError("dt_sechiba, one_day, and one_year must be positive")
+    if int(istp) != istp:
+        raise ValueError("istp must be an integer")
     name = calendar.strip()
-    initialized = previous is not None
-    year_length = (
-        previous.year_length if initialized else int(np.rint(one_year / dt_sechiba))
-    )
-    year_spread = (
-        previous.year_spread
-        if initialized
-        else (1.0 if name == "gregorian" else one_year / 365.2425)
-    )
-    in_julian = float(date0) + int(istp) * float(dt_sechiba) / float(one_day)
-
-    if name == "gregorian":
-        year, month, day, _ = _julian_to_gregorian(in_julian)
-        julian0 = _gregorian_to_julian(year, 1, 1)
-        julian_diff = in_julian - julian0
-        second = int(np.rint((julian_diff - int(julian_diff)) * one_day))
-        month_length = _gregorian_month_length(year, month)
+    if clock is None:
+        clock = IOIPSLCalendar(name)
+    if not isinstance(clock, IOIPSLCalendar) or clock.calendar != name:
+        raise ValueError("clock calendar must match the owner calendar")
+    if one_year != clock.one_year_days:
+        raise ValueError("one_year must use the IOIPSL calendar constant in days, not seconds")
+    if one_day != clock.one_day_seconds:
+        raise ValueError("one_day must use the IOIPSL day constant in seconds")
+    if name != "gregorian" and clock.startdate_day is None:
+        raise ValueError("noleap requires an explicitly locked IOIPSLCalendar startdate")
+    binding = (date0_convention, name, clock.startdate_day, clock.startdate_second,
+               float(date0), float(dt_sechiba), float(one_year), float(one_day))
+    if previous is not None:
+        if not previous.initialized or previous.clock_binding is None:
+            raise ValueError("previous must be initialized and carry an explicit IOIPSL clock binding")
+        if previous.clock_binding != binding:
+            raise ValueError("previous clock binding changed; this adapter requires an immutable run")
+        if (previous.calendar, previous.one_year, previous.one_day) != (name, one_year, one_day):
+            raise ValueError("previous calendar constants disagree with its clock binding")
+        year_length, year_spread = previous.year_length, previous.year_spread
     else:
-        if non_gregorian_ymds is None:
-            raise ValueError(
-                "non_gregorian_ymds is required for a non-Gregorian IOIPSL calendar"
-            )
-        year, month, day, second = non_gregorian_ymds(int(istp), float(dt_sechiba))
-        julian0 = in_julian + non_gregorian_ymds_to_year_offset(
-            month=month,
-            day=day,
-            second=second,
-            one_day=one_day,
-            calendar=name,
-            year=year,
-        )
-        julian_diff = in_julian - julian0
-        month_length = _non_gregorian_month_length(name, year, month)
-
+        year_length = clock.year_steps(float(dt_sechiba), float(date0))
+        year_spread = 1.0 if name == "gregorian" else float(one_year) / 365.2425
+    in_julian = clock.itau2date(int(istp), float(date0), float(dt_sechiba))
+    if name == "gregorian":
+        year, month, day, _ = clock.ju2ymds(in_julian)
+    else:
+        year, month, day, second = clock.itau2ymds(int(istp), float(dt_sechiba))
+    julian0 = clock.ymds2ju(year, 1, 1, 0.0)
+    julian_diff = in_julian - julian0
+    if name == "gregorian":
+        second = float(fortran_nint((julian_diff - int(julian_diff)) * one_day))
     return IntersurfTimeState(
-        calendar=name,
-        one_year=float(one_year),
-        one_day=float(one_day),
-        year_length=year_length,
-        year_spread=float(year_spread),
-        in_julian=in_julian,
-        julian0=float(julian0),
-        julian_diff=float(julian_diff),
-        year=int(year),
-        month=int(month),
-        day=int(day),
-        second=int(second),
-        month_length=int(month_length),
+        calendar=name, one_year=float(one_year), one_day=float(one_day),
+        year_length=year_length, year_spread=float(year_spread),
+        in_julian=in_julian, julian0=julian0, julian_diff=julian_diff,
+        year=int(year), month=int(month), day=int(day), second=float(second),
+        month_length=clock.month_length(year, month), clock_binding=binding,
     )
 
 
 def _non_gregorian_month_length(calendar: str, year: int, month: int) -> int:
-    if calendar in {"360d", "360_day"}:
-        return 30
-    if calendar in {"noleap", "365d", "365_day"}:
-        return (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
-    if calendar in {"all_leap", "366d", "366_day"}:
-        return (31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
-    raise ValueError(f"unsupported non-Gregorian calendar {calendar!r}")
+    """Only the native-measured noleap domain is supported by this adapter."""
+    if calendar != "noleap":
+        raise ValueError(f"unsupported non-Gregorian calendar {calendar!r}")
+    return IOIPSLCalendar(calendar).month_length(year, month)
 
 
 def non_gregorian_ymds_to_year_offset(
-    *, month: int, day: int, second: int, one_day: float, calendar: str, year: int
+    *, month: int, day: int, second: float, one_day: float, calendar: str, year: int
 ) -> float:
-    """Return the negative Julian offset from a date to January 1."""
+    """Pure negative offset only; this cannot establish an IOIPSL origin lock.
 
+    Month lengths follow calendar.f90::ioget_mon_len858-909. The source owner
+    computes julian0 by ymds2ju; it does not reconstruct it from this offset.
+    """
     days = sum(_non_gregorian_month_length(calendar, year, m) for m in range(1, month))
     days += day - 1 + second / one_day
     return -float(days)

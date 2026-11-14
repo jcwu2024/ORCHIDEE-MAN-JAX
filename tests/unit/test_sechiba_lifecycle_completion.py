@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import yaml
 
+from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
 from jax_orchidee.sechiba.lifecycle_completion import (
     HistorySwitches,
     SechibaFinalizeSwitches,
@@ -20,49 +21,53 @@ from jax_orchidee.sechiba.lifecycle_completion import (
 def test_intersurf_time_gregorian_initializes_once_and_routes_calendar_state():
     state = intersurf_time(
         istp=1,
-        date0=2451544.5,
+        date0=152385.0,
         dt_sechiba=3600,
         calendar="gregorian",
-        one_year=365 * 86400,
+        one_year=365.2425,
         one_day=86400,
+        date0_convention="ioipsl_calendar",
     )
     assert (state.year, state.month, state.day, state.second) == (2000, 1, 1, 3600)
     assert state.year_spread == 1
     later = intersurf_time(
         istp=24,
-        date0=2451544.5,
+        date0=152385.0,
         dt_sechiba=3600,
         calendar="gregorian",
-        one_year=999,
+        one_year=365.2425,
         one_day=86400,
         previous=state,
+        date0_convention="ioipsl_calendar",
     )
     assert later.year_length == state.year_length
     assert (later.month, later.day) == (1, 2)
 
 
-def test_non_gregorian_requires_ioipsl_ymds_primitive_and_computes_derived_values():
-    with pytest.raises(ValueError, match="non_gregorian_ymds"):
+def test_non_gregorian_requires_bound_ioipsl_calendar_and_computes_derived_values():
+    with pytest.raises(ValueError, match="locked"):
         intersurf_time(
             istp=1,
-            date0=0,
+            date0=715765,
             dt_sechiba=86400,
-            calendar="360d",
-            one_year=360 * 86400,
+            calendar="noleap",
+            one_year=365,
             one_day=86400,
+            date0_convention="ioipsl_calendar",
         )
     state = intersurf_time(
         istp=31,
-        date0=100,
+        date0=715765,
         dt_sechiba=86400,
-        calendar="360d",
-        one_year=360 * 86400,
+        calendar="noleap",
+        one_year=365,
         one_day=86400,
-        non_gregorian_ymds=lambda _step, _dt: (2, 2, 2, 0),
+        clock=IOIPSLCalendar.from_ymds("noleap", 1961, 1, 1, 0),
+        date0_convention="ioipsl_calendar",
     )
-    assert state.month_length == 30
+    assert state.month_length == 28
     assert state.julian_diff == 31
-    assert state.year_spread == pytest.approx(360 * 86400 / 365.2425)
+    assert state.year_spread == pytest.approx(365 / 365.2425)
 
 
 def test_history_paper_xios_route_disables_all_ioipsl_streams_before_transport():

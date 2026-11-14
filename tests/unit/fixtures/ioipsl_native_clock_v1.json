@@ -1,0 +1,811 @@
+{
+  "schema": "identified-native-clock-observations-v1",
+  "status": "SOURCE_NATIVE_AGREEMENT",
+  "source": "IOIPSL calendar.f90 source formulas; restcom178-400/402-829",
+  "producer": "new identified current-reference archive, not original001",
+  "native_process_count": 11,
+  "fixture_schema": {
+    "dimensions": {
+      "x": 1,
+      "y": 1,
+      "z": 1,
+      "time": "UNLIMITED length1"
+    },
+    "domain_id": "absent",
+    "physical_origin": "1961-01-01",
+    "timestep_origin": "1962-01-01",
+    "physical_seconds": 86400.0,
+    "time_steps": 17,
+    "tstep_sec": 3600.0
+  },
+  "absent_axes_policy": "expected fatal source error; physical-only commented conversion not tested as implementation",
+  "clocks": [
+    {
+      "case_id": "nl1961",
+      "calendar": "noleap",
+      "origin_ymds": [
+        1961,
+        1,
+        1,
+        0.0
+      ],
+      "dt": 1800.0,
+      "steps": [
+        0,
+        1,
+        47,
+        48,
+        49,
+        17519,
+        17520,
+        17521
+      ],
+      "date0": 715765.0,
+      "date0_hex": "0x1.5d7ea00000000p+19",
+      "start_sec": 0.0,
+      "year_length": 17520,
+      "one_year_days": 365.0,
+      "one_day_seconds": 86400.0,
+      "year_spread": 0.9993360575508052,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 715765.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 1,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.0208333334,
+          "primitive_sec": 1800.0,
+          "owner_sec": 1800.0,
+          "jan1": 715765.0,
+          "diff": 0.02083333337213844
+        },
+        {
+          "istp": 47,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.9791666666,
+          "primitive_sec": 84600.0,
+          "owner_sec": 84600.0,
+          "jan1": 715765.0,
+          "diff": 0.9791666666278616
+        },
+        {
+          "istp": 48,
+          "year": 1961,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 715766.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 715765.0,
+          "diff": 1.0
+        },
+        {
+          "istp": 49,
+          "year": 1961,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 715766.0208333334,
+          "primitive_sec": 1800.0,
+          "owner_sec": 1800.0,
+          "jan1": 715765.0,
+          "diff": 1.0208333333721384
+        },
+        {
+          "istp": 17519,
+          "year": 1961,
+          "month": 12,
+          "day": 31,
+          "month_length": 31,
+          "in_julian": 716129.9791666666,
+          "primitive_sec": 84600.0,
+          "owner_sec": 84600.0,
+          "jan1": 715765.0,
+          "diff": 364.97916666662786
+        },
+        {
+          "istp": 17520,
+          "year": 1962,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 716130.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 716130.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 17521,
+          "year": 1962,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 716130.0208333334,
+          "primitive_sec": 1800.0,
+          "owner_sec": 1800.0,
+          "jan1": 716130.0,
+          "diff": 0.02083333337213844
+        }
+      ]
+    },
+    {
+      "case_id": "nlfrac",
+      "calendar": "noleap",
+      "origin_ymds": [
+        1961,
+        1,
+        1,
+        900.25
+      ],
+      "dt": 1800.0,
+      "steps": [
+        0,
+        1,
+        47,
+        48
+      ],
+      "date0": 715765.0104195601,
+      "date0_hex": "0x1.5d7ea0555b66cp+19",
+      "start_sec": 900.2499952912331,
+      "year_length": 17520,
+      "one_year_days": 365.0,
+      "one_day_seconds": 86400.0,
+      "year_spread": 0.9993360575508052,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.0104195601,
+          "primitive_sec": 900.2499952912331,
+          "owner_sec": 900.2499952912331,
+          "jan1": 715765.0,
+          "diff": 0.010419560130685568
+        },
+        {
+          "istp": 1,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.0312528935,
+          "primitive_sec": 2700.249995291233,
+          "owner_sec": 2700.249995291233,
+          "jan1": 715765.0,
+          "diff": 0.03125289350282401
+        },
+        {
+          "istp": 47,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.9895862268,
+          "primitive_sec": 85500.24999529123,
+          "owner_sec": 85500.24999529123,
+          "jan1": 715765.0,
+          "diff": 0.9895862267585471
+        },
+        {
+          "istp": 48,
+          "year": 1961,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 715766.0104195601,
+          "primitive_sec": 900.2499952912331,
+          "owner_sec": 900.2499952912331,
+          "jan1": 715765.0,
+          "diff": 1.0104195601306856
+        }
+      ]
+    },
+    {
+      "case_id": "g2000",
+      "calendar": "gregorian",
+      "origin_ymds": [
+        2000,
+        1,
+        1,
+        0.0
+      ],
+      "dt": 1800.0,
+      "steps": [
+        0,
+        1,
+        48,
+        49,
+        2832,
+        17519,
+        17520,
+        17567,
+        17568,
+        17569
+      ],
+      "date0": 152385.0,
+      "date0_hex": "0x1.29a0800000000p+17",
+      "start_sec": 0.0,
+      "year_length": 17568,
+      "one_year_days": 365.2425,
+      "one_day_seconds": 86400.0,
+      "year_spread": 1.0,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152385.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 1,
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152385.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152385.0,
+          "diff": 0.02083333334303461
+        },
+        {
+          "istp": 48,
+          "year": 2000,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 152386.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 1.0
+        },
+        {
+          "istp": 49,
+          "year": 2000,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 152386.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152385.0,
+          "diff": 1.0208333333430346
+        },
+        {
+          "istp": 2832,
+          "year": 2000,
+          "month": 2,
+          "day": 29,
+          "month_length": 29,
+          "in_julian": 152444.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 59.0
+        },
+        {
+          "istp": 17519,
+          "year": 2000,
+          "month": 12,
+          "day": 30,
+          "month_length": 31,
+          "in_julian": 152749.97916666666,
+          "primitive_sec": 84599.99999916181,
+          "owner_sec": 84600.0,
+          "jan1": 152385.0,
+          "diff": 364.97916666665697
+        },
+        {
+          "istp": 17520,
+          "year": 2000,
+          "month": 12,
+          "day": 31,
+          "month_length": 31,
+          "in_julian": 152750.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 365.0
+        },
+        {
+          "istp": 17567,
+          "year": 2000,
+          "month": 12,
+          "day": 31,
+          "month_length": 31,
+          "in_julian": 152750.97916666666,
+          "primitive_sec": 84599.99999916181,
+          "owner_sec": 84600.0,
+          "jan1": 152385.0,
+          "diff": 365.97916666665697
+        },
+        {
+          "istp": 17568,
+          "year": 2001,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152751.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152751.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 17569,
+          "year": 2001,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152751.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152751.0,
+          "diff": 0.02083333334303461
+        }
+      ]
+    },
+    {
+      "case_id": "g2001",
+      "calendar": "gregorian",
+      "origin_ymds": [
+        2001,
+        1,
+        1,
+        0.0
+      ],
+      "dt": 1800.0,
+      "steps": [
+        0,
+        1,
+        48,
+        49,
+        17519,
+        17520,
+        17521
+      ],
+      "date0": 152751.0,
+      "date0_hex": "0x1.2a57800000000p+17",
+      "start_sec": 0.0,
+      "year_length": 17520,
+      "one_year_days": 365.2425,
+      "one_day_seconds": 86400.0,
+      "year_spread": 1.0,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 2001,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152751.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152751.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 1,
+          "year": 2001,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152751.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152751.0,
+          "diff": 0.02083333334303461
+        },
+        {
+          "istp": 48,
+          "year": 2001,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 152752.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152751.0,
+          "diff": 1.0
+        },
+        {
+          "istp": 49,
+          "year": 2001,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 152752.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152751.0,
+          "diff": 1.0208333333430346
+        },
+        {
+          "istp": 17519,
+          "year": 2001,
+          "month": 12,
+          "day": 31,
+          "month_length": 31,
+          "in_julian": 153115.97916666666,
+          "primitive_sec": 84599.99999916181,
+          "owner_sec": 84600.0,
+          "jan1": 152751.0,
+          "diff": 364.97916666665697
+        },
+        {
+          "istp": 17520,
+          "year": 2002,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 153116.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 153116.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 17521,
+          "year": 2002,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 153116.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 153116.0,
+          "diff": 0.02083333334303461
+        }
+      ]
+    },
+    {
+      "case_id": "gleapday",
+      "calendar": "gregorian",
+      "origin_ymds": [
+        2000,
+        2,
+        29,
+        0.0
+      ],
+      "dt": 1800.0,
+      "steps": [
+        0,
+        1,
+        48,
+        17519,
+        17520,
+        17521
+      ],
+      "date0": 152444.0,
+      "date0_hex": "0x1.29be000000000p+17",
+      "start_sec": 0.0,
+      "year_length": 17568,
+      "one_year_days": 365.2425,
+      "one_day_seconds": 86400.0,
+      "year_spread": 1.0,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 2000,
+          "month": 2,
+          "day": 29,
+          "month_length": 29,
+          "in_julian": 152444.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 59.0
+        },
+        {
+          "istp": 1,
+          "year": 2000,
+          "month": 2,
+          "day": 29,
+          "month_length": 29,
+          "in_julian": 152444.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152385.0,
+          "diff": 59.020833333343035
+        },
+        {
+          "istp": 48,
+          "year": 2000,
+          "month": 3,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152445.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 60.0
+        },
+        {
+          "istp": 17519,
+          "year": 2001,
+          "month": 2,
+          "day": 27,
+          "month_length": 28,
+          "in_julian": 152808.97916666666,
+          "primitive_sec": 84599.99999916181,
+          "owner_sec": 84600.0,
+          "jan1": 152751.0,
+          "diff": 57.979166666656965
+        },
+        {
+          "istp": 17520,
+          "year": 2001,
+          "month": 2,
+          "day": 28,
+          "month_length": 28,
+          "in_julian": 152809.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 152751.0,
+          "diff": 58.0
+        },
+        {
+          "istp": 17521,
+          "year": 2001,
+          "month": 2,
+          "day": 28,
+          "month_length": 28,
+          "in_julian": 152809.02083333334,
+          "primitive_sec": 1800.0000008381903,
+          "owner_sec": 1800.0,
+          "jan1": 152751.0,
+          "diff": 58.020833333343035
+        }
+      ]
+    },
+    {
+      "case_id": "ghalf",
+      "calendar": "gregorian",
+      "origin_ymds": [
+        2000,
+        1,
+        1,
+        0.5
+      ],
+      "dt": 1800.0,
+      "steps": [
+        0,
+        1,
+        47,
+        48
+      ],
+      "date0": 152385.00000578703,
+      "date0_hex": "0x1.29a08000308b9p+17",
+      "start_sec": 0.4999998025596142,
+      "year_length": 17568,
+      "one_year_days": 365.2425,
+      "one_day_seconds": 86400.0,
+      "year_spread": 1.0,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152385.00000578703,
+          "primitive_sec": 0.4999998025596142,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 5.787034751847386e-06
+        },
+        {
+          "istp": 1,
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152385.02083912038,
+          "primitive_sec": 1800.50000064075,
+          "owner_sec": 1801.0,
+          "jan1": 152385.0,
+          "diff": 0.020839120377786458
+        },
+        {
+          "istp": 47,
+          "year": 2000,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 152385.9791724537,
+          "primitive_sec": 84600.49999896437,
+          "owner_sec": 84600.0,
+          "jan1": 152385.0,
+          "diff": 0.9791724536917172
+        },
+        {
+          "istp": 48,
+          "year": 2000,
+          "month": 1,
+          "day": 2,
+          "month_length": 31,
+          "in_julian": 152386.00000578703,
+          "primitive_sec": 0.4999998025596142,
+          "owner_sec": 0.0,
+          "jan1": 152385.0,
+          "diff": 1.0000057870347518
+        }
+      ]
+    },
+    {
+      "case_id": "nlyearhalf",
+      "calendar": "noleap",
+      "origin_ymds": [
+        1961,
+        1,
+        1,
+        0.0
+      ],
+      "dt": 172800.0,
+      "steps": [
+        0,
+        1
+      ],
+      "date0": 715765.0,
+      "date0_hex": "0x1.5d7ea00000000p+19",
+      "start_sec": 0.0,
+      "year_length": 183,
+      "one_year_days": 365.0,
+      "one_day_seconds": 86400.0,
+      "year_spread": 0.9993360575508052,
+      "observed": [
+        {
+          "istp": 0,
+          "year": 1961,
+          "month": 1,
+          "day": 1,
+          "month_length": 31,
+          "in_julian": 715765.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 715765.0,
+          "diff": 0.0
+        },
+        {
+          "istp": 1,
+          "year": 1961,
+          "month": 1,
+          "day": 3,
+          "month_length": 31,
+          "in_julian": 715767.0,
+          "primitive_sec": 0.0,
+          "owner_sec": 0.0,
+          "jan1": 715765.0,
+          "diff": 2.0
+        }
+      ]
+    }
+  ],
+  "metadata": [
+    {
+      "case_id": "cold",
+      "itau": 7,
+      "date0": 715765.0,
+      "dt": 1800.0,
+      "native_exit": 0,
+      "observed": {
+        "calendar": "noleap",
+        "real_kind": 8,
+        "real_bits": 64,
+        "itau": 7,
+        "date0": 715765.0,
+        "dt": 1800.0
+      }
+    },
+    {
+      "case_id": "restore",
+      "itau": 17,
+      "date0": 716130.0,
+      "dt": 3600.0,
+      "native_exit": 0,
+      "observed": {
+        "calendar": "noleap",
+        "real_kind": 8,
+        "real_bits": 64,
+        "itau": 17,
+        "date0": 716130.0,
+        "dt": 3600.0
+      }
+    },
+    {
+      "case_id": "overwrite",
+      "itau": 7,
+      "date0": 715765.0,
+      "dt": 1800.0,
+      "native_exit": 0,
+      "observed": {
+        "calendar": "noleap",
+        "real_kind": 8,
+        "real_bits": 64,
+        "itau": 7,
+        "date0": 715765.0,
+        "dt": 1800.0
+      }
+    },
+    {
+      "case_id": "absent",
+      "expected_error": "No time axis was found",
+      "exit_must_be_nonzero": true,
+      "native_exit": 1
+    }
+  ],
+  "differences": [],
+  "identity": {
+    "archive_sha256": "d6cf2238d24e10e4f9765adc8cbfe1b1eeb42af615a53385a0402d38a54049e1",
+    "calendar_source_sha256": "4143df773973bfa0d7b9a8fa1aea36475e23f210b7c5bb6daec95ac02e05acc1",
+    "restcom_source_sha256": "724a3c1499f2dee4343688b443b5ab2df7b751f0216d3636d0c0c59e1c4bd512",
+    "job_id": "127957445",
+    "remote_root": "/public/share/qhcess/qhcess2/User/jcwu/clock_authority_reference_v1",
+    "historical_limit": "New identified reference only; no original001 or original source-to-archive build manifest proved",
+    "executable_sha256": {
+      "clock-probe": "b9feafe55a91fff458f8dd9957ab2098eaf5de7579616eebe976db29a0eec485",
+      "metadata-probe": "788fcabd1e3ef3f6cdbd698ac05cdf8efe26ca7677efb56e8db862c141bdf846"
+    },
+    "link_map_sha256": {
+      "clock-link.map": "b8389c1870e30a179293d28a447e0b9b1e4c690eba94406e80ac9d4ef21f8b30",
+      "metadata-link.map": "fe3e27e070731ddf48d9c366993ee28430994c21c072999b4207114811b7fd2c"
+    },
+    "module_sha256": {
+      "calendar": "91068f64dd56f38360df7ff3a1959d30c4719d95bd5ea6fccaa1f2812da651db",
+      "defprec": "cca7048affa40dba8bf83dad75e8528804e72ab5fd22e20b9b0693428b4762e3",
+      "restcom": "9ee96487053e27a8f3236ee8cb218e61731c3141d7cafdbf3778c190ed3fbf55",
+      "ioipsl": "6e8431516136b12d923f2ba86e7375fc1f634055499a8101218d6c67ac32c02e"
+    },
+    "input_manifest_sha256": "0cb326cc61f7b436ea2422e71e3711e51c92456d8245cddd659e08be6115acb8",
+    "runtime_receipt": "native-execution.json.raw_native_files.runtime-identity.txt"
+  },
+  "execution": {
+    "native_jobs": 1,
+    "native_processes": 11,
+    "submission_transport_attempts": 2,
+    "requested_cpus": 1,
+    "requested_memory_GiB": 1,
+    "requested_wall_seconds": 300,
+    "scheduler_elapsed_seconds": 14,
+    "allocated_cpu_seconds": 14,
+    "total_cpu_seconds": 2.73,
+    "max_rss_KiB": 14236,
+    "node": "a09r1n15",
+    "second_native_job_used": false
+  },
+  "actual_native_processes": 11,
+  "raw_result": "job=127957445 exit=0 elapsed_seconds=11 actual_native_processes=11\n",
+  "comparison_policy": {
+    "integer_fields": "exact",
+    "real_absolute_tolerance": 1e-10,
+    "relative_tolerance": 0,
+    "reason": "same source binary64 operations; raw decimal and float hex preserved; stop on larger differences"
+  }
+}

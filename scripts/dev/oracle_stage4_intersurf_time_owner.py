@@ -1,8 +1,11 @@
-"""Formal executable owner closure for ``intersurf_time`` (Stage 4 Batch C).
+"""Archived synthetic owner oracle for ``intersurf_time`` (Stage 4 Batch C).
 
 The oracle composes the procedure from its original bytes.  ``calendar_*``
 below are intentionally narrow IOIPSL boundary stubs: they provide only the
-calendar calls made by this procedure and are exercised against the JAX owner.
+calendar calls made by this procedure. Their seconds-valued years,
+astronomical-JD dates and synthetic2001 startdate are historical fixture
+identities, not the native IOIPSL contract. Current helper comparison entry
+points refuse before compilation; TEMPLATE/CASES and old evidence stay intact.
 """
 from __future__ import annotations
 
@@ -178,6 +181,7 @@ def _ymds(calendar: str, istp: int, dt: float) -> tuple[int, int, int, int]:
 
 
 def _jax_case(init: bool, calendar: str, date0: float, istp: int, days: float) -> dict[str, np.ndarray]:
+    raise RuntimeError("Archived synthetic IOIPSL stubs cannot validate the native-clock helper; use the identified native clock fixture")
     from jax_orchidee.sechiba.lifecycle_completion import IntersurfTimeState, intersurf_time
     previous = None if init else IntersurfTimeState(calendar, days * 86400., 86400., int(days), 1. if calendar == "gregorian" else days * 86400. / 365.2425, 0., 0., 0., 2001, 1, 1, 0, 31)
     state = intersurf_time(istp=istp, date0=date0, dt_sechiba=86400., calendar=calendar, one_year=days * 86400., one_day=86400., previous=previous, non_gregorian_ymds=(lambda step, dt: _ymds(calendar, step, dt)) if calendar != "gregorian" else None)
@@ -185,6 +189,7 @@ def _jax_case(init: bool, calendar: str, date0: float, istp: int, days: float) -
 
 
 def run_oracle(output_dir: Path, compiler: Path = DEFAULT_COMPILER) -> dict[str, object]:
+    raise RuntimeError("Archived synthetic IOIPSL stubs cannot validate the native-clock helper; use the identified native clock fixture")
     output_dir.mkdir(parents=True, exist_ok=True)
     all_fortran: dict[str, np.ndarray] = {}; all_jax: dict[str, np.ndarray] = {}
     with tempfile.TemporaryDirectory(prefix="orchidee_intersurf_time_") as temporary:
@@ -219,6 +224,7 @@ def _audit(output_dir: Path, evidence: dict) -> dict:
 
 
 def run_coverage(output_dir: Path = DEFAULT_OUTPUT_DIR, compiler: Path = DEFAULT_COMPILER, gcov: Path = GCOV) -> dict:
+    raise RuntimeError("Archived synthetic IOIPSL stubs cannot validate the native-clock helper; use the identified native clock fixture")
     result = run_extracted_owner_coverage(family=FAMILY, source_file=SOURCE, procedures=PROCEDURES, compose=lambda path: compose(path), run_numerical_oracle=run_oracle, output_dir=output_dir, compiler=compiler, gcov=gcov, execute_harness=execute_harness, arm_branch_indices=ARM_BRANCH_INDICES, arm_execution_lines=ARM_EXECUTION_LINES, coverage_extra_flags=("--coverage",))
     return {**result, "formal_audit": _audit(output_dir, result["owner_evidence"])}
 
