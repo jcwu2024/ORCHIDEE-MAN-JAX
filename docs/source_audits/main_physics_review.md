@@ -1,5 +1,15 @@
 # main 物理正确性检查入口
 
+## 当前：C48 生产日历接线已接受
+
+2026-11-14，基线 main `b5eff879e00154c936a1709d5ab91aae65f158d6`。FIELD-CANDIDATE-01 已连接 forcing／restart 变量属性、DIM2 chronology、cold／first-day／ordinary／compact／compiled／年界与三文件 IO。共享 calendar owner 按 `slowproc.f90:556–610` 在 pre-STOMATE 相位更新 growth_day／peatC_ok；两镜像、once-only 和日末合并有实际适配器证据。触及的 STOMATE 参数构造器使用 bound julian_diff／EndOfYear。交付与逐路径范围见[本包](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)及[当前报告](main_equivalence_remaining_work.md)。
+
+120 个唯一检查最终通过：首次组合 112 通过／7 个夹具缺字段失败，仅修夹具后定向 7／7 通过，再补实际 forcing host factory 1／1。生产 SHA 不变，首次失败保留。真实小型 JAX scan／lower／executable、变化日期复用、两种年重启生命周期、真实三文件写读及旧完整函数反例均有执行证据；实际 JAX 编译非零，日志计数口径见最终回执。模型步／日／积分、完整物理 kernel、真实 compiled 物理块、新 Fortran／远端／GPU／训练／付费及环境重建均 0。
+
+仅 growth_day／peatC_ok 两行按有界接线证据归一，当前 89＋3／92；原 93 science 身份与 numerical_acceptance=false 保持。主控已接受为 **C48**，代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`，正式累计 **48项／26个代码提交**；[验收记录](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)复用owner验证，无主控行为重跑。整日接口要求源日界对齐且 DT_STOMATE 等于源日长，半小时支持显式 source/local 偏移。原001／旧构建／命名实际年重启身份、DOC 严格状态／守恒、独立热真值及 maxmass 限制仍单列，研究分支同步暂停，不升级整模型数值接受。下一包核实剩余三行字段合同。
+
+## 此前 C45–C47 原生 clock／helper 接受快照
+
 2026-11-14，主控已接受[原生clock／helper包](../../outputs/reviews/main-physics-20261114/native-clock-helper/README.md)，基线`a5748f6aa1f1d56e06831f23f198f5d7f435e76d`。新识别IOIPSL参考job `127957445`在compute node以1 CPU／1 GiB／300秒硬限完成，实际14调度秒／2.730 CPU秒、11个case进程（含1个预期fatal）、41条clock记录，源预期0差异。native明确返回noleap／gregorian，确认1961 noleap17520步、Gregorian2000／2001为17568／17520步、Lilian起点、小数秒与NINT；显式合成restini／restsett用例确认NONE、time_steps origin／tstep_sec优先级、overwrite及缺轴错误。四module、archive、实际动态库、两executable／link及前后输入SHA完整保存。两次传输中的首90秒超时、无intent／job的只读恢复和中文locale的14项解析误报均保留，实际仅1作业、无原生重跑，原数值门未改。
 
 `lifecycle_completion`及新纯provider已本地修正date-aware首次year_length、Gregorian Lilian起点与非Gregorian REAL秒；显式epoch／独立startdate锁／previous不可变run binding和未测calendar拒绝防止旧payload被静默重释。首次常量跨年保持。两个unit caller迁移，旧2001 stub oracle的模板／用例及原身份保留，当前比较入口在编译前拒绝。唯一相关组合**80／80通过**，含41native对照、6纯DIM2 reset映射和3保存基线反例，0错误／skip／重跑，TEMP清理；来源、合同和回执见[剩余工作报告](main_equivalence_remaining_work.md)。正式登记为C45–C47，代码／测试／fixture提交3f7b482765b7b41339ee56a818b1f164490a5d1e，累计**47项／25代码提交**；[主控接受](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)限定于源标量clock／元数据和helper合同，复用原检查，未重跑。SLOWPROC／compiled／year-restart IO未接入，92／93字段分母不变，仍不满足PFT14等价合同。

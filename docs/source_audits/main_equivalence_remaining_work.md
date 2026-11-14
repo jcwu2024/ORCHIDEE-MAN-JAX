@@ -1,6 +1,28 @@
 # PFT14 剩余源码与状态覆盖
 
-## C45–C47时钟基础接口已接受；生产日历接线仍开放
+## 当前：C48 生产日历接线已接受，剩余三项字段合同
+
+2026-11-14，执行基线 main `b5eff879e00154c936a1709d5ab91aae65f158d6`。本包完成已接受 IOIPSL provider 的生产适配器接线；[交付入口](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)、[实际路径矩阵](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/integration-evidence.json)、[IO 合同](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/clock-io-evidence.json)与[字段更新](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/field-contract-update.json)分别记录实际范围。
+
+| 边界 | 当前实现与证据 |
+| --- | --- |
+| 时钟来源 | 实际 forcing／三份 restart 的 calendar、units／origin、time_steps／tstep_sec，经源优先级及 DIM2 reset／overwrite；小 NC config factory 与实际 forcing host factory 已调用，不从文件名或 modulo 猜日期 |
+| 共享 owner | Jan1 init／first-active、Jan2 全 dynpeat_PC／JUDGE_PC／PC_lim 分支含非默认等号、午夜严格 temp_growth>5；取 pre-STOMATE 温度与 peatC，位于 DYN_PEAT 外 |
+| 实际 caller | cold／first-day／ordinary／compact／scaffold／day-end 两镜像、once-only、pre/post 故意改值 spy；三个实际 STOMATE 参数构造器见证 source julian_diff／EndOfYear |
+| compiled | 每半小时八个数值 clock 叶，full FastState 携独立 runtime；真实 jit／scan／lower／executable、变化日期下同 context 复用与 binding 分区；静态 1961／48／2／47 标签不提供 chronology |
+| 年与 IO | continuous 保留首次锁／常量并独立 rebase local 标签；new_native_run 建立新 run；实际 packet→bundle→三文件→aggregate 校验属性、游标与双镜像 |
+
+唯一全组合 **119 项：112 通过／7 失败**；7 项在夹具缺 forcing.u/v 或必需 DT_SECHIBA 时提前退出，仅修夹具后定向 **7／7 通过**。路径矩阵又定位一项尚未直接调用的 forcing host factory，补一项新检查 **1／1 通过**；最终 **120 个唯一检查**均有通过证据，生产代码在三次执行间未改。[最终验证索引](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/verification-results.json)保留首次失败与三份不可变回执。旧 b5 完整组件 builder 在同组物理替身下复现丢失／陈旧日历值，新完整 builder 修复双镜像；不以 AST 表达式替代实际 caller。22 项 source-clock／IO 与 42 项相关旧 IO 首次通过，无重跑。C45–C47 旧80／41 native、C44 专项及 gas／DOC 等复用。
+
+本地合同仅将 growth_day／peatC_ok 两行归一，**89＋3／92**；phase/path 两维各由 90＋2 改为 92＋0，其余维度不改。剩余三行是 veget_year 活动域科学定义、vegstress sentinel／初始化及 peqAcoef 耦合单位。93 science 身份、canonical／lifecycle 分母及 numerical_acceptance=false 保持；字段级接线验证不构成整模型／年度或实际物理 compiled 接受。
+
+支持域为 canonical Gregorian／noleap。整日入口在物理调用／lower 前要求源日界对齐及 DT_STOMATE=86400，半小时允许显式偏移；未知／冲突／缺失 metadata、混合版本、physical-only legacy restart、无法保真固定格式序列化等精确拒绝。严格 clock reader 默认拒绝旧载荷，native_metadata_v1 仅显式准入新 run；科学-only 旧 reader 不作时钟声明。实际 JAX 编译非零（216 个 live completion 日志事件，含 import／eager primitive；初始原始99含2个重复，口径保留），完整物理编译为0。模型步／日／积分、新 Fortran、远端作业、GPU、训练、付费与环境重建全0，TEMP cache 清理。
+
+主控已按实际源码、调用测试、三份原始回执及独立审核接受为 **C48**，代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`；正式累计 **48项／26个代码提交**。24份交付文件、30份包内证据与23份执行绑定源码均核对一致，主控未重复行为测试。详见[主控验收](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)。冻结owner交付保留验收前47／25身份，研究同步仍暂停。
+
+下一包收口剩余 `veget_year`、`vegstress`、`peqAcoef` 三行的源定义、初始化与单位合同，复用已完成路径证据；不能把源未定义、缺证或合法支持域边界直接当作翻译bug。原001 producer／初始输入、旧 source/object-to-archive manifest、命名实际年重启 tuple 仍缺，不能由合成夹具恢复，也不作为重复考古条件。DOC 严格状态／真正质量残差、独立热真值、maxmass 条件域和 PFT14 等价发布合同仍单列；本包不自动启动后续模型运行。
+
+## 此前 C45–C47 helper 接受快照：当时生产日历尚未接线
 
 2026-11-14，基线main `a5748f6aa1f1d56e06831f23f198f5d7f435e76d`。本包完成新识别IOIPSL参考库的标量时钟／合成restart元数据对照，并本地整合两个clock候选及非Gregorian小数秒截断修复。交付与逐项证据见[本包入口](../../outputs/reviews/main-physics-20261114/native-clock-helper/README.md)、[原生观测](../../outputs/reviews/main-physics-20261114/native-clock-helper/native-observed.json)和[helper合同](../../outputs/reviews/main-physics-20261114/native-clock-helper/helper-repairs.json)。主控已接受C45实际日期年长、C46 Gregorian Lilian起点、C47非Gregorian REAL秒；代码／测试／fixture提交3f7b482765b7b41339ee56a818b1f164490a5d1e，累计**47项／25个代码提交**。不重复C42／C44，仍不满足PFT14等价发布合同。
 

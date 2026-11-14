@@ -1,5 +1,15 @@
 # 共享物理核心与研究分支核查
 
+## 当前已接受 C48：生产日历接线
+
+2026-11-14，基线 main `b5eff879e00154c936a1709d5ab91aae65f158d6` 上完成 FIELD-CANDIDATE-01。共享 source_calendar 由现有 slowproc 与实际 driver 复用；source_clock 将实际变量属性、DIM2、run 生命周期和三文件 IO 绑定至已接受 provider；packet／FastState 的独立 runtime 传递游标与 binding，原93 science 不扩展。STOMATE 入口的 julian_diff／EndOfYear 沿源时钟传递。[本包](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)保留实际矩阵、旧完整函数反例及回执。
+
+120 个唯一检查最终通过：首次112通过／7个夹具失败，仅修夹具后定向7通过，再补实际forcing host factory1项；生产 SHA 一致，首次失败保留。真实小型 JAX clock scan／compiled executable 和真实三文件 IO 仅证明所列适配器，物理 delegates 均替换；模型／完整物理／真实物理 compiled／新 Fortran／远端／GPU／训练／付费／环境重建全0。两行字段缺口归一后89＋3／92，93 science 与 numerical_acceptance=false 保持。整日 source-alignment 和 legacy policy 见[当前报告](main_equivalence_remaining_work.md)。
+
+主控已接受为 **C48**，代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`，正式登记 **C1–C48／48项／26个代码提交**。[验收记录](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)保留实际审阅和原验证范围，冻结owner交付仍为验收前身份。daily/global同步暂停；以后须按准确提交整合共享owner、driver、clock IO和相关测试，不能仅复制单个slowproc文件。原001／旧构建／命名实际年重启身份、DOC严格状态／守恒、独立热真值、maxmass及整模型等价限制保留，不将旧 producer 改称本次模型验证。
+
+## 此前 C45–C47 原生 helper 接受快照
+
 2026-11-14，主控已接受[原生clock／helper修复](../../outputs/reviews/main-physics-20261114/native-clock-helper/README.md)：正式编号C45–C47，代码／测试／fixture提交3f7b482765b7b41339ee56a818b1f164490a5d1e；累计**47项／25个代码提交**。研究分支同步继续暂停。共同生产改动仅`sechiba/lifecycle_completion.py`和新纯`sechiba/ioipsl_calendar.py`，纠正首次date-aware年长、Gregorian Lilian日数及非Gregorian小数秒；同一run跨年保留首次常量。显式日期约定、独立startdate锁及previous binding限定适配器支持域，旧seconds／astronomical／无绑定payload与未测calendar提前拒绝。两个直接unit测试迁移，旧2001合成oracle保留原TEMPLATE／CASES，仅当前比较／coverage入口在编译前拒绝；相关接口和fixture须随本次准确提交交接；[主控接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)复用原80项通过及独立终审，未重跑。
 
 新标量参考job `127957445`使用既有IOIPSL archive，1 CPU／1 GiB／300秒硬限，在compute node实际14秒完成11个进程、41条clock记录（metadata另含1个预期exit1）；源预期全部一致，原`1e-10/rel0`门不变。实际compiler／四module／动态库／两新executable与各自link map、前后SHA及原始退出均保存；首传输超时、明确absence恢复和中文locale解析误报完整保留，实际只有1个job，无原生重跑。唯一本地相关组合80／80通过，含41native对照、6项纯DIM2 reset映射、3个旧基线反例；本地无模型、物理、JIT、Fortran或remote调用，服务器标量Fortran的非零计账单列。旧50＋11、C44专项50与gas／DOC／92字段证据复用，未重复执行。
@@ -871,12 +881,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C47，共47项已接受修正、25个代码提交。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C48，共48项已接受修正、26个代码提交。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C47仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C48仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -915,6 +925,11 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C45 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C46 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C47 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
+| C48 | `driver/source_calendar.py`、`source_clock.py`、`orchestration.py`、`fast_state.py`、`dim2.py`、forcing／restart适配器及`sechiba/slowproc.py`、`stomate/restart_io.py` | 782535b4130f2ddc8cd30a251e0493709e1ab26a |
+
+### C48生产日历更新与状态接线（2026-11-14已接受）
+
+源 `slowproc.f90:556–610` 在STOMATE之前执行Jan1首active步的growth_day清零、Jan2首active步的peatC_ok条件写入及午夜temp_growth>5的growth_day增量；复查前JAX已存在owner，但选定driver没有调用／保存这些更新。当前由单一共享owner连接cold／first／ordinary／compact／compiled和日年界，绑定实际forcing／restart时钟，游标不进入原93 science字段，三文件IO保存显式版本化metadata。完整旧b5 builder在相同替身下失败、当前builder通过；120项最终通过，其中初次7项夹具失败及定向修复保留。接受限于源与合成适配器／IO语义，未执行物理模型、不升级年度／DOC／热／maxmass接受。该项按一个共同接线遗漏登记，不拆成多个字段bug；C45–C47仍为独立primitive修复。研究同步待后续统一核验。
 
 ### C45–C47时钟基础接口（2026-11-14已接受）
 

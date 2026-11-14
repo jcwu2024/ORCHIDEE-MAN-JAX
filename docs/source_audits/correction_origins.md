@@ -1,8 +1,14 @@
-# C1–C47修正来源登记（2026-11-14）
+# C1–C48修正来源登记（2026-11-14）
 
-当前累计47项修正、25个代码提交。原C1–C44来源和接受范围保留；新增C45年长度、C46 Gregorian起点、C47非Gregorian小数秒截断均有复查前7cae3e02及初始仓库7333b46c的JAX证据。当前合计46项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称47项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
+当前累计48项修正、26个代码提交。原C1–C47来源和接受范围保留；C48为复查前7cae3e02已存在的选定driver日历owner调用／写回遗漏，代码提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`。当前合计47项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称48项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
 
-C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[本次接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产日历接线仍开放，不属于本轮三个helper修复的完成声明。
+C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
+
+## C48（原 FIELD-CANDIDATE-01）生产接线已接受
+
+2026-11-14 的[接线包](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/README.md)完成共享 calendar、真实 metadata／DIM2、实际 caller／compiled／年与 IO 接线。来源沿用复查前 `7cae3e02` 已存在的 driver owner 调用遗漏。本包保存 b5 `b5eff879e00154c936a1709d5ab91aae65f158d6` 中完整 `_runtime_next_state_from_components` 函数，在相同物理替身下调用其旧 signature，复现 Jan1／Jan2 丢失／stale 日历值，再执行当前完整 builder 验证双镜像修复；fixture、原函数 SHA 与跨度见[来源绑定](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/baseline-replay-identity.json)。没有执行旧模块／旧模型，也不追认未受 Git 跟踪 Fortran 的历史身份。
+
+当前 `slowproc.f90:556–610` 的 pre-STOMATE 顺序、Jan1／Jan2／午夜、全部PC分支及严格边界为源依据，C45–C47 primitive/native证据复用。120个唯一检查最终通过：首次112通过／7夹具失败、修夹具后定向7通过，再补1个实际host factory；原回执保留、生产SHA未改。[C48主控接受](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)限于接线语义，不宣称标准案例数值回归或其排除，不恢复原001／旧archive构建／命名实际重启producer。正式累计48／26，研究同步暂停。下方旧包表格保留交付当时状态，当前C48状态以本节为准。
 
 ## 原C1–C40来源审计快照
 

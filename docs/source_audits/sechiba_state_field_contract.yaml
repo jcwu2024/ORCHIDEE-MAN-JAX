@@ -225,10 +225,16 @@ contracts:
   - {component: thermosoil_previous_step_state, field: tdeep, shape_group: grid_deep_pft, dtype_kind: real, applicability: deep_soil_layers_and_pfts, inactive_behavior: source_deep_profile_for_inactive_pfts, freshness: overwrite_each_step, freshness_guard: thermosoil_module.ok_and_downstream_payload_contains_deeptemp_prof, producer_phase: thermosoil_final_state, consumer_phase: next_slowproc_permafrost, jax_owner: jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields, source_ref: thermosoil_main}
   - {component: thermosoil_previous_step_state, field: temp_sol_beg, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: source_begin_temperature_is_preserved, freshness: overwrite_each_step, freshness_guard: thermosoil_module.ok_and_downstream_payload_contains_field, producer_phase: thermosoil_energy_end, consumer_phase: next_thermosoil_energy, jax_owner: jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields, source_ref: thermosoil_main}
 
-# S-NEXT-01 historical-extra source contracts (documentation only)
+# S-NEXT-01 historical-extra source contracts (bounded adapter evidence below)
 historical_extra_field_source_contracts:
   schema_version: 1
   baseline: 8f3c7dbab3ce22af5cd2a828d1ea5416b0489035
+  calendar_wiring_update:
+    baseline: b5eff879e00154c936a1709d5ab91aae65f158d6
+    evidence: outputs/reviews/main-physics-20261114/calendar-driver-wiring/field-contract-update.json
+    status: locally_verified_pending_controller_acceptance
+    changed_rows: [sechiba_finalize_state.growth_day, sechiba_finalize_state.peatC_ok]
+    domain: synthetic actual adapters, real clock-only JIT/scan and small three-file restart IO; no physical model execution
   scope: finite historical EXTRA92; source/schema only; separate from original123 transition contracts and three source-backed
     omissions now completed
   denominator: 92
@@ -238,8 +244,8 @@ historical_extra_field_source_contracts:
     denominator: 92
     prior_identity_joins: 92
     new_identity_joins: 0
-    source_contract_normalized: 87
-    precise_gap_rows: 5
+    source_contract_normalized: 89
+    precise_gap_rows: 3
     by_dimension_after:
       units:
         resolved_in_selected_source_domain: 91
@@ -254,11 +260,11 @@ historical_extra_field_source_contracts:
         resolved_in_selected_source_domain: 91
         precise_gap: 1
       phase:
-        resolved_in_selected_source_domain: 90
-        precise_gap: 2
+        resolved_in_selected_source_domain: 92
+        precise_gap: 0
       path:
-        resolved_in_selected_source_domain: 90
-        precise_gap: 2
+        resolved_in_selected_source_domain: 92
+        precise_gap: 0
     by_dimension_before:
       units:
         all92_source_semantics_certified: 0
@@ -287,6 +293,12 @@ historical_extra_field_source_contracts:
       certification
     new_independent_Fortran_oracles: 0
     real_compiled_runs: 0
+    real_compiled_runs_scope: physical model blocks; real clock-only jit/scan executed with replaced physical delegates
+    locally_repaired_adapter_semantic_contradiction_groups: 1
+    locally_repaired_field_rows: 2
+    final_unique_bounded_checks: 120
+    final_bounded_failures: 0
+    formal_register_unchanged: 47 corrections / 25 code commits; FIELD-CANDIDATE-01 pending controller acceptance
     confirmed_production_defects: 0
     candidate_groups_pending_microcheck: 0
     reproduced_adapter_semantic_contradiction_groups: 1
@@ -1706,15 +1718,27 @@ historical_extra_field_source_contracts:
       temp_growth>5degC, otherwise preserve'
     default_and_sentinel: whole missing ->0
     phase_dispositions:
-      cold: source_path_bound
-      restart: source_path_bound
-      first_day_special: source_path_bound
-      ordinary: source_path_bound
-      compiled: source_path_bound_not_executed
-      day_end: source_path_bound
-      year_end_and_IO: source_path_bound
-      consumers: source_bound
+      cold: actual_builder_executed_with_replaced_physics
+      restart: actual_builder_and_small_three_file_IO_executed
+      first_day_special: actual_builder_executed_with_replaced_physics
+      ordinary: actual_adapter_executed_with_replaced_physics
+      compiled: actual_clock_only_jit_scan_executed_with_replaced_physics
+      day_end: actual_merge_executed_with_pre_post_STOMATE_spies
+      year_end_and_IO: actual_year_adapter_and_small_IO_executed_with_replaced_physics
+      consumers: actual_STOMATE_builders_executed_with_replaced_physics
     path_record: outputs/reviews/main-physics-20261113/state-parameter-contracts/field-contracts.json#EXTRA92:sechiba_finalize_state:growth_day
+    current_path_record: outputs/reviews/main-physics-20261114/calendar-driver-wiring/field-contract-update.json#sechiba_finalize_state.growth_day
+    current_phase_evidence:
+      cold: actual complete builder with replaced physical producers; initialization inactive, first active Jan1 reset
+      restart: actual first-day builder and real small three-file writer/reader; explicit versioned clock admission
+      first_day_special: actual complete builder with synthetic input and once-only source cursor
+      ordinary: actual runtime wrapper, compact function and state builder; physical delegates replaced
+      compiled: actual scan/block builders and real clock-only jit/scan/lower/executable; physical delegates replaced
+      day_end: actual merge retains pre-STOMATE calendar update while other post-STOMATE values change
+      year_end_and_IO: actual year wrapper/rebase with replaced physics and real small restart IO; source alignment required
+      consumers: actual three STOMATE argument builders; later builder also under real clock-only jit
+    source_calendar_owner: jax_orchidee.driver.source_calendar.source_calendar_assignments
+    evidence_limit: bounded source/adapter contract only; no real compiled physical block or scientific numerical acceptance
     source_refs:
     - file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
       lines: 139-142
@@ -1730,21 +1754,8 @@ historical_extra_field_source_contracts:
       lines: 587-591
     - file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
       lines: 637-641
-    status: precise_gap
-    gaps:
-    - dimension: phase
-      also_affects:
-      - path
-      source_reason: active calendar writes slowproc556-594 are implemented in slowproc_main_pft14_step but selected orchestration
-        never calls that owner; finalize carry and day-end allowlists retain stale value
-      action: reproduced pure packet/carry semantic contradiction; review focused calendar-boundary integration before production
-        change
-      candidate: FIELD-CANDIDATE-01
-      source: SRC:fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:556-594:ab9ecf6b3cc0
-      producer: SRC:jax_orchidee/sechiba/slowproc.py:1310-1541:d28fa4b9fe4c
-      caller: SRC:jax_orchidee/driver/orchestration.py:6033-6105:0c92c057d02f
-      day_end: SRC:jax_orchidee/driver/orchestration.py:9385-9442:6155daf0b4bb
-      allowlists: SRC:jax_orchidee/driver/orchestration.py:8978-9054:4e58a6a95f7b
+    status: normalized_in_selected_source_domain
+    gaps: []
     numerical_acceptance: false
   - component: sechiba_finalize_state
     field: ae_ns
@@ -4895,15 +4906,27 @@ historical_extra_field_source_contracts:
       calls preserve
     default_and_sentinel: whole missing ->0
     phase_dispositions:
-      cold: source_path_bound
-      restart: source_path_bound
-      first_day_special: source_path_bound
-      ordinary: source_path_bound
-      compiled: source_path_bound_not_executed
-      day_end: source_path_bound
-      year_end_and_IO: source_path_bound
-      consumers: source_bound
+      cold: actual_builder_executed_with_replaced_physics
+      restart: actual_builder_and_small_three_file_IO_executed
+      first_day_special: actual_builder_executed_with_replaced_physics
+      ordinary: actual_adapter_executed_with_replaced_physics
+      compiled: actual_clock_only_jit_scan_executed_with_replaced_physics
+      day_end: actual_merge_executed_with_pre_post_STOMATE_spies
+      year_end_and_IO: actual_year_adapter_and_small_IO_executed_with_replaced_physics
+      consumers: actual_STOMATE_builders_executed_with_replaced_physics
     path_record: outputs/reviews/main-physics-20261113/state-parameter-contracts/field-contracts.json#EXTRA92:sechiba_finalize_state:peatC_ok
+    current_path_record: outputs/reviews/main-physics-20261114/calendar-driver-wiring/field-contract-update.json#sechiba_finalize_state.peatC_ok
+    current_phase_evidence:
+      cold: actual complete builder with replaced physical producers; initialization inactive
+      restart: actual first-day builder and real small three-file writer/reader; explicit versioned clock admission
+      first_day_special: actual complete builder with synthetic input and once-only source cursor
+      ordinary: actual runtime wrapper, compact function and state builder; Jan2 full dynpeat_PC/JUDGE_PC truth table
+      compiled: actual scan/block builders and real clock-only jit/scan/lower/executable; physical delegates replaced
+      day_end: actual merge retains pre-STOMATE peatC comparison result while post-STOMATE peatC changes
+      year_end_and_IO: actual year wrapper/rebase with replaced physics and real small restart IO; source alignment required
+      consumers: actual three STOMATE argument builders; later builder also under real clock-only jit
+    source_calendar_owner: jax_orchidee.driver.source_calendar.source_calendar_assignments
+    evidence_limit: bounded source/adapter contract only; no real compiled physical block or scientific numerical acceptance
     source_refs:
     - file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
       lines: 138-141
@@ -4919,21 +4942,8 @@ historical_extra_field_source_contracts:
       lines: 575-579
     - file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
       lines: 873-877
-    status: precise_gap
-    gaps:
-    - dimension: phase
-      also_affects:
-      - path
-      source_reason: active calendar writes slowproc556-594 are implemented in slowproc_main_pft14_step but selected orchestration
-        never calls that owner; finalize carry and day-end allowlists retain stale value
-      action: reproduced pure packet/carry semantic contradiction; review focused calendar-boundary integration before production
-        change
-      candidate: FIELD-CANDIDATE-01
-      source: SRC:fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:556-594:ab9ecf6b3cc0
-      producer: SRC:jax_orchidee/sechiba/slowproc.py:1310-1541:d28fa4b9fe4c
-      caller: SRC:jax_orchidee/driver/orchestration.py:6033-6105:0c92c057d02f
-      day_end: SRC:jax_orchidee/driver/orchestration.py:9385-9442:6155daf0b4bb
-      allowlists: SRC:jax_orchidee/driver/orchestration.py:8978-9054:4e58a6a95f7b
+    status: normalized_in_selected_source_domain
+    gaps: []
     numerical_acceptance: false
   - component: sechiba_finalize_state
     field: q_sol_pot

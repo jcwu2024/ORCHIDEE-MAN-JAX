@@ -4,6 +4,24 @@ Scope: active paper-case PFT14 driver runtime after semantic closure through
 the current one-year validation windows. This ledger is an implementation plan
 for performance work only; it does not change Fortran process semantics.
 
+The 2026-11-14 calendar wiring adds runtime metadata outside the existing 93
+science finalize fields and 13 driver fields. `DriverSourceClockPayload`
+transports eight numeric leaves (`local_tstep`, `istp`, `year`, `month`, `day`,
+`second`, `active`, `julian_diff`). `SourceClockRuntime` keeps an immutable
+static binding and three dynamic cursor/anchor leaves. Actual scan and block
+builders carry the complete fast state; calendar identity partitions compiled
+cache entries, while changing numeric dates reuses the same binding.
+
+The [bounded invocation matrix](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/integration-evidence.json)
+and [120-check verification index](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/verification-results.json)
+record real calendar-only JIT/scan/lower/executable checks with physical
+delegates replaced. Their 216 live XLA completion log events include eager
+primitives and imports; they do not count physical kernels. No real compiled
+physical block or model day executed in this package. Half-hour adapters
+support source/local cursor offsets; whole-day adapters require a source-day
+boundary and `DT_STOMATE=86400`, rejecting unsupported admission before physics
+or lowering. This metadata evidence does not upgrade scientific or annual gates.
+
 ## Current Bottleneck
 
 The warmed 30-day lite/compact profile is dominated by Python half-hour
