@@ -4,11 +4,11 @@
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 
-## 当前三字段分类（不新增修正编号）
+## 当前vegstress源码补证（不新增修正编号）
 
-2026-11-14，[三字段包](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)以main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f` 为基线，没有确认可修的生产adapter缺陷或新增回归，因此仍为 **48项／26代码提交**，不分C号。`veget_year` 是Fortran imposed分支未定义的科学值，JAX零仅serialization sentinel；`vegstress` all(val_exp)表达式差异仍缺实际IOIPSL返回合同，不把条件性表达式当旧翻译bug；`peqAcoef` 的零路径已验证，非零源单位缺证在外部producer边界。账本分类89归一＋1源未定义边界＋2精确缺证／92，不改变原93／126／181与numerical_acceptance=false。
+2026-11-14，基线main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a`；[restcom单文件包](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/README.md)取得已识别完整源SHA，确认默认缓冲999999、DIM2 setter、锁定和rank2调用。源all999999累加行为与当前JAX显式mapping保留有同decoded输入的局部差异，但完整文件可达性仍缺find_str／mathop gather直接body；NONE input membership count又无源定义初值。它们不自动成为已确认的生产翻译bug或新增回归。候选仅存输出、未应用／执行，源自身quirk、支持域与selected消费者mask分开记录。
 
-新19项唯一检查均有通过证据，首18pass／1fail是本包测试夹具误读Dim2StepOutput API，改用真实callback spy后定向1pass；不是生产回归或新的物理修正。两次回执与精确源码身份、源／input／first-consumer链及[最小后续观察](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)保留；本包无模型／完整物理／原生或远端执行，C48旧120项复用。[主控已验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)并发布测试／报告阶段，不增加生产修复提交数或修改下方历史来源标签；研究同步暂停。
+4项新NC fill reader观察一次通过，原19／120／80／41复用；单次source-only SSH成功，无远端写入／原生Fortran／模型／调度／GPU／训练／付费／环境重建。正式仍 **48项／26个生产修复提交**，不分C号；89归一＋1源未定义inactive边界＋2精确缺证／92及93／126／181、numerical_acceptance=false保留。[主控已验收](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)，仅发布测试／报告阶段，不改变生产修复提交数，研究同步暂停。详见[逐谓词源合同](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.json)、[候选与必要回归](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)和[唯一直接依赖合同的最小后续](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)；不改下方历史来源标签或冻结旧包。
 
 ## C48（原 FIELD-CANDIDATE-01）生产接线已接受
 

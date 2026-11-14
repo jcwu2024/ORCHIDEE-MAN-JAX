@@ -1,12 +1,14 @@
 # main 物理正确性检查入口
 
-## 当前：三字段分类已接受，无新增生产修复
+## 当前：vegstress 缺值缓冲规则已查明，最终搬运合同仍有精确边界
 
-2026-11-14，基线 main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f`。按[主控决策](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-decision.json)完成[三字段收口](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)：`veget_year` 属 IMPOSE_VEG 下源未定义／inactive 的明确边界，零仅为序列化 sentinel；`vegstress` 缺实际 IOIPSL restget／expval 规则，已确定 var_init 不覆盖、首灌溉消费者在选定 PFT14 下被 mask，随后 diag_soil 才确定覆盖；`peqAcoef` 选定非松弛且非 WATCHOUT 的 A=0／B=Qair 行为源定义一致，非零耦合单位仍缺外部 producer。无生产修复，不把条件性源码差异登记为 bug。
+2026-11-14，基线main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a`，按[本包决策](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-decision.json)完成一次授权的单文件Cancon只读提取。完整restcom.f90为102939字节，SHA与预期一致；SSH耗时27.851秒，stdout125194字节、stderr0，远端命令硬限30秒／1MiB，无远端写入。源码明确默认val_exp999999与operator missing_val1e20不同，DIM2:121显式setter，negative lookup且def_beha=true时1718–1719填整缓冲并锁定。实际字段走rank2 overload，不是rank3；[逐谓词矩阵](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.md)区分NONE、缺变量、present、全／部分numeric sentinel与真实NC fill。
 
-账本为 **89 归一＋1 源未定义边界＋2 精确缺证／92**。19 个唯一新检查均有通过证据：首次18通过／1夹具 API 失败，修真实 callback spy 后仅定向1通过；失败及两份执行 SHA 保留。真实小 NC、实际 reader／codec、完整适配器与替换物理委托、早期拒绝及两个小 irrigation slice 的范围见[验证索引](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/verification-results.json)。JAX eager/import 编译日志共91个完成事件，完整物理 compiled、模型步／日／积分、新 Fortran／SSH／远端／GPU／训练／付费／环境重建均0，TEMP已清理。
+完整rank2返回仍需同一直接依赖合同：`stringop::find_str`负查找及`mathelp::mathop('gather')`的数值搬运。两body未在已有本地源码保存，[最小后续](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)仅列两个精确候选源路径，未追加SSH。NONE input的nbvar_in未被该源显式初始化，保留为源未定义边界，不借常见static零填值。给定明确decoded全999999，HYDROL加S而JAX保留的局部差异已写为[未应用候选](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)；它重现源quirk，不是已确认需要修的活动模型结果。
 
-正式接受仍为 **C48／48项／26个生产修复提交**，代码 `782535b4130f2ddc8cd30a251e0493709e1ab26a`；C48旧120项与原生41／本地80等证据复用，旧包冻结不改。[本包主控验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)已核对实际源码、测试、回执与独立审核，未重复行为测试；仅发布两份测试与五份报告／字段合同，不新增生产修正编号。原93 science／126 canonical／181 lifecycle 与 numerical_acceptance=false 保持。缺证的[最小后续观察](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)在本包未执行，下一优先项为按既有历史Fortran取证授权仅补读已识别IOIPSL源码。非零WATCHOUT域暂不扩张；原001／旧构建／命名实际年重启、DOC严格状态／守恒、独立热真值和maxmass限制仍单列，研究同步暂停。
+4项新增实际NC fill reader检查一次通过，含default未写fill／_FillValue999999／_FillValue1e20／missing_value999999；字段与backing数值保留而mask丢弃。23个raw JAX import/eager完成事件单列，完整物理／物理compiled、新原生Fortran／模型／调度／GPU／训练／付费／环境重建均0；旧19／120／80／41复用，TEMP清理。只读SSH计1，不能说本包无远端访问。
+
+账本仍 **89归一＋1源未定义inactive边界＋2精确缺证／92**，仅vegstress行补证。原三字段包已主控接受并发布为当前main，正式仍 **48项／26个生产修复提交**；本包无生产修改或新C号。93 science／126 canonical／181 lifecycle、numerical_acceptance=false、DOC严格状态／守恒、独立热真值、maxmass及整模型／历史身份限制不变，veget_year和非零WATCHOUT不重查。[主控已验收](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)上述有界源证据与4项reader检查，核对6份交付及6项执行绑定身份，未重跑测试、模型或SSH；仅发布报告／字段合同／测试阶段，冻结旧包不改，研究同步暂停。下一包完成直接lookup／gather合同、受支持输入可达性和必要修复判断，不把未应用候选当成已修复。
 
 ## 此前 C45–C47 原生 clock／helper 接受快照
 

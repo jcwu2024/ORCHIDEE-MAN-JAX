@@ -1,20 +1,21 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前：三字段收口完成，剩余为明确边界与精确外部缺证
+## 当前：restcom 缺值缓冲规则已闭合，剩余为直接 lookup／gather 合同
 
-2026-11-14，基线 main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f`；[新包](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)仅调查前一账本的三行，不重跑C48接线或旧完整调查。生产源码未改，当前 **89 归一＋1 源未定义边界＋2 精确缺证／92**，不是92／92数值接受。
+2026-11-14，基线main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a`。三字段包已接受／普通推送；本[单文件补证包](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/README.md)只推进vegstress，不重查veget_year或未准入的非零WATCHOUT。一次strict-host-key只读SSH提取完整restcom，SHA724a3c…与已识别源相符，102939字节；27.851秒／stdout125194字节／stderr0，远端硬限30秒／1MiB，无远端写入、编译、原生probe或调度。
 
-| 字段 | 本包结论 | 最小后续条件 |
-| --- | --- | --- |
-| veget_year | slowproc1603–1644仅map且非imposed赋值；当前scientific year未定义，veget_update=0／无rotation排除活动读；JAX零为serialization sentinel，实际signed32 codec与拒绝域已验证 | 当前inactive分支无需数值观察；启用map／LCC／rotation前先声明源输入域 |
-| vegstress | 正常present值保留；原all(val_exp)累加无零重置；var_init不覆盖。首irrigation ratio在当前PFT14／OK_LAIDEV=false下被mask，diag_soil9044才全覆盖 | 实际IOIPSL缺字段／expval读体不在已存摘录；[一份SHA核验源码的只读提取](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)，本包未执行 |
-| peqAcoef | 实际非relaxed且非WATCHOUT路径每步A=0／B=Qair，非零restart读取／codec保留后在活动边界覆盖；JAX明确拒绝另两模式 | 外部WATCHOUT输入身份、producer revision／公式、A/B单位和flux／amount／dt约定；零值不能证明一般单位 |
+| 边界 | 当前结论 |
+| --- | --- |
+| 默认／锁定 | restcom158默认999999；DIM2:121显式设置；setter／getter及missing read锁定均有实际body。negative lookup＋def_beha=true时整缓冲赋val_exp，不再是未知默认 |
+| rank2链 | hydrol3048→ioipsl_para344–372→restget_opp_r2d1098–1178→restget_real→每PFT mathop gather→scatter_r1；index_g为1基陆地点索引 |
+| 最终缺证 | `find_str`与`mathop`直接body尚未保存；完整文件membership和gather对999999／1e20／NC fill的处理仍需[这一组精确源依赖](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)，本包未追加访问 |
+| NONE | nbvar_in声明无显式初值，NONE绕过restopenin，输出初始化不建立输入count；不把static常见零作为source保证，也不复制undefined存储 |
+| JAX局部差异 | 给定相同decoded全999999，HYDROL加S，当前owner保留；[候选补丁](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)仅在输出中、未应用／执行，遗漏key不擅自改写。不是已确认native文件轨迹bug或物理修复 |
+| 首读／覆盖 | 复用已接受的var_init不覆盖、首irrigation ratio在当前PFT14／OK_LAIDEV=false下被mask、diag_soil才全重算；不证明init→finalize或crop域相同 |
 
-完整源、输入身份与首读／首覆盖链见[vegetation证据](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/vegetation-contract-evidence.json)、[peq单位证据](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/peq-contract-evidence.json)与[三行分类](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/three-field-dispositions.json)。数值999999不等于已观测原生缺值或NC fill mask，不能从当前mask外推crop支持，初始化后直接finalize的相等性也未被证明。不复制未定义值，不修改物理公式或容差。
+4项新真实NC fill检查一次通过：[回执](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/fill-checks.json)与[完整log](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/fill-checks.log)保留。Python netCDF4将这些输入mask，实际reader丢弃mask而保留backing数值／present key；这不是NF90或gather原生观测。23个raw live JAX完成事件包含import/eager，物理compiled为0。模型步／日／积分、完整物理、新原生Fortran／远端作业／GPU／训练／付费／环境重建全0；SSH只读访问1次单列。旧19／120／80／41未重跑。
 
-19个唯一新检查最终均通过：唯一组合18pass／1fail，夹具访问不存在的step.boundary；改为真实initialize/main回调spy后仅该1项重跑通过。生产SHA相同，原失败保留，最终tested-source身份已封存；[验证回执](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/verification-results.json)单列91个JAX live编译完成日志事件（含import／eager，非独立executable计数）。执行仅纯适配器、小NC及有限synthetic slice；模型／整日／积分／完整物理／真实物理compiled、新Fortran／远端／SSH／GPU／训练／付费／环境重建全0，TEMP清理。
-
-C48仍已接受：代码 `782535b4130f2ddc8cd30a251e0493709e1ab26a`，累计48项／26个生产修复提交；其120项与旧41 native／80本地检查复用，冻结旧包保留原交付身份。[本包主控验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)已接受三行分类与19项有界检查，7份交付文件、26份包内证据及10份最终执行绑定路径均一致，无主控行为重跑。仅测试／报告发布，无新C号或研究同步。下一优先项按既有历史Fortran取证授权补读已识别restcom.f90，确定vegstress实际缺值规则；不启动模型／新原生probe，不扩张非零WATCHOUT域。93 science／126 canonical／181 lifecycle 与 numerical_acceptance=false不变；原001 producer／初始输入、旧source/object-to-archive manifest、命名真实年重启tuple、DOC严格状态／真实质量残差、独立热真值及maxmass域仍未由本包补足。
+账本保持89归一＋1源未定义inactive边界＋2精确缺证／92，仅vegstress源证据收窄；原93／126／181与numerical_acceptance=false保持。正式C48／48项／26个生产修复提交无新增；不改研究工作树、主控合同或旧冻结回执。原001／旧构建／命名真实年重启、DOC严格状态／真实质量残差、独立热真值、maxmass与整模型等价限制继续单列。[主控已接受](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)本包源证据与4项reader检查，仅发布报告／测试阶段，无行为重跑。后续按一个完整结果补齐直接lookup／gather依赖、文件至实际owner可达性与必要修复判断；当前候选仍未应用，源未定义边界与不支持域保持显式。
 
 ## 此前 C45–C47 helper 接受快照：当时生产日历尚未接线
 

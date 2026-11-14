@@ -4630,8 +4630,9 @@ historical_extra_field_source_contracts:
     - nvm
     mask_and_inactive: CWRR6soiltiles; mask_soiltile=soiltile>min_sechiba, mask_veget=veget_max>min_sechiba; exact peat/tide
       activecoordinate guards retained in sources; inactive carried slots never globallydeleted
-    default_and_sentinel: source adds vegstressv only IF ALL(restget result==val_exp), without zero reset; actual IOIPSL missing
-      return remains unobserved. JAX missing mapping selects summed us; explicit normal/all999999/partial999999 preserved.
+    default_and_sentinel: identified restcom158 and DIM2 setter121 bind val_exp999999; negative lookup plus def_behaTRUE
+      fills read buffer999999 at1718-1719. Final rank2 return still passes external find_str/mathop gather; NONE input count lacks
+      source initialization. JAX omitted mapping selects S, explicit arrays preserved; decoded all999999 source branch adds S.
     phase_dispositions:
       cold: source_path_bound
       restart: source_path_bound
@@ -4697,7 +4698,14 @@ historical_extra_field_source_contracts:
       lines: 5482-5486
     - file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
       lines: 6802-6806
-    current_evidence: outputs/reviews/main-physics-20261114/remaining-field-contracts/vegetation-contract-evidence.json#vegstress
+    current_evidence: outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.json
+    identified_IOIPSL_source:
+      file: outputs/reviews/main-physics-20261114/vegstress-restget-source/restcom.f90
+      sha256: 724a3c1499f2dee4343688b443b5ab2df7b751f0216d3636d0c0c59e1c4bd512
+      lines: 152-159,1098-1178,1647-1825,3010-3045
+      evidence_level: source-derived, not native missing-return observation
+    candidate: explicit decoded all999999 compatibility patch retained only in output, unapplied and unexecuted; omitted-key
+      cold/NONE semantics and selected physical acceptance unchanged
     selected_first_consumer: sechiba1048 copies old stress; hydrol1241-1274 irrigation ratio precedes hydrol_soil. Only PFT14
       occupied and OK_LAIDEV14=false mask the selected ratio; actual small drip/flood slices also demonstrate crop-enabled sensitivity.
     first_definitive_overwrite: hydrol_var_init3832-4650 has no vegstress input or overwrite; hydrol_diag_soil9044 zeroes whole
@@ -4705,10 +4713,11 @@ historical_extra_field_source_contracts:
     status: precise_gap
     gaps:
     - dimension: default_sentinel
-      source_reason: hydrol3048-3057 and ioipsl_para344-372 depend on actual IOIPSL restget_opp_r2d return/expval; saved local
-        IOIPSL evidence lacks that read body. ORCHIDEE val_exp999999 is not an observed native missing return.
-      action: external-observation-plan.md specifies one SHA-checked read-only restcom.f90 extraction; not executed. No speculative
-        production edit, copying undefined values, or missing-default numerical acceptance.
+      source_reason: restcom buffer/default/locking is now known, but file membership and final gather transfer depend on
+        unsaved stringop find_str and mathelp mathop bodies. NONE membership count has no source-defined initial value;
+        finite numeric999999, operator missing1e20 and NetCDF fill attributes remain separate.
+      action: outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md names the one remaining direct-dependency contract and two precise candidate
+        source paths; not retrieved. No native probe or production fix; same-decoded-input candidate requires controller judgment.
     numerical_acceptance: false
   - component: sechiba_finalize_state
     field: cgrnd

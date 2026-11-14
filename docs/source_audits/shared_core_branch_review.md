@@ -1,12 +1,12 @@
 # 共享物理核心与研究分支核查
 
-## 当前：三字段源合同收口，正式登记仍为C48
+## 当前：vegstress 的 restcom 源补证，无生产修复
 
-2026-11-14，main `8fcedfb05e9de632f0d40b8ba5e717b517e3d11f` 上完成[remaining-field-contracts](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/README.md)。仅三行账本、两份聚焦测试及当前报告变化，无生产源码修复：veget_year归为源未定义／inactive合法边界；vegstress的原生缺值规则保留精确缺证，已确定实际var_init不覆盖及selected首消费者mask；peqAcoef的selected非relaxed／非WATCHOUT零路径源定义一致，外部非零单位仍未认证。当前计数 **89归一＋1明确源未定义边界＋2精确缺证／92**。
+2026-11-14，main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a` 上完成[源码补证](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/README.md)。原三字段包已由主控接受并发布；当前只读1份已识别restcom，SHA一致，strict pin、单次27.851秒／125194字节输出、无远端写入。rank2链、val_exp999999／missing_val1e20、DIM2 setter与默认缓冲赋值／锁定已查明；最终返回仍依赖未保存的find_str及mathop gather。[矩阵](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.md)将NONE未初始化membership状态、missing、numeric sentinel及NC fill分开，源码推导不冒充native结果。
 
-19个唯一新检查最终通过，首18pass／1夹具API失败及定向修复1pass均保留；实际reader／codec、替换物理委托的完整adapter、支持域拒绝和小灌溉slice范围见[回执](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/verification-results.json)。实际JAX编译非零（91个raw live completion事件），完整物理kernel／物理compiled、模型步／日／积分、新Fortran／SSH／远端／GPU／训练／付费／环境重建全0。原120项C48和其他不变证据未重跑；原93science／126canonical／181lifecycle和numerical_acceptance=false保留。
+4项新实际NC fill reader检查一次通过，23个raw JAX import/eager完成日志；旧19／120／80／41复用。完整物理／物理compiled、模型步／日／积分、新原生Fortran／调度／GPU／训练／付费／环境重建0，source-only SSH1次明确计账。显式decoded全999999的局部adapter差异及[候选计划](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)可审，补丁仅存输出、未应用／执行；不将源quirk直接复制到生产，不因selected首消费者mask就宣称全部输入相同。
 
-正式登记保持 **C1–C48／48项／26个生产修复提交**；C48代码／测试提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a` 的[主控验收](../../outputs/reviews/main-physics-20261114/calendar-driver-wiring/controller-acceptance.json)不变。[三字段包主控验收](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json)已完成，发布内容仅测试与报告，不新增修正编号，daily/global同步暂停。[最小后续方案](../../outputs/reviews/main-physics-20261114/remaining-field-contracts/external-observation-plan.md)保留本包未执行身份；后续仅补读已识别restcom源码，模型运行与新原生probe另列。原001／旧构建／实际命名年重启身份、DOC严格状态／守恒、独立热真值、maxmass与整模型等价限制保留。
+正式仍 **C1–C48／48项／26个生产修复提交**；账本 **89归一＋1源未定义inactive边界＋2精确缺证／92**，原93science／126canonical／181lifecycle及numerical_acceptance=false保持。[主控验收](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)已接受有界源证据及4项reader检查，6份交付及6项执行绑定与封存相符，主控未重跑行为检查；发布仅含报告／字段合同／测试，无新C号，其他研究工作树／旧冻结包不动，研究同步暂停。[两个精确候选源路径](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)留作下一完整读取链／修复判断包，不冒称本包已执行。DOC／thermal／maxmass／整模型与历史身份限制保留。
 
 ## 此前 C45–C47 原生 helper 接受快照
 
