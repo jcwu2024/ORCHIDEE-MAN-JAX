@@ -337,6 +337,106 @@ def read_sechiba_restart_state(
     return SechibaRestartState(fields, provenance)
 
 
+def read_hydrol_init_restart_state(
+    path: str | Path,
+    *,
+    npts: int,
+    nvm: int,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> dict[str, np.ndarray]:
+    """Read the explicit HYDROL initialization mapping from an existing file.
+
+    The input uses the same materialized land/PFT layout as the raw reader;
+    ``npts,nvm`` bind that layout to the initialization owner. Present values
+    are retained. A missing ``vegstress`` is materialized as the selected
+    DIM2 val_exp, so the shared owner can apply its whole-local-array test.
+    An omitted key in a caller-created mapping carries no file-read context.
+
+    Fortran provenance: hydrol.f90::hydrol_init3045-3058;
+    ioipsl_para.f90::restget_p_opp_r2d344-372; audited IOIPSL
+    restcom.f90::restget_real1715-1736 and restget_opp_r2d1159-1168;
+    stringop.f90::find_str80-113; mathelp.f90::ma_fugath_r111093-1123.
+    These source rules bind the selected DIM2 default999999 and valid positive
+    gather indices. The raw complete-state codec and writer keep their own
+    field-coverage contracts.
+    """
+    if npts < 1 or nvm < 1:
+        raise ValueError("HYDROL initialization dimensions must be positive")
+    state = read_sechiba_restart_state(
+        path, source_pft_layout=source_pft_layout, target_pft_layout=target_pft_layout,
+    )
+    return _hydrol_init_restart_mapping(state, npts=npts, nvm=nvm)
+
+
+def _hydrol_init_restart_mapping(
+    state: SechibaRestartState, *, npts: int, nvm: int,
+) -> dict[str, np.ndarray]:
+    """Adapt a real file read to hydrol_init's explicit restget boundary.
+
+    Fortran provenance: hydrol_init3045-3058 and the selected IOIPSL
+    restget_real1715-1736 / restget_opp_r2d1159-1168 read contract.
+    """
+    from jax_orchidee.sechiba.hydrol import HYDROL_INIT_RESTART_EXPVAL
+
+    names = SECHIBA_RESTART_COMPONENT_FIELDS["hydrol"] | SECHIBA_RESTART_COMPONENT_FIELDS["explicit_snow"]
+    restart = {
+        SECHIBA_RESTART_TO_SOURCE_NAMES.get(name, name): value
+        for name, value in state.fields.items() if name in names
+    }
+    if "us" in restart and (restart["us"].ndim != 4 or restart["us"].shape[:2] != (npts, nvm)):
+        raise ValueError("restart us must have leading dimensions (npts,nvm)")
+    if "vegstress" not in restart:
+        restart["vegstress"] = np.full((npts, nvm), HYDROL_INIT_RESTART_EXPVAL, dtype=np.float64)
+    elif restart["vegstress"].shape != (npts, nvm):
+        raise ValueError("restart vegstress must have shape (npts,nvm)")
+    return restart
+
+
+def read_sechiba_init_restart_state(
+    path: str | Path,
+    *,
+    npts: int,
+    nvm: int,
+    pref_soil_veg,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> SechibaRestartState:
+    """Read the paper file-initialization snapshot before its first main call.
+
+    This boundary applies the shared HYDROL vegstress transition once to a
+    real file's otherwise materialized state. ``us`` and its source-selected
+    soil mapping are explicit inputs. Other component fields keep the raw
+    reader's values and coverage; complete-state serialization stays strict.
+    This is separate from restoring an already initialized runtime checkpoint.
+
+    Fortran provenance: dim2_driver.f901111-1137, intersurf.f90377-387,
+    sechiba.f90602/666, hydrol.f90::hydrol_init3039-3058. The initialization
+    dispatcher precedes the first main call, for both new cold/file runs.
+    """
+    from jax_orchidee.sechiba.hydrol import hydrol_init_restored_humrelv, hydrol_init_vegstress
+
+    if npts < 1 or nvm < 1:
+        raise ValueError("HYDROL initialization dimensions must be positive")
+    raw = read_sechiba_restart_state(
+        path, source_pft_layout=source_pft_layout, target_pft_layout=target_pft_layout,
+    )
+    restart = _hydrol_init_restart_mapping(raw, npts=npts, nvm=nvm)
+    if "us" not in restart:
+        raise ValueError("paper file initialization requires explicit restored us")
+    stress = hydrol_init_vegstress(
+        humrelv=hydrol_init_restored_humrelv(us=restart["us"]),
+        pref_soil_veg=pref_soil_veg, vegstress=restart["vegstress"],
+    )
+    fields = {**raw.fields, "vegstress": np.asarray(stress)}
+    provenance = dict(raw.provenance_by_field)
+    provenance["vegstress"] = (
+        *provenance.get("vegstress", ()),
+        "hydrol.f90::hydrol_init3039-3058, once at the paper file initialization boundary",
+    )
+    return SechibaRestartState(fields, provenance)
+
+
 def write_sechiba_restart_state(
     output_path: str | Path,
     *,

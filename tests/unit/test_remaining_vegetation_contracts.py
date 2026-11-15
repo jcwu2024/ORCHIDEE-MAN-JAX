@@ -131,7 +131,11 @@ def test_actual_hydrol_init_adapter_distinguishes_omitted_and_explicit_values(mo
         expected[:, 13] = [0.6, 0.9]
         np.testing.assert_allclose(result.state["vegstress"], expected, atol=1e-15)
     else:
-        np.testing.assert_array_equal(result.state["vegstress"], supplied)
+        expected = supplied.copy()
+        if mode == "all_sentinel":
+            # hydrol_init3052-3058 adds to val_exp; it does not reset it.
+            expected[:, 13] += [0.6, 0.9]
+        np.testing.assert_array_equal(result.state["vegstress"], expected)
     np.testing.assert_array_equal(result.state["vegstress"], result.span_state["vegstress"])
 
 

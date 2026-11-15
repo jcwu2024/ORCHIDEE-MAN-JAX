@@ -27,7 +27,7 @@ from jax_orchidee.sechiba.enerbil import (
     read_enerbil_soil_thermal_state_restart,
 )
 from jax_orchidee.sechiba.hydrol_reference import HydrolRestartAnchors, read_hydrol_restart_anchors
-from jax_orchidee.sechiba.restart_io import SechibaRestartState, read_sechiba_restart_state
+from jax_orchidee.sechiba.restart_io import SechibaRestartState, read_sechiba_init_restart_state
 from jax_orchidee.sechiba.slowproc import SlowprocRestartEntryState, read_slowproc_restart_entry_state
 from jax_orchidee.sechiba.thermosoil import ThermosoilRestartState, read_thermosoil_restart_state
 from jax_orchidee.stomate.reference import (
@@ -208,9 +208,11 @@ def reference_case_first_step_restart_state(
 
     The paper driver uses ``driver_start.nc``, ``sechiba_start.nc``, and
     ``stomate_start.nc`` after the first loop year. This helper aggregates
-    those restart readers for first-step orchestration coverage only. It does
-    not advance prognostic state, substitute restart for later timesteps, or
-    synthesize absent restart variables.
+    those readers for the new-run initialization phase. The complete SECHIBA
+    snapshot applies the source-defined HYDROL vegstress initialization before
+    its first main call; the other readers remain raw diagnostic anchors.
+    No model timestep runs here. Complete runtime checkpoint recovery and
+    in-memory continuation have separate entry points.
     """
 
     root_path = Path(root) if root is not None else Path(config_path).resolve().parents[1]
@@ -245,7 +247,8 @@ def reference_case_first_step_restart_state(
 
     config = load_case_config(config_path)
     catalog = load_pft_catalog(config["pft_catalog"]["path"])
-    target_pft_layout = read_run_scalars(config_path, run_def_path).pft_layout
+    run_scalars = read_run_scalars(config_path, run_def_path)
+    target_pft_layout = run_scalars.pft_layout
     legacy_layout_id = "paper_250919_legacy14"
     stomate_source_pft_layout = read_pft_layout_from_netcdf(
         stomate_input,
@@ -342,8 +345,11 @@ def reference_case_first_step_restart_state(
         ),
         stomate=stomate,
         stomate_readstart=readstart,
-        sechiba_restart_state=read_sechiba_restart_state(
+        sechiba_restart_state=read_sechiba_init_restart_state(
             sechiba_start,
+            npts=int(stomate.biomass.shape[0]),
+            nvm=target_pft_layout.n_pft,
+            pref_soil_veg=run_scalars.pref_soil_veg,
             source_pft_layout=sechiba_source_pft_layout,
             target_pft_layout=target_pft_layout,
         ),

@@ -15,7 +15,7 @@ import jax.numpy as jnp
 from jax_orchidee.sechiba.enerbil import enerbil_cold_start_surface_state
 from jax_orchidee.sechiba.diffuco import diffuco_initialize
 from jax_orchidee.sechiba.condveg import condveg_initialize
-from jax_orchidee.sechiba.hydrol import hydrol_cold_start_state
+from jax_orchidee.sechiba.hydrol import hydrol_init_pft14_owner
 from jax_orchidee.sechiba.slowproc import slowproc_init_pft14_explicit
 from jax_orchidee.sechiba.thermosoil import thermosoil_initialize
 
@@ -167,14 +167,15 @@ OwnerInputs = Mapping[str, object] | Callable[[Mapping[str, object], Mapping[str
 class SechibaInitializationOwners:
     """Exact local owners and explicit boundaries in Fortran call order.
 
-    Defaults are the existing source-backed initialization owners. Callers may
+    Defaults include the composed HYDROL initialization owner, whose inputs
+    explicitly distinguish restart mappings from cold defaults. Callers may
     replace any owner explicitly for alternate integration boundaries.
     """
 
     slowproc_initialize: Owner | None = slowproc_init_pft14_explicit
     diffuco_initialize: Owner | None = diffuco_initialize
     enerbil_initialize: Owner | None = enerbil_cold_start_surface_state
-    hydrol_initialize: Owner | None = hydrol_cold_start_state
+    hydrol_initialize: Owner | None = hydrol_init_pft14_owner
     condveg_initialize: Owner | None = condveg_initialize
     thermosoil_initialize: Owner | None = thermosoil_initialize
 

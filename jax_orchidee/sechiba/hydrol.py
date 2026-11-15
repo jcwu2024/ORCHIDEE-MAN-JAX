@@ -29,6 +29,11 @@ from jax_orchidee.sechiba.routing import routing_zero_outputs  # noqa: E402
 from jax_orchidee.sechiba.thermosoil import thermosoil_diaglev_from_ptn
 
 
+# DIM2 dim2_driver.f90:120-121 sets constantes_var.f90:170's val_exp;
+# audited IOIPSL restcom.f90:158,1715-1719 uses this missing-variable value.
+HYDROL_INIT_RESTART_EXPVAL = 999999.0
+
+
 USDA_NVAN = (
     2.68,
     2.28,
@@ -352,6 +357,10 @@ class HydrolInitPFT14Result(NamedTuple):
     switches: HydrolInitPFT14Switches
     provenance: tuple[str, ...]
     notes: tuple[str, ...]
+
+    def as_payload(self) -> dict[str, object]:
+        """Expose scientific writeback to the SECHIBA initialization dispatcher."""
+        return dict(self.state)
 
 
 class DrainageCorrectionResult(NamedTuple):
@@ -4521,6 +4530,55 @@ def _hydrol_init_allocation_shapes(*, npts: int, nvm: int, nstm: int, nslm: int)
     return shapes
 
 
+def hydrol_init_restored_humrelv(*, us):
+    """Build initialization humrelv from explicitly materialized restart us.
+
+    This host initialization boundary requires the upstream US_INIT setvar
+    phase to be resolved. A whole-local rank3 layer of val_exp is a legal
+    Fortran input that needs that separate phase, outside this adapter's
+    materialized-us domain. Partial markers do not select the setvar branch.
+
+    Fortran provenance: ``hydrol.f90::hydrol_init`` lines 2830-2832 apply
+    setvar_p per layer before ``SUM(us,dim=4)`` at line 3039.
+    """
+    us = _as_4d("us", us)
+    if np.any(np.all(np.asarray(us) == HYDROL_INIT_RESTART_EXPVAL, axis=(0, 1, 2))):
+        raise NotImplementedError(
+            "HYDROL initialization requires materialized us; a whole local layer "
+            "still needs the upstream US_INIT setvar phase"
+        )
+    return jnp.sum(us, axis=3)
+
+
+def hydrol_init_vegstress(*, humrelv, pref_soil_veg, vegstress=None):
+    """Apply the HYDROL initialization stress transition on the local domain.
+
+    ``humrelv`` is the restored ``SUM(us, dim=4)``. An explicit whole-array
+    val_exp value is incremented in place in the source; ordinary and partial
+    arrays retain their values. ``None`` retains the caller-created cold
+    mapping API's selected-stress default. An existing file's absent field
+    must be materialized as val_exp by its initialization adapter instead.
+
+    Fortran provenance: ``hydrol.f90::hydrol_init`` lines 3039-3058, with
+    the selected DIM2 val_exp=999999 from ``dim2_driver.f90`` lines 120-121.
+    The source's NONE-file IOIPSL input-count boundary remains undefined.
+    """
+    humrelv = _as_3d("humrelv", humrelv)
+    npts, nvm, nstm = humrelv.shape
+    pref = np.asarray(pref_soil_veg, dtype=np.int32)
+    if pref.shape != (nvm,) or np.any(pref < 1) or np.any(pref > nstm):
+        raise ValueError("pref_soil_veg must contain nvm Fortran 1-based soil tile indices")
+    selected = jnp.stack([humrelv[:, jv, int(pref[jv]) - 1] for jv in range(nvm)], axis=1)
+    if vegstress is None:
+        return selected
+    stress = _as_2d("vegstress", vegstress)
+    if stress.shape != (npts, nvm):
+        raise ValueError("vegstress must have shape (npts,nvm)")
+    return jnp.where(
+        jnp.all(stress == HYDROL_INIT_RESTART_EXPVAL), stress + selected, stress,
+    )
+
+
 def hydrol_init_pft14_owner(
     *,
     veget,
@@ -4545,10 +4603,12 @@ def hydrol_init_pft14_owner(
 ) -> HydrolInitPFT14Result:
     """Own the source-ordered PFT14 ``hydrol_init`` scientific state.
 
-    The restart mapping is the explicit replacement for ``restget_p``. A
-    missing field follows the corresponding ``setvar_p`` or all-missing
-    fallback in lines 2813-3090. Allocation-only arrays are represented by
-    shape contracts and are not assigned invented numerical values.
+    The restart mapping is the explicit replacement for ``restget_p``.
+    Omitted mapping keys retain the cold API defaults. For an existing
+    file, ``read_hydrol_init_restart_state`` materializes the source-defined
+    missing ``vegstress`` value before this owner applies lines 3052-3058.
+    Explicit all-val_exp stress is incremented without a zero reset.
+    Allocation-only arrays are represented by shape contracts until assigned.
 
     Fortran provenance: ``hydrol.f90::hydrol_init`` lines 2028-3120 and
     ``hydrol.f90::hydrol_var_init`` lines 3946-4624, called immediately after
@@ -4613,17 +4673,19 @@ def hydrol_init_pft14_owner(
     us = _as_4d("us", span_state["us"])
     if us.shape != (npts, nvm, nstm, nslm):
         raise ValueError("us must have shape (npts,nvm,nstm,nslm)")
-    humrelv = jnp.sum(us, axis=3)
+    humrelv = hydrol_init_restored_humrelv(us=us)
     span_state["humrelv"] = humrelv
     span_state["vegstressv"] = humrelv
-    pref = np.asarray(pref_soil_veg, dtype=np.int32)
-    if pref.shape != (nvm,) or np.any(pref < 1) or np.any(pref > nstm):
-        raise ValueError("pref_soil_veg must contain nvm Fortran 1-based soil tile indices")
-    selected_stress = jnp.stack([humrelv[:, jv, int(pref[jv]) - 1] for jv in range(nvm)], axis=1)
-    if "vegstress" not in restart:
-        span_state["vegstress"] = selected_stress
+    # A caller-created present None was invalid before this extraction; only
+    # an omitted mapping key selects the cold API default.
+    if "vegstress" in restart and restart["vegstress"] is None:
+        raise ValueError("vegstress must have shape (npts,nvm)")
+    span_state["vegstress"] = hydrol_init_vegstress(
+        humrelv=humrelv, pref_soil_veg=pref_soil_veg,
+        vegstress=restart.get("vegstress"),
+    )
     if "humrel" not in restart:
-        span_state["humrel"] = selected_stress
+        span_state["humrel"] = hydrol_init_vegstress(humrelv=humrelv, pref_soil_veg=pref_soil_veg)
     if "evap_bare_lim" not in restart:
         span_state["evap_bare_lim"] = jnp.sum(
             span_state["evap_bare_lim_ns"] * span_state["vegtot"][:, None] * soiltile,

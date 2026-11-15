@@ -12220,6 +12220,21 @@ def paper_1961_driver_restart_year_start_day_result(
             rebased.fields_by_component["sechiba_finalize_state"],
             njsc_class_count=3 if context.run_def_values.get("SOILTYPE_CLASSIF", "usda").lower() == "fao" else 12,
         )
+    if run_mode == "new_native_run":
+        # Job0_bio315-322 starts another executable. dim2_driver1111 and
+        # intersurf377 call sechiba_initialize again; HYDROL3039-3058 applies
+        # this transition once before the first main call. A complete packet
+        # decode or continuous-year rebase does not enter this source phase.
+        from jax_orchidee.sechiba.hydrol import hydrol_init_restored_humrelv, hydrol_init_vegstress
+        restored = rebased.fields_by_component["sechiba_finalize_state"]
+        rebased.fields_by_component["sechiba_finalize_state"] = {
+            **restored,
+            "vegstress": hydrol_init_vegstress(
+                humrelv=hydrol_init_restored_humrelv(us=restored["us"]),
+                pref_soil_veg=context.run_scalars.pref_soil_veg,
+                vegstress=restored["vegstress"],
+            ),
+        }
     step = _paper_1961_step_bundle_from_context(context, year=year, tstep=0)
     payload = build_intersurf_first_step_payload(
         step, driver_z0_for_wind=_driver_wind_z0_from_previous_state(rebased),
