@@ -1,14 +1,16 @@
 # main 物理正确性检查入口
 
-## 当前：vegstress 缺值缓冲规则已查明，最终搬运合同仍有精确边界
+## 当前：C49 vegstress源初始化与实际生产入口接线已接受
 
-2026-11-14，基线main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a`，按[本包决策](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-decision.json)完成一次授权的单文件Cancon只读提取。完整restcom.f90为102939字节，SHA与预期一致；SSH耗时27.851秒，stdout125194字节、stderr0，远端命令硬限30秒／1MiB，无远端写入。源码明确默认val_exp999999与operator missing_val1e20不同，DIM2:121显式setter，negative lookup且def_beha=true时1718–1719填整缓冲并锁定。实际字段走rank2 overload，不是rank3；[逐谓词矩阵](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.md)区分NONE、缺变量、present、全／部分numeric sentinel与真实NC fill。
+2026-11-15，本包基线main `194d91350bf375f2c9e49360401b807e07d8a02e`；[本次接线交付](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/README.md)补齐[主控指出的实际入口缺项](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/controller-review.json)。[上一包](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/README.md)的find_str／mathop／gather来源、真实旧owner失败与21项检查保留原字节；其局部owner结论没有被当作整条生产链验收。
 
-完整rank2返回仍需同一直接依赖合同：`stringop::find_str`负查找及`mathelp::mathop('gather')`的数值搬运。两body未在已有本地源码保存，[最小后续](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)仅列两个精确候选源路径，未追加SSH。NONE input的nbvar_in未被该源显式初始化，保留为源未定义边界，不借常见static零填值。给定明确decoded全999999，HYDROL加S而JAX保留的局部差异已写为[未应用候选](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)；它重现源quirk，不是已确认需要修的活动模型结果。
+实际`reference_case_first_step_restart_state`现在选择明确文件初始化adapter，缺vegstress物化999999后进入共享HYDROL规则；默认SECHIBA dispatcher选择完整`hydrol_init_pft14_owner`，通过`as_payload`将科学state写到顶层，后续callback实际读到结果。年度`new_native_run`在首main前应用一次；`continuous`、同年内存继续和完整checkpoint反序列化保留状态。raw reader／strict93 normalizer／writer的函数体保持不变。相位源、实际调用链与限制见[合同](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/phase-contract.md)／[JSON](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/phase-contract.json)。
 
-4项新增实际NC fill reader检查一次通过，含default未写fill／_FillValue999999／_FillValue1e20／missing_value999999；字段与backing数值保留而mask丢弃。23个raw JAX import/eager完成事件单列，完整物理／物理compiled、新原生Fortran／模型／调度／GPU／训练／付费／环境重建均0；旧19／120／80／41复用，TEMP清理。只读SSH计1，不能说本包无远端访问。
+[本轮验证](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/verification-results.json)累计32个不同检查有通过证据：首轮29通过／2失败，guard夹具改用精确整数加零后仅重跑这2项，再补1项实际内存继续入口；生产源码各轮相同，总监督19.358秒。两项原失败为混合大marker与分数层的NumPy/JAX归约1 ULP差异，原日志和夹具完整保留，算法和精确比较门未改。实际论文入口4例直接经过strict93、全部paper finalizer及NC写回；另含默认owner选择／callback写回、重复l_first拒绝、年度相位／checkpoint和US_INIT边界。物理及runtime委托被替换，没有模型步／日／积分或完整物理执行；CPU/x64小数组操作可产生JAX primitive编译。
 
-账本仍 **89归一＋1源未定义inactive边界＋2精确缺证／92**，仅vegstress行补证。原三字段包已主控接受并发布为当前main，正式仍 **48项／26个生产修复提交**；本包无生产修改或新C号。93 science／126 canonical／181 lifecycle、numerical_acceptance=false、DOC严格状态／守恒、独立热真值、maxmass及整模型／历史身份限制不变，veget_year和非零WATCHOUT不重查。[主控已验收](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)上述有界源证据与4项reader检查，核对6份交付及6项执行绑定身份，未重跑测试、模型或SSH；仅发布报告／字段合同／测试阶段，冻结旧包不改，研究同步暂停。下一包完成直接lookup／gather合同、受支持输入可达性和必要修复判断，不把未应用候选当成已修复。
+支持域要求us已完成上游物化：源hydrol2830–2832的整本地rank3层ALL999999需要先走US_INIT；file/fullowner/new-native入口对该未完成分支显式拒绝，partial坐标保持准入。它是Fortran合法、当前adapter子域未实现的上游初始化分支，不是Fortran错误，也不代表任意93字段文件已完成全部初始化。源NONE的nbvar_in未定义、原生返回／历史构建身份、DOC／thermal／maxmass及整模型门继续保留。
+
+主控已接受本组为C49，代码／测试提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`；[验收记录](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-acceptance.json)复用上述检查及独立复核，未重复模型或测试。账本仍**90归一＋1源未定义inactive＋1精确缺证／92**，正式**49项／27个生产修复提交**，93 science／126 canonical／181 lifecycle与`numerical_acceptance=false`不变。该接受不证明NPP／DOC改善或整模型数值等价；下一优先项是同一源初始化链中整层缺失us的US_INIT物化。研究同步继续暂停，尚未启动下一阶段；提交与远端核对见[发布回执](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-publication.json)。科学验证仅本地；另按用户本轮服务器连接询问作只读SSH检查，曙光Cancon成功返回login01（34.446秒），此前25秒超时保留，不能倒推旧超时根因。
 
 ## 此前 C45–C47 原生 clock／helper 接受快照
 

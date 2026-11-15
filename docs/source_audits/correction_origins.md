@@ -1,14 +1,18 @@
-# C1–C48修正来源登记（2026-11-14）
+# C1–C49修正来源登记（2026-11-15）
 
-当前累计48项修正、26个代码提交。原C1–C47来源和接受范围保留；C48为复查前7cae3e02已存在的选定driver日历owner调用／写回遗漏，代码提交 `782535b4130f2ddc8cd30a251e0493709e1ab26a`。当前合计47项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称48项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
+当前累计49项修正、27个代码提交。原C1–C48来源和接受范围保留；C49为复查前7cae3e02已存在的HYDROL vegstress初始化分支遗漏及本次实际入口接线，代码提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`。当前合计48项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称49项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 
-## 当前vegstress源码补证（不新增修正编号）
+## C49：vegstress源初始化与实际入口接线已接受
 
-2026-11-14，基线main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a`；[restcom单文件包](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/README.md)取得已识别完整源SHA，确认默认缓冲999999、DIM2 setter、锁定和rank2调用。源all999999累加行为与当前JAX显式mapping保留有同decoded输入的局部差异，但完整文件可达性仍缺find_str／mathop gather直接body；NONE input membership count又无源定义初值。它们不自动成为已确认的生产翻译bug或新增回归。候选仅存输出、未应用／执行，源自身quirk、支持域与selected消费者mask分开记录。
+2026-11-15，本包基线main `194d91350bf375f2c9e49360401b807e07d8a02e`；[上一包](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/README.md)取得同树lookup／gather源码，闭合源whole-local ALL999999原值加S，并保存旧真实owner失败和21项检查。[来源绑定](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/origin-binding.json)证明pre-review `7cae3e02adad23674767a590fdf4d27f239ce065`与BASE完整owner均遗漏显式all999999分支；真实首次引入提交仍未知。
 
-4项新NC fill reader观察一次通过，原19／120／80／41复用；单次source-only SSH成功，无远端写入／原生Fortran／模型／调度／GPU／训练／付费／环境重建。正式仍 **48项／26个生产修复提交**，不分C号；89归一＋1源未定义inactive边界＋2精确缺证／92及93／126／181、numerical_acceptance=false保留。[主控已验收](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)，仅发布测试／报告阶段，不改变生产修复提交数，研究同步暂停。详见[逐谓词源合同](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.json)、[候选与必要回归](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)和[唯一直接依赖合同的最小后续](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)；不改下方历史来源标签或冻结旧包。
+[主控反馈](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/controller-review.json)指出该包仅完成局部owner／reader，实际论文入口仍raw、dispatcher默认cold helper且结果未展开。本次是**同一修复组的集成补齐**：[交付](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/README.md)把共享规则接入真实paper file-init与new-native年入口，默认dispatcher改完整owner并以as_payload展开科学state。既有raw codec／strict93／writer保持；continuous／同年内存继续／checkpoint解码不重放。新adapter、接线与as_payload是本次实现，不将其伪称成旧版已有代码；局部规则与入口集成合并登记为C49，不按调用处重复计数。
+
+[本轮证据](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/verification-results.json)累计32不同检查有通过证据（29＋2＋1，总监督19.358秒），首轮两项新guard夹具的归约1 ULP失败及原输入源保留。只将该guard控制改为精确整数加零，原精确门及生产算法不变，生产源码各轮一致。四真实NC论文入口、默认owner选择／后续callback写回、l_first重复拒绝、新进程与连续相位／pickle及US_INIT前置域均有有界入口证据；旧21按原绑定保留复用。
+
+主控已在声明的源码及materialized-us适配器域接受C49，代码／测试提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`，见[验收记录](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-acceptance.json)。正式为**49项／27生产修复提交**（48项有复查前证据、1项C42属新helper默认遗漏）。账本90＋1＋1／92、93／126／181及`numerical_acceptance=false`不变。us未完成整层US_INIT是Fortran合法但当前materialized-us子域未实现的上游边界，显式拒绝；源NONE、native数值／历史身份、DOC／thermal／maxmass／整模型门保留。没有新模型步／完整物理／Fortran／GPU／训练／调度／付费／环境重建，研究同步仍暂停；原失败和成功工件保留。提交及远端核对另记[发布回执](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-publication.json)。
 
 ## C48（原 FIELD-CANDIDATE-01）生产接线已接受
 

@@ -243,6 +243,26 @@ historical_extra_field_source_contracts:
     controller_acceptance: outputs/reviews/main-physics-20261114/remaining-field-contracts/controller-acceptance.json
     changed_rows: [sechiba_finalize_state.veget_year, sechiba_finalize_state.vegstress, driver_previous_step_state.peqAcoef]
     domain: source reads, actual pure adapters with physical delegates replaced, small NetCDF and synthetic scalar slices; no model execution
+  vegstress_read_path_update:
+    baseline: 194d91350bf375f2c9e49360401b807e07d8a02e
+    evidence: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/field-contract-update.json
+    status: controller_accepted_in_declared_source_and_materialized_us_adapter_domain
+    formal_number: C49
+    code_commit: ea75bde31012cf519d4b0fa5c689d865c9d9c2b7
+    controller_acceptance: outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-acceptance.json
+    production_entry_evidence: outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/verification-results.json
+    changed_rows:
+    - sechiba_finalize_state.vegstress
+    passed_checks_read_path_stage_at_original_bindings: 21
+    unique_production_entry_checks_with_passing_evidence: 32
+    production_entry_case_executions: 34
+    expected_old_owner_failures_preserved: 1
+    production_repair_groups_accepted: 1
+    production_repair_groups_pending: 0
+    formal_register: 49 corrections / 27 code commits; local rule and actual-entry integration counted once as C49
+    prior_adapter_counter_scope: summary local adapter counts/120-check snapshot below retain the accepted calendar-wiring
+      stage; current vegstress verification is separate
+    numerical_acceptance: false
   scope: finite historical EXTRA92; source/schema only; separate from original123 transition contracts and three source-backed
     omissions now completed
   denominator: 92
@@ -252,10 +272,10 @@ historical_extra_field_source_contracts:
     denominator: 92
     prior_identity_joins: 92
     new_identity_joins: 0
-    source_contract_normalized: 89
+    source_contract_normalized: 90
     source_undefined_inactive_boundary_rows: 1
-    precise_gap_rows: 2
-    count_policy: mutually exclusive 89 normalized + 1 source-undefined boundary + 2 exact gaps; per-dimension IO and guard contracts do not certify defined scientific values or numerical equivalence
+    precise_gap_rows: 1
+    count_policy: mutually exclusive 90 normalized + 1 source-undefined boundary + 1 exact gap; per-dimension IO and guard contracts do not certify defined scientific values or numerical equivalence
     by_dimension_after:
       units:
         resolved_in_selected_source_domain: 91
@@ -267,8 +287,8 @@ historical_extra_field_source_contracts:
       mask:
         resolved_in_selected_source_domain: 92
       default_sentinel:
-        resolved_in_selected_source_domain: 91
-        precise_gap: 1
+        resolved_in_selected_source_domain: 92
+        precise_gap: 0
       phase:
         resolved_in_selected_source_domain: 92
         precise_gap: 0
@@ -308,7 +328,7 @@ historical_extra_field_source_contracts:
     locally_repaired_field_rows: 2
     final_unique_bounded_checks: 120
     final_bounded_failures: 0
-    formal_register_unchanged: 47 corrections / 25 code commits; FIELD-CANDIDATE-01 pending controller acceptance
+    formal_register_current: 49 corrections / 27 code commits; C49 accepted, prior calendar adapter counters unchanged
     confirmed_production_defects: 0
     candidate_groups_pending_microcheck: 0
     reproduced_adapter_semantic_contradiction_groups: 1
@@ -4630,9 +4650,9 @@ historical_extra_field_source_contracts:
     - nvm
     mask_and_inactive: CWRR6soiltiles; mask_soiltile=soiltile>min_sechiba, mask_veget=veget_max>min_sechiba; exact peat/tide
       activecoordinate guards retained in sources; inactive carried slots never globallydeleted
-    default_and_sentinel: identified restcom158 and DIM2 setter121 bind val_exp999999; negative lookup plus def_behaTRUE
-      fills read buffer999999 at1718-1719. Final rank2 return still passes external find_str/mathop gather; NONE input count lacks
-      source initialization. JAX omitted mapping selects S, explicit arrays preserved; decoded all999999 source branch adds S.
+    default_and_sentinel: Selected DIM2 sets val_exp999999. Identified find_str77-106 returns -1 for no match; restcom1715-1736
+      fills the buffer. Positive in-range full-length gather copies every selected numeric value unchanged. Whole-local-array
+      ALL999999 increments existing values by selected S at hydrol3052-3058. Ordinary and partial arrays are retained.
     phase_dispositions:
       cold: source_path_bound
       restart: source_path_bound
@@ -4698,27 +4718,84 @@ historical_extra_field_source_contracts:
       lines: 5482-5486
     - file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
       lines: 6802-6806
-    current_evidence: outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.json
+    current_evidence: outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/phase-contract.json
     identified_IOIPSL_source:
-      file: outputs/reviews/main-physics-20261114/vegstress-restget-source/restcom.f90
-      sha256: 724a3c1499f2dee4343688b443b5ab2df7b751f0216d3636d0c0c59e1c4bd512
-      lines: 152-159,1098-1178,1647-1825,3010-3045
-      evidence_level: source-derived, not native missing-return observation
-    candidate: explicit decoded all999999 compatibility patch retained only in output, unapplied and unexecuted; omitted-key
-      cold/NONE semantics and selected physical acceptance unchanged
-    selected_first_consumer: sechiba1048 copies old stress; hydrol1241-1274 irrigation ratio precedes hydrol_soil. Only PFT14
-      occupied and OK_LAIDEV14=false mask the selected ratio; actual small drip/flood slices also demonstrate crop-enabled sensitivity.
-    first_definitive_overwrite: hydrol_var_init3832-4650 has no vegstress input or overwrite; hydrol_diag_soil9044 zeroes whole
-      array then9090-9099 recomputes before slowproc consumer at sechiba1187. Init/finalize-before-first-step equality unaccepted.
-    status: precise_gap
-    gaps:
-    - dimension: default_sentinel
-      source_reason: restcom buffer/default/locking is now known, but file membership and final gather transfer depend on
-        unsaved stringop find_str and mathelp mathop bodies. NONE membership count has no source-defined initial value;
-        finite numeric999999, operator missing1e20 and NetCDF fill attributes remain separate.
-      action: outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md names the one remaining direct-dependency contract and two precise candidate
-        source paths; not retrieved. No native probe or production fix; same-decoded-input candidate requires controller judgment.
+      restcom:
+        file: outputs/reviews/main-physics-20261114/vegstress-restget-source/restcom.f90
+        sha256: 724a3c1499f2dee4343688b443b5ab2df7b751f0216d3636d0c0c59e1c4bd512
+        lines: 152-159,1098-1178,1691-1802,3010-3045
+      stringop:
+        file: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/stringop.f90
+        sha256: 606268f5f4d9be9e6754bb681d5e5516bb4a00879fe62dedc6e23d0bbe4f22ac
+        lines: 77-106
+      mathelp:
+        file: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/mathelp.f90
+        sha256: f36b39010889c00aaa5037a1ea1257f1b2792ea6b01490deb2ccfc4234ddec1c
+        lines: 14-16,478-625,1093-1123
+      evidence_level: source-derived closure; no native missing-return, actual NF90 numeric return or historical executable/build
+        identity
+    direct_finalize_visibility: Actual reference_case_first_step_restart_state now selects the file-initialization
+      adapter. Four real-entry cases pass initialized state directly through strict93, all seven paper finalizers and
+      writer/readback, without test-supplied stress writeback. Default SECHIBA dispatcher selects the full HYDROL owner
+      and expands as_payload into top-level scientific state before the next callback. Missing/all999999 produce
+      PFT14 999999.6/999999.9 for selected S0.6/0.9; ordinary/partial controls retain their values. Current32 unique
+      checks have passing evidence across29+2+1; first2 guard-fixture precision failures remain saved. Prior21 source/owner
+      checks are reused at their original source bindings. Physical/runtime delegates are replaced.
+    file_absence_vs_omitted_mapping: Known existing-file absence is materialized only by the explicit file-initialization
+      adapter selected by the actual paper entry. Cold restart_state=None and caller-created omitted mapping keys keep
+      their existing API rules; present mapping None stays invalid. Raw reader and strict93 normalizer/writer keep
+      their unchanged serialization contracts. The complete-checkpoint decoder does not replay initialization.
+    production_entry_phase_contract:
+      paper_file: reference_case_first_step_restart_state -> read_sechiba_init_restart_state -> shared HYDROL transition
+      dispatcher: default full hydrol_init_pft14_owner -> HydrolInitPFT14Result.as_payload -> next owner callback
+      new_native_year: paper_1961_driver_restart_year_start_day_result applies the shared transition once before main
+      continuous_year: preserves initialized state without replaying the file-initialization transition
+      in_memory_later_day: actual entry retains its packet up to the replaced runtime delegate; no model step executed
+      complete_checkpoint: pickle decode preserves the complete serialized packet; the subsequent declared run_mode chooses phase
+      cold_and_NONE: local cold API convention is tested; source NONE input count remains undefined and is not numerically simulated
+    materialized_us_boundary: File/full-owner/new_native_run initialization requires resolved us. Source hydrol2830-2832
+      applies US_INIT setvar to each whole-local rank3 layer before3039 SUM. A whole999999 layer is a legal upstream
+      Fortran branch outside this materialized-us adapter domain and is explicitly rejected; partial coordinates are
+      accepted. Continuous and checkpoint decode do not run that initialization guard. Other-field initialization
+      branches and arbitrary incomplete restart files are not newly certified.
+    selected_first_consumer: sechiba1048 copies old stress; hydrol1241-1274 irrigation ratio precedes hydrol_soil. Only
+      PFT14 occupied and OK_LAIDEV14=false mask the selected ratio; actual small drip/flood slices also demonstrate
+      crop-enabled sensitivity.
+    first_definitive_overwrite: hydrol_var_init3832-4650 has no vegstress input or overwrite; hydrol_diag_soil9044 zeroes
+      whole array then9090-9099 recomputes before slowproc consumer at sechiba1187. Init/finalize-before-first-step
+      source-defined local adapter closure is tested; native numeric and whole-model equality remain unaccepted.
+    status: normalized_in_selected_source_domain
+    gaps: []
     numerical_acceptance: false
+    repair:
+      status: controller_accepted_in_declared_source_and_materialized_us_adapter_domain
+      files:
+      - jax_orchidee/sechiba/hydrol.py
+      - jax_orchidee/sechiba/restart_io.py
+      - jax_orchidee/sechiba/initialize.py
+      - jax_orchidee/driver/restart_state.py
+      - jax_orchidee/driver/orchestration.py
+      behavior: Shared owner applies exact local ALL999999 addition. Explicit read_hydrol_init_restart_state uses known
+        existing-file membership, selects/renames HYDROL fields and materializes missing stress999999 before the owner.
+        Actual paper file initialization, default full-owner dispatcher and new_native_run year entry use the same rule.
+        Continuous and complete checkpoint paths do not replay initialization. Raw codec/writer remain strict complete-state boundaries.
+      baseline_failure: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/baseline-owner-failure.json
+      passing_checks: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/repaired-adapters.json
+      production_entry_passing_checks: outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/verification-results.json
+      controller_acceptance: outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-acceptance.json
+      origin: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/origin-binding.json
+      formal_number: C49
+      code_commit: ea75bde31012cf519d4b0fa5c689d865c9d9c2b7
+    previous_blocked_stage:
+      manifest: outputs/reviews/main-physics-20261114/vegstress-read-path-closure/manifest.json
+      status_at_freeze: source_access_blocked_repair_undetermined
+      bytes_preserved: true
+    source_NONE_boundary: Input membership count nbvar_in has no source-defined initialization on NONE; remains undefined
+      and excluded from numeric equivalence. Do not synthesize undefined storage or equate it to a missing variable
+      in a valid existing file.
+    numeric_kind_limit: mathelp uses default REAL. For valid full positive indices all scratch1e20 slots are overwritten;
+      no comparison to data markers occurs. No exact defaultREAL1e20 bit pattern is assumed. Common REAL32/64 represent999999
+      exactly; historical compiler kinds and actual NF90 conversions remain unidentified.
   - component: sechiba_finalize_state
     field: cgrnd
     owner: thermosoil

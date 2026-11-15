@@ -1,12 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前：vegstress 的 restcom 源补证，无生产修复
+## 当前：C49 vegstress共享规则与实际初始化入口已接受
 
-2026-11-14，main `1992dab4d1dd9fe535b1b0cc725a1af584ff3e2a` 上完成[源码补证](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/README.md)。原三字段包已由主控接受并发布；当前只读1份已识别restcom，SHA一致，strict pin、单次27.851秒／125194字节输出、无远端写入。rank2链、val_exp999999／missing_val1e20、DIM2 setter与默认缓冲赋值／锁定已查明；最终返回仍依赖未保存的find_str及mathop gather。[矩阵](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/restget-contract.md)将NONE未初始化membership状态、missing、numeric sentinel及NC fill分开，源码推导不冒充native结果。
+2026-11-15，本包基线main `194d91350bf375f2c9e49360401b807e07d8a02e`；[本次接线包](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/README.md)沿用[上一包](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/README.md)的源合同与21项owner检查，并完成[主控指出的入口／相位缺项](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/controller-review.json)。合法已有文件缺vegstress或whole-local ALL999999按源在原值上加所选S，ordinary／partial保留；raw complete93 codec的函数体不变。
 
-4项新实际NC fill reader检查一次通过，23个raw JAX import/eager完成日志；旧19／120／80／41复用。完整物理／物理compiled、模型步／日／积分、新原生Fortran／调度／GPU／训练／付费／环境重建0，source-only SSH1次明确计账。显式decoded全999999的局部adapter差异及[候选计划](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/candidate-assessment.md)可审，补丁仅存输出、未应用／执行；不将源quirk直接复制到生产，不因selected首消费者mask就宣称全部输入相同。
+论文聚合入口自动选file-init reader，默认SECHIBA dispatcher改选完整HYDROL owner并实际展开科学state；年度`new_native_run`应用同一规则一次，`continuous`／同年内存继续／完整checkpoint解码保留状态。us的US_INIT上游层须先物化；未物化的整层marker在file/fullowner/new-native路径显式拒绝，partial保持。源NONE未定义边界与局部cold API约定分开。相位证据、实际caller及子域限制见[合同](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/phase-contract.md)。
 
-正式仍 **C1–C48／48项／26个生产修复提交**；账本 **89归一＋1源未定义inactive边界＋2精确缺证／92**，原93science／126canonical／181lifecycle及numerical_acceptance=false保持。[主控验收](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/controller-acceptance.json)已接受有界源证据及4项reader检查，6份交付及6项执行绑定与封存相符，主控未重跑行为检查；发布仅含报告／字段合同／测试，无新C号，其他研究工作树／旧冻结包不动，研究同步暂停。[两个精确候选源路径](../../outputs/reviews/main-physics-20261114/vegstress-restget-source/minimum-followup.md)留作下一完整读取链／修复判断包，不冒称本包已执行。DOC／thermal／maxmass／整模型与历史身份限制保留。
+[本地验证](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/verification-results.json)累计32不同检查有通过证据：首轮29通过／2个guard fixture精确比较失败，保留原回执与夹具；用精确整数加零隔离guard后仅2项定向通过，再加实际内存入口1项，总监督19.358秒。生产源码各轮未变，原数值门保留。四真实NC论文入口直接经strict93／所有finalizer／writer；默认owner、callback顶层写回、l_first、年度相位、checkpoint及上游拒绝均有实际入口检查。四物理委托和后续runtime被替换，没有物理模型执行；原21和4／19／120／80／41继续按各自绑定复用。
+
+主控已将局部源规则与实际接线作为同一组修复接受为C49，代码／测试提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`，见[验收记录](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-acceptance.json)。未声称NPP／DOC或标准算例改善；[来源](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/origin-binding.json)只证明复查前7cae3e02已有owner遗漏，精确引入未知。正式**C1–C49／49项／27生产修复提交**。账本90＋1＋1／92、93／126／181、`numerical_acceptance=false`与DOC／thermal／maxmass／整模型／历史身份门不变；研究树未同步，下一阶段未派发，优先补齐US_INIT上游物化。旧失败和成功工件逐字保留；本轮另按用户询问只读复核曙光连接成功，未启动远端科学运行／作业。提交与远端核对见[发布回执](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/controller-publication.json)。
 
 ## 此前 C45–C47 原生 helper 接受快照
 
@@ -881,12 +883,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C48，共48项已接受修正、26个代码提交。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C49，共49项已接受修正、27个代码提交。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C48仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C49仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -926,6 +928,13 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C46 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C47 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C48 | `driver/source_calendar.py`、`source_clock.py`、`orchestration.py`、`fast_state.py`、`dim2.py`、forcing／restart适配器及`sechiba/slowproc.py`、`stomate/restart_io.py` | 782535b4130f2ddc8cd30a251e0493709e1ab26a |
+| C49 | `sechiba/hydrol.py`、`restart_io.py`、`initialize.py`及`driver/restart_state.py`、`orchestration.py` | `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` |
+
+### C49 HYDROL vegstress初始化及实际入口（2026-11-15已接受）
+
+源 `hydrol.f90:3039–3058` 对整个本地vegstress数组全999999的情形，在原值上加由已物化us求和并选出的土壤stress；普通与partial数组保持。已识别IOIPSL读取链支持有效已有文件缺变量时填999999。复查前7cae3e02完整owner已遗漏该分支，首次引入提交未知；源的特殊加法按语义保留，不作为新科学公式。共享规则、真实文件初始化reader、默认完整HYDROL owner及state展开、新年度`new_native_run`接线同属C49。连续年、同年内存继续和完整checkpoint解码不重放初始化，raw／strict93／writer合同保持。
+
+32项不同检查具有通过证据，含4个真实NC入口、dispatcher后续consumer及finalizer写回、相位和US_INIT边界；首轮两项测试夹具的1 ULP失败和定向修复过程保留，未改算法或容差。物理与runtime委托被替换，没有执行完整物理初始化或模型积分。接受限于us已完成上游物化的声明域，整层缺失US_INIT仍显式拒绝且为下一优先项；不升级NPP／DOC、原生／历史身份及整模型数值接受。来源、旧反例、各次验证及准确提交均随本项登记，研究分支待以后集中核对。
 
 ### C48生产日历更新与状态接线（2026-11-14已接受）
 
