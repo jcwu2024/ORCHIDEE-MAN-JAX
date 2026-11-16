@@ -1,6 +1,16 @@
 # 共享物理核心与研究分支核查
 
-## 当前：C49 vegstress共享规则与实际初始化入口已接受
+## 当前：C49上游US_INIT扩展已接受，同步继续暂停
+
+[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)以main `512d2a1134b96586d41528aea0376e81fe42e72e` 为基线，补齐C49已声明缺失的逐层US_INIT物化，并传递真实run.def参数、保留initialized us及年度consumer镜像。主控于2026-11-16接受，代码／测试提交 `d6bad452932d1a7179ff5ab5fd80c771da89e336`；见[验收记录](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json)和[发布回执](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-publication.json)。源条件、配置有限语法和相位见[合同](../../outputs/reviews/main-physics-20261115/us-init-production-closure/phase-contract.md)。复用唯一组合84／84通过及独立终审，无重跑；大型scaffold未执行，其实参只有源码证据。旧失败／成功回执保持原身份。
+
+未来集中核对需作为一个依赖组处理六生产文件：`sechiba/hydrol.py`、`sechiba/io_contracts.py`、`sechiba/restart_io.py`、`sechiba/initialize.py`、`driver/restart_state.py`、`driver/orchestration.py`；配套`test_us_init_production.py`和`test_vegstress_read_path.py`、字段YAML的us/vegstress合同及本包phase/config/state-flow说明。复用未修改的`driver/init.py` raw_run_def、strict93／writer和multiyear pickle合同；不能只搬shared helper而漏掉参数、科学snapshot、实际caller或年度两镜像。
+
+未检查或改动daily/global工作树；同步仍暂停，不生成交接执行或新部署。正式49项／28个相关生产代码提交，本次作为C49初始化链支持域扩展登记，不增加C50。48项复查前证据／C42新增helper遗漏、90＋1＋1／92、93／126／181和numerical_acceptance=false保持。getincom本体／完整语法、源NONE、历史producer／构建、DOC严格state／真实碳通量、thermal、maxmass、peqAcoef单位及整模型限制保留。另行用户hostname连接检查不构成科学运行授权。
+
+以下保留C49接受时快照；上游US_INIT边界的当前实现以新包为准。
+
+## 已接受快照：C49 vegstress共享规则与实际初始化入口
 
 2026-11-15，本包基线main `194d91350bf375f2c9e49360401b807e07d8a02e`；[本次接线包](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/README.md)沿用[上一包](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/README.md)的源合同与21项owner检查，并完成[主控指出的入口／相位缺项](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/controller-review.json)。合法已有文件缺vegstress或whole-local ALL999999按源在原值上加所选S，ordinary／partial保留；raw complete93 codec的函数体不变。
 
@@ -883,7 +893,7 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C49，共49项已接受修正、27个代码提交。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C49，共49项已接受修正、28个相关生产代码提交；C49上游US_INIT支持域扩展随本项登记，不增概念修正编号。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
@@ -928,13 +938,15 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C46 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C47 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C48 | `driver/source_calendar.py`、`source_clock.py`、`orchestration.py`、`fast_state.py`、`dim2.py`、forcing／restart适配器及`sechiba/slowproc.py`、`stomate/restart_io.py` | 782535b4130f2ddc8cd30a251e0493709e1ab26a |
-| C49 | `sechiba/hydrol.py`、`restart_io.py`、`initialize.py`及`driver/restart_state.py`、`orchestration.py` | `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` |
+| C49 | `sechiba/hydrol.py`、`io_contracts.py`、`restart_io.py`、`initialize.py`及`driver/restart_state.py`、`orchestration.py` | `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`（初次vegstress）；`d6bad452932d1a7179ff5ab5fd80c771da89e336`（US_INIT上游补齐） |
 
-### C49 HYDROL vegstress初始化及实际入口（2026-11-15已接受）
+### C49 HYDROL初始化链（2026-11-15初次接受，2026-11-16上游补齐）
 
 源 `hydrol.f90:3039–3058` 对整个本地vegstress数组全999999的情形，在原值上加由已物化us求和并选出的土壤stress；普通与partial数组保持。已识别IOIPSL读取链支持有效已有文件缺变量时填999999。复查前7cae3e02完整owner已遗漏该分支，首次引入提交未知；源的特殊加法按语义保留，不作为新科学公式。共享规则、真实文件初始化reader、默认完整HYDROL owner及state展开、新年度`new_native_run`接线同属C49。连续年、同年内存继续和完整checkpoint解码不重放初始化，raw／strict93／writer合同保持。
 
-32项不同检查具有通过证据，含4个真实NC入口、dispatcher后续consumer及finalizer写回、相位和US_INIT边界；首轮两项测试夹具的1 ULP失败和定向修复过程保留，未改算法或容差。物理与runtime委托被替换，没有执行完整物理初始化或模型积分。接受限于us已完成上游物化的声明域，整层缺失US_INIT仍显式拒绝且为下一优先项；不升级NPP／DOC、原生／历史身份及整模型数值接受。来源、旧反例、各次验证及准确提交均随本项登记，研究分支待以后集中核对。
+初次32项不同检查具有通过证据，含4个真实NC入口、dispatcher后续consumer及finalizer写回、相位和US_INIT边界；首轮两项测试夹具的1 ULP失败和定向修复过程保留，未改算法或容差。物理与runtime委托被替换，没有执行完整物理初始化或模型积分。初次接受限于us已完成上游物化的声明域，当时整层缺失US_INIT显式拒绝；不追改该历史保证。
+
+2026-11-16接受上游补充提交 `d6bad452932d1a7179ff5ab5fd80c771da89e336`：按hydrol2821–2832及sechiba_io_p485–508逐层完整local ALL条件执行scalar US_INIT，再保留物化us到实际file／owner／年度consumer双镜像。复用既有generic setvar，配置支持typed scalar和plain decimal、惰性读取；连续与解码不重放。唯一相关84项通过，实际aggregate＋assembler组合及写读回有证据，大型scaffold只核对源码实参，没有完整物理或模型积分。该合法支持域扩展与新参数／state接线随C49计账，不拆C50；原生／完整parser、NPP／DOC、历史身份及整模型数值接受仍未升级。两个准确生产提交、各自测试和合同须成组核对后再同步到研究分支。
 
 ### C48生产日历更新与状态接线（2026-11-14已接受）
 

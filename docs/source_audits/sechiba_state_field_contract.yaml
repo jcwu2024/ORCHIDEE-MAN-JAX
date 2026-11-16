@@ -263,6 +263,19 @@ historical_extra_field_source_contracts:
     prior_adapter_counter_scope: summary local adapter counts/120-check snapshot below retain the accepted calendar-wiring
       stage; current vegstress verification is separate
     numerical_acceptance: false
+  us_init_support_update:
+    baseline: 512d2a1134b96586d41528aea0376e81fe42e72e
+    accepted_date: '2026-11-16'
+    status: controller_accepted_in_declared_source_and_scalar_adapter_domain
+    registration: C49 upstream support extension; no new C50
+    code_commit: d6bad452932d1a7179ff5ab5fd80c771da89e336
+    controller_acceptance: outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json
+    evidence: outputs/reviews/main-physics-20261115/us-init-production-closure/verification-results.json
+    changed_rows: [sechiba_finalize_state.us, sechiba_finalize_state.vegstress]
+    unique_checks_passed: 84
+    attempts: 1
+    formal_register: 49 corrections / 28 related production code commits; prior C49 snapshot retained
+    numerical_acceptance: false
   scope: finite historical EXTRA92; source/schema only; separate from original123 transition contracts and three source-backed
     omissions now completed
   denominator: 92
@@ -328,7 +341,7 @@ historical_extra_field_source_contracts:
     locally_repaired_field_rows: 2
     final_unique_bounded_checks: 120
     final_bounded_failures: 0
-    formal_register_current: 49 corrections / 27 code commits; C49 accepted, prior calendar adapter counters unchanged
+    formal_register_current: 49 corrections / 28 related production code commits; C49 US_INIT extension accepted, prior calendar counters unchanged
     confirmed_production_defects: 0
     candidate_groups_pending_microcheck: 0
     reproduced_adapter_semantic_contradiction_groups: 1
@@ -3205,7 +3218,30 @@ historical_extra_field_source_contracts:
     - nslm
     mask_and_inactive: CWRR6soiltiles; mask_soiltile=soiltile>min_sechiba, mask_veget=veget_max>min_sechiba; exact peat/tide
       activecoordinate guards retained in sources; inactive carried slots never globallydeleted
-    default_and_sentinel: whole missing slices ->US_INIT(default0); source SUM(us,dim4) yields initial stress
+    default_and_sentinel: Per layer, only ALL of the complete local land/PFT/soil rank3 slice equal to selected val_exp999999
+      triggers scalar US_INIT(default0) and whole-layer assignment. Ordinary and partial layers retain every value and do
+      not read the key. SUM(us,dim4) at hydrol3040 follows this phase; no executable no-file or [0,1] restriction is added.
+    current_evidence: outputs/reviews/main-physics-20261115/us-init-production-closure/phase-contract.json
+    upstream_initialization:
+      status: controller_accepted_in_declared_source_and_scalar_adapter_domain
+      registration: C49 upstream support extension
+      code_commit: d6bad452932d1a7179ff5ab5fd80c771da89e336
+      controller_acceptance: outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json
+      source_rule: hydrol2821-2832 -> sechiba_io_p r30setvar_p485-508; constantes_var351 zero=0._r_std
+      existing_file_absence: Explicit positive source nstm/nslm materialize missing us as rank4 marker before per-layer
+        initialization; identified restcom1270-1348 and1691-1736 support missing-field fill and ordered gather.
+      real_parameters: read_run_scalars.raw_run_def / default dispatcher run_def_values / new_native_run context.run_def_values;
+        separate from the USDA-vector hydrol_init_config channel
+      scalar_adapter: Lazy typed scalar numeric or one ASCII signed plain decimal literal. Bool/complex/None/array/list,
+        multiple tokens and D/E grammar reject only when read; getincom body is unavailable, so full IOIPSL syntax and native
+        bad-token exception equivalence are not claimed. Raw literal overflow to nonfinite is outside the supported domain.
+      state_writeback: Keep initialized us in the complete owner and scientific file snapshot; new_native_run updates both
+        finalize us and hydrol consumer us/humrelv/vegstressv mirror. The actual first HYDROL assembler selects initialized_us.
+      phase: File/new-native initialization only. Continuous year, same-year memory entry and complete pickle decode do not
+        replay. Cold None/omitted-us is a local API convention and does not numerically define source NONE input count.
+      validation: One84-case local CPU/x64 combination passed; aggregate and actual assembler composed. Entire large paper
+        scaffold is not executed, its initialized_us argument is verified in actual source. No model or full physics.
+      origin: outputs/reviews/main-physics-20261115/us-init-production-closure/origin-binding.json
     phase_dispositions:
       cold: source_path_bound
       restart: source_path_bound
@@ -4718,12 +4754,12 @@ historical_extra_field_source_contracts:
       lines: 5482-5486
     - file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
       lines: 6802-6806
-    current_evidence: outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/phase-contract.json
+    current_evidence: outputs/reviews/main-physics-20261115/us-init-production-closure/phase-contract.json
     identified_IOIPSL_source:
       restcom:
         file: outputs/reviews/main-physics-20261114/vegstress-restget-source/restcom.f90
         sha256: 724a3c1499f2dee4343688b443b5ab2df7b751f0216d3636d0c0c59e1c4bd512
-        lines: 152-159,1098-1178,1691-1802,3010-3045
+        lines: 152-159,1098-1178,1270-1348,1691-1802,3010-3045
       stringop:
         file: outputs/reviews/main-physics-20261115/vegstress-read-path-closure/stringop.f90
         sha256: 606268f5f4d9be9e6754bb681d5e5516bb4a00879fe62dedc6e23d0bbe4f22ac
@@ -4734,30 +4770,42 @@ historical_extra_field_source_contracts:
         lines: 14-16,478-625,1093-1123
       evidence_level: source-derived closure; no native missing-return, actual NF90 numeric return or historical executable/build
         identity
-    direct_finalize_visibility: Actual reference_case_first_step_restart_state now selects the file-initialization
-      adapter. Four real-entry cases pass initialized state directly through strict93, all seven paper finalizers and
-      writer/readback, without test-supplied stress writeback. Default SECHIBA dispatcher selects the full HYDROL owner
-      and expands as_payload into top-level scientific state before the next callback. Missing/all999999 produce
-      PFT14 999999.6/999999.9 for selected S0.6/0.9; ordinary/partial controls retain their values. Current32 unique
-      checks have passing evidence across29+2+1; first2 guard-fixture precision failures remain saved. Prior21 source/owner
-      checks are reused at their original source bindings. Physical/runtime delegates are replaced.
+    direct_finalize_visibility: Actual reference_case_first_step_restart_state selects the file-initialization adapter
+      with real raw_run_def and source dimensions. Eight current real-entry cases retain initialized us and stress through
+      strict93, all seven paper finalizers and writer/readback. Default full HYDROL owner expands as_payload before the next
+      callback; first HYDROL assembler consumes the initialized us snapshot. One84-case local combination passed, including
+      current39 read-path cases and35 new US_INIT cases plus10 related controls. Historical C49 totals32 and prior21 keep their
+      original source/receipt identity; two original guard-fixture precision failures remain saved. Physical/runtime delegates
+      are replaced; entire large paper scaffold is not executed, its actual argument selection is static evidence only.
     file_absence_vs_omitted_mapping: Known existing-file absence is materialized only by the explicit file-initialization
-      adapter selected by the actual paper entry. Cold restart_state=None and caller-created omitted mapping keys keep
-      their existing API rules; present mapping None stays invalid. Raw reader and strict93 normalizer/writer keep
-      their unchanged serialization contracts. The complete-checkpoint decoder does not replay initialization.
+      adapter selected by the actual paper entry. Missing us needs explicit positive source soil/layer dimensions before
+      marker materialization. Cold restart_state=None and caller-created omitted us enter the shared US_INIT phase by an
+      explicit local API convention; present mapping None stays invalid. Raw reader and strict93 normalizer/writer keep
+      unchanged serialization contracts. The complete-checkpoint decoder does not replay initialization.
     production_entry_phase_contract:
-      paper_file: reference_case_first_step_restart_state -> read_sechiba_init_restart_state -> shared HYDROL transition
-      dispatcher: default full hydrol_init_pft14_owner -> HydrolInitPFT14Result.as_payload -> next owner callback
-      new_native_year: paper_1961_driver_restart_year_start_day_result applies the shared transition once before main
+      paper_file: reference_case_first_step_restart_state -> read_sechiba_init_restart_state -> layer US_INIT -> shared stress
+      dispatcher: real run_def_values -> default full hydrol_init_pft14_owner -> as_payload us/humrelv/vegstressv/stress -> callback
+      new_native_year: paper_1961_driver_restart_year_start_day_result applies US_INIT/stress once and updates finalize and
+        hydrol consumer mirrors before main
       continuous_year: preserves initialized state without replaying the file-initialization transition
       in_memory_later_day: actual entry retains its packet up to the replaced runtime delegate; no model step executed
       complete_checkpoint: pickle decode preserves the complete serialized packet; the subsequent declared run_mode chooses phase
       cold_and_NONE: local cold API convention is tested; source NONE input count remains undefined and is not numerically simulated
-    materialized_us_boundary: File/full-owner/new_native_run initialization requires resolved us. Source hydrol2830-2832
-      applies US_INIT setvar to each whole-local rank3 layer before3039 SUM. A whole999999 layer is a legal upstream
-      Fortran branch outside this materialized-us adapter domain and is explicitly rejected; partial coordinates are
-      accepted. Continuous and checkpoint decode do not run that initialization guard. Other-field initialization
-      branches and arbitrary incomplete restart files are not newly certified.
+    materialized_us_boundary: The current accepted package expands the C49 initial materialized-us domain upstream. File,
+      full owner and new_native_run perform hydrol2821-2832 layer-local US_INIT before3040 SUM, retain the initialized us state
+      and then apply the C49 stress rule. Only full local rank3 ALL999999 layers read the scalar key; partial values remain.
+      Current plain-decimal scalar adapter is narrower than full IOIPSL grammar because getincom is unavailable. Continuous
+      and checkpoint decode do not replay this phase. Other-field initialization and arbitrary incomplete files are not certified.
+    upstream_us_extension:
+      status: controller_accepted_in_declared_source_and_scalar_adapter_domain
+      registration: C49 upstream support extension; no new C50
+      code_commit: d6bad452932d1a7179ff5ab5fd80c771da89e336
+      controller_acceptance: outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json
+      evidence: outputs/reviews/main-physics-20261115/us-init-production-closure/verification-results.json
+      origin: outputs/reviews/main-physics-20261115/us-init-production-closure/origin-binding.json
+      C49_boundary: The old explicit whole-layer rejection was an accepted unsupported-upstream boundary, not a new failure
+        of the accepted materialized-us subdomain. Current register is49 corrections/28 related production commits including
+        this support extension; original C49 acceptance and repair record remain historical evidence at their original binding.
     selected_first_consumer: sechiba1048 copies old stress; hydrol1241-1274 irrigation ratio precedes hydrol_soil. Only
       PFT14 occupied and OK_LAIDEV14=false mask the selected ratio; actual small drip/flood slices also demonstrate
       crop-enabled sensitivity.

@@ -1,6 +1,18 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前：C49实际入口与相位接线已接受，US_INIT仍待补齐
+## 当前：US_INIT支持域与配置／状态接线已接受
+
+基线main `512d2a1134b96586d41528aea0376e81fe42e72e` 的[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)完成此前唯一优先项：核准逐层完整local rank3 ALL条件、scalar默认0和真实参数覆盖，再接入C49实际入口。已有文件缺us由显式source nstm/nslm物化；partial和ordinary保留，不加入no-file或[0,1]条件。真实参数通道与USDA向量配置分离，坏配置仅在源分支实际读取时拒绝。
+
+论文file-init snapshot、默认完整HYDROL owner／后续callback、新年度finalize与hydrol consumer两镜像均保留initialized us；首HYDROL consumer取科学snapshot。continuous／同年内存继续／完整pickle解码不重放。cold None／省us是本地API约定，不能数值化源NONE未定义计数。实际入口和支持域见[合同](../../outputs/reviews/main-physics-20261115/us-init-production-closure/phase-contract.json)。
+
+唯一组合[84通过、0失败／错误／跳过](../../outputs/reviews/main-physics-20261115/us-init-production-closure/verification-results.json)，监督22.849秒；本轮只执行其XML列出的节点，历史回执按原身份保留。aggregate与真实assembler有组合执行；大型scaffold只做实参静态核对，其他物理／runtime委托替换，没有模型步日积分。验证后仅改provenance docstring并静态比较执行AST。
+
+主控于2026-11-16接受声明域内的补齐，代码／测试提交 `d6bad452932d1a7179ff5ab5fd80c771da89e336`，见[验收记录](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json)及[发布回执](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-publication.json)。本包作为C49上游支持域扩展登记，不增加C50；正式49项／28个相关生产代码提交，90＋1＋1／92、93／126／181和numerical_acceptance=false保持。上轮列出的US_INIT缺项在当前有限scalar配置域内已完成，不再列作下一阻塞。getincom完整语法／原生异常、源NONE、历史producer／构建、DOC严格状态／真实碳通量、独立thermal、maxmass、peqAcoef单位和整模型门仍开放；大型scaffold未执行也不能视为整条物理链已通过。研究同步继续暂停，本轮未派发新阶段。用户另行要求的只读服务器连接诊断与本包本地科学验证分列。
+
+以下为C49接受时快照；其中“US_INIT待补齐／显式拒绝”是当时支持域，当前以上方新包为准。
+
+## 已接受快照：C49实际入口与相位接线，当时US_INIT待补齐
 
 2026-11-15，本包基线main `194d91350bf375f2c9e49360401b807e07d8a02e`；[本次接线包](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/README.md)完成[主控所列缺项](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/controller-review.json)，复用[上一包](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/README.md)已识别IOIPSL源码、旧owner失败及21项局部检查。旧包不回写。
 

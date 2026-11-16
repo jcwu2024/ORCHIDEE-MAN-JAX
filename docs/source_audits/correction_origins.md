@@ -1,8 +1,16 @@
-# C1–C49修正来源登记（2026-11-15）
+# C1–C49修正来源登记（2026-11-16）
 
-当前累计49项修正、27个代码提交。原C1–C48来源和接受范围保留；C49为复查前7cae3e02已存在的HYDROL vegstress初始化分支遗漏及本次实际入口接线，代码提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`。当前合计48项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称49项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
+当前累计49项修正、28个相关生产代码提交（含本次US_INIT支持域补齐）。原C1–C48来源和接受范围保留；C49初次vegstress初始化及入口修复提交为 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`，上游US_INIT补充提交为 `d6bad452932d1a7179ff5ab5fd80c771da89e336`。本次扩展随C49初始化链登记，不增加C50或追改初次接受的支持域。当前合计48项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称49项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
+
+## 当前已接受：C49上游US_INIT支持域与实际入口补齐
+
+基线main `512d2a1134b96586d41528aea0376e81fe42e72e`，见[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)及[来源绑定](../../outputs/reviews/main-physics-20261115/us-init-production-closure/origin-binding.json)。只读git show保存复查前`7cae3e02adad23674767a590fdf4d27f239ce065`的完整HYDROL owner、cold helper、USDA配置helper及raw_run_def通道：旧完整owner直接`jnp.sum(us,axis=3)`，这三个有界函数没有US_INIT setvar，证明该上游缺项在复查前已存在；精确首次引入仍未知，不外推为全项目负面结论，也未执行旧模块。
+
+C49接受的是已物化us子域，并明确拒绝合法但尚未实现的整层marker分支。该guard是当时已接受的显式边界，不能改称今天新发现的旧版隐藏保证或新的C49失败。本包是源支持域扩展，加上新的scalar adapter、真实参数通道、完整state写回及年度consumer镜像接线；调用点不分别计旧bug，也不把今天新增adapter／接线伪称旧版已有。
+
+主控于2026-11-16接受声明域内的上游补齐，代码／测试提交 `d6bad452932d1a7179ff5ab5fd80c771da89e336`，见[验收记录](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json)及[发布回执](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-publication.json)。复用唯一组合[84／84通过](../../outputs/reviews/main-physics-20261115/us-init-production-closure/verification-results.json)、独立终审和执行AST绑定，核对当前13个交付文件，无重跑。正式49项／28个相关生产代码提交，仍48项有复查前证据／C42新helper遗漏；本次作为C49已声明边界的支持域扩展，不另编号。账本90＋1＋1／92和93／126／181、numerical_acceptance=false保持。getincom本体、源NONE、历史producer／构建、DOC／thermal／maxmass／peqAcoef与整模型门不变，研究同步暂停。原C49、此前源／通过／失败工件95个原字节保留，以下C49接受快照不回写。
 
 ## C49：vegstress源初始化与实际入口接线已接受
 

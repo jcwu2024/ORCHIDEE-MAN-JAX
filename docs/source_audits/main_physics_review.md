@@ -1,6 +1,18 @@
 # main 物理正确性检查入口
 
-## 当前：C49 vegstress源初始化与实际生产入口接线已接受
+## 当前：C49上游US_INIT物化与实际入口补齐已接受
+
+2026-11-15，基线main `512d2a1134b96586d41528aea0376e81fe42e72e`；[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)补齐C49明确保留的上游US_INIT支持域。源hydrol2821–2832逐层调用rank3/scalar setvar：仅整个本地land/PFT/soil层ALL999999才惰性读US_INIT，默认由zero=0确定；ordinary／partial保留。随后3040求SUM、3050复制vegstressv，再应用C49 stress规则；帮助注释不增加no-file条件，也不加[0,1]限制。
+
+真实run.def参数经论文aggregate、默认完整HYDROL owner／dispatcher和new_native_run年入口传入；initialized us保留到科学snapshot、完整owner及年度两镜像，实际首HYDROL assembler选用该值。[相位与状态流](../../outputs/reviews/main-physics-20261115/us-init-production-closure/phase-contract.md)明确：aggregate＋assembler组合执行，大型scaffold实参只做实际源码核对；continuous、内存继续和完整checkpoint解码不重放初始化。
+
+主控于2026-11-16接受声明域内的补齐，代码／测试提交 `d6bad452932d1a7179ff5ab5fd80c771da89e336`，见[验收记录](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json)及[发布回执](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-publication.json)。复用唯一相关组合[84／84通过](../../outputs/reviews/main-physics-20261115/us-init-production-closure/verification-results.json)、独立终审与AST绑定，核对当前13个交付文件，未重跑。原95个冻结工件保留，验证后仅修正一处provenance行号。正式49项／28个相关生产代码提交；本次随C49初始化链登记为支持域补齐，不增加C50，48项复查前证据及C42新增helper遗漏的分类不变。账本90＋1＋1／92、93／126／181和numerical_acceptance=false保持。
+
+getincom本体未取得，plain decimal scalar adapter不等于完整IOIPSL语法／原生异常；源NONE输入计数、历史producer／构建、DOC严格state／真实碳通量、thermal、maxmass、peqAcoef单位与整模型门保留。仅本地CPU/x64 tiny操作，允许primitive编译；模型／完整物理／Fortran／GPU／训练／调度／付费为0。用户另问的SSH hostname连接诊断单列，不算科学验证；研究同步继续暂停。
+
+以下保留C49接受当时的边界和计账，US_INIT的当前状态以上方新包为准。
+
+## 已接受快照：C49 vegstress源初始化与真实文件／相位入口接线
 
 2026-11-15，本包基线main `194d91350bf375f2c9e49360401b807e07d8a02e`；[本次接线交付](../../outputs/reviews/main-physics-20261115/vegstress-production-entry-closure/README.md)补齐[主控指出的实际入口缺项](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/controller-review.json)。[上一包](../../outputs/reviews/main-physics-20261115/vegstress-read-path-closure/README.md)的find_str／mathop／gather来源、真实旧owner失败与21项检查保留原字节；其局部owner结论没有被当作整条生产链验收。
 
