@@ -1,0 +1,94 @@
+{
+  "schema": "thermal-energy-first-consumer-source-fixture-v1",
+  "source_file": "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90",
+  "source_sha256": "a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b",
+  "source_spans": {
+    "caller": [
+      913,
+      913
+    ],
+    "energy": [
+      2420,
+      2462
+    ]
+  },
+  "producer": "outputs/reviews/main-physics-20261116/thermal-initialization-oracle/sparse-before/complete_sparse_vegetation",
+  "veget_max": [
+    [
+      0.05,
+      0.125,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25
+    ]
+  ],
+  "veget_max_bg": [
+    [
+      0.625,
+      0.125,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25
+    ]
+  ],
+  "pcapa_en_level1": [
+    [
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1231702.381808564,
+      1757713.5989437425
+    ]
+  ],
+  "soilcap": [
+    86759.74116215836
+  ],
+  "temp_sol_beg": [
+    279.25
+  ],
+  "temp_sol_new": [
+    281.75
+  ],
+  "sn_capa": 693000.0,
+  "expected_surfheat_incr": [
+    216899.3529053959
+  ],
+  "expected_coldcont_incr": [
+    0.0
+  ],
+  "before_surfheat_incr": [
+    0.0
+  ],
+  "before_coldcont_incr": [
+    216899.3529053959
+  ],
+  "rtol": 1e-12,
+  "atol": 1e-12
+}

@@ -3176,7 +3176,8 @@ def thermosoil_explicit_step(
         temp_sol_beg=temp_sol_beg,
         soilcap=soilcap_initial,
         pcapa_en=energy_pcapa_en,
-        veget_max=veget_max,
+        # thermosoil_main:913 passes the bare-ground-completed weights.
+        veget_max=thermosoil_veget_max_bg(veget_max),
         ptn=profile.ptn,
         sn_capa=SN_CAPA,
     )
@@ -3384,7 +3385,8 @@ def thermosoil_no_explicit_snow_step(
         temp_sol_beg=temp_sol_beg,
         soilcap=soilcap_initial,
         pcapa_en=getdiff.pcapa_en if pcapa_en_previous is None else pcapa_en_previous,
-        veget_max=veget_max,
+        # thermosoil_main:913 uses the same weights in either snow branch.
+        veget_max=thermosoil_veget_max_bg(veget_max),
         ptn=profile.ptn,
         sn_capa=SN_CAPA,
     )
