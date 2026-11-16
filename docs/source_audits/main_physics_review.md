@@ -1,6 +1,18 @@
 # main 物理正确性检查入口
 
-## 当前：C49上游US_INIT物化与实际入口补齐已接受
+## 当前：C50热能裸地权重修复及有界独立初始化对照已接受
+
+2026-11-16，主控接受基线 `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` 上的[独立热过程包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)。原Fortran `thermosoil_main:913`传入补足裸地的`veget_max_bg`，旧JAX的explicit和no-explicit两个energy调用却传raw权重。稀疏植被同输入反例将216899.3529053959的热量增量分入不同诊断项；这是可证实的实参遗漏，不是仅由浮点误差解释的差异。修复复用现有`thermosoil_veget_max_bg`，仅改两个生产实参，登记为同一项C50；代码／Oracle／回归fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`。
+
+独立原源微驱动的17个标准案例通过871字段／159450标量对照；追加稀疏反例的4个失败字段保留。修复后复用18份保存参考，两调用表达式的eager／窄energy JIT共288字段／32472标量通过；另有一次真实隔离explicit thermal组件及carry验证，pytest为95通过、2项旧C44控制跳过并复用原证据。主控核对实际源、差异、输入分类、验证回执及独立终审，确认9个交付文件绑定；不重跑数值验证。验收时另补Oracle的已有目录拒绝保护，2项CLI检查确认不会改写原失败日志或空目录，无物理／编译执行。详见[主控接受](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)及[发布记录](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-publication.json)。
+
+当前声明域内cold／whole-array缺九组系数、完整恢复组、薄雪相位与首消费者有独立原Fortran证据；完整恢复后的thin overlay和缺组随后coef覆盖严格区分。输入含明确的合成状态与冻结边界，reader由给定数组替身提供，不能称历史319／001轨迹或原IOIPSL读者认证。17个标准组截取thermal delegate后单独执行profile和energy；完整compiled热路径、完整no-explicit分支、partial-marker及其他配置域仍未认证。保留原科学容差和`numerical_acceptance=false`，不据此声称NPP／DOC改善或整模型等价。
+
+C50在复查前 `7cae3e02adad23674767a590fdf4d27f239ce065` 的两调用点已存在，精确首次引入未知。累计为**50项修正／29个相关生产代码提交**，其中49项有复查前证据、C42为复查新增helper遗漏；取证脚本保护不算新增模型修正。字段账本90＋1＋1／92及science／canonical／lifecycle 93／126／181保持。同步daily/global继续暂停。下一优先项为热过程实际编译执行与状态写回的有界对照，本次未派发下一阶段；DOC严格状态／真实碳通量、maxmass、peqAcoef单位、历史身份与整模型门继续保留。
+
+下列C49及更早段落是各次接受时的快照，当前热过程和累计计数以上节为准。
+
+## 此前已接受：C49上游US_INIT物化与实际入口补齐
 
 2026-11-15，基线main `512d2a1134b96586d41528aea0376e81fe42e72e`；[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)补齐C49明确保留的上游US_INIT支持域。源hydrol2821–2832逐层调用rank3/scalar setvar：仅整个本地land/PFT/soil层ALL999999才惰性读US_INIT，默认由zero=0确定；ordinary／partial保留。随后3040求SUM、3050复制vegstressv，再应用C49 stress规则；帮助注释不增加no-file条件，也不加[0,1]限制。
 

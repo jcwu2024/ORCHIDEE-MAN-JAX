@@ -1,6 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前：C49上游US_INIT扩展已接受，同步继续暂停
+## 当前已接受：C50 thermal energy权重修复，同步继续暂停
+
+main `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` 上的[本地独立thermal包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)已获主控接受，登记C50，代码／Oracle／fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`。原源`thermosoil_main:913`传`veget_max_bg`，本轮将`sechiba/thermosoil.py`中explicit及no-explicit两个energy调用实参补足裸地，其余生产执行AST不变。稀疏植被原Fortran反例证实旧两路均可把surfheat错分到coldcont；17标准案例通过后，修复后18保存案例两caller eager／窄JIT的288字段通过，真实隔离explicit owner／carry单次通过，pytest95通过／2旧控制skip。全no-explicit分支及完整compiled热路径未认证，详见[主控接受](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)。
+
+未来集中核对的新增依赖组为`sechiba/thermosoil.py`、`scripts/dev/oracle_thermosoil_initialization.py`、`tests/unit/test_thermal_first_consumer.py`及其原Fortran数值fixture，加本包相位／来源／验证合同及字段YAML注释。已有C34 `driver/restart_state.py`、cold owner及`driver/orchestration.py`输入／写回在本轮被核验但未改；原Fortran、公共比较器与科学容差保持。本包不能作为只移动两行而遗漏fixture来源／支持域的研究部署回执，也不授权现在同步。
+
+研究树未写入或同步；审查者早期误读daily同名源后，已纠正并在main重核，不能把本轮描述成全程未读取研究树。正式为50项／29个相关生产代码提交，49项有复查前证据、C42为新增helper遗漏；90＋1＋1／92及93／126／181、`numerical_acceptance=false`保持。独立初始化／首消费者已有本地有限证据，其他thermal分支、历史身份、DOC、maxmass、peqAcoef与整模型门继续保留。主控复用数值验证，另补Oracle的已有目录保护并完成2项CLI拒绝检查；不涉及生产物理。发布和远端核对见[记录](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-publication.json)。
+
+## 已接受基线：C49上游US_INIT扩展，同步暂停
 
 [当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)以main `512d2a1134b96586d41528aea0376e81fe42e72e` 为基线，补齐C49已声明缺失的逐层US_INIT物化，并传递真实run.def参数、保留initialized us及年度consumer镜像。主控于2026-11-16接受，代码／测试提交 `d6bad452932d1a7179ff5ab5fd80c771da89e336`；见[验收记录](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-acceptance.json)和[发布回执](../../outputs/reviews/main-physics-20261115/us-init-production-closure/controller-publication.json)。源条件、配置有限语法和相位见[合同](../../outputs/reviews/main-physics-20261115/us-init-production-closure/phase-contract.md)。复用唯一组合84／84通过及独立终审，无重跑；大型scaffold未执行，其实参只有源码证据。旧失败／成功回执保持原身份。
 
@@ -939,6 +947,11 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C47 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C48 | `driver/source_calendar.py`、`source_clock.py`、`orchestration.py`、`fast_state.py`、`dim2.py`、forcing／restart适配器及`sechiba/slowproc.py`、`stomate/restart_io.py` | 782535b4130f2ddc8cd30a251e0493709e1ab26a |
 | C49 | `sechiba/hydrol.py`、`io_contracts.py`、`restart_io.py`、`initialize.py`及`driver/restart_state.py`、`orchestration.py` | `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`（初次vegstress）；`d6bad452932d1a7179ff5ab5fd80c771da89e336`（US_INIT上游补齐） |
+| C50 | `sechiba/thermosoil.py` 两个energy调用；同提交包含原源Oracle及回归fixture | `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01` |
+
+### C50 热能诊断权重（2026-11-16已接受）
+
+源thermosoil_main:913将裸地补足的权重交给energy，explicit及no-explicit两个JAX调用曾传raw权重。复查前7cae3e02已存在，两点按同一概念错误计一项。稀疏植被原源反例和修复后eager／窄JIT证明分支修复；完整no-explicit、完整compiled及整模型不随此接受。生产复用现有共享权重函数，仅改两个实参，原energy API不改。未来同步须携带同提交中的独立fixture／测试与当前相位合同，不能从一次组件通过外推其他科学结果。
 
 ### C49 HYDROL初始化链（2026-11-15初次接受，2026-11-16上游补齐）
 

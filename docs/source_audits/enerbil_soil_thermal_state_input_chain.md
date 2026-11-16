@@ -6,6 +6,59 @@ ENERBIL pre-call state, ENERBIL after-boundary trace, THERMOSOIL after-call
 state, and restart start state. It does not use `after_enerbil_main` to infer
 pre-call values.
 
+## Current Bounded Independent Evidence (2026-11-16; Accepted)
+
+The [local source-extracted oracle](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)
+uses main `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` and supplied-array
+restart seams. It compiles original THERMOSOIL procedures and initialization
+statements, plus HYDROL moisture/temperature statements; it does not compile
+the IOIPSL/NetCDF reader or replay the historical reference producer.
+
+The nine-member coefficient group is `soilcap`, `soilcap_pft`, `soilflx`,
+`soilflx_pft`, `cgrnd`, `dgrnd`, `cgrnd_snow`, `dgrnd_snow`, and `lambda_snow`.
+Source lines 667-714 set `calculate_coef` when any member is wholly `val_exp`.
+The unconditional final `var_init` at 719-723 reconstructs `pcapa`,
+`pcapa_en`, `pkappa`, `stempdiag`, and the humidity/profile diagnostics.
+For a complete restored group its thin-snow overlay remains. For a missing
+group the following `coef` calls `getdiff` again, overwriting the transient
+thin-snow material overlay; its thin-snow call at 1499-1504 is commented out.
+The [phase contract](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.md)
+records the separate cold, restored, missing-group, and continued phases.
+
+`pcapa`, `pcapa_en`, and `pkappa` are material fields used inside THERMOSOIL;
+they are not the four direct ENERBIL coefficient inputs listed above.
+Initial `temp_sol_beg` comes from the pre-ENERBIL surface temperature
+(570-573). The first THERMOSOIL energy consumer combines that begin memory
+with post-ENERBIL temperature, initial `soilcap`, and initial `pcapa_en`.
+It then updates begin memory to the current temperature/profile (2458-2462).
+The actual carry writer subsequently stores current `getdiff.pcapa_en`,
+profile `stempdiag`, and end-of-component coefficients for the next call.
+
+Seventeen standard same-input cases passed 871 field / 159450 scalar
+comparisons. An additional sparse-vegetation original Fortran case exposed
+two JAX energy callers passing raw `veget_max`; source `thermosoil_main:913`
+passes `veget_max_bg`. Accepted correction C50 changes those two operands only,
+in code commit `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`.
+The [verification](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/verification-results.json)
+passes 288 energy/begin-memory field comparisons over 18 saved cases,
+both actual caller expressions, eager and narrow energy JIT. One real
+isolated explicit thermal owner and carry writer also passed profile,
+diagnostic and energy checks. Fresh end-of-component coefficients have
+writeback evidence, not a new independent numerical oracle claim.
+
+This evidence is limited to the declared default USDA, explicit-snow,
+source-enabled refSOC/freezing, nonpeat domain, whole-array missing markers,
+and the tested dimensions. It does not certify full no-explicit-snow parity,
+the complete compiled thermal path, arbitrary partial markers, a whole model
+timestep, or historical producer identity. The legacy initializer result
+does not expose all three material arrays; production cold closure and C34
+restart helper are verified separately. Formal correction/production-commit
+counts are 50/29; 93/126/181 remain unchanged and `numerical_acceptance=false`.
+The [controller acceptance](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)
+reuses the owner's numerical checks and records a separate CLI-only guard
+against overwriting existing evidence. Neither the reader nor the complete
+compiled thermal component acquired new numerical certification.
+
 ## Run Order
 
 `sechiba_initialize` calls `thermosoil_initialize` before any timestep

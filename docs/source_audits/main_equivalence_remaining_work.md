@@ -1,6 +1,16 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前：US_INIT支持域与配置／状态接线已接受
+## 当前已接受：独立土壤热初始化与首消费者包、C50权重修复
+
+基线main `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` 的[本地交付包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)已获主控有界接受，代码／Oracle／回归fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`。原源切片按初始化相位执行：完整九系数组保留恢复值及最终薄雪overlay；cold／任一组整个数组缺失时，最终coef再次getdiff，覆盖该瞬态overlay。HYDROL raw水分、PFT映射、diaglev及C34实际helper均有同输入数值证据，不能再把这一声明域写作“独立thermal未开始”。支持域与未覆盖分支见[相位合同](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.md)和[主控接受](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)。
+
+17个标准案例共871字段／159450标量比较通过；另一个稀疏植被反例发现两个production energy调用误传raw `veget_max`，源`thermosoil_main:913`实际传补足裸地的`veget_max_bg`。修复仅两个实参；保存反例原Fortran的`surfheat=216899.3529053959, coldcont=0`，旧JAX反置。修复后18保存案例×两调用点×eager／窄energy JIT共288字段／32472标量比较通过；真实隔离thermal owner和carry writer另执行一次，通过profile／energy／diag及写回检查。95项pytest通过、2项旧C44保存基线AST控制按原包跳过，原证据复用；未重跑US_INIT84。详见[验证汇总](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/verification-results.json)。
+
+新缺陷已在复查前`7cae3e02adad23674767a590fdf4d27f239ce065`的两调用实参中核实；精确引入提交未知，未执行整个旧模块。主控按同一错误登记C50，正式为**50项／29个相关生产代码提交**，49项有复查前证据／C42新增helper遗漏，**90 normalized＋1 source-undefined inactive＋1 precise gap／92**及**93／126／181**保持，`numerical_acceptance=false`。整模型、完整compiled热路径、全no-explicit-snow路径、partial-marker适配域、历史producer／构建、DOC严格状态／真实碳通量、maxmass和peqAcoef单位等门仍开放。
+
+本任务全部本地执行，新增3次Fortran编译尝试、19个micro-driver进程（18成功参考、1非法fixture fatal），无SSH或服务器作业。失败、原输入、旧工件均保留。主控复用验证、核对9个交付文件绑定，并补Oracle已有输出目录的日志保护，2项CLI检查通过，无新增数值执行。研究树未写入／同步；只读审查者早期误读daily同名文件后已回到main重核，该范围纠正如实记录。提交与远端核对见[发布记录](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-publication.json)。唯一优先下一包为热过程实际编译执行与状态写回的有界对照，尚未派发，不自动开启新模型积分或研究同步。下方早期段落保留其当时接受范围，热过程当前状态以本节及更新后的缺项表为准。
+
+## 已接受基线：US_INIT支持域与配置／状态接线
 
 基线main `512d2a1134b96586d41528aea0376e81fe42e72e` 的[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)完成此前唯一优先项：核准逐层完整local rank3 ALL条件、scalar默认0和真实参数覆盖，再接入C49实际入口。已有文件缺us由显式source nstm/nslm物化；partial和ordinary保留，不加入no-file或[0,1]条件。真实参数通道与USDA向量配置分离，坏配置仅在源分支实际读取时拒绝。
 
@@ -225,7 +235,7 @@ cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，�
 | HYDROL／HYDRO_SUBGRID | 现有源oracle到当前调用与状态写回的逐case桥；冻结、mask、条件域保留；不重开已接受C29–C31因果 |
 | DIFFUCO／QSAT | 源分支同输入tuple、PFT／植被mask、返回状态及真实production消费者桥 |
 | ENERBIL | 现有源微oracle和返回状态的当前production认证；热初始化字段不误标为其直接输入 |
-| THERMOSOIL／EXPLICITSNOW | 独立初始化／首消费者真值、非默认热参数域、显雪maxmass合法条件域及同相位写回 |
+| THERMOSOIL／EXPLICITSNOW | 默认声明域的独立初始化／首消费者证据已接受；补实际compiled与写回桥、其余热参数域及显雪maxmass合法条件域 |
 | STOMATE／carbon／DOC | 生命周期与SAVE／年度记忆逐字段闭包、独立oracle与compiled写回桥；保留DOC严格失败和真实碳通量缺证 |
 | restart／modelout／IO | 真实IO schema的单位／轴／phase／非默认覆盖、外部实现与输入身份；之后才选择代表性集成门和669-case发布门 |
 | 其余源模块／域分类 | 逐ID保留固定paper外、未扫描、非PFT14、其他配置、diagnostic/error及源未定义契约；只按源依据排除，不能把未知默认为不可达 |
@@ -235,8 +245,8 @@ cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，�
 | S-GAP-EXTRA-SCHEMA92 | 身份关联已完成；92字段单位／mask／有效默认及完整相位／数值schema仍未完成 |
 | S-GAP-COMPILED-STATIC | 完整有效参数与consumer／cache／闭包分母缺项；保留C38和选定gas证据 |
 | S-GAP-REFERENCE-BRIDGES | 剩余旧oracle／当前kernel与caller／状态／真实compiled的逐case身份桥及认证 |
-| S-GAP-THERMAL-TRUTH | 原始Fortran初始化终点及首实际消费者的独立数值真值、source／binary／input身份缺项 |
-| S-GAP-THERMAL-DOMAIN | custom FR_DT、热表／常数、未审flags、缺coeff的准入尚未认证 |
+| S-GAP-THERMAL-TRUTH | 默认声明域的原源初始化／首消费者微参考及自身source／binary／input身份已补齐；真实reader、历史producer及完整compiled桥仍不在本证据内 |
+| S-GAP-THERMAL-DOMAIN | 默认显雪whole-array缺coeff已验证；custom FR_DT、热表／常数、未审flags、partial-marker和全no-explicit域仍未认证 |
 | S-GAP-SNOW-MAXMASS | 合法显雪剖面、阈值和forcing下的PFT14可达域及源数值case未证明 |
 | S-GAP-001-HISTORICAL | 缺历史001／1961实际used_run及输入producer；2010归档边界不是该历史起点 |
 | S-GAP-IOIPSL-EXTERNAL | 外部restini/restget等实现、build和NONE实际输出缺项；caller不能提供默认数值真值 |

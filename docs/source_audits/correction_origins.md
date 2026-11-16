@@ -1,10 +1,18 @@
-# C1–C49修正来源登记（2026-11-16）
+# C1–C50修正来源登记（2026-11-16）
 
-当前累计49项修正、28个相关生产代码提交（含本次US_INIT支持域补齐）。原C1–C48来源和接受范围保留；C49初次vegstress初始化及入口修复提交为 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`，上游US_INIT补充提交为 `d6bad452932d1a7179ff5ab5fd80c771da89e336`。本次扩展随C49初始化链登记，不增加C50或追改初次接受的支持域。当前合计48项有复查前证据、1项C42属本轮新helper的默认遗漏，不能称49项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
+当前累计50项修正、29个相关生产代码提交。新增C50是热能消费者的裸地权重实参遗漏，提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`；原C1–C49来源和接受范围保留。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。当前合计49项有复查前证据、1项C42属复查新增helper的默认遗漏，不能称50项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 
-## 当前已接受：C49上游US_INIT支持域与实际入口补齐
+## C50：thermal energy消费者的裸地权重已接受
+
+2026-11-16，[独立thermal包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)从原`thermosoil.f90:602–603,913,2442–2455`确认energy必须使用补足裸地的`veget_max_bg`。复查前`7cae3e02adad23674767a590fdf4d27f239ce065`及本包基线`551cc8cdbc4f16fa37ed2c89f260c36b57c596a8`的`thermosoil_explicit_step`、`thermosoil_no_explicit_snow_step`均传raw `veget_max`；kernel直接按入参加权，未做补足。已保存两个完整文件及实参AST，[来源绑定](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/origin-binding.json)证明复查前已存在，精确引入提交未调查；旧整个模块／模型未执行。
+
+独立本地原Fortran稀疏案例`veget_max[0,[0,1,13]]=[.05,.125,.25]`，补足后bare=.625：原源`surfheat=216899.3529053959, coldcont=0`，旧JAX eager／窄JIT反置，4个energy字段失败已封存。生产仅改两个调用实参为`thermosoil_veget_max_bg(veget_max)`，kernel接口和其余执行AST不变；不是C34初始化helper修复，也不按调用点分别计两项。修复后288字段对照、真实隔离thermal组件／carry及95通过／2旧控制skip见[验证](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/verification-results.json)。没有据此声称PFT14标准案例、NPP或DOC改善。
+
+主控于2026-11-16接受为**C50**，代码／Oracle／fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`，见[验收](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)与[发布](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-publication.json)。累计50项／29个相关生产代码提交，其中49项有复查前证据。新脚本与fixture是本轮建立的独立参考基础设施，不能倒写成旧版已有；验收另补脚本的已有目录日志保护，2项CLI检查通过，不另算模型修正。审查者早期误读daily同名文件后在main独立重核，未写入／同步研究树；范围纠正保存在本包审查记录。组件证据不改变`numerical_acceptance=false`或93／126／181分母，旧交付回执仍保留当时pending状态并由主控接受记录更新结论。
+
+## 此前已接受：C49上游US_INIT支持域与实际入口补齐
 
 基线main `512d2a1134b96586d41528aea0376e81fe42e72e`，见[当前包](../../outputs/reviews/main-physics-20261115/us-init-production-closure/README.md)及[来源绑定](../../outputs/reviews/main-physics-20261115/us-init-production-closure/origin-binding.json)。只读git show保存复查前`7cae3e02adad23674767a590fdf4d27f239ce065`的完整HYDROL owner、cold helper、USDA配置helper及raw_run_def通道：旧完整owner直接`jnp.sum(us,axis=3)`，这三个有界函数没有US_INIT setvar，证明该上游缺项在复查前已存在；精确首次引入仍未知，不外推为全项目负面结论，也未执行旧模块。
 

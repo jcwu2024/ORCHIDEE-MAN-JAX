@@ -1,6 +1,13 @@
 schema_version: 1
 scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBIL, HYDROL, and THERMOSOIL
 
+# 2026-11-16 supplementary thermal evidence accepted in its declared domain (C50).
+# outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.json
+# Original-source initialization / first consumers, not full compiled or model parity.
+# pcapa_en, stempdiag and temp_sol_beg retain their existing field/phase statuses.
+# Formal 50 corrections / 29 production commits; 93 / 126 / 181 denominators unchanged.
+# numerical_acceptance remains false; no extra normalized fields are added.
+
 axis_groups:
   grid: [npts]
   grid_band: [npts, spectral_band_2]
