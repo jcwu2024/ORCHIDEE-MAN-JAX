@@ -4530,24 +4530,45 @@ def _hydrol_init_allocation_shapes(*, npts: int, nvm: int, nstm: int, nslm: int)
     return shapes
 
 
-def hydrol_init_restored_humrelv(*, us):
-    """Build initialization humrelv from explicitly materialized restart us.
+class HydrolInitUSState(NamedTuple):
+    us: object
+    humrelv: object
 
-    This host initialization boundary requires the upstream US_INIT setvar
-    phase to be resolved. A whole-local rank3 layer of val_exp is a legal
-    Fortran input that needs that separate phase, outside this adapter's
-    materialized-us domain. Partial markers do not select the setvar branch.
 
-    Fortran provenance: ``hydrol.f90::hydrol_init`` lines 2830-2832 apply
-    setvar_p per layer before ``SUM(us,dim=4)`` at line 3039.
+def hydrol_init_us_state(*, us, run_def_values: Mapping[str, object] | None = None) -> HydrolInitUSState:
+    """Materialize each whole-local exceptional US layer before its sum.
+
+    Fortran provenance: ``hydrol.f90::hydrol_init`` lines 2821-2832 loops
+    over soil levels; ``sechiba_io_p.f90::r30setvar_p`` lines 485-508 tests
+    ALL over (land,PFT,soil), reads one scalar REAL only for a selected layer,
+    and assigns the entire layer. Default zero and existing/partial layers
+    are preserved exactly. ``hydrol.f90`` line 3040 derives humrelv and
+    line 3050 copies it to vegstressv. No no-file or [0,1] runtime restriction is in this
+    source branch; the comment about cold starts is not an executable guard.
+
+    ``run_def_values`` is the actual parsed parameter channel. Its scalar
+    literal adapter is intentionally narrower than the full IOIPSL grammar.
+    This host initialization transition must not run during continuation.
     """
-    us = _as_4d("us", us)
-    if np.any(np.all(np.asarray(us) == HYDROL_INIT_RESTART_EXPVAL, axis=(0, 1, 2))):
-        raise NotImplementedError(
-            "HYDROL initialization requires materialized us; a whole local layer "
-            "still needs the upstream US_INIT setvar phase"
-        )
-    return jnp.sum(us, axis=3)
+    from jax_orchidee.sechiba.io_contracts import ScalarRealRunDefReader, r30setvar_p
+
+    restored = np.asarray(_as_4d("us", us))
+    if any(size < 1 for size in restored.shape):
+        raise ValueError("US initialization requires positive land/PFT/soil/layer dimensions")
+    reader = ScalarRealRunDefReader({} if run_def_values is None else run_def_values)
+    layers = [r30setvar_p(restored[:, :, :, layer], HYDROL_INIT_RESTART_EXPVAL,
+                         "US_INIT", 0.0, config=reader)
+              for layer in range(restored.shape[3])]
+    initialized = jnp.asarray(np.stack(layers, axis=3))
+    return HydrolInitUSState(initialized, jnp.sum(initialized, axis=3))
+
+
+def hydrol_init_restored_humrelv(*, us, run_def_values: Mapping[str, object] | None = None):
+    """Return derived humrelv; state owners must also retain initialized us.
+
+    Fortran provenance: ``hydrol.f90::hydrol_init`` lines 2830-2832/3039-3041.
+    """
+    return hydrol_init_us_state(us=us, run_def_values=run_def_values).humrelv
 
 
 def hydrol_init_vegstress(*, humrelv, pref_soil_veg, vegstress=None):
@@ -4594,6 +4615,7 @@ def hydrol_init_pft14_owner(
     frac_nobio=None,
     restart_state: Mapping[str, object] | None = None,
     hydrol_init_config: Mapping[str, object] | None = None,
+    run_def_values: Mapping[str, object] | None = None,
     hydrol_var_config: Mapping[str, float] | None = None,
     refSOC_1d=None,
     use_refSOC_hydrol=False,
@@ -4606,7 +4628,10 @@ def hydrol_init_pft14_owner(
     The restart mapping is the explicit replacement for ``restget_p``.
     Omitted mapping keys retain the cold API defaults. For an existing
     file, ``read_hydrol_init_restart_state`` materializes the source-defined
-    missing ``vegstress`` value before this owner applies lines 3052-3058.
+    missing ``us``/``vegstress`` values before this owner applies the layer
+    US_INIT transition and lines 3052-3058. The cold/omitted-us mapping API
+    enters that same parameter transition by its explicit local convention;
+    this does not prove the source NONE-file input-count behavior.
     Explicit all-val_exp stress is incremented without a zero reset.
     Allocation-only arrays are represented by shape contracts until assigned.
 
@@ -4670,10 +4695,15 @@ def hydrol_init_pft14_owner(
         span_state["zforce"] = bool(jnp.any(zwt_force[0, :] <= 2.0))
     restart_inputs = tuple(sorted(restart))
 
-    us = _as_4d("us", span_state["us"])
+    # The caller-created cold/omitted-key API denotes absent restart input.
+    # Unlike a present restored value, it enters the defaulting phase here.
+    us = (_as_4d("us", span_state["us"]) if "us" in restart else
+          jnp.full((npts, nvm, nstm, nslm), HYDROL_INIT_RESTART_EXPVAL, dtype=jnp.float64))
     if us.shape != (npts, nvm, nstm, nslm):
         raise ValueError("us must have shape (npts,nvm,nstm,nslm)")
-    humrelv = hydrol_init_restored_humrelv(us=us)
+    initialized_us = hydrol_init_us_state(us=us, run_def_values=run_def_values)
+    span_state["us"] = initialized_us.us
+    humrelv = initialized_us.humrelv
     span_state["humrelv"] = humrelv
     span_state["vegstressv"] = humrelv
     # A caller-created present None was invalid before this extraction; only
@@ -5226,6 +5256,7 @@ def assemble_hydrol_first_step_precall_payload(
     pref_soil_veg,
     nstm: int,
     ext_coeff_vegetfrac,
+    initialized_us=None,
     refSOC_1d=None,
     use_refSOC_hydrol=False,
     precip_rain=None,
@@ -5257,6 +5288,11 @@ def assemble_hydrol_first_step_precall_payload(
     an exact upstream/restart/source-backed value is supplied. When THERMOSOIL
     freezing reconstruction is active, the source CWRR ``dh_mm`` is required;
     missing thickness is a hard input error with no ``zz_mm`` fallback.
+
+    ``initialized_us`` selects the already initialized file snapshot supplied
+    by the paper entry. It replaces the raw diagnostic US anchor without
+    repeating US_INIT; humrelv is derived from that selected state below.
+    Fortran provenance: ``hydrol.f90::hydrol_init`` 2821-2832/3040-3041.
     """
 
     payload: dict[str, object] = {}
@@ -5369,7 +5405,8 @@ def assemble_hydrol_first_step_precall_payload(
             _add_payload_field(payload, source_kernel_inputs, "tot_melt", zeros(snowdz.shape[0], dtype=np.float64))
 
     for field in ("ae_ns", "water2infilt", "free_drain_coef", "zwt_force", "wt_ab", "wt_ab_tide", "evap_bare_lim_ns", "us"):
-        value = getattr(hydrol_restart, field, None)
+        value = (initialized_us if field == "us" and initialized_us is not None else
+                 getattr(hydrol_restart, field, None))
         if value is not None:
             _add_payload_field(payload, restart_inputs, field, value)
     for field in ("snowheat", "snowgrain", "snowliq", "subsnownobio", "grndflux", "snowmelt", "soilflxresid"):

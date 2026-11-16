@@ -504,18 +504,12 @@ def test_production_year_entry_selects_only_the_new_process_initialization_phase
         return kwargs["previous_state"]
 
     monkeypatch.setattr(orch, "paper_1961_driver_later_day_runtime_result", runtime)
-    if stress_mode == "unresolved_us" and mode == "new_native_run":
-        with pytest.raises(NotImplementedError, match="upstream US_INIT"):
-            orch.paper_1961_driver_restart_year_start_day_result("unused.yaml",
-                previous_year_end_state=packet, year=1962, prepared_context=context, run_mode=mode)
-        assert calls == []
-        np.testing.assert_array_equal(source["vegstress"], stress)
-        print("PRODUCTION_ENTRY " + json.dumps({"route": "year_entry", "mode": mode,
-            "stress_mode": stress_mode, "calls": calls, "explicit_upstream_boundary": "US_INIT"}))
-        return
     result = orch.paper_1961_driver_restart_year_start_day_result("unused.yaml",
         previous_year_end_state=packet, year=1962, prepared_context=context, run_mode=mode)
-    expected = (_source_stress_expectation(fixture.fields, fixture.pref, stress)
+    expected_us = source["us"].copy()
+    if stress_mode == "unresolved_us" and mode == "new_native_run":
+        expected_us[:, :, :, 0] = 0.0
+    expected = (_source_stress_expectation({"us": expected_us}, fixture.pref, stress)
                 if mode == "new_native_run" else stress)
     np.testing.assert_array_equal(result.fields_by_component["sechiba_finalize_state"]["vegstress"], expected)
     assert calls == (["stress_initialization", "runtime_delegate"] if mode == "new_native_run"
@@ -523,8 +517,9 @@ def test_production_year_entry_selects_only_the_new_process_initialization_phase
     np.testing.assert_array_equal(source["vegstress"], stress)
     assert result.tstep == -1 and packet.tstep == 17519
     for name, value in source.items():
-        if name != "vegstress":
+        if name not in {"vegstress", "us"}:
             np.testing.assert_array_equal(result.fields_by_component["sechiba_finalize_state"][name], value)
+    np.testing.assert_array_equal(result.fields_by_component["sechiba_finalize_state"]["us"], expected_us)
     print("PRODUCTION_ENTRY " + json.dumps({"route": "year_entry", "mode": mode,
         "stress_mode": stress_mode, "calls": calls, "PFT14": expected[:, 13].tolist(),
         "original_packet_unchanged": True, "model_steps": 0}))
@@ -538,7 +533,8 @@ def test_production_complete_checkpoint_decode_preserves_already_initialized_sta
     from jax_orchidee.runners.multiyear import _read_year_end_state_cache
 
     source = sechiba_finalize_source_state_from_restart(SechibaRestartState(
-        {**restart_fixture.fields, "vegstress": np.full((2, 14), 999999.0)}, {}))
+        {**restart_fixture.fields, "us": np.full_like(restart_fixture.fields["us"], 999999.0),
+         "vegstress": np.full((2, 14), 999999.0)}, {}))
     assert len(source) == 93
     state = DriverPreviousStepStatePacket(tstep=17519,
         fields_by_component={"sechiba_finalize_state": source}, provenance_by_component={})
@@ -548,6 +544,8 @@ def test_production_complete_checkpoint_decode_preserves_already_initialized_sta
     before = hashlib.sha256(path.read_bytes()).hexdigest()
     monkeypatch.setattr(hydrol, "hydrol_init_vegstress",
                         lambda **kwargs: pytest.fail("complete checkpoint decode replayed initialization"))
+    monkeypatch.setattr(hydrol, "hydrol_init_us_state",
+                        lambda **kwargs: pytest.fail("complete checkpoint decode replayed US_INIT"))
     result = _read_year_end_state_cache(path)
     restored = result["state"]
     assert restored.tstep == state.tstep
@@ -591,14 +589,13 @@ def test_production_materialized_us_boundary_is_explicit_and_local(
         return read_sechiba_init_restart_state(path, npts=2, nvm=14,
             pref_soil_veg=fixture.pref).fields["vegstress"]
 
+    expected_us = us.copy()
     if marker_scope == "whole_layer":
-        with pytest.raises(NotImplementedError, match="upstream US_INIT"):
-            invoke()
-    else:
-        expected = _source_stress_expectation({"us": us}, fixture.pref, stress)
-        np.testing.assert_array_equal(invoke(), expected)
+        expected_us[:, :, :, 0] = 0.0
+    expected = _source_stress_expectation({"us": expected_us}, fixture.pref, stress)
+    np.testing.assert_array_equal(invoke(), expected)
     print("PRODUCTION_ENTRY " + json.dumps({"route": route, "marker_scope": marker_scope,
-        "upstream_US_INIT_boundary": marker_scope == "whole_layer"}))
+        "US_INIT_applied": marker_scope == "whole_layer"}))
 
 
 def test_production_in_memory_later_day_keeps_state_before_its_runtime_delegate(
@@ -607,7 +604,8 @@ def test_production_in_memory_later_day_keeps_state_before_its_runtime_delegate(
     import jax_orchidee.driver.orchestration as orch
 
     source = sechiba_finalize_source_state_from_restart(SechibaRestartState(
-        {**restart_fixture.fields, "vegstress": np.full((2, 14), 999999.0)}, {}))
+        {**restart_fixture.fields, "us": np.full_like(restart_fixture.fields["us"], 999999.0),
+         "vegstress": np.full((2, 14), 999999.0)}, {}))
     packet = orch.DriverPreviousStepStatePacket(tstep=47,
         fields_by_component={"sechiba_finalize_state": source}, provenance_by_component={})
     context = SimpleNamespace(run_def_path="unused.def", run_def_values={}, cwrr_grid=object(),
@@ -617,8 +615,8 @@ def test_production_in_memory_later_day_keeps_state_before_its_runtime_delegate(
     monkeypatch.setattr(orch, "_require_source_day_alignment", lambda *a, **kw: None)
     monkeypatch.setattr(hydrol, "hydrol_init_vegstress",
                         lambda **kw: pytest.fail("in-memory later-day entry replayed initialization"))
-    monkeypatch.setattr(hydrol, "hydrol_init_restored_humrelv",
-                        lambda **kw: pytest.fail("in-memory later-day entry reapplied file US_INIT admission"))
+    monkeypatch.setattr(hydrol, "hydrol_init_us_state",
+                        lambda **kw: pytest.fail("in-memory later-day entry replayed US_INIT"))
     observed = []
 
     class ReachedRuntimeDelegate(Exception):

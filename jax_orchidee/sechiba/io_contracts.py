@@ -8,6 +8,7 @@ generic rank/type dispatch and whole-array exceptional-value tests.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any, Mapping, Protocol, runtime_checkable
 
 import numpy as np
@@ -59,6 +60,39 @@ class MappingConfigurationReader:
 
     def read(self, key: str, default: Any) -> Any:
         return self.values.get(key, default)
+
+
+@dataclass(frozen=True)
+class ScalarRealRunDefReader:
+    """Lazy scalar REAL boundary for already parsed literal run.def values.
+
+    ``ioipsl_para.f90::getin_p_r`` lines 251-258 receives a scalar, as does
+    ``sechiba_io_p.f90::r30setvar_p`` lines 485-508. This adapter admits a
+    scalar numeric value or one plain decimal literal, not the full IOIPSL
+    configuration language. It reads a key only when its source caller does.
+    No physical range restriction is imposed on the scalar.
+    """
+
+    values: Mapping[str, Any]
+
+    def read(self, key: str, default: Any) -> Any:
+        fallback = np.asarray(default)
+        if fallback.ndim != 0 or fallback.dtype.kind != "f":
+            raise SetvarContractError("literal run.def reader requires a scalar REAL default")
+        if key not in self.values:
+            return np.array(fallback, copy=True)
+        value = self.values[key]
+        if isinstance(value, str):
+            token = value.strip()
+            if re.fullmatch(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)", token) is None:
+                raise SetvarContractError(f"{key} requires one scalar REAL literal")
+            value = float(token)
+            if not np.isfinite(value):
+                raise SetvarContractError(f"{key} scalar REAL literal is outside the supported finite domain")
+        array = np.asarray(value)
+        if array.ndim != 0 or array.dtype.kind not in {"f", "i", "u"}:
+            raise SetvarContractError(f"{key} requires one scalar REAL value")
+        return np.asarray(array, dtype=fallback.dtype)
 
 
 @dataclass(frozen=True)

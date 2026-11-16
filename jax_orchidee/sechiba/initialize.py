@@ -534,6 +534,7 @@ def sechiba_initialize_pft14_explicit(
     forcing: Mapping[str, object],
     pft_parameters: Mapping[str, object],
     owner_inputs: Mapping[str, OwnerInputs],
+    run_def_values: Mapping[str, object] | None = None,
     owners: SechibaInitializationOwners = SechibaInitializationOwners(),
     switches: SechibaInitializePFT14Switches = SechibaInitializePFT14Switches(),
     restart_irrigation: object | None = None,
@@ -584,7 +585,12 @@ def sechiba_initialize_pft14_explicit(
             )
         if name not in owner_inputs:
             raise SechibaInitializationBoundaryError(f"missing explicit inputs for {name}")
-        result = owner(**_owner_kwargs(owner_inputs[name], state, results))
+        kwargs = _owner_kwargs(owner_inputs[name], state, results)
+        if name == "hydrol_initialize" and owner is hydrol_init_pft14_owner and run_def_values is not None:
+            if "run_def_values" in kwargs:
+                raise ValueError("supply HYDROL run_def_values at the dispatcher or in owner inputs, not both")
+            kwargs["run_def_values"] = run_def_values
+        result = owner(**kwargs)
         results[name] = result
         state.update(_payload(result))
         order.append(name)

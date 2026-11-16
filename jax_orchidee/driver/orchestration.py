@@ -7488,6 +7488,7 @@ def paper_1961_driver_timestep_scaffold(
             hydrol_first_step_precall = assemble_hydrol_first_step_precall_payload(
                 enerbil_payload=enerbil_first_step_local.payload,
                 hydrol_restart=first_step_restart_state.hydrol,
+                initialized_us=first_step_restart_state.sechiba_restart_state.fields["us"],
                 slowproc_restart=first_step_restart_state.slowproc,
                 pref_soil_veg=step.run_scalars.pref_soil_veg,
                 nstm=nflow,
@@ -12225,16 +12226,23 @@ def paper_1961_driver_restart_year_start_day_result(
         # intersurf377 call sechiba_initialize again; HYDROL3039-3058 applies
         # this transition once before the first main call. A complete packet
         # decode or continuous-year rebase does not enter this source phase.
-        from jax_orchidee.sechiba.hydrol import hydrol_init_restored_humrelv, hydrol_init_vegstress
+        from jax_orchidee.sechiba.hydrol import hydrol_init_us_state, hydrol_init_vegstress
         restored = rebased.fields_by_component["sechiba_finalize_state"]
+        initialized_us = hydrol_init_us_state(us=restored["us"], run_def_values=context.run_def_values)
         rebased.fields_by_component["sechiba_finalize_state"] = {
             **restored,
+            "us": initialized_us.us,
             "vegstress": hydrol_init_vegstress(
-                humrelv=hydrol_init_restored_humrelv(us=restored["us"]),
+                humrelv=initialized_us.humrelv,
                 pref_soil_veg=context.run_scalars.pref_soil_veg,
                 vegstress=restored["vegstress"],
             ),
         }
+        # The runtime consumer reads this component mirror; updating only the
+        # restart serialization snapshot would leave its US state stale.
+        rebased.fields_by_component.setdefault("hydrol_previous_step_state", {}).update(
+            us=initialized_us.us, humrelv=initialized_us.humrelv, vegstressv=initialized_us.humrelv,
+        )
     step = _paper_1961_step_bundle_from_context(context, year=year, tstep=0)
     payload = build_intersurf_first_step_payload(
         step, driver_z0_for_wind=_driver_wind_z0_from_previous_state(rebased),

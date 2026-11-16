@@ -209,7 +209,7 @@ def reference_case_first_step_restart_state(
     The paper driver uses ``driver_start.nc``, ``sechiba_start.nc``, and
     ``stomate_start.nc`` after the first loop year. This helper aggregates
     those readers for the new-run initialization phase. The complete SECHIBA
-    snapshot applies the source-defined HYDROL vegstress initialization before
+    snapshot applies source-defined HYDROL US_INIT/vegstress initialization before
     its first main call; the other readers remain raw diagnostic anchors.
     No model timestep runs here. Complete runtime checkpoint recovery and
     in-memory continuation have separate entry points.
@@ -350,6 +350,9 @@ def reference_case_first_step_restart_state(
             npts=int(stomate.biomass.shape[0]),
             nvm=target_pft_layout.n_pft,
             pref_soil_veg=run_scalars.pref_soil_veg,
+            nstm=run_scalars.nstm,
+            nslm=int(stomate_season.tsoil_month.shape[1]),
+            run_def_values=run_scalars.raw_run_def,
             source_pft_layout=sechiba_source_pft_layout,
             target_pft_layout=target_pft_layout,
         ),
