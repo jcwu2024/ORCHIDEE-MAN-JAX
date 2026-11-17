@@ -1,6 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C53／C54水文写回与冠层编译入口，研究同步继续暂停
+## 当前已接受：C55土壤参数共同合同；研究同步继续暂停
+
+2026-11-18主控接受C55，代码／测试／CI提交`474f52088be77a543ebf181b232acfc8a02ddc02`。同一十字段USDA合同从配置、初始化和静态模板传到实际水文组件、诊断及编译参数包；原四差在原输入／参考／容差下闭合。正式55项／32生产提交，54项有复查前证据及C42新增helper遗漏。见[验收](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-acceptance.json)和[来源](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-origin-check.json)。
+
+未来集中同步须按同一依赖组评审`sechiba/hydrol.py`、`driver/orchestration.py`、`driver/restart_state.py`、组件适配脚本、新回归与CI。保留C43 context缓存所有权、C48日历、C49初始化及C51–C54已接受边界；矿物背景不等于refSOC有效点阈值。新增HydrolSoilParameters为动态叶PyTree，静态参数不塞进NetCDF／日循环carry；旧两参数构造和pickle可恢复，精确两元素tuple解包需要迁移到字段访问，不能直接覆盖其他分支整个文件。
+
+当前不访问／写入／同步daily或global。用户授权先接力完成[参数和状态传递收尾](parameter_state_closeout_plan.md)，其余物理和整模型门保持。源码隔离30项、参数缓存40项、五例eager／JIT各191项的范围与替身限制见原包；完整冷启动／重启／scan、十向量以外深度参数及整模型数值接受未认证。
+
+## 已接受基线：C53／C54水文写回与冠层编译入口，研究同步继续暂停
 
 main基线 `a6a99f8c612813ad8ba3520d0ccb8f83dd059420` 的[本包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)于2026-11-17获主控有限接受，登记C53=`HD-FWET-01`、C54=`HD-JIT-01`，共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。生产只修改`driver/orchestration.py`两处fwet fallback和`sechiba/diffuco.py`无光照分层表时的源静态表接线；正式54项／31生产提交。两处均有复查前源码证据，不代表当前论文默认路径已观测到对应失败。见[主控验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)及[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)。
 

@@ -382,4 +382,3 @@ def test_actual_restart_initialization_rejects_enabled_refsoc_without_the_field(
     with pytest.raises(ValueError, match="refSOC_1d"):
         driver_restart.restart_thermosoil_initial_fields(
             source, context=context, payload=NS(), altmax=np.zeros((1, 2)))
-

@@ -1,18 +1,15 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前已接受有限成果：水文、冠层与状态交接包
 
-基线 `a6a99f8c612813ad8ba3520d0ccb8f83dd059420` 的[本地有界包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)于2026-11-17获主控有限接受；水文仍部分通过。C53／C54共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。正式为54项／31相关生产提交，53项复查前证据＋C42新增helper遗漏；90＋1＋1／92及93／126／181不变，`numerical_acceptance=false`。主控核对源规则、改前反例与实际组件／交接证据，复用owner验证而未重跑；见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)。研究同步继续暂停，普通中文入口见[进度说明](main_review_progress.md)。
+## 当前已接受：C55自定义土壤参数贯通；继续参数与状态收尾
 
-| 范围 | 实测结果 | 尚缺边界 |
-| --- | --- | --- |
-| 水文 | 五个eager案例187／191项过；default warm17、cold18和mask19原源字段全过；cold18真实组件JIT42／42过 | case1／5保留drysoil_frac及vegstress四差：自定义初始化土壤参数未通过当前组件schema贯通；不能归为默认配置通过，也未确证为默认物理公式错；完整hydrol_main、配置全域仍缺 |
-| 冠层与能量入口 | 固定10案例，真实组件41字段／2970标量的eager及JIT原源对照通过；另2个直接eager QSAT诊断／20标量通过，合计43／2990 | PFT14有限C3配置，胁迫floor及零humrel掩码已测，above-floor响应未测；未定义PFT1坐标不作参考；完整配置与上游热／地表来源未认证 |
-| 实际交接 | 最终19项通过，四种状态布局各41字段；下一次实际冠层／能量消费者及窄writer JIT通过；真实93字段NetCDF中18个组件覆盖字段raw／init读取通过 | 日历及无关组件ready admission隔离；七层us不塞入十一层文件；不认证整模型一步、完整首步恢复或所有93字段的新科学来源 |
+2026-11-18，主控接受基线`43865933ed6ab53c4ea5f75e1510f5e7f3ba1ae7`的[土壤参数链包](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/README.md)，登记C55=`HD-SOIL-PARAM-01`，代码／测试／CI提交`474f52088be77a543ebf181b232acfc8a02ddc02`。十字段USDA合同贯通初始化、静态模板、CWRR表、真实组件和诊断；有效点阈值与原矿物背景分离，编译动态参数优先于捕获context。原四差同属一条参数链，不拆成四个bug。
 
-确认并最小修复两处复查前已有的接口／执行问题：C53（`HD-FWET-01`）普通及compact writer把新湿地比例覆盖为旧值，现仅在无新诊断时保留旧值；C54（`HD-JIT-01`）显式冠层参数缺光照分层表时，实际JIT入口将层数误作动态值，现提前生成既有源静态表。前者只认证真实module上的独立TOPMODEL诊断链，wrapper本身未接通TOPMODEL=True；后者当前论文默认参数getter本来已供表。均不能据此声称论文自然轨迹原来失败或主指标改善。失败、年代及独立参考见[整包报告](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/report.md)。本地源码副本10项回归及Ruff通过，hosted Ubuntu／uv未运行。
+五原案例eager／真实CPU x64组件JIT各191／191、每种2277标量通过：90原源字段、96独立相位、5独立TOPMODEL诊断。保留原输入、CSV和容差；22110标量绑定一致的fixture使用当前initializer，不冒充旧initializer独立重放。隔离源码30项、旧参数缓存40项及初始化13项按各自范围复用，重叠不相加。主控确认34项交付绑定并核对旧源码，未重复数值执行。
 
-下一优先是先完成自定义土壤参数从初始化到水文诊断的共同schema／支持域核准，再用同一参数来源闭合保留的四项差异；据此固定后续代表性集成门。积雪grain严格差异／自然可达性、外部PBL输入约定、DOC严格状态与真实碳通量、历史身份及整模型门继续开放，不启动新整模型积分。
+复查前`7cae3e02adad23674767a590fdf4d27f239ce065`已有初始化接受自定义soil_parameters、下游模板／wrapper／diagnostics回退USDA的源码证据；精确首次引入未知。当前正式55项／32相关生产提交，54项复查前证据＋C42，90＋1＋1／92和93／126／181保持，`numerical_acceptance=false`。见[验收](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-acceptance.json)、[来源](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-origin-check.json)与[当前总账](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-progress-ledger.json)。
+
+十四driver接线包括AST／隔离调用证据；完整cold／restart／scan未认证。两处旧cold尾部context未定义、十向量外深度控制、其他必需参数／状态边继续进入[本阶段收尾](parameter_state_closeout_plan.md)。两参数构造及旧pickle恢复保留，外部精确两元素tuple解包需改字段访问；静态合同不写入日循环状态／NetCDF。TOPMODEL诊断不等于wrapper支持True。完整物理条件域、原DOC／积雪严格门、外部PBL／IOIPSL／历史身份及整模型门独立保留；不自动启动集成运行或研究同步。
 
 ## 已接受基线：完整thermal组件、snow条件域与coupling边界
 
