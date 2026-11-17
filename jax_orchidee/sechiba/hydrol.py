@@ -179,6 +179,136 @@ USDA_MC_AWET = (0.25,) * 12
 USDA_MC_ADRY = (0.1,) * 12
 
 
+_HYDROL_SOIL_PARAMETER_DEFAULTS = {
+    "nvan": USDA_NVAN,
+    "avan": USDA_AVAN,
+    "mcr": USDA_MCR,
+    "mcs_mineral": USDA_MCS,
+    "ks": USDA_KS,
+    "pcent": USDA_PCENT,
+    "mcf_mineral": USDA_MCF,
+    "mcw_mineral": USDA_MCW,
+    "mc_awet": USDA_MC_AWET,
+    "mc_adry": USDA_MC_ADRY,
+}
+_HYDROL_SOIL_CONFIG_NAMES = {
+    "CWRR_N_VANGENUCHTEN": "nvan",
+    "CWRR_A_VANGENUCHTEN": "avan",
+    "VWC_RESIDUAL": "mcr",
+    "VWC_SAT": "mcs_mineral",
+    "CWRR_KS": "ks",
+    "WETNESS_TRANSPIR_MAX": "pcent",
+    "VWC_FC": "mcf_mineral",
+    "VWC_WP": "mcw_mineral",
+    "VWC_MIN_FOR_WET_ALB": "mc_awet",
+    "VWC_MAX_FOR_DRY_ALB": "mc_adry",
+}
+
+
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True, eq=False)
+class HydrolSoilParameters(Mapping[str, jnp.ndarray]):
+    """Immutable USDA texture parameters, separate from effective point thresholds.
+
+    Fortran provenance: ``hydrol.f90::hydrol_init`` lines 2045-2249.
+    These ten module vectors are selected once by ``getin_p``. In particular,
+    ``mcs_mineral/mcf_mineral/mcw_mineral`` remain mineral backgrounds when
+    ``hydrol_var_init`` lines 4071-4088 derives SOC-adjusted point thresholds.
+    Array leaves remain dynamic under JIT; this contract is never loop state.
+    """
+
+    nvan: jnp.ndarray
+    avan: jnp.ndarray
+    mcr: jnp.ndarray
+    mcs_mineral: jnp.ndarray
+    ks: jnp.ndarray
+    pcent: jnp.ndarray
+    mcf_mineral: jnp.ndarray
+    mcw_mineral: jnp.ndarray
+    mc_awet: jnp.ndarray
+    mc_adry: jnp.ndarray
+
+    def __getitem__(self, name):
+        if name not in _HYDROL_SOIL_PARAMETER_DEFAULTS:
+            raise KeyError(name)
+        return getattr(self, name)
+
+    def __iter__(self):
+        return iter(_HYDROL_SOIL_PARAMETER_DEFAULTS)
+
+    def __len__(self):
+        return len(_HYDROL_SOIL_PARAMETER_DEFAULTS)
+
+    def tree_flatten(self):
+        return tuple(self[name] for name in self), None
+
+    @classmethod
+    def tree_unflatten(cls, auxiliary, children):
+        return cls(**dict(zip(_HYDROL_SOIL_PARAMETER_DEFAULTS, children)))
+
+
+def hydrol_soil_parameters(soil_parameters=None) -> HydrolSoilParameters:
+    """Bind partial explicit texture overrides using the source init defaults."""
+
+    if isinstance(soil_parameters, HydrolSoilParameters):
+        return soil_parameters
+    if soil_parameters is None:
+        return HydrolSoilParameters(**{
+            name: jnp.asarray(values, dtype=jnp.float64)
+            for name, values in _HYDROL_SOIL_PARAMETER_DEFAULTS.items()
+        })
+    supplied = dict(soil_parameters)
+    unknown = set(supplied) - set(_HYDROL_SOIL_PARAMETER_DEFAULTS)
+    if unknown:
+        raise ValueError(f"unsupported hydrol_init soil parameter(s): {sorted(unknown)}")
+    config_values = {
+        config_name: supplied[name]
+        for config_name, name in _HYDROL_SOIL_CONFIG_NAMES.items()
+        if name in supplied
+    }
+    return _hydrol_init_usda_parameters(config_values)
+
+
+def hydrol_soil_parameters_from_run_def(run_def_values: Mapping[str, object]) -> HydrolSoilParameters:
+    """Resolve base or indexed run.def vectors through the init parameter owner.
+
+    A base vector initializes its twelve entries; materialized ``__00001``
+    entries replace their matching coordinates. Missing coordinates retain the
+    same USDA defaults as ``hydrol_init``. The explicit mapping boundary
+    accepts scalar broadcast, comma/space lists, and ``N*value`` vectors.
+    """
+
+    config_values = {}
+    for config_name, name in _HYDROL_SOIL_CONFIG_NAMES.items():
+        values = np.asarray(_HYDROL_SOIL_PARAMETER_DEFAULTS[name], dtype=np.float64).copy()
+        present = config_name in run_def_values
+        if present:
+            raw = run_def_values[config_name]
+            if isinstance(raw, str):
+                expanded = []
+                for token in raw.replace(",", " ").split():
+                    count, separator, value = token.partition("*")
+                    number = float((value if separator else count).replace("D", "E").replace("d", "e"))
+                    expanded.extend([number] * (int(count) if separator else 1))
+                base = np.asarray(expanded, dtype=np.float64)
+            else:
+                base = np.asarray(raw, dtype=np.float64)
+            if base.size == 1:
+                values[:] = base.reshape(-1)[0]
+            elif base.shape == (12,):
+                values[:] = base
+            else:
+                raise ValueError(f"{config_name} must provide one or twelve values")
+        for index in range(1, 13):
+            key = f"{config_name}__{index:05d}"
+            if key in run_def_values:
+                values[index - 1] = float(str(run_def_values[key]).replace("D", "E").replace("d", "e"))
+                present = True
+        if present:
+            config_values[config_name] = values
+    return _hydrol_init_usda_parameters(config_values)
+
+
 class HydrolSoilCoefResult(NamedTuple):
     """Selected mineral HYDROL coefficients and diagnostics."""
 
@@ -1535,6 +1665,7 @@ def hydrol_static_precall_template_from_slowproc(
     peat_hydro=False,
     ok_dgvm=False,
     dt_days=None,
+    soil_parameters=None,
 ) -> dict[str, object]:
     """Build the slow/static HYDROL pre-call fields for a driver day loop.
 
@@ -1545,6 +1676,7 @@ def hydrol_static_precall_template_from_slowproc(
     same-step ENERBIL/DIFFUCO fields are still supplied by each timestep.
     """
 
+    soil = hydrol_soil_parameters(soil_parameters)
     payload: dict[str, object] = {}
     source_kernel_inputs: list[str] = []
     slowproc_inputs: list[str] = []
@@ -1575,6 +1707,7 @@ def hydrol_static_precall_template_from_slowproc(
             njsc=hydrol_njsc,
             pref_indices=pref_indices,
             peat_hydro=bool(peat_hydro),
+            ks=soil.ks,
         )
         _add_payload_field(
             payload,
@@ -1596,22 +1729,23 @@ def hydrol_static_precall_template_from_slowproc(
             payload,
             source_kernel_inputs,
             "mcr",
-            jnp.asarray(USDA_MCR, dtype=jnp.float64)[tex],
+            soil.mcr[tex],
         )
         if bool(use_refSOC_hydrol):
             thresholds = hydrol_refsoc_1d_thresholds(
                 njsc=hydrol_njsc,
                 refSOC_1d=refSOC_1d,
                 use_refSOC_hydrol=True,
+                soil_parameters=soil,
             )
             _add_payload_field(payload, source_kernel_inputs, "mcs", thresholds.mcs)
             _add_payload_field(payload, source_kernel_inputs, "mcw", thresholds.mcw)
             _add_payload_field(payload, source_kernel_inputs, "mcf", thresholds.mcf)
             _add_payload_field(payload, source_kernel_inputs, "refSOC_1d", refSOC_1d)
         else:
-            _add_payload_field(payload, source_kernel_inputs, "mcs", jnp.asarray(USDA_MCS, dtype=jnp.float64)[tex])
-            _add_payload_field(payload, source_kernel_inputs, "mcw", jnp.asarray(USDA_MCW, dtype=jnp.float64)[tex])
-            _add_payload_field(payload, source_kernel_inputs, "mcf", jnp.asarray(USDA_MCF, dtype=jnp.float64)[tex])
+            _add_payload_field(payload, source_kernel_inputs, "mcs", soil.mcs_mineral[tex])
+            _add_payload_field(payload, source_kernel_inputs, "mcw", soil.mcw_mineral[tex])
+            _add_payload_field(payload, source_kernel_inputs, "mcf", soil.mcf_mineral[tex])
     payload["_source_kernel_inputs"] = tuple(dict.fromkeys(source_kernel_inputs))
     payload["_slowproc_inputs"] = tuple(dict.fromkeys(slowproc_inputs))
     payload["_restart_inputs"] = tuple(dict.fromkeys(restart_inputs))
@@ -1637,6 +1771,7 @@ def hydrol_refsoc_1d_thresholds(
     nscm: int = 12,
     soilc_max: float = SOILC_MAX,
     poros_org: float = POROS_ORG,
+    soil_parameters=None,
 ) -> HydrolRefSocThresholds:
     """Apply HYDROL's ``use_refSOC_hydrol`` threshold update.
 
@@ -1649,14 +1784,15 @@ def hydrol_refsoc_1d_thresholds(
     aborts unless ``nscm == 12``.
     """
 
+    soil = hydrol_soil_parameters(soil_parameters)
     njsc_arr = _as_1d("njsc", njsc).astype(jnp.int32)
     npts = int(njsc_arr.shape[0])
     if bool(jnp.any(njsc_arr < 1)) or bool(jnp.any(njsc_arr > 12)):
         raise ValueError("HYDROL refSOC thresholds require USDA njsc in 1..12")
     tex = njsc_arr - 1
-    mineral_mcs = jnp.asarray(USDA_MCS, dtype=jnp.float64)[tex]
-    mineral_mcw = jnp.asarray(USDA_MCW, dtype=jnp.float64)[tex]
-    mineral_mcf = jnp.asarray(USDA_MCF, dtype=jnp.float64)[tex]
+    mineral_mcs = soil.mcs_mineral[tex]
+    mineral_mcw = soil.mcw_mineral[tex]
+    mineral_mcf = soil.mcf_mineral[tex]
     if not bool(use_refSOC_hydrol):
         return HydrolRefSocThresholds(
             mcs=mineral_mcs,
@@ -1675,7 +1811,7 @@ def hydrol_refsoc_1d_thresholds(
     if refsoc.shape[0] != npts:
         raise ValueError("refSOC_1d must have shape (npts,)")
 
-    mcr = jnp.asarray(USDA_MCR, dtype=jnp.float64)[tex]
+    mcr = soil.mcr[tex]
     alpha = jnp.asarray(USDA_AVAN, dtype=jnp.float64)[tex]
     vg_n = jnp.asarray(USDA_NVAN, dtype=jnp.float64)[tex]
     vg_m = jnp.asarray(USDA_VG_M, dtype=jnp.float64)[tex]
@@ -1924,6 +2060,8 @@ def hydrol_first_step_profil_froz_from_arrays(
     froz_frac_corr=1.0,
     smtot_corr=2.0,
     max_froz_hydro=1.0,
+    soil_parameters=None,
+    mcs_point=None,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     """Derive first-step freezing state using the source CWRR layer thickness.
 
@@ -1933,6 +2071,7 @@ def hydrol_first_step_profil_froz_from_arrays(
     it is not inferred from ``zz_mm``.
     """
 
+    soil = hydrol_soil_parameters(soil_parameters)
     zz_mm = jnp.asarray(zz_mm, dtype=jnp.float64)
     dh_mm = jnp.asarray(dh_mm, dtype=jnp.float64)
     if dh_mm.shape != zz_mm.shape:
@@ -1958,6 +2097,11 @@ def hydrol_first_step_profil_froz_from_arrays(
         froz_frac_corr=froz_frac_corr,
         smtot_corr=smtot_corr,
         max_froz_hydro=max_froz_hydro,
+        nvan=soil.nvan,
+        avan=soil.avan,
+        mcr=soil.mcr,
+        mcs=soil.mcs_mineral,
+        mcs_point=mcs_point,
     )
     return profil, stempdiag, temp_hydro
 
@@ -1993,6 +2137,8 @@ def hydrol_first_step_profil_froz_from_restart_thermosoil(
     froz_frac_corr=1.0,
     smtot_corr=2.0,
     max_froz_hydro=1.0,
+    soil_parameters=None,
+    mcs_point=None,
 ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     """Derive first-step freezing state from restart arrays and exact ``dh_mm``."""
 
@@ -2013,6 +2159,8 @@ def hydrol_first_step_profil_froz_from_restart_thermosoil(
         froz_frac_corr=froz_frac_corr,
         smtot_corr=smtot_corr,
         max_froz_hydro=max_froz_hydro,
+        soil_parameters=soil_parameters,
+        mcs_point=mcs_point,
     )
 
 
@@ -4429,33 +4577,11 @@ def hydrol_cold_start_state(
     )
 
 
-def _hydrol_init_usda_parameters(config_values: Mapping[str, object] | None = None) -> dict[str, jnp.ndarray]:
+def _hydrol_init_usda_parameters(config_values: Mapping[str, object] | None = None) -> HydrolSoilParameters:
     """Select and validate ``hydrol_init`` USDA parameters in source order."""
 
-    defaults = {
-        "nvan": USDA_NVAN,
-        "avan": USDA_AVAN,
-        "mcr": USDA_MCR,
-        "mcs_mineral": USDA_MCS,
-        "ks": USDA_KS,
-        "pcent": USDA_PCENT,
-        "mcf_mineral": USDA_MCF,
-        "mcw_mineral": USDA_MCW,
-        "mc_awet": USDA_MC_AWET,
-        "mc_adry": USDA_MC_ADRY,
-    }
-    config_names = {
-        "CWRR_N_VANGENUCHTEN": "nvan",
-        "CWRR_A_VANGENUCHTEN": "avan",
-        "VWC_RESIDUAL": "mcr",
-        "VWC_SAT": "mcs_mineral",
-        "CWRR_KS": "ks",
-        "WETNESS_TRANSPIR_MAX": "pcent",
-        "VWC_FC": "mcf_mineral",
-        "VWC_WP": "mcw_mineral",
-        "VWC_MIN_FOR_WET_ALB": "mc_awet",
-        "VWC_MAX_FOR_DRY_ALB": "mc_adry",
-    }
+    defaults = _HYDROL_SOIL_PARAMETER_DEFAULTS
+    config_names = _HYDROL_SOIL_CONFIG_NAMES
     supplied = {} if config_values is None else dict(config_values)
     unknown = set(supplied) - set(config_names)
     if unknown:
@@ -4492,7 +4618,7 @@ def _hydrol_init_usda_parameters(config_values: Mapping[str, object] | None = No
     for failed, message in checks:
         if bool(failed):
             raise ValueError(message)
-    return parameters
+    return HydrolSoilParameters(**parameters)
 
 
 def _hydrol_init_allocation_shapes(*, npts: int, nvm: int, nstm: int, nslm: int) -> dict[str, tuple[int, ...]]:
@@ -5280,6 +5406,7 @@ def assemble_hydrol_first_step_precall_payload(
     dt_days=None,
     static_payload_template: Mapping[str, object] | None = None,
     use_jit=False,
+    soil_parameters=None,
 ) -> HydrolFirstStepPrecallAssembly:
     """Assemble exact first-step fields immediately before ``hydrol_main``.
 
@@ -5295,6 +5422,7 @@ def assemble_hydrol_first_step_precall_payload(
     Fortran provenance: ``hydrol.f90::hydrol_init`` 2821-2832/3040-3041.
     """
 
+    soil = hydrol_soil_parameters(soil_parameters)
     payload: dict[str, object] = {}
     enerbil_inputs: list[str] = []
     restart_inputs: list[str] = []
@@ -5391,6 +5519,7 @@ def assemble_hydrol_first_step_precall_payload(
                     humcste=humcste,
                     zz_mm=zz_mm,
                     njsc=hydrol_restart.njsc,
+                    ks=soil.ks,
                     peat_hydro=peat_hydro,
                 ),
             )
@@ -5456,6 +5585,13 @@ def assemble_hydrol_first_step_precall_payload(
             froz_frac_corr=froz_frac_corr,
             smtot_corr=smtot_corr,
             max_froz_hydro=max_froz_hydro,
+            soil_parameters=soil,
+            mcs_point=payload.get("mcs") if "mcs" in payload else hydrol_refsoc_1d_thresholds(
+                njsc=hydrol_restart.njsc,
+                refSOC_1d=refSOC_1d,
+                use_refSOC_hydrol=use_refSOC_hydrol,
+                soil_parameters=soil,
+            ).mcs,
         )
         _add_payload_field(payload, source_kernel_inputs, "profil_froz", profil_froz)
         _add_payload_field(payload, source_kernel_inputs, "stempdiag", stempdiag)
@@ -5485,26 +5621,26 @@ def assemble_hydrol_first_step_precall_payload(
         if "njsc" not in payload:
             _add_payload_field(payload, restart_inputs, "njsc", hydrol_restart.njsc, dtype="int32")
         tex = as_runtime_array(hydrol_restart.njsc, dtype=np.int32) - 1
-        table_array = jnp.asarray if isinstance(tex, jax.core.Tracer) else np.asarray
         if "mcr" not in payload:
-            _add_payload_field(payload, source_kernel_inputs, "mcr", table_array(USDA_MCR, dtype=np.float64)[tex])
+            _add_payload_field(payload, source_kernel_inputs, "mcr", soil.mcr[tex])
         if "mcs" not in payload:
             if bool(use_refSOC_hydrol):
                 thresholds = hydrol_refsoc_1d_thresholds(
                     njsc=hydrol_restart.njsc,
                     refSOC_1d=refSOC_1d,
                     use_refSOC_hydrol=True,
+                    soil_parameters=soil,
                 )
                 _add_payload_field(payload, source_kernel_inputs, "mcs", thresholds.mcs)
                 _add_payload_field(payload, source_kernel_inputs, "mcw", thresholds.mcw)
                 _add_payload_field(payload, source_kernel_inputs, "mcf", thresholds.mcf)
                 _add_payload_field(payload, source_kernel_inputs, "refSOC_1d", refSOC_1d)
             else:
-                _add_payload_field(payload, source_kernel_inputs, "mcs", table_array(USDA_MCS, dtype=np.float64)[tex])
+                _add_payload_field(payload, source_kernel_inputs, "mcs", soil.mcs_mineral[tex])
         if "mcw" not in payload:
-            _add_payload_field(payload, source_kernel_inputs, "mcw", table_array(USDA_MCW, dtype=np.float64)[tex])
+            _add_payload_field(payload, source_kernel_inputs, "mcw", soil.mcw_mineral[tex])
         if "mcf" not in payload:
-            _add_payload_field(payload, source_kernel_inputs, "mcf", table_array(USDA_MCF, dtype=np.float64)[tex])
+            _add_payload_field(payload, source_kernel_inputs, "mcf", soil.mcf_mineral[tex])
 
     missing = tuple(field for field in HYDROL_FIRST_STEP_PRECALL_REQUIRED_FIELDS if field not in payload)
     return HydrolFirstStepPrecallAssembly(
@@ -5742,55 +5878,19 @@ def hydrol_var_init(
         if failed:
             raise ValueError(message)
 
-    soil_parameter_defaults = {
-        "nvan": USDA_NVAN,
-        "avan": USDA_AVAN,
-        "mcr": USDA_MCR,
-        "mcs_mineral": USDA_MCS,
-        "ks": USDA_KS,
-        "pcent": USDA_PCENT,
-        "mcf_mineral": USDA_MCF,
-        "mcw_mineral": USDA_MCW,
-        "mc_awet": USDA_MC_AWET,
-        "mc_adry": USDA_MC_ADRY,
-    }
-    supplied_soil_parameters = {} if soil_parameters is None else dict(soil_parameters)
-    unknown_soil_parameters = set(supplied_soil_parameters) - set(soil_parameter_defaults)
-    if unknown_soil_parameters:
-        raise ValueError(f"unsupported hydrol_init soil parameter(s): {sorted(unknown_soil_parameters)}")
-    soil = {
-        name: jnp.asarray(supplied_soil_parameters.get(name, default), dtype=jnp.float64)
-        for name, default in soil_parameter_defaults.items()
-    }
-    for name, values in soil.items():
-        if values.shape != (12,):
-            raise ValueError(f"{name} must have shape (12,) for USDA soil classification")
-
+    soil = hydrol_soil_parameters(soil_parameters)
     zz = znh_m * 1000.0
     dz = dnh_m * 1000.0
     dh = dlh_m * 1000.0
     texture = njsc - 1
-    mineral_mcs = soil["mcs_mineral"][texture]
-    if bool(use_refSOC_hydrol):
-        if refSOC_1d is None:
-            raise ValueError("use_refSOC_hydrol=True requires explicit refSOC_1d")
-        refsoc = _as_1d("refSOC_1d", refSOC_1d)
-        if refsoc.shape != (npts,):
-            raise ValueError("refSOC_1d must have shape (npts,)")
-        zx1 = jnp.minimum(refsoc / SOILC_MAX, 1.0)
-        mcs = zx1 * POROS_ORG + (1.0 - zx1) * mineral_mcs
-        mcr_point = soil["mcr"][texture]
-        alpha = jnp.asarray(USDA_AVAN, dtype=jnp.float64)[texture]
-        vg_n = jnp.asarray(USDA_NVAN, dtype=jnp.float64)[texture]
-        vg_m = jnp.asarray(USDA_VG_M, dtype=jnp.float64)[texture]
-        psi_wp = jnp.asarray(USDA_VG_PSI_WP, dtype=jnp.float64)[texture]
-        psi_fc = jnp.asarray(USDA_VG_PSI_FC, dtype=jnp.float64)[texture]
-        mcw = mcr_point + (mcs - mcr_point) / (1.0 + (alpha * psi_wp) ** vg_n) ** vg_m
-        mcf = mcr_point + (mcs - mcr_point) / (1.0 + (alpha * psi_fc) ** vg_n) ** vg_m
-    else:
-        mcs = mineral_mcs
-        mcw = soil["mcw_mineral"][texture]
-        mcf = soil["mcf_mineral"][texture]
+    mineral_mcs = soil.mcs_mineral[texture]
+    thresholds = hydrol_refsoc_1d_thresholds(
+        njsc=njsc,
+        refSOC_1d=refSOC_1d,
+        use_refSOC_hydrol=use_refSOC_hydrol,
+        soil_parameters=soil,
+    )
+    mcs, mcw, mcf = thresholds.mcs, thresholds.mcw, thresholds.mcf
     humcste_use = jnp.broadcast_to(humcste[None, :], (npts, nvm))
     nroot = hydrol_nroot_from_humcste(
         humcste=humcste,
@@ -6317,7 +6417,7 @@ def _array_cache_key(value) -> tuple[str, tuple[int, ...], tuple[float | int, ..
 
 
 @lru_cache(maxsize=32)
-def _cached_mineral_cwrr_tables(njsc_key, mcs_key, z_m_key, ks_key):
+def _cached_mineral_cwrr_tables(njsc_key, mcs_key, z_m_key, ks_key, mcr_key, nvan_key, avan_key):
     _, njsc_shape, njsc_values = njsc_key
     _, mcs_shape, mcs_values = mcs_key
     _, z_m_shape, z_m_values = z_m_key
@@ -6326,7 +6426,13 @@ def _cached_mineral_cwrr_tables(njsc_key, mcs_key, z_m_key, ks_key):
     mcs = np.asarray(mcs_values, dtype=np.float64).reshape(mcs_shape)
     z_m = np.asarray(z_m_values, dtype=np.float64).reshape(z_m_shape)
     ks = np.asarray(ks_values, dtype=np.float64).reshape(ks_shape)
-    return build_mineral_cwrr_tables(njsc=njsc, mcs=mcs, z_m=z_m, ks=ks)
+    def restore(key):
+        _, shape, values = key
+        return np.asarray(values, dtype=np.float64).reshape(shape)
+    return build_mineral_cwrr_tables(
+        njsc=njsc, mcs=mcs, z_m=z_m, ks=ks,
+        mcr=restore(mcr_key), nvan=restore(nvan_key), avan=restore(avan_key),
+    )
 
 
 @lru_cache(maxsize=8)
@@ -6341,6 +6447,7 @@ class HydrolRuntimeStaticTables(NamedTuple):
 
     mineral: MineralCWRRTables
     peat: PeatCWRRTables | None
+    soil_parameters: HydrolSoilParameters | None = None
 
 
 def hydrol_runtime_static_tables_from_payload(
@@ -6348,21 +6455,28 @@ def hydrol_runtime_static_tables_from_payload(
     *,
     ks=USDA_KS,
     peat_hydro=False,
+    soil_parameters=None,
 ) -> HydrolRuntimeStaticTables:
     """Build immutable HYDROL tables from source-backed day-static inputs."""
 
+    soil = hydrol_soil_parameters(soil_parameters)
+    if soil_parameters is None:
+        soil = HydrolSoilParameters(**{**soil, "ks": jnp.asarray(ks, dtype=jnp.float64)})
     njsc = np.asarray(payload["njsc"], dtype=np.int32)
     mcs = np.asarray(payload["mcs"], dtype=np.float64)
     zz_mm = np.asarray(payload["zz_mm"], dtype=np.float64)
-    ks_array = np.asarray(ks, dtype=np.float64)
+    ks_array = np.asarray(soil.ks, dtype=np.float64)
     mineral = _cached_mineral_cwrr_tables(
         _array_cache_key(njsc),
         _array_cache_key(mcs),
         _array_cache_key(zz_mm / 1000.0),
         _array_cache_key(ks_array),
+        _array_cache_key(soil.mcr),
+        _array_cache_key(soil.nvan),
+        _array_cache_key(soil.avan),
     )
     peat = _cached_peat_cwrr_tables(_array_cache_key(zz_mm / 1000.0)) if bool(peat_hydro) else None
-    return HydrolRuntimeStaticTables(mineral=mineral, peat=peat)
+    return HydrolRuntimeStaticTables(mineral=mineral, peat=peat, soil_parameters=soil)
 
 
 def select_mineral_cwrr_bin(
@@ -7931,6 +8045,10 @@ def hydrol_module_diagnostics(
     mcs_mineral=USDA_MCS,
     mcf_mineral=USDA_MCF,
     mcw_mineral=USDA_MCW,
+    soil_parameters=None,
+    mcr=USDA_MCR,
+    mc_awet=USDA_MC_AWET,
+    mc_adry=USDA_MC_ADRY,
     pcent=None,
     mineral_tables: MineralCWRRTables | None = None,
     peat_tables: PeatCWRRTables | None = None,
@@ -7979,6 +8097,14 @@ def hydrol_module_diagnostics(
     dynamic-root controls) remain explicit here.
     """
 
+    if soil_parameters is not None:
+        soil = hydrol_soil_parameters(soil_parameters)
+        mcs_mineral, mcf_mineral, mcw_mineral = soil.mcs_mineral, soil.mcf_mineral, soil.mcw_mineral
+        mcr, mc_awet, mc_adry, ks = soil.mcr, soil.mc_awet, soil.mc_adry, soil.ks
+        mcs = soil.mcs_mineral if mcs is None else mcs
+        mcf = soil.mcf_mineral if mcf is None else mcf
+        mcw = soil.mcw_mineral if mcw is None else mcw
+        pcent = soil.pcent if pcent is None else pcent
     mc = result.soil.mc
     mcl = result.soil.mcl
     if veget_max is None:
@@ -8114,6 +8240,9 @@ def hydrol_module_diagnostics(
         mcs=mcs,
         mcf=mcf,
         mcw=mcw,
+        mcr=mcr,
+        mc_awet=mc_awet,
+        mc_adry=mc_adry,
         peat_hydro=peat_hydro,
         perma_peat=perma_peat,
         agri_peat=agri_peat,
@@ -8929,6 +9058,7 @@ def _hydrol_vegupd_kfact_root_jit(
     njsc,
     pref_indices: tuple[int, ...],
     peat_hydro: bool,
+    ks=USDA_KS,
     peat_tiles=(4, 5),
     min_sechiba=1.0e-8,
 ):
@@ -8975,7 +9105,7 @@ def _hydrol_vegupd_kfact_root_jit(
             jnp.where(vegtot > minv, tile_sum / jnp.where(vegtot > minv, vegtot, 1.0), zero)
         )
 
-    ks_values = jnp.asarray(USDA_KS, dtype=jnp.float64)
+    ks_values = jnp.asarray(ks, dtype=jnp.float64)
     max_ks = jnp.max(ks_values)
     mineral_ks = ks_values[njsc - 1]
     peat_tile_set = {int(tile) for tile in peat_tiles}
@@ -9220,6 +9350,7 @@ def hydrol_cold_start_thermosoil_moisture_inputs(
 
 
 HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
+    "soil_parameters",
     "precip_rain",
     "vevapwet",
     "veget",
@@ -9365,6 +9496,7 @@ def run_hydrol_first_step_module_from_precall(
     use_jit=False,
     static_table_payload: Mapping[str, object] | None = None,
     runtime_static_tables: HydrolRuntimeStaticTables | None = None,
+    soil_parameters=None,
 ) -> HydrolFirstStepModuleClosure:
     """Run the first-step HYDROL module and expose downstream boundaries.
 
@@ -9375,6 +9507,12 @@ def run_hydrol_first_step_module_from_precall(
     if any required source-backed field is absent.
     """
 
+    if soil_parameters is None and runtime_static_tables is not None:
+        soil_parameters = runtime_static_tables.soil_parameters
+    soil = hydrol_soil_parameters(soil_parameters)
+    if soil_parameters is None:
+        soil = HydrolSoilParameters(**{**soil, "ks": jnp.asarray(ks, dtype=jnp.float64)})
+    ks = soil.ks
     payload = dict(precall.payload)
     missing: list[str] = list(precall.missing_inputs)
     if not precall.ok:
@@ -9408,6 +9546,7 @@ def run_hydrol_first_step_module_from_precall(
             table_payload,
             ks=ks,
             peat_hydro=peat_hydro,
+            soil_parameters=soil,
         )
     mineral_tables = runtime_static_tables.mineral
     peat_tables = runtime_static_tables.peat
@@ -9420,6 +9559,7 @@ def run_hydrol_first_step_module_from_precall(
             "zz_mm": zz_mm,
             "resolv": soiltile > 0.0,
             "ks": ks,
+            "soil_parameters": soil,
             "kfact": mineral_tables.kfact,
             "mineral_tables": mineral_tables,
             "peat_tables": peat_tables,
@@ -9669,12 +9809,15 @@ def run_hydrol_first_step_module_from_precall(
             dyn_nroot_larix=dyn_nroot_larix,
             is_tree=tuple(bool(value) for value in np.asarray(is_tree).tolist()) if is_tree is not None else None,
             znt=znt,
+            mcf=module_inputs.get("mcf"),
+            mcw=module_inputs.get("mcw"),
         )
         outputs = HydrolModuleOutputs(*output_arrays)
         moisture = HydrolThermosoilMoistureInputs(*moisture_arrays)
     else:
         module = hydrol_module_explicit_step(**selected_module_inputs)
         diagnostic_inputs = {
+            "soil_parameters": soil,
             "nroot": nroot,
             "dz_mm": dz_mm,
             "dh_mm": dh_mm,
@@ -9707,6 +9850,7 @@ def run_hydrol_first_step_module_from_precall(
         outputs = hydrol_module_outputs(module, soiltile=module_inputs["soiltile"])
         moisture = hydrol_to_thermosoil_moisture_inputs(diagnostics, pref_soil_veg=module_inputs["pref_soil_veg"])
     diagnostic_inputs = {
+        "soil_parameters": soil,
         "nroot": nroot,
         "dz_mm": dz_mm,
         "dh_mm": dh_mm,
@@ -10612,6 +10756,7 @@ def hydrol_soil_all_tiles_explicit_step(
     froz_frac_corr=1.0,
     smtot_corr=2.0,
     max_froz_hydro=1.0,
+    soil_parameters=None,
     zwt_force=None,
     zz_mm=None,
     zmaxh_m=None,
@@ -10903,6 +11048,7 @@ def hydrol_soil_all_tiles_explicit_step(
         # unchanged actual temperature. 7165-7174 restores normal mc/mcl/tmc,
         # but does not restore the old profile. The dummy-only liquid and
         # transport reconstruction below therefore consumes this new profile.
+        soil = hydrol_soil_parameters(soil_parameters)
         profil_froz = hydrol_soil_froz_profile(
             temp_hydro=temp_hydro,
             mc=mc_state,
@@ -10917,6 +11063,10 @@ def hydrol_soil_all_tiles_explicit_step(
             max_froz_hydro=max_froz_hydro,
             mcr_point=mcr,
             mcs_point=mcs,
+            nvan=soil.nvan,
+            avan=soil.avan,
+            mcr=soil.mcr,
+            mcs=soil.mcs_mineral,
         )
     evap_bare_limit_alt = hydrol_alt_residual_all_tiles_from_results(
         tuple(tile_results),
@@ -11025,6 +11175,7 @@ def hydrol_module_explicit_step(
     froz_frac_corr=1.0,
     smtot_corr=2.0,
     max_froz_hydro=1.0,
+    soil_parameters=None,
     zwt_force=None,
     zz_mm=None,
     zmaxh_m=None,
@@ -11157,6 +11308,7 @@ def hydrol_module_explicit_step(
         froz_frac_corr=froz_frac_corr,
         smtot_corr=smtot_corr,
         max_froz_hydro=max_froz_hydro,
+        soil_parameters=soil_parameters,
         zwt_force=zwt_force,
         zz_mm=zz_mm,
         zmaxh_m=zmaxh_m,
@@ -11293,6 +11445,11 @@ def hydrol_main_step(
         raise ValueError("TOPM_calcul requires raw hydro_subgrid_main inputs")
     module_args = dict(module_inputs)
     diagnostic_args = dict(diagnostic_inputs)
+    if module_args.get("soil_parameters") is not None:
+        soil_parameters = hydrol_soil_parameters(module_args["soil_parameters"])
+        module_args["soil_parameters"] = soil_parameters
+        module_args["ks"] = soil_parameters.ks
+        diagnostic_args.setdefault("soil_parameters", soil_parameters)
     diagnostic_args.setdefault("ok_freeze_cwrr", bool(module_args.get("ok_freeze_cwrr", False)))
     snow_args = dict(snow_inputs)
     irrigation_args = dict(irrigation_inputs)
@@ -11719,6 +11876,8 @@ def _hydrol_module_closure_core(
     dyn_nroot_larix=False,
     is_tree=None,
     znt=None,
+    mcf=None,
+    mcw=None,
     **module_inputs,
 ) -> tuple[
     HydrolModuleExplicitResult,
@@ -11737,8 +11896,9 @@ def _hydrol_module_closure_core(
         soiltile=module_inputs["soiltile"],
         vegtot=module_inputs["vegtot"],
         mcs=module_inputs["mcs"],
-        mcf=module_inputs.get("mcf"),
-        mcw=module_inputs.get("mcw"),
+        mcf=mcf,
+        mcw=mcw,
+        soil_parameters=module_inputs.get("soil_parameters"),
         mineral_tables=module_inputs["mineral_tables"],
         peat_tables=module_inputs.get("peat_tables"),
         ks=module_inputs["ks"],

@@ -41,6 +41,7 @@ def make_owner_inputs(case_id=1):
         mcf_mineral=np.full(12, mcf), mcw_mineral=np.full(12, mcw),
         ks=np.full(12, ks), pcent=np.full(12, .8),
         mc_awet=np.full(12, .25 if class3 else .32), mc_adry=np.full(12, .10))
+    parameter_contract = h.hydrol_soil_parameters(parameters)
     if case_id == 5:
         mc[:, 0, :] = .055
     if case_id == 18:
@@ -57,7 +58,7 @@ def make_owner_inputs(case_id=1):
         mc=mc, mcl=mc.copy(), water2infilt=np.zeros((npts,nstm)),
         vegtot_old=np.ones(npts), drysoil_frac=np.zeros(npts),
         ok_pc=False, ok_leak=False, peat_hydro=False, tides=False,
-        agri_peat=False, ok_freeze_cwrr=freeze, soil_parameters=parameters)
+        agri_peat=False, ok_freeze_cwrr=freeze, soil_parameters=parameter_contract)
     temp_hydro = np.full((npts, nslm), 271.5 if freeze else 280.)
     profile = np.zeros_like(mc)
     if freeze:
@@ -104,11 +105,13 @@ def make_owner_inputs(case_id=1):
         zmaxh_m=2., ok_freeze_cwrr=freeze, ok_thermodynamical_freezing=True,
         ok_pc=False, ok_leak=False, peat_hydro=False, dyn_nroot_larix=case_id in (18,19),
         is_tree=np.array([False]*13+[True]), znt=np.array([.01,.03,.07,.15,.30,.60,1.20]),
-        runtime_static_tables=h.HydrolRuntimeStaticTables(initialized.mineral_tables,None))
+        runtime_static_tables=h.HydrolRuntimeStaticTables(initialized.mineral_tables,None,
+            soil_parameters=parameter_contract))
     return dict(precall=precall, kwargs=kwargs, initialized=initialized,
-        soil_parameters=parameters, contract=dict(case_id=case_id,name=CASE_NAMES[case_id],
+        soil_parameters=parameter_contract, contract=dict(case_id=case_id,name=CASE_NAMES[case_id],
             dimensions=dict(npts=npts,nvm=nvm,nstm=nstm,nslm=nslm,nsnow=3),
             snow="actual explicit zero-state owner", melt=0.,
+            soil_parameter_binding="same complete formal contract for var_init and runtime tables",
             topmodel_wrapper_reachable=False, source_case=case_id))
 
 

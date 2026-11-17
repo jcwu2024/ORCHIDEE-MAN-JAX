@@ -27,6 +27,15 @@ jobs:
           tests/unit/test_coupling_source_contract.py::test_nonzero_tuple_surftemp_flux_and_intersurf_rate_match_original_source
           tests/unit/test_coupling_source_contract.py::test_nonzero_A_is_consumed_and_rate_boundary_is_jittable
           tests/unit/test_coupling_source_contract.py::test_production_precall_adapter_passes_nonzero_tuple_to_actual_energy_solver
+      - name: Custom soil parameters through HYDROL
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen pytest -q
+          tests/unit/test_hydrol_soil_parameter_contract.py
+          tests/unit/test_hydrol_soil_parameter_callers.py
+          tests/unit/test_hydrol_component_owner_closure.py::test_custom_soil_parameters_reach_real_wrapper_diagnostics
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -41,3 +50,6 @@ jobs:
           tests/unit/test_thermosoil_full_component_coef.py
           tests/unit/test_snow_maxmass_domain.py
           tests/unit/test_coupling_source_contract.py
+          tests/unit/test_hydrol_soil_parameter_contract.py
+          tests/unit/test_hydrol_soil_parameter_callers.py
+          tests/unit/test_hydrol_component_owner_closure.py

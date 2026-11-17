@@ -181,6 +181,7 @@ from jax_orchidee.sechiba.enerbil import (
 from jax_orchidee.sechiba.first_step import SechibaFirstStepInputCoverage, first_step_sechiba_input_coverage
 from jax_orchidee.sechiba.hydrol import (
     HydrolRuntimeStaticTables,
+    HydrolSoilParameters,
     HydrolFirstStepModuleClosure,
     HydrolFirstStepPrecallAssembly,
     MineralCWRRTables,
@@ -190,6 +191,8 @@ from jax_orchidee.sechiba.hydrol import (
     hydrol_cold_start_waterbal_begin_state,
     hydrol_layer_thickness_from_zz_mm,
     hydrol_runtime_static_tables_from_payload,
+    hydrol_refsoc_1d_thresholds,
+    hydrol_soil_parameters_from_run_def,
     hydrol_static_precall_template_from_slowproc,
     run_hydrol_first_step_module_from_precall,
 )
@@ -424,6 +427,26 @@ class Paper1961PreparedDriverContext:
         "fortran_source/ORCHIDEE/src_parameters/vertical_soil.f90::vertical_soil_init lines 175-454",
         "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 653-659 and 1111-1125",
     )
+    hydrol_soil_parameters: HydrolSoilParameters | None = None
+
+
+def _prepared_hydrol_soil_parameters(
+    context: Paper1961PreparedDriverContext,
+    *,
+    runtime_static_tables: HydrolRuntimeStaticTables | None = None,
+) -> HydrolSoilParameters:
+    """Bind saved HYDROL globals separately from effective point thresholds.
+
+    Fortran provenance: hydrol.f90::hydrol_init 2069-2252 configures the
+    mineral vectors; hydrol_var_init 4071-4088 derives point thresholds.
+    The fallback supports previously serialized prepared contexts.
+    """
+    parameters = getattr(runtime_static_tables, "soil_parameters", None)
+    if parameters is None:
+        parameters = getattr(context, "hydrol_soil_parameters", None)
+    if parameters is None:
+        parameters = hydrol_soil_parameters_from_run_def(context.run_def_values)
+    return parameters
 
 
 def _domain_override_from_run_def_values(values: Mapping[str, str]) -> dict[str, float] | None:
@@ -737,6 +760,7 @@ def _prepare_paper_1961_driver_context_cached(
         npts=int(np.asarray(first_step_bundle.domain.lalo).shape[0]),
         used_run_def=Path(run_def_path),
     )
+    hydrol_soil = hydrol_soil_parameters_from_run_def(values)
     return Paper1961PreparedDriverContext(
         config_path=Path(config_path),
         run_def_path=Path(run_def_path),
@@ -763,7 +787,8 @@ def _prepare_paper_1961_driver_context_cached(
         hydrol_throughfall_by_pft=parse_run_def_indexed_selection(
             values, "PERCENT_THROUGHFALL_PFT", fortran_pft_ids
         ),
-        hydrol_cwrr_ks=parse_run_def_indexed_vector(values, "CWRR_KS", 12),
+        hydrol_cwrr_ks=np.asarray(hydrol_soil.ks),
+        hydrol_soil_parameters=hydrol_soil,
         hydrol_zz_mm=cwrr_grid.znh * 1000.0,
         hydrol_dz_mm=cwrr_grid.dnh * 1000.0,
         hydrol_dh_mm=cwrr_grid.dlh * 1000.0,
@@ -2257,7 +2282,7 @@ class DriverCompiledStomateParameterValues(NamedTuple):
 
 
 class DriverCompiledHydrolTableArrays(NamedTuple):
-    """Dynamic mineral CWRR table arrays for one landpoint batch."""
+    """Dynamic CWRR arrays and their original mineral parameter contract."""
 
     mc_lin: object
     k_lin: object
@@ -2269,6 +2294,7 @@ class DriverCompiledHydrolTableArrays(NamedTuple):
     afact: object
     nvan_mod: object
     avan_mod: object
+    soil_parameters: HydrolSoilParameters | None = None
 
 
 @dataclass(frozen=True)
@@ -4555,6 +4581,7 @@ def paper_1961_next_step_hydrol_precall_scaffold(
     hydrol_zz_mm = context.hydrol_zz_mm
     if prepared_context is not None and hydrol_static_template is None:
         hydrol_static_template = hydrol_static_precall_template_from_slowproc(
+            soil_parameters=_prepared_hydrol_soil_parameters(context),
             slowproc_restart=SimpleNamespace(**previous_state.fields_by_component["slowproc_stomate_previous_step_state"]),
             pref_soil_veg=enerbil.step.run_scalars.pref_soil_veg,
             nstm=enerbil.step.run_scalars.nstm,
@@ -4580,6 +4607,7 @@ def paper_1961_next_step_hydrol_precall_scaffold(
             dt_days=context.dt_sechiba_days,
         )
     hydrol_precall = assemble_hydrol_first_step_precall_payload(
+        soil_parameters=_prepared_hydrol_soil_parameters(context),
         enerbil_payload=enerbil.enerbil_local.payload,
         hydrol_restart=hydrol_state,
         slowproc_restart=SimpleNamespace(**previous_state.fields_by_component["slowproc_stomate_previous_step_state"]),
@@ -4632,6 +4660,7 @@ def paper_1961_next_step_hydrol_precall_scaffold(
     if hydrol_precall.ok and not combined_missing:
         hydrol_module = run_hydrol_first_step_module_from_precall(
             hydrol_precall,
+            soil_parameters=_prepared_hydrol_soil_parameters(context),
             temp_air=enerbil.payload.temp_air,
             pb=enerbil.payload.pb,
             u=enerbil.payload.u,
@@ -4827,6 +4856,11 @@ def paper_1961_driver_cold_start_first_step_coverage(
             initialized_payloads={"thermosoil_fresh_cold_controls": cold_thermal_controls},
             notes=("Source-valid cold control variants lack the selected adapter binding; no physical initialization was entered. Missing external files/configuration are separate reader errors.",),
         )
+    hydrol_soil = (
+        _prepared_hydrol_soil_parameters(prepared_context)
+        if prepared_context is not None
+        else hydrol_soil_parameters_from_run_def(run_def_values)
+    )
     dt_sechiba = (
         prepared_context.dt_sechiba
         if prepared_context is not None
@@ -5029,14 +5063,6 @@ def paper_1961_driver_cold_start_first_step_coverage(
         drain_factor=float(run_def_values.get("DRAIN_FACTOR", 1.0)),
         zmaxh=parse_run_def_float(run_def_values, "DEPTH_MAX_H"),
     )
-    hydrol_cold_moisture = hydrol_cold_start_thermosoil_moisture_inputs(
-        hydrol_cold,
-        pref_soil_veg=run_scalars.pref_soil_veg,
-        dz_mm=cwrr_grid.dnh * 1000.0,
-        dh_mm=cwrr_grid.dlh * 1000.0,
-        njsc=payload.njsc,
-        peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
-    )
     hydrol_waterbal_begin = hydrol_cold_start_waterbal_begin_state(
         hydrol_cold,
         veget_max=slowproc_veg_cold.vegetation.veget_max,
@@ -5057,6 +5083,22 @@ def paper_1961_driver_cold_start_first_step_coverage(
             lalo=step.domain.lalo,
             resolution_m=step.domain.resolution,
         )
+    hydrol_cold_thresholds = hydrol_refsoc_1d_thresholds(
+        njsc=payload.njsc,
+        refSOC_1d=hydrol_refsoc_1d,
+        use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
+        soil_parameters=hydrol_soil,
+    )
+    hydrol_cold_moisture = hydrol_cold_start_thermosoil_moisture_inputs(
+        hydrol_cold,
+        pref_soil_veg=run_scalars.pref_soil_veg,
+        dz_mm=cwrr_grid.dnh * 1000.0,
+        dh_mm=cwrr_grid.dlh * 1000.0,
+        njsc=payload.njsc,
+        mcs=hydrol_cold_thresholds.mcs,
+        mcs_mineral=hydrol_soil.mcs_mineral,
+        peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
+    )
     soilalbedo_bg = None
     soilalbedo_bg_meta = None
     condveg_albedo = None
@@ -5348,6 +5390,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
             wt_ab_tide=hydrol_cold.wt_ab_tide,
         )
         hydrol_precall = assemble_hydrol_first_step_precall_payload(
+            soil_parameters=hydrol_soil,
             enerbil_payload=enerbil_local.payload,
             hydrol_restart=hydrol_restart,
             slowproc_restart=SimpleNamespace(
@@ -5391,6 +5434,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         if hydrol_precall.ok:
             hydrol_module = run_hydrol_first_step_module_from_precall(
                 hydrol_precall,
+                soil_parameters=hydrol_soil,
                 temp_air=payload.temp_air,
                 pb=payload.pb,
                 u=payload.u,
@@ -6841,6 +6885,7 @@ def _paper_1961_next_step_runtime_result_compact(
         hydrol_zz_mm = context.hydrol_zz_mm
         if hydrol_static_template is None:
             hydrol_static_template = hydrol_static_precall_template_from_slowproc(
+                soil_parameters=_prepared_hydrol_soil_parameters(context, runtime_static_tables=hydrol_runtime_static_tables),
                 slowproc_restart=SimpleNamespace(**slowproc_state),
                 pref_soil_veg=step.run_scalars.pref_soil_veg,
                 nstm=step.run_scalars.nstm,
@@ -6866,6 +6911,7 @@ def _paper_1961_next_step_runtime_result_compact(
                 dt_days=context.dt_sechiba_days,
             )
         hydrol_precall = assemble_hydrol_first_step_precall_payload(
+            soil_parameters=_prepared_hydrol_soil_parameters(context, runtime_static_tables=hydrol_runtime_static_tables),
             enerbil_payload=enerbil_local.payload,
             hydrol_restart=hydrol_state,
             slowproc_restart=SimpleNamespace(**slowproc_state),
@@ -6913,6 +6959,7 @@ def _paper_1961_next_step_runtime_result_compact(
         if hydrol_precall.ok and not combined_missing:
             hydrol_module = run_hydrol_first_step_module_from_precall(
                 hydrol_precall,
+                soil_parameters=_prepared_hydrol_soil_parameters(context, runtime_static_tables=hydrol_runtime_static_tables),
                 temp_air=payload.temp_air,
                 pb=payload.pb,
                 u=payload.u,
@@ -7499,6 +7546,7 @@ def paper_1961_driver_timestep_scaffold(
             )
         if enerbil_first_step_local is not None:
             hydrol_first_step_precall = assemble_hydrol_first_step_precall_payload(
+                soil_parameters=_prepared_hydrol_soil_parameters(context),
                 enerbil_payload=enerbil_first_step_local.payload,
                 hydrol_restart=first_step_restart_state.hydrol,
                 initialized_us=first_step_restart_state.sechiba_restart_state.fields["us"],
@@ -7537,6 +7585,7 @@ def paper_1961_driver_timestep_scaffold(
             )
             hydrol_first_step_module = run_hydrol_first_step_module_from_precall(
                 hydrol_first_step_precall,
+                soil_parameters=_prepared_hydrol_soil_parameters(context),
                 temp_air=payload.temp_air,
                 pb=payload.pb,
                 u=payload.u,
@@ -9981,6 +10030,7 @@ def paper_1961_driver_day_scaffold(
             first_hydrol_state, _ = _hydrol_state_namespace_from_previous_state(previous_state)
             day_nvm = int(np.asarray(previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["lai"]).shape[1])
             day_hydrol_static_template = hydrol_static_precall_template_from_slowproc(
+                soil_parameters=_prepared_hydrol_soil_parameters(context),
                 slowproc_restart=SimpleNamespace(**previous_state.fields_by_component["slowproc_stomate_previous_step_state"]),
                 pref_soil_veg=first.step.run_scalars.pref_soil_veg,
                 nstm=first.step.run_scalars.nstm,
@@ -10298,6 +10348,7 @@ def paper_1961_driver_later_day_scaffold(
                 domain_override=context.domain_override,
             ).run_scalars
         day_hydrol_static_template = hydrol_static_precall_template_from_slowproc(
+            soil_parameters=_prepared_hydrol_soil_parameters(context),
             slowproc_restart=SimpleNamespace(**current_state.fields_by_component["slowproc_stomate_previous_step_state"]),
             pref_soil_veg=run_scalars.pref_soil_veg,
             nstm=run_scalars.nstm,
@@ -10629,6 +10680,7 @@ def _paper_1961_later_day_transition_inputs(
         day_start_bundle = _paper_1961_step_bundle_from_context(context, year=year, tstep=start)
     run_scalars = day_start_bundle.run_scalars
     hydrol_static_template = hydrol_static_precall_template_from_slowproc(
+        soil_parameters=_prepared_hydrol_soil_parameters(context),
         slowproc_restart=SimpleNamespace(**current_state.fields_by_component["slowproc_stomate_previous_step_state"]),
         pref_soil_veg=run_scalars.pref_soil_veg,
         nstm=run_scalars.nstm,
@@ -10647,6 +10699,7 @@ def _paper_1961_later_day_transition_inputs(
     if hydrol_runtime_static_tables is None:
         hydrol_runtime_static_tables = hydrol_runtime_static_tables_from_payload(
             hydrol_static_template,
+            soil_parameters=_prepared_hydrol_soil_parameters(context),
             ks=context.hydrol_cwrr_ks,
             peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
         )
@@ -10894,6 +10947,25 @@ def _compiled_hydrol_table_arrays(tables: HydrolRuntimeStaticTables) -> DriverCo
         afact=mineral.afact,
         nvan_mod=mineral.nvan_mod,
         avan_mod=mineral.avan_mod,
+        soil_parameters=tables.soil_parameters,
+    )
+
+
+def _hydrol_runtime_static_tables_from_compiled_arrays(
+    arrays: DriverCompiledHydrolTableArrays, *, imin: int, imax: int,
+) -> HydrolRuntimeStaticTables:
+    """Restore tables and globals across the compiled dynamic boundary.
+
+    Fortran provenance: hydrol.f90::hydrol_var_init 4071-4088, 4146-4161
+    keeps configured mineral globals alongside effective point/table values;
+    hydrol_soil 6395-6741 consumes both when producing diagnostics.
+    """
+    values = dict(arrays._asdict())
+    parameters = values.pop("soil_parameters", None)
+    return HydrolRuntimeStaticTables(
+        mineral=MineralCWRRTables(**values, imin=imin, imax=imax),
+        peat=None,
+        soil_parameters=parameters,
     )
 
 
@@ -11047,12 +11119,9 @@ def _paper_compiled_sechiba_scan(
         )
         hydrol_template = dict(static_hydrol_template)
         hydrol_template.update(zip(hydrol_dynamic_names, hydrol_values, strict=True))
-        mineral_tables = MineralCWRRTables(
-            **hydrol_table_arrays._asdict(),
-            imin=mineral_imin,
-            imax=mineral_imax,
+        runtime_static_tables = _hydrol_runtime_static_tables_from_compiled_arrays(
+            hydrol_table_arrays, imin=mineral_imin, imax=mineral_imax,
         )
-        runtime_static_tables = HydrolRuntimeStaticTables(mineral=mineral_tables, peat=None)
         trans_co2_parameters = dict(static_diffuco_parameters)
         trans_co2_parameters.update(diffuco_parameter_values.trans_co2)
         diffuco_static_kwargs = dict(static_diffuco_kwargs)
@@ -11952,13 +12021,8 @@ def _paper_compiled_later_day_block_executable(
                 use_static_jit_daily_carbon=False,
                 prebuild_day_payloads=True,
                 use_compiled_sechiba_day=True,
-                prebound_hydrol_runtime_static_tables=HydrolRuntimeStaticTables(
-                    mineral=MineralCWRRTables(
-                        **hydrol_table_arrays._asdict(),
-                        imin=mineral_imin,
-                        imax=mineral_imax,
-                    ),
-                    peat=None,
+                prebound_hydrol_runtime_static_tables=_hydrol_runtime_static_tables_from_compiled_arrays(
+                    hydrol_table_arrays, imin=mineral_imin, imax=mineral_imax,
                 ),
                 materialize_compiled_entries=False,
                 outer_compiled_daily_carbon_dispatch=daily_carbon_dispatch,
@@ -12262,8 +12326,12 @@ def paper_1961_driver_restart_year_start_day_result(
         dt_sechiba=context.dt_sechiba,
     )
     if run_mode == "new_native_run" and restart_thermosoil_initialization_supported(context):
+        thermal_source = dict(rebased.fields_by_component["sechiba_finalize_state"])
+        refsoc_1d = rebased.fields_by_component.get("hydrol_previous_step_state", {}).get("refSOC_1d")
+        if refsoc_1d is not None:
+            thermal_source["refSOC_1d"] = refsoc_1d
         initial_thermal = restart_thermosoil_initial_fields(
-            rebased.fields_by_component["sechiba_finalize_state"],
+            thermal_source,
             context=context, payload=payload,
             altmax=rebased.fields_by_component["slowproc_stomate_previous_step_state"]["altmax"],
         )

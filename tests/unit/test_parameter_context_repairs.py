@@ -181,10 +181,16 @@ class _CacheHarness:
     def __init__(self, monkeypatch, tmp_path, *, retain_transition):
         self.temp = tmp_path; self.observed = []; self.cache = {}
         self.spec = NS(components=("witness",), field_names_by_component=(("x",),))
-        self.initial = NS(spec=self.spec, values_by_component=((np.zeros(1),),))
+        self.initial = NS(spec=self.spec, values_by_component=((np.zeros(1),),), tstep=47,
+                          source_clock_runtime=None)
         self.tables = NS(mineral=NS(imin=1, imax=2)); self.arrays = NS(_asdict=lambda: {})
         self.created = 0
         monkeypatch.setattr(o, "_COMPILED_LATER_DAY_BLOCK_CACHE", self.cache)
+        # This harness tests cache ownership with fake lowering and a physical
+        # spy. Source-clock admission belongs to its independent clock tests.
+        monkeypatch.setattr(o, "_validate_compiled_source_clock_series", lambda *a, **kw: None)
+        monkeypatch.setattr(o, "_source_clock_setup", lambda context: NS(binding=NS(binding_key=("cache-spy",))))
+        monkeypatch.setattr(o, "_calendar_controls", lambda context: {})
         monkeypatch.setattr(o, "fast_state_from_previous_packet", lambda packet: self.initial)
         monkeypatch.setattr(o, "_compiled_hydrol_table_arrays", lambda tables: self.arrays)
         monkeypatch.setattr(o, "_compiled_landpoint_payload", lambda payload: {})
@@ -224,7 +230,7 @@ class _CacheHarness:
 
     def build(self, context):
         executable, spec = o._paper_compiled_later_day_block_executable(
-            context.config_path, context=context, initial_state=(), year=1961,
+            context.config_path, context=context, initial_state=self.initial, year=1961,
             block_forcing=(), block_day_numbers=np.array([2], dtype=np.int32),
             prebound_hydrol_runtime_static_tables=self.tables, daily_carbon_dispatch={},
             stomate_parameter_values=(),
@@ -238,7 +244,8 @@ class _CacheHarness:
         assert kwargs["used_run_def_path"] == context.run_def_path
         value = np.asarray([context.hydrol_fr_dt])
         self.observed.append((str(context.run_def_path), context.hydrol_fr_dt))
-        return NS(day_end_state=NS(fields_by_component={"witness": {"x": value}}),
+        return NS(day_end_state=NS(fields_by_component={"witness": {"x": value}}, tstep=95,
+                                  source_clock_runtime=None),
                   daily_modelout=NS(modelout_fields={"fr_dt": value}, modelout=value))
 
     def evaluate(self, executable):
@@ -271,17 +278,24 @@ def test_cache_equivalent_distinct_contexts_deliberately_compile_separately(monk
     assert harness.build(a) is first and harness.build(equivalent) is second
 
 
-def test_cache_explicit_owner_retains_context_until_clear_without_executable_closure(monkeypatch, tmp_path):
+def test_cache_and_clock_guard_retain_context_until_both_owners_release(monkeypatch, tmp_path):
     harness = _CacheHarness(monkeypatch, tmp_path, retain_transition=False)
     context = harness.context(); reference = weakref.ref(context)
     executable = harness.build(context)
-    assert type(executable) is object  # does not retain the transition or context
+    # The source-clock guard is now a wrapper retaining its context. Its
+    # underlying fake compiled executable still drops the numerical closure.
+    closure = dict(zip(executable.__code__.co_freevars,
+                       (cell.cell_contents for cell in executable.__closure__), strict=True))
+    assert type(closure["compiled_executable"]) is object
     assert harness.build(context) is executable
     assert next(iter(harness.cache.values())).context is context
     del context
     gc.collect()
     assert reference() is not None
     harness.cache.clear()
+    gc.collect()
+    assert reference() is not None  # the live guard remains an independent owner
+    del closure, executable
     gc.collect()
     assert reference() is None
 
@@ -303,7 +317,8 @@ def test_cache_bound_eight_fifo_eviction_releases_only_oldest_context(monkeypatc
     assert all(reference() is not None for reference in references[1:])
     assert ninth() is not None
     live_ids = {id(entry.context) for entry in harness.cache.values()}
-    assert len(live_ids) == 8 and live_ids == {key[0] for key in harness.cache}
+    # Source-clock binding and calendar controls precede context identity.
+    assert len(live_ids) == 8 and live_ids == {key[2] for key in harness.cache}
     harness.cache.clear()
     gc.collect()
     assert all(reference() is None for reference in references) and ninth() is None

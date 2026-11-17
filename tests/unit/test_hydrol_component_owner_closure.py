@@ -13,6 +13,21 @@ import pytest
 from scripts.dev.oracle_hydrol_component_owner import run_owner_case, run_owner_diagnostics
 
 
+@pytest.mark.parametrize("case_id,drysoil_frac,vegstress", [
+    (1, .10504178806323072, 1.1982066838626464),
+    (5, .16688044329516771, 1.1677527847519424),
+])
+def test_custom_soil_parameters_reach_real_wrapper_diagnostics(case_id, drysoil_frac, vegstress):
+    # Independent unchanged original Fortran CSV cases 1/5, hydrol_soil
+    # 6395-6741 and hydrol_diag_soil 9089-9284. Fixture supplies the formal
+    # initialized soil-parameter contract; there are no diagnostic overrides.
+    closure = run_owner_case(case_id)
+    np.testing.assert_allclose(closure.diagnostics.drysoil_frac,
+        [drysoil_frac], rtol=1e-12, atol=1e-14)
+    np.testing.assert_allclose(closure.diagnostics.vegstress,
+        [[0.]*13+[vegstress]], rtol=1e-12, atol=1e-14)
+
+
 @pytest.fixture(scope="module")
 def cold_closure():
     assert jax.default_backend() == "cpu"

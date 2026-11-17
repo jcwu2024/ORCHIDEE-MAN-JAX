@@ -90,6 +90,7 @@ def restart_thermosoil_initial_fields(
     from jax_orchidee.driver.init import parse_run_def_bool
     from jax_orchidee.sechiba.hydrol import (
         hydrol_var_init, hydrol_cold_start_thermosoil_moisture_inputs,
+        hydrol_soil_parameters_from_run_def,
     )
     from jax_orchidee.sechiba.thermosoil import (
         thermosoil_humlev, thermosoil_getdiff_explicit,
@@ -106,6 +107,9 @@ def restart_thermosoil_initial_fields(
     ) or context.hydrol_ok_leak
     if not effective_wetdiag:
         raise ValueError("restart thermal initialization requires effective long-term wet diagnostics")
+    soil = getattr(context, "hydrol_soil_parameters", None)
+    if soil is None:
+        soil = hydrol_soil_parameters_from_run_def(values)
     hydro = hydrol_var_init(
         veget=source["veget"], veget_max=source["veget_max"],
         soiltile=context.first_step_bundle.vegetation.soiltile,
@@ -117,6 +121,9 @@ def restart_thermosoil_initial_fields(
         water2infilt=source["water2infilt"], resdist=source["resdist"],
         vegtot_old=source["vegtot_old"], qsintveg=source["qsintveg"],
         drysoil_frac=source["drysoil_frac"],
+        soil_parameters=soil,
+        refSOC_1d=source.get("refSOC_1d"),
+        use_refSOC_hydrol=flag("use_refSOC_hydrol", "FALSE"),
         ok_pc=context.hydrol_ok_pc, ok_leak=context.hydrol_ok_leak,
         peat_hydro=context.hydrol_soil_peat_hydro,
         tides=context.hydrol_tides, agri_peat=context.hydrol_agri_peat,
@@ -127,6 +134,7 @@ def restart_thermosoil_initial_fields(
         hydro, pref_soil_veg=context.run_scalars.pref_soil_veg,
         dz_mm=context.hydrol_dz_mm, dh_mm=context.hydrol_dh_mm,
         njsc=source["njsc"], mcs=hydro.mcs,
+        mcs_mineral=soil.mcs_mineral,
         peat_hydro=context.hydrol_soil_peat_hydro,
     )
     humlev = thermosoil_humlev(

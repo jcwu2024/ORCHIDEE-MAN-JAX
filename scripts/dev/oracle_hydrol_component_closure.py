@@ -1,4 +1,4 @@
-"""Five finite source-owner comparisons and one real compiled closure.
+"""Five finite source-owner comparisons in eager or real compiled closures.
 
 Uses verbatim original Fortran procedures through the existing extractor.
 Only driver inputs/case selection and extra output statements change.
@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -32,6 +33,14 @@ DEFAULT_OUT = ROOT / "outputs/reviews/main-physics-20261117/hydrol-diffuco-state
 
 def _sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def comparison_summary(comparisons):
+    """Keep field checks and scalar-element denominators explicit."""
+    return dict(total=len(comparisons),
+        passed=sum(item["passed"] for item in comparisons),
+        failed=sum(not item["passed"] for item in comparisons),
+        scalar_elements_compared=sum(item.get("count", 0) for item in comparisons))
 
 
 def build_reference(output_dir):
@@ -166,19 +175,39 @@ def independent_topmodel(result):
     return float_comparison("topmodel_independent_chain.fwet_new",expected,np.asarray(diagnostics.fwet_new),rtol=1e-12,atol=1e-14)
 
 
-def run(output_dir=DEFAULT_OUT, *, jit_case=None, case_ids=None, reuse_reference=False):
+def run(output_dir=DEFAULT_OUT, *, jit_case=None, case_ids=None, reuse_reference=False,
+        use_jit=False, additional_reference_csvs=()):
     output_dir.mkdir(parents=True,exist_ok=True)
     assert jax.default_backend() == "cpu", jax.default_backend()
     assert jax.config.jax_enable_x64, "requires actual JAX x64"
     started = time.perf_counter()
+    use_jit = use_jit or jit_case is not None
+    if use_jit:
+        assert not jax.config.jax_disable_jit, "requires actual component compilation"
     references = source_owner._read_fortran(output_dir/"fortran_outputs.csv") if reuse_reference else build_reference(output_dir)
+    reference_merges = []
+    for path in additional_reference_csvs:
+        additional = source_owner._read_fortran(path)
+        duplicates = 0
+        for case_id, fields in additional.items():
+            if case_id in references:
+                if references[case_id].keys() != fields.keys():
+                    raise ValueError(f"independent reference fields disagree for case {case_id}")
+                for name, expected in fields.items():
+                    if not np.array_equal(references[case_id][name], expected):
+                        raise ValueError(f"independent references disagree for case {case_id}.{name}")
+                    duplicates += 1
+            else:
+                references[case_id] = fields
+        reference_merges.append(dict(path=str(path),sha256=_sha(path),
+            case_ids=sorted(additional),exact_duplicate_fields_verified=duplicates))
     cases, all_comparisons = [], []
     for case_id in ((jit_case,) if jit_case else (case_ids or CASE_IDS)):
         before = time.perf_counter()
         values = make_owner_inputs(case_id)
-        result = run_owner_case(case_id,use_jit=jit_case is not None)
+        result = run_owner_case(case_id,use_jit=use_jit)
         fields = closure_fields(result,values["initialized"])
-        np.savez_compressed(output_dir/f"{'jit' if jit_case else 'eager'}_case{case_id}.npz",
+        np.savez_compressed(output_dir/f"{'jit' if use_jit else 'eager'}_case{case_id}.npz",
             **{name:np.asarray(value) for name,value in fields.items()},
             dummy_rhs=np.asarray(result.module.soil.evap_bare_limit_alt.saved.rhs),
             dummy_first=np.asarray(result.module.soil.evap_bare_limit_alt.first.mcl),
@@ -189,24 +218,38 @@ def run(output_dir=DEFAULT_OUT, *, jit_case=None, case_ids=None, reuse_reference
             comparisons.append(float_comparison(name,expected,np.asarray(fields[name]).ravel(order="C"),rtol=1e-12,atol=1e-14))
         phases = independent_phase_checks(result)
         topmodel = independent_topmodel(result)
-        case = dict(case_id=case_id,jit=jit_case is not None,elapsed_s=time.perf_counter()-before,
+        case = dict(case_id=case_id,jit=use_jit,elapsed_s=time.perf_counter()-before,
             contract=values["contract"],source_fields=comparisons,phase_checks=phases,
+            checks=dict(source_fields=comparison_summary(comparisons),
+                independent_phases=comparison_summary(phases),
+                independent_topmodel=comparison_summary([topmodel])),
             independent_topmodel=topmodel,snow_zero=bool(np.all(np.asarray(result.snow_state.snow)==0)),
             wrapper_fwet_none=result.diagnostics.fwet_new is None)
         cases.append(case)
         all_comparisons += comparisons+phases+[topmodel]
-        print(json.dumps(dict(case=case_id,jit=jit_case is not None,elapsed_s=case["elapsed_s"],
+        print(json.dumps(dict(case=case_id,jit=use_jit,elapsed_s=case["elapsed_s"],
             passed=sum(x["passed"] for x in comparisons+phases+[topmodel]),
             failed=[x for x in comparisons+phases+[topmodel] if not x["passed"]])),flush=True)
     result = dict(backend=jax.default_backend(),x64=jax.config.jax_enable_x64,
+        jax_disable_jit=jax.config.jax_disable_jit,
         elapsed_s=time.perf_counter()-started,cases=cases,
+        checks={group:comparison_summary([check for case in cases for check in
+            (case[group] if group != "independent_topmodel" else [case[group]])])
+            for group in ("source_fields", "phase_checks", "independent_topmodel")},
         count=len(all_comparisons),passed=sum(x["passed"] for x in all_comparisons),
         failed=sum(not x["passed"] for x in all_comparisons),
         identities={str(path.relative_to(ROOT)).replace("\\","/"):_sha(path) for path in
             [ROOT/"jax_orchidee/sechiba/hydrol.py",Path(__file__),ROOT/"scripts/dev/oracle_hydrol_component_owner.py",
              ROOT/"tests/unit/test_stage25_hydrol_boundary_fixes.py",source_owner.SOURCE]},
-        limitation="Partial owner certification: independent original var_init+soil chain; full hydrol_main is not independently compiled.")
-    name = "jit_comparison.json" if jit_case else (f"case{case_ids[0]}_comparison.json" if case_ids else "eager_comparison.json")
+        reference=dict(csv_sha256=_sha(output_dir/"fortran_outputs.csv"),
+            additional_csvs=reference_merges,
+            reused_without_recompilation=reuse_reference,
+            kind="Independent original Fortran var_init+soil outputs plus independent literal NumPy phase formulas; never eager JAX"),
+        execution=dict(argv=sys.argv,executable=sys.executable,
+            environment={name:os.environ.get(name) for name in
+                ("JAX_PLATFORMS", "JAX_ENABLE_X64", "PYTHONDONTWRITEBYTECODE")}),
+        limitation="Partial owner certification: independent original var_init+soil chain; full hydrol_main is not independently compiled. Independent TOPMODEL diagnostics do not prove the wrapper naturally reaches TOPMODEL=True.")
+    name = "jit_comparison.json" if use_jit else (f"case{case_ids[0]}_comparison.json" if case_ids else "eager_comparison.json")
     (output_dir/name).write_text(json.dumps(result,indent=2)+"\n")
     return result
 
@@ -214,10 +257,15 @@ def run(output_dir=DEFAULT_OUT, *, jit_case=None, case_ids=None, reuse_reference
 if __name__ == "__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--output-dir",type=Path,default=DEFAULT_OUT)
-    parser.add_argument("--jit-case",type=int,choices=CASE_IDS)
+    jit_selection = parser.add_mutually_exclusive_group()
+    jit_selection.add_argument("--jit-case",type=int,choices=CASE_IDS)
+    jit_selection.add_argument("--jit",action="store_true",help="Compile all selected bounded cases")
     parser.add_argument("--case",type=int,choices=CASE_IDS)
     parser.add_argument("--reuse-reference",action="store_true")
+    parser.add_argument("--additional-reference-csv",type=Path,action="append",default=[],
+        help="Reuse an additional original CSV; overlapping reference fields must agree exactly")
     args=parser.parse_args()
-    result=run(args.output_dir,jit_case=args.jit_case,case_ids=(args.case,) if args.case else None,reuse_reference=args.reuse_reference)
+    result=run(args.output_dir,jit_case=args.jit_case,case_ids=(args.case,) if args.case else None,
+        reuse_reference=args.reuse_reference,use_jit=args.jit,additional_reference_csvs=args.additional_reference_csv)
     print(json.dumps({key:result[key] for key in ("backend","x64","elapsed_s","count","passed","failed")}))
     raise SystemExit(bool(result["failed"]))
