@@ -79,6 +79,7 @@ def _components(closure, payload):
         "peqAcoef peqBcoef zlev qair temp_air rau"
     ).split()}
     ep.update(payload)
+    ep["dt_sechiba"] = 1800.0
     enerbil = NS(payload=ep, step=NS(pottemp=None))
     diffuco = NS(
         kwargs={"pft_index": 0},
@@ -140,6 +141,10 @@ def test_all_packet_routes_finalize_and_next_diffuco_read_clamped_grid(monkeypat
     def unexpected_second_clamp(**kwargs):
         pytest.fail("driver writers must reuse the closed downstream temperature")
     monkeypatch.setattr(thermosoil, "thermosoil_explicit_snow_surface_clamp", unexpected_second_clamp)
+    # Calendar wiring has its own accepted tests. Isolate that independent
+    # adapter while exercising the actual physics writers and consumers here.
+    monkeypatch.setattr(driver, "_driver_source_clock_payload", lambda *args, **kwargs: None)
+    monkeypatch.setattr(driver, "_apply_driver_source_calendar", lambda state, **kwargs: state)
 
     if route in {"runtime", "compiled_fast"}:
         def write(temp_override):
@@ -151,13 +156,13 @@ def test_all_packet_routes_finalize_and_next_diffuco_read_clamped_grid(monkeypat
         packet = jax.jit(write)(temp) if route == "compiled_fast" else write(temp)
     elif route == "later_scaffold":
         packet = driver.driver_previous_step_state_from_next_step_hydrol_scaffold(NS(
-            ready_for_next_state=True, tstep=1,
+            ready_for_next_state=True, tstep=1, source_clock_context=None,
             enerbil=NS(enerbil_local=enerbil, diffuco_local_enerbil_precall=diffuco, previous_state=previous),
             thermosoil_module=closure, hydrol_module=hydrol, condveg_module=condveg))
     elif route == "first_scaffold":
         # All restart-specific carry/readstart owners are orthogonal to this writer.
         packet = driver.driver_previous_step_state_from_timestep_scaffold(NS(
-            step=NS(tstep=0), enerbil_first_step_local=enerbil,
+            step=NS(tstep=0), source_clock_context=None, enerbil_first_step_local=enerbil,
             diffuco_first_step_local_enerbil_precall=diffuco,
             diffuco_control_salinity=None, diffuco_control_assembly=None,
             diffuco_first_step_precall=None, thermosoil_first_step_module=closure,

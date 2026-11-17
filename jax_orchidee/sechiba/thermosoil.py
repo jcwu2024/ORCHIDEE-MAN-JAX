@@ -3198,7 +3198,8 @@ def thermosoil_explicit_step(
         snowtemp=snowtemp,
         temp_sol_new=temp_sol_new,
         temp_sol_new_pft=temp_sol_new_pft,
-        veget_max=veget_max,
+        # thermosoil_main:1002-1009 passes veget_max_bg to thermosoil_coef.
+        veget_max=thermosoil_veget_max_bg(veget_max),
         ok_laidev=ok_laidev if ok_laidev is not None else jnp.zeros(profile.ptn.shape[2], dtype=bool),
         dlt=dlt,
         dz1=dz1,
@@ -3396,7 +3397,8 @@ def thermosoil_no_explicit_snow_step(
         pkappa=getdiff.pkappa,
         temp_sol_new=temp_sol_new,
         temp_sol_new_pft=temp_sol_new_pft,
-        veget_max=veget_max,
+        # The same final coef call uses completed weights in either snow mode.
+        veget_max=thermosoil_veget_max_bg(veget_max),
         ok_laidev=ok_laidev,
         dlt=dlt,
         dz1=dz1,

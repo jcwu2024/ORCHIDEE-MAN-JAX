@@ -716,6 +716,21 @@ def sechiba_air_density_from_pb_temp_air(
     )
 
 
+def intersurf_evaporation_rate(vevapp, *, dt_sechiba):
+    """Convert ENERBIL water amount to the DIM2 intersurf return rate.
+
+    Fortran provenance: ``src_sechiba/intersurf.f90``,
+    ``intersurf_initialize_2d`` lines 427-433 and ``intersurf_main_2d``
+    lines 743-749 divide ``vevapp`` by the explicit ``xrdt`` argument.
+    ``src_driver/dim2_driver.f90`` lines 1111-1123 and 1293-1305 pass
+    ``dt`` as ``xrdt``. ENERBIL's ``enerbil_flux`` lines 1505-1508
+    produces kg m-2 per model step; this boundary returns kg m-2 s-1.
+    Keep the ENERBIL amount unchanged for SECHIBA consumers and restarts.
+    """
+
+    return _as_1d("vevapp", vevapp) / jnp.asarray(dt_sechiba)
+
+
 def dim2_driver_non_watchout_energy_coupling_inputs(
     temp_air,
     zlev,
@@ -2016,6 +2031,7 @@ def run_enerbil_first_step_local_from_precall(
     )
 
     local_payload = {
+        "dt_sechiba": dt_sechiba,
         "psold": step.begin.psold,
         "psold_pft": step.begin.psold_pft,
         "qsol_sat": step.begin.qsol_sat,

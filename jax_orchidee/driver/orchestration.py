@@ -175,6 +175,7 @@ from jax_orchidee.sechiba.enerbil import (
     driver_swnet_from_swdown_albedo,
     enerbil_cold_start_surface_state,
     enerbil_first_step_input_coverage,
+    intersurf_evaporation_rate,
     run_enerbil_first_step_local_from_precall,
 )
 from jax_orchidee.sechiba.first_step import SechibaFirstStepInputCoverage, first_step_sechiba_input_coverage
@@ -3031,6 +3032,7 @@ def _previous_step_state_provenance() -> dict[str, tuple[str, ...]]:
         "driver_previous_step_state": (
             "fortran_source/ORCHIDEE/src_driver/orchideedriver.f90 lines 598-659",
             "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 1139-1164",
+            "fortran_source/ORCHIDEE/src_sechiba/intersurf.f90::intersurf_main_2d lines 743-749 returns vevapp per second",
             "fortran_source/ORCHIDEE/src_sechiba/condveg.f90 lines 612-839 returns two-band albedo to the driver state",
         ),
         "sechiba_finalize_state": (
@@ -3256,8 +3258,13 @@ def _add_enerbil_local_to_previous_fields(
             if target_name in {"temp_sol", "temp_sol_pft", "qsurf"}:
                 fields["enerbil_previous_step_state"][target_name] = payload[source_name]
     driver = fields.setdefault("driver_previous_step_state", {})
-    for name in ("fluxsens", "vevapp", "petAcoef", "petBcoef", "peqAcoef", "peqBcoef"):
+    for name in ("fluxsens", "petAcoef", "petBcoef", "peqAcoef", "peqBcoef"):
         driver[name] = payload[name]
+    # intersurf_main_2d:743-749 returns a rate to DIM2. The ENERBIL
+    # payload and SECHIBA finalize state retain the accumulated water amount.
+    driver["vevapp"] = intersurf_evaporation_rate(
+        payload["vevapp"], dt_sechiba=payload["dt_sechiba"],
+    )
     driver.update(
         {
             "old_zlev": payload["zlev"],

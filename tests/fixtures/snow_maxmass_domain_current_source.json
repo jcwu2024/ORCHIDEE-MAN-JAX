@@ -1,0 +1,1798 @@
+{
+  "schema": "snow-maxmass-domain-current-source-v1",
+  "baseline": "82d622722feea3cfe5034d8b15f98cda78e04872",
+  "provenance": "Current original explicitsnow main325-372/386-402 fragments and complete snow procedures. Read-only phase instrumentation. New bounded reference, not regeneration of historical10-case oracle.",
+  "identity": {
+    "baseline": "82d622722feea3cfe5034d8b15f98cda78e04872",
+    "source_files": {
+      "fortran_source\\ORCHIDEE\\src_sechiba\\explicitsnow.f90": "648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9",
+      "fortran_source\\ORCHIDEE\\src_sechiba\\qsat_moisture.f90": "3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e",
+      "scripts\\dev\\oracle_lane_hydrol_explicit_snow.f90.template": "23a089275a4d1b08b71fbabd5dc2cf54620db9c10996af736e02faef8e57c842",
+      "scripts\\dev\\oracle_snow_maxmass_domain.py": "d2b3eeb219fd25877cecc16c6349ba17648ef08fd829f7bd0bccab01c0daaec5"
+    },
+    "extracted_procedures": {
+      "explicitsnow_main": "db54995f8bc7a5394bc6516b054a319ceeeebd038352b4451d1c0f1bc56c22fe",
+      "explicitsnow_grain": "ddc8577cbac9f8133b800241253a8c6a71a47fa6250e3dfa8c340f670baa77f8",
+      "explicitsnow_compactn": "534f0a0345984a503af90cd70f92abb8851aeac3e5fe74f842dc64df90bd48fa",
+      "explicitsnow_transf": "5c819f013d39f0b3e9b5800ce4f5e72868888d6d4534862c297d46c5370c81f9",
+      "explicitsnow_fall": "9a5c8fcf1f6fb53d33a2f8deccccf58d070e822d2391f2bf4a6c680e8b71b55a",
+      "explicitsnow_gone": "f32654d09da1a4f169819a2fbe71d0d569789be79da037ed71fb888b975df263",
+      "explicitsnow_melt_refrz": "7b2a1feb74c077cc017730d184a48bdafe49c3dde7847cc7dd13db3f0bdb77a1",
+      "explicitsnow_levels": "4a0ccaefd44d637fe2664b63eb65962a3ea4aba59eef6317960ab5131d40629a",
+      "explicitsnow_profile": "a4506967315fb8b1d6836f5165c1b69aa227b889b1263575464f39fb3fb1fc81",
+      "snow3lgrain_0d": "180028d52d09b838e8fd012cb67d00bce58ac31912b5343b51802153371edc46",
+      "snow3lgrain_1d": "b581fd00cd44e079c9c9a770bc17eaa4d860c34d7e6f03c0103ec2a7a1992300",
+      "snow3lscap_1d": "810c0769d27c12b4ab476b5fb7d281531caef4d19299a075546d74693fb3f894",
+      "snow3lhold_1d": "d4dd18012757b07c3947bdf20f864da60a2148b9f1e3384c3c1049a27e127ea6",
+      "snow3lheat_1d": "c9da3627250c4d3c35f7444cd42c125ebd1c9fa2d510e7a2fd536b9a6f622680",
+      "snow3ltemp_1d": "ddd84a7e6c28ca813821b8ffadb78407b4ce8eb89901c1f9f8ed21fea17d25bd",
+      "snow3lliq_1d": "6bd3b3bcfe696f274eb213fa5e6ff147a7b78bd4134594ae2078c528f2a117ac"
+    },
+    "exact_fragments": {
+      "maxmass": [
+        325,
+        372
+      ],
+      "return_heat": [
+        386,
+        402
+      ]
+    },
+    "instrumentation": "Read-only phase captures; original procedure arithmetic unchanged. Wrapper initializes locals and returns location; original inactive location is undefined and represented by0 in wrapper only.",
+    "snow_chalfu0": 333700.0,
+    "soil_lhf": 333600.0,
+    "old_oracle": "not overwritten or regenerated",
+    "graph": "Verify exact-source fallback; parent list_projects Transport closed, generation/coverage unavailable"
+  },
+  "fortran_outputs_sha256": "c4e1fc6f237eede7b03791942fdcb9ad07a3c7f3677b0864580408ae2be4ebe7",
+  "compile_unit_sha256": "6272e011a8da34ab763c6d894b3cd66d89ca98405672e78cf575448cd30e9953",
+  "source_constant_snow_latent_heat": 333700.0,
+  "soil_lhf": 333600.0,
+  "cases": [
+    {
+      "inputs": {
+        "id": "below_mass_threshold",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          7.0,
+          0.25,
+          0.2475
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 16685000.0,
+        "expected_loc": 0,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -964728519.9999998,
+        -34033389.99999999,
+        -33036300.0
+      ],
+      "expected": {
+        "removal": [
+          0.0
+        ],
+        "location": [
+          0.0
+        ],
+        "mass": [
+          2999.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.0,
+          0.25,
+          0.2475
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -964728519.9999998,
+          -34033389.99999999,
+          -33036300.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "mass_threshold_equal",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          7.0,
+          0.25,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 16685000.0,
+        "expected_loc": 0,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -964728519.9999998,
+        -34033389.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          0.0
+        ],
+        "location": [
+          0.0
+        ],
+        "mass": [
+          3000.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.0,
+          0.25,
+          0.25
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -964728519.9999998,
+          -34033389.99999999,
+          -33370000.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "moderate_zero_capacity",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 0.0,
+        "expected_loc": 3,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          0.0
+        ],
+        "location": [
+          3.0
+        ],
+        "mass": [
+          3500.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -68066779.99999999,
+          -33370000.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "moderate_bottom_cap",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 16685000.0,
+        "expected_loc": 3,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          50.0
+        ],
+        "location": [
+          3.0
+        ],
+        "mass": [
+          3450.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.5,
+          0.125
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -68066779.99999999,
+          -16685000.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "bottom_interface_equal",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 33370000.0,
+        "expected_loc": 2,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          100.0
+        ],
+        "location": [
+          2.0
+        ],
+        "mass": [
+          3400.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.5,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -68066779.99999999,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "middle_positive_removal",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 66740000.0,
+        "expected_loc": 2,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          200.0
+        ],
+        "location": [
+          2.0
+        ],
+        "mass": [
+          3300.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.25,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -34033389.99999999,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "middle_interface_equal",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 100110000.0,
+        "expected_loc": 1,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          300.0
+        ],
+        "location": [
+          1.0
+        ],
+        "mass": [
+          3200.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.0,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          0.0,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "top_positive_removal",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 133480000.0,
+        "expected_loc": 1,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          400.0
+        ],
+        "location": [
+          1.0
+        ],
+        "mass": [
+          3100.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.75,
+          0.0,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1068092289.9999998,
+          0.0,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "excess_limited",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 333700000.0,
+        "expected_loc": 1,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          500.0
+        ],
+        "location": [
+          1.0
+        ],
+        "mass": [
+          3000.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.5,
+          0.0,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1033637699.9999998,
+          0.0,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "upper_mass_below_3000",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          6.9975,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 333700000.0,
+        "expected_loc": 3,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -964383974.0999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          99.0
+        ],
+        "location": [
+          3.0
+        ],
+        "mass": [
+          3000.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          6.9975,
+          0.5,
+          0.0025000000000000022
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -964383974.0999998,
+          -68066779.99999999,
+          -333700.0000000003
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "upper_mass_equal_3000",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          7.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 333700000.0,
+        "expected_loc": 2,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -964728519.9999998,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          100.0
+        ],
+        "location": [
+          2.0
+        ],
+        "mass": [
+          3000.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.0,
+          0.5,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -964728519.9999998,
+          -68066779.99999999,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "upper_mass_above_3000",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          7.0025,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 333700000.0,
+        "expected_loc": 2,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -965073065.8999999,
+        -68066779.99999999,
+        -33370000.0
+      ],
+      "expected": {
+        "removal": [
+          101.0
+        ],
+        "location": [
+          2.0
+        ],
+        "mass": [
+          3000.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.0025,
+          0.4975,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -965073065.8999999,
+          -67726446.09999998,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "empty_bottom_equal_zero",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.0
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 0.0,
+        "expected_loc": 2,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        0.0
+      ],
+      "expected": {
+        "removal": [
+          0.0
+        ],
+        "location": [
+          2.0
+        ],
+        "mass": [
+          3400.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.5,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -68066779.99999999,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "two_empty_bottom_layers_equal_zero",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.0,
+          0.0
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 0.0,
+        "expected_loc": 1,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        0.0,
+        0.0
+      ],
+      "expected": {
+        "removal": [
+          0.0
+        ],
+        "location": [
+          1.0
+        ],
+        "mass": [
+          3200.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.0,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          0.0,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "wet_cross_layer_return_heat",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.25
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.001,
+          0.001,
+          0.001
+        ],
+        "soilcap": 133480000.0,
+        "expected_loc": 1,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102213179.9999998,
+        -67733079.99999999,
+        -33036300.0
+      ],
+      "expected": {
+        "removal": [
+          400.0
+        ],
+        "location": [
+          1.0
+        ],
+        "mass": [
+          3100.0
+        ],
+        "grndflux": [
+          370.77777777777777
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          7.75,
+          0.0,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.001,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1067758589.9999998,
+          0.0,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "extreme_factor_threshold_equal",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.5
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 333700.0,
+        "expected_loc": 3,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -66740000.0
+      ],
+      "expected": {
+        "removal": [
+          1.0
+        ],
+        "location": [
+          3.0
+        ],
+        "mass": [
+          3599.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.5,
+          0.4975
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -68066779.99999999,
+          -66406300.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "extreme_factor_threshold_above",
+        "mode": "helper",
+        "domain": "mathematical_positive_density_maxmass_domain",
+        "rho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "dz": [
+          8.0,
+          0.5,
+          0.5000000000000011
+        ],
+        "temperature": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 333700.0,
+        "expected_loc": 3,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1102546879.9999998,
+        -68066779.99999999,
+        -66740000.00000015
+      ],
+      "expected": {
+        "removal": [
+          3.0
+        ],
+        "location": [
+          3.0
+        ],
+        "mass": [
+          3597.0000000000005
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          400.0,
+          400.0,
+          400.0
+        ],
+        "snowdz": [
+          8.0,
+          0.5,
+          0.4925000000000011
+        ],
+        "snowtemp": [
+          268.0,
+          270.0,
+          273.15
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1102546879.9999998,
+          -68066779.99999999,
+          -65738900.00000015
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "deep_regular_remap",
+        "mode": "path",
+        "domain": "source_consumable_component_restart_and_inputs_not_natural_path_proof",
+        "rho": [
+          300.0,
+          300.0,
+          300.0
+        ],
+        "dz": [
+          0.05,
+          0.5,
+          10.0
+        ],
+        "temperature": [
+          268.0,
+          268.0,
+          268.0
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 2000000.0,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -5168188.5,
+        -51681884.99999999,
+        -1033637699.9999999
+      ],
+      "expected": {
+        "mass": [
+          3159.0065927479777
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          300.0063892197431,
+          300.07028141717365,
+          301.3481253657849
+        ],
+        "snowdz": [
+          0.0499989351527213,
+          0.49988289173982553,
+          9.935374872877565
+        ],
+        "snowtemp": [
+          268.0,
+          268.0,
+          268.0
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -5168188.5,
+          -51681884.999999985,
+          -1031572696.1042852
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "snow": [
+          3159.0065927479777
+        ],
+        "snowmelt": [
+          0.0
+        ],
+        "tot_melt": [
+          5.993407252022775
+        ],
+        "vevapsno": [
+          0.0
+        ],
+        "subsinksoil": [
+          0.0
+        ],
+        "temp_sol_add": [
+          0.0
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "zero_layer_deep_uniform_transfer_crossing",
+        "mode": "path",
+        "domain": "source_consumable_ordinary_density_high_capacity_not_natural_path_proof",
+        "rho": [
+          600.0,
+          600.0,
+          600.0
+        ],
+        "dz": [
+          0.0,
+          5.0,
+          5.0
+        ],
+        "temperature": [
+          268.0,
+          268.0,
+          268.0
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 266960000.0,
+        "vevapsno": 0.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        0.0,
+        -1033637699.9999999,
+        -1033637699.9999999
+      ],
+      "expected": {
+        "mass": [
+          3600.0
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          600.0076953141679,
+          600.0153906283358,
+          600.0230859425037
+        ],
+        "snowdz": [
+          3.3332905821362626,
+          2.6665982656286213,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          268.0,
+          268.0
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -689091800.0,
+          -551273439.9999999,
+          0.0
+        ],
+        "snowgrain": [
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "snow": [
+          3600.0
+        ],
+        "snowmelt": [
+          0.0
+        ],
+        "tot_melt": [
+          2400.0
+        ],
+        "vevapsno": [
+          0.0
+        ],
+        "subsinksoil": [
+          0.0
+        ],
+        "temp_sol_add": [
+          0.0
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "negative_sublimation_crossing",
+        "mode": "path",
+        "domain": "source_consumable_ordinary_density_extreme_deposition_not_natural_path_proof",
+        "rho": [
+          300.0,
+          300.0,
+          300.0
+        ],
+        "dz": [
+          0.01,
+          0.01,
+          0.01
+        ],
+        "temperature": [
+          268.0,
+          268.0,
+          268.0
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 2000000.0,
+        "vevapsno": -3005.0,
+        "snowfall": 0.0,
+        "profile_temperature": 268.0
+      },
+      "entry_heat": [
+        -1033637.6999999998,
+        -1033637.6999999998,
+        -1033637.6999999998
+      ],
+      "expected": {
+        "mass": [
+          3008.0065927479773
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          300.0012778439486,
+          300.0025556878972,
+          300.0038335318459
+        ],
+        "snowdz": [
+          10.026623958464166,
+          2.1975639381163065e-05,
+          0.0
+        ],
+        "snowtemp": [
+          268.0,
+          268.0,
+          268.0
+        ],
+        "snowliq": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "snowheat": [
+          -1036394067.1999999,
+          -2271.504285286001,
+          0.0
+        ],
+        "snowgrain": [
+          0.00010000000000000002,
+          0.0001,
+          0.00010000000000000006
+        ],
+        "snow": [
+          3008.0065927479773
+        ],
+        "snowmelt": [
+          0.0
+        ],
+        "tot_melt": [
+          5.993407252022775
+        ],
+        "vevapsno": [
+          -3005.0
+        ],
+        "subsinksoil": [
+          0.0
+        ],
+        "temp_sol_add": [
+          0.0
+        ]
+      }
+    },
+    {
+      "inputs": {
+        "id": "snowfall_warm_phase_and_drainage",
+        "mode": "path",
+        "domain": "bounded_synthetic_component_path_not_natural_path_proof",
+        "rho": [
+          300.0,
+          300.0,
+          300.0
+        ],
+        "dz": [
+          0.05,
+          0.5,
+          10.0
+        ],
+        "temperature": [
+          273.15,
+          273.15,
+          273.15
+        ],
+        "liquid": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "soilcap": 2000000.0,
+        "vevapsno": 0.2,
+        "snowfall": 1.0,
+        "profile_temperature": 281.15
+      },
+      "entry_heat": [
+        -5005500.0,
+        -50055000.0,
+        -1001100000.0
+      ],
+      "expected": {
+        "mass": [
+          3094.9401198681453
+        ],
+        "grndflux": [
+          0.0
+        ],
+        "snowrho": [
+          276.7447320050666,
+          308.7627106394735,
+          311.3882496078638
+        ],
+        "snowdz": [
+          0.046781196797799685,
+          0.4748943462103553,
+          9.426701258608
+        ],
+        "snowtemp": [
+          273.15,
+          273.15,
+          273.15
+        ],
+        "snowliq": [
+          0.00040264302981466566,
+          0.004490901638773232,
+          0.0900864553314121
+        ],
+        "snowheat": [
+          -4185868.309427881,
+          -47431705.53495253,
+          -949469118.1556197
+        ],
+        "snowgrain": [
+          0.00011437752093768525,
+          0.00010288987433064736,
+          0.00010266857684084014
+        ],
+        "snow": [
+          3094.9401198681453
+        ],
+        "snowmelt": [
+          64.86647287983222
+        ],
+        "tot_melt": [
+          70.859880131855
+        ],
+        "vevapsno": [
+          0.2
+        ],
+        "subsinksoil": [
+          0.0
+        ],
+        "temp_sol_add": [
+          0.0
+        ]
+      }
+    }
+  ]
+}

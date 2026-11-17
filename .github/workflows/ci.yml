@@ -19,6 +19,12 @@ jobs:
           tests/unit/test_public_cli.py
           tests/unit/test_portable_config.py
           tests/unit/test_paper_landpoint_acceptance.py
+          tests/unit/test_ci_c50_energy_regression.py
+          tests/unit/test_thermosoil_full_component_coef.py::test_actual_final_coefficient_call_matches_original_fortran
+          tests/unit/test_snow_maxmass_domain.py::test_current_source_maxmass_all_locations_caps_ties_and_return_heat
+          tests/unit/test_coupling_source_contract.py::test_nonzero_tuple_surftemp_flux_and_intersurf_rate_match_original_source
+          tests/unit/test_coupling_source_contract.py::test_nonzero_A_is_consumed_and_rate_boundary_is_jittable
+          tests/unit/test_coupling_source_contract.py::test_production_precall_adapter_passes_nonzero_tuple_to_actual_energy_solver
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -27,3 +33,7 @@ jobs:
           tests/unit/test_public_cli.py
           tests/unit/test_portable_config.py
           tests/unit/test_paper_landpoint_acceptance.py
+          tests/unit/test_ci_c50_energy_regression.py
+          tests/unit/test_thermosoil_full_component_coef.py
+          tests/unit/test_snow_maxmass_domain.py
+          tests/unit/test_coupling_source_contract.py
