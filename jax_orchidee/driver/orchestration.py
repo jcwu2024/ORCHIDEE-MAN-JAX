@@ -3901,7 +3901,10 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
             fields["thermosoil_previous_step_state"][name] = prior_therm[name]
     prior_hydrol = scaffold.enerbil.previous_state.fields_by_component.get("hydrol_previous_step_state", {})
     for name in ("free_drain_coef", "zwt_force", "njsc", "fwet_new"):
-        if name in prior_hydrol:
+        # hydrol_soil:7307-7342 updates fwet only on the TOPMODEL branch.
+        if name in prior_hydrol and (
+            name != "fwet_new" or name not in fields["hydrol_previous_step_state"]
+        ):
             fields["hydrol_previous_step_state"][name] = prior_hydrol[name]
     prior_diffuco = scaffold.enerbil.previous_state.fields_by_component.get("diffuco_previous_step_state", {})
     if "soilalbedo_bg" in prior_diffuco:
@@ -6491,7 +6494,10 @@ def _runtime_next_state_from_components(
             fields["thermosoil_previous_step_state"][name] = prior_therm[name]
     prior_hydrol = _previous_state_component_fields(previous_state, "hydrol_previous_step_state")
     for name in ("free_drain_coef", "zwt_force", "njsc", "fwet_new"):
-        if name in prior_hydrol:
+        # Preserve a new TOPMODEL diagnostic; otherwise retain the source carry.
+        if name in prior_hydrol and (
+            name != "fwet_new" or name not in fields["hydrol_previous_step_state"]
+        ):
             fields["hydrol_previous_step_state"][name] = prior_hydrol[name]
     prior_diffuco = _previous_state_component_fields(previous_state, "diffuco_previous_step_state")
     if "soilalbedo_bg" in prior_diffuco:

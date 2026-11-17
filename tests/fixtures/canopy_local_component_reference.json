@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "case_name": "dry_active",
+  "point_index": 0,
+  "pft_fortran_index": 14,
+  "original_fortran_csv": "outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/canopy/reference/fortran_outputs.csv",
+  "original_fortran_csv_sha256": "baad08f6309081787090855769a165748ef2fd4073e5b505a7a41d0bc3b24f57",
+  "source_spans": {
+    "diffuco_aero": {
+      "start_line": 940,
+      "end_line": 1144,
+      "sha256": "59f2479a8823c00373f246e4ba1f0de3f3fb2792363f603f54ad29b8df2f689c",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "diffuco_snow": {
+      "start_line": 1177,
+      "end_line": 1281,
+      "sha256": "9c18da8b4f087bcd531d337d7428c8804b20a175efcea99dc709834b6eed16ee",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "diffuco_flood": {
+      "start_line": 1301,
+      "end_line": 1356,
+      "sha256": "d72835d077792f5598a5699aecac28551d42e6544bc422645372411a0d5679fc",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "diffuco_inter": {
+      "start_line": 1426,
+      "end_line": 1553,
+      "sha256": "d304213aba7d53ac04d4ea115e04e2e185585fc2d20aab733e32e3a36b5a91dc",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "diffuco_trans_co2": {
+      "start_line": 2018,
+      "end_line": 2982,
+      "sha256": "8b5f99c017fabe160bc5d51b771d9755c3bb69ecf320d3a0b71ca04202b094d9",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "diffuco_bare": {
+      "start_line": 1593,
+      "end_line": 1690,
+      "sha256": "1e7936e21385d90a437699988150c605b782d4e7d62af84b3cbc90e1e95304b4",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "diffuco_comb": {
+      "start_line": 3070,
+      "end_line": 3271,
+      "sha256": "bfc8a7d2e1d2b329564643bef965ede273084752fe6126684b7becb0f3b4a63a",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "Arrhenius": {
+      "start_line": 3356,
+      "end_line": 3370,
+      "sha256": "de1ec10fe68c9c25660433cadc88214679eafd4945d050b6255bd033aedddda7",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "Arrhenius_modified_0d": {
+      "start_line": 3393,
+      "end_line": 3412,
+      "sha256": "89be283952d0c5ccfc1cf3d0bbde069a1e753cafdc6fa251da2a06a0a255f758",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "Arrhenius_modified_1d": {
+      "start_line": 3372,
+      "end_line": 3391,
+      "sha256": "771403beb3ec0e33cee29a6a5246eea181518f9501a2b573ed86395475d41cb4",
+      "source_sha256": "6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba"
+    },
+    "enerbil_main": {
+      "start_line": 390,
+      "end_line": 598,
+      "sha256": "d6def4ed8f37ba2d9c09df55bde398ac33b868735115f47573b1b9e3bba3613f",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "enerbil_begin": {
+      "start_line": 735,
+      "end_line": 873,
+      "sha256": "e701b94a403f03d9e0603092fbb378e75cfcbcd8ec0f01ed754d62b1a3a391b3",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "enerbil_surftemp": {
+      "start_line": 927,
+      "end_line": 1245,
+      "sha256": "8958aece7cec9727ccb684183ef02955a273a2f95eaf4d01ec58eeca50347cb6",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "enerbil_pottemp": {
+      "start_line": 1263,
+      "end_line": 1317,
+      "sha256": "738b87f68b608c7de07247125ec3f1eabc7d1035265b20ecabb4d76adfff21d4",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "enerbil_flux": {
+      "start_line": 1367,
+      "end_line": 1651,
+      "sha256": "e0a4a180a8be8fd740bd36f00dd45dc3254f2339e2db585910ce6443742b4ec5",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "enerbil_evapveg": {
+      "start_line": 1691,
+      "end_line": 1841,
+      "sha256": "f3391ebc773d575e454a43ee2f5caf7157148b57247b461283ec51ece89a2b43",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "enerbil_t2mdiag": {
+      "start_line": 1993,
+      "end_line": 2021,
+      "sha256": "33adadac3dc6b320ef66f0cc089b53986a2fa3f58ef402d9cbb22748831f492a",
+      "source_sha256": "997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b"
+    },
+    "qsfrict_init": {
+      "start_line": 547,
+      "end_line": 589,
+      "sha256": "111ec65a159bffd0a05edc78afc13ebb43cd8f888686003b0ae12f669db8de0c",
+      "source_sha256": "3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e"
+    },
+    "qsatcalc": {
+      "start_line": 79,
+      "end_line": 179,
+      "sha256": "e2f88c9bb8a7faa186ff2119af3eab2e22521f2f90088168d7ed00cebf78a0bb",
+      "source_sha256": "3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e"
+    },
+    "dev_qsatcalc": {
+      "start_line": 311,
+      "end_line": 408,
+      "sha256": "580e844fc0a7ab8d3e0ac9e89316760c441a84dcaec9986f5d342a9293e5252a",
+      "source_sha256": "3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e"
+    }
+  },
+  "input_fixture": "scripts/dev/oracle_canopy_component_fixture.py::make_canopy_fixture(indices=(0,))",
+  "input_fixture_sha256": "74e56674a63a25e5318ea2265ad8d9a9c317294c79d9e6b98a6b0d7730ff85d5",
+  "reference_kind": "original complete procedures in bounded component harness; scientific routines unmodified; IO stubs only; not diffuco_main or SECHIBA",
+  "rtol": 1e-11,
+  "atol": 1e-12,
+  "expected": {
+    "diffuco.gpp": 0.07517672575065532,
+    "diffuco.gsmean": 0.13653741831348093,
+    "diffuco.rveget": 144.64645011660085,
+    "diffuco.rstruct": 23.97352036580068,
+    "diffuco.cimean": 218.48175047757118,
+    "diffuco.vbeta3": 0.6373168393312266,
+    "diffuco.vbeta2": 0.0,
+    "enerbil.qsol_sat": 0.019526704238462575,
+    "enerbil.pdqsold": 0.0011657633593417137,
+    "enerbil.temp_sol_new": 299.2912422257699,
+    "enerbil.transpir": 0.009729953736267664,
+    "enerbil.transpot": 0.009729953736267664,
+    "enerbil.fluxlat": 18.92532249383284,
+    "enerbil.qsurf": 0.018899031408535563
+  }
+}

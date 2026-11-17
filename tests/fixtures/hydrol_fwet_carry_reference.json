@@ -1,0 +1,16 @@
+{
+  "schema": "hydrol-fwet-writer-source-input-v1",
+  "source": "fortran_source/ORCHIDEE/src_sechiba/hydrol.f90::hydrol_soil:7252-7342",
+  "purpose": "Portable source-defined TOPMODEL diagnostic input and writer freshness invariant, not an independent numerical oracle or complete HYDROL closure",
+  "dimensions": {"npts": 1, "nslm": 7, "nstm": 1},
+  "mc": 0.3,
+  "mcs": [0.41],
+  "dz_mm": [2, 4, 8, 12, 18, 24, 30],
+  "dh_mm": [2, 4, 8, 12, 18, 24, 30],
+  "temp_hydro": 280.0,
+  "param_vp": [0.8],
+  "param_kp": [2.0],
+  "param_qp": [0.1],
+  "param_fmax": [0.7],
+  "prior_fwet_new": [0.123]
+}

@@ -2177,6 +2177,17 @@ def assemble_pft14_local_enerbil_precall_kwargs_from_first_step_precall(
         "lai_level_depth": lai_level_depth,
         "min_wind": min_wind,
     }
+    if "lai_light" not in trans_co2_inputs:
+        # Build the source-static canopy layout before the local owner enters
+        # jit. A nested trans_co2_inputs['nlai'] is otherwise traced as a
+        # runtime scalar, although diffuco_trans_co2 lines 2214-2234 require
+        # the declared number of LAI levels to determine array dimensions.
+        trans_co2_inputs["lai_light"] = diffuco_lai_light_table(
+            jnp.atleast_1d(pft_params["ext_coeff"]),
+            nlai=DEFAULT_NLAI,
+            laimax=laimax,
+            lai_level_depth=lai_level_depth,
+        )
     xp = jnp if isinstance(ca, core.Tracer) else np
     pft_backgrounds = {
         "gpp": xp.zeros((npts, nvm), dtype=np.float64),

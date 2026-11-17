@@ -19,6 +19,8 @@ jobs:
           tests/unit/test_public_cli.py
           tests/unit/test_portable_config.py
           tests/unit/test_paper_landpoint_acceptance.py
+          tests/unit/test_hydrol_diffuco_state_handoff.py::test_portable_fwet_diagnostic_survives_actual_carry
+          tests/unit/test_canopy_component_local_jit.py::test_canopy_component_first_step_jit_matches_original_fortran
           tests/unit/test_ci_c50_energy_regression.py
           tests/unit/test_thermosoil_full_component_coef.py::test_actual_final_coefficient_call_matches_original_fortran
           tests/unit/test_snow_maxmass_domain.py::test_current_source_maxmass_all_locations_caps_ties_and_return_heat
@@ -33,6 +35,8 @@ jobs:
           tests/unit/test_public_cli.py
           tests/unit/test_portable_config.py
           tests/unit/test_paper_landpoint_acceptance.py
+          tests/unit/test_hydrol_diffuco_state_handoff.py
+          tests/unit/test_canopy_component_local_jit.py
           tests/unit/test_ci_c50_energy_regression.py
           tests/unit/test_thermosoil_full_component_coef.py
           tests/unit/test_snow_maxmass_domain.py
