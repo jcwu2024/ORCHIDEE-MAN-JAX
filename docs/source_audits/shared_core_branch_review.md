@@ -1,6 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C50 thermal energy权重修复，同步继续暂停
+## 当前已接受：C51／C52热过程与蒸发单位共享依赖组，同步继续暂停
+
+main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[并行整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)于2026-11-17获主控接受，包含两个有复查前证据的修复：C51 THERMOSOIL两个final coef使用补足裸地权重；C52 ENERBIL实际执行dt随local payload传给共同writer，按源intersurf只在driver vevapp处除dt。共同代码／测试／CI提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。完整thermal8例eager／实际JIT对照552字段过，根有限carry／writer／单点IO15项过。HYDROL和DIM2生产代码未改。
+
+未来集中核对必须包含三个生产文件`sechiba/thermosoil.py`、`sechiba/enerbil.py`、`driver/orchestration.py`，两项新oracle脚本、A／B／C及联合测试和三份原源数值fixture、C50 CI测试及workflow。特别是dt元数据、共同writer、SECHIBA amount与driver rate的命名空间须作为同一依赖组评审，codec不再二次除dt。CI只纳入可移植节点；源identity节点仍需本地只读Fortran。
+
+积雪17 helper／4完整组件的635／636字段通过，1项grain完整JIT严格失败和自然PFT14跨层`domain-unproven`保留；非零peq外部producer合同仍缺。本包只证明声明组件域和有限接口，不授权模型积分或部署。正式52项／30相关生产提交，51项复查前证据＋C42新增helper遗漏；90＋1＋1／92、93／126／181及`numerical_acceptance=false`保持。主控将雪测试的strict xfail收窄到已知case的有限grain差异，定向1项xfail及Ruff通过，不增加模型修正数。没有访问、写入或同步daily／global工作树；此前C50审查误读研究树的范围纠正仍保留在原包。[主控验收](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-acceptance.json)和[发布记录](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-publication.json)补充原交付pending回执。
+
+## 已接受基线：C50 thermal energy权重修复，同步继续暂停
 
 main `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` 上的[本地独立thermal包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)已获主控接受，登记C50，代码／Oracle／fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`。原源`thermosoil_main:913`传`veget_max_bg`，本轮将`sechiba/thermosoil.py`中explicit及no-explicit两个energy调用实参补足裸地，其余生产执行AST不变。稀疏植被原Fortran反例证实旧两路均可把surfheat错分到coldcont；17标准案例通过后，修复后18保存案例两caller eager／窄JIT的288字段通过，真实隔离explicit owner／carry单次通过，pytest95通过／2旧控制skip。全no-explicit分支及完整compiled热路径未认证，详见[主控接受](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)。
 
@@ -901,12 +909,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C50，共50项已接受修正、29个相关生产代码提交；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C52，共52项已接受修正、30个相关生产代码提交；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C50仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C52仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -948,6 +956,14 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C48 | `driver/source_calendar.py`、`source_clock.py`、`orchestration.py`、`fast_state.py`、`dim2.py`、forcing／restart适配器及`sechiba/slowproc.py`、`stomate/restart_io.py` | 782535b4130f2ddc8cd30a251e0493709e1ab26a |
 | C49 | `sechiba/hydrol.py`、`io_contracts.py`、`restart_io.py`、`initialize.py`及`driver/restart_state.py`、`orchestration.py` | `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7`（初次vegstress）；`d6bad452932d1a7179ff5ab5fd80c771da89e336`（US_INIT上游补齐） |
 | C50 | `sechiba/thermosoil.py` 两个energy调用；同提交包含原源Oracle及回归fixture | `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01` |
+| C51 | `sechiba/thermosoil.py` 两个final coef调用；同提交包含完整组件Oracle及回归fixture | `9a856c6cf859437d2436f4f3748d4c9e770838a1` |
+| C52 | `sechiba/enerbil.py`实际dt元数据／amount→rate helper、`driver/orchestration.py`共享writer；联合测试及CI随同 | `9a856c6cf859437d2436f4f3748d4c9e770838a1` |
+
+### C51／C52 热系数权重与driver蒸发单位（2026-11-17已接受）
+
+C51按源thermosoil_main:1002–1009将补足裸地的veget_max_bg传给两个末段coef消费者，复用既有helper；它不重复登记C50的energy实参，也不改coef算法。旧52字段反例与修后552字段／112332标量通过均绑定原8例参考。C52按enerbil_flux:1505–1508及intersurf_main_2d:743–749区分每步kg m⁻²和driver kg m⁻² s⁻¹；实际执行dt随payload传到唯一共享writer后除一次，SECHIBA amount与driver codec不再转换。两个旧错在7cae3e02已存在，精确引入提交未知。
+
+共同提交包含三个生产文件及原源fixture／开发Oracle／回归与CI；有限接口15项通过，隔离CI26项与Ruff证据分别复用attempt05／06。后续同步必须成组核对C50／C51权重依赖、实际dt和writer各caller、amount／rate命名空间及独立测试，不能只替换整文件。积雪strict xfail仅放行已知case的有限grain差异，其他字段先正常检查；这一测试保护不计新模型缺陷。自然雪域、外部PBL producer、真实reader／历史身份和整模型／NPP／DOC门仍未关闭。
 
 ### C50 热能诊断权重（2026-11-16已接受）
 

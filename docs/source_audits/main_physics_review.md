@@ -1,6 +1,16 @@
 # main 物理正确性检查入口
 
-## 当前：C50热能裸地权重修复及有界独立初始化对照已接受
+## 当前已接受：C51热系数权重、C52驱动蒸发单位与并行验证包
+
+2026-11-17，主控接受基线main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)。本包补齐完整热组件 eager／真实组件JIT的有界独立原Fortran对照，并完成有限相邻组件、共享写回和driver NetCDF检查。确认并最小修复两个复查前已存在的问题：C51两个final coef调用误传raw `veget_max`，C52共享driver carry遗漏intersurf的蒸发量除以实际dt。前者补足裸地权重，后者只在driver边界转为kg m⁻² s⁻¹；ENERBIL及SECHIBA `evapora`仍保留每步水量。两项均保存旧反例与来源，共同代码／测试提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。
+
+热过程修后复用8份原源参考，完整eager8／JIT8的552字段、112332标量比较全部通过；原52失败字段保留。根联合15项通过，包含真实材料／系数／温度记忆传递、两份单点driver文件往返和五种真实writer路由。稀疏显雪与无显雪薄雪各完成两次相邻thermal调用；冷合成输入第二次触发现有跨PFT冻结guard，只认证其首调用、写回及下一调用实参，不称连续冷轨迹。writer路由隔离独立calendar adapter，不增加clock认证。
+
+积雪使用当前333700潜热建立17个helper边界及4条完整组件原源参考，636字段比较635通过、1项完整JIT grain严格失败；9通过／1 strict xfail明确保留，未改容差。原Fortran O3/FMA同输入也产生微正液水并改变精确零分支，支持浮点收缩敏感性，不能把严格失败改写为通过。transfer的零旧层fallback可均分深雪并覆盖levels几何界限；普通密度的源可消费跨层实例已证实，自然PFT14可达域仍`domain-unproven`。非零peq consumer及dt900／2700原源对照通过；外部PBL producer身份、符号和rate／amount合同仍是精确缺证。
+
+CI加入已跟踪fixture可承载的C50和本包A／B／C小回归；隔离attempt05的26项测试通过，attempt06在945 tracked／8 overlay文件身份一致后只补正确Ruff命令并通过，不能称两套测试或hosted Ubuntu／uv已执行。详见[CI交付](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/ci/README.md)。主控复用数值验证，仅收窄积雪xfail到已知case的有限grain差异，其他字段先正常断言；定向1项仍xfail，Ruff通过，原CI helper AST未变。初次回执解析误要求JUnit包含异常类名而失败，已从保存XML核实并修正记录，未重复计算。整包只有本地CPU/x64微驱动、组件和有限接口操作，没有整模型步日年、SSH、GPU、训练或研究树同步。**正式计数为52修正／30相关生产提交，51复查前证据＋C42新增helper遗漏；90＋1＋1／92和93／126／181、`numerical_acceptance=false`保持。** [主控验收](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-acceptance.json)和[发布记录](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-publication.json)更新当前状态，原交付pending回执及失败历史保留。剩余与失败分账见[整包报告](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/report.md)。
+
+## 已接受基线：C50热能裸地权重修复及有界独立初始化对照
 
 2026-11-16，主控接受基线 `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` 上的[独立热过程包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)。原Fortran `thermosoil_main:913`传入补足裸地的`veget_max_bg`，旧JAX的explicit和no-explicit两个energy调用却传raw权重。稀疏植被同输入反例将216899.3529053959的热量增量分入不同诊断项；这是可证实的实参遗漏，不是仅由浮点误差解释的差异。修复复用现有`thermosoil_veget_max_bg`，仅改两个生产实参，登记为同一项C50；代码／Oracle／回归fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`。
 

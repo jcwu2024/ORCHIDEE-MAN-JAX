@@ -6,7 +6,42 @@ ENERBIL pre-call state, ENERBIL after-boundary trace, THERMOSOIL after-call
 state, and restart start state. It does not use `after_enerbil_main` to infer
 pre-call values.
 
-## Current Bounded Independent Evidence (2026-11-16; Accepted)
+## Current component evidence (2026-11-17; accepted in the declared domain)
+
+The [thermal/snow/coupling batch](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)
+adds eight original-source full-component references on main
+`82d622722feea3cfe5034d8b15f98cda78e04872`. Actual production owners select
+the complete explicit or no-explicit eager/JIT delegate. A second bare-ground
+operand omission was found at both final coefficient callers: source
+`thermosoil_main:1002-1009` passes `veget_max_bg`. Only those two operands were
+repaired; accepted C50 energy calls remain unchanged. Reusing the original
+references after repair passes 552 fields / 112332 scalars; the 52 original
+failed coefficient fields remain saved. This is accepted correction C51,
+distinct from C50's energy consumer. Code/test commit:
+`9a856c6cf859437d2436f4f3748d4c9e770838a1`; see the
+[controller acceptance](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-acceptance.json).
+
+The same commit accepts C52 at the separate driver boundary: the actual
+ENERBIL payload carries its executed timestep, and the shared driver writer
+converts evaporation amount to rate once, as in `intersurf:743-749`.
+ENERBIL/SECHIBA retain per-step amounts; the driver codec retains the rate.
+The external PBL coefficient producer remains unidentified.
+
+The root's 15 bounded joint checks exercise the actual shared writer,
+current getdiff `pcapa_en`, energy `temp_sol_beg`, profile/diagnostics and
+end coefficients. Sparse explicit and bucket-thin cases each run a second
+thermal component and consume the new capacity/begin memory. The cold case
+verifies first-call carry and observes the actual next delegate's arguments;
+its second synthetic input hits the existing cross-PFT freeze guard and is
+not a successful cold trajectory. Actual snow output also reaches the thermal
+boundary, without claiming an independent coupled numerical oracle.
+
+No-explicit initialization, compiled illegal-freeze abort semantics, arbitrary
+flags/peat/masks, actual restart reader and historical producer remain outside
+this evidence. Whole-model numerical acceptance remains false. The accepted
+initialization evidence below retains its original identity and scope.
+
+## Accepted initialization and first-consumer evidence (2026-11-16)
 
 The [local source-extracted oracle](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)
 uses main `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` and supplied-array

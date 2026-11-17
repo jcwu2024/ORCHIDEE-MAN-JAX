@@ -1,8 +1,19 @@
-# C1–C50修正来源登记（2026-11-16）
+# C1–C52修正来源登记（2026-11-17）
 
-当前累计50项修正、29个相关生产代码提交。新增C50是热能消费者的裸地权重实参遗漏，提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`；原C1–C49来源和接受范围保留。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。当前合计49项有复查前证据、1项C42属复查新增helper的默认遗漏，不能称50项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
+当前累计52项修正、30个相关生产代码提交。新增C51是热过程末段系数消费者的裸地权重遗漏，C52是driver蒸发量到蒸发率的换算遗漏，两项共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`；原C1–C50来源和接受范围保留。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。当前合计51项有复查前证据、1项C42属复查新增helper的默认遗漏，不能称52项全是旧翻译错误，也不能把接口修正数量当作活动物理公式错误数量。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
+
+## C51–C52：完整热组件及driver蒸发单位边界已接受
+
+基线main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)分别保存两个复查前来源。主控于2026-11-17接受为C51、C52，共同代码／Oracle／fixture／CI提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。见[主控验收](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-acceptance.json)及[发布记录](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-publication.json)。交付时pending回执保留其原始身份。
+
+| 编号 | 复查前证据与最小修复 | 验证／边界 |
+| --- | --- | --- |
+| C51 thermal final coef裸地权重 | `7cae3e02`两个full-step final coef实参均为raw veget_max；源thermosoil_main1002–1009传veget_max_bg。仅两个实参改现有helper，C50 energy调用保持 | [来源](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/thermal/origin-binding.json)；修前52失败字段，修后原8参考eager／JIT552字段过；不同于C50的energy消费者，两个coef调用点合计一项 |
+| C52 driver vevapp amount→rate | `7cae3e02`共享writer直接复制ENERBIL每步amount；源intersurf743–749除xrdt后才返DIM2。新增纯除法helper、实际dt元数据、共同writer一次转换 | [来源](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/integration/origin-binding.json)；非零原源与实际writer／单点IO通过；SECHIBA evapora仍amount，peq外部producer gap不因此关闭 |
+
+只执行保存旧writer的单一函数AST负控制，未import／执行整个旧模块。两项的精确首次引入提交均未知；当前新建参考基础设施和dt metadata接线不伪称旧版已有。积雪没有新确认翻译错，O0／完整JIT grain严格失败独立保留，不能用strict xfail增加通过数或新C号。主控将该xfail限制到已知case的有限grain差异，其他字段先正常断言；定向1项仍为xfail且Ruff通过，属于测试保护，不增加模型修正数。没有整模型运行、研究树同步或NPP／DOC改善结论。
 
 ## C50：thermal energy消费者的裸地权重已接受
 

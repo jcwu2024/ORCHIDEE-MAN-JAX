@@ -1,6 +1,21 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前已接受：独立土壤热初始化与首消费者包、C50权重修复
+## 当前已接受：完整thermal组件、snow条件域与coupling边界
+
+基线main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[并行整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)于2026-11-17获主控有界接受。新增C51 final coef裸地权重与C52 driver蒸发量→率边界，两项均有复查前证据，共同代码／测试提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。正式52／30，51项复查前证据及C42新增helper遗漏；90＋1＋1／92、93／126／181和`numerical_acceptance=false`保持。
+
+| 工作线 | 本包完成 | 仍开放的精确边界 |
+| --- | --- | --- |
+| 热过程 | 原Fortran8例，真实完整eager8／JIT8修后552字段／112332标量通过；末段coef两caller按源使用veget_max_bg | 无显雪初始化、非法跨PFT冻结的compiled abort、partial marker、任意flag／peat／mask、真实reader及历史producer；不外推整模型 |
+| 积雪 | 当前333700的17 helper＋4完整组件；635／636字段过、21例局部预算过；零旧层fallback与跨层源算术已核实 | 1项完整JIT grain严格失败（原O3/FMA亦零分支敏感）；自然PFT14跨层仍conditional/domain-unproven，无全局能量守恒声明 |
+| 耦合／共享接口 | 非零A正负／零、dt900／2700的binary64原源consumer；实际local payload保留执行dt，共享writer仅转换driver rate；15联合检查通过 | 外部PBL producer的tuple／符号／dt约定；WATCHOUT／RELAXATION继续拒绝；NetCDF限单点schema；冷第二合成输入被现有freeze guard拒绝 |
+| CI | tracked fixture数值小回归与C50操作数回归，最终代码的隔离checkout入口验证 | 本地Windows／ORCJAX不等于Ubuntu／uv hosted运行；CI不读被忽略的Fortran或outputs，也不等于完整source／物理分母 |
+
+各失败attempt、原预期独立性、共享写回与精确输入相位见[报告](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/report.md)。主控复用原源、组件及隔离26项CI证据；仅收窄雪grain预期失败标记后定向核对1项xfail和Ruff，其他字段错误不能被该标记吞掉，未重复Fortran或整套测试。见[验收](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/controller-acceptance.json)。下方C50及更早段落保留当时接受范围；其“下一包／尚未派发”不代表本包仍未执行。整模型、DOC严格state／真实碳通量、历史身份及研究同步门继续保留。
+
+下一优先是剩余模块的既有独立参考到当前生产调用及状态写回的逐case核对，先覆盖HYDROL／DIFFUCO相关边界，再据固定缺项清单准备代表性集成门。复用本包已接受的热／雪／耦合证据，不另开长轨迹追逐已识别的浮点分支差异。此处是后续优先顺序，本次验收未派发新任务或启动模型运行。
+
+## 已接受基线：独立土壤热初始化与首消费者包、C50权重修复
 
 基线main `551cc8cdbc4f16fa37ed2c89f260c36b57c596a8` 的[本地交付包](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/README.md)已获主控有界接受，代码／Oracle／回归fixture提交 `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01`。原源切片按初始化相位执行：完整九系数组保留恢复值及最终薄雪overlay；cold／任一组整个数组缺失时，最终coef再次getdiff，覆盖该瞬态overlay。HYDROL raw水分、PFT映射、diaglev及C34实际helper均有同输入数值证据，不能再把这一声明域写作“独立thermal未开始”。支持域与未覆盖分支见[相位合同](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.md)和[主控接受](../../outputs/reviews/main-physics-20261116/thermal-initialization-oracle/controller-acceptance.json)。
 
@@ -235,7 +250,7 @@ cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，�
 | HYDROL／HYDRO_SUBGRID | 现有源oracle到当前调用与状态写回的逐case桥；冻结、mask、条件域保留；不重开已接受C29–C31因果 |
 | DIFFUCO／QSAT | 源分支同输入tuple、PFT／植被mask、返回状态及真实production消费者桥 |
 | ENERBIL | 现有源微oracle和返回状态的当前production认证；热初始化字段不误标为其直接输入 |
-| THERMOSOIL／EXPLICITSNOW | 默认声明域的独立初始化／首消费者证据已接受；补实际compiled与写回桥、其余热参数域及显雪maxmass合法条件域 |
+| THERMOSOIL／EXPLICITSNOW | 初始化／首消费者证据已接受；本包补8例真实完整eager／JIT及有限写回桥；保留其余热参数域、snow自然条件域与1项grain严格失败 |
 | STOMATE／carbon／DOC | 生命周期与SAVE／年度记忆逐字段闭包、独立oracle与compiled写回桥；保留DOC严格失败和真实碳通量缺证 |
 | restart／modelout／IO | 真实IO schema的单位／轴／phase／非默认覆盖、外部实现与输入身份；之后才选择代表性集成门和669-case发布门 |
 | 其余源模块／域分类 | 逐ID保留固定paper外、未扫描、非PFT14、其他配置、diagnostic/error及源未定义契约；只按源依据排除，不能把未知默认为不可达 |
@@ -245,9 +260,9 @@ cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，�
 | S-GAP-EXTRA-SCHEMA92 | 身份关联已完成；92字段单位／mask／有效默认及完整相位／数值schema仍未完成 |
 | S-GAP-COMPILED-STATIC | 完整有效参数与consumer／cache／闭包分母缺项；保留C38和选定gas证据 |
 | S-GAP-REFERENCE-BRIDGES | 剩余旧oracle／当前kernel与caller／状态／真实compiled的逐case身份桥及认证 |
-| S-GAP-THERMAL-TRUTH | 默认声明域的原源初始化／首消费者微参考及自身source／binary／input身份已补齐；真实reader、历史producer及完整compiled桥仍不在本证据内 |
+| S-GAP-THERMAL-TRUTH | 原源初始化／首消费者已接受；当前8例完整组件eager／JIT及有限carry桥已接受；真实reader、历史producer及整模型仍缺证 |
 | S-GAP-THERMAL-DOMAIN | 默认显雪whole-array缺coeff已验证；custom FR_DT、热表／常数、未审flags、partial-marker和全no-explicit域仍未认证 |
-| S-GAP-SNOW-MAXMASS | 合法显雪剖面、阈值和forcing下的PFT14可达域及源数值case未证明 |
+| S-GAP-SNOW-MAXMASS | 当前原源21例边界／完整snow参考及跨层算术已补；自然PFT14可达域仍domain-unproven，完整JIT grain保留1项严格失败 |
 | S-GAP-001-HISTORICAL | 缺历史001／1961实际used_run及输入producer；2010归档边界不是该历史起点 |
 | S-GAP-IOIPSL-EXTERNAL | 外部restini/restget等实现、build和NONE实际输出缺项；caller不能提供默认数值真值 |
 | S-GAP-DOC-STRICT | 已接受有界浮点敏感性；78坐标maxabs2.2346858610422515e-4和累计诊断差0.02923796884715557仍超原严格门 |
@@ -262,11 +277,11 @@ C1–C40的准确原commit、接受来源与适用行见[accepted-corrections-ma
 
 ## 后续CI与下一包
 
-当前CI仅有CLI／配置／paper-landpoint smoke和相应Ruff。已选择五个现有轻量静态节点：reachable-ledger、evidence-scope、constants原始片段组装、thermosoil源span和未定义OK_ZIMOV策略门。它们依赖已跟踪的源码／YAML；constants节点会导入JAX参数模块。详细节点、未来命令和未保护类别见[CI候选](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/ci-candidates.md)。本包未执行这些测试或修改workflow。
+当前已接受的CI在CLI／配置／paper-landpoint smoke上增加C50能量操作数与原Fortran固定数值、本包final coef数值、snow maxmass helper和非零coupling／dt metadata节点；全部只依赖已跟踪的测试／fixture／脚本与代码。精确选择和最终隔离结果见[CI交付](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/ci/README.md)。源SHA节点因依赖未跟踪Fortran不进入无条件workflow，完整snow grain已知失败也不混入smoke。旧五个静态候选仍是候选，不能把它们写成已入CI或执行通过。
 
 constants闭合／writeback和thermosoil缓存结果测试另依赖被忽略的`outputs/reference_mode`资产，不能直接加入仅有Git checkout的无条件CI。读取旧pass也不认证当前production。轻量CI不能覆盖完整源分母、状态相位、独立数值oracle、真实compiled写回或669-case发布门。
 
-下一最小包为[S-NEXT-01](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/next-package.json)：复用已完成的92身份关联，补齐单位、mask、有效默认与cold／首日／普通／compiled／日年界的源相位合同，并把选定used_run键接到实际consumer与cache／闭包。入口为`prepare_paper_1961_driver_context`、`_paper_compiled_later_day_block_executable`、`restart_thermosoil_initial_fields`。完成条件是每字段／选定knob均有源owner、单位、相位、默认／override及消费边，或明确稳定缺项；相位差不能被无条件复制抹平。
+此前提出的[S-NEXT-01](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/next-package.json)保留为总体合同：复用已完成的92身份关联，补齐单位、mask、有效默认与cold／首日／普通／compiled／日年界的源相位合同，并把选定used_run键接到实际consumer与cache／闭包。入口为`prepare_paper_1961_driver_context`、`_paper_compiled_later_day_block_executable`、`restart_thermosoil_initial_fields`。后续已完成内容按本文件当前登记扣除，不能把整个旧计划重新派发。完成条件是每字段／选定knob均有源owner、单位、相位、默认／override及消费边，或明确稳定缺项；相位差不能被无条件复制抹平。
 
 此处只提出离线包。发现实际同输入传递遗漏后，才准备一项局部共享修复和回归，并单列未来首次、普通、实际compiled、日年界／真实IO及独立Fortran验证的有界执行合同。逐模块oracle桥接随后推进；热真值、maxmass与历史外部身份可独立处理，不等待另一条DOC轨迹。
 

@@ -5,8 +5,14 @@ scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBI
 # outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.json
 # Original-source initialization / first consumers, not full compiled or model parity.
 # pcapa_en, stempdiag and temp_sol_beg retain their existing field/phase statuses.
-# Formal 50 corrections / 29 production commits; 93 / 126 / 181 denominators unchanged.
+# Current formal 52 corrections / 30 production commits; 93 / 126 / 181 denominators unchanged.
 # numerical_acceptance remains false; no extra normalized fields are added.
+# 2026-11-16 thermal-snow-coupling-batch adds bounded complete thermal eager/JIT
+# evidence and finite carry/driver IO checks, accepted 2026-11-17 as C51/C52.
+# Code/test commit: 9a856c6cf859437d2436f4f3748d4c9e770838a1.
+# Eight component inputs do not certify every compiled field phase/flag/domain.
+# Snow complete-JIT grain retains one strict failure; natural crossing is unproven.
+# Driver vevapp is intersurf amount/xrdt; SECHIBA vevapp/evapora stays an amount.
 
 axis_groups:
   grid: [npts]
@@ -5409,15 +5415,15 @@ historical_extra_field_source_contracts:
   - component: driver_previous_step_state
     field: vevapp
     owner: driver
-    units: kg m-2 per dt_sechiba
-    unit_basis: dt_sechiba*rau*exchange*delta_specific_humidity, enerbil1505; day-rate declaration stale
+    units: kg m-2 s-1
+    unit_basis: enerbil1505-1508 forms kg m-2 per step; intersurf_initialize427-433 and main743-749 divide by xrdt seconds before DIM2
     source_dtype: REAL(r_std)
     runtime_dtype: float64
     axes:
     - npts
     mask_and_inactive: allselected landpoints; source DIM2 landindex gather/scatter; driver relaxed/watchout alternate domain
       not added
-    default_and_sentinel: missing ->0; current ENERBIL overwrites step wateramount
+    default_and_sentinel: missing ->0; actual ENERBIL result carries executed dt; shared writer converts amount once to driver rate; codec preserves rate
     phase_dispositions:
       cold: source_path_bound
       restart: source_path_bound
@@ -5435,6 +5441,12 @@ historical_extra_field_source_contracts:
       lines: 933-937
     - file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
       lines: 1121-1125
+    - file: fortran_source/ORCHIDEE/src_sechiba/intersurf.f90
+      lines: 427-433
+    - file: fortran_source/ORCHIDEE/src_sechiba/intersurf.f90
+      lines: 743-749
+    current_evidence: outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/integration/attempt02/run-receipt.json
+    evidence_limit: eager/JIT shared writer and two separate single-landpoint driver files; no full compiled driver or model trajectory; SECHIBA internal vevapp remains amount
     status: normalized_in_selected_source_domain
     gaps: []
     numerical_acceptance: false
@@ -5529,9 +5541,8 @@ historical_extra_field_source_contracts:
   - component: driver_previous_step_state
     field: peqAcoef
     owner: driver
-    units: unresolved outside zero-coefficient nonrelaxed domain
-    unit_basis: ENERBIL denominator subtracts peqA from zikq; vevapp formula includes dt and history divides it out, while DIM2
-      relaxed qair=-peqA*vevapp*dt+peqB adds dt. Exact nonzero coefficient producer convention remains missing.
+    units: consumer m2 s kg-1; external producer convention unresolved
+    unit_basis: enerbil1002-1003 sets zikq=1/(rho*speed*cdrag); live denominator subtracts beta*peqA, and qair=B-A*E_up_rate. Disabled DIM2 relaxation amount expression does not establish external PBL units.
     source_dtype: REAL(r_std)
     runtime_dtype: float64
     axes:
@@ -5569,18 +5580,16 @@ historical_extra_field_source_contracts:
       lines: 1089-1093
     - file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
       lines: 1116-1120
-    current_evidence: outputs/reviews/main-physics-20261114/remaining-field-contracts/peq-contract-evidence.json
+    current_evidence: outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/coupling/phase-units-contract.md
     selected_behavior: source-defined consistent nonrelaxed nonWATCHOUT zero A/observed Qair B; actual forcing reader, driver
       with synthetic callbacks, nonzero restart codec, missing fallback and unsupported-switch guards checked
     unsupported_domain: JAX rejects RELAXATION and WATCHOUT; source RELAXATION default false and severity3 reject598-605;
       source nonrelaxed WATCHOUT preserves imported A, so nonrelaxed alone must not imply zero
     status: precise_gap
     gaps:
-    - dimension: units
-      source_reason: readdim2 imports unitted PBL A; no paired external WATCHOUT producer equation/input is identified. Step-amount
-        vs rate and q_cdrag/comment conflicts permit only a conditional dimensional discrepancy, not a proven adapter bug.
-      action: bind exact WATCHOUT file, producer revision/equation, A/B units and flux/dt convention per external-observation-plan.md;
-        no external command executed, general units are not inferred from selected zero coefficients
+    - dimension: external_producer_units
+      source_reason: ENERBIL consumer units/sign now source-defined and nonzero binary64 tested; readdim2 only imports PBL A/B, with no identified producer equation/input or producer-to-land timestep conversion.
+      action: bind actual external atmospheric producer revision/equation and tuple, sign, rate-vs-amount and producer/land dt relation; keep WATCHOUT and RELAXATION unsupported until admitted
     numerical_acceptance: false
   - component: driver_previous_step_state
     field: peqBcoef
