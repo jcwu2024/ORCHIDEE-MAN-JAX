@@ -1,6 +1,14 @@
 # main 物理正确性检查入口
 
-## 当前已接受：C51热系数权重、C52驱动蒸发单位与并行验证包
+## 当前已接受：C53状态写回、C54冠层编译入口及有限组件证据
+
+基线main `a6a99f8c612813ad8ba3520d0ccb8f83dd059420` 的[本包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)已完成有限原源／当前组件核对及实际状态交接。水文五eager案例187／191检查过，新增独立default warm17、cold18、mask19原源字段过，cold18真实JIT42／42过；四项自定义土壤参数链差异保留。冠层10案例的真实组件41字段／2970标量eager／JIT过，另2个直接eager QSAT诊断／20标量过，报告合计43／2990。最终交接19项过，四布局各41字段、下一实际消费者、窄JIT及单点93字段文件中18个真实覆盖字段raw／init读取通过。完整水文主调度、全参数域、above-floor水分胁迫响应和七层us到十一层schema未认证。
+
+只修改两个生产文件：共同driver两处fallback条件防止新`fwet_new`被prior覆盖；DIFFUCO显式参数适配器在无`lai_light`时先构建源静态表，避免真实JIT的层数concretization异常。主控于2026-11-17分别接受为C53（`HD-FWET-01`）和C54（`HD-JIT-01`），共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。两项在复查前`7cae3e02`已有精确源码证据，首次引入未知。TOPMODEL=True当前wrapper未贯通，论文默认冠层getter已预供光照表，不能将两项外推为当前论文自然路径的已观测错误；物理公式、阈值与容差未改。
+
+原失败、原Fortran程序身份、输入相位和调用限制见[报告](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/report.md)及[普通中文进度](main_review_progress.md)。正式54项／31提交、53项复查前证据＋C42；90＋1＋1／92及93／126／181、`numerical_acceptance=false`保持。主控核对20份交付文件身份、配对源、旧反例和原始19／10项测试XML，复用独立审查及数值证据，无数值重跑。当前有界接受及发布见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)、[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)，原pending回执保留历史身份。无整模型步日年、服务器、GPU、训练或研究树访问／同步。唯一下一优先为自定义土壤参数共同schema与支持域核准；四项失败、旧积雪、DOC／碳通量、历史身份和整模型门继续保留。下方为已接受阶段快照，旧“下一包”不重算为今天未执行。
+
+## 已接受基线：C51热系数权重、C52驱动蒸发单位与并行验证包
 
 2026-11-17，主控接受基线main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)。本包补齐完整热组件 eager／真实组件JIT的有界独立原Fortran对照，并完成有限相邻组件、共享写回和driver NetCDF检查。确认并最小修复两个复查前已存在的问题：C51两个final coef调用误传raw `veget_max`，C52共享driver carry遗漏intersurf的蒸发量除以实际dt。前者补足裸地权重，后者只在driver边界转为kg m⁻² s⁻¹；ENERBIL及SECHIBA `evapora`仍保留每步水量。两项均保存旧反例与来源，共同代码／测试提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。
 

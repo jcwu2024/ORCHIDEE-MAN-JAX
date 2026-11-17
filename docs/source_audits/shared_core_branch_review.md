@@ -1,6 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C51／C52热过程与蒸发单位共享依赖组，同步继续暂停
+## 当前已接受：C53／C54水文写回与冠层编译入口，研究同步继续暂停
+
+main基线 `a6a99f8c612813ad8ba3520d0ccb8f83dd059420` 的[本包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)于2026-11-17获主控有限接受，登记C53=`HD-FWET-01`、C54=`HD-JIT-01`，共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。生产只修改`driver/orchestration.py`两处fwet fallback和`sechiba/diffuco.py`无光照分层表时的源静态表接线；正式54项／31生产提交。两处均有复查前源码证据，不代表当前论文默认路径已观测到对应失败。见[主控验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)及[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)。
+
+未来集中同步须按依赖组核对这两个生产文件、新回归测试与两份小参考fixture、组件适配脚本和CI节点。保留已有C48日历、C49 us初始化、C51热系数及C52蒸发量／率边界；不可将七层组件us直接塞入十一层文件，也不可把独立TOPMODEL诊断链当作wrapper配置已准入。当前水文187／191保留四项自定义参数贯通缺证；冠层10例eager／真实JIT原源通过，交接19项通过，详细范围见[当前剩余工作](main_equivalence_remaining_work.md)。
+
+本轮没有访问、写入或同步daily／global工作树，没有整模型运行或部署；已接受共享修复按以后明确授权集中评估同步。`numerical_acceptance=false`及原状态／分支分母保持。下一优先为自定义土壤参数共同schema／支持域核准，不能用当前有界数据交接结果代替研究线科学验证。
+
+## 已接受基线：C51／C52热过程与蒸发单位共享依赖组，同步继续暂停
 
 main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[并行整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)于2026-11-17获主控接受，包含两个有复查前证据的修复：C51 THERMOSOIL两个final coef使用补足裸地权重；C52 ENERBIL实际执行dt随local payload传给共同writer，按源intersurf只在driver vevapp处除dt。共同代码／测试／CI提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。完整thermal8例eager／实际JIT对照552字段过，根有限carry／writer／单点IO15项过。HYDROL和DIM2生产代码未改。
 
@@ -909,12 +917,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C52，共52项已接受修正、30个相关生产代码提交；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C54，共54项已接受修正、31个相关生产代码提交；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C52仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C54仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -958,6 +966,14 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C50 | `sechiba/thermosoil.py` 两个energy调用；同提交包含原源Oracle及回归fixture | `6a5d4a7f2092f32ef9de064e61ee3224c5b48b01` |
 | C51 | `sechiba/thermosoil.py` 两个final coef调用；同提交包含完整组件Oracle及回归fixture | `9a856c6cf859437d2436f4f3748d4c9e770838a1` |
 | C52 | `sechiba/enerbil.py`实际dt元数据／amount→rate helper、`driver/orchestration.py`共享writer；联合测试及CI随同 | `9a856c6cf859437d2436f4f3748d4c9e770838a1` |
+| C53 | `driver/orchestration.py`普通及compact状态构建器两处fwet fallback；实际交接与小fixture／CI回归随同 | `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa` |
+| C54 | `sechiba/diffuco.py`显式参数缺表时的静态光照布局接线；原Fortran冠层fixture／真实组件JIT测试随同 | `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa` |
+
+### C53／C54 状态选择与显式参数编译入口（2026-11-17已接受）
+
+C53按hydrol_soil:7307–7342保留新湿地诊断，无新诊断时才沿用旧值；两处旧fallback在普通／runtime／fast布局中将0.412613023955767覆盖为0.123。C54按diffuco_trans_co2:2214–2234复用现有静态光照分层helper，显式参数无表时在进入真实local JIT前建立20层布局；已有表不重建。两项均在7cae3e02存在，精确首次引入未知，不改方程或容差。
+
+主控复用19项交接和10项隔离回归／Ruff、冠层10例原源eager／JIT证据，未重复数值运行。未来同步同时核对共同writer、实际参数适配器、开发fixture与回归依赖，保留C48／C49／C51／C52既有行为。TOPMODEL=True wrapper尚未准入、默认冠层getter本来供表，不能声称论文自然路径的已观测失败或修复后科学指标改善。水文自定义土壤参数四项差异、不同土层数IO及整模型门仍未关闭。
 
 ### C51／C52 热系数权重与driver蒸发单位（2026-11-17已接受）
 

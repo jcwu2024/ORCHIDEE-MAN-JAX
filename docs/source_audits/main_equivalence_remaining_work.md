@@ -1,6 +1,20 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前已接受：完整thermal组件、snow条件域与coupling边界
+## 当前已接受有限成果：水文、冠层与状态交接包
+
+基线 `a6a99f8c612813ad8ba3520d0ccb8f83dd059420` 的[本地有界包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)于2026-11-17获主控有限接受；水文仍部分通过。C53／C54共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。正式为54项／31相关生产提交，53项复查前证据＋C42新增helper遗漏；90＋1＋1／92及93／126／181不变，`numerical_acceptance=false`。主控核对源规则、改前反例与实际组件／交接证据，复用owner验证而未重跑；见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)。研究同步继续暂停，普通中文入口见[进度说明](main_review_progress.md)。
+
+| 范围 | 实测结果 | 尚缺边界 |
+| --- | --- | --- |
+| 水文 | 五个eager案例187／191项过；default warm17、cold18和mask19原源字段全过；cold18真实组件JIT42／42过 | case1／5保留drysoil_frac及vegstress四差：自定义初始化土壤参数未通过当前组件schema贯通；不能归为默认配置通过，也未确证为默认物理公式错；完整hydrol_main、配置全域仍缺 |
+| 冠层与能量入口 | 固定10案例，真实组件41字段／2970标量的eager及JIT原源对照通过；另2个直接eager QSAT诊断／20标量通过，合计43／2990 | PFT14有限C3配置，胁迫floor及零humrel掩码已测，above-floor响应未测；未定义PFT1坐标不作参考；完整配置与上游热／地表来源未认证 |
+| 实际交接 | 最终19项通过，四种状态布局各41字段；下一次实际冠层／能量消费者及窄writer JIT通过；真实93字段NetCDF中18个组件覆盖字段raw／init读取通过 | 日历及无关组件ready admission隔离；七层us不塞入十一层文件；不认证整模型一步、完整首步恢复或所有93字段的新科学来源 |
+
+确认并最小修复两处复查前已有的接口／执行问题：C53（`HD-FWET-01`）普通及compact writer把新湿地比例覆盖为旧值，现仅在无新诊断时保留旧值；C54（`HD-JIT-01`）显式冠层参数缺光照分层表时，实际JIT入口将层数误作动态值，现提前生成既有源静态表。前者只认证真实module上的独立TOPMODEL诊断链，wrapper本身未接通TOPMODEL=True；后者当前论文默认参数getter本来已供表。均不能据此声称论文自然轨迹原来失败或主指标改善。失败、年代及独立参考见[整包报告](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/report.md)。本地源码副本10项回归及Ruff通过，hosted Ubuntu／uv未运行。
+
+下一优先是先完成自定义土壤参数从初始化到水文诊断的共同schema／支持域核准，再用同一参数来源闭合保留的四项差异；据此固定后续代表性集成门。积雪grain严格差异／自然可达性、外部PBL输入约定、DOC严格状态与真实碳通量、历史身份及整模型门继续开放，不启动新整模型积分。
+
+## 已接受基线：完整thermal组件、snow条件域与coupling边界
 
 基线main `82d622722feea3cfe5034d8b15f98cda78e04872` 的[并行整包](../../outputs/reviews/main-physics-20261116/thermal-snow-coupling-batch/README.md)于2026-11-17获主控有界接受。新增C51 final coef裸地权重与C52 driver蒸发量→率边界，两项均有复查前证据，共同代码／测试提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。正式52／30，51项复查前证据及C42新增helper遗漏；90＋1＋1／92、93／126／181和`numerical_acceptance=false`保持。
 

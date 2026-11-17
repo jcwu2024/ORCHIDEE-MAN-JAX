@@ -5,7 +5,7 @@ scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBI
 # outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.json
 # Original-source initialization / first consumers, not full compiled or model parity.
 # pcapa_en, stempdiag and temp_sol_beg retain their existing field/phase statuses.
-# Current formal 52 corrections / 30 production commits; 93 / 126 / 181 denominators unchanged.
+# Current formal 54 corrections / 31 production commits; 93 / 126 / 181 denominators unchanged.
 # numerical_acceptance remains false; no extra normalized fields are added.
 # 2026-11-16 thermal-snow-coupling-batch adds bounded complete thermal eager/JIT
 # evidence and finite carry/driver IO checks, accepted 2026-11-17 as C51/C52.
@@ -13,6 +13,10 @@ scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBI
 # Eight component inputs do not certify every compiled field phase/flag/domain.
 # Snow complete-JIT grain retains one strict failure; natural crossing is unproven.
 # Driver vevapp is intersurf amount/xrdt; SECHIBA vevapp/evapora stays an amount.
+# C53 preserves a present current fwet_new at two shared writer fallbacks.
+# C54 prepares an omitted canopy light table before the explicit-parameter JIT entry.
+# Both accepted 2026-11-17, commit 139e1ba7ba2db46d6f1a3b00f0592335bf40cafa;
+# no additional normalized field or full-model acceptance follows from these fixes.
 
 axis_groups:
   grid: [npts]
