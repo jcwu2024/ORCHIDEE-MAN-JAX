@@ -1,5 +1,16 @@
 # PFT14 剩余源码与状态覆盖
 
+## 当前已接受：参数和状态接口修复；WATCHOUT本地运输链继续收尾
+
+2026-11-18，主控接受基线`db8dd72eea30e3c2dc30dd3b7368a664d5a56058`的[交付包](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)，代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。深度参数归C55扩展，scan context归C43扩展，新增C56条件refSOC生命周期、C57冷启动就绪出口context、C58状态派生dispatch缓存键、C59 temp_growth carry。正式59项／33相关生产提交，57项有复查前证据、C42／C57属复查新增遗漏；本包终审纠正的stale refSOC仍归C56同一链，不能倒写成复查前已有。
+
+本包94个不同节点有最终通过证据（可移植59、driver9、旧cache构造6、静态合同20）；是保留失败后按受影响范围补齐的组合证据，不是单次94全绿。主控核对425项交付绑定、两份独立review和真实JUnit，复用C55各191项及原Fortran来源，无数值重跑。完整cold物理、整段compiled物理和模型step/day/year/669没有执行；局部AST／delegate／窄JIT与真实文件运输的证据边界保持。[验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)、[当前总账](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-progress-ledger.json)补充封存owner的pending快照。
+
+**本部分尚未完成，但当前不以外部PBL资料缺失停工。** [补充只读审查](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-watchout-scope-review.md)确认原readdim2按小写levels识别WATCHOUT，读取／插值四系数，dim2在RELAXATION=false时保留，intersurf按kindex传递；本地LMDZ转换文档也说明了dt边界。下一包补齐实际高层入口的source-backed文件→substep→bundle／dim2→intersurf运输，不以移除guard或测试旁路代替接线，不重复dt转换。RELAXATION=true在原源即fatal，继续拒绝。
+
+封存`ledger/finite-dependencies.json`的“必须先取得外部tuple合同”是当时推断，由上述新源证据修正，不回写旧回执。实际大气producer/build、真实文件的输出时间约定仍未知，只限制对那个实际来源的科学／历史身份声明；不能冒称已验证。一般IOIPSL多点／复杂getin／native metadata与历史build仍是更宽边界。本包默认93／126、条件refSOC1与181生命周期分母保持；90 normalized＋1 source-undefined inactive＋1 precise gap／92不因接口修复上调。
+
+完成标准继续见[计划](parameter_state_closeout_plan.md)：支持域的必需运输边不许仅改标unsupported。DOC严格状态／真实碳通量、积雪grain严格失败、其他物理条件及整模型门另管，`numerical_acceptance=false`。下方已接受包保留各自历史范围；其中“深度、cold出口、refSOC待补”不再代表当前状态。
 
 ## 当前已接受：C55自定义土壤参数贯通；继续参数与状态收尾
 

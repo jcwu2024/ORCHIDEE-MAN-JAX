@@ -5,7 +5,9 @@ scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBI
 # outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.json
 # Original-source initialization / first consumers, not full compiled or model parity.
 # pcapa_en, stempdiag and temp_sol_beg retain their existing field/phase statuses.
-# Current formal 55 corrections / 32 production commits; 93 / 126 / 181 base denominators unchanged.
+# Current formal 59 corrections / 33 production commits; 93 / 126 / 181 base denominators unchanged.
+# 2026-11-18: C56 explicit conditional refSOC state accepted; see parameter_state_closeout_plan.md.
+# C43/C55 extensions and C57-C59 preserve adapter/cache/carry contracts; full physics remains unaccepted.
 # numerical_acceptance remains false; no extra normalized fields are added.
 # 2026-11-16 thermal-snow-coupling-batch adds bounded complete thermal eager/JIT
 # evidence and finite carry/driver IO checks, accepted 2026-11-17 as C51/C52.

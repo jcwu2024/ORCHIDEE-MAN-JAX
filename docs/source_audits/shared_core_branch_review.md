@@ -1,12 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C55土壤参数共同合同；研究同步继续暂停
+## 当前已接受：C55／C43扩展与C56–C59；研究同步仍暂停
 
-2026-11-18主控接受C55，代码／测试／CI提交`474f52088be77a543ebf181b232acfc8a02ddc02`。同一十字段USDA合同从配置、初始化和静态模板传到实际水文组件、诊断及编译参数包；原四差在原输入／参考／容差下闭合。正式55项／32生产提交，54项有复查前证据及C42新增helper遗漏。见[验收](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-acceptance.json)和[来源](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-origin-check.json)。
+2026-11-18，本轮代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。深度参数归C55既有初始化到运行参数链扩展，scan context归C43已有缓存所有权扩展；条件refSOC、cold出口、block dispatch与temp_growth分别为C56–C59。正式59项／33个相关生产提交，57项有复查前证据、C42／C57为复查期间遗漏。C57准确引入为C48提交782535b4；本包stale refSOC集成遗漏归C56并单独保留年代。见[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)和[来源登记](correction_origins.md)。
 
-未来集中同步须按同一依赖组评审`sechiba/hydrol.py`、`driver/orchestration.py`、`driver/restart_state.py`、组件适配脚本、新回归与CI。保留C43 context缓存所有权、C48日历、C49初始化及C51–C54已接受边界；矿物背景不等于refSOC有效点阈值。新增HydrolSoilParameters为动态叶PyTree，静态参数不塞进NetCDF／日循环carry；旧两参数构造和pickle可恢复，精确两元素tuple解包需要迁移到字段访问，不能直接覆盖其他分支整个文件。
+未来集中同步须把七生产文件作为一个依赖组评审：`sechiba/hydrol.py`、`restart_io.py`、`restart_export.py`、`restart_lifecycle.py`及`driver/orchestration.py`、`restart_state.py`、`restart_bundle.py`；随同三个audit caller／validator、新四个接口测试、既有caller／cache测试、CI及字段YAML。保留C43 context ownership、C48日历相位、C49初始化、C55十向量和C51–C54边界。default93／canonical126不膨胀，refSOC条件1显式登记；flag、presence、双镜像与三文件需一起同步，不能只搬helper。
 
-当前不访问／写入／同步daily或global。用户授权先接力完成[参数和状态传递收尾](parameter_state_closeout_plan.md)，其余物理和整模型门保持。源码隔离30项、参数缓存40项、五例eager／JIT各191项的范围与替身限制见原包；完整冷启动／重启／scan、十向量以外深度参数及整模型数值接受未认证。
+HydrolDepthParameters单列七活动标量与一inactive metadata，原HydrolSoilParameters十叶次序不动；旧runtime两／三参数构造和pickle有有限兼容证据，精确tuple解包需改字段访问。静态参数不写入科学carry／NetCDF。scan closure持有context，block静态dispatch同时入key／快照；两者不能用字段名相同推断不同参数可共享编译缓存。
+
+本轮94不同节点最终通过是组合接口证据，完整cold／compiled物理及模型积分未执行。主控无数值重跑。下一本地包闭合WATCHOUT读取／插值／driver参数传递，真实外部producer身份独立未知。没有访问、写入或同步daily/global；全部共享修复待后续明确集中核对，不直接覆盖研究文件。`numerical_acceptance=false`和原科学门保持。
 
 ## 已接受基线：C53／C54水文写回与冠层编译入口，研究同步继续暂停
 
@@ -925,12 +927,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C54，共54项已接受修正、31个相关生产代码提交；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C59，共59项已接受修正、33个相关生产代码提交；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C54仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C59仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -964,7 +966,7 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C40 | `stomate/restart_io.py`、`driver/orchestration.py` | `76e406e0e0e75402d221bb281908fa4260bc5d66` |
 | C41 | `driver/orchestration.py` | `8a772de6f4977018a875093d535b6088317716c8` |
 | C42 | `driver/restart_state.py` | `8a772de6f4977018a875093d535b6088317716c8` |
-| C43 | `driver/orchestration.py`；开发cache读者同步适配 | `8a772de6f4977018a875093d535b6088317716c8` |
+| C43 | `driver/orchestration.py`；开发cache读者同步适配；本轮扩到scan context ownership | `8a772de6f4977018a875093d535b6088317716c8`；`5fe049ffa249f2c53daf669d576fe590ecbbb999`（scan扩展） |
 | C44 | `driver/orchestration.py` | `9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2` |
 | C45 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
 | C46 | `sechiba/lifecycle_completion.py`、`sechiba/ioipsl_calendar.py` | 3f7b482765b7b41339ee56a818b1f164490a5d1e |
@@ -976,6 +978,11 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C52 | `sechiba/enerbil.py`实际dt元数据／amount→rate helper、`driver/orchestration.py`共享writer；联合测试及CI随同 | `9a856c6cf859437d2436f4f3748d4c9e770838a1` |
 | C53 | `driver/orchestration.py`普通及compact状态构建器两处fwet fallback；实际交接与小fixture／CI回归随同 | `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa` |
 | C54 | `sechiba/diffuco.py`显式参数缺表时的静态光照布局接线；原Fortran冠层fixture／真实组件JIT测试随同 | `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa` |
+| C55 | `sechiba/hydrol.py`、`driver/orchestration.py`、`driver/restart_state.py`；同一soil/depth合同、caller及CI | `474f52088be77a543ebf181b232acfc8a02ddc02`（十向量）；`5fe049ffa249f2c53daf669d576fe590ecbbb999`（深度扩展） |
+| C56 | HYDROL条件refSOC：`sechiba/hydrol.py`及restart IO/export/lifecycle，`driver/restart_state.py`、`restart_bundle.py`、`orchestration.py`；audit／合同／测试随同 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
+| C57 | `driver/orchestration.py` cold ready出口context；prepared／unprepared局部回归 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
+| C58 | `driver/orchestration.py` block state-derived静态dispatch缓存分区／快照；真实窄JIT回归 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
+| C59 | `driver/orchestration.py`中央STOMATE_HALF_HOUR_CARRY_FIELDS的temp_growth；实际clock交接测试 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
 
 ### C53／C54 状态选择与显式参数编译入口（2026-11-17已接受）
 

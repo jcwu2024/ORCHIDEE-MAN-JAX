@@ -1,5 +1,14 @@
 # main 物理正确性检查入口
 
+## 当前已接受：参数和状态交接修复，继续WATCHOUT本地收尾
+
+2026-11-18，主控接受[本轮交付](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)，基线`db8dd72eea30e3c2dc30dd3b7368a664d5a56058`，代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。土壤七活动深度参数归C55扩展、scan的context所有权归C43扩展；新增C56条件refSOC初始化／carry／finalize／IO、C57冷启动ready出口context、C58状态派生dispatch缓存、C59 temp_growth半小时carry。累计59项／33相关生产提交；57项有复查前源码证据，C57由C48日历接线提交782535b4引入，与此前C42均明确归为复查期间遗漏。
+
+源hydrol_initialize625–636规定条件refSOC先读restart，仅全local999999才调静态reader，partial保留，finalize1748按开关写出。实现保留默认93／126并单列条件1，经双镜像、普通／compact、day-end／fast、七finalizer和14／2PFT真实三文件及实际reader验证。独立终审发现本包disabled初始化携带旧optional值的集成遗漏，已修两owner，原红反例保留，属C56同一链，不冒称复查前错误。深度参数保留原AKS_POWER误查nk_rel的源行为及inactive阈值分支。cold出口只认证局部AST就绪路径；scan／block是真实窄JIT加物理delegate witness，不外推整模型。
+
+主控检查425项原交付绑定、两个review绑定、四历史源码绑定和保存JUnit中94个不同节点最终通过证据（59＋9＋6＋20）。首轮隔离及后续夹具／集成失败原样保留，是组合验证，不是单次全套全绿；C55五例eager／JIT各191项参考复用，无主控数值重跑。提交前仅移除测试EOF空行，AST不变。[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)、[当前总账](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-progress-ledger.json)和[发布记录](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-publication.json)给出当前身份；owner封存快照不倒改。
+
+本部分仍未全部完成。追加[WATCHOUT源范围审查](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-watchout-scope-review.md)确认本地可继续reader→插值→高层driver／intersurf运输，无需先恢复实际大气producer身份。RELAXATION=false的合法路径应贯通，原源fatal的RELAXATION=true保持拒绝；文件四系数已经是ORCHIDEE约定，不能再乘dt或清零。未知的实际producer/build及输出时间属性是另一证据边界。默认93／126／181、92字段状态分类及`numerical_acceptance=false`保持；DOC／积雪严格门、整模型接受及研究同步分别管理。下方为历次接受快照，当前状态以本节和[中文进度](main_review_progress.md)为准。
 
 ## 当前已接受：C55自定义土壤参数贯通；继续参数与状态收尾
 

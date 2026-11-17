@@ -4,16 +4,16 @@
 
 ## 当前基线与有限完成项
 
-C55十字段USDA土壤参数链已获主控有界接受，代码提交`474f52088be77a543ebf181b232acfc8a02ddc02`。原四项差异在保留输入、参考和容差下闭合；有效点阈值与矿物背景分开。正式55项修正／32个相关生产提交；完整数值接受仍为false。详见[中文进度](main_review_progress.md)与[剩余工作](main_equivalence_remaining_work.md)。
+主控2026-11-18接受本轮参数／状态接口，代码提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。正式59项／33相关生产提交，57项有复查前证据，C42／C57为复查期间遗漏；[中文进度](main_review_progress.md)、[来源登记](correction_origins.md)及[验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)记录准确范围。93／126／181与90＋1＋1／92不变，条件refSOC单列，完整数值接受仍为false。
 
-本计划是收尾范围与验收规则，不把下表视为已完成的字段审计，也不以任务轮数或测试数计算完成比例。
+本表是有限接口状态，不是全物理分支覆盖，也不以轮数或检查数计算完成比例。
 
-| 工作面 | 需要闭合的边界 | 当前下一动作 |
+| 工作面 | 已接受的有界结果 | 剩余边界 |
 | --- | --- | --- |
-| 有效参数与缓存 | 源默认／配置覆盖、单位／轴、初始化后有效值、实际消费者、静态缓存与动态编译实参；同形状不同值不串用 | 复用C55十向量，核对尚缺的深度剖面控制及其他已声明参数 |
-| 创建与恢复相位 | cold、已有文件初始化、新年度原生启动、同年／跨年连续运行、完整checkpoint解码的不同源规则 | 查清cold尾部两个未定义context的真实可达性；补实际入口与refSOC传递证据 |
-| 运行中状态交接 | 首步、普通、compact、compiled、日末／年界的更新／保留／别名／单位／掩码 | 对照现有账本逐项绑定真实writer及下一消费者，优先非默认可辨识输入 |
-| 保存与读回 | 声明的单点文件布局、字段轴、完整状态及别名的一致恢复；参数与预报状态不混装 | 复用已接受真实文件证据，补剩余支持字段与实际reader路径 |
+| 有效参数与缓存 | C55十向量＋七活动深度标量贯通；scan context／block静态dispatch正确分区 | WATCHOUT forcing-source字段到高层driver／intersurf的实际运输 |
+| 创建与恢复相位 | cold ready出口context；file-init／new_native refSOC源规则；continuous／decode不重初始化 | 不宣称完整cold物理或所有native IOIPSL输入语义 |
+| 运行中状态交接 | 条件refSOC双镜像和temp_growth实际clock carry；默认／compact／窄compiled接口 | 不以物理delegate witness代替完整compiled物理 |
+| 保存与读回 | default93＋条件refSOC的14／2PFT真实三文件链逐字段运输 | 一般多点IOIPSL scatter／metadata、历史producer身份另限 |
 
 ## 完成标准
 
@@ -22,6 +22,12 @@ C55十字段USDA土壤参数链已获主控有界接受，代码提交`474f52088
 已确认修复和不变参考直接复用。保留自然浮点敏感性的已接受结论；本部分核对参数和状态是否正确交接，不重开NPP／DOC／积雪归因。若参考真值或整模型观测另有缺项，单独保留，不能把接口通过写成物理数值接受。
 
 完成需满足：声明支持域内没有未修复的参数／状态传递缺陷，没有未分类的必需交接边；重要实际入口、缓存与文件接口有相应非默认输入回归，并完成独立审查和主控验收。源码支持的必需路径不能仅改标unsupported来收口；测试替身只证明其实际覆盖的接口，不代替完整物理执行。无法取得的外部身份／输入合同列为明确阻塞，报告未完成，不用改口径宣告全部完成。
+
+[本轮包](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)已由主控有界接受。425项交付绑定及94个不同节点最终通过证据已核对；验证为59个可移植接口＋9个driver＋6个cache构造＋20个静态合同的组合，非单次全套全绿。旧C55的191／191不重跑。原pending／失败／外部阻塞判断保留在封存包，用主控补充记录更新当前决定。
+
+**下一包：WATCHOUT输入运输链。** [本地源范围审查](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-watchout-scope-review.md)证明可继续RELAXATION=false下的文件识别、读取、插值、bundle／dim2／intersurf参数交接。当前不需用户提供额外PBL资料即可推进；不得为收口仅删guard、改标unsupported、清零A或重复乘dt。RELAXATION=true继续按原源fatal拒绝。实际外部producer/build／输出时间约定继续未知，但不与土地模型已定义输入合同混为同一前置条件。
+
+下一包完成后由主控对剩余账本逐项作本部分是否结束的判断；未验收前整部分为未完成。科学组件／完整模型、DOC真实通量及更宽IOIPSL身份等外推门仍分别管理，不在本接力中自动扩张。
 
 ## 授权、交付与停止
 

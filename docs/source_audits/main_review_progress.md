@@ -1,21 +1,25 @@
 # 主线进度
 
-2026-11-18，自定义土壤参数贯通包已获主控有界验收，登记为C55。原四项差异属于同一参数传递遗漏：初始化用了自定义值，后续诊断却用了默认值。现在十个土壤参数统一传到后续组件、缓存和编译入口，矿物背景与土壤碳规则处理后的点位阈值分别保存。
+2026-11-18，主控已接受本轮参数和状态交接修复，代码／测试／CI提交 `5fe049ffa249f2c53daf669d576fe590ecbbb999`。参数覆盖、条件状态的创建和保存读回、跨步保留及缓存隔离，在下表所列接口范围内已有证据。**这部分还差WATCHOUT输入传递链的本地收尾；整个模型的数值等价仍未验收。**
 
-正式累计55项修正、32个相关生产提交；其中54项有复查前证据，C42是复查新增helper遗漏。数量不等于完成比例。完整模型数值接受仍为false。
+累计为**59项修正／33个相关生产提交**。其中57项有复查前源码证据；C42与本轮C57是复查期间引入的遗漏。计数包括接口、默认值和缓存问题，不等于59条活动物理公式错误，也不是完成百分比。
 
-| 已验收内容 | 结果与边界 |
+| 本轮接受 | 实际结果与边界 |
 | --- | --- |
-| 原四项失败 | 两个原案例的土壤干燥比例、植被水分胁迫均闭合；输入、参考、容差未改 |
-| 默认与自定义控制 | 五例普通执行和真实组件编译执行各191／191通过，每种2277标量 |
-| 参数与接口 | 同形状不同参数保留各自数值；有效阈值与矿物背景分开；局部实际文件读取和初始化通过 |
-| 防回退 | 隔离源码30项、既有参数／缓存40项通过，重叠节点不相加；后者使用物理／编译替身 |
-| 尚未认证 | 完整冷启动、完整重启、整模型连续运行；仍有深度参数和其他交接边待收尾 |
+| 土壤深度参数（C55扩展） | 七个活动标量从配置／初始化传到表、系数消费者和编译参数；一项原源注释分支的metadata保持不激活。原十向量合同不变 |
+| 条件refSOC状态（C56） | 按源开关读取、缺失／全marker初始化、双镜像交接及真实三文件读回；默认93科学字段／126 canonical字段不变，条件字段单列 |
+| 冷启动出口（C57） | 修正日历接线时引入的未定义context；保持已有prepared对象或从cold bundle建clock。只验证该就绪出口，不宣称完整冷启动物理链已通过 |
+| 编译缓存（C43扩展、C58） | scan隔离捕获的context；block隔离由状态决定的phenology分支。真实窄JIT使用明确的物理替身 |
+| 跨步温度状态（C59） | 补temp_growth半小时保留，实际clock入口可读取；旧carry遗漏与后来新增必需消费者分开记账 |
 
-代码提交`474f52088be77a543ebf181b232acfc8a02ddc02`。主控核对实际改动、原Fortran规则、旧源码年代、34项交付身份及保存验证，没有重复数值运行。独立终审无阻断。两处基线已有的冷启动尾部名称问题仍保留，下一包要核实实际可达性和源相位后处理。
+主控核对了实际差异、源规则、425项交付绑定、独立审查及保存JUnit中94个不同节点的最终通过证据：59个可移植接口、9个深度driver、6个旧缓存构造、20个本地静态合同检查。它们是分批修复后的组合证据，**不是单次全套94全绿，也不是hosted Ubuntu执行**。C55原五例eager／JIT各191项证据直接复用，主控没有重跑数值或模型。
 
-用户已授权把“参数和状态传递收尾”接力做完：Sol每包完成后给本主控发送一次交付消息，主控验收后派下一包；这部分完成后停止。执行期间主控不重复调查。范围与完成标准见[收尾计划](parameter_state_closeout_plan.md)。
+独立终审还抓到本包新接入refSOC时“关闭开关仍保留旧条件值”的遗漏，已在首writer和新年度双镜像处修正，原两条失败证据保留，归入C56同一链。夹具错误单列；主控提交前只去掉一个测试文件尾部空行，执行AST不变。
 
-本阶段不等于整个模型等价。其他模块条件覆盖、积雪严格数值限制、外部耦合输入、DOC严格状态与真实碳通量，以及原年度／整模型验收继续分别保留。研究分支同步仍暂停。
+下一包核对**WATCHOUT文件→时间插值→driver／intersurf的参数运输**。原Fortran按forcing中的小写levels识别这条路径，本地源和文档已给出系数约定，足以继续；不能把缺实际大气producer身份当作当前必须停工的理由。RELAXATION=true仍按原源拒绝，不再次乘dt、不清零文件提供的A系数。实际外部producer版本和输出时间身份继续单列未知。
 
-[主控验收](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-acceptance.json) · [当前总账](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-progress-ledger.json) · [修正登记](correction_origins.md) · [发布记录](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/controller-publication.json)
+92／93／126／181及179参数投影等账本视图相互重叠，不能相加。原NPP／DOC／积雪浮点结论不重开；DOC严格状态与真实碳通量、其他物理条件覆盖和整模型门继续保留，`numerical_acceptance=false`。daily/global研究树仍未同步。
+
+用户已授权逐包接力：Sol封存并停止修改后给本主控发一次交付消息；主控验收后再派本范围下一包。这部分完成后停止，不自动进入其他阶段。范围和授权见[收尾计划](parameter_state_closeout_plan.md)。
+
+[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json) · [当前总账](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-progress-ledger.json) · [来源登记](correction_origins.md) · [发布回执](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-publication.json)
