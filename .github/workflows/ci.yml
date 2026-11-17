@@ -36,6 +36,16 @@ jobs:
           tests/unit/test_hydrol_soil_parameter_contract.py
           tests/unit/test_hydrol_soil_parameter_callers.py
           tests/unit/test_hydrol_component_owner_closure.py::test_custom_soil_parameters_reach_real_wrapper_diagnostics
+      - name: Parameter and state handoff interfaces
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen pytest -q
+          tests/unit/test_hydrol_depth_parameter_closeout.py
+          tests/unit/test_parameter_state_creation_phases.py
+          tests/unit/test_parameter_state_io_closeout.py
+          tests/unit/test_parameter_state_scan_closeout.py
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -53,3 +63,7 @@ jobs:
           tests/unit/test_hydrol_soil_parameter_contract.py
           tests/unit/test_hydrol_soil_parameter_callers.py
           tests/unit/test_hydrol_component_owner_closure.py
+          tests/unit/test_hydrol_depth_parameter_closeout.py
+          tests/unit/test_parameter_state_creation_phases.py
+          tests/unit/test_parameter_state_io_closeout.py
+          tests/unit/test_parameter_state_scan_closeout.py

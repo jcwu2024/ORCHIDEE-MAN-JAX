@@ -11,7 +11,6 @@ from typing import Iterable
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
@@ -23,7 +22,6 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     DAY1_PREVIOUS_STEP_STATE_GAPS,
     YEAR_HANDOFF_STATE_GAPS,
 )
-
 
 ORCHESTRATION_PATH = ROOT / "jax_orchidee" / "driver" / "orchestration.py"
 DEFAULT_OUTPUT = (
@@ -370,12 +368,20 @@ def build_audit(
     axis_groups = contract.get("axis_groups", {})
     source_refs = contract.get("source_refs", {})
     raw_contracts = contract.get("contracts", [])
+    conditional_contracts = contract.get("conditional_contracts", [])
     if not isinstance(axis_groups, dict):
         axis_groups = {}
     if not isinstance(source_refs, dict):
         source_refs = {}
     if not isinstance(raw_contracts, list):
         raw_contracts = []
+    conditional_contract_errors = {}
+    if not isinstance(conditional_contracts, list):
+        conditional_contract_errors["conditional_contracts"] = "must be a list"
+        conditional_contracts = []
+    for index, entry in enumerate(conditional_contracts):
+        if not isinstance(entry, dict) or not isinstance(entry.get("activation"), str) or not entry["activation"].strip():
+            conditional_contract_errors[f"conditional_contract[{index}]"] = "requires an explicit activation condition"
 
     contract_pairs: list[tuple[str, str]] = []
     incomplete_contracts: dict[str, list[str]] = {}
@@ -393,7 +399,9 @@ def build_audit(
     contracts_by_component: dict[str, set[str]] = {
         component: set() for component in COMPONENTS
     }
-    for index, entry in enumerate(raw_contracts):
+    # Conditional fields receive every base metadata/owner/provenance check;
+    # they are not an allow-any-extra escape and do not alter the base count.
+    for index, entry in enumerate([*raw_contracts, *conditional_contracts]):
         label = f"contract[{index}]"
         if not isinstance(entry, dict):
             incomplete_contracts[label] = sorted(CONTRACT_REQUIRED_KEYS)
@@ -503,6 +511,7 @@ def build_audit(
         name for name, report in components.items() if report["closed"]
     ]
     errors = {
+        "conditional_contract_errors": conditional_contract_errors,
         "undeclared_producer_components": sorted(
             set(producers) - declared - {"driver_previous_step_state"}
         ),
@@ -538,6 +547,13 @@ def build_audit(
         "source": str(ORCHESTRATION_PATH.relative_to(ROOT)).replace("\\", "/"),
         "contract": str(contract_path.relative_to(ROOT)).replace("\\", "/"),
         "contract_count": len(raw_contracts),
+        "conditional_contract_count": len(conditional_contracts),
+        "total_contract_count": len(raw_contracts) + len(conditional_contracts),
+        "conditional_fields": [
+            f"{entry['component']}.{entry['field']}"
+            for entry in conditional_contracts
+            if isinstance(entry, dict) and "component" in entry and "field" in entry
+        ],
         "source_ref_count": len(source_refs),
         "declared_empty_components": sorted(declared),
         "producer_functions": {

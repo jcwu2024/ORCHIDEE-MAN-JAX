@@ -7,13 +7,12 @@ from pathlib import Path
 from typing import Mapping
 
 import numpy as np
-
 from netCDF4 import Dataset
 
 from jax_orchidee.driver.domain import load_case_config
 from jax_orchidee.driver.init import read_run_scalars
-from jax_orchidee.driver.source_clock import PREFIX, RestartClockBundle, read_source_clock_restart_bundle
 from jax_orchidee.driver.restart import SechibaStaticRestart, read_sechiba_static_restart, reference_restart_path
+from jax_orchidee.driver.source_clock import PREFIX, RestartClockBundle, read_source_clock_restart_bundle
 from jax_orchidee.parameters.pft_catalog import (
     PFTRunLayout,
     load_pft_catalog,
@@ -56,6 +55,71 @@ REFERENCE_CASE_INITIAL_STATE_MODE = "restart_backed_reference_case"
 COLD_START_INITIAL_STATE_MODE = "cold_start_no_restart"
 
 
+def resolve_hydrol_initialization_refsoc_1d(
+    config_path: str | Path,
+    *,
+    run_def_values: Mapping[str, object],
+    npts: int,
+    restart_path: str | Path | None = None,
+    restored_refSOC_1d=None,
+    domain=None,
+) -> np.ndarray | None:
+    """Bind the source HYDROL static input at a new initialization boundary.
+
+    Fortran provenance: hydrol.f90::hydrol_initialize 625-636 reads the
+    configured restart refSOC_1d before hydrol_init/var_init 659-676. Only
+    ALL(refSOC_1d == val_exp) invokes read_refSOC_1dfile 9721-9847; a partial
+    sentinel vector is retained. hydrol_finalize 1748 conditionally writes
+    this separate point input. Mineral parameter vectors and SOC-adjusted
+    effective mcs/mcf/mcw are different objects.
+
+    An explicit restored vector is authoritative for an in-memory new-native
+    run. Otherwise read the selected restart file, then use the existing
+    static reader only for an absent/all-missing field. Continuous execution
+    and complete checkpoint decoding must not call this initialization owner.
+    """
+    from jax_orchidee.driver.init import parse_run_def_bool
+    from jax_orchidee.driver.static import read_paper_hydrol_refsoc_1d_static_field
+    from jax_orchidee.sechiba.hydrol import HYDROL_INIT_RESTART_EXPVAL
+
+    if not parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")):
+        return None
+    if int(npts) != npts or int(npts) < 1:
+        raise ValueError("HYDROL refSOC_1d requires positive integer npts")
+    npts = int(npts)
+
+    def point_vector(value):
+        array = np.asarray(value, dtype=np.float64)
+        if array.shape != (npts,):
+            raise ValueError(f"HYDROL refSOC_1d must have shape ({npts},), got {array.shape}")
+        if not np.all(np.isfinite(array)):
+            raise ValueError("HYDROL refSOC_1d must contain finite values")
+        return array
+
+    refsoc = None
+    if restored_refSOC_1d is not None:
+        refsoc = point_vector(restored_refSOC_1d)
+    elif restart_path is not None:
+        with Dataset(restart_path) as dataset:
+            if "refSOC_1d" in dataset.variables:
+                variable = dataset.variables["refSOC_1d"]
+                # Read actual stored values, preserving the selected source's
+                # 999999 sentinel rather than applying masked-array defaults.
+                variable.set_auto_maskandscale(False)
+                stored = np.asarray(variable[:], dtype=np.float64)
+                if variable.dimensions and variable.dimensions[0] == "time":
+                    stored = stored[0]
+                refsoc = point_vector(stored.reshape(-1))
+    if refsoc is not None and not np.all(refsoc == HYDROL_INIT_RESTART_EXPVAL):
+        return refsoc
+    if domain is None or getattr(domain, "resolution", None) is None:
+        raise ValueError("HYDROL refSOC_1d static fallback requires explicit driver domain/resolution")
+    refsoc, _ = read_paper_hydrol_refsoc_1d_static_field(
+        config_path, lalo=domain.lalo, resolution_m=domain.resolution,
+    )
+    return point_vector(refsoc)
+
+
 def restart_thermosoil_initialization_supported(context: object) -> bool:
     """Limit the new lifecycle reconstruction to its audited source path."""
     from jax_orchidee.driver.init import parse_run_def_bool
@@ -89,13 +153,17 @@ def restart_thermosoil_initial_fields(
     """
     from jax_orchidee.driver.init import parse_run_def_bool
     from jax_orchidee.sechiba.hydrol import (
-        hydrol_var_init, hydrol_cold_start_thermosoil_moisture_inputs,
+        hydrol_cold_start_thermosoil_moisture_inputs,
+        hydrol_depth_parameters_from_run_def,
         hydrol_soil_parameters_from_run_def,
+        hydrol_var_init,
     )
     from jax_orchidee.sechiba.thermosoil import (
-        thermosoil_humlev, thermosoil_getdiff_explicit,
-        thermosoil_getdiff_thinsnow, thermosoil_soilc_tempdiff_fraction,
         thermosoil_diaglev_from_ptn,
+        thermosoil_getdiff_explicit,
+        thermosoil_getdiff_thinsnow,
+        thermosoil_humlev,
+        thermosoil_soilc_tempdiff_fraction,
     )
     values = context.run_def_values
     flag = lambda name, default: parse_run_def_bool(values.get(name, default))
@@ -110,6 +178,9 @@ def restart_thermosoil_initial_fields(
     soil = getattr(context, "hydrol_soil_parameters", None)
     if soil is None:
         soil = hydrol_soil_parameters_from_run_def(values)
+    depth = getattr(context, "hydrol_depth_parameters", None)
+    if depth is None:
+        depth = hydrol_depth_parameters_from_run_def(values)
     hydro = hydrol_var_init(
         veget=source["veget"], veget_max=source["veget_max"],
         soiltile=context.first_step_bundle.vegetation.soiltile,
@@ -122,6 +193,7 @@ def restart_thermosoil_initial_fields(
         vegtot_old=source["vegtot_old"], qsintveg=source["qsintveg"],
         drysoil_frac=source["drysoil_frac"],
         soil_parameters=soil,
+        depth_parameters=depth,
         refSOC_1d=source.get("refSOC_1d"),
         use_refSOC_hydrol=flag("use_refSOC_hydrol", "FALSE"),
         ok_pc=context.hydrol_ok_pc, ok_leak=context.hydrol_ok_leak,

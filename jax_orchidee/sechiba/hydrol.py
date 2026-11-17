@@ -309,6 +309,121 @@ def hydrol_soil_parameters_from_run_def(run_def_values: Mapping[str, object]) ->
     return _hydrol_init_usda_parameters(config_values)
 
 
+_HYDROL_DEPTH_CONFIG = {
+    "altmax_for_nroot_thresh": ("altmax_for_nroot_thresh", 3.0),
+    "CWRR_NKS_N0": ("n0", 0.95),
+    "CWRR_NKS_POWER": ("nk_rel", 0.34),
+    "CWRR_AKS_A0": ("a0", 0.00012),
+    "CWRR_AKS_POWER": ("ak_rel", 0.53),
+    "KFACT_DECAY_RATE": ("f_ks", 2.0),
+    "KFACT_STARTING_DEPTH": ("dp_comp", 0.3),
+    "KFACT_MAX": ("kfact_max", 10.0),
+}
+_HYDROL_ACTIVE_DEPTH_FIELDS = tuple(
+    field for field, _ in _HYDROL_DEPTH_CONFIG.values() if field != "altmax_for_nroot_thresh"
+)
+
+
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True, eq=False)
+class HydrolDepthParameters(Mapping[str, jnp.ndarray]):
+    """Source scalar depth controls, separate from USDA texture parameters.
+
+    Fortran provenance: ``hydrol.f90::hydrol_var_init`` lines 3898-4059
+    defines defaults/guards; lines 4150-4306 apply the seven active controls
+    to mineral and peat tables. ``altmax_for_nroot_thresh`` is read at 3932,
+    but its only scientific use at 4107-4111 is commented out in this source.
+    It remains configuration metadata and never changes roots or table keys.
+    The source units are metres for the threshold and ``dp_comp``, 1/metre
+    for ``f_ks``, 1/mm for ``a0``, and dimensionless for the other scalars.
+    Construct through ``hydrol_depth_parameters`` before entering JIT.
+    """
+
+    altmax_for_nroot_thresh: jnp.ndarray
+    n0: jnp.ndarray
+    nk_rel: jnp.ndarray
+    a0: jnp.ndarray
+    ak_rel: jnp.ndarray
+    f_ks: jnp.ndarray
+    dp_comp: jnp.ndarray
+    kfact_max: jnp.ndarray
+
+    def __getitem__(self, name):
+        if name not in self.__dataclass_fields__:
+            raise KeyError(name)
+        return getattr(self, name)
+
+    def __iter__(self):
+        return iter(field for field, _ in _HYDROL_DEPTH_CONFIG.values())
+
+    def __len__(self):
+        return len(_HYDROL_DEPTH_CONFIG)
+
+    def tree_flatten(self):
+        return tuple(self[name] for name in self), None
+
+    @classmethod
+    def tree_unflatten(cls, auxiliary, children):
+        return cls(**dict(zip((field for field, _ in _HYDROL_DEPTH_CONFIG.values()), children)))
+
+    def table_kwargs(self):
+        """Expose only controls used by the source mineral/peat table builders."""
+        return {field: self[field] for field in _HYDROL_ACTIVE_DEPTH_FIELDS}
+
+    def as_config_values(self):
+        """Expose the existing eager initialization result's scalar key layout."""
+        return {key: float(self[field]) for key, (field, _) in _HYDROL_DEPTH_CONFIG.items()}
+
+
+def hydrol_depth_parameters(config_values=None) -> HydrolDepthParameters:
+    """Resolve the source ``hydrol_var_init`` scalar defaults and guards once."""
+
+    if isinstance(config_values, HydrolDepthParameters):
+        return config_values
+    supplied = {} if config_values is None else dict(config_values)
+    unknown = set(supplied) - set(_HYDROL_DEPTH_CONFIG)
+    if unknown:
+        raise ValueError(f"unsupported hydrol_var_init config key(s): {sorted(unknown)}")
+    values = {}
+    for key, (field, default) in _HYDROL_DEPTH_CONFIG.items():
+        raw = np.asarray(supplied.get(key, default))
+        if raw.shape != ():
+            raise ValueError(f"{key} must be a scalar")
+        values[field] = float(str(raw.item()).replace("D", "E").replace("d", "e"))
+    # Fortran hydrol.f90:4000 intentionally checks nk_rel again after reading
+    # CWRR_AKS_POWER. Preserve that audited source behavior, including accepting
+    # a negative ak_rel when nk_rel is non-negative; do not substitute ak_rel.
+    checks = (
+        (values["n0"] < 0.0, "CWRR_NKS_N0 must be non-negative"),
+        (values["nk_rel"] < 0.0, "CWRR_NKS_POWER must be non-negative"),
+        (values["a0"] < 0.0, "CWRR_AKS_A0 must be non-negative"),
+        (values["nk_rel"] < 0.0, "CWRR_AKS_POWER failed the source nk_rel check"),
+        (values["f_ks"] < 0.0, "KFACT_DECAY_RATE must be non-negative"),
+        (values["dp_comp"] <= 0.0, "KFACT_STARTING_DEPTH must be positive"),
+        (values["kfact_max"] < 10.0, "KFACT_MAX must be at least 10"),
+    )
+    for failed, message in checks:
+        if failed:
+            raise ValueError(message)
+    return HydrolDepthParameters(**{name: jnp.asarray(value, dtype=jnp.float64) for name, value in values.items()})
+
+
+def hydrol_depth_parameters_from_run_def(run_def_values: Mapping[str, object]) -> HydrolDepthParameters:
+    """Select the eight source scalar keys from an already parsed run.def."""
+    return hydrol_depth_parameters({key: run_def_values[key] for key in _HYDROL_DEPTH_CONFIG if key in run_def_values})
+
+
+def _hydrol_depth_parameters_for_init(config_values, depth_parameters):
+    if depth_parameters is None:
+        return hydrol_depth_parameters(config_values)
+    depth = hydrol_depth_parameters(depth_parameters)
+    if config_values:
+        configured = hydrol_depth_parameters({**depth.as_config_values(), **dict(config_values)})
+        if any(float(depth[field]) != float(configured[field]) for field in depth):
+            raise ValueError("config_values conflict with the explicit HYDROL depth_parameters contract")
+    return depth
+
+
 class HydrolSoilCoefResult(NamedTuple):
     """Selected mineral HYDROL coefficients and diagnostics."""
 
@@ -4743,6 +4858,7 @@ def hydrol_init_pft14_owner(
     hydrol_init_config: Mapping[str, object] | None = None,
     run_def_values: Mapping[str, object] | None = None,
     hydrol_var_config: Mapping[str, float] | None = None,
+    depth_parameters=None,
     refSOC_1d=None,
     use_refSOC_hydrol=False,
     switches: HydrolInitPFT14Switches | None = None,
@@ -4848,6 +4964,10 @@ def hydrol_init_pft14_owner(
             axis=1,
         )
 
+    if depth_parameters is None:
+        depth_values = hydrol_depth_parameters_from_run_def(run_def_values or {}).as_config_values()
+        depth_values.update(hydrol_var_config or {})
+        depth_parameters = hydrol_depth_parameters(depth_values)
     restart_static = hydrol_var_init(
         veget=veget,
         veget_max=veget_max,
@@ -4875,6 +4995,7 @@ def hydrol_init_pft14_owner(
         agri_peat=switches.agri_peat,
         ok_freeze_cwrr=switches.ok_freeze_cwrr,
         config_values=hydrol_var_config,
+        depth_parameters=depth_parameters,
         soil_parameters=soil_parameters,
     )
     vegetation_static = hydrol_vegupd_static_state(
@@ -5790,6 +5911,7 @@ def hydrol_var_init(
     ok_freeze_cwrr=True,
     config_values: Mapping[str, float] | None = None,
     soil_parameters: Mapping[str, object] | None = None,
+    depth_parameters=None,
     zmaxh=2.0,
     mx_eau_nobio=150.0,
     val_exp=999999.0,
@@ -5833,50 +5955,8 @@ def hydrol_var_init(
     if (bool(peat_hydro) or bool(tides) or bool(agri_peat)) and nstm < 6:
         raise ValueError("peat/tide initialization references Fortran soil tiles 4, 5, and 6")
 
-    cfg = {} if config_values is None else dict(config_values)
-    allowed = {
-        "altmax_for_nroot_thresh",
-        "CWRR_NKS_N0",
-        "CWRR_NKS_POWER",
-        "CWRR_AKS_A0",
-        "CWRR_AKS_POWER",
-        "KFACT_DECAY_RATE",
-        "KFACT_STARTING_DEPTH",
-        "KFACT_MAX",
-    }
-    unknown = set(cfg) - allowed
-    if unknown:
-        raise ValueError(f"unsupported hydrol_var_init config key(s): {sorted(unknown)}")
-    parameters = {
-        "altmax_for_nroot_thresh": float(cfg.get("altmax_for_nroot_thresh", 3.0)),
-        "CWRR_NKS_N0": float(cfg.get("CWRR_NKS_N0", 0.95)),
-        "CWRR_NKS_POWER": float(cfg.get("CWRR_NKS_POWER", 0.34)),
-        "CWRR_AKS_A0": float(cfg.get("CWRR_AKS_A0", 0.00012)),
-        "CWRR_AKS_POWER": float(cfg.get("CWRR_AKS_POWER", 0.53)),
-        "KFACT_DECAY_RATE": float(cfg.get("KFACT_DECAY_RATE", 2.0)),
-        "KFACT_STARTING_DEPTH": float(cfg.get("KFACT_STARTING_DEPTH", 0.3)),
-        "KFACT_MAX": float(cfg.get("KFACT_MAX", 10.0)),
-    }
-    n0 = parameters["CWRR_NKS_N0"]
-    nk_rel = parameters["CWRR_NKS_POWER"]
-    a0 = parameters["CWRR_AKS_A0"]
-    ak_rel = parameters["CWRR_AKS_POWER"]
-    f_ks = parameters["KFACT_DECAY_RATE"]
-    dp_comp = parameters["KFACT_STARTING_DEPTH"]
-    kfact_max = parameters["KFACT_MAX"]
-    # Keep the source's line-4000 check: AKS_POWER accidentally tests nk_rel.
-    checks = (
-        (n0 < 0.0, "CWRR_NKS_N0 must be non-negative"),
-        (nk_rel < 0.0, "CWRR_NKS_POWER must be non-negative"),
-        (a0 < 0.0, "CWRR_AKS_A0 must be non-negative"),
-        (nk_rel < 0.0, "CWRR_AKS_POWER failed the source nk_rel check"),
-        (f_ks < 0.0, "KFACT_DECAY_RATE must be non-negative"),
-        (dp_comp <= 0.0, "KFACT_STARTING_DEPTH must be positive"),
-        (kfact_max < 10.0, "KFACT_MAX must be at least 10"),
-    )
-    for failed, message in checks:
-        if failed:
-            raise ValueError(message)
+    depth = _hydrol_depth_parameters_for_init(config_values, depth_parameters)
+    parameters = depth.as_config_values()
 
     soil = hydrol_soil_parameters(soil_parameters)
     zz = znh_m * 1000.0
@@ -5910,25 +5990,13 @@ def hydrol_var_init(
         nvan=soil["nvan"],
         avan=soil["avan"],
         ks=soil["ks"],
-        n0=n0,
-        nk_rel=nk_rel,
-        a0=a0,
-        ak_rel=ak_rel,
-        f_ks=f_ks,
-        dp_comp=dp_comp,
-        kfact_max=kfact_max,
+        **depth.table_kwargs(),
     )
     peat_tables = None
     if bool(peat_hydro):
         peat_tables = build_peat_cwrr_tables(
             znh_m,
-            n0=n0,
-            nk_rel=nk_rel,
-            a0=a0,
-            ak_rel=ak_rel,
-            f_ks=f_ks,
-            dp_comp=dp_comp,
-            kfact_max=kfact_max,
+            **depth.table_kwargs(),
         )
 
     shape3 = (npts, nslm, nstm)
@@ -6121,7 +6189,7 @@ def build_mineral_cwrr_tables(
     """Build mineral CWRR linearized hydraulic tables.
 
     Fortran provenance: `fortran_source/ORCHIDEE/src_sechiba/hydrol.f90`,
-    subroutine `hydrol_init`, lines 4172-4244; depth-factor setup lines
+    subroutine `hydrol_var_init`, lines 4172-4244; depth-factor setup lines
     4150-4159. Depth grid provenance:
     `fortran_source/ORCHIDEE/src_parameters/vertical_soil.f90`, lines 185-263
     and 331-363. USDA parameter provenance:
@@ -6417,7 +6485,7 @@ def _array_cache_key(value) -> tuple[str, tuple[int, ...], tuple[float | int, ..
 
 
 @lru_cache(maxsize=32)
-def _cached_mineral_cwrr_tables(njsc_key, mcs_key, z_m_key, ks_key, mcr_key, nvan_key, avan_key):
+def _cached_mineral_cwrr_tables(njsc_key, mcs_key, z_m_key, ks_key, mcr_key, nvan_key, avan_key, depth_key):
     _, njsc_shape, njsc_values = njsc_key
     _, mcs_shape, mcs_values = mcs_key
     _, z_m_shape, z_m_values = z_m_key
@@ -6432,14 +6500,15 @@ def _cached_mineral_cwrr_tables(njsc_key, mcs_key, z_m_key, ks_key, mcr_key, nva
     return build_mineral_cwrr_tables(
         njsc=njsc, mcs=mcs, z_m=z_m, ks=ks,
         mcr=restore(mcr_key), nvan=restore(nvan_key), avan=restore(avan_key),
+        **dict(zip(_HYDROL_ACTIVE_DEPTH_FIELDS, depth_key)),
     )
 
 
 @lru_cache(maxsize=8)
-def _cached_peat_cwrr_tables(z_m_key):
+def _cached_peat_cwrr_tables(z_m_key, depth_key):
     _, z_m_shape, z_m_values = z_m_key
     z_m = np.asarray(z_m_values, dtype=np.float64).reshape(z_m_shape)
-    return build_peat_cwrr_tables(z_m)
+    return build_peat_cwrr_tables(z_m, **dict(zip(_HYDROL_ACTIVE_DEPTH_FIELDS, depth_key)))
 
 
 class HydrolRuntimeStaticTables(NamedTuple):
@@ -6448,6 +6517,7 @@ class HydrolRuntimeStaticTables(NamedTuple):
     mineral: MineralCWRRTables
     peat: PeatCWRRTables | None
     soil_parameters: HydrolSoilParameters | None = None
+    depth_parameters: HydrolDepthParameters | None = None
 
 
 def hydrol_runtime_static_tables_from_payload(
@@ -6456,12 +6526,15 @@ def hydrol_runtime_static_tables_from_payload(
     ks=USDA_KS,
     peat_hydro=False,
     soil_parameters=None,
+    depth_parameters=None,
 ) -> HydrolRuntimeStaticTables:
     """Build immutable HYDROL tables from source-backed day-static inputs."""
 
     soil = hydrol_soil_parameters(soil_parameters)
     if soil_parameters is None:
         soil = HydrolSoilParameters(**{**soil, "ks": jnp.asarray(ks, dtype=jnp.float64)})
+    depth = hydrol_depth_parameters(depth_parameters)
+    depth_key = tuple(float(depth[field]) for field in _HYDROL_ACTIVE_DEPTH_FIELDS)
     njsc = np.asarray(payload["njsc"], dtype=np.int32)
     mcs = np.asarray(payload["mcs"], dtype=np.float64)
     zz_mm = np.asarray(payload["zz_mm"], dtype=np.float64)
@@ -6474,9 +6547,10 @@ def hydrol_runtime_static_tables_from_payload(
         _array_cache_key(soil.mcr),
         _array_cache_key(soil.nvan),
         _array_cache_key(soil.avan),
+        depth_key,
     )
-    peat = _cached_peat_cwrr_tables(_array_cache_key(zz_mm / 1000.0)) if bool(peat_hydro) else None
-    return HydrolRuntimeStaticTables(mineral=mineral, peat=peat, soil_parameters=soil)
+    peat = _cached_peat_cwrr_tables(_array_cache_key(zz_mm / 1000.0), depth_key) if bool(peat_hydro) else None
+    return HydrolRuntimeStaticTables(mineral=mineral, peat=peat, soil_parameters=soil, depth_parameters=depth)
 
 
 def select_mineral_cwrr_bin(
@@ -9497,6 +9571,7 @@ def run_hydrol_first_step_module_from_precall(
     static_table_payload: Mapping[str, object] | None = None,
     runtime_static_tables: HydrolRuntimeStaticTables | None = None,
     soil_parameters=None,
+    depth_parameters=None,
 ) -> HydrolFirstStepModuleClosure:
     """Run the first-step HYDROL module and expose downstream boundaries.
 
@@ -9509,6 +9584,8 @@ def run_hydrol_first_step_module_from_precall(
 
     if soil_parameters is None and runtime_static_tables is not None:
         soil_parameters = runtime_static_tables.soil_parameters
+    if depth_parameters is None and runtime_static_tables is not None:
+        depth_parameters = runtime_static_tables.depth_parameters
     soil = hydrol_soil_parameters(soil_parameters)
     if soil_parameters is None:
         soil = HydrolSoilParameters(**{**soil, "ks": jnp.asarray(ks, dtype=jnp.float64)})
@@ -9547,6 +9624,7 @@ def run_hydrol_first_step_module_from_precall(
             ks=ks,
             peat_hydro=peat_hydro,
             soil_parameters=soil,
+            depth_parameters=depth_parameters,
         )
     mineral_tables = runtime_static_tables.mineral
     peat_tables = runtime_static_tables.peat

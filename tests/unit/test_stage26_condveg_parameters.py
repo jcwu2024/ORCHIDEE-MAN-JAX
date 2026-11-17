@@ -213,6 +213,10 @@ def test_actual_cache_constructors_capture_four_effective_parameters(monkeypatch
     """
     from jax_orchidee.driver import orchestration as orch
 
+    # This constructor-only probe deliberately supplies no chronology.
+    monkeypatch.setattr(orch, "_source_clock_setup", lambda context: SimpleNamespace(binding=SimpleNamespace(binding_key=("cache-construction",))))
+    monkeypatch.setattr(orch, "_validate_compiled_source_clock_series", lambda *args, **kwargs: None)
+
     class ConstructionOnlyJit:
         def lower(self, *args):
             return self
@@ -241,7 +245,7 @@ def test_actual_cache_constructors_capture_four_effective_parameters(monkeypatch
         monkeypatch.setattr(orch, "_compiled_diffuco_parameter_values", lambda context: ())
         monkeypatch.setattr(orch, "_paper_1961_later_day_transition_inputs", lambda **kwargs:
                             SimpleNamespace(compiled_base_payload_template=None))
-        initial = SimpleNamespace(spec=spec, values_by_component=())
+        initial = SimpleNamespace(spec=spec, values_by_component=(), tstep=47)
 
         def build(context):
             executable, actual_spec = orch._paper_compiled_later_day_block_executable(
@@ -258,14 +262,14 @@ def test_actual_cache_constructors_capture_four_effective_parameters(monkeypatch
     assert build(default_context) is default
     names = {"MIN_WIND": ".4", "HEIGHT_DISPLACEMENT": ".5", "Z0_ICE": ".002", "SNOW_DENSITY": "660"}
     inactive = build(_cache_context({"IMPOSE_PARAM": "FALSE", **{name: "not-read" for name in names}}))
-    assert (inactive is default) is (entry == "sechiba-scan")
+    assert inactive is not default  # distinct immutable context
     for name, value in names.items():
         distinct_context = _cache_context({name: value})
         distinct = build(distinct_context)
         assert distinct is not default, name
         assert build(distinct_context) is distinct
         equivalent = build(_cache_context({name: str(float(value))}))
-        assert (equivalent is distinct) is (entry == "sechiba-scan")
+        assert equivalent is not distinct
 
 
 @pytest.mark.parametrize("producer", ["ordinary", "compact", "cold-wrapper", "cold-main", "cold-frac"])

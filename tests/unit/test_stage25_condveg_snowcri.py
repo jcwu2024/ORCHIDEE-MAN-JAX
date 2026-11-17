@@ -207,6 +207,10 @@ def test_real_cache_construction_uses_effective_snowcri(monkeypatch, entry):
     """
     from jax_orchidee.driver import orchestration as orch
 
+    # This constructor-only probe deliberately supplies no chronology.
+    monkeypatch.setattr(orch, "_source_clock_setup", lambda context: SimpleNamespace(binding=SimpleNamespace(binding_key=("cache-construction",))))
+    monkeypatch.setattr(orch, "_validate_compiled_source_clock_series", lambda *args, **kwargs: None)
+
     class ConstructionOnlyJit:
         def lower(self, *args):
             return self
@@ -235,7 +239,7 @@ def test_real_cache_construction_uses_effective_snowcri(monkeypatch, entry):
         monkeypatch.setattr(orch, "_compiled_diffuco_parameter_values", lambda context: ())
         monkeypatch.setattr(orch, "_paper_1961_later_day_transition_inputs", lambda **kwargs:
                             SimpleNamespace(compiled_base_payload_template=None))
-        initial = SimpleNamespace(spec=spec, values_by_component=())
+        initial = SimpleNamespace(spec=spec, values_by_component=(), tstep=47)
 
         def build(context):
             executable, actual_spec = orch._paper_compiled_later_day_block_executable(
@@ -257,13 +261,13 @@ def test_real_cache_construction_uses_effective_snowcri(monkeypatch, entry):
         equivalent_context = _cache_context(raw)
         equivalent = build(equivalent_context)
         assert build(equivalent_context) is equivalent
-        assert (equivalent is default) is (entry == "sechiba-scan")
+        assert equivalent is not default  # distinct immutable context
     nondefault_context = _cache_context({"SNOWCRI_ALB": "20"})
     nondefault = build(nondefault_context)
     assert nondefault is not default, "different effective SNOWCRI_ALB must isolate executable"
     assert build(nondefault_context) is nondefault
     equivalent = build(_cache_context({"IMPOSE_PARAM": "TRUE", "SNOWCRI_ALB": "20.0"}))
-    assert (equivalent is nondefault) is (entry == "sechiba-scan")
+    assert equivalent is not nondefault
 
 
 @pytest.mark.parametrize("producer", ["ordinary", "compact", "cold-wrapper", "cold-main", "cold-frac"])

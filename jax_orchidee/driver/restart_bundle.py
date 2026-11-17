@@ -12,7 +12,9 @@ from jax_orchidee.driver.dim2 import Dim2DriverRestart
 from jax_orchidee.driver.restart_export import stomate_full_restart_states_from_day_end_packet
 from jax_orchidee.driver.restart_file_io import write_dim2_driver_restart
 from jax_orchidee.driver.source_clock import (
-    PREFIX, SourceClockRuntime, physical_state_with_source_clock,
+    PREFIX,
+    SourceClockRuntime,
+    physical_state_with_source_clock,
     read_source_clock_restart_bundle,
     validate_source_clock_restart_packet,
 )
@@ -69,11 +71,14 @@ def paper_restart_bundle_state_from_day_end_packet(
     *,
     base_stomate: StomateReadstartStates,
     kjit: int,
+    use_refsoc_hydrol: bool = False,
 ) -> PaperRestartBundleState:
     """Convert a complete production day/year-end packet to three restart states.
 
     The packet must contain the dedicated 93-field ``sechiba_finalize_state``
-    and all 13 driver restart fields. STOMATE state uses the audited day-end
+    and all 13 driver restart fields. Enabling ``use_refsoc_hydrol`` requires
+    the additional source-conditional ``refSOC_1d`` field, without changing the
+    default 93-field denominator. STOMATE state uses the audited day-end
     merge contract from ``driver.restart_export``.
     """
 
@@ -87,9 +92,14 @@ def paper_restart_bundle_state_from_day_end_packet(
     if missing_driver:
         raise ValueError(f"day-end packet is missing driver restart fields: {missing_driver}")
     finalize = components.get("sechiba_finalize_state", {})
-    if len(finalize) != 93:
+    if bool(use_refsoc_hydrol) != ("refSOC_1d" in finalize):
         raise ValueError(
-            f"day-end packet SECHIBA finalize denominator must be 93, got {len(finalize)}"
+            "conditional refSOC_1d state must be present exactly when use_refsoc_hydrol is enabled"
+        )
+    base_count = len(finalize) - int("refSOC_1d" in finalize)
+    if base_count != 93:
+        raise ValueError(
+            f"day-end packet SECHIBA base finalize denominator must be 93, got {base_count}"
         )
     slowproc = components.get("slowproc_stomate_previous_step_state", {})
     stomate, _ = stomate_full_restart_states_from_day_end_packet(
@@ -97,7 +107,9 @@ def paper_restart_bundle_state_from_day_end_packet(
     )
     return PaperRestartBundleState(
         driver=Dim2DriverRestart(**{name: driver_fields[name] for name in driver_names}),
-        sechiba=paper_sechiba_restart_state_from_finalize_state(finalize, kjit=int(kjit)),
+        sechiba=paper_sechiba_restart_state_from_finalize_state(
+            finalize, kjit=int(kjit), use_refsoc_hydrol=use_refsoc_hydrol,
+        ),
         stomate=stomate,
         source_clock_runtime=runtime,
     )

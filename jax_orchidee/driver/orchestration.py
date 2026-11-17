@@ -115,6 +115,7 @@ from jax_orchidee.driver.restart_state import (
     reference_case_first_step_restart_state,
     restart_thermosoil_initial_fields,
     restart_thermosoil_initialization_supported,
+    resolve_hydrol_initialization_refsoc_1d,
 )
 from jax_orchidee.driver.sechiba_boundary import (
     IntersurfFirstStepPayload,
@@ -180,6 +181,7 @@ from jax_orchidee.sechiba.enerbil import (
 )
 from jax_orchidee.sechiba.first_step import SechibaFirstStepInputCoverage, first_step_sechiba_input_coverage
 from jax_orchidee.sechiba.hydrol import (
+    HydrolDepthParameters,
     HydrolRuntimeStaticTables,
     HydrolSoilParameters,
     HydrolFirstStepModuleClosure,
@@ -189,6 +191,7 @@ from jax_orchidee.sechiba.hydrol import (
     hydrol_cold_start_thermosoil_moisture_inputs,
     hydrol_cold_start_state,
     hydrol_cold_start_waterbal_begin_state,
+    hydrol_depth_parameters_from_run_def,
     hydrol_layer_thickness_from_zz_mm,
     hydrol_runtime_static_tables_from_payload,
     hydrol_refsoc_1d_thresholds,
@@ -428,6 +431,7 @@ class Paper1961PreparedDriverContext:
         "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 653-659 and 1111-1125",
     )
     hydrol_soil_parameters: HydrolSoilParameters | None = None
+    hydrol_depth_parameters: HydrolDepthParameters | None = None
 
 
 def _prepared_hydrol_soil_parameters(
@@ -446,6 +450,25 @@ def _prepared_hydrol_soil_parameters(
         parameters = getattr(context, "hydrol_soil_parameters", None)
     if parameters is None:
         parameters = hydrol_soil_parameters_from_run_def(context.run_def_values)
+    return parameters
+
+
+def _prepared_hydrol_depth_parameters(
+    context: Paper1961PreparedDriverContext,
+    *,
+    runtime_static_tables: HydrolRuntimeStaticTables | None = None,
+) -> HydrolDepthParameters:
+    """Bind source depth controls, with dynamic runtime values taking priority.
+
+    Fortran provenance: hydrol_var_init 3936-4046 configures the controls;
+    4150-4244 builds their depth factors and hydraulic tables. Missing saved
+    attributes on old prepared contexts resolve from their immutable run.def.
+    """
+    parameters = getattr(runtime_static_tables, "depth_parameters", None)
+    if parameters is None:
+        parameters = getattr(context, "hydrol_depth_parameters", None)
+    if parameters is None:
+        parameters = hydrol_depth_parameters_from_run_def(context.run_def_values)
     return parameters
 
 
@@ -789,6 +812,7 @@ def _prepare_paper_1961_driver_context_cached(
         ),
         hydrol_cwrr_ks=np.asarray(hydrol_soil.ks),
         hydrol_soil_parameters=hydrol_soil,
+        hydrol_depth_parameters=hydrol_depth_parameters_from_run_def(values),
         hydrol_zz_mm=cwrr_grid.znh * 1000.0,
         hydrol_dz_mm=cwrr_grid.dnh * 1000.0,
         hydrol_dh_mm=cwrr_grid.dlh * 1000.0,
@@ -1192,6 +1216,8 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object], *
         for name in component_fields
     }
     carry: dict[str, object] = {}
+    if payloads.get("hydrol_refSOC_1d") is not None:
+        carry["refSOC_1d"] = payloads["hydrol_refSOC_1d"]
     enerbil_surface = payloads.get("enerbil_surface_state")
     slowproc_full = payloads.get("slowproc_init_pft14")
     soilalbedo_bg = payloads.get("condveg_soilalbedo_bg")
@@ -1616,7 +1642,9 @@ STOMATE_HALF_HOUR_CARRY_FIELDS = (
     "carb_mass_total", "soiltile", "totfrac_nobio", "tot_bare_soil",
     "lignin_struc_above", "lignin_struc_below", "deepC_a", "deepC_s",
     "deepC_p", "soilc_total", "thawed_humidity", "depth_organic_soil",
-    "resp_maint_part", "daily_accumulators", "t2m_longterm",
+    # slowproc_main:588 reads the prior growth temperature before STOMATE;
+    # stomate_main:5049 updates it at the daily boundary, not each half-hour.
+    "resp_maint_part", "daily_accumulators", "t2m_longterm", "temp_growth",
     "dt_days_read", "resp_hetero", "tsurf_year", "deepC_peat",
     "depth_deepsoil", "t2m_14",
     *STOMATE_FIXED_PATH_CARRY_FIELDS,
@@ -2295,6 +2323,7 @@ class DriverCompiledHydrolTableArrays(NamedTuple):
     nvan_mod: object
     avan_mod: object
     soil_parameters: HydrolSoilParameters | None = None
+    depth_parameters: HydrolDepthParameters | None = None
 
 
 @dataclass(frozen=True)
@@ -3504,7 +3533,7 @@ def _sechiba_finalize_state_from_components(
     hydrol_module: HydrolFirstStepModuleClosure,
     slowproc_updates: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
-    """Build all 93 SECHIBA finalize inputs after one production step."""
+    """Build 93 SECHIBA inputs and the source-conditional refSOC field."""
 
     if not (
         thermosoil_module.ok and condveg_module.ok and hydrol_module.ok
@@ -3584,6 +3613,10 @@ def _sechiba_finalize_state_from_components(
     }
     pottemp = e.step.pottemp
     carry = set(_SECHIBA_HALF_HOUR_CARRY_FIELDS)
+    if "refSOC_1d" in previous:
+        # HYDROL module SAVE value: initialized once, conditionally finalized
+        # at hydrol.f90:1748; ordinary timesteps do not rewrite it.
+        carry.add("refSOC_1d")
     if pottemp is not None:
         updates["q_sol_pot"] = pottemp.q_sol_pot
         updates["temp_sol_pot"] = pottemp.temp_sol_pot
@@ -3608,6 +3641,10 @@ def _sechiba_finalize_state_from_components(
         )
         for name in carry
     }
+    if "refSOC_1d" in carry:
+        carry_provenance["refSOC_1d"] = (
+            "hydrol.f90::hydrol_initialize 625-636; hydrol_finalize 1748: conditional SAVE field",
+        )
     return dict(
         transition_sechiba_finalize_source_state(
             previous,
@@ -3782,6 +3819,16 @@ def driver_previous_step_state_from_timestep_scaffold(
         initial_finalize = sechiba_finalize_source_state_from_restart(
             scaffold.first_step_restart_state.sechiba_restart_state
         )
+        # hydrol_initialize:625-636 reads this restart field only when its
+        # source switch is active. A stale field in an older input file is
+        # not live state after a disabled initialization.
+        initial_finalize.pop("refSOC_1d", None)
+        initial_refsoc = getattr(scaffold.hydrol_first_step_precall, "payload", {}).get("refSOC_1d")
+        if initial_refsoc is not None:
+            # Preserve the actual initialized consumer value, including a
+            # source-authorized static-file fallback after a missing restart.
+            initial_finalize["refSOC_1d"] = initial_refsoc
+            fields["hydrol_previous_step_state"]["refSOC_1d"] = initial_refsoc
         fields["sechiba_finalize_state"] = _sechiba_finalize_state_from_components(
             previous=initial_finalize,
             enerbil_local=scaffold.enerbil_first_step_local,
@@ -3926,7 +3973,7 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
         if name in prior_therm:
             fields["thermosoil_previous_step_state"][name] = prior_therm[name]
     prior_hydrol = scaffold.enerbil.previous_state.fields_by_component.get("hydrol_previous_step_state", {})
-    for name in ("free_drain_coef", "zwt_force", "njsc", "fwet_new"):
+    for name in ("free_drain_coef", "zwt_force", "njsc", "fwet_new", "refSOC_1d"):
         # hydrol_soil:7307-7342 updates fwet only on the TOPMODEL branch.
         if name in prior_hydrol and (
             name != "fwet_new" or name not in fields["hydrol_previous_step_state"]
@@ -4661,6 +4708,7 @@ def paper_1961_next_step_hydrol_precall_scaffold(
         hydrol_module = run_hydrol_first_step_module_from_precall(
             hydrol_precall,
             soil_parameters=_prepared_hydrol_soil_parameters(context),
+            depth_parameters=_prepared_hydrol_depth_parameters(context),
             temp_air=enerbil.payload.temp_air,
             pb=enerbil.payload.pb,
             u=enerbil.payload.u,
@@ -5435,6 +5483,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
             hydrol_module = run_hydrol_first_step_module_from_precall(
                 hydrol_precall,
                 soil_parameters=hydrol_soil,
+                depth_parameters=hydrol_depth_parameters_from_run_def(run_def_values),
                 temp_air=payload.temp_air,
                 pb=payload.pb,
                 u=payload.u,
@@ -5857,8 +5906,23 @@ def paper_1961_driver_cold_start_first_step_coverage(
         "cold_start_first_step_entry_payload": cold_start_first_step_entry_payload,
     }
     if not any(missing.values()):
-        initialized_payloads["source_clock_context"] = context
-        initialized_payloads["cold_start_first_step_previous_state"] = _previous_step_state_from_cold_start_payloads(initialized_payloads, source_clock_context=context)
+        # A no-restart initialization cannot enter the restart-backed prepared
+        # context constructor. Bind the actual cold bundle's declared clock;
+        # a caller's already admitted context retains its run identity.
+        clock_context = prepared_context
+        if clock_context is None:
+            clock_context = SimpleNamespace(
+                run_def_values=run_def_values,
+                source_clock_setup=source_clock_setup_from_config(
+                    config_path, run_def_path=run_def_path,
+                    run_def_values=run_def_values, first_step_bundle=init_step,
+                    run_mode="new_native_run",
+                ),
+            )
+        initialized_payloads["source_clock_context"] = clock_context
+        initialized_payloads["cold_start_first_step_previous_state"] = _previous_step_state_from_cold_start_payloads(
+            initialized_payloads, source_clock_context=clock_context,
+        )
 
     return ColdStartFirstStepStateCoverage(
         mode=COLD_START_INITIAL_STATE_MODE,
@@ -6537,7 +6601,7 @@ def _runtime_next_state_from_components(
         if name in prior_therm:
             fields["thermosoil_previous_step_state"][name] = prior_therm[name]
     prior_hydrol = _previous_state_component_fields(previous_state, "hydrol_previous_step_state")
-    for name in ("free_drain_coef", "zwt_force", "njsc", "fwet_new"):
+    for name in ("free_drain_coef", "zwt_force", "njsc", "fwet_new", "refSOC_1d"):
         # Preserve a new TOPMODEL diagnostic; otherwise retain the source carry.
         if name in prior_hydrol and (
             name != "fwet_new" or name not in fields["hydrol_previous_step_state"]
@@ -6960,6 +7024,7 @@ def _paper_1961_next_step_runtime_result_compact(
             hydrol_module = run_hydrol_first_step_module_from_precall(
                 hydrol_precall,
                 soil_parameters=_prepared_hydrol_soil_parameters(context, runtime_static_tables=hydrol_runtime_static_tables),
+                depth_parameters=_prepared_hydrol_depth_parameters(context, runtime_static_tables=hydrol_runtime_static_tables),
                 temp_air=payload.temp_air,
                 pb=payload.pb,
                 u=payload.u,
@@ -7392,10 +7457,19 @@ def paper_1961_driver_timestep_scaffold(
         # nonpersisted memory from the restored pre-main state, before any
         # same-step process can change surface temperature, moisture or snow.
         from jax_orchidee.sechiba.restart_io import sechiba_finalize_source_state_from_restart
+        initial_refsoc_1d = resolve_hydrol_initialization_refsoc_1d(
+            config_path, run_def_values=run_def_values, npts=payload.kjpindex,
+            restart_path=first_step_restart_state.sechiba_start,
+            restored_refSOC_1d=first_step_restart_state.sechiba_restart_state.fields.get("refSOC_1d"),
+            domain=step.domain,
+        )
         restart_thermal_fields = {}
         if restart_thermosoil_initialization_supported(context):
+            thermal_source = dict(sechiba_finalize_source_state_from_restart(first_step_restart_state.sechiba_restart_state))
+            if initial_refsoc_1d is not None:
+                thermal_source["refSOC_1d"] = initial_refsoc_1d
             restart_thermal_fields = restart_thermosoil_initial_fields(
-                sechiba_finalize_source_state_from_restart(first_step_restart_state.sechiba_restart_state),
+                thermal_source,
                 context=context, payload=payload,
                 altmax=first_step_restart_state.stomate.altmax,
             )
@@ -7547,6 +7621,8 @@ def paper_1961_driver_timestep_scaffold(
         if enerbil_first_step_local is not None:
             hydrol_first_step_precall = assemble_hydrol_first_step_precall_payload(
                 soil_parameters=_prepared_hydrol_soil_parameters(context),
+                refSOC_1d=initial_refsoc_1d,
+                use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
                 enerbil_payload=enerbil_first_step_local.payload,
                 hydrol_restart=first_step_restart_state.hydrol,
                 initialized_us=first_step_restart_state.sechiba_restart_state.fields["us"],
@@ -7586,6 +7662,7 @@ def paper_1961_driver_timestep_scaffold(
             hydrol_first_step_module = run_hydrol_first_step_module_from_precall(
                 hydrol_first_step_precall,
                 soil_parameters=_prepared_hydrol_soil_parameters(context),
+                depth_parameters=_prepared_hydrol_depth_parameters(context),
                 temp_air=payload.temp_air,
                 pb=payload.pb,
                 u=payload.u,
@@ -10700,6 +10777,7 @@ def _paper_1961_later_day_transition_inputs(
         hydrol_runtime_static_tables = hydrol_runtime_static_tables_from_payload(
             hydrol_static_template,
             soil_parameters=_prepared_hydrol_soil_parameters(context),
+            depth_parameters=_prepared_hydrol_depth_parameters(context),
             ks=context.hydrol_cwrr_ks,
             peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
         )
@@ -10948,6 +11026,7 @@ def _compiled_hydrol_table_arrays(tables: HydrolRuntimeStaticTables) -> DriverCo
         nvan_mod=mineral.nvan_mod,
         avan_mod=mineral.avan_mod,
         soil_parameters=tables.soil_parameters,
+        depth_parameters=getattr(tables, "depth_parameters", None),
     )
 
 
@@ -10962,10 +11041,12 @@ def _hydrol_runtime_static_tables_from_compiled_arrays(
     """
     values = dict(arrays._asdict())
     parameters = values.pop("soil_parameters", None)
+    depth_parameters = values.pop("depth_parameters", None)
     return HydrolRuntimeStaticTables(
         mineral=MineralCWRRTables(**values, imin=imin, imax=imax),
         peat=None,
         soil_parameters=parameters,
+        depth_parameters=depth_parameters,
     )
 
 
@@ -11024,6 +11105,13 @@ def _paper_compiled_sechiba_scan(
     hydrol_runtime_static_tables,
     capture_daily_flux_labels: bool = False,
 ):
+    """Reuse a scan within one immutable context and dynamic parameter layout.
+
+    The compact entry also reads captured HYDROL controls and DIFFUCO
+    scalars. Dynamic array packs do not replace those globals. The admitted
+    wrapper retains the context, so its identity cannot be recycled while
+    this cache entry is alive.
+    """
     hydrol_dynamic_names = tuple(
         name
         for name in hydrol_static_template
@@ -11034,6 +11122,7 @@ def _paper_compiled_sechiba_scan(
     cache_key = (
         _source_clock_setup(context).binding.binding_key,
         tuple(sorted(_calendar_controls(context).items())),
+        id(context),
         runtime_spec.components,
         runtime_spec.field_names_by_component,
         int(context.nvm),
@@ -11973,6 +12062,16 @@ def _paper_compiled_later_day_block_executable(
     stomate_season_provenance = (
         context.first_step_restart_state.stomate_readstart.season_state.provenance
     )
+    # These host controls include a state-derived active-PFT mask. Two
+    # admitted states can share context/layout yet require different static
+    # STOMATE branches. Keep the immutable scalar/tuple projection produced by
+    # _paper_daily_carbon_static_dispatch in both specialization and closure.
+    dispatch_key = tuple(sorted(daily_carbon_dispatch.items()))
+    try:
+        hash(dispatch_key)
+    except TypeError as exc:
+        raise ValueError("compiled daily dispatch requires immutable scalar/tuple controls") from exc
+    daily_carbon_dispatch = dict(dispatch_key)
     cache_key = (
         _source_clock_setup(context).binding.binding_key,
         tuple(sorted(_calendar_controls(context).items())),
@@ -11988,6 +12087,7 @@ def _paper_compiled_later_day_block_executable(
         initial.spec.field_names_by_component,
         bool(capture_pre_daily_training_boundaries),
         training_output_projector_key,
+        dispatch_key,
     )
     cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
     if cached is not None:
@@ -12325,6 +12425,22 @@ def paper_1961_driver_restart_year_start_day_result(
         step, driver_z0_for_wind=_driver_wind_z0_from_previous_state(rebased),
         dt_sechiba=context.dt_sechiba,
     )
+    if run_mode == "new_native_run":
+        initial_refsoc_1d = resolve_hydrol_initialization_refsoc_1d(
+            config_path, run_def_values=context.run_def_values, npts=payload.kjpindex,
+            restored_refSOC_1d=rebased.fields_by_component.get("hydrol_previous_step_state", {}).get(
+                "refSOC_1d", rebased.fields_by_component["sechiba_finalize_state"].get("refSOC_1d")),
+            restart_path=getattr(context.first_step_restart_state, "sechiba_start", None),
+            domain=step.domain,
+        )
+        if initial_refsoc_1d is not None:
+            rebased.fields_by_component["hydrol_previous_step_state"]["refSOC_1d"] = initial_refsoc_1d
+            rebased.fields_by_component["sechiba_finalize_state"]["refSOC_1d"] = initial_refsoc_1d
+        else:
+            # A new source run with the flag disabled neither reads nor
+            # finalizes refSOC_1d (hydrol.f90:625-636,1748).
+            rebased.fields_by_component["hydrol_previous_step_state"].pop("refSOC_1d", None)
+            rebased.fields_by_component["sechiba_finalize_state"].pop("refSOC_1d", None)
     if run_mode == "new_native_run" and restart_thermosoil_initialization_supported(context):
         thermal_source = dict(rebased.fields_by_component["sechiba_finalize_state"])
         refsoc_1d = rebased.fields_by_component.get("hydrol_previous_step_state", {}).get("refSOC_1d")

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "dev" / "audit_sechiba_state_transition_contract.py"
 SPEC = importlib.util.spec_from_file_location(
@@ -66,20 +65,48 @@ def _contract_document():
 
 def test_field_contract_is_exactly_the_production_inventory():
     audit = AUDIT.build_audit()
-    assert audit["contract_count"] == 123
+    assert audit["contract_count"] == 126
+    assert audit["conditional_contract_count"] == 1
+    assert audit["total_contract_count"] == 127
+    assert audit["conditional_fields"] == ["hydrol_previous_step_state.refSOC_1d"]
     assert {
         component: len(report["contract_fields"])
         for component, report in audit["components"].items()
     } == {
         "driver_previous_step_state": 10,
-        "diffuco_previous_step_state": 35,
+        "diffuco_previous_step_state": 37,
         "enerbil_previous_step_state": 13,
-        "hydrol_previous_step_state": 49,
-        "thermosoil_previous_step_state": 16,
+        "hydrol_previous_step_state": 50,
+        "thermosoil_previous_step_state": 17,
     }
     assert audit["errors"]["producer_without_contract"] == []
     assert audit["errors"]["contract_without_producer"] == []
     assert audit["errors"]["duplicate_contracts"] == []
+
+
+def test_conditional_contract_cannot_hide_missing_metadata_or_unregistered_producers():
+    base = _contract_document()
+    missing = copy.deepcopy(base)
+    del missing["conditional_contracts"][0]["activation"]
+    audit = AUDIT.build_audit(contract_document=missing)
+    assert not audit["closed"]
+    assert audit["errors"]["conditional_contract_errors"]
+
+    missing = copy.deepcopy(base)
+    del missing["conditional_contracts"][0]["shape_group"]
+    audit = AUDIT.build_audit(contract_document=missing)
+    assert not audit["closed"]
+    assert audit["errors"]["incomplete_contracts"] == {
+        "hydrol_previous_step_state.refSOC_1d": ["shape_group"],
+    }
+
+    absent = copy.deepcopy(base)
+    absent["conditional_contracts"] = []
+    audit = AUDIT.build_audit(contract_document=absent)
+    assert not audit["closed"]
+    assert audit["errors"]["producer_without_contract"] == [
+        "hydrol_previous_step_state.refSOC_1d",
+    ]
 
 
 @pytest.mark.parametrize("missing_key", sorted(AUDIT.CONTRACT_REQUIRED_KEYS))

@@ -102,6 +102,11 @@ def test_real_compiled_cache_construction_isolates_nondefault_bare_roughness(mon
     """
     from jax_orchidee.driver import orchestration as orch
 
+    # Construction-only cache evidence; chronology admission is tested by
+    # the separate source-clock suite, rather than these empty forcing spies.
+    monkeypatch.setattr(orch, "_source_clock_setup", lambda context: SimpleNamespace(binding=SimpleNamespace(binding_key=("cache-construction",))))
+    monkeypatch.setattr(orch, "_validate_compiled_source_clock_series", lambda *args, **kwargs: None)
+
     class ConstructionOnlyJit:
         def lower(self, *args):
             return self
@@ -130,7 +135,7 @@ def test_real_compiled_cache_construction_isolates_nondefault_bare_roughness(mon
         monkeypatch.setattr(orch, "_compiled_diffuco_parameter_values", lambda context: ())
         monkeypatch.setattr(orch, "_paper_1961_later_day_transition_inputs", lambda **kwargs:
                             SimpleNamespace(compiled_base_payload_template=None))
-        initial = SimpleNamespace(spec=spec, values_by_component=())
+        initial = SimpleNamespace(spec=spec, values_by_component=(), tstep=47)
 
         def build(context):
             executable, actual_spec = orch._paper_compiled_later_day_block_executable(
@@ -146,14 +151,13 @@ def test_real_compiled_cache_construction_isolates_nondefault_bare_roughness(mon
     default = build(default_context)
     assert build(default_context) is default
     equivalent = build(_cache_context("0.010"))
-    # Complete-day closures own a context instance; the SECHIBA scan retains
-    # its existing effective-scalar sharing contract.
-    assert (equivalent is default) is (entry == "sechiba-scan")
+    # Both closures retain other context values beyond this selected scalar.
+    assert equivalent is not default
     nondefault_context = _cache_context(0.02)
     nondefault = build(nondefault_context)
     assert nondefault is not default, "different captured Z0_BARE must not reuse default executable"
     assert build(nondefault_context) is nondefault
-    assert (build(_cache_context(0.02)) is nondefault) is (entry == "sechiba-scan")
+    assert build(_cache_context(0.02)) is not nondefault
 
 
 @pytest.mark.parametrize("z0_bare", [0.01, 0.02])

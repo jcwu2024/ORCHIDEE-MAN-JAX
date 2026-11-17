@@ -23,18 +23,25 @@ def paper_sechiba_restart_state_from_finalize_state(
     state: Mapping[str, object],
     *,
     kjit: int,
+    use_refsoc_hydrol: bool = False,
 ) -> SechibaRestartState:
     """Run all paper-path component finalize owners in Fortran order.
 
     Missing scientific state is an error. The fixed switches correspond to
     the paper run: CWRR hydrology, explicit snow, CO2, MODIS background
     albedo, MAP_PFT_FORMAT, OK_LEAK-driven wet diagnostics, and freezing energy
-    correction are active; prescribed LAI is inactive.
+    correction are active; prescribed LAI is inactive. The explicit
+    ``use_refsoc_hydrol`` switch adds only its source-conditional per-point
+    ``refSOC_1d`` field (hydrol_initialize 625-636, hydrol_finalize 1748).
 
     Fortran provenance: ``sechiba.f90::sechiba_finalize`` lines 1800-1923.
     """
 
     values = dict(state)
+    if bool(use_refsoc_hydrol) != ("refSOC_1d" in values):
+        raise ValueError(
+            "conditional refSOC_1d state must be present exactly when use_refsoc_hydrol is enabled"
+        )
     diffuco = diffuco_finalize_restart_packet(
         rstruct=values["rstruct"],
         q_cdrag_pft=values["q_cdrag_pft"],
@@ -60,7 +67,7 @@ def paper_sechiba_restart_state_from_finalize_state(
             for name in ("snowrho", "snowtemp", "snowdz", "snowheat", "snowgrain")
         },
         restart_writer=lambda request: request,
-        use_refsoc_hydrol=False,
+        use_refsoc_hydrol=use_refsoc_hydrol,
         check_waterbal=False,
         ok_explicitsnow=True,
         explicitsnow_finalizer=lambda payload: explicitsnow_finalize_restart_packet(

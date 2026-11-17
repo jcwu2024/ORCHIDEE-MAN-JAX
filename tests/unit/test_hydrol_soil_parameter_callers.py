@@ -1,8 +1,9 @@
 """HYDROL static/cached/compiled parameter plumbing, without model timesteps.
 
-Fortran: hydrol_init 2028-2252; hydrol_var_init 4071-4244;
-hydrol_soil 6414-6470/6474-6562. Numerical consumers below are the actual
-local table and diagnostic owners. AST probes check caller wiring only.
+Fortran: hydrol_init 2028-2252; hydrol_var_init 3932-4306;
+hydrol_soil 6414-6470/6474-6562; hydrol_soil_coef 8248-8307.
+Numerical consumers below are the actual local table and diagnostic owners.
+AST probes check caller wiring only.
 """
 from __future__ import annotations
 
@@ -37,6 +38,12 @@ CUSTOM_B = dict(nvan=2.7, avan=.04, mcr=.05, mcs_mineral=.55,
                 mcf_mineral=.34, mcw_mineral=.14, ks=150., pcent=.65,
                 mc_awet=.40, mc_adry=.10)
 ZZ_MM = np.array([0., 1., 3., 7., 15., 31., 63.])
+DEPTH_DRIVER_CUSTOM = {
+    "CWRR_NKS_N0": .85, "CWRR_NKS_POWER": .45,
+    "CWRR_AKS_A0": .0002, "CWRR_AKS_POWER": .65,
+    "KFACT_DECAY_RATE": 1.5, "KFACT_STARTING_DEPTH": .25, "KFACT_MAX": 20.,
+    "altmax_for_nroot_thresh": .6,
+}
 
 
 def _run_def_custom(custom):
@@ -109,8 +116,8 @@ def context_builder(monkeypatch, tmp_path):
     values.update(PFT_TO_MTC__00014="2", PFT_TO_MTC__00002="3",
                   OK_LAIDEV__00014="FALSE", OK_LAIDEV__00002="TRUE")
 
-    def build(custom, name):
-        declared = {**values, **_run_def_custom(custom)}
+    def build(custom, name, *, extra_run_def=None):
+        declared = {**values, **_run_def_custom(custom), **(extra_run_def or {})}
         path = tmp_path / f"{name}.def"
         path.write_text("\n".join(f"{k}={v}" for k, v in declared.items()), encoding="utf-8")
         return o._prepare_paper_1961_driver_context_cached.__wrapped__(
@@ -382,3 +389,126 @@ def test_actual_restart_initialization_rejects_enabled_refsoc_without_the_field(
     with pytest.raises(ValueError, match="refSOC_1d"):
         driver_restart.restart_thermosoil_initial_fields(
             source, context=context, payload=NS(), altmax=np.zeros((1, 2)))
+
+
+@pytest.fixture(scope="module")
+def depth_driver_tables():
+    """Small real tables isolate depth changes while keeping soil unchanged."""
+    soil = _parameters(CUSTOM_A)
+    payload = {"njsc": [2], "mcs": [CUSTOM_A["mcs_mineral"]], "zz_mm": [1., 550., 2000.]}
+    return tuple(h.hydrol_runtime_static_tables_from_payload(
+        payload, soil_parameters=soil, depth_parameters=h.hydrol_depth_parameters(config),
+    ) for config in (DEPTH_DRIVER_CUSTOM, {}))
+
+
+def test_depth_driver_materialized_prepared_context_binds_nondefault_scalars(context_builder):
+    custom = context_builder(
+        CUSTOM_A, "depth-prepared", extra_run_def={**DEPTH_DRIVER_CUSTOM, "KFACT_DECAY_RATE": "1.5D0"},
+    )
+    baseline = context_builder(CUSTOM_A, "depth-default")
+    assert isinstance(custom.hydrol_depth_parameters, h.HydrolDepthParameters)
+    assert custom.hydrol_depth_parameters.as_config_values() == DEPTH_DRIVER_CUSTOM
+    assert baseline.hydrol_depth_parameters.as_config_values() == h.hydrol_depth_parameters().as_config_values()
+    assert o._prepared_hydrol_depth_parameters(custom) is custom.hydrol_depth_parameters
+    assert o._prepared_hydrol_depth_parameters(baseline) is baseline.hydrol_depth_parameters
+
+
+def test_depth_driver_legacy_context_fallback_and_runtime_priority(depth_driver_tables):
+    custom, baseline = depth_driver_tables
+    for legacy in (NS(run_def_values=DEPTH_DRIVER_CUSTOM),
+                   NS(run_def_values=DEPTH_DRIVER_CUSTOM, hydrol_depth_parameters=None)):
+        selected = o._prepared_hydrol_depth_parameters(legacy)
+        assert selected.as_config_values() == DEPTH_DRIVER_CUSTOM
+    context = NS(hydrol_depth_parameters=custom.depth_parameters, run_def_values={})
+    assert o._prepared_hydrol_depth_parameters(context) is custom.depth_parameters
+    assert o._prepared_hydrol_depth_parameters(
+        context, runtime_static_tables=baseline,
+    ) is baseline.depth_parameters
+    assert o._prepared_hydrol_depth_parameters(
+        context, runtime_static_tables=NS(),
+    ) is custom.depth_parameters
+
+
+def test_depth_driver_compiled_pack_tree_roundtrip_preserves_actual_consumer_values(depth_driver_tables):
+    """Actual pack/restore and coefficient consumer; no JIT or physical step."""
+    observed = []
+    context = NS(hydrol_depth_parameters=depth_driver_tables[0].depth_parameters, run_def_values={})
+    for runtime in depth_driver_tables:
+        packed = o._compiled_hydrol_table_arrays(runtime)
+        assert packed.depth_parameters is runtime.depth_parameters
+        leaves, structure = jax.tree_util.tree_flatten(packed)
+        unpacked = jax.tree_util.tree_unflatten(structure, leaves)
+        restored = o._hydrol_runtime_static_tables_from_compiled_arrays(unpacked, imin=1, imax=51)
+        for field in runtime.mineral._fields:
+            np.testing.assert_array_equal(getattr(restored.mineral, field), getattr(runtime.mineral, field))
+        assert restored.depth_parameters.as_config_values() == runtime.depth_parameters.as_config_values()
+        assert o._prepared_hydrol_depth_parameters(
+            context, runtime_static_tables=restored,
+        ) is restored.depth_parameters
+
+        def consume(tables):
+            return h.hydrol_soil_coef_mineral_profile_from_tables(
+                mc=[[.25, .28, .31]], profil_froz=[[0., .25, .5]], kfact_root=np.ones((1, 3)),
+                tables=tables.mineral, mcr=[CUSTOM_A["mcr"]], mcs=[CUSTOM_A["mcs_mineral"]],
+            )
+
+        before, after = consume(runtime), consume(restored)
+        for field in ("k", "d"):
+            np.testing.assert_array_equal(getattr(after, field), getattr(before, field))
+            assert np.isfinite(np.asarray(getattr(after, field))).all()
+        observed.append(after)
+    assert not np.array_equal(observed[0].k, observed[1].k)
+    assert not np.array_equal(observed[0].d, observed[1].d)
+
+
+def test_depth_driver_actual_later_day_binding_builds_nondefault_tables(context_builder, monkeypatch):
+    # This fixture's last layer is 63 mm; use a 10 mm compacted depth so the
+    # actual caller's numerical table can distinguish custom/default values.
+    declared = {**DEPTH_DRIVER_CUSTOM, "KFACT_STARTING_DEPTH": .01}
+    context = context_builder(CUSTOM_A, "depth-later-day", extra_run_def=declared)
+    bundle = context.first_step_bundle
+    context = replace(context, first_step_bundle=None)
+    monkeypatch.setattr(o, "_paper_1961_step_bundle_from_context", lambda *args, **kwargs: bundle)
+    monkeypatch.setattr(o, "_hydrol_state_namespace_from_previous_state",
+                        lambda state: (NS(njsc=np.array([2])), ()))
+    state = NS(fields_by_component={"slowproc_stomate_previous_step_state": {
+        "lai": np.ones((1, 2)), "veget": np.array([[.2, .6]]),
+        "veget_max": np.array([[.2, .6]]), "frac_nobio": np.array([[.2]]),
+        "soiltile": np.array([[.2, .3, .3]]),
+    }})
+    result = o._paper_1961_later_day_transition_inputs(
+        context=context, current_state=state, year=1961, start=48,
+        steps_per_stomate=1, fixed_format_trace_dir=None,
+        static_trace_fields=None, prebuild_day_payloads=False,
+    )
+    runtime = result.hydrol_runtime_static_tables
+    assert runtime.depth_parameters is context.hydrol_depth_parameters
+    expected = np.clip(np.exp(-1.5 * (np.asarray(context.cwrr_grid.znh) - .01)), 1. / 20., 1.)
+    np.testing.assert_allclose(runtime.mineral.kfact[:, 0], expected, rtol=1.e-14)
+    default = h.hydrol_runtime_static_tables_from_payload(
+        result.hydrol_static_template, soil_parameters=context.hydrol_soil_parameters,
+    )
+    assert not np.array_equal(runtime.mineral.kfact, default.mineral.kfact)
+    assert not np.array_equal(runtime.mineral.k_lin, default.mineral.k_lin)
+
+
+@pytest.mark.parametrize("producer,consumer", [
+    ("paper_1961_next_step_hydrol_precall_scaffold", "run_hydrol_first_step_module_from_precall"),
+    ("paper_1961_driver_cold_start_first_step_coverage", "run_hydrol_first_step_module_from_precall"),
+    ("_paper_1961_next_step_runtime_result_compact", "run_hydrol_first_step_module_from_precall"),
+    ("paper_1961_driver_timestep_scaffold", "run_hydrol_first_step_module_from_precall"),
+    ("_paper_1961_later_day_transition_inputs", "hydrol_runtime_static_tables_from_payload"),
+])
+def test_depth_driver_actual_call_expressions_forward_the_declared_contract(producer, consumer, depth_driver_tables):
+    """AST argument evidence only; actual numerical callers are tested above."""
+    expression = _actual_call_keyword(producer, consumer, "depth_parameters")
+    custom, baseline = depth_driver_tables
+    environment = {**vars(o), "context": NS(hydrol_depth_parameters=custom.depth_parameters),
+                   "run_def_values": DEPTH_DRIVER_CUSTOM, "hydrol_runtime_static_tables": None}
+    actual = eval(compile(expression, "<actual-depth-parameter-keyword>", "eval"), environment)
+    assert actual.as_config_values() == DEPTH_DRIVER_CUSTOM
+    if any(isinstance(node, ast.Name) and node.id == "hydrol_runtime_static_tables"
+           for node in ast.walk(expression)):
+        environment["hydrol_runtime_static_tables"] = baseline
+        selected = eval(compile(expression, "<actual-dynamic-depth-keyword>", "eval"), environment)
+        assert selected is baseline.depth_parameters

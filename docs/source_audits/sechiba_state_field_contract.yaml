@@ -5,7 +5,7 @@ scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBI
 # outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.json
 # Original-source initialization / first consumers, not full compiled or model parity.
 # pcapa_en, stempdiag and temp_sol_beg retain their existing field/phase statuses.
-# Current formal 54 corrections / 31 production commits; 93 / 126 / 181 denominators unchanged.
+# Current formal 55 corrections / 32 production commits; 93 / 126 / 181 base denominators unchanged.
 # numerical_acceptance remains false; no extra normalized fields are added.
 # 2026-11-16 thermal-snow-coupling-batch adds bounded complete thermal eager/JIT
 # evidence and finite carry/driver IO checks, accepted 2026-11-17 as C51/C52.
@@ -102,6 +102,32 @@ source_refs:
     subroutine: thermosoil_initialize
     lines: 226-744
     local_initialization_lines: 595-598
+  hydrol_refsoc_initialization:
+    file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    subroutine: hydrol_initialize
+    lines: 520-676
+    local_read_lines: 625-636
+    save_declaration_line: 498
+    finalize_lines: 1682-1748
+
+# Source-conditional extensions remain separate from the 126 base contracts.
+# Every extension has the same strict metadata, owner and source checks.
+conditional_contracts:
+  - component: hydrol_previous_step_state
+    field: refSOC_1d
+    activation: use_refSOC_hydrol == TRUE
+    shape_group: grid
+    dtype_kind: real
+    applicability: enabled_HYDROL_refSOC_initialization_and_continuation
+    inactive_behavior: absent_when_disabled_not_a_mineral_or_thermal_refSOC_alias
+    freshness: initialize_once_then_carry
+    freshness_guard: initialized_HYDROL_payload_else_prior_HYDROL_mirror
+    producer_phase: first_file_or_new_native_initialization_then_half_hour_carry
+    consumer_phase: hydrol_var_init_effective_thresholds_and_conditional_finalize
+    jax_owner: jax_orchidee.driver.orchestration._runtime_next_state_from_components
+    source_ref: hydrol_refsoc_initialization
+    units: retain_source_input_contract_without_inferred_units
+    serialization_axes: [time, y, x]
 
 # Every entry is a complete field-level contract. Repetition is intentional:
 # component-wide defaults would hide the materially different axes and guards.

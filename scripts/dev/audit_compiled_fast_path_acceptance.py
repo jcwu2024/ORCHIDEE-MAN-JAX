@@ -1,24 +1,24 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping
-from dataclasses import fields, is_dataclass
 import gc
 import json
 import shutil
 import sys
 import tempfile
 import time
+from collections.abc import Mapping
+from dataclasses import fields, is_dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from jax_orchidee.driver import orchestration  # noqa: E402
+from jax_orchidee.driver.init import parse_run_def_bool  # noqa: E402
 from jax_orchidee.driver.orchestration import (  # noqa: E402
     paper_1961_driver_cold_start_multiday_modelout_lite_run,
     paper_1961_driver_restart_year_multiday_modelout_lite_run,
@@ -47,7 +47,6 @@ from jax_orchidee.stomate.modelout import (  # noqa: E402
     compute_modelout_from_fields,
 )
 from scripts.dev.audit_stage5_lifecycle import _packet_from_restart_readers  # noqa: E402
-
 
 configure_jax_compilation_cache(ROOT)
 
@@ -342,16 +341,21 @@ def _scan_cache_snapshot() -> dict[str, object]:
     }
 
 
-def _split_restart_packet(reference: PaperLandpointReference, state: Any, output: Path) -> tuple[Any, Path]:
+def _split_restart_packet(
+    reference: PaperLandpointReference, state: Any, output: Path,
+    *, used_run_def_path: Path | None = None,
+) -> tuple[Any, Path]:
     if reference.output_dir is None:
         raise FileNotFoundError(reference.landpoint_id)
     context = prepare_paper_1961_driver_context(
-        CONFIG, reference_run_dir=reference.output_dir
+        CONFIG, reference_run_dir=reference.output_dir,
+        used_run_def_path=used_run_def_path,
     )
     bundle = paper_restart_bundle_state_from_day_end_packet(
         state,
         base_stomate=context.first_step_restart_state.stomate_readstart,
         kjit=int(state.tstep) + 1,
+        use_refsoc_hydrol=parse_run_def_bool(context.run_def_values.get("use_refSOC_hydrol", "FALSE")),
     )
     physical = PaperRestartBundlePhysicalState(
         driver=read_restart_physical_state(reference.output_dir / "driver_start.nc"),
@@ -369,7 +373,8 @@ def _split_restart_packet(reference: PaperLandpointReference, state: Any, output
     if histories:
         shutil.copyfile(histories[0], output / histories[0].name)
     restored = reference_case_first_step_restart_state(
-        CONFIG, root=ROOT, run_dir=report.output_directory, stomate_filename="stomate_start.nc"
+        CONFIG, root=ROOT, run_dir=report.output_directory, stomate_filename="stomate_start.nc",
+        run_def_path=used_run_def_path,
     )
     restored_packet = _packet_from_restart_readers(
         state,
@@ -474,10 +479,12 @@ def run(
         with tempfile.TemporaryDirectory(prefix=f"orchjax_fast_{landpoint_id.replace('.', '_')}_") as temporary:
             temporary_root = Path(temporary)
             strict_packet, strict_restart_dir = _split_restart_packet(
-                reference, baseline_annual_state, temporary_root / "strict"
+                reference, baseline_annual_state, temporary_root / "strict",
+                used_run_def_path=run_def,
             )
             compiled_packet, compiled_restart_dir = _split_restart_packet(
-                reference, compiled_annual_state, temporary_root / "compiled"
+                reference, compiled_annual_state, temporary_root / "compiled",
+                used_run_def_path=run_def,
             )
             strict_split, strict_split_seconds = _run_restart_year(
                 reference,

@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from typing import Mapping
 
 from jax_orchidee.sechiba.restart_io import (
+    SECHIBA_OPTIONAL_RESTART_FIELDS,
     SECHIBA_RESTART_COMPONENT_FIELDS,
     SECHIBA_RESTART_TO_SOURCE_NAMES,
 )
-
 
 SECHIBA_FINALIZE_SOURCE_FIELDS = frozenset(
     SECHIBA_RESTART_TO_SOURCE_NAMES.get(name, name)
@@ -20,7 +20,7 @@ SECHIBA_FINALIZE_SOURCE_FIELDS = frozenset(
 
 @dataclass(frozen=True)
 class SechibaFinalizeStateTransition:
-    """One complete 93-field transition with explicit update/carry ownership."""
+    """The base 93 fields and any source-conditional state with explicit owners."""
 
     fields: Mapping[str, object]
     updated_fields: tuple[str, ...]
@@ -41,6 +41,9 @@ def transition_sechiba_finalize_source_state(
     Every field must be either updated by its current process owner or named in
     ``carried_fields`` with source provenance proving its SAVE/static lifetime.
     This gate deliberately rejects ``{**previous, **updates}`` style merging.
+    Optional ``refSOC_1d`` has the same ownership/provenance gate after source
+    initialization; hydrol.f90 498,625-636,1748 gives it SAVE lifetime and a
+    conditional restart edge. It does not expand the default 93-field set.
 
     Fortran provenance: ``sechiba.f90::sechiba_main`` lines 893-1128 and
     ``sechiba.f90::sechiba_finalize`` lines 1800-1923.
@@ -50,6 +53,7 @@ def transition_sechiba_finalize_source_state(
     update_names = set(updates)
     carry_names = set(carried_fields)
     expected = set(SECHIBA_FINALIZE_SOURCE_FIELDS)
+    expected.update(previous_names & SECHIBA_OPTIONAL_RESTART_FIELDS)
     if previous_names != expected:
         raise ValueError(
             "previous SECHIBA finalize state mismatch: "

@@ -21,7 +21,6 @@ from jax_orchidee.stomate.restart_io import (
     create_stomate_restart_skeleton_from_schema,
 )
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SECHIBA_RESTART_SCHEMA = (
     ROOT / "docs" / "source_audits" / "sechiba_restart_netcdf_schema.json"
@@ -29,6 +28,11 @@ DEFAULT_SECHIBA_RESTART_SCHEMA = (
 PHYSICAL_RESTART_VARIABLES = frozenset(
     {"nav_lon", "nav_lat", "nav_lev", "time", "time_steps"}
 )
+# This source-conditional field is absent from the default paper file. Keep
+# the audited 93-field schema intact, while permitting the hydrol_initialize
+# 625-636 / hydrol_finalize 1748 restart edge when its source switch is active.
+# It is a scientific per-landpoint state, not a static parameter or PFT field.
+SECHIBA_OPTIONAL_RESTART_FIELDS = frozenset({"refSOC_1d"})
 SECHIBA_NORMALIZED_RESTART_PFT_AXES = {
     **SECHIBA_RESTART_PFT_AXES,
     "frac_age": 1,
@@ -187,13 +191,15 @@ def sechiba_finalize_source_state_from_restart(
         for name in fields
     }
     actual = set(source)
+    expected.update(actual & SECHIBA_OPTIONAL_RESTART_FIELDS)
     if actual != expected:
         raise ValueError(
             "SECHIBA finalize source-state mismatch: "
             f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}"
         )
-    if len(source) != 93:
-        raise ValueError(f"SECHIBA finalize source-state denominator must be 93, got {len(source)}")
+    base_count = len(source) - len(actual & SECHIBA_OPTIONAL_RESTART_FIELDS)
+    if base_count != 93:
+        raise ValueError(f"SECHIBA base finalize source-state denominator must be 93, got {base_count}")
     return restore_sechiba_integer_source_fields(source)
 
 
@@ -224,8 +230,10 @@ def sechiba_restart_state_from_finalize_packets(
     fields: dict[str, np.ndarray] = {}
     provenance: dict[str, tuple[str, ...]] = {}
     for component, packet in packets.items():
-        expected = SECHIBA_RESTART_COMPONENT_FIELDS[component]
+        expected = set(SECHIBA_RESTART_COMPONENT_FIELDS[component])
         actual = set(packet)
+        if component == "hydrol":
+            expected.update(actual & SECHIBA_OPTIONAL_RESTART_FIELDS)
         if actual != expected:
             raise ValueError(
                 f"{component} finalize packet mismatch: "
@@ -240,8 +248,9 @@ def sechiba_restart_state_from_finalize_packets(
                 "fortran_source/ORCHIDEE/src_sechiba/"
                 f"{SECHIBA_COMPONENT_SOURCE_FILES[component]}::{component}_finalize",
             )
-    if len(fields) != 93:
-        raise ValueError(f"SECHIBA finalize denominator must be 93, got {len(fields)}")
+    base_count = len(fields) - len(set(fields) & SECHIBA_OPTIONAL_RESTART_FIELDS)
+    if base_count != 93:
+        raise ValueError(f"SECHIBA base finalize denominator must be 93, got {base_count}")
     return SechibaRestartState(fields, provenance)
 
 
@@ -383,7 +392,11 @@ def _hydrol_init_restart_mapping(
     """
     from jax_orchidee.sechiba.hydrol import HYDROL_INIT_RESTART_EXPVAL
 
-    names = SECHIBA_RESTART_COMPONENT_FIELDS["hydrol"] | SECHIBA_RESTART_COMPONENT_FIELDS["explicit_snow"]
+    names = (
+        SECHIBA_RESTART_COMPONENT_FIELDS["hydrol"]
+        | SECHIBA_RESTART_COMPONENT_FIELDS["explicit_snow"]
+        | SECHIBA_OPTIONAL_RESTART_FIELDS
+    )
     restart = {
         SECHIBA_RESTART_TO_SOURCE_NAMES.get(name, name): value
         for name, value in state.fields.items() if name in names
@@ -469,6 +482,8 @@ def write_sechiba_restart_state(
     schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
     expected = set(schema["variables"]) - PHYSICAL_RESTART_VARIABLES
     actual = set(state.fields)
+    optional = actual & SECHIBA_OPTIONAL_RESTART_FIELDS
+    expected.update(optional)
     if actual != expected:
         raise ValueError(
             "SECHIBA restart field coverage mismatch: "
@@ -481,6 +496,12 @@ def write_sechiba_restart_state(
         pft_layout=pft_layout,
     )
     with Dataset(output, "r+") as dataset:
+        if "refSOC_1d" in optional and "refSOC_1d" not in dataset.variables:
+            # restput_p(rest_id,'refSOC_1d',nbp_glo,1,1,...,'scatter',...)
+            # uses the same point-only physical axes as snow. Scientific units
+            # are retained from the source/input contract, not inferred from
+            # IOIPSL's generic restart metadata.
+            dataset.createVariable("refSOC_1d", "f8", ("time", "y", "x"))
         for name in _science_variable_names(dataset):
             _write_science_variable(dataset.variables[name], name, state.fields[name])
     return StomateRestartWriteReport(

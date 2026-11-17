@@ -1,21 +1,21 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Mapping
-from dataclasses import fields, is_dataclass
 import json
 import shutil
 import sys
 import tempfile
+from collections.abc import Mapping
+from dataclasses import fields, is_dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from jax_orchidee.driver.init import parse_run_def_bool  # noqa: E402
 from jax_orchidee.driver.orchestration import (  # noqa: E402
     DriverPreviousStepStatePacket,
     paper_1961_driver_cold_start_day_scaffold,
@@ -23,18 +23,17 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     paper_1961_driver_restart_year_start_day_result,
     prepare_paper_1961_driver_context,
 )
-from jax_orchidee.driver.restart_file_io import read_dim2_driver_restart  # noqa: E402
 from jax_orchidee.driver.restart_bundle import (  # noqa: E402
     PaperRestartBundlePhysicalState,
     paper_restart_bundle_state_from_day_end_packet,
     read_restart_physical_state,
     write_paper_restart_start_bundle,
 )
+from jax_orchidee.driver.restart_file_io import read_dim2_driver_restart  # noqa: E402
 from jax_orchidee.driver.restart_state import reference_case_first_step_restart_state  # noqa: E402
 from jax_orchidee.sechiba.restart_io import (  # noqa: E402
     sechiba_finalize_source_state_from_restart,
 )
-
 
 CONFIG = ROOT / "configs/orchidee_man_250919.yaml"
 OUTPUT = ROOT / "outputs/reference_mode/stage5_lifecycle_acceptance.json"
@@ -180,6 +179,16 @@ def _check(name: str, passed: bool, **details: Any) -> dict[str, Any]:
     return {"name": name, "passed": bool(passed), **details}
 
 
+def _restart_bundle_from_context(packet: Any, context: Any, *, kjit: int):
+    """Keep the restart exporter on the same effective initialization switches."""
+    return paper_restart_bundle_state_from_day_end_packet(
+        packet,
+        base_stomate=context.first_step_restart_state.stomate_readstart,
+        kjit=kjit,
+        use_refsoc_hydrol=parse_run_def_bool(context.run_def_values.get("use_refSOC_hydrol", "FALSE")),
+    )
+
+
 def run(config: Path = CONFIG) -> dict[str, Any]:
     state_ledger = json.loads(STATE_LEDGER.read_text(encoding="utf-8"))
     restart_lifecycle = json.loads(RESTART_LIFECYCLE.read_text(encoding="utf-8"))
@@ -224,11 +233,7 @@ def run(config: Path = CONFIG) -> dict[str, Any]:
 
     template_run = _reference_run()
     base = context.first_step_restart_state
-    bundle_state = paper_restart_bundle_state_from_day_end_packet(
-        day2.day_end_state,
-        base_stomate=base.stomate_readstart,
-        kjit=96,
-    )
+    bundle_state = _restart_bundle_from_context(day2.day_end_state, context, kjit=96)
     physical = PaperRestartBundlePhysicalState(
         driver=read_restart_physical_state(template_run / "driver_start.nc"),
         sechiba=read_restart_physical_state(template_run / "sechiba_start.nc"),
