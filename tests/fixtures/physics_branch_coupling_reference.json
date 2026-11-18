@@ -1,0 +1,65 @@
+{
+  "schema": "physics-branch-coupling-original-unit-boundary-v1",
+  "source": {
+    "path": "fortran_source/ORCHIDEE/src_sechiba/intersurf.f90",
+    "line": 749,
+    "source_sha256": "ad291e582295a095ca0873017eff25848469fe74ca2ef8181a5bf833949c008f",
+    "statement_sha256": "c917ac1df5d6d25ca1fc2146f8d0104de6cad8359eac4d11b88090373d63e0cc"
+  },
+  "amount_origin": {
+    "path": "tests/fixtures/physics_branch_energy_reference.json",
+    "sha256": "b0814497311795d0da4384489ba5943f3acb4188680f497f1c36f80cc6b70145",
+    "boundary": "original enerbil_main vevapp output, first two complete tuples"
+  },
+  "cases": [
+    {
+      "name": "dt900-explicit1-laidev0",
+      "dt_sechiba": 900.0,
+      "amount": [
+        0.0,
+        -0.1419267917800373,
+        0.0006434272203287329,
+        0.02836107831889671,
+        0.039903008189695936,
+        0.0021504986668547514,
+        0.0005022546754244566,
+        0.005676410104016455
+      ],
+      "rate": [
+        0.0,
+        -0.00015769643531115258,
+        7.149191336985921e-07,
+        3.151230924321856e-05,
+        4.433667576632882e-05,
+        2.389442963171946e-06,
+        5.580607504716184e-07,
+        6.307122337796061e-06
+      ]
+    },
+    {
+      "name": "dt2700-explicit1-laidev0",
+      "dt_sechiba": 2700.0,
+      "amount": [
+        0.0,
+        -0.4174209841370933,
+        0.0018590932529952745,
+        0.1123454637348357,
+        0.11815567263680121,
+        0.0068174368218900305,
+        0.0016520602405868696,
+        0.013542843951065454
+      ],
+      "rate": [
+        0.0,
+        -0.00015460036449521972,
+        6.885530566649164e-07,
+        4.160943101290211e-05,
+        4.37613602358523e-05,
+        2.524976600700011e-06,
+        6.118741631803221e-07,
+        5.015868130024242e-06
+      ]
+    }
+  ],
+  "scope": "Original unit statement only; no intersurf_main or external PBL producer execution"
+}

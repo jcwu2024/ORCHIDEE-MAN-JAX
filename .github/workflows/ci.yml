@@ -60,6 +60,15 @@ jobs:
           tests/unit/test_watchout_forcing_repair.py
           tests/unit/test_watchout_run_context_repair.py
           tests/unit/test_watchout_context_handoff.py
+      - name: Canopy and energy branch components
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_physics_branch_canopy.py
+          tests/unit/test_physics_branch_energy.py
+          tests/unit/test_physics_branch_coupling.py
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -89,3 +98,6 @@ jobs:
           tests/unit/test_watchout_forcing_repair.py
           tests/unit/test_watchout_run_context_repair.py
           tests/unit/test_watchout_context_handoff.py
+          tests/unit/test_physics_branch_canopy.py
+          tests/unit/test_physics_branch_energy.py
+          tests/unit/test_physics_branch_coupling.py
