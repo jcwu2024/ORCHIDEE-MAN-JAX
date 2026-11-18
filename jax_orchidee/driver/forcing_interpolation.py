@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 import math
-from typing import Mapping
+from typing import Callable, Mapping
 
 import numpy as np
 
@@ -205,12 +205,17 @@ def forcing_read_interpol_transition(
     netrad_cons: bool = False,
     julian_for: float = 0.0,
     julian0: float = 0.0,
+    solarang_function: Callable[..., np.ndarray] = solarang,
 ) -> ForcingInterpolationResult:
     """Execute defined scientific transitions from lines 780-1687.
 
     Records use Fortran one-based time semantics through ``itauin`` and wrap
     at the end of the forcing file. Initialization is represented explicitly
     by ``itauin=0, itau_split=0``.
+
+    ``solarang_function`` defaults to the source solar owner. A selected-land
+    IO caller may compute that same function on the full regular grid and
+    gather its result, retaining the source geometry before the land handoff.
     """
 
     if not records or split < 1 or nb_spread < 1:
@@ -261,7 +266,11 @@ def forcing_read_interpol_transition(
     first_daily_read = daily_interpol and last_read == 0
     if should_read:
         if read_n == 0:
-            read_nm1 = itau_read - 1 if itau_read > 1 else int(round(86400.0 / dt_force))
+            # readdim2.f90:1435-1452 requires a complete first day, then
+            # NINT(one_day/dt_force). Python round uses ties-to-even.
+            if not daily_interpol and itau_read == 1 and dt_force * ttm <= 86400.0 - 1.0:
+                raise ValueError("forcing file contains less than 24 hours")
+            read_nm1 = itau_read - 1 if itau_read > 1 else math.floor(86400.0 / dt_force + 0.5)
             if not 1 <= read_nm1 <= ttm:
                 raise ValueError("forcing file contains less than 24 hours")
             previous = records[read_nm1 - 1]
@@ -279,7 +288,7 @@ def forcing_read_interpol_transition(
         if dt_force > 3600.0 and not daily_interpol:
             mean_cos = np.zeros_like(current.tair)
             for index in range(1, split + 1):
-                mean_cos += solarang(
+                mean_cos += solarang_function(
                     interval_julian + (index - 0.5) / split * dt_force / 86400.0,
                     julian0,
                     lon,
@@ -290,7 +299,7 @@ def forcing_read_interpol_transition(
             mean_cos = np.zeros_like(current.tair)
             day_n = np.zeros_like(current.tair)
             for index in range(1, split + 1):
-                angle = solarang(
+                angle = solarang_function(
                     interval_julian + (index - 0.5) / split * dt_force / 86400.0,
                     julian0,
                     lon * 0.0,
@@ -314,7 +323,7 @@ def forcing_read_interpol_transition(
             day_n = np.zeros_like(current.tair)
             mean_cos = np.zeros_like(current.tair)
             for index in range(1, split + 1):
-                angle = solarang(interval_julian + (index - 0.5) / split * dt_force / 86400.0, julian0, lon * 0.0, lat)
+                angle = solarang_function(interval_julian + (index - 0.5) / split * dt_force / 86400.0, julian0, lon * 0.0, lat)
                 mean_cos += angle
                 day_n += np.where(angle > 0.0, 24.0 / split, 0.0)
             mean_cos /= split
@@ -349,7 +358,7 @@ def forcing_read_interpol_transition(
             values[name] = _linear(getattr(previous, name), getattr(current, name), weight)
     values["lwdown"] = current.lwdown if netrad_cons else _linear(previous.lwdown, current.lwdown, weight)
     if dt_force > 3600.0:
-        cosz = solarang(interval_julian + (itau_split - 0.5) / split * dt_force / 86400.0, julian0, lon * (0.0 if daily_interpol else 1.0), lat)
+        cosz = solarang_function(interval_julian + (itau_split - 0.5) / split * dt_force / 86400.0, julian0, lon * (0.0 if daily_interpol else 1.0), lat)
         denominator = np.asarray(mean_cos)
         solar_source = current.swdown
         if daily_interpol:

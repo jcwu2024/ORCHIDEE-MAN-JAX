@@ -81,6 +81,7 @@ from jax_orchidee.driver.bundle import (
     load_paper_1961_first_step_bundle,
     load_paper_1961_step_bundle,
     paper_forcing_nb_spread,
+    paper_forcing_read_kwargs,
     paper_forcing_split_from_config,
 )
 from jax_orchidee.driver.fast_state import (
@@ -96,7 +97,7 @@ from jax_orchidee.driver.source_clock import (
     validate_source_clock_runtime, rebase_source_clock_runtime,
 )
 from jax_orchidee.driver.domain import load_case_config, read_annual_co2, read_forcing_model_step_cached, read_forcing_step
-from jax_orchidee.driver.dim2 import CP_AIR, GRAVITY
+from jax_orchidee.driver.dim2 import CP_AIR, GRAVITY, Dim2Switches, validate_dim2_switches
 from jax_orchidee.driver.init import (
     RunScalars,
     initialize_imposed_vegetation_state,
@@ -118,7 +119,9 @@ from jax_orchidee.driver.restart_state import (
     resolve_hydrol_initialization_refsoc_1d,
 )
 from jax_orchidee.driver.sechiba_boundary import (
+    WATCHOUT_COUPLING_FIELDS,
     IntersurfFirstStepPayload,
+    intersurf_watchout_coupling_fields,
     build_intersurf_first_step_payload,
     intersurf_payload_with_driver_wind_z0,
 )
@@ -432,6 +435,7 @@ class Paper1961PreparedDriverContext:
     )
     hydrol_soil_parameters: HydrolSoilParameters | None = None
     hydrol_depth_parameters: HydrolDepthParameters | None = None
+    watchout_initialize_main_tstep: int | None = None
 
 
 def _prepared_hydrol_soil_parameters(
@@ -721,6 +725,7 @@ def _prepare_paper_1961_driver_context_cached(
     reference_run_dir: str | None,
 ) -> Paper1961PreparedDriverContext:
     values = parse_run_def(run_def_path)
+    _validate_paper_forcing_coupling_switches(values)
     _validate_stomate_main_supported_switches(values)
     domain_override = _domain_override_from_run_def_values(values)
     runtime = DriverRuntimeScalars(
@@ -763,6 +768,18 @@ def _prepare_paper_1961_driver_context_cached(
     )
     forcing_config = load_case_config(config_path)
     forcing_split = paper_forcing_split_from_config(forcing_config, first_step_bundle.run_scalars)
+    forcing_controls = paper_forcing_read_kwargs(
+        first_step_bundle.forcing, dt_sechiba=dt_sechiba, split=forcing_split,
+        nb_spread=paper_forcing_nb_spread(forcing_split), run_def_values=values,
+    )
+    # dim2_driver415-422 is only a raw pre-read. The loop reads the first
+    # interpolated substep at841-848 before initialize1111-1125 selects drag.
+    initialization_forcing = first_step_bundle.forcing
+    if bool(getattr(initialization_forcing, "is_watchout", False)):
+        initialization_forcing = read_forcing_model_step_cached(
+            config_path, domain=first_step_bundle.domain, year=first_step_bundle.year,
+            model_tstep=0, **forcing_controls,
+        )
     first_step_restart_state = reference_case_first_step_restart_state(
         config_path,
         root=Path(config_path).resolve().parents[1],
@@ -798,8 +815,8 @@ def _prepare_paper_1961_driver_context_cached(
         run_scalars=first_step_bundle.run_scalars,
         nflow=parse_run_def_int(values, "NSTM"),
         nvm=nvm,
-        forcing_split=forcing_split,
-        forcing_nb_spread=paper_forcing_nb_spread(forcing_split),
+        forcing_split=forcing_controls["split"],
+        forcing_nb_spread=forcing_controls["nb_spread"],
         ok_laidev=tuple(
             parse_run_def_bool(values[f"OK_LAIDEV__{fortran_id:05d}"])
             for fortran_id in fortran_pft_ids
@@ -878,6 +895,7 @@ def _prepare_paper_1961_driver_context_cached(
             pft_index=mangrove_pft_index,
         ),
         diffuco_pft14_static_kwargs={
+            "ldq_cdrag_from_gcm": _paper_initial_drag_mode(values, initialization_forcing),
             "rstruct_const": parse_run_def_indexed_selection(
                 values, "RSTRUCT_CONST", fortran_pft_ids
             ),
@@ -947,6 +965,7 @@ def _paper_1961_step_bundle_from_context(
 ) -> DriverStepBundle:
     """Build a step bundle by reusing prepared static/domain fields."""
 
+    _validate_paper_forcing_coupling_switches(context.run_def_values)
     first = context.first_step_bundle
     if first is None:
         return load_paper_1961_step_bundle(
@@ -962,8 +981,10 @@ def _paper_1961_step_bundle_from_context(
         domain=first.domain,
         year=year,
         model_tstep=tstep,
-        split=context.forcing_split,
-        nb_spread=context.forcing_nb_spread,
+        **paper_forcing_read_kwargs(
+            first.forcing, dt_sechiba=context.dt_sechiba, split=context.forcing_split,
+            nb_spread=context.forcing_nb_spread, run_def_values=context.run_def_values,
+        ),
     )
     co2_ppm = read_annual_co2(context.config_path, year)
     return DriverStepBundle(
@@ -1051,6 +1072,7 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object], *
     _add_enerbil_local_to_previous_fields(
         fields, payloads.get("enerbil_first_step_local"),
         thermosoil_module=payloads.get("thermosoil_first_step_module"),
+        is_watchout=bool(getattr(payloads.get("first_step_payload"), "is_watchout", False)),
     )
     _add_diffuco_local_to_previous_fields(fields, payloads.get("diffuco_first_step_local_enerbil_precall"))
     _add_diffuco_saved_controls_to_previous_fields(
@@ -2262,6 +2284,18 @@ class DriverSourceClockPayload(NamedTuple):
     julian_diff: object
 
 
+class DriverCompiledWatchoutForcing(NamedTuple):
+    """Source-supplied coupling leaves, separate from scientific checkpoint state."""
+
+    eair: object
+    swnet: object
+    cdrag: object
+    petAcoef: object
+    peqAcoef: object
+    petBcoef: object
+    peqBcoef: object
+
+
 class DriverCompiledHalfHourForcing(NamedTuple):
     """Dynamic forcing arrays consumed by one compiled SECHIBA step."""
 
@@ -2280,6 +2314,7 @@ class DriverCompiledHalfHourForcing(NamedTuple):
     salinity: object
     tide_height: object
     source_clock: DriverSourceClockPayload | None = None
+    watchout: DriverCompiledWatchoutForcing | None = None
 
 
 class DriverCompiledDiffucoDayInputs(NamedTuple):
@@ -2557,6 +2592,7 @@ class DriverColdStartDayScaffold:
         "This scaffold starts from explicit no-restart initialization, not case_001_071 restart files.",
         "STOMATE daily carbon and day-end state remain separate until their cold-start input bundles are source-closed.",
     )
+    prepared_context: Paper1961PreparedDriverContext | None = None
 
     @property
     def ready_for_day_boundary(self) -> bool:
@@ -2683,6 +2719,7 @@ class DriverRuntimeDayResult:
     notes: tuple[str, ...] = (
         "Runtime day uses the same source-backed process functions as DriverLaterDayScaffold but retains only modelout, day-end state, and gaps.",
     )
+    prepared_context: Paper1961PreparedDriverContext | None = None
 
     @property
     def ready_for_day_end_state(self) -> bool:
@@ -2735,6 +2772,7 @@ class DriverLiteMultiDayModeloutRun:
     notes: tuple[str, ...] = (
         "Lite runtime keeps the same source-backed day functions but drops completed day scaffolds after extracting modelout and day-end state.",
     )
+    prepared_context: Paper1961PreparedDriverContext | None = None
 
     @property
     def ready_for_requested_days(self) -> bool:
@@ -3293,6 +3331,7 @@ def _add_enerbil_local_to_previous_fields(
     enerbil_local: EnerbilFirstStepLocalAssembly | None,
     *,
     thermosoil_module: ThermosoilFirstStepModuleClosure | None = None,
+    is_watchout: bool = False,
 ) -> None:
     if enerbil_local is None:
         return
@@ -3313,8 +3352,13 @@ def _add_enerbil_local_to_previous_fields(
             if target_name in {"temp_sol", "temp_sol_pft", "qsurf"}:
                 fields["enerbil_previous_step_state"][target_name] = payload[source_name]
     driver = fields.setdefault("driver_previous_step_state", {})
-    for name in ("fluxsens", "petAcoef", "petBcoef", "peqAcoef", "peqBcoef"):
-        driver[name] = payload[name]
+    driver["fluxsens"] = payload["fluxsens"]
+    for name in ("petAcoef", "petBcoef", "peqAcoef", "peqBcoef"):
+        if is_watchout:
+            # dim2_driver:769-787,1425-1430 supply these from forcing only.
+            driver.pop(name, None)
+        else:
+            driver[name] = payload[name]
     # intersurf_main_2d:743-749 returns a rate to DIM2. The ENERBIL
     # payload and SECHIBA finalize state retain the accumulated water amount.
     driver["vevapp"] = intersurf_evaporation_rate(
@@ -3324,7 +3368,8 @@ def _add_enerbil_local_to_previous_fields(
         {
             "old_zlev": payload["zlev"],
             "old_qair": payload["qair"],
-            "old_eair": CP_AIR * payload["temp_air"] + GRAVITY * payload["zlev"],
+            "old_eair": (payload["epot_air"] if is_watchout
+                         else CP_AIR * payload["temp_air"] + GRAVITY * payload["zlev"]),
             "rau_old": payload["rau"],
         }
     )
@@ -3702,6 +3747,7 @@ def driver_previous_step_state_from_timestep_scaffold(
     _add_enerbil_local_to_previous_fields(
         fields, scaffold.enerbil_first_step_local,
         thermosoil_module=scaffold.thermosoil_first_step_module,
+        is_watchout=bool(getattr(scaffold.payload, "is_watchout", False)),
     )
     _add_diffuco_local_to_previous_fields(fields, scaffold.diffuco_first_step_local_enerbil_precall)
     _add_diffuco_saved_controls_to_previous_fields(
@@ -3863,6 +3909,7 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
     _add_enerbil_local_to_previous_fields(
         fields, scaffold.enerbil.enerbil_local,
         thermosoil_module=scaffold.thermosoil_module,
+        is_watchout=bool(getattr(scaffold.enerbil.payload, "is_watchout", False)),
     )
     _add_diffuco_local_to_previous_fields(fields, scaffold.enerbil.diffuco_local_enerbil_precall)
     _add_diffuco_saved_controls_to_previous_fields(
@@ -4408,6 +4455,7 @@ def paper_1961_next_step_diffuco_precall_scaffold(
             "lalo": payload.lalo,
             "neighbours": payload.neighbours,
             "resolution": payload.resolution,
+            **_diffuco_driver_coupling_fields(payload, initializing=_paper_watchout_initializing(context, tstep), driver_albedo_payload=_paper_driver_albedo_from_previous_state(previous_state)),
         },
         restart_payload=restart_payload,
         driver_albedo_payload=None,
@@ -4504,15 +4552,16 @@ def paper_1961_next_step_enerbil_precall_scaffold(
             pft_index=_paper_mangrove_pft_index(context.run_scalars),
             static_kwargs=context.diffuco_pft14_static_kwargs if prepared_context is not None else None,
             use_jit=diffuco_local_jit,
+            ldq_cdrag_from_gcm=_paper_context_drag_mode(context, diffuco.payload),
         )
         after_diffuco_payload = diffuco_local.result.payload.payload
     enerbil_precall = assemble_enerbil_first_step_precall_payload(
-        driver_or_intersurf_payload=_enerbil_driver_coverage_payload(diffuco.payload),
+        driver_or_intersurf_payload=_enerbil_driver_coverage_payload(diffuco.payload, initializing=_paper_watchout_initializing(context, tstep), driver_albedo_payload=driver_albedo_payload),
         driver_albedo_payload=driver_albedo_payload,
         soil_thermal_restart_payload=thermal_payload,
         after_diffuco_payload=after_diffuco_payload,
         condveg_impaze=False,
-        non_watchout_driver_executed=True,
+        non_watchout_driver_executed=not bool(getattr(diffuco.payload, "is_watchout", False)),
     )
     combined_missing = tuple(dict.fromkeys((*diffuco.missing_previous_state_fields, *missing_previous)))
     enerbil_local = None
@@ -4891,6 +4940,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         else default_used_run_def_path(config_path)
     )
     run_def_values = prepared_context.run_def_values if prepared_context is not None else parse_run_def(run_def_path)
+    _validate_paper_forcing_coupling_switches(run_def_values)
     cold_thermal_controls = _fresh_cold_thermosoil_controls(run_def_values)
     cold_thermal_missing = _fresh_cold_thermosoil_missing_inputs(
         cold_thermal_controls,
@@ -4914,12 +4964,15 @@ def paper_1961_driver_cold_start_first_step_coverage(
         if prepared_context is not None
         else parse_run_def_float(run_def_values, "DT_SECHIBA")
     )
-    init_step = (
-        prepared_context.first_step_bundle
+    # The raw record1 pre-read is not the input to source initialize. Both
+    # initialize and the first main call use this same current forcing read.
+    step = (
+        _paper_1961_step_bundle_from_context(prepared_context, year=year, tstep=0)
         if prepared_context is not None and fixed_format_trace_dir is None and static_trace_fields is None
-        else load_paper_1961_first_step_bundle(
+        else load_paper_1961_step_bundle(
             config_path,
             year=year,
+            tstep=0,
             run_def_path=run_def_path,
             reference_run_dir=prepared_context.reference_run_dir if prepared_context is not None else None,
             fixed_format_trace_dir=fixed_format_trace_dir,
@@ -4927,17 +4980,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
             domain_override=_domain_override_from_run_def_values(run_def_values),
         )
     )
+    init_step = step
     init_payload = build_intersurf_first_step_payload(init_step, dt_sechiba=dt_sechiba)
-    step = load_paper_1961_step_bundle(
-        config_path,
-        year=year,
-        tstep=0,
-        run_def_path=run_def_path,
-        reference_run_dir=prepared_context.reference_run_dir if prepared_context is not None else None,
-        fixed_format_trace_dir=fixed_format_trace_dir,
-        static_trace_fields=static_trace_fields,
-        domain_override=_domain_override_from_run_def_values(run_def_values),
-    )
     payload = build_intersurf_first_step_payload(step, driver_z0_for_wind=999999.0, dt_sechiba=dt_sechiba)
     run_scalars = read_run_scalars(config_path, run_def_path=run_def_path)
     vegetation = initialize_imposed_vegetation_state(run_scalars, npts=payload.kjpindex)
@@ -5372,6 +5416,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
             "lalo": payload.lalo,
             "neighbours": payload.neighbours,
             "resolution": payload.resolution,
+            **_diffuco_driver_coupling_fields(payload, initializing=True, driver_albedo_payload={"albedo": condveg_initial_surface.albedo}),
         },
         restart_payload=diffuco_restart_payload,
         driver_albedo_payload={"albedo": condveg_initial_surface.albedo},
@@ -5393,15 +5438,19 @@ def paper_1961_driver_cold_start_first_step_coverage(
             diffuco_precall,
             run_def_values=run_def_values,
             pft_index=_paper_mangrove_pft_index(run_scalars),
+            # This public coverage entry is itself an initialization owner:
+            # select from its actual target-year input, even if its reusable
+            # static context was originally prepared for another year.
+            ldq_cdrag_from_gcm=_paper_initial_drag_mode(run_def_values, payload),
         )
     after_diffuco_payload = diffuco_precall.payload if diffuco_local is None else diffuco_local.result.payload.payload
     enerbil_precall = assemble_enerbil_first_step_precall_payload(
-        driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+        driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=True, driver_albedo_payload={"albedo": condveg_initial_surface.albedo}),
         driver_albedo_payload={"albedo": condveg_initial_surface.albedo},
         soil_thermal_restart_payload=_enerbil_soil_thermal_payload_from_thermosoil_cold_coef(thermosoil_cold_coef),
         after_diffuco_payload=after_diffuco_payload,
         condveg_impaze=parse_run_def_bool(run_def_values.get("IMPOSE_AZE", "FALSE")),
-        non_watchout_driver_executed=True,
+        non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
     )
     enerbil_local = None
     if enerbil_precall.ok:
@@ -5950,10 +5999,113 @@ def _stomate_entry_assembly_from_driver_scaffold(
     return assemble_stomate_main_payload(driver_source, routing_source)
 
 
-def _enerbil_driver_coverage_payload(payload: IntersurfFirstStepPayload) -> dict[str, object]:
-    """Expose driver/intersurf fields by ENERBIL coverage names."""
+def _validate_paper_forcing_coupling_switches(values: Mapping[str, str]) -> None:
+    """Keep dim2_driver.f90:598-604's RELAXATION fatal at paper entries."""
+    validate_dim2_switches(Dim2Switches(relaxation=parse_run_def_bool(values.get("RELAXATION", "FALSE"))))
 
-    return {
+
+def _paper_initial_drag_mode(values: Mapping[str, str], forcing) -> bool:
+    """Resolve the native initialization flag once, before tracing substeps.
+
+    Fortran provenance: diffuco.f90::diffuco_initialize 157-172 infers the
+    default from ABS(MAXVAL(q_cdrag)) and then reads CDRAG_from_GCM. This
+    static flag is not re-inferred from later forcing records.
+    """
+    for name, token in values.items():
+        if name.upper() == "CDRAG_FROM_GCM":
+            return parse_run_def_bool(token)
+    drag = getattr(forcing, "cdrag", None) if bool(getattr(forcing, "is_watchout", False)) else None
+    if drag is None:
+        return False
+    return abs(float(np.max(np.asarray(drag, dtype=np.float64)))) > np.finfo(np.float64).eps
+
+
+def _paper_context_drag_mode(context, payload=None) -> bool:
+    static = getattr(context, "diffuco_pft14_static_kwargs", {})
+    if "ldq_cdrag_from_gcm" in static:
+        return bool(static["ldq_cdrag_from_gcm"])
+    first = getattr(context, "first_step_bundle", None)
+    if first is None:
+        # A payload-only local caller must supply its initialization input.
+        forcing = payload
+    elif bool(getattr(first.forcing, "is_watchout", False)):
+        forcing = _paper_1961_step_bundle_from_context(context, year=first.year, tstep=0).forcing
+    else:
+        forcing = first.forcing
+    return _paper_initial_drag_mode(getattr(context, "run_def_values", {}), forcing)
+
+
+def _paper_native_initialization_context(context, *, year, step=None):
+    """Admit one immutable native-run context from the actual first input.
+
+    dim2_driver841-848 reads before initialize1111-1125; diffuco167-172
+    selects its SAVE flag once. Native year and cold owners return this
+    context to their callers, rather than confining it to the first day.
+    """
+    if step is None:
+        step = _paper_1961_step_bundle_from_context(context, year=year, tstep=0)
+    return replace(
+        context, watchout_initialize_main_tstep=0,
+        diffuco_pft14_static_kwargs={
+            **context.diffuco_pft14_static_kwargs,
+            "ldq_cdrag_from_gcm": _paper_initial_drag_mode(context.run_def_values, step.forcing),
+        },
+    )
+
+
+def _paper_context_after_initial_main(context):
+    """Retire dim2_driver1163's one-time phase; keep the selected SAVE flag.
+
+    A later continuous year may reset its file-local tstep to zero without
+    entering initialize. Carrying an active local0 marker would replay SWnet.
+    """
+    if getattr(context, "watchout_initialize_main_tstep", None) is None:
+        return context
+    return replace(context, watchout_initialize_main_tstep=None)
+
+
+def _require_paper_continuous_context(prepared_context, *, run_mode):
+    """Require the preceding run's SAVE state before a continuous entry.
+
+    diffuco.f90:157-172 selects drag during native initialization. Neither
+    the source-clock packet nor a fresh forcing read restores that SAVE flag.
+    This also preserves explicit non-WATCHOUT initialization overrides.
+    """
+    if run_mode == "continuous" and prepared_context is None:
+        raise ValueError(
+            "continuous requires prepared_context returned by the preceding "
+            "initialized run; fresh preparation cannot restore initialization history"
+        )
+
+
+def _paper_watchout_initializing(context, tstep):
+    """Select the first main call of a new native run, including inside scan."""
+    initial = getattr(context, "watchout_initialize_main_tstep", None)
+    return False if initial is None else jnp.equal(tstep, initial)
+
+
+def _paper_driver_albedo_from_previous_state(previous_state):
+    for component in ("driver_previous_step_state", "enerbil_previous_step_state"):
+        fields = _previous_state_component_fields(previous_state, component)
+        if "albedo" in fields:
+            return {"albedo": fields["albedo"]}
+    return {}
+
+
+def _enerbil_driver_coverage_payload(
+    payload: IntersurfFirstStepPayload,
+    *,
+    initializing: bool = False,
+    driver_albedo_payload: Mapping[str, object] | None = None,
+) -> dict[str, object]:
+    """Expose source-mode inputs at the actual ENERBIL call boundary.
+
+    dim2_driver:914-1009 preserves WATCHOUT energy/coefficients, without a
+    second producer conversion. The first main call is a separate phase:
+    line1163 recomputes SWnet after initialize/restart albedo for both modes.
+    """
+
+    fields = {
         "zlev": payload.zlev,
         "lwdown": payload.lwdown,
         "swdown": payload.swdown,
@@ -5964,6 +6116,36 @@ def _enerbil_driver_coverage_payload(payload: IntersurfFirstStepPayload) -> dict
         "pb": payload.pb,
         "precip_rain": payload.precip_rain,
     }
+    if bool(getattr(payload, "is_watchout", False)):
+        fields["epot_air"] = payload.eair
+        fields.update({name: getattr(payload, name)
+                       for name in ("petAcoef", "petBcoef", "peqAcoef", "peqBcoef")})
+        if isinstance(initializing, jax.core.Tracer) or bool(initializing):
+            albedo = {} if driver_albedo_payload is None else driver_albedo_payload
+            if "albedo" in albedo:
+                bands = albedo["albedo"]
+            elif {"albedo_vis", "albedo_nir"} <= albedo.keys():
+                bands = jnp.stack((albedo["albedo_vis"], albedo["albedo_nir"]), axis=1)
+            else:
+                raise ValueError("WATCHOUT first main call requires initialized driver albedo")
+            recomputed = driver_swnet_from_swdown_albedo(swdown=payload.swdown, albedo=bands)
+            fields["swnet"] = jnp.where(initializing, recomputed, payload.swnet)
+        else:
+            fields["swnet"] = payload.swnet
+    return fields
+
+
+def _diffuco_driver_coupling_fields(payload, *, initializing=False, driver_albedo_payload=None):
+    """Forward source-supplied drag and radiation to the existing DIFFUCO adapter."""
+    if not bool(getattr(payload, "is_watchout", False)):
+        # dim2_driver1007-1008 supplies zero even when diffuco172 explicitly
+        # enables CDRAG_from_GCM. This preserves the source argument and its
+        # possible singular physics, rather than inventing a replacement.
+        return {"q_cdrag": jnp.zeros_like(payload.u)}
+    energy = _enerbil_driver_coverage_payload(
+        payload, initializing=initializing, driver_albedo_payload=driver_albedo_payload,
+    )
+    return {"q_cdrag": payload.cdrag, "swnet": energy["swnet"]}
 
 
 def _enerbil_soil_thermal_payload_from_thermosoil_cold_coef(thermosoil_cold_coef) -> dict[str, object]:
@@ -6560,12 +6742,14 @@ def _runtime_next_state_from_components(
     ok_laidev: tuple[bool, ...] | None = None,
     source_clock_context=None,
     source_clock=None,
+    is_watchout: bool = False,
 ) -> DriverPreviousStepStatePacket:
     """Extract source-backed next-step state from compact runtime components."""
 
     fields = _empty_previous_step_state_fields()
     _add_enerbil_local_to_previous_fields(
         fields, enerbil_local, thermosoil_module=thermosoil_module,
+        is_watchout=is_watchout,
     )
     _add_diffuco_local_to_previous_fields(fields, diffuco_local)
     if diffuco_day_static_cache is not None:
@@ -6759,6 +6943,7 @@ def _paper_1961_next_step_runtime_result_compact(
     """Advance one half-hour step without retaining audit scaffold objects."""
 
     context = prepared_context
+    _validate_paper_forcing_coupling_switches(context.run_def_values)
     source_clock = (source_clock if source_clock is not None else
         getattr(prebuilt_input, "source_clock", None))
     if source_clock is None:
@@ -6880,6 +7065,7 @@ def _paper_1961_next_step_runtime_result_compact(
             "lalo": payload.lalo,
             "neighbours": payload.neighbours,
             "resolution": payload.resolution,
+            **_diffuco_driver_coupling_fields(payload, initializing=_paper_watchout_initializing(context, tstep), driver_albedo_payload=_paper_driver_albedo_from_previous_state(previous_state)),
         },
         restart_payload=restart_payload,
         driver_albedo_payload=None,
@@ -6913,15 +7099,16 @@ def _paper_1961_next_step_runtime_result_compact(
                 else compiled_diffuco_static_kwargs
             ),
             use_jit=diffuco_local_jit,
+            ldq_cdrag_from_gcm=_paper_context_drag_mode(context, payload),
         )
         after_diffuco_payload = diffuco_local.result.payload.payload
     enerbil_precall = assemble_enerbil_first_step_precall_payload(
-        driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+        driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=_paper_watchout_initializing(context, tstep), driver_albedo_payload=driver_albedo_payload),
         driver_albedo_payload=driver_albedo_payload,
         soil_thermal_restart_payload=thermal_payload,
         after_diffuco_payload=after_diffuco_payload,
         condveg_impaze=False,
-        non_watchout_driver_executed=True,
+        non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
     )
     enerbil_local = None
     if enerbil_precall.ok and not combined_missing:
@@ -7212,6 +7399,7 @@ def _paper_1961_next_step_runtime_result_compact(
         ok_laidev=context.ok_laidev,
         source_clock_context=context,
         source_clock=source_clock,
+        is_watchout=bool(getattr(payload, "is_watchout", False)),
     )
     entry_payload = {**entry_payload, "source_clock": source_clock}
     metadata = DriverRuntimeStepMetadata(
@@ -7481,20 +7669,20 @@ def paper_1961_driver_timestep_scaffold(
             nbp_glo=payload.kjpindex,
         )
         enerbil_first_step_coverage = enerbil_first_step_input_coverage(
-            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=True, driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload()),
             driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload(),
             soil_thermal_restart_payload=first_step_restart_state.enerbil_thermal.as_coverage_payload(),
             sechiba_var_init_executed=True,
-            non_watchout_driver_executed=True,
+            non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
             condveg_initialize_executed=True,
             condveg_impaze=False,
         )
         enerbil_first_step_precall = assemble_enerbil_first_step_precall_payload(
-            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=True, driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload()),
             driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload(),
             soil_thermal_restart_payload=first_step_restart_state.enerbil_thermal.as_coverage_payload(),
             condveg_impaze=False,
-            non_watchout_driver_executed=True,
+            non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
         )
         diffuco_control_coverage = diffuco_control_inundation_input_coverage(
             diaglev_source_available=True,
@@ -7553,6 +7741,7 @@ def paper_1961_driver_timestep_scaffold(
                 "lalo": payload.lalo,
                 "neighbours": payload.neighbours,
                 "resolution": payload.resolution,
+                **_diffuco_driver_coupling_fields(payload, initializing=True, driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload()),
             },
             restart_payload=first_step_restart_state.diffuco_precall.as_payload(),
             driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload(),
@@ -7574,25 +7763,26 @@ def paper_1961_driver_timestep_scaffold(
                 diffuco_first_step_precall,
                 run_def_values=run_def_values,
                 pft_index=_paper_mangrove_pft_index(step.run_scalars),
+                ldq_cdrag_from_gcm=_paper_context_drag_mode(context, payload),
             )
             after_diffuco_payload = diffuco_first_step_local_enerbil_precall.result.payload.payload
         enerbil_first_step_coverage = enerbil_first_step_input_coverage(
             after_diffuco_payload=after_diffuco_payload,
-            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=True, driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload()),
             driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload(),
             soil_thermal_restart_payload=first_step_restart_state.enerbil_thermal.as_coverage_payload(),
             sechiba_var_init_executed=True,
-            non_watchout_driver_executed=True,
+            non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
             condveg_initialize_executed=True,
             condveg_impaze=False,
         )
         enerbil_first_step_precall = assemble_enerbil_first_step_precall_payload(
-            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+            driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=True, driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload()),
             driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload(),
             soil_thermal_restart_payload=first_step_restart_state.enerbil_thermal.as_coverage_payload(),
             after_diffuco_payload=after_diffuco_payload,
             condveg_impaze=False,
-            non_watchout_driver_executed=True,
+            non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
         )
         if diffuco_first_step_local_enerbil_precall is not None:
             ok_laidev = [
@@ -7608,11 +7798,11 @@ def paper_1961_driver_timestep_scaffold(
             )
             enerbil_first_step_coverage = enerbil_first_step_input_coverage(
                 after_diffuco_payload=after_diffuco_payload,
-                driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload),
+                driver_or_intersurf_payload=_enerbil_driver_coverage_payload(payload, initializing=True, driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload()),
                 driver_albedo_payload=first_step_restart_state.driver_albedo.as_coverage_payload(),
                 soil_thermal_restart_payload=first_step_restart_state.enerbil_thermal.as_coverage_payload(),
                 sechiba_var_init_executed=True,
-                non_watchout_driver_executed=True,
+                non_watchout_driver_executed=not bool(getattr(payload, "is_watchout", False)),
                 enerbil_begin_executed=True,
                 enerbil_surftemp_executed=True,
                 condveg_initialize_executed=True,
@@ -10883,7 +11073,7 @@ _COMPILED_STOMATE_ENTRY_FIELDS = (
     "mc_man_above",
 )
 _COMPILED_HALF_HOUR_FORCING_FIELDS = frozenset(DriverCompiledHalfHourForcing._fields)
-_COMPILED_DRIVER_METADATA_FIELDS = frozenset({"soilclass_sub_index", "soilclass_sub_area"})
+_COMPILED_DRIVER_METADATA_FIELDS = frozenset({"soilclass_sub_index", "soilclass_sub_area", "is_watchout"})
 _COMPILED_INTERSURF_PAYLOAD_FIELDS = tuple(
     field.name
     for field in dataclass_fields(IntersurfFirstStepPayload)
@@ -10891,6 +11081,7 @@ _COMPILED_INTERSURF_PAYLOAD_FIELDS = tuple(
     not in {"kjpindex", "nbindex", "missing_fields"}
     | _COMPILED_HALF_HOUR_FORCING_FIELDS
     | _COMPILED_DRIVER_METADATA_FIELDS
+    | set(WATCHOUT_COUPLING_FIELDS)
 )
 assert not (_COMPILED_HALF_HOUR_FORCING_FIELDS & set(_COMPILED_INTERSURF_PAYLOAD_FIELDS))
 _COMPILED_SECHIBA_SCAN_CACHE: dict[object, object] = {}
@@ -10926,6 +11117,8 @@ def _compiled_half_hour_forcing(item: DriverRuntimeHalfHourInput) -> DriverCompi
         salinity=payload.salinity,
         tide_height=payload.tide_height,
         source_clock=item.source_clock,
+        watchout=(DriverCompiledWatchoutForcing(**{name: getattr(payload, name) for name in WATCHOUT_COUPLING_FIELDS})
+                  if bool(getattr(payload, "is_watchout", False)) else None),
     )
 
 
@@ -10939,6 +11132,7 @@ def _paper_compiled_forcing_day(
 ) -> DriverCompiledHalfHourForcing:
     """Stack one forcing day without constructing state-dependent process inputs."""
 
+    _validate_paper_forcing_coupling_switches(context.run_def_values)
     first = context.first_step_bundle
     if first is None:
         raise ValueError("compiled forcing assembly requires a prepared first-step bundle")
@@ -10958,8 +11152,10 @@ def _paper_compiled_forcing_day(
             domain=first.domain,
             year=year,
             model_tstep=tstep,
-            split=context.forcing_split,
-            nb_spread=context.forcing_nb_spread,
+            **paper_forcing_read_kwargs(
+                first.forcing, dt_sechiba=context.dt_sechiba, split=context.forcing_split,
+                nb_spread=context.forcing_nb_spread, run_def_values=context.run_def_values,
+            ),
         )
         return DriverCompiledHalfHourForcing(
             zlev=land_vector(forcing.zlev),
@@ -10981,6 +11177,8 @@ def _paper_compiled_forcing_day(
             salinity=salinity,
             tide_height=tide_height,
             source_clock=_driver_source_clock_payload(context, source_clock_runtime, tstep=tstep),
+            watchout=(DriverCompiledWatchoutForcing(**intersurf_watchout_coupling_fields(forcing, npts=first.domain.nbindex))
+                      if bool(getattr(forcing, "is_watchout", False)) else None),
         )
 
     half_hour_forcing = tuple(
@@ -11123,6 +11321,8 @@ def _paper_compiled_sechiba_scan(
         _source_clock_setup(context).binding.binding_key,
         tuple(sorted(_calendar_controls(context).items())),
         id(context),
+        bool(getattr(base_payload_template, "is_watchout", False)),
+        getattr(context, "watchout_initialize_main_tstep", None),
         runtime_spec.components,
         runtime_spec.field_names_by_component,
         int(context.nvm),
@@ -11199,6 +11399,8 @@ def _paper_compiled_sechiba_scan(
             ccanopy=forcing.ccanopy,
             salinity=forcing.salinity,
             tide_height=forcing.tide_height,
+            is_watchout=forcing.watchout is not None,
+            **({name: None for name in WATCHOUT_COUPLING_FIELDS} if forcing.watchout is None else forcing.watchout._asdict()),
         )
         runtime_forcing = SimpleNamespace(
             zlev=forcing.zlev,
@@ -11375,6 +11577,9 @@ def _paper_1961_later_day_half_hour_transition(
                 ccanopy=first_compiled_forcing.ccanopy,
                 salinity=first_compiled_forcing.salinity,
                 tide_height=first_compiled_forcing.tide_height,
+                is_watchout=first_compiled_forcing.watchout is not None,
+                **({name: None for name in WATCHOUT_COUPLING_FIELDS}
+                   if first_compiled_forcing.watchout is None else first_compiled_forcing.watchout._asdict()),
             )
         )
         first_step = _paper_1961_next_step_runtime_result_compact(
@@ -12021,6 +12226,7 @@ def paper_1961_driver_later_day_runtime_result(
         daily_process_fold=daily_fold,
         pre_daily_training_boundary=pre_daily_training_boundary,
         daily_flux_labels=daily_flux_labels,
+        prepared_context=context,
     )
 
 
@@ -12077,6 +12283,8 @@ def _paper_compiled_later_day_block_executable(
         tuple(sorted(_calendar_controls(context).items())),
         id(context),
         str(context.config_path.resolve()),
+        getattr(block_forcing, "watchout", None) is not None,
+        getattr(context, "watchout_initialize_main_tstep", None),
         float(context.run_def_values.get("Z0_BARE", 0.01)),
         resolve_condveg_snowcri_alb(context.run_def_values, ok_sechiba=True),
         resolve_condveg_source_parameters(context.run_def_values, ok_sechiba=True),
@@ -12357,6 +12565,7 @@ def paper_1961_driver_restart_year_start_day_result(
     SECHIBA/STOMATE dynamic state is carried forward.
     """
 
+    _require_paper_continuous_context(prepared_context, run_mode=run_mode)
     context = prepared_context or prepare_paper_1961_driver_context(
         config_path, used_run_def_path=used_run_def_path, run_mode=run_mode,
         previous_runtime=(None if previous_year_end_state is None or run_mode != "continuous"
@@ -12381,7 +12590,7 @@ def paper_1961_driver_restart_year_start_day_result(
             first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
             run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
             run_id=run_id)
-        context = replace(context, source_clock_setup=setup)
+        context = replace(context, source_clock_setup=setup, watchout_initialize_main_tstep=None)
     elif run_id is not None:
         context = replace(context, source_clock_setup=source_clock_setup_from_config(
             context.config_path, run_def_path=context.run_def_path, run_def_values=context.run_def_values,
@@ -12421,6 +12630,8 @@ def paper_1961_driver_restart_year_start_day_result(
             us=initialized_us.us, humrelv=initialized_us.humrelv, vegstressv=initialized_us.humrelv,
         )
     step = _paper_1961_step_bundle_from_context(context, year=year, tstep=0)
+    if run_mode == "new_native_run":
+        context = _paper_native_initialization_context(context, year=year, step=step)
     payload = build_intersurf_first_step_payload(
         step, driver_z0_for_wind=_driver_wind_z0_from_previous_state(rebased),
         dt_sechiba=context.dt_sechiba,
@@ -12455,7 +12666,7 @@ def paper_1961_driver_restart_year_start_day_result(
         # hydrol_init 2617-2619 initializes this nonrestart temporary; the first
         # hydrol_main 5677-5680 recomputes it from restored ptn/stempdiag.
         rebased.fields_by_component["hydrol_previous_step_state"].pop("temp_hydro", None)
-    return paper_1961_driver_later_day_runtime_result(
+    day = paper_1961_driver_later_day_runtime_result(
         config_path,
         previous_state=rebased,
         day_index=1,
@@ -12473,6 +12684,13 @@ def paper_1961_driver_restart_year_start_day_result(
         retain_stomate_step_results=retain_stomate_step_results,
         prebuild_day_payloads=prebuild_day_payloads,
         use_compiled_sechiba_day=use_compiled_sechiba_day,
+    )
+    return replace(
+        day,
+        prepared_context=(
+            _paper_context_after_initial_main(context) if day.ready_for_day_end_state
+            else context if run_mode == "continuous" else None
+        ),
     )
 
 
@@ -12494,8 +12712,15 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
     prebuild_day_payloads: bool = True,
     use_compiled_sechiba_day: bool = False,
     compiled_day_block_size: int = 0,
+    prepared_context: Paper1961PreparedDriverContext | None = None,
+    run_mode: str = "new_native_run",
+    run_id: str | None = None,
 ) -> DriverLiteMultiDayModeloutRun:
-    """Run a new forcing year from a previous year-end dynamic state."""
+    """Run a forcing year and return the effective immutable run context.
+
+    Continuous callers pass the context returned by their preceding run;
+    file-local tstep0 does not select the SAVE drag flag or first-main phase.
+    """
 
     if int(ndays) < 0:
         raise ValueError("ndays must be non-negative")
@@ -12513,10 +12738,15 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
         raise ValueError(
             "compiled day blocks require compiled later days, JIT, and no trace overrides"
         )
-    context = prepare_paper_1961_driver_context(
+    _require_paper_continuous_context(prepared_context, run_mode=run_mode)
+    context = prepared_context or prepare_paper_1961_driver_context(
         config_path,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
+        run_mode=run_mode,
+        previous_runtime=(None if previous_year_end_state is None or run_mode != "continuous"
+                          else previous_year_end_state.source_clock_runtime),
+        run_id=run_id,
     )
     steps_per_stomate = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
     initial_state_mode = "restart_from_previous_year_state"
@@ -12530,6 +12760,7 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
             stopped_day_index=None,
             _missing_components=(),
             last_day_end_state=previous_year_end_state,
+            prepared_context=context if run_mode == "continuous" else None,
         )
 
     daily_modelout: list[DriverDailyModelout] = []
@@ -12544,6 +12775,8 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
         static_trace_fields=static_trace_fields,
         used_run_def_path=context.run_def_path,
         prepared_context=context,
+        run_mode=run_mode,
+        run_id=run_id,
         module_jit=module_jit,
         diffuco_local_jit=diffuco_local_jit,
         single_pass_daily_fold=single_pass_daily_fold,
@@ -12553,6 +12786,7 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
         use_compiled_sechiba_day=use_compiled_sechiba_day,
         retain_stomate_step_results=False,
     )
+    context = first.prepared_context or context
     previous_state = first.day_end_state
     if not first.ready_for_day_end_state:
         stopped_day_index = 1
@@ -12621,6 +12855,7 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
         if stopped_day_index is not None
         else (),
         last_day_end_state=previous_state,
+        prepared_context=context if daily_modelout or run_mode == "continuous" else None,
     )
 
 
@@ -12697,6 +12932,7 @@ def paper_1961_driver_cold_start_multiday_modelout_lite_run(
         used_run_def_path=context.run_def_path,
         prepared_context=context,
     )
+    context = first.prepared_context or context
     previous_state = first.first_day_end_state
     first_output = _driver_modelout_from_outputs(
         first.stomate_outputs,
@@ -12771,6 +13007,7 @@ def paper_1961_driver_cold_start_multiday_modelout_lite_run(
         if stopped_day_index is not None
         else (),
         last_day_end_state=previous_state,
+        prepared_context=context if daily_modelout else None,
     )
 
 
@@ -12815,6 +13052,7 @@ def paper_1961_driver_cold_start_runtime_day_result(
         module_jit=module_jit,
         diffuco_local_jit=diffuco_local_jit,
     )
+    context = first.prepared_context or context
     previous_state = first.first_day_end_state
     if previous_state is None or not first.ready_for_first_day_end_state:
         return DriverRuntimeDayResult(
@@ -12870,6 +13108,7 @@ def paper_1961_driver_cold_start_day_scaffold(
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
+    context = _paper_native_initialization_context(context, year=year)
     run_def_path = context.run_def_path
     runtime = context.runtime
     steps_per_stomate = int(round(runtime.dt_stomate / runtime.dt_sechiba))
@@ -13186,6 +13425,9 @@ def paper_1961_driver_cold_start_day_scaffold(
         daily_reset_fields=daily_reset_fields,
         first_day_stomate_state=first_day_stomate_state,
         first_day_end_state=first_day_end_state,
+        prepared_context=(
+            _paper_context_after_initial_main(context) if completed_payloads else None
+        ),
     )
 
 
@@ -13420,6 +13662,7 @@ def paper_1961_driver_multiday_modelout_lite_run(
         missing_components = first.missing_components
     else:
         daily_modelout.append(output)
+        context = _paper_context_after_initial_main(context)
 
     next_day_index = 2
     if (
@@ -13507,4 +13750,5 @@ def paper_1961_driver_multiday_modelout_lite_run(
         if stopped_day_index is not None
         else (),
         last_day_end_state=previous_state,
+        prepared_context=context if daily_modelout else None,
     )

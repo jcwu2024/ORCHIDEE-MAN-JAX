@@ -26,7 +26,7 @@ from jax_orchidee.driver.domain import (
     read_forcing_step,
     read_water_table_sequences,
 )
-from jax_orchidee.driver.init import ImposedVegetationState, RunScalars, initialize_imposed_vegetation_state, read_run_scalars
+from jax_orchidee.driver.init import ImposedVegetationState, RunScalars, initialize_imposed_vegetation_state, parse_run_def_bool, read_run_scalars
 from jax_orchidee.driver.restart import SechibaStaticRestart, read_sechiba_static_restart, reference_restart_path
 from jax_orchidee.driver.static import read_paper_salinity_tide_static_fields, read_paper_usda_soil_static_fields
 from jax_orchidee.driver.trace import (
@@ -276,6 +276,80 @@ def paper_forcing_nb_spread(split: int) -> int:
     return min(int(0.5 * split), split) if split >= 6 else split
 
 
+def paper_forcing_read_kwargs(forcing, *, dt_sechiba, split, nb_spread, run_def_values):
+    """Carry file-derived WATCHOUT cadence and effective DIM2 controls.
+
+    Fortran provenance: readdim2::forcing_info170-195 supplies the cadence;
+    dim2_driver293-310 computes split and620-696 resolves INTER_LIN,
+    SPRED_PREC and NETRAD_CONS. Source909-910 always interpolates, even when
+    INTER_LIN is false; that switch controls NETRAD_CONS admission here.
+    """
+    kwargs = {"split": int(split), "nb_spread": int(nb_spread)}
+    if not bool(getattr(forcing, "is_watchout", False)):
+        return kwargs
+    # Local import avoids dim2 -> bundle -> dim2 during module initialization.
+    from jax_orchidee.driver.dim2 import resolve_dim2_forcing_controls
+
+    dt_force = float(forcing.dt_force)
+    split = int(dt_force / float(dt_sechiba))
+    linear = parse_run_def_bool(run_def_values.get("INTER_LIN", "FALSE")) and split > 1
+    controls = resolve_dim2_forcing_controls(
+        dt_force=dt_force, dt=float(dt_sechiba), split=split, inter_lin=linear,
+        spread_override=(int(run_def_values["SPRED_PREC"]) if "SPRED_PREC" in run_def_values else None),
+        netrad_cons_override=(parse_run_def_bool(run_def_values["NETRAD_CONS"])
+                              if linear and "NETRAD_CONS" in run_def_values else None),
+    )
+    return {"split": split, "nb_spread": controls.nb_spread, "netrad_cons": controls.netrad_cons}
+
+
+def _paper_forcing_default_nsteps(config_path, *, year, first, split):
+    """Plan a fresh file-start span from the actual file or TIME_LENGTH.
+
+    Fortran provenance: ``dim2_driver.f90`` lines 533-556 defaults to the
+    full forcing length and resolves an explicit TIME_LENGTH with tlen2itau.
+    ``readdim2.f90`` line780 cyclically selects records, so an explicit
+    duration longer than one file span deliberately repeats the file.
+    Configuration dimensions are descriptive metadata, not a second clock.
+    """
+
+    import xarray as xr
+
+    from jax_orchidee.driver.domain import forcing_file_for_year
+    from jax_orchidee.driver.forcing_readers import _dims
+
+    config = load_case_config(config_path)
+    forcing_path = forcing_file_for_year(config, year)
+    with xr.open_dataset(forcing_path, decode_times=False) as dataset:
+        _, _, time_dim = _dims(dataset)
+        records = int(dataset.sizes[time_dim])
+    duration = first.run_scalars.raw_run_def.get("TIME_LENGTH")
+    if duration is None:
+        return records * int(split)
+
+    # Local import avoids dim2 -> bundle -> dim2 at module initialization.
+    from jax_orchidee.driver.dim2 import time_length_to_forcing_steps
+
+    dt_force = getattr(first.forcing, "dt_force", None)
+    if dt_force is None:
+        dt_force = float(config["time"]["forcing_step_hours"]) * 3600.0
+    token = str(duration).strip()
+    if token.lstrip("+-").isdigit():
+        length = time_length_to_forcing_steps(token, dt_force=float(dt_force))
+    else:
+        # The existing clock owner binds Y/M duration to the actual calendar
+        # and date origin; do not manufacture a fixed365 year or dummy date.
+        from jax_orchidee.driver.source_clock import read_forcing_clock_metadata
+
+        metadata = read_forcing_clock_metadata(forcing_path)
+        length = time_length_to_forcing_steps(
+            token, dt_force=metadata.dt_force,
+            calendar=metadata.calendar, date0=metadata.date0,
+        )
+    if length < 0:
+        raise ValueError("TIME_LENGTH must be non-negative")
+    return int(length) * int(split)
+
+
 def ccanopy_from_co2(co2_ppm: float, npts: int) -> np.ndarray:
     """Build the land-point `ccanopy` vector from annual `ATM_CO2`.
 
@@ -431,8 +505,10 @@ def load_paper_1961_step_bundle(
         domain=first.domain,
         year=year,
         model_tstep=tstep,
-        split=split,
-        nb_spread=paper_forcing_nb_spread(split),
+        **paper_forcing_read_kwargs(
+            first.forcing, dt_sechiba=float(first.run_scalars.raw_run_def.get("DT_SECHIBA", "1800")), split=split,
+            nb_spread=paper_forcing_nb_spread(split), run_def_values=first.run_scalars.raw_run_def,
+        ),
     )
     return DriverStepBundle(
         year=year,
@@ -479,7 +555,14 @@ def iter_paper_year_step_bundles(
     )
     config = load_case_config(config_path)
     split = paper_forcing_split_from_config(config, first.run_scalars)
-    total = int(nsteps) if nsteps is not None else int(config["drivers"]["atmospheric_forcing"]["dimensions"]["tstep"]) * split
+    forcing_kwargs = paper_forcing_read_kwargs(
+        first.forcing, dt_sechiba=float(first.run_scalars.raw_run_def.get("DT_SECHIBA", "1800")), split=split,
+        nb_spread=paper_forcing_nb_spread(split), run_def_values=first.run_scalars.raw_run_def,
+    )
+    split = forcing_kwargs["split"]
+    total = int(nsteps) if nsteps is not None else _paper_forcing_default_nsteps(
+        config_path, year=year, first=first, split=split,
+    )
     if total < 0:
         raise ValueError("nsteps must be non-negative")
     for tstep in range(total):
@@ -488,8 +571,7 @@ def iter_paper_year_step_bundles(
             domain=first.domain,
             year=year,
             model_tstep=tstep,
-            split=split,
-            nb_spread=paper_forcing_nb_spread(split),
+            **forcing_kwargs,
         )
         yield DriverStepBundle(
             year=year,

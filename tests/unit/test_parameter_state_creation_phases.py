@@ -392,7 +392,8 @@ def _exercise_actual_year_entry_phase(monkeypatch, tmp_path, mode, all_missing_s
                           first_step_restart_state=None, source_clock_setup=setup,
                           run_scalars=NS(pref_soil_veg=np.array([1] + [3] * 12 + [4])),
                           runtime=NS(dt_stomate=86400., dt_sechiba=1800.), dt_sechiba=1800.,
-                          hydrol_ok_pc=False, hydrol_ok_leak=True)
+                          hydrol_ok_pc=False, hydrol_ok_leak=True,
+                          diffuco_pft14_static_kwargs={}, watchout_initialize_main_tstep=None)
     context_type = make_dataclass("LocalPhaseContext", [(name, object) for name in context_values])
     context = context_type(**context_values)
     events = []
@@ -418,7 +419,12 @@ def _exercise_actual_year_entry_phase(monkeypatch, tmp_path, mode, all_missing_s
 
     def runtime(*args, **kwargs):
         events.append("runtime_boundary")
-        return kwargs["previous_state"]
+        # Stop at the actual typed day-result boundary; no physical day runs.
+        return o.DriverRuntimeDayResult(
+            year=1962, day_index=1, start_tstep=0, steps_per_stomate=48,
+            daily_modelout=None, day_end_state=kwargs["previous_state"],
+            stopped_at_tstep=0, missing_components=("delegated_daily_physics",),
+        )
 
     monkeypatch.setattr(h, "hydrol_init_us_state", us_init)
     monkeypatch.setattr(h, "hydrol_init_vegstress", stress_init)
@@ -428,10 +434,12 @@ def _exercise_actual_year_entry_phase(monkeypatch, tmp_path, mode, all_missing_s
     monkeypatch.setattr(o, "source_clock_setup_from_config", lambda *args, **kwargs: setup)
     monkeypatch.setattr(o, "_require_source_day_alignment", lambda *args, **kwargs: None)
     monkeypatch.setattr(o, "_paper_1961_step_bundle_from_context", lambda *args, **kwargs: NS(
-        domain=NS(lalo=np.zeros((1, 2)), resolution=np.ones((1, 2)))))
+        domain=NS(lalo=np.zeros((1, 2)), resolution=np.ones((1, 2))),
+        forcing=NS(is_watchout=False)))
     monkeypatch.setattr(o, "build_intersurf_first_step_payload", lambda *args, **kwargs: NS(kjpindex=1))
-    result = o.paper_1961_driver_restart_year_start_day_result(
+    day_result = o.paper_1961_driver_restart_year_start_day_result(
         "case.yaml", previous_year_end_state=packet, year=1962, prepared_context=context, run_mode=mode)
+    result = day_result.day_end_state
     assert events == (["US_INIT", "vegstress_initialize", "thermal_initialize", "runtime_boundary"]
                       if mode == "new_native_run" else ["runtime_boundary"])
     assert result.tstep == -1 and packet.tstep == 17519

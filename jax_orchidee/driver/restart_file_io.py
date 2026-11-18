@@ -14,7 +14,6 @@ from jax_orchidee.stomate.restart_io import (
     create_stomate_restart_skeleton_from_schema,
 )
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DRIVER_RESTART_SCHEMA = (
     ROOT / "docs" / "source_audits" / "driver_restart_netcdf_schema.json"
@@ -35,21 +34,34 @@ DRIVER_RESTART_VARIABLES = {
     "albedo_nir": "albedo_nir",
     "z0": "z0",
 }
+WATCHOUT_FORCING_COEFFICIENTS = ("petAcoef", "petBcoef", "peqAcoef", "peqBcoef")
 
 
-def read_dim2_driver_restart(path: str | Path) -> Dim2DriverRestart:
-    """Read every DIM2 prognostic restart field in source order.
+def _restart_variables(*, is_watchout: bool) -> dict[str, str]:
+    return {
+        field: name for field, name in DRIVER_RESTART_VARIABLES.items()
+        if not is_watchout or field not in WATCHOUT_FORCING_COEFFICIENTS
+    }
 
-    Fortran provenance: ``dim2_driver.f90`` lines 722-796 and 1139-1157.
+
+def read_dim2_driver_restart(
+    path: str | Path, *, is_watchout: bool = False,
+) -> Dim2DriverRestart:
+    """Read source-selected DIM2 restart state, excluding WATCHOUT forcing coefficients.
+
+    Fortran provenance: ``dim2_driver.f90`` lines 722-796 and 1139-1157;
+    lines 769-788 guard all four coefficient reads with NOT is_watchout.
+    WATCHOUT leaves them undefined even when stale variables exist in a file.
     """
 
+    variables = _restart_variables(is_watchout=is_watchout)
     with Dataset(path) as dataset:
-        missing = sorted(set(DRIVER_RESTART_VARIABLES.values()) - set(dataset.variables))
+        missing = sorted(set(variables.values()) - set(dataset.variables))
         if missing:
             raise KeyError(f"driver restart is missing variables: {missing}")
         values = {
             field: np.asarray(dataset.variables[name][0]).reshape(-1)
-            for field, name in DRIVER_RESTART_VARIABLES.items()
+            for field, name in variables.items()
         }
     return Dim2DriverRestart(**values)
 
@@ -60,24 +72,29 @@ def write_dim2_driver_restart(
     state: Dim2DriverRestart,
     physical_state: StomateRestartPhysicalState,
     schema_path: str | Path = DEFAULT_DRIVER_RESTART_SCHEMA,
+    is_watchout: bool = False,
 ) -> StomateRestartWriteReport:
-    """Construct and populate the complete DIM2 driver restart file.
+    """Write the nine WATCHOUT or thirteen non-WATCHOUT DIM2 restart fields.
 
-    Fortran provenance: ``dim2_driver.f90`` lines 1411-1429.
+    Fortran provenance: ``dim2_driver.f90`` lines 1411-1430; lines 1425-1430
+    exclude the four forcing coefficients in WATCHOUT. They are not required
+    or created in that mode, including when a supplied state has stale values.
     """
 
     if not isinstance(state, Dim2DriverRestart):
         raise TypeError("state must be Dim2DriverRestart")
-    undefined = [field for field in DRIVER_RESTART_VARIABLES if getattr(state, field) is None]
+    variables = _restart_variables(is_watchout=is_watchout)
+    undefined = [field for field in variables if getattr(state, field) is None]
     if undefined:
         raise ValueError(f"driver restart state is undefined for fields: {undefined}")
     output = create_stomate_restart_skeleton_from_schema(
         output_path,
         physical_state,
         schema_path=schema_path,
+        excluded_science_variables=WATCHOUT_FORCING_COEFFICIENTS if is_watchout else (),
     )
     with Dataset(output, "r+") as dataset:
-        for field, name in DRIVER_RESTART_VARIABLES.items():
+        for field, name in variables.items():
             variable = dataset.variables[name]
             value = np.asarray(getattr(state, field))
             expected = int(np.prod(variable.shape[1:]))
@@ -88,7 +105,7 @@ def write_dim2_driver_restart(
             variable[0] = value.reshape(variable.shape[1:])
     return StomateRestartWriteReport(
         output_path=output,
-        written_fields=tuple(DRIVER_RESTART_VARIABLES),
+        written_fields=tuple(variables),
         validated_derived_fields=(),
         unsupported_fields=(),
     )

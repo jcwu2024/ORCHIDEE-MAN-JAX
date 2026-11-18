@@ -1,0 +1,861 @@
+{
+  "schema": "watchout-parameter-transport-v1",
+  "point": {
+    "fortran_i": 1,
+    "fortran_j": 1,
+    "lon": -30.0,
+    "lat": -20.0
+  },
+  "scope": "Existing original-Fortran saved WATCHOUT field transport; no atmospheric-producer identity or complete model acceptance.",
+  "source_identity": [
+    {
+      "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+      "sha256": "af5a6962579d4735cc6a7da358eed835401ce3b6e9d55b4305611d597ef0bf58",
+      "bytes": 23108
+    },
+    {
+      "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+      "sha256": "0a683fd39cdd313df14c83b1c753af819b9c40aad9970465fd503fe1c5ab6547",
+      "bytes": 135832
+    },
+    {
+      "path": "scripts/dev/oracle_lane_driver_forcing_owner_run.py",
+      "sha256": "6175f6f2eaaa8795610358fd5a36e8640977fbbd802f0598831a2cd61638071b",
+      "bytes": 23893
+    },
+    {
+      "path": "scripts/dev/oracle_lane_driver_forcing_owner_harness.f90",
+      "sha256": "85d8ecfafe5fa13dbc05640e00f7947266532d847d7be303c58ab038202dff8c",
+      "bytes": 4316
+    },
+    {
+      "path": "scripts/dev/oracle_lane_driver_forcing_owner_stubs.f90",
+      "sha256": "51c9059ca4ee397846bfe7e4be91ede05d1233e7de7b085c0e02a678d612b688",
+      "bytes": 3672
+    },
+    {
+      "path": "fortran_source/ORCHIDEE/src_driver/readdim2.f90",
+      "sha256": "eb1f88047de5b6fb8d20c3fb415d4ae653c656b922322428d4b4c314b3145e9a",
+      "bytes": 100103
+    }
+  ],
+  "record_templates": {
+    "1": {
+      "Tair": 278.0,
+      "Tmin": 270.0,
+      "Tmax": 286.0,
+      "Rainf": 2e-05,
+      "Snowf": 2e-06,
+      "precip": 3.0000000000000004e-05,
+      "SWdown": 111.0,
+      "LWdown": 212.0,
+      "levels": 2.35,
+      "SWnet": 52.0,
+      "Eair": 1011.0,
+      "petAcoef": 0.11,
+      "peqAcoef": 0.21000000000000002,
+      "petBcoef": 0.31,
+      "peqBcoef": 0.41000000000000003,
+      "cdrag": 0.006,
+      "ccanopy": 353.0,
+      "PSurf": 91011.0,
+      "Qair": 0.0031,
+      "Wind_N": 2.0,
+      "Wind_E": -2.0
+    },
+    "2": {
+      "Tair": 283.0,
+      "Tmin": 273.0,
+      "Tmax": 290.0,
+      "Rainf": 3.0000000000000004e-05,
+      "Snowf": 3e-06,
+      "precip": 4e-05,
+      "SWdown": 211.0,
+      "LWdown": 222.0,
+      "levels": 2.6,
+      "SWnet": 102.0,
+      "Eair": 2011.0,
+      "petAcoef": 0.21000000000000002,
+      "peqAcoef": 0.41000000000000003,
+      "petBcoef": 0.61,
+      "peqBcoef": 0.81,
+      "cdrag": 0.011,
+      "ccanopy": 354.0,
+      "PSurf": 92011.0,
+      "Qair": 0.0041,
+      "Wind_N": 3.0,
+      "Wind_E": -3.0
+    },
+    "3": {
+      "Tair": 288.0,
+      "Tmin": 276.0,
+      "Tmax": 294.0,
+      "Rainf": 4e-05,
+      "Snowf": 4e-06,
+      "precip": 5e-05,
+      "SWdown": 311.0,
+      "LWdown": 232.0,
+      "levels": 2.85,
+      "SWnet": 152.0,
+      "Eair": 3011.0,
+      "petAcoef": 0.31000000000000005,
+      "peqAcoef": 0.6100000000000001,
+      "petBcoef": 0.9099999999999999,
+      "peqBcoef": 1.2100000000000002,
+      "cdrag": 0.016,
+      "ccanopy": 355.0,
+      "PSurf": 93011.0,
+      "Qair": 0.0051,
+      "Wind_N": 4.0,
+      "Wind_E": -4.0
+    },
+    "4": {
+      "Tair": 293.0,
+      "Tmin": 279.0,
+      "Tmax": 298.0,
+      "Rainf": 5e-05,
+      "Snowf": 4.9999999999999996e-06,
+      "precip": 6.000000000000001e-05,
+      "SWdown": 411.0,
+      "LWdown": 242.0,
+      "levels": 3.1,
+      "SWnet": 202.0,
+      "Eair": 4011.0,
+      "petAcoef": 0.41000000000000003,
+      "peqAcoef": 0.81,
+      "petBcoef": 1.21,
+      "peqBcoef": 1.61,
+      "cdrag": 0.021,
+      "ccanopy": 356.0,
+      "PSurf": 94011.0,
+      "Qair": 0.0061,
+      "Wind_N": 5.0,
+      "Wind_E": -5.0
+    }
+  },
+  "input_recipe": {
+    "origin": "Exact ORACLE_BACKEND Fortran oracle_flinget expressions, i=j=1, oracle_high_solar=false",
+    "expressions": {
+      "Tair": "270.+5.*itb+i+2*j",
+      "Tmin": "265.+3.*itb+i+j",
+      "Tmax": "280.+4.*itb+i+j",
+      "Rainf": "1.e-5*(itb+i)",
+      "Snowf": "1.e-6*(itb+j)",
+      "precip": "1.e-5*(itb+i+j)",
+      "SWdown": "100.*itb+10.*i+j",
+      "LWdown": "200.+10.*itb+i+j",
+      "levels": "2.+.25*itb+.1*i",
+      "SWnet": "50.*itb+i+j",
+      "Eair": "1000.*itb+10*i+j",
+      "petAcoef": ".1*itb+.01*i",
+      "peqAcoef": ".2*itb+.01*j",
+      "petBcoef": ".3*itb+.01*i",
+      "peqBcoef": ".4*itb+.01*j",
+      "cdrag": ".005*itb+.001*i",
+      "ccanopy": "350.+itb+i+j",
+      "PSurf": "90000.+1000.*itb+10.*i+j",
+      "Qair": ".002+.001*itb+.0001*i",
+      "Wind_N": "itb+i",
+      "Wind_E": "-itb-j"
+    }
+  },
+  "ordinary": {
+    "dt_force": 3600.0,
+    "dt_sechiba": 1800.0,
+    "split": 2,
+    "nb_spread": 1,
+    "record_sequence": [
+      1,
+      2,
+      3,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "phase_contract": "Initialization reads record1. Simple-start ordinary interpolation uses record24 as nm1 (same payload as saved backend record4); itauin1 uses record1 as n. Auxiliary/levels source expressions contain no dt_force.",
+    "cases": [
+      {
+        "model_tstep": 0,
+        "itauin": 1,
+        "itau_split": 1,
+        "expected": {
+          "zlev": 2.725,
+          "zlevuv": 2.725,
+          "swnet": 127.0,
+          "eair": 2511.0,
+          "petAcoef": 0.26,
+          "peqAcoef": 0.51,
+          "petBcoef": 0.76,
+          "peqBcoef": 1.01,
+          "cdrag": 0.013500000000000002,
+          "ccanopy": 354.5
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+          "step": 2,
+          "point_ordinal_zero_based": 0,
+          "csv_rows": {
+            "zlev": 157,
+            "zlevuv": 161,
+            "swnet": 165,
+            "eair": 169,
+            "petAcoef": 173,
+            "peqAcoef": 177,
+            "petBcoef": 181,
+            "peqBcoef": 185,
+            "cdrag": 189,
+            "ccanopy": 193
+          }
+        }
+      },
+      {
+        "model_tstep": 1,
+        "itauin": 1,
+        "itau_split": 2,
+        "expected": {
+          "zlev": 2.35,
+          "zlevuv": 2.35,
+          "swnet": 52.0,
+          "eair": 1011.0,
+          "petAcoef": 0.10999999999999999,
+          "peqAcoef": 0.20999999999999996,
+          "petBcoef": 0.31000000000000005,
+          "peqBcoef": 0.4099999999999999,
+          "cdrag": 0.006,
+          "ccanopy": 353.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+          "step": 4,
+          "point_ordinal_zero_based": 0,
+          "csv_rows": {
+            "zlev": 309,
+            "zlevuv": 313,
+            "swnet": 317,
+            "eair": 321,
+            "petAcoef": 325,
+            "peqAcoef": 329,
+            "petBcoef": 333,
+            "peqBcoef": 337,
+            "cdrag": 341,
+            "ccanopy": 345
+          }
+        }
+      },
+      {
+        "model_tstep": 2,
+        "itauin": 2,
+        "itau_split": 1,
+        "expected": {
+          "zlev": 2.475,
+          "zlevuv": 2.475,
+          "swnet": 77.0,
+          "eair": 1511.0,
+          "petAcoef": 0.16,
+          "peqAcoef": 0.31000000000000005,
+          "petBcoef": 0.45999999999999996,
+          "peqBcoef": 0.6100000000000001,
+          "cdrag": 0.0085,
+          "ccanopy": 353.5
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+          "step": 6,
+          "point_ordinal_zero_based": 0,
+          "csv_rows": {
+            "zlev": 461,
+            "zlevuv": 465,
+            "swnet": 469,
+            "eair": 473,
+            "petAcoef": 477,
+            "peqAcoef": 481,
+            "petBcoef": 485,
+            "peqBcoef": 489,
+            "cdrag": 493,
+            "ccanopy": 497
+          }
+        }
+      },
+      {
+        "model_tstep": 3,
+        "itauin": 2,
+        "itau_split": 2,
+        "expected": {
+          "zlev": 2.6,
+          "zlevuv": 2.6,
+          "swnet": 102.0,
+          "eair": 2011.0,
+          "petAcoef": 0.21000000000000002,
+          "peqAcoef": 0.41000000000000003,
+          "petBcoef": 0.61,
+          "peqBcoef": 0.81,
+          "cdrag": 0.011,
+          "ccanopy": 354.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+          "step": 8,
+          "point_ordinal_zero_based": 0,
+          "csv_rows": {
+            "zlev": 613,
+            "zlevuv": 617,
+            "swnet": 621,
+            "eair": 625,
+            "petAcoef": 629,
+            "peqAcoef": 633,
+            "petBcoef": 637,
+            "peqBcoef": 641,
+            "cdrag": 645,
+            "ccanopy": 649
+          }
+        }
+      }
+    ]
+  },
+  "split1": {
+    "dt_force": 3600.0,
+    "dt_sechiba": 3600.0,
+    "split": 1,
+    "nb_spread": 1,
+    "cases": [
+      {
+        "model_tstep": 0,
+        "itauin": 1,
+        "itau_split": 1,
+        "expected": {
+          "zlev": 2.35,
+          "zlevuv": 2.35,
+          "swnet": 52.0,
+          "eair": 1011.0,
+          "petAcoef": 0.10999999999999999,
+          "peqAcoef": 0.20999999999999996,
+          "petBcoef": 0.31000000000000005,
+          "peqBcoef": 0.4099999999999999,
+          "cdrag": 0.006,
+          "ccanopy": 353.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+          "step": 4,
+          "csv_rows": {
+            "zlev": 309,
+            "zlevuv": 313,
+            "swnet": 317,
+            "eair": 321,
+            "petAcoef": 325,
+            "peqAcoef": 329,
+            "petBcoef": 333,
+            "peqBcoef": 337,
+            "cdrag": 341,
+            "ccanopy": 345
+          }
+        },
+        "source_proof": "readdim2:1545-1549 sets rw=1 for split1; endpoint equals current record."
+      },
+      {
+        "model_tstep": 1,
+        "itauin": 2,
+        "itau_split": 1,
+        "expected": {
+          "zlev": 2.6,
+          "zlevuv": 2.6,
+          "swnet": 102.0,
+          "eair": 2011.0,
+          "petAcoef": 0.21000000000000002,
+          "peqAcoef": 0.41000000000000003,
+          "petBcoef": 0.61,
+          "peqBcoef": 0.81,
+          "cdrag": 0.011,
+          "ccanopy": 354.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_watchout.csv",
+          "step": 8,
+          "csv_rows": {
+            "zlev": 613,
+            "zlevuv": 617,
+            "swnet": 621,
+            "eair": 625,
+            "petAcoef": 629,
+            "peqAcoef": 633,
+            "petBcoef": 637,
+            "peqBcoef": 641,
+            "cdrag": 645,
+            "ccanopy": 649
+          }
+        },
+        "source_proof": "readdim2:1545-1549 sets rw=1 for split1; endpoint equals current record."
+      }
+    ]
+  },
+  "daily": {
+    "dt_force": 86400.0,
+    "dt_sechiba": 3600.0,
+    "split": 24,
+    "nb_spread": 6,
+    "record_sequence": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "meteorology_origin": "Point i=j=1, lon=-30/lat=-20, source harness julian/date origin0; calendar stubs ju2ymds year2001/month1/day1+int(j), ymds2ju=dd-1. Compare full meteorology only with same effective solar/day origin and source daylength history.",
+    "cases": [
+      {
+        "model_tstep": 0,
+        "itauin": 1,
+        "itau_split": 1,
+        "expected": {
+          "zlev": 2.35,
+          "zlevuv": 2.35,
+          "swnet": 52.0,
+          "eair": 1011.0,
+          "petAcoef": 0.11,
+          "peqAcoef": 0.21000000000000002,
+          "petBcoef": 0.31,
+          "peqBcoef": 0.41000000000000003,
+          "cdrag": 0.006,
+          "ccanopy": 353.0
+        },
+        "expected_meteorology": {
+          "tair": 272.64695514912916,
+          "qair": 0.0031,
+          "pb": 91011.0,
+          "u": 2.0,
+          "v": -2.0,
+          "rainf": 0.0,
+          "snowf": 0.00012000000000000002,
+          "swdown": 0.0,
+          "lwdown": 212.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 1,
+          "csv_rows": {
+            "zlev": 81,
+            "zlevuv": 85,
+            "swnet": 89,
+            "eair": 93,
+            "petAcoef": 97,
+            "peqAcoef": 101,
+            "petBcoef": 105,
+            "peqBcoef": 109,
+            "cdrag": 113,
+            "ccanopy": 117
+          },
+          "meteorology_csv_rows": {
+            "tair": 45,
+            "qair": 49,
+            "pb": 65,
+            "u": 69,
+            "v": 73,
+            "rainf": 57,
+            "snowf": 61,
+            "swdown": 53,
+            "lwdown": 77
+          }
+        }
+      },
+      {
+        "model_tstep": 11,
+        "itauin": 1,
+        "itau_split": 12,
+        "expected": {
+          "zlev": 2.35,
+          "zlevuv": 2.35,
+          "swnet": 52.0,
+          "eair": 1011.0,
+          "petAcoef": 0.11,
+          "peqAcoef": 0.21000000000000002,
+          "petBcoef": 0.31,
+          "peqBcoef": 0.41000000000000003,
+          "cdrag": 0.006,
+          "ccanopy": 353.0
+        },
+        "expected_meteorology": {
+          "tair": 284.12835554495183,
+          "qair": 0.0031,
+          "pb": 91011.0,
+          "u": 2.0,
+          "v": -2.0,
+          "rainf": 0.0,
+          "snowf": 0.0,
+          "swdown": 318.5827216145047,
+          "lwdown": 212.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 12,
+          "csv_rows": {
+            "zlev": 917,
+            "zlevuv": 921,
+            "swnet": 925,
+            "eair": 929,
+            "petAcoef": 933,
+            "peqAcoef": 937,
+            "petBcoef": 941,
+            "peqBcoef": 945,
+            "cdrag": 949,
+            "ccanopy": 953
+          },
+          "meteorology_csv_rows": {
+            "tair": 881,
+            "qair": 885,
+            "pb": 901,
+            "u": 905,
+            "v": 909,
+            "rainf": 893,
+            "snowf": 897,
+            "swdown": 889,
+            "lwdown": 913
+          }
+        }
+      },
+      {
+        "model_tstep": 12,
+        "itauin": 1,
+        "itau_split": 13,
+        "expected": {
+          "zlev": 2.3604166666666666,
+          "zlevuv": 2.3604166666666666,
+          "swnet": 54.083333333333336,
+          "eair": 1052.6666666666667,
+          "petAcoef": 0.11416666666666667,
+          "peqAcoef": 0.21833333333333335,
+          "petBcoef": 0.3225,
+          "peqBcoef": 0.4266666666666667,
+          "cdrag": 0.006208333333333333,
+          "ccanopy": 353.0416666666667
+        },
+        "expected_meteorology": {
+          "tair": 285.51754096628724,
+          "qair": 0.0031,
+          "pb": 91052.66666666667,
+          "u": 2.0416666666666665,
+          "v": -2.0416666666666665,
+          "rainf": 0.0,
+          "snowf": 0.0,
+          "swdown": 319.57541774706976,
+          "lwdown": 212.41666666666666
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 13,
+          "csv_rows": {
+            "zlev": 993,
+            "zlevuv": 997,
+            "swnet": 1001,
+            "eair": 1005,
+            "petAcoef": 1009,
+            "peqAcoef": 1013,
+            "petBcoef": 1017,
+            "peqBcoef": 1021,
+            "cdrag": 1025,
+            "ccanopy": 1029
+          },
+          "meteorology_csv_rows": {
+            "tair": 957,
+            "qair": 961,
+            "pb": 977,
+            "u": 981,
+            "v": 985,
+            "rainf": 969,
+            "snowf": 973,
+            "swdown": 965,
+            "lwdown": 989
+          }
+        }
+      },
+      {
+        "model_tstep": 23,
+        "itauin": 1,
+        "itau_split": 24,
+        "expected": {
+          "zlev": 2.475,
+          "zlevuv": 2.475,
+          "swnet": 77.0,
+          "eair": 1511.0,
+          "petAcoef": 0.16,
+          "peqAcoef": 0.31000000000000005,
+          "petBcoef": 0.45999999999999996,
+          "peqBcoef": 0.6100000000000001,
+          "cdrag": 0.0085,
+          "ccanopy": 353.5
+        },
+        "expected_meteorology": {
+          "tair": 276.25,
+          "qair": 0.0038278710097468392,
+          "pb": 91511.0,
+          "u": 2.5,
+          "v": -2.5,
+          "rainf": 0.0,
+          "snowf": 0.0,
+          "swdown": 0.0,
+          "lwdown": 217.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 24,
+          "csv_rows": {
+            "zlev": 1829,
+            "zlevuv": 1833,
+            "swnet": 1837,
+            "eair": 1841,
+            "petAcoef": 1845,
+            "peqAcoef": 1849,
+            "petBcoef": 1853,
+            "peqBcoef": 1857,
+            "cdrag": 1861,
+            "ccanopy": 1865
+          },
+          "meteorology_csv_rows": {
+            "tair": 1793,
+            "qair": 1797,
+            "pb": 1813,
+            "u": 1817,
+            "v": 1821,
+            "rainf": 1805,
+            "snowf": 1809,
+            "swdown": 1801,
+            "lwdown": 1825
+          }
+        }
+      },
+      {
+        "model_tstep": 24,
+        "itauin": 2,
+        "itau_split": 1,
+        "expected": {
+          "zlev": 2.4854166666666666,
+          "zlevuv": 2.4854166666666666,
+          "swnet": 79.08333333333333,
+          "eair": 1552.6666666666665,
+          "petAcoef": 0.16416666666666668,
+          "peqAcoef": 0.31833333333333336,
+          "petBcoef": 0.4725,
+          "peqBcoef": 0.6266666666666667,
+          "cdrag": 0.008708333333333332,
+          "ccanopy": 353.5416666666667
+        },
+        "expected_meteorology": {
+          "tair": 275.15065105866745,
+          "qair": 0.0039083912690064445,
+          "pb": 91552.66666666667,
+          "u": 2.5416666666666665,
+          "v": -2.5416666666666665,
+          "rainf": 0.00016,
+          "snowf": 0.0,
+          "swdown": 0.0,
+          "lwdown": 217.41666666666666
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 25,
+          "csv_rows": {
+            "zlev": 1905,
+            "zlevuv": 1909,
+            "swnet": 1913,
+            "eair": 1917,
+            "petAcoef": 1921,
+            "peqAcoef": 1925,
+            "petBcoef": 1929,
+            "peqBcoef": 1933,
+            "cdrag": 1937,
+            "ccanopy": 1941
+          },
+          "meteorology_csv_rows": {
+            "tair": 1869,
+            "qair": 1873,
+            "pb": 1889,
+            "u": 1893,
+            "v": 1897,
+            "rainf": 1881,
+            "snowf": 1885,
+            "swdown": 1877,
+            "lwdown": 1901
+          }
+        }
+      },
+      {
+        "model_tstep": 35,
+        "itauin": 2,
+        "itau_split": 12,
+        "expected": {
+          "zlev": 2.6,
+          "zlevuv": 2.6,
+          "swnet": 102.0,
+          "eair": 2011.0,
+          "petAcoef": 0.21000000000000002,
+          "peqAcoef": 0.41000000000000003,
+          "petBcoef": 0.61,
+          "peqBcoef": 0.81,
+          "cdrag": 0.011,
+          "ccanopy": 354.0
+        },
+        "expected_meteorology": {
+          "tair": 288.0113777665113,
+          "qair": 0.004139589098975599,
+          "pb": 92011.0,
+          "u": 3.0,
+          "v": -3.0,
+          "rainf": 0.0,
+          "snowf": 0.0,
+          "swdown": 605.594182528473,
+          "lwdown": 222.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 36,
+          "csv_rows": {
+            "zlev": 2741,
+            "zlevuv": 2745,
+            "swnet": 2749,
+            "eair": 2753,
+            "petAcoef": 2757,
+            "peqAcoef": 2761,
+            "petBcoef": 2765,
+            "peqBcoef": 2769,
+            "cdrag": 2773,
+            "ccanopy": 2777
+          },
+          "meteorology_csv_rows": {
+            "tair": 2705,
+            "qair": 2709,
+            "pb": 2725,
+            "u": 2729,
+            "v": 2733,
+            "rainf": 2717,
+            "snowf": 2721,
+            "swdown": 2713,
+            "lwdown": 2737
+          }
+        }
+      },
+      {
+        "model_tstep": 47,
+        "itauin": 2,
+        "itau_split": 24,
+        "expected": {
+          "zlev": 2.725,
+          "zlevuv": 2.725,
+          "swnet": 127.0,
+          "eair": 2511.0,
+          "petAcoef": 0.26,
+          "peqAcoef": 0.51,
+          "petBcoef": 0.76,
+          "peqBcoef": 1.0100000000000002,
+          "cdrag": 0.0135,
+          "ccanopy": 354.5
+        },
+        "expected_meteorology": {
+          "tair": 279.5,
+          "qair": 0.0047963701825230656,
+          "pb": 92511.0,
+          "u": 3.5,
+          "v": -3.5,
+          "rainf": 0.0,
+          "snowf": 0.0,
+          "swdown": 0.0,
+          "lwdown": 227.0
+        },
+        "saved_reference": {
+          "path": "outputs/reference_mode/micro_oracles/driver_forcing_owner/fortran_outputs_daily_watchout.csv",
+          "step": 48,
+          "csv_rows": {
+            "zlev": 3653,
+            "zlevuv": 3657,
+            "swnet": 3661,
+            "eair": 3665,
+            "petAcoef": 3669,
+            "peqAcoef": 3673,
+            "petBcoef": 3677,
+            "peqBcoef": 3681,
+            "cdrag": 3685,
+            "ccanopy": 3689
+          },
+          "meteorology_csv_rows": {
+            "tair": 3617,
+            "qair": 3621,
+            "pb": 3637,
+            "u": 3641,
+            "v": 3645,
+            "rainf": 3629,
+            "snowf": 3633,
+            "swdown": 3625,
+            "lwdown": 3649
+          }
+        }
+      }
+    ]
+  },
+  "initialization": {
+    "file_record": 1,
+    "expected": {
+      "zlev": 2.35,
+      "zlevuv": 2.35,
+      "swnet": 52.0,
+      "eair": 1011.0,
+      "petAcoef": 0.11,
+      "peqAcoef": 0.21000000000000002,
+      "petBcoef": 0.31,
+      "peqBcoef": 0.41000000000000003,
+      "cdrag": 0.006,
+      "ccanopy": 353.0
+    },
+    "origin": "Exact source extraction of oracle_flinget input plus readdim2:844-848 and 1833-1863 direct copy; not a newly run oracle."
+  },
+  "driver": {
+    "relaxation": false,
+    "annual_atmco2": 411.25,
+    "expected_ccanopy": 411.25,
+    "ccanopy_origin": "dim2_driver:1009 overwrites file ccanopy unconditionally",
+    "unchanged_at_driver_all_phases": [
+      "eair",
+      "petAcoef",
+      "peqAcoef",
+      "petBcoef",
+      "peqBcoef",
+      "cdrag"
+    ],
+    "swnet_by_phase": {
+      "initialize_call": "Forcing-file SWnet, preserved by dim2_driver:914-921 NOT is_watchout guard, supplied at1111-1125.",
+      "same_step_first_main_call": "dim2_driver:1139-1152 restores albedo_vis/nir when present;1163 unconditionally sets for_swnet=(1-(albedo_vis+albedo_nir)/2)*swdown, including WATCHOUT.",
+      "later_ordinary_main_call": "New forcing SWnet is preserved at914-921; lstep_init is false so1163 is not reached.",
+      "restart_first_main_call": "Same lstep_init branch applies;1163 uses restart-restored albedo when available."
+    },
+    "initialize_consumer_limit": "intersurf_initialize_2d gathers epot_air at305 but sechiba_initialize call380 passes ztemp_air twice and omits zepot_air. Eair transport observation at dim2/intersurf input is not proof of initialize consumer use. Four coefficients are passed at381.",
+    "forbidden_transformations": [
+      "repeat producer dt scaling of A",
+      "add sign conversion",
+      "recompute WATCHOUT Eair",
+      "recompute WATCHOUT SWnet outside source first-initialization exception",
+      "clear WATCHOUT cdrag",
+      "prefer four-coefficient restart values over WATCHOUT forcing"
+    ]
+  },
+  "limits": [
+    "Saved ordinary reference used split4/dt_force21600; cases below select identical rw values and same nm1/n payloads, justified by exact source statements without dt for these fields.",
+    "Only WATCHOUT auxiliary fields and levels are remapped across ordinary dt. SWdown, rain, snow, solar timing and complete meteorological outputs are not certified by this remapping.",
+    "Daily cases retain the saved split24/dt86400 clock exactly.",
+    "Saved driver_forcing_owner build receipt lacks source/compile-unit hashes; present source/harness bytes are frozen here, but no retroactive producer/build identity is invented.",
+    "Synthetic B coefficients here are transport sentinels, not physically admitted consumer states; use coupling_peq_nonzero_reference.json for already accepted nonzero consumer checks."
+  ]
+}

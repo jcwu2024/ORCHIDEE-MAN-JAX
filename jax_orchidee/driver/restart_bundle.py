@@ -10,7 +10,10 @@ from netCDF4 import Dataset
 
 from jax_orchidee.driver.dim2 import Dim2DriverRestart
 from jax_orchidee.driver.restart_export import stomate_full_restart_states_from_day_end_packet
-from jax_orchidee.driver.restart_file_io import write_dim2_driver_restart
+from jax_orchidee.driver.restart_file_io import (
+    WATCHOUT_FORCING_COEFFICIENTS,
+    write_dim2_driver_restart,
+)
 from jax_orchidee.driver.source_clock import (
     PREFIX,
     SourceClockRuntime,
@@ -37,6 +40,7 @@ class PaperRestartBundleState:
     sechiba: SechibaRestartState
     stomate: StomateReadstartStates
     source_clock_runtime: SourceClockRuntime | None = None
+    is_watchout: bool = False
 
 
 @dataclass(frozen=True)
@@ -72,11 +76,14 @@ def paper_restart_bundle_state_from_day_end_packet(
     base_stomate: StomateReadstartStates,
     kjit: int,
     use_refsoc_hydrol: bool = False,
+    is_watchout: bool = False,
 ) -> PaperRestartBundleState:
     """Convert a complete production day/year-end packet to three restart states.
 
     The packet must contain the dedicated 93-field ``sechiba_finalize_state``
-    and all 13 driver restart fields. Enabling ``use_refsoc_hydrol`` requires
+    and nine driver restart fields for WATCHOUT, otherwise all thirteen.
+    Fortran ``dim2_driver.f90:769-788,1425-1430`` excludes the four WATCHOUT
+    forcing coefficients from restart IO. Enabling ``use_refsoc_hydrol`` requires
     the additional source-conditional ``refSOC_1d`` field, without changing the
     default 93-field denominator. STOMATE state uses the audited day-end
     merge contract from ``driver.restart_export``.
@@ -87,7 +94,10 @@ def paper_restart_bundle_state_from_day_end_packet(
         raise TypeError("packet must expose fields_by_component")
     runtime = validate_source_clock_restart_packet(packet, source_istp=kjit)
     driver_fields = components.get("driver_previous_step_state", {})
-    driver_names = tuple(Dim2DriverRestart.__dataclass_fields__)
+    driver_names = tuple(
+        name for name in Dim2DriverRestart.__dataclass_fields__
+        if not is_watchout or name not in WATCHOUT_FORCING_COEFFICIENTS
+    )
     missing_driver = tuple(name for name in driver_names if name not in driver_fields)
     if missing_driver:
         raise ValueError(f"day-end packet is missing driver restart fields: {missing_driver}")
@@ -112,6 +122,7 @@ def paper_restart_bundle_state_from_day_end_packet(
         ),
         stomate=stomate,
         source_clock_runtime=runtime,
+        is_watchout=bool(is_watchout),
     )
 
 
@@ -181,7 +192,8 @@ def write_paper_restart_start_bundle(
         })
 
     driver_report = write_dim2_driver_restart(
-        paths["driver"], state=state.driver, physical_state=physical_state.driver
+        paths["driver"], state=state.driver, physical_state=physical_state.driver,
+        is_watchout=bool(getattr(state, "is_watchout", False)),
     )
     sechiba_report = write_sechiba_restart_state(
         paths["sechiba"],

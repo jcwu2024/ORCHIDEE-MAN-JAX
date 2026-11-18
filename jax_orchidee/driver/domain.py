@@ -11,7 +11,7 @@ from __future__ import annotations
 import math
 import os
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -53,24 +53,34 @@ class ForcingStep:
     Wind_E: np.ndarray
     Wind_N: np.ndarray
     Rainf: np.ndarray
-    Snowf: np.ndarray
+    Snowf: np.ndarray | None
     SWdown: np.ndarray
     LWdown: np.ndarray
     Areas: np.ndarray
     contfrac: np.ndarray
-    Height_Lev1: float
-    Height_Levuv: float
+    Height_Lev1: float | None
+    Height_Levuv: float | None
     temp_air: np.ndarray
     pb: np.ndarray
     qair: np.ndarray
     u: np.ndarray
     v: np.ndarray
     precip_rain: np.ndarray
-    precip_snow: np.ndarray
+    precip_snow: np.ndarray | None
     swdown: np.ndarray
     lwdown: np.ndarray
     zlev: np.ndarray
     zlevuv: np.ndarray
+    is_watchout: bool = False
+    swnet: np.ndarray | None = None
+    eair: np.ndarray | None = None
+    petAcoef: np.ndarray | None = None
+    peqAcoef: np.ndarray | None = None
+    petBcoef: np.ndarray | None = None
+    peqBcoef: np.ndarray | None = None
+    cdrag: np.ndarray | None = None
+    ccanopy: np.ndarray | None = None
+    dt_force: float | None = None
 
 
 @dataclass(frozen=True)
@@ -83,13 +93,34 @@ class PaperPointForcingCache:
     Wind_E: np.ndarray
     Wind_N: np.ndarray
     Rainf: np.ndarray
-    Snowf: np.ndarray
+    Snowf: np.ndarray | None
     SWdown: np.ndarray
     LWdown: np.ndarray
     Areas: np.ndarray
     contfrac: np.ndarray
-    Height_Lev1: float
-    Height_Levuv: float
+    Height_Lev1: float | None
+    Height_Levuv: float | None
+    is_watchout: bool = False
+    swnet: np.ndarray | None = None
+    eair: np.ndarray | None = None
+    petAcoef: np.ndarray | None = None
+    peqAcoef: np.ndarray | None = None
+    petBcoef: np.ndarray | None = None
+    peqBcoef: np.ndarray | None = None
+    cdrag: np.ndarray | None = None
+    ccanopy: np.ndarray | None = None
+    zlev: np.ndarray | None = None
+    zlevuv: np.ndarray | None = None
+    daily_interpol: bool = False
+    dt_force: float | None = None
+    Tmax: np.ndarray | None = None
+
+
+_WATCHOUT_FILE_FIELDS = {
+    "swnet": "SWnet", "eair": "Eair", "petAcoef": "petAcoef",
+    "peqAcoef": "peqAcoef", "petBcoef": "petBcoef", "peqBcoef": "peqBcoef",
+    "cdrag": "cdrag", "ccanopy": "ccanopy",
+}
 
 
 @dataclass(frozen=True)
@@ -201,6 +232,106 @@ def _as_fortran_timestep(ds: xr.Dataset, name: str, tstep: int) -> np.ndarray:
     return np.asarray(ds[name].isel(tstep=tstep).values).T
 
 
+def _watchout_forcing_cadence(ds: xr.Dataset, config: dict[str, Any], time_dim: str) -> float:
+    """Resolve the file interval used by ``forcing_info`` lines 170-195.
+
+    The explicit case cadence remains a fallback for legacy files whose
+    numeric record coordinate has no units. WATCHOUT recognition itself is
+    exclusively the lowercase ``levels`` query at source lines 805-807.
+    """
+
+    from .forcing_readers import ForcingReaderError
+
+    factors = {"second": 1.0, "seconds": 1.0, "s": 1.0,
+               "minute": 60.0, "minutes": 60.0,
+               "hour": 3600.0, "hours": 3600.0,
+               "day": 86400.0, "days": 86400.0}
+    for name in ("time_counter", "time", time_dim):
+        variable = ds.get(name)
+        if variable is None or variable.dims != (time_dim,) or variable.size < 2:
+            continue
+        unit = str(variable.attrs.get("units", "")).strip().lower().split(" since ")[0]
+        if unit in factors:
+            times = np.asarray(variable.isel({time_dim: slice(0, 2)}).values, dtype=np.float64)
+            cadence = float(abs(times[1] - times[0])) * factors[unit]
+            if not np.isfinite(cadence) or cadence <= 0.0:
+                raise ForcingReaderError("forcing records must have a positive finite time interval")
+            return cadence
+    hours = config.get("time", {}).get("forcing_step_hours")
+    if hours is None or not np.isfinite(float(hours)) or float(hours) <= 0.0:
+        raise ForcingReaderError("WATCHOUT forcing requires time-coordinate units or explicit forcing_step_hours")
+    return float(hours) * 3600.0
+
+
+def _read_watchout_land_cache(
+    ds: xr.Dataset,
+    config: dict[str, Any],
+    land_i: np.ndarray,
+    land_j: np.ndarray,
+    *,
+    tstep: int | None = None,
+) -> PaperPointForcingCache:
+    """Read WATCHOUT into the selected-land cache without changing units.
+
+    Provenance: ``readdim2.f90::forcing_just_read`` lines 1745-1863 reads
+    meteorology, then lowercase levels and the eight payloads. Lines
+    1833-1839 override both heights. The source reader is also called once
+    to retain vertical-coordinate and required-field validation.
+    """
+
+    from .forcing_readers import ForcingReaderError, _dims, _read_field, forcing_just_read
+
+    y_dim, x_dim, time_dim = _dims(ds)
+    nt = int(ds.sizes[time_dim])
+    if tstep is not None and not 0 <= tstep < nt:
+        raise IndexError(f"tstep {tstep} outside forcing range 0..{nt - 1}")
+    dt_force = _watchout_forcing_cadence(ds, config, time_dim)
+    daily = dt_force == 86400.0
+    forcing_just_read(
+        ds, itb=1 if tstep is None else tstep + 1, ite=1 if tstep is None else tstep + 1,
+        daily_interpol=daily, wind_n_exists="Wind_N" in ds, is_watchout=True,
+    )
+
+    def series_at(name: str) -> np.ndarray:
+        if name not in ds:
+            raise ForcingReaderError(f"required forcing variable {name!r} is missing")
+        variable = ds[name]
+        expected = {y_dim, x_dim}
+        if set(variable.dims) not in (expected, expected | {time_dim}):
+            raise ForcingReaderError(f"{name} must have horizontal dimensions and at most the forcing time dimension")
+        variable = variable.isel({y_dim: xr.DataArray(land_j, dims="land"), x_dim: xr.DataArray(land_i, dims="land")})
+        if time_dim in variable.dims:
+            if tstep is not None:
+                variable = variable.isel({time_dim: slice(tstep, tstep + 1)})
+            values = np.asarray(variable.transpose(time_dim, "land").values, dtype=np.float64)
+        else:
+            values = np.broadcast_to(np.asarray(variable.values, dtype=np.float64), (nt if tstep is None else 1, land_i.size))
+        return values.reshape((-1, land_i.size, 1))
+
+    levels = series_at("levels")
+    wind_n = "Wind_N" in ds
+    wind_u = series_at("Wind_N" if wind_n else "Wind")
+    # Source lines 1063-1064 derive Watchout area from file resolution;
+    # the standard forcing's Areas variable is not required in this branch.
+    def resolution_land(name):
+        grid = _read_field(ds, name, y_dim=y_dim, x_dim=x_dim, time_dim=time_dim, t0=0, ii=None, jj=None)
+        return _land_column_values(grid, land_i, land_j)
+
+    return PaperPointForcingCache(
+        Tair=series_at("Tmin" if daily else "Tair"), PSurf=series_at("PSurf"), Qair=series_at("Qair"),
+        Wind_E=series_at("Wind_E") if wind_n else np.zeros_like(wind_u), Wind_N=wind_u,
+        Rainf=series_at("precip" if daily else "Rainf"), Snowf=None if daily else series_at("Snowf"),
+        SWdown=series_at("SWdown"), LWdown=series_at("LWdown"),
+        Areas=resolution_land("resolutionX") * resolution_land("resolutionY"),
+        contfrac=_land_column_values(_as_fortran_2d(ds, "contfrac"), land_i, land_j),
+        Height_Lev1=float(np.asarray(ds["Height_Lev1"].values)) if "Height_Lev1" in ds else None,
+        Height_Levuv=float(np.asarray(ds["Height_Levuv"].values)) if "Height_Levuv" in ds else None,
+        is_watchout=True, zlev=levels, zlevuv=levels, daily_interpol=daily, dt_force=dt_force,
+        Tmax=series_at("Tmax") if daily and tstep is None and "Tmax" in ds else None,
+        **{public: series_at(file_name) for public, file_name in _WATCHOUT_FILE_FIELDS.items()},
+    )
+
+
 @lru_cache(maxsize=4)
 def _read_paper_point_forcing_cache(config_path: str, year: int, i0: int, j0: int) -> PaperPointForcingCache:
     """Read the active point's yearly forcing once, preserving Fortran order."""
@@ -227,6 +358,8 @@ def _read_forcing_land_cache(config_path: str, year: int, land_indices_key: tupl
     config = load_case_config(config_path)
     forcing_path = forcing_file_for_year(config, year)
     with xr.open_dataset(forcing_path, decode_times=False) as ds:
+        if "levels" in ds:
+            return _read_watchout_land_cache(ds, config, land_i, land_j)
         def series_at(name: str) -> np.ndarray:
             values = np.asarray(ds[name].values, dtype=np.float64)
             return values[:, land_j, land_i].reshape((values.shape[0], land_i.size, 1))
@@ -256,43 +389,13 @@ def _forcing_step_from_cached_point(cache: PaperPointForcingCache, *, tstep: int
     nt = int(cache.Tair.shape[0])
     if tstep < 0 or tstep >= nt:
         raise IndexError(f"tstep {tstep} outside forcing range 0..{nt - 1}")
-    Tair = cache.Tair[int(tstep)]
-    PSurf = cache.PSurf[int(tstep)]
-    Qair = cache.Qair[int(tstep)]
-    Wind_E = cache.Wind_E[int(tstep)]
-    Wind_N = cache.Wind_N[int(tstep)]
-    Rainf = cache.Rainf[int(tstep)]
-    Snowf = cache.Snowf[int(tstep)]
-    SWdown = cache.SWdown[int(tstep)]
-    LWdown = cache.LWdown[int(tstep)]
-    zlev = np.full_like(Tair, cache.Height_Lev1)
-    zlevuv = np.full_like(Tair, cache.Height_Levuv)
-    return ForcingStep(
-        tstep=int(tstep),
-        Tair=Tair,
-        PSurf=PSurf,
-        Qair=Qair,
-        Wind_E=Wind_E,
-        Wind_N=Wind_N,
-        Rainf=Rainf,
-        Snowf=Snowf,
-        SWdown=SWdown,
-        LWdown=LWdown,
-        Areas=cache.Areas,
-        contfrac=cache.contfrac,
-        Height_Lev1=cache.Height_Lev1,
-        Height_Levuv=cache.Height_Levuv,
-        temp_air=Tair,
-        pb=PSurf,
-        qair=Qair,
-        u=Wind_N,
-        v=Wind_E,
-        precip_rain=Rainf,
-        precip_snow=Snowf,
-        swdown=SWdown,
-        lwdown=LWdown,
-        zlev=zlev,
-        zlevuv=zlevuv,
+    return _forcing_step_with_values(
+        cache, tstep=tstep,
+        **{name: None if (value := getattr(cache, name)) is None else value[tstep]
+           for name in ("Tair", "PSurf", "Qair", "Wind_E", "Wind_N", "Rainf", "Snowf", "SWdown", "LWdown")},
+        zlev=None if cache.zlev is None else cache.zlev[tstep],
+        zlevuv=None if cache.zlevuv is None else cache.zlevuv[tstep],
+        watchout_values={name: getattr(cache, name)[tstep] for name in _WATCHOUT_FILE_FIELDS} if cache.is_watchout else None,
     )
 
 
@@ -306,16 +409,25 @@ def _forcing_step_with_values(
     Wind_E: np.ndarray,
     Wind_N: np.ndarray,
     Rainf: np.ndarray,
-    Snowf: np.ndarray,
+    Snowf: np.ndarray | None,
     SWdown: np.ndarray,
     LWdown: np.ndarray,
+    zlev: np.ndarray | None = None,
+    zlevuv: np.ndarray | None = None,
+    watchout_values: dict[str, np.ndarray] | None = None,
 ) -> ForcingStep:
-    zlev = np.full_like(Tair, cache.Height_Lev1)
+    if zlev is None:
+        if cache.Height_Lev1 is None:
+            raise ValueError("forcing requires explicit zlev or Height_Lev1")
+        zlev = np.full_like(Tair, cache.Height_Lev1)
     # Active paper files are non-Watchout CRUNCEP forcing. In
     # readdim2.f90::forcing_read_interpol, lines 1554-1561 set zlev/zlevuv
     # only inside the is_watchout branch; for non-Watchout files zlevuv keeps
     # the forcing_just_read Height_Levuv value from lines 1808-1811.
-    zlevuv = np.full_like(Tair, cache.Height_Levuv)
+    if zlevuv is None:
+        if cache.Height_Levuv is None:
+            raise ValueError("forcing requires explicit zlevuv or Height_Levuv")
+        zlevuv = np.full_like(Tair, cache.Height_Levuv)
     return ForcingStep(
         tstep=int(tstep),
         Tair=Tair,
@@ -342,6 +454,9 @@ def _forcing_step_with_values(
         lwdown=LWdown,
         zlev=zlev,
         zlevuv=zlevuv,
+        is_watchout=cache.is_watchout,
+        dt_force=cache.dt_force,
+        **(watchout_values or {}),
     )
 
 
@@ -561,6 +676,109 @@ def _paper_model_step_swdown_land_from_solarang(
     return np.where(swdown > 2000.0, 2000.0, swdown)
 
 
+class _WatchoutModelCursor:
+    """Bounded IO cursor for source SAVE variables, never checkpoint state.
+
+    Sequential calls retain only the final interpolation state/result. A
+    backwards request replays from initialization, preserving the source's
+    daily half-day and solar-history transitions rather than inventing a
+    stateless daily approximation. The records are selected-land views.
+
+    Fortran provenance: ``readdim2.f90::forcing_read_interpol`` lines
+    844-848 initializes the raw record, 1079-1407 owns daily progression,
+    and 1425-1661 owns ordinary progression, through the shared owner.
+    """
+
+    def __init__(self, cache, *, split, nb_spread, dt_force, lon, lat, land_indices_key, netrad_cons=False):
+        from .forcing_interpolation import ForcingInterpolationRecord
+
+        self.cache = cache
+        self.split = int(split)
+        self.nb_spread = min(int(nb_spread), self.split)
+        self.dt_force = float(dt_force)
+        self.lon = np.asarray(lon, dtype=np.float64)
+        self.lat = np.asarray(lat, dtype=np.float64)
+        self.land_indices = np.asarray(land_indices_key, dtype=np.int64)
+        self.netrad_cons = bool(netrad_cons)
+        self.records = tuple(
+            ForcingInterpolationRecord.from_mapping({
+                "tair": cache.Tair[index], "pb": cache.PSurf[index], "qair": cache.Qair[index],
+                "u": cache.Wind_N[index], "v": cache.Wind_E[index],
+                "rainf": cache.Rainf[index], "snowf": None if cache.Snowf is None else cache.Snowf[index],
+                "swdown": cache.SWdown[index], "lwdown": cache.LWdown[index],
+                "zlev": cache.zlev[index], "zlevuv": cache.zlevuv[index],
+                "tmax": None if cache.Tmax is None else cache.Tmax[index],
+                **{name.lower(): getattr(cache, name)[index] for name in _WATCHOUT_FILE_FIELDS},
+            })
+            for index in range(cache.Tair.shape[0])
+        )
+        self._reset()
+
+    def _solar_selected(self, julian, julian0, lon, lat):
+        # solarang uses the regular grid's first lon column/lat row. Compute
+        # before gathering, as readdim2 does; a land column is not that grid.
+        from .driver_forcing_completion import solarang
+
+        grid = solarang(julian, julian0, lon, lat)
+        return _land_column_values(grid, self.land_indices[:, 0], self.land_indices[:, 1])
+
+    def _transition(self, state, *, itauin, itau_split):
+        from .forcing_interpolation import forcing_read_interpol_transition
+
+        return forcing_read_interpol_transition(
+            self.records, state, itauin=itauin, itau_split=itau_split,
+            split=self.split, nb_spread=self.nb_spread, dt_force=self.dt_force,
+            lon=self.lon, lat=self.lat, daily_interpol=self.cache.daily_interpol,
+            is_watchout=True, netrad_cons=self.netrad_cons,
+            solarang_function=self._solar_selected,
+        )
+
+    def _reset(self):
+        from .forcing_interpolation import ForcingInterpolationState
+
+        self.state = self._transition(ForcingInterpolationState(), itauin=0, itau_split=0).state
+        self.last_step = -1
+        self.last_values = None
+
+    def read(self, model_tstep):
+        model_tstep = int(model_tstep)
+        if model_tstep < 0:
+            raise IndexError("model_tstep must be non-negative")
+        if model_tstep < self.last_step:
+            self._reset()
+        while self.last_step < model_tstep:
+            next_step = self.last_step + 1
+            result = self._transition(
+                self.state, itauin=next_step // self.split + 1,
+                itau_split=next_step % self.split + 1,
+            )
+            self.state, self.last_values = result.state, result.values
+            self.last_step = next_step
+        values = self.last_values
+        return _forcing_step_with_values(
+            self.cache, tstep=model_tstep,
+            Tair=values.tair, PSurf=values.pb, Qair=values.qair,
+            Wind_E=values.v, Wind_N=values.u, Rainf=values.rainf, Snowf=values.snowf,
+            SWdown=values.swdown, LWdown=values.lwdown, zlev=values.zlev, zlevuv=values.zlevuv,
+            watchout_values={name: getattr(values, name.lower()) for name in _WATCHOUT_FILE_FIELDS},
+        )
+
+
+@lru_cache(maxsize=4)
+def _watchout_model_cursor(
+    config_path, year, land_indices_key, split, nb_spread, dt_force,
+    lon_key, lat_key, local_land_indices_key, netrad_cons, cache_identity,
+):
+    """Cache host IO progression only; no coefficients enter model restart."""
+
+    cache = _read_forcing_land_cache(config_path, year, land_indices_key)
+    return _WatchoutModelCursor(
+        cache, split=split, nb_spread=nb_spread, dt_force=dt_force,
+        lon=np.asarray(lon_key), lat=np.asarray(lat_key),
+        land_indices_key=local_land_indices_key, netrad_cons=netrad_cons,
+    )
+
+
 def _forcing_model_step_from_cached_point(
     cache: PaperPointForcingCache,
     *,
@@ -571,6 +789,7 @@ def _forcing_model_step_from_cached_point(
     lat: np.ndarray | None = None,
     land_indices_key: tuple[tuple[int, int], ...] | None = None,
     dt_force: float = 21600.0,
+    netrad_cons: bool = False,
 ) -> ForcingStep:
     """Return Fortran's active paper-case model-step forcing.
 
@@ -593,6 +812,15 @@ def _forcing_model_step_from_cached_point(
     if nb_spread < 1:
         raise ValueError("nb_spread must be positive")
     nb_spread = min(nb_spread, split)
+
+    if cache.is_watchout:
+        if lon is None or lat is None or land_indices_key is None:
+            raise ValueError("WATCHOUT model interpolation requires full domain geometry and land indices")
+        return _WatchoutModelCursor(
+            cache, split=split, nb_spread=nb_spread,
+            dt_force=cache.dt_force if cache.dt_force is not None else dt_force,
+            lon=lon, lat=lat, land_indices_key=land_indices_key, netrad_cons=netrad_cons,
+        ).read(model_tstep)
 
     nt = int(cache.Tair.shape[0])
     itau_read = model_tstep // split + 1
@@ -649,7 +877,7 @@ def _forcing_model_step_from_cached_point(
         Rainf=spread("Rainf"),
         Snowf=spread("Snowf"),
         SWdown=swdown,
-        LWdown=lin("LWdown"),
+        LWdown=cache.LWdown[curr_index] if netrad_cons else lin("LWdown"),
     )
 
 
@@ -786,18 +1014,42 @@ def read_domain_grid(
         lon = _zoom_2d(lon_full, i_index, j_index)
         lat = _zoom_2d(lat_full, i_index, j_index)
         contfrac = _zoom_2d(_as_fortran_2d(ds, "contfrac"), i_index, j_index)
-        area2d = _zoom_2d(_as_fortran_2d(ds, "Areas"), i_index, j_index)
+        is_watchout = "levels" in ds
+        area2d = None if is_watchout else _zoom_2d(_as_fortran_2d(ds, "Areas"), i_index, j_index)
+        if is_watchout:
+            from .forcing_readers import _dims, _read_field
+
+            y_dim, x_dim, time_dim = _dims(ds)
+
+            def watchout_grid_field(name):
+                return _read_field(ds, name, y_dim=y_dim, x_dim=x_dim, time_dim=time_dim, t0=0, ii=i_index, jj=j_index)
+
+            # readdim2.f90::forcing_read_interpol lines 976-1064 consumes
+            # the file geometry, without regular-grid reconstruction.
+            watchout_neighbours = np.full((*lon.shape, 8), 999999999, dtype=np.int32)
+            for component, suffix in enumerate(("NN", "NE", "EE", "SE", "SS", "SW", "WW", "NW")):
+                values = watchout_grid_field("neighbours" + suffix)
+                valid = values < 999999999
+                rounded = np.where(values[valid] >= 0.0, np.floor(values[valid] + 0.5), np.ceil(values[valid] - 0.5))
+                watchout_neighbours[..., component][valid] = rounded.astype(np.int32)
+            watchout_resolution = np.stack((watchout_grid_field("resolutionX"), watchout_grid_field("resolutionY")), axis=-1)
 
     kindex, ij_pairs = _land_kindex(contfrac)
     land_i = ij_pairs[:, 0]
     land_j = ij_pairs[:, 1]
     lalo = np.column_stack((lat[land_i, land_j], lon[land_i, land_j]))
     contfrac_land = contfrac[land_i, land_j]
-    area = area2d[land_i, land_j]
+    area = None if area2d is None else area2d[land_i, land_j]
     forcing_indices = np.column_stack((i_index[land_i], j_index[land_j]))
-    resolution, neighbours, grid_area, corners, seglength = _regular_lonlat_geometry_if_available(lon, lat, kindex, lalo)
-    if grid_area is not None:
-        area = grid_area
+    if is_watchout:
+        resolution = watchout_resolution[land_i, land_j]
+        neighbours = watchout_neighbours[land_i, land_j]
+        area = resolution[:, 0] * resolution[:, 1]
+        corners = seglength = None
+    else:
+        resolution, neighbours, grid_area, corners, seglength = _regular_lonlat_geometry_if_available(lon, lat, kindex, lalo)
+        if grid_area is not None:
+            area = grid_area
 
     return DomainGrid(
         iim=int(lon.shape[0]),
@@ -845,6 +1097,9 @@ def read_forcing_step(
     if int(domain.nbindex) != int(i_index.size) or int(domain.nbindex) != int(j_index.size):
         raise ValueError("domain nbindex must match forcing_indices_zero_based length")
     with xr.open_dataset(forcing_path, decode_times=False) as ds:
+        if "levels" in ds:
+            cache = _read_watchout_land_cache(ds, config, i_index, j_index, tstep=int(tstep))
+            return replace(_forcing_step_from_cached_point(cache, tstep=0), tstep=int(tstep))
         nt = int(ds.sizes.get("tstep", 0))
         if tstep < 0 or tstep >= nt:
             raise IndexError(f"tstep {tstep} outside forcing range 0..{nt - 1}")
@@ -930,6 +1185,7 @@ def read_forcing_model_step_cached(
     model_tstep: int = 0,
     split: int = 12,
     nb_spread: int = 6,
+    netrad_cons: bool = False,
 ) -> ForcingStep:
     """Read Fortran-expanded forcing for one SECHIBA model timestep.
 
@@ -949,6 +1205,14 @@ def read_forcing_model_step_cached(
     local_j = (np.asarray(domain.kindex, dtype=np.int64) - 1) // int(domain.iim)
     local_land_indices_key = tuple((int(i), int(j)) for i, j in zip(local_i, local_j))
     cache = _read_forcing_land_cache(config_resolved, int(year), land_indices_key)
+    if cache.is_watchout:
+        if split < 1 or nb_spread < 1:
+            raise ValueError("split and nb_spread must be positive")
+        cursor = _watchout_model_cursor(
+            config_resolved, int(year), land_indices_key, int(split), int(nb_spread), float(cache.dt_force),
+            _array_tuple_key(domain.lon), _array_tuple_key(domain.lat), local_land_indices_key, bool(netrad_cons), id(cache),
+        )
+        return cursor.read(int(model_tstep))
     return _forcing_model_step_from_cached_point(
         cache,
         model_tstep=int(model_tstep),
@@ -958,6 +1222,7 @@ def read_forcing_model_step_cached(
         lat=domain.lat,
         land_indices_key=local_land_indices_key,
         dt_force=float(split) * 1800.0,
+        netrad_cons=bool(netrad_cons),
     )
 
 

@@ -29,7 +29,10 @@ from jax_orchidee.driver.restart_bundle import (  # noqa: E402
     read_restart_physical_state,
     write_paper_restart_start_bundle,
 )
-from jax_orchidee.driver.restart_file_io import read_dim2_driver_restart  # noqa: E402
+from jax_orchidee.driver.restart_file_io import (  # noqa: E402
+    WATCHOUT_FORCING_COEFFICIENTS,
+    read_dim2_driver_restart,
+)
 from jax_orchidee.driver.restart_state import reference_case_first_step_restart_state  # noqa: E402
 from jax_orchidee.sechiba.restart_io import (  # noqa: E402
     sechiba_finalize_source_state_from_restart,
@@ -118,6 +121,7 @@ def _packet_from_restart_readers(
     driver: Any,
     sechiba: Any,
     stomate: Any,
+    is_watchout: bool = False,
 ) -> DriverPreviousStepStatePacket:
     """Rebuild persisted year-end state from the three production readers."""
 
@@ -127,6 +131,7 @@ def _packet_from_restart_readers(
     }
     driver_fields = {
         name: getattr(driver, name) for name in driver.__dataclass_fields__
+        if not is_watchout or name not in WATCHOUT_FORCING_COEFFICIENTS
     }
     # dim2_driver.f90 lines 1139-1152 restores the two persisted bands into
     # albedo(:,:,1:2) before the first intersurf call.
@@ -179,6 +184,13 @@ def _check(name: str, passed: bool, **details: Any) -> dict[str, Any]:
     return {"name": name, "passed": bool(passed), **details}
 
 
+def _restart_is_watchout(context: Any) -> bool:
+    """Use forcing-file identity carried by the actual prepared bundle."""
+
+    bundle = getattr(context, "first_step_bundle", None)
+    return bool(getattr(getattr(bundle, "forcing", None), "is_watchout", False))
+
+
 def _restart_bundle_from_context(packet: Any, context: Any, *, kjit: int):
     """Keep the restart exporter on the same effective initialization switches."""
     return paper_restart_bundle_state_from_day_end_packet(
@@ -186,6 +198,7 @@ def _restart_bundle_from_context(packet: Any, context: Any, *, kjit: int):
         base_stomate=context.first_step_restart_state.stomate_readstart,
         kjit=kjit,
         use_refsoc_hydrol=parse_run_def_bool(context.run_def_values.get("use_refSOC_hydrol", "FALSE")),
+        **({"is_watchout": True} if _restart_is_watchout(context) else {}),
     )
 
 
@@ -265,13 +278,14 @@ def run(config: Path = CONFIG) -> dict[str, Any]:
             reference_run_dir=report.output_directory,
         )
         restored_driver = read_dim2_driver_restart(
-            report.output_directory / "driver_start.nc"
+            report.output_directory / "driver_start.nc", is_watchout=bundle_state.is_watchout,
         )
         restored_packet = _packet_from_restart_readers(
             day2.day_end_state,
             driver=restored_driver,
             sechiba=restored.sechiba_restart_state,
             stomate=restored.stomate_readstart,
+            is_watchout=bundle_state.is_watchout,
         )
         split_1962 = paper_1961_driver_restart_year_start_day_result(
             config,

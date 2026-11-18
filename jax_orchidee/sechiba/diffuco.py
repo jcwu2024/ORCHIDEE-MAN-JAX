@@ -1832,6 +1832,14 @@ def assemble_diffuco_first_step_precall_payload(
         if field in driver and driver[field] is not None:
             add(field, driver[field], driver_inputs)
 
+    # diffuco_main:629-641 uses the current atmospheric q_cdrag only when
+    # the initialization flag selects the coupled branch. It is optional
+    # driver state, not a required offline field or a scientific checkpoint.
+    # dim2_driver:914-920,1163 selects file/first-main radiation before this call.
+    for field in ("q_cdrag", "swnet"):
+        if field in driver and driver[field] is not None:
+            add(field, driver[field], driver_inputs)
+
     if "rau" not in payload and {"pb", "temp_air"} <= payload.keys():
         add(
             "rau",
@@ -2057,6 +2065,9 @@ def assemble_pft14_local_enerbil_precall_kwargs_from_first_step_precall(
         return values
 
     payload = precall.payload
+    coupled_drag_kwargs = (
+        _require_precall_payload_arrays(payload, ("q_cdrag",)) if bool(ldq_cdrag_from_gcm) else {}
+    )
     arrays = _require_precall_payload_arrays(
         payload,
         (
@@ -2220,6 +2231,7 @@ def assemble_pft14_local_enerbil_precall_kwargs_from_first_step_precall(
         "pft_index": int(pft_index),
         "trans_co2_inputs": trans_co2_inputs,
         "ldq_cdrag_from_gcm": bool(ldq_cdrag_from_gcm),
+        **coupled_drag_kwargs,
         "u": arrays["u"],
         "v": arrays["v"],
         "zlev": arrays["zlev"],

@@ -180,8 +180,6 @@ def validate_dim2_switches(switches: Dim2Switches) -> None:
         unsupported.append("WEATHERGEN=y")
     if switches.relaxation:
         unsupported.append("RELAXATION=y")
-    if switches.watchout:
-        unsupported.append("WATCHOUT forcing")
     if switches.driver_routing:
         unsupported.append("driver-owned routing")
     if not switches.river_routing:
@@ -427,6 +425,7 @@ def resolve_dim2_restart_fields(
     eair = CP_AIR * temp_air + GRAVITY * zlev
     rau = pb_pa / (MOLAR_GAS_CONSTANT_AIR * temp_air)
     zero = np.zeros(npts, dtype=np.float64)
+    is_watchout = bool(getattr(bundle.forcing, "is_watchout", False))
     return replace(
         restart,
         fluxsens=_restart_value(restart.fluxsens, zero, npts, "fluxsens"),
@@ -435,10 +434,11 @@ def resolve_dim2_restart_fields(
         old_qair=_restart_value(restart.old_qair, qair, npts, "old_qair"),
         old_eair=_restart_value(restart.old_eair, eair, npts, "old_eair"),
         rau_old=_restart_value(restart.rau_old, rau, npts, "rau_old"),
-        petAcoef=_restart_value(restart.petAcoef, zero, npts, "petAcoef"),
-        petBcoef=_restart_value(restart.petBcoef, eair, npts, "petBcoef"),
-        peqAcoef=_restart_value(restart.peqAcoef, zero, npts, "peqAcoef"),
-        peqBcoef=_restart_value(restart.peqBcoef, qair, npts, "peqBcoef"),
+        # Source lines769-787 do not read the four coefficients in WATCHOUT.
+        petAcoef=None if is_watchout else _restart_value(restart.petAcoef, zero, npts, "petAcoef"),
+        petBcoef=None if is_watchout else _restart_value(restart.petBcoef, eair, npts, "petBcoef"),
+        peqAcoef=None if is_watchout else _restart_value(restart.peqAcoef, zero, npts, "peqAcoef"),
+        peqBcoef=None if is_watchout else _restart_value(restart.peqBcoef, qair, npts, "peqBcoef"),
     )
 
 
@@ -451,6 +451,7 @@ def _boundary(
     restart: Dim2DriverRestart,
     dt: float,
     coszang: np.ndarray | None,
+    after_initialize: bool = False,
 ) -> Dim2IntersurfBoundary:
     npts = int(bundle.domain.nbindex)
     payload = build_intersurf_first_step_payload(bundle, driver_z0_for_wind=z0, dt_sechiba=dt)
@@ -462,6 +463,17 @@ def _boundary(
     swdown = _vector(bundle.forcing.swdown, npts, "swdown")
     swnet = (1.0 - np.mean(albedo, axis=1)) * swdown
     zero = np.zeros(npts, dtype=np.float64)
+    if payload.is_watchout:
+        eair = _vector(payload.eair, npts, "eair")
+        # Line1163 is unconditional after initialize, including WATCHOUT.
+        if not after_initialize:
+            swnet = _vector(payload.swnet, npts, "swnet")
+        coupling = {name: _vector(getattr(payload, name), npts, name)
+                    for name in ("cdrag", "petAcoef", "petBcoef", "peqAcoef", "peqBcoef")}
+        payload = replace(payload, eair=eair, swnet=swnet)
+    else:
+        coupling = dict(cdrag=zero, petAcoef=zero, petBcoef=eair.copy(),
+                        peqAcoef=zero, peqBcoef=payload.qair.copy())
     return Dim2IntersurfBoundary(
         index=index,
         payload=payload,
@@ -469,13 +481,7 @@ def _boundary(
         swnet=swnet,
         coszang=None if coszang is None else _vector(coszang, npts, "coszang"),
         rau=rau,
-        cdrag=zero,
-        petAcoef=zero,
-        # Non-relaxation paper path, lines 974-1003: forcing observations
-        # overwrite all four coefficients on every substep.
-        petBcoef=eair.copy(),
-        peqAcoef=zero,
-        peqBcoef=payload.qair.copy(),
+        **coupling,
     )
 
 
@@ -569,7 +575,8 @@ def run_dim2_driver(
             tmp_z0 = initialized.z0 if restart.z0 is None else _vector(restart.z0, npts, "z0")
             z0 = tmp_z0 if np.all(tmp_z0 == VAL_EXP) else initialized.z0
             temp_sol_old = initialized.temp_sol_new
-            boundary = _boundary(bundle, index, z0=z0, albedo=albedo, restart=restart, dt=time.dt, coszang=coszang)
+            boundary = _boundary(bundle, index, z0=z0, albedo=albedo, restart=restart, dt=time.dt,
+                                 coszang=coszang, after_initialize=True)
 
         output = _validate_output(intersurf_main(boundary, component_state), npts)
         component_state = output.component_state
@@ -595,10 +602,11 @@ def run_dim2_driver(
         albedo_vis=output.albedo[:, 0],
         albedo_nir=output.albedo[:, 1],
         z0=output.z0,
-        petAcoef=final_boundary.petAcoef,
-        petBcoef=final_boundary.petBcoef,
-        peqAcoef=final_boundary.peqAcoef,
-        peqBcoef=final_boundary.peqBcoef,
+        # Source lines1425-1430 write these only for non-WATCHOUT forcing.
+        petAcoef=None if final_boundary.payload.is_watchout else final_boundary.petAcoef,
+        petBcoef=None if final_boundary.payload.is_watchout else final_boundary.petBcoef,
+        peqAcoef=None if final_boundary.payload.is_watchout else final_boundary.peqAcoef,
+        peqBcoef=None if final_boundary.payload.is_watchout else final_boundary.peqBcoef,
     )
     return Dim2DriverResult(
         time=time,

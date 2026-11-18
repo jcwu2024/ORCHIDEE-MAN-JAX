@@ -316,7 +316,8 @@ def test_actual_cold_payload_builder_distinguishes_initialization_from_active(mo
 def _payload_template():
     from jax_orchidee.driver.sechiba_boundary import IntersurfFirstStepPayload
     values = {field.name: jnp.ones(3) for field in fields(IntersurfFirstStepPayload)}
-    values.update(kjpindex=3, nbindex=3, missing_fields=(), veget=jnp.ones((3, 2)),
+    values.update(kjpindex=3, nbindex=3, missing_fields=(), is_watchout=False,
+                  **{name: None for name in orch.WATCHOUT_COUPLING_FIELDS}, veget=jnp.ones((3, 2)),
                   veget_max=jnp.ones((3, 2)), lalo=jnp.ones((3, 2)))
     return IntersurfFirstStepPayload(**values)
 
@@ -468,7 +469,7 @@ def _compact_physics_spies(monkeypatch, context, state):
     monkeypatch.setattr(orch, "_hydrol_state_namespace_from_previous_state", lambda *a: (NS(), ()))
     monkeypatch.setattr(orch, "_paper_mangrove_pft_index", lambda *a: 1)
     monkeypatch.setattr(orch, "_validated_prepared_pft_axis", lambda value, **k: value)
-    monkeypatch.setattr(orch, "_enerbil_driver_coverage_payload", lambda *a: {})
+    monkeypatch.setattr(orch, "_enerbil_driver_coverage_payload", lambda *a, **kwargs: {})
     monkeypatch.setattr(orch, "_hydrol_current_diffuco_payload", lambda *a: {})
     diffuco = NS(result=NS(payload=NS(payload={})))
     record("assemble_diffuco_first_step_precall_payload", NS(ok=True, payload={}))

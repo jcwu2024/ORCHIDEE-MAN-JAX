@@ -46,6 +46,20 @@ jobs:
           tests/unit/test_parameter_state_creation_phases.py
           tests/unit/test_parameter_state_io_closeout.py
           tests/unit/test_parameter_state_scan_closeout.py
+      - name: WATCHOUT forcing and restart transport
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen pytest -q
+          tests/unit/test_watchout_domain_transport.py
+          tests/unit/test_watchout_drag_transport.py
+          tests/unit/test_watchout_driver_transport.py
+          tests/unit/test_watchout_paper_compiled_transport.py
+          tests/unit/test_watchout_restart_transport.py
+          tests/unit/test_watchout_forcing_repair.py
+          tests/unit/test_watchout_run_context_repair.py
+          tests/unit/test_watchout_context_handoff.py
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -67,3 +81,11 @@ jobs:
           tests/unit/test_parameter_state_creation_phases.py
           tests/unit/test_parameter_state_io_closeout.py
           tests/unit/test_parameter_state_scan_closeout.py
+          tests/unit/test_watchout_domain_transport.py
+          tests/unit/test_watchout_drag_transport.py
+          tests/unit/test_watchout_driver_transport.py
+          tests/unit/test_watchout_paper_compiled_transport.py
+          tests/unit/test_watchout_restart_transport.py
+          tests/unit/test_watchout_forcing_repair.py
+          tests/unit/test_watchout_run_context_repair.py
+          tests/unit/test_watchout_context_handoff.py

@@ -379,6 +379,7 @@ def _exercise_initialized_refsoc_transport(monkeypatch, *, enabled: bool) -> Non
     monkeypatch.setattr(orch, "_sechiba_finalize_state_from_components", lambda *, previous, **kwargs: dict(previous))
     first = orch.driver_previous_step_state_from_timestep_scaffold(SimpleNamespace(
         step=SimpleNamespace(tstep=0), first_step_restart_state=snapshot,
+        payload=SimpleNamespace(is_watchout=False),
         source_clock_context=context,
         enerbil_first_step_local=None, diffuco_first_step_local_enerbil_precall=None,
         diffuco_control_salinity=None, diffuco_control_assembly=None,
@@ -395,7 +396,8 @@ def _exercise_initialized_refsoc_transport(monkeypatch, *, enabled: bool) -> Non
             assert "refSOC_1d" not in first.fields_by_component.get(component, {})
     scaffold = SimpleNamespace(
         ready_for_next_state=True, tstep=1, source_clock_context=context,
-        enerbil=SimpleNamespace(previous_state=first, enerbil_local=None, diffuco_local_enerbil_precall=None),
+        enerbil=SimpleNamespace(previous_state=first, enerbil_local=None, diffuco_local_enerbil_precall=None,
+                               payload=SimpleNamespace(is_watchout=False)),
         thermosoil_module=None, condveg_module=None, hydrol_module=None,
     )
     first_step = orch.driver_previous_step_state_from_next_step_hydrol_scaffold(scaffold)

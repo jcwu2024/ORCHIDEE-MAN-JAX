@@ -53,7 +53,8 @@ def _materialized_values(pc=False, leak=True):
 def prepared_context(monkeypatch, tmp_path):
     scalars = NS(nvm=2, fortran_pft_ids=(14, 2), pft_to_mtc=np.array([2, 3]))
     grid = NS(znh=np.array([0.1, 0.3]), dnh=np.array([0.1, 0.2]), dlh=np.array([0.1, 0.2]))
-    bundle = NS(run_scalars=scalars, domain=NS(lalo=np.zeros((1, 2))))
+    bundle = NS(run_scalars=scalars, domain=NS(lalo=np.zeros((1, 2))),
+                forcing=NS(is_watchout=False), year=1961)
     delegates = {
         "read_run_scalars": scalars, "_paper_mangrove_pft_index": 0,
         "_paper_mangrove_fortran_pft_id": 14,

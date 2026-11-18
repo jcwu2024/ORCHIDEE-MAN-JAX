@@ -51,7 +51,8 @@ def scan_harness(monkeypatch):
         jnp.asarray([value]) for value in (1, 1, 1961, 1, 1, 1800., True, 0.)
     ))
     forcing = o.DriverCompiledHalfHourForcing(
-        *(jnp.ones((1, 1)) for _ in o.DriverCompiledHalfHourForcing._fields[:-1]),
+        **{name: jnp.ones((1, 1)) for name in o.DriverCompiledHalfHourForcing._fields
+           if name not in {"source_clock", "watchout"}},
         source_clock=clock,
     )
 

@@ -46,7 +46,10 @@ from jax_orchidee.stomate.modelout import (  # noqa: E402
     annual_history_mean_fields_from_daily_modelout,
     compute_modelout_from_fields,
 )
-from scripts.dev.audit_stage5_lifecycle import _packet_from_restart_readers  # noqa: E402
+from scripts.dev.audit_stage5_lifecycle import (  # noqa: E402
+    _packet_from_restart_readers,
+    _restart_is_watchout,
+)
 
 configure_jax_compilation_cache(ROOT)
 
@@ -356,6 +359,7 @@ def _split_restart_packet(
         base_stomate=context.first_step_restart_state.stomate_readstart,
         kjit=int(state.tstep) + 1,
         use_refsoc_hydrol=parse_run_def_bool(context.run_def_values.get("use_refSOC_hydrol", "FALSE")),
+        is_watchout=_restart_is_watchout(context),
     )
     physical = PaperRestartBundlePhysicalState(
         driver=read_restart_physical_state(reference.output_dir / "driver_start.nc"),
@@ -378,9 +382,10 @@ def _split_restart_packet(
     )
     restored_packet = _packet_from_restart_readers(
         state,
-        driver=read_dim2_driver_restart(output / "driver_start.nc"),
+        driver=read_dim2_driver_restart(output / "driver_start.nc", is_watchout=bundle.is_watchout),
         sechiba=restored.sechiba_restart_state,
         stomate=restored.stomate_readstart,
+        is_watchout=bundle.is_watchout,
     )
     return restored_packet, report.output_directory
 

@@ -5,10 +5,32 @@ scope: SECHIBA production previous-step state fields for driver, DIFFUCO, ENERBI
 # outputs/reviews/main-physics-20261116/thermal-initialization-oracle/phase-contract.json
 # Original-source initialization / first consumers, not full compiled or model parity.
 # pcapa_en, stempdiag and temp_sol_beg retain their existing field/phase statuses.
-# Current formal 59 corrections / 33 production commits; 93 / 126 / 181 base denominators unchanged.
+# Current formal 61 corrections/support completions / 34 production commits; 93 / 126 / 181 base denominators unchanged.
 # 2026-11-18: C56 explicit conditional refSOC state accepted; see parameter_state_closeout_plan.md.
 # C43/C55 extensions and C57-C59 preserve adapter/cache/carry contracts; full physics remains unaccepted.
 # numerical_acceptance remains false; no extra normalized fields are added.
+# Current WATCHOUT transport is a mode override, not four new checkpoint fields.
+watchout_forcing_transport:
+  status: local_transport_accepted_in_declared_scope
+  evidence: outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json
+  recognition: lowercase_levels_in_forcing_schema_not_run_def_WATCHOUT
+  required_mode: RELAXATION_false
+  forcing_supplied: [eair, swnet, cdrag, petAcoef, peqAcoef, petBcoef, peqBcoef]
+  driver_checkpoint_coefficients: non_watchout_only
+  ccanopy: annual_atmco2_overrides_file
+  swnet_phase: file_at_initialize_and_ordinary_main_albedo_recomputed_at_first_main
+  initialize_input: first_actual_interpolated_substep_raw_record1_is_preread_only
+  cdrag_phase: infer_or_override_once_from_actual_initialization_then_carry_returned_run_context
+  continuous_phase: require_preceding_initialized_run_context_no_fresh_guess_no_annual_local0_replay
+  context_producers: reference_cold_native_public_results_preserve_actual_completed_initialization
+  empty_or_uninitialized_native_result: no_new_history_context
+  first_ordinary_record: positive_Fortran_NINT_and_source_full_day_admission
+  default_length: actual_file_records_or_explicit_source_TIME_LENGTH
+  fresh_midyear_native_restart: unverified_not_implied_by_annual_or_continuous_tests
+  eair_init_limit: intersurf_gather_is_not_sechiba_initialize_epot_air_consumption
+  external_producer_build_identity: unknown_separate_scientific_provenance_limit
+  denominators: overlapping_default_92_93_126_181_and_conditional_refSOC_unchanged
+  numerical_acceptance: false
 # 2026-11-16 thermal-snow-coupling-batch adds bounded complete thermal eager/JIT
 # evidence and finite carry/driver IO checks, accepted 2026-11-17 as C51/C52.
 # Code/test commit: 9a856c6cf859437d2436f4f3748d4c9e770838a1.
@@ -141,10 +163,10 @@ contracts:
   - {component: driver_previous_step_state, field: z0, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: condveg_failure_is_fatal_in_production, freshness: overwrite_each_step, freshness_guard: condveg_module.ok_and_albedo_is_not_none, producer_phase: condveg_end, consumer_phase: next_driver_wind_interpolation, jax_owner: jax_orchidee.driver.orchestration._add_condveg_to_previous_fields, source_ref: condveg_roughness}
   - {component: driver_previous_step_state, field: fluxsens, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: zero_flux_is_preserved, freshness: overwrite_each_step, freshness_guard: enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: driver_output_and_next_step, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
   - {component: driver_previous_step_state, field: vevapp, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: zero_flux_is_preserved, freshness: overwrite_each_step, freshness_guard: enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: driver_output_and_next_step, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
-  - {component: driver_previous_step_state, field: petAcoef, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: source_coefficient_is_preserved, freshness: overwrite_each_step, freshness_guard: enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
-  - {component: driver_previous_step_state, field: petBcoef, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: source_coefficient_is_preserved, freshness: overwrite_each_step, freshness_guard: enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
-  - {component: driver_previous_step_state, field: peqAcoef, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: source_coefficient_is_preserved, freshness: overwrite_each_step, freshness_guard: enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
-  - {component: driver_previous_step_state, field: peqBcoef, shape_group: grid, dtype_kind: real, applicability: all_land, inactive_behavior: source_coefficient_is_preserved, freshness: overwrite_each_step, freshness_guard: enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
+  - {component: driver_previous_step_state, field: petAcoef, shape_group: grid, dtype_kind: real, applicability: non_watchout_land, inactive_behavior: watchout_supplied_by_forcing_not_driver_checkpoint, freshness: overwrite_each_step, freshness_guard: non_watchout_and_enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
+  - {component: driver_previous_step_state, field: petBcoef, shape_group: grid, dtype_kind: real, applicability: non_watchout_land, inactive_behavior: watchout_supplied_by_forcing_not_driver_checkpoint, freshness: overwrite_each_step, freshness_guard: non_watchout_and_enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
+  - {component: driver_previous_step_state, field: peqAcoef, shape_group: grid, dtype_kind: real, applicability: non_watchout_land, inactive_behavior: watchout_supplied_by_forcing_not_driver_checkpoint, freshness: overwrite_each_step, freshness_guard: non_watchout_and_enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
+  - {component: driver_previous_step_state, field: peqBcoef, shape_group: grid, dtype_kind: real, applicability: non_watchout_land, inactive_behavior: watchout_supplied_by_forcing_not_driver_checkpoint, freshness: overwrite_each_step, freshness_guard: non_watchout_and_enerbil_local_payload_present, producer_phase: enerbil_end, consumer_phase: next_driver_atmospheric_coupling, jax_owner: jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields, source_ref: enerbil_main}
 
   # diffuco_previous_step_state (37; original35 + two CONDVEG fraction omissions)
   - {component: diffuco_previous_step_state, field: frac_snow_veg, shape_group: grid, dtype_kind: real, applicability: vegetated_surface_all_landpoints, inactive_behavior: zero_when_explicit_snow_depth_below_min_sechiba_else_source_tanh_fraction, freshness: overwrite_each_step, freshness_guard: condveg_module.ok_and_module_present, producer_phase: condveg_snow_fraction_end, consumer_phase: next_diffuco_snow_surface_partition, jax_owner: jax_orchidee.driver.orchestration._add_condveg_to_previous_fields, source_ref: condveg_snow_fractions}

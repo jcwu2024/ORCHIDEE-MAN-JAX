@@ -17,6 +17,9 @@ from jax_orchidee.driver.bundle import DriverFirstStepBundle, DriverStepBundle
 from jax_orchidee.driver.trace import StaticTraceFields
 
 
+WATCHOUT_COUPLING_FIELDS = ("eair", "swnet", "cdrag", "petAcoef", "peqAcoef", "petBcoef", "peqBcoef")
+
+
 @dataclass(frozen=True)
 class IntersurfFirstStepPayload:
     """Land-point payload for first-step SECHIBA boundary tests."""
@@ -60,11 +63,44 @@ class IntersurfFirstStepPayload:
     salinity: np.ndarray | None
     tide_height: np.ndarray | None
     missing_fields: tuple[str, ...]
+    is_watchout: bool = False
+    eair: np.ndarray | None = None
+    swnet: np.ndarray | None = None
+    cdrag: np.ndarray | None = None
+    petAcoef: np.ndarray | None = None
+    peqAcoef: np.ndarray | None = None
+    petBcoef: np.ndarray | None = None
+    peqBcoef: np.ndarray | None = None
 
 
 def _land_vector(value) -> np.ndarray:
     arr = np.asarray(value, dtype=np.float64)
     return arr.reshape(-1)
+
+
+def intersurf_watchout_coupling_fields(forcing, *, npts: int) -> dict[str, object]:
+    """Gather the already normalized ORCHIDEE WATCHOUT forcing tuple.
+
+    Fortran provenance: readdim2.f90::forcing_read_interpol 792-807 detects
+    lowercase ``levels``; forcing_just_read 1833-1863 reads the tuple without
+    a sign or timestep conversion. dim2_driver.f90 914-1008 preserves it
+    under WATCHOUT/non-RELAXATION, and intersurf.f90 294-310,580-599 gathers
+    the same land coordinates. Annual CO2 is handled separately at line1009.
+    """
+    if not bool(getattr(forcing, "is_watchout", False)):
+        return {}
+    fields = {}
+    for name in WATCHOUT_COUPLING_FIELDS:
+        value = getattr(forcing, name, None)
+        if value is None:
+            raise ValueError(f"WATCHOUT forcing is missing {name}")
+        values = _land_vector(value)
+        if values.shape != (int(npts),):
+            raise ValueError(f"WATCHOUT {name} must have land-vector shape {(int(npts),)}")
+        if not np.all(np.isfinite(values)):
+            raise ValueError(f"WATCHOUT {name} must be finite")
+        fields[name] = values
+    return fields
 
 
 def _driver_wind_at_scalar_height(wind, *, zlev, zlevuv, z0=0.1) -> np.ndarray:
@@ -129,6 +165,7 @@ def build_intersurf_first_step_payload(
     static_trace_fields = static_trace_fields or bundle.static_trace_fields or StaticTraceFields()
     wind_z0 = 0.1 if driver_z0_for_wind is None else driver_z0_for_wind
     dt_sechiba = float(dt_sechiba)
+    watchout_fields = intersurf_watchout_coupling_fields(forcing, npts=domain.nbindex)
 
     missing = set(bundle.missing_geometry_fields)
     missing.update(bundle.missing_static_fields)
@@ -211,6 +248,8 @@ def build_intersurf_first_step_payload(
         salinity=salinity,
         tide_height=tide_height,
         missing_fields=tuple(sorted(missing)),
+        is_watchout=bool(getattr(forcing, "is_watchout", False)),
+        **watchout_fields,
     )
 
 

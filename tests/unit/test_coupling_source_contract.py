@@ -76,7 +76,7 @@ def test_nonzero_A_is_consumed_and_rate_boundary_is_jittable():
     np.testing.assert_allclose(rate, case["outputs"]["vevapp_rate"], rtol=1e-12, atol=1e-12)
 
 
-def test_watchout_reader_preserves_nonzero_tuple_without_enabling_driver():
+def test_watchout_reader_preserves_nonzero_tuple_without_claiming_producer_identity():
     from jax_orchidee.driver.dim2 import Dim2Switches, validate_dim2_switches
     from jax_orchidee.driver.forcing_readers import VerticalForcingOptions, forcing_just_read
 
@@ -118,8 +118,7 @@ def test_watchout_reader_preserves_nonzero_tuple_without_enabling_driver():
     )
     for name in ["petAcoef", "peqAcoef", "petBcoef", "peqBcoef"]:
         np.testing.assert_array_equal(getattr(fields, name), [[values[name]]])
-    with pytest.raises(NotImplementedError, match="WATCHOUT"):
-        validate_dim2_switches(Dim2Switches(watchout=True))
+    validate_dim2_switches(Dim2Switches(watchout=True))
     with pytest.raises(NotImplementedError, match="RELAXATION"):
         validate_dim2_switches(Dim2Switches(relaxation=True))
 

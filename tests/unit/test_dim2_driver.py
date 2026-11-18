@@ -68,7 +68,6 @@ def test_non_integral_split_uses_fortran_int_and_unsupported_switches_are_explic
     for switches in (
         Dim2Switches(weathergen=True),
         Dim2Switches(relaxation=True),
-        Dim2Switches(watchout=True),
         Dim2Switches(driver_routing=True),
         Dim2Switches(river_routing=False),
     ):
@@ -76,6 +75,7 @@ def test_non_integral_split_uses_fortran_int_and_unsupported_switches_are_explic
             validate_dim2_switches(switches)
     parsed = dim2_switches_from_run_def({"WEATHERGEN": "n", "RIVER_ROUTING": "y"})
     assert not parsed.weathergen and parsed.river_routing
+    validate_dim2_switches(Dim2Switches(watchout=True))
 
 
 def test_default_time_length_shrinks_after_time_skip():

@@ -1503,6 +1503,7 @@ def create_stomate_restart_skeleton_from_schema(
     *,
     schema_path: str | Path = DEFAULT_STOMATE_RESTART_SCHEMA,
     pft_layout: PFTRunLayout | None = None,
+    excluded_science_variables: tuple[str, ...] = (),
 ) -> Path:
     """Create the complete paper-protocol NetCDF structure without a template.
 
@@ -1512,6 +1513,8 @@ def create_stomate_restart_skeleton_from_schema(
 
     Provenance: ``stomate_io.f90::writerestart`` lines 1751-2944 and the
     IOIPSL ``restini/restput_p`` physical-file boundary recorded in the schema.
+    A caller may omit only explicitly named, declared science variables for a
+    source-conditional restart branch; physical axes and metadata stay strict.
     """
 
     if not isinstance(physical_state, StomateRestartPhysicalState):
@@ -1529,6 +1532,14 @@ def create_stomate_restart_skeleton_from_schema(
     scatter = schema.get("single_landpoint_scatter", {})
     if scatter.get("index_g") != [1] or scatter.get("grid_shape") != [1, 1]:
         raise ValueError("restart schema does not declare the paper identity scatter")
+    excluded = set(excluded_science_variables)
+    science_variables = set(schema["variables"]) - set(schema["physical_variables"])
+    if excluded - science_variables:
+        raise ValueError("excluded restart variables must name known science variables")
+    if physical_state.variable_attributes:
+        overlaid_science = set(physical_state.variable_attributes) & science_variables
+        if overlaid_science:
+            raise ValueError("physical metadata overlay cannot modify science variables")
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -1560,6 +1571,8 @@ def create_stomate_restart_skeleton_from_schema(
         dataset.setncatts(global_attributes)
 
         for name, declaration in schema["variables"].items():
+            if name in excluded:
+                continue
             create_kwargs: dict[str, object] = {}
             if "fill_value" in declaration:
                 create_kwargs["fill_value"] = declaration["fill_value"]
