@@ -4,7 +4,9 @@
 
 2026-11-18，用户在参数／状态验收后明确授权新一轮Sol与主控接力，直至[本阶段完成标准](physics_branch_closeout_plan.md)满足。接受基线为`000d5307ede59df6b8f51d015d0ad5cf17f79845`；正式61项／34相关生产提交、90＋1＋1／92及`numerical_acceptance=false`均保持。
 
-本阶段按原Fortran源条件、独立同输入参考、真实组件及消费者／写回建立当前证据覆盖。首包同时做全模块旧证据归并与冠层／光合、能量交换检查，后续依有限缺口表接续。不得把旧清点分母、参数／状态接口通过或已证浮点敏感性当作整个物理域数值通过。整模型积分、服务器任务和研究同步未启动；详细授权、并行所有权及停止边界见新计划。
+本阶段按原Fortran源条件、独立同输入参考、真实组件及消费者／写回建立当前证据覆盖。2026-11-19主控已接受[冠层／能量首包与CI修订](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)的有限增量，测试／参考／CI提交`ebd1141d5b214ab0b874d124eab2466eef8e0a77`；生产代码未改、无新修复编号，正式61／34不变。[当前覆盖总账](physics_branch_coverage.md)关联52过程及本次案例，不宣称完整源分母或PB-01／PB-02完成。原能量420项字段／运行检查及3456数值通过，冠层每模式44／45字段严格通过，低光cim单坐标严格失败保留；实际消费者6项另行记录，HYDROL只到输入组装。极低正LAI前驱／参考未证、外部PBL和既有科学限制均保持。
+
+CI缺源反例已实际复现，修订在tracked＋明确overlay的干净隔离中运行完整三文件，本地uv结果110通过、2来源门跳过、2精确坐标strict xfail；本地有源静态门另2通过。缺源不算原源认证，hosted Ubuntu／uv sync未执行。主控核对实际修订、9份执行资产、依赖审计和两份终审，复用数值结果，没有重复计算。封存候选与原回执保留，发布状态见[发布记录](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-publication.json)。下一包按[收尾计划](physics_branch_closeout_plan.md)并行推进PB-03水文／冻结／泥炭和土壤热／积雪。整模型、服务器和研究同步未启动。
 
 
 ## 当前已接受：参数和状态传递收尾完成

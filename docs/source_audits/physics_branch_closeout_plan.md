@@ -110,6 +110,22 @@ Sol不stage／commit／push。主控在实际产物验收后按项目既有授�
 
 ## 完成标准与停止边界
 
+当前首包状态（2026-11-19）：[主控已有限接受冠层／能量及CI修订](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)，
+测试／参考／CI提交`ebd1141d5b214ab0b874d124eab2466eef8e0a77`。[当前覆盖表](physics_branch_coverage.md)保留新增原Fortran参考、eager／窄JIT和有限真实消费者证据。
+未确证生产缺陷，正式61／34不变。低光cim严格失败及极低正LAI原Fortran陷阱显式保留；
+首包不是PB-01／PB-02或整个阶段全面闭合。下一优先按机器表进入PB-03当前源／案例关联及首个未代表条件，
+不重跑已有五土壤参数案例；后续PB-04与跨组缺项继续按具名最小动作接续。
+
+下一执行包为 `outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/`。
+Sol并行组织HYDROL土壤／潮汐／冻结／泥炭与THERMOSOIL／snow两组，先把C13／C17／C18／C50–C55、
+18个初始化案例及8个完整热组件案例按原身份关联当前源条件，再执行缺失合法条件的一组连贯组件检查。
+HYDROL明确区分私有peat_hydro和同名参数；thermal／snow区分合成合法、源可消费和自然前驱可达，
+不通过重复长跑碰触分支。Sol整合真实humrel／vegstress／wat_flux与热水分等下一消费者和写回，
+为本组13个具名过程条目形成精确处置，不以helper通过替代生产组件证明。
+该包可修复确证源级问题并补相关回归；保留原科学阈值、已证浮点结论及所有未解门。
+PB-01／PB-02残余缺项继续在总账中，不因转入PB-03被删除。仍无整模型／远端任务授权，
+每包封存回传、主控验收后再派下一包。
+
 - 所有目标模块及源条件已在有限当前总账中有明确处置，没有未归属的域内分支，
   没有靠扫描无结果或默认案例未触发而遗漏的条件。
 - 每个域内条目具备相应原源、独立参考、当前生产caller／compiled组件／writeback证据，
