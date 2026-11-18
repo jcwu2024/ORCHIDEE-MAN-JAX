@@ -1,5 +1,11 @@
 # PFT14 剩余源码与状态覆盖
 
+## 当前接力：物理计算与条件分支验证
+
+2026-11-18，用户在参数／状态验收后明确授权新一轮Sol与主控接力，直至[本阶段完成标准](physics_branch_closeout_plan.md)满足。接受基线为`000d5307ede59df6b8f51d015d0ad5cf17f79845`；正式61项／34相关生产提交、90＋1＋1／92及`numerical_acceptance=false`均保持。
+
+本阶段按原Fortran源条件、独立同输入参考、真实组件及消费者／写回建立当前证据覆盖。首包同时做全模块旧证据归并与冠层／光合、能量交换检查，后续依有限缺口表接续。不得把旧清点分母、参数／状态接口通过或已证浮点敏感性当作整个物理域数值通过。整模型积分、服务器任务和研究同步未启动；详细授权、并行所有权及停止边界见新计划。
+
 
 ## 当前已接受：参数和状态传递收尾完成
 
@@ -11,7 +17,7 @@
 
 验证按版本分开：上一repair为99项隔离检查＋另1项本地静态身份检查；最终R2续包同输入修前16失败／19通过、修后35通过，另受影响既有7项通过。原113项和forcing66／context30保留其历史身份，不相加或宣称全部在最终字节重跑。主控复核实际源码、六条交接边、162项封包绑定及2份终审，复用检查，无新数值运行；提交时仅去掉三个测试的空EOF行并证明AST不变。原参考和容差未改，hosted Ubuntu／uv未执行。见[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)和[发布回执](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)。
 
-90＋1＋1／92、93／126／181与条件refSOC1等重叠口径不变，`numerical_acceptance=false`。完整物理／科学门、真实外部producer身份、一般native IOIPSL与多点scatter、任意fresh-midyear／TIME_SKIP仍分别保留。研究分支同步继续暂停。本部分接力已完成并停止，不自动开始其他阶段；下方有日期的接受记录保留当时范围，以本节为当前状态。
+90＋1＋1／92、93／126／181与条件refSOC1等重叠口径不变，`numerical_acceptance=false`。完整物理／科学门、真实外部producer身份、一般native IOIPSL与多点scatter、任意fresh-midyear／TIME_SKIP仍分别保留。研究分支同步继续暂停。参数／状态接力已完成；新授权的物理验证安排见上节。下方有日期的接受记录保留当时范围。
 
 ## 已接受快照：C55自定义土壤参数贯通（当时继续参数与状态收尾）
 

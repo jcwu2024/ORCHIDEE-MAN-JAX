@@ -1,6 +1,6 @@
 # 主线进度
 
-2026-11-18，**参数和状态传递这一部分已验收完成，接力已停止。** 范围是既定PFT14论文工作流及已经声明支持的本地接口；还没有宣称整个模型与Fortran全面等价。
+2026-11-18，**参数和状态传递已验收完成；用户新授权的物理计算与条件分支验证接力现已启动。** 范围遵循既定PFT14等价合同；还没有宣称整个模型与Fortran全面等价。
 
 | 工作面 | 这次完成意味着什么 |
 | --- | --- |
@@ -14,6 +14,8 @@
 
 代码／测试／CI提交：`aa14d04210ab371aae6e959da193561f37f55d0e`。上一包99项隔离检查＋另1项静态检查，本次最终35项与另7项检查分别通过；各批按各自源码版本记录，不机械相加。主控复用这些验证并核对实际代码和交接边，没有重跑整模型。原参考与科学阈值不变。
 
-还剩的是其他工作面：物理分支与当前消费者的数值覆盖、完整模型集成，以及部分外部参考／原生IO身份和科学限制。原有DOC与积雪严格门仍保留，`numerical_acceptance=false`。这些缺证和限制不等于已经确认的新代码bug。
+当前由原Sol聊天推进[物理计算与条件分支收尾](physics_branch_closeout_plan.md)：先建立可复用既有证据的有限覆盖总账，并行检查冠层／光合与能量交换，再按缺口完成水文／土壤热／积雪、植被／碳过程及跨组消费者。每包完成后Sol回传一次，主控验收并接续；这部分完成即停止，不设定时消息，也不自动启动综合模型运行。
 
-[本部分完成标准](parameter_state_closeout_plan.md) · [主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json) · [发布核对](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)。后续阶段未自动启动。
+之后仍需完整模型集成，以及部分外部参考／原生IO身份和科学限制的处理。原有DOC与积雪严格门仍保留，`numerical_acceptance=false`。这些缺证和限制不等于已经确认的新代码bug，已接受浮点成因也不把严格失败改写为通过。
+
+[参数／状态完成标准](parameter_state_closeout_plan.md) · [主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json) · [发布核对](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json) · [新阶段范围及停止标准](physics_branch_closeout_plan.md)。

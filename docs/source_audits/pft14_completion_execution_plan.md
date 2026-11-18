@@ -6,6 +6,15 @@ relevant.
 
 ## Current Controller Decision (2026-11-13)
 
+Current execution update (2026-11-18): parameter/state closeout is accepted at
+main `000d5307ede59df6b8f51d015d0ad5cf17f79845`. The user now explicitly
+authorizes an event-driven relay between the existing Sol chat and controller
+until [physics/branch closeout](physics_branch_closeout_plan.md) is accepted.
+That plan governs current packets and completion callbacks. It supersedes the
+old immediate assignment and manual-only follow-up below, while retaining
+the engineering policy and release gates. No scheduled automation or whole-model
+integration is started by this update.
+
 This section and the execution order below govern current main hardening.
 The July implementation notes retained below are historical evidence, not a
 current-source acceptance claim or an instruction to restart completed work.
@@ -334,8 +343,9 @@ PFT14 branch closure first, performance before routine long mosaics, and full
 - Report a confirmed defect in an accepted path with its affected evidence and
   a minimal regression; do not discard unrelated completed validation.
 - Delivery includes actual artifacts, checks performed, remaining uncertainty
-  and one prioritized next package. Follow-up is manual, with no scheduled
-  messages or unsolicited reports sent back to the controller chat.
+  and one prioritized next package. Follow the current human-authorized relay
+  in `physics_branch_closeout_plan.md`: one completion callback after sealing,
+  followed by controller acceptance. No scheduled messages or repetitive polls.
 
 ## Performance Rule
 
