@@ -1,33 +1,32 @@
 # 参数和状态传递收尾
 
-2026-11-18，用户授权主控与既有Sol执行聊天逐包接力，直到本部分完成。只推进PFT14及既定论文工作流的参数／状态接口；其他模块数值覆盖、碳通量核算和整模型验收仍按各自门槛管理。
+**2026-11-18：声明支持域内已通过主控验收，本部分接力结束。** 最终代码／测试／CI提交`aa14d04210ab371aae6e959da193561f37f55d0e`。这是参数与状态接口的有限收尾，不是全模型数值等价验收，也不启动下一大阶段。
 
-## 当前基线与有限完成项
+## 支持范围与完成项
 
-主控2026-11-18接受本轮参数／状态接口，代码提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。正式59项／33相关生产提交，57项有复查前证据，C42／C57为复查期间遗漏；[中文进度](main_review_progress.md)、[来源登记](correction_origins.md)及[验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)记录准确范围。93／126／181与90＋1＋1／92不变，条件refSOC单列，完整数值接受仍为false。
+范围为既定PFT14论文工作流、选定参数／forcing变化、normalized本地单点14／2PFT restart、条件refSOC，固定annual file-start及持有前次有效state/context的continuous-history。RELAXATION保持源fatal；未实现的其他域不因本次通过而自动准入。
 
-本表是有限接口状态，不是全物理分支覆盖，也不以轮数或检查数计算完成比例。
+| 工作面 | 当前接受结果 |
+| --- | --- |
+| 有效参数与缓存 | C55十向量和七活动深度标量；C43 scan/later-day context ownership与C58 block静态dispatch；WATCHOUT实际file cadence和有效控制到消费者 |
+| 创建／恢复相位 | C57 cold出口；C56条件refSOC file-init／new-native规则；actual首子步选择drag、first-main只执行一次，continuous不重初始化 |
+| 运行中交接 | 条件refSOC镜像、C59 temp_growth及默认／compact／窄compiled接口；standard／cold／native返回真实已初始化context，两公开continuous入口缺历史即拒绝 |
+| 保存／读回 | default93＋条件refSOC的真实小型三文件14／2PFT链；WATCHOUT四系数由forcing供应，不误从driver restart读写 |
+| forcing支持链 | C60 schema／读取／插值／driver／消费者／编译tuple／IO贯通；C61正NINT及完整首日guard；真实文件默认长度和显式TIME_LENGTH复用源owner |
 
-| 工作面 | 已接受的有界结果 | 剩余边界 |
-| --- | --- | --- |
-| 有效参数与缓存 | C55十向量＋七活动深度标量贯通；scan context／block静态dispatch正确分区 | WATCHOUT forcing-source字段到高层driver／intersurf的实际运输 |
-| 创建与恢复相位 | cold ready出口context；file-init／new_native refSOC源规则；continuous／decode不重初始化 | 不宣称完整cold物理或所有native IOIPSL输入语义 |
-| 运行中状态交接 | 条件refSOC双镜像和temp_growth实际clock carry；默认／compact／窄compiled接口 | 不以物理delegate witness代替完整compiled物理 |
-| 保存与读回 | default93＋条件refSOC的14／2PFT真实三文件链逐字段运输 | 一般多点IOIPSL scatter／metadata、历史producer身份另限 |
+## 验收依据与限制
 
-## 完成标准
+有限清单关联92额外字段、93科学字段、126 canonical、181生命周期、选定参数179及soil/depth子视图，沿用原row身份、源owner、单位／形状／掩码、默认／覆盖、相位、入口／出口。各视图重叠，不相加；90＋1＋1／92及条件refSOC1不变。本支持域未发现遗留必需运输边或未分类交接边。主控核对[最终六边](../../outputs/reviews/main-physics-20261118/watchout-context-handoff/ledger/required-edges.json)及继承账本后接受；这是可审计的有限结论，不是所有未知分支不存在错误的证明。
 
-执行者建立有限、可逐项核查的清单，关联已有92额外字段、93科学字段、126 canonical字段、181生命周期字段及有效参数表。这些视图重叠，不能相加为独立总数。每项标注支持域、源owner、默认／覆盖、单位／形状／掩码、更新相位、生产入口／出口、可复用证据、缺项与唯一下一动作。
+证据依次为已接受parameter-state-closeout、WATCHOUT原包、R1–R5 repair和R2公开handoff。前包94不同节点的组合证据与C55各191项复用；上一repair99项隔离＋另1静态，最终R2同输入16失败／19通过→35通过及另7项既有接口检查按各自版本单列。独立终审与主控实际源码核对完成；162＋2最终封包校验通过。旧113、66／30不相加，不冒称在最终源码重跑。主控只去除三个测试空EOF并证明AST一致，未新运行数值或整模型。
 
-已确认修复和不变参考直接复用。保留自然浮点敏感性的已接受结论；本部分核对参数和状态是否正确交接，不重开NPP／DOC／积雪归因。若参考真值或整模型观测另有缺项，单独保留，不能把接口通过写成物理数值接受。
+正式61项修正／支持补齐、34个相关生产提交；C60为旧支持缺口补齐，C61为旧首读取整问题，开发中各次接线遗漏另记年代但不追加C号。[验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)、[来源](correction_origins.md)、[同步依赖](shared_core_branch_review.md#累计修改位置与提交索引)及[发布](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)保存精确记录。两个旧WATCHOUT包、R2包及此前主控退回记录原字节保留，当前决定由新的主控记录补充。
 
-完成需满足：声明支持域内没有未修复的参数／状态传递缺陷，没有未分类的必需交接边；重要实际入口、缓存与文件接口有相应非默认输入回归，并完成独立审查和主控验收。源码支持的必需路径不能仅改标unsupported来收口；测试替身只证明其实际覆盖的接口，不代替完整物理执行。无法取得的外部身份／输入合同列为明确阻塞，报告未完成，不用改口径宣告全部完成。
+`numerical_acceptance=false`。完整物理／compiled数值覆盖和整模型门、DOC真实碳通量／严格状态、积雪严格grain／自然域、真实外部producer／build身份、一般native IOIPSL／多点scatter、任意fresh-midyear／TIME_SKIP仍分别开放。这些不属于本次运输收尾的额外任务；已接受NPP／DOC／积雪浮点归因不重开。无服务器、GPU、训练、付费、669或研究树同步。
 
-[本轮包](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)已由主控有界接受。425项交付绑定及94个不同节点最终通过证据已核对；验证为59个可移植接口＋9个driver＋6个cache构造＋20个静态合同的组合，非单次全套全绿。旧C55的191／191不重跑。原pending／失败／外部阻塞判断保留在封存包，用主控补充记录更新当前决定。
+## 接力终态
 
-**下一包：WATCHOUT输入运输链。** [本地源范围审查](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-watchout-scope-review.md)证明可继续RELAXATION=false下的文件识别、读取、插值、bundle／dim2／intersurf参数交接。当前不需用户提供额外PBL资料即可推进；不得为收口仅删guard、改标unsupported、清零A或重复乘dt。RELAXATION=true继续按原源fatal拒绝。实际外部producer/build／输出时间约定继续未知，但不与土地模型已定义输入合同混为同一前置条件。
-
-下一包完成后由主控对剩余账本逐项作本部分是否结束的判断；未验收前整部分为未完成。科学组件／完整模型、DOC真实通量及更宽IOIPSL身份等外推门仍分别管理，不在本接力中自动扩张。
+本部分已完成，Sol保持停止；不再发送本部分续包或安排自动提醒。下方保留原人类授权以供追溯，其“完成后停止”条件现已满足。其他工作仍需按用户后续指示处理。
 
 ## 授权、交付与停止
 

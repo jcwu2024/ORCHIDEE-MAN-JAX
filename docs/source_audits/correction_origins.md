@@ -1,8 +1,24 @@
-# C1–C59修正来源登记（2026-11-18）
+# C1–C61修正与支持补齐来源登记（2026-11-18）
 
-## 本轮已接受：参数和状态交接
 
-[交付包](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)基线`db8dd72eea30e3c2dc30dd3b7368a664d5a56058`，共同代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。按概念修复登记为C55与C43扩展及四个新编号，不能把六候选组机械算成六个新bug。当前累计59项修正／33个相关生产提交，其中57项有复查前证据，C42与C57为复查期间引入。原精确来源、失败和限制见`origin-binding.json`及[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)；没有执行旧整个模块或旧模型。
+## 当前接受：C60／C61与参数状态收尾
+
+2026-11-18，基线`a3551dac4dbb2f53bee2ef47c80b4995eb57af82`上的WATCHOUT原包、R1–R5修正与R2公开历史续包合并接受，代码／测试／CI提交`aa14d04210ab371aae6e959da193561f37f55d0e`。正式累计61项修正／支持补齐、34个相关生产提交；59项有复查前错误或支持缺项证据（含C60），C42／C57为复查期间已接受代码的遗漏。不能把61解释成61条当时均激活的物理公式bug。
+
+| 登记 | 必要性、年代与证据 | 修复和接受边界 |
+| --- | --- | --- |
+| C60：WATCHOUT-TRANSPORT-01 | 完整复查前`7cae3e02adad23674767a590fdf4d27f239ce065`与a355快照中高层forcing／cache缺字段、driver拒绝该模式，低层参考不能证明高层已接通；这是旧支持缺口，不虚称旧可执行路径曾产生数值失败。准确最初引入未知 | 文件schema／geometry／高度／cadence与有效控制→插值／bundle→DIM2／intersurf→DIFFUCO／ENERBIL→compiled动态tuple和source条件driver9／13读写。actual first-substep初始化、once-only SWnet、static drag及standard／cold／native公开context交接一体接受；RELAXATION原fatal保留 |
+| C61：FORCING-FIRST-READ-01 | 7cae `forcing_interpolation.py:264`与a355都有Python `round(86400/dt_force)`；原`readdim2.f90:1435–1452`要求NINT及完整首日。19200秒得到4.5时旧选record4、原源选5；四条20000秒虽index合法却不足源完整首日。新cadence接线暴露旧表达式边界，首次引入未知 | 正数NINT半值远离零，源完整首日guard恢复；实际public bundle及file输入验证。原插值公式、参考与容差保持；默认长度／TIME_LENGTH的新接线归C60，不按调用点增加C号 |
+
+来源：[原运输缺口](../../outputs/reviews/main-physics-20261118/watchout-parameter-transport/origin-binding.json)、[R1–R5年代](../../outputs/reviews/main-physics-20261118/watchout-parameter-transport-repair/origin-binding.json)、[R2交接](../../outputs/reviews/main-physics-20261118/watchout-context-handoff/origin-binding.json)。本地Fortran未被旧Git提交跟踪，不伪称恢复其历史producer。
+
+C60开发期间发现的SWnet assembler、compiled首tuple、NETRAD／SPRED入口、writer变量／模式、raw预读误当初始化、局部context丢失、old count与new split混用、非WATCHOUT override实参、continuous缺历史fallback和reference漏返回，均是**本轮未接受支持实现中的集成遗漏**，合并在同一链并保留修前证据，不倒写为7cae已有，不追加独立旧bug。夹具、缓存身份和lint修正另外记录。
+
+最终公开交接同输入16失败／19通过→35通过，另既有7项通过；之前99＋1与原113各保留当时版本。完整stage反例与终审保留，主控复核未重跑数值；提交时3测试仅移除空EOF，AST不变。见[最终验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)。参数／状态有限工作面已完成，完整科学接受仍false；未来两研究分支按共同commit及基线依赖集中核对，尚未同步。
+
+## 已接受快照：C55／C43扩展与C56–C59参数状态交接
+
+[交付包](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)基线`db8dd72eea30e3c2dc30dd3b7368a664d5a56058`，共同代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。按概念修复登记为C55与C43扩展及四个新编号，不能把六候选组机械算成六个新bug。该包接受时累计59项修正／33个相关生产提交，其中57项有复查前证据，C42与C57为复查期间引入。原精确来源、失败和限制见`origin-binding.json`及[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)；没有执行旧整个模块或旧模型。
 
 | 登记 | 年代及旧反例 | 修复与接受边界 |
 | --- | --- | --- |
@@ -25,7 +41,7 @@ WATCHOUT尚需本地source→driver运输补齐；原封存包将外部producer�
 
 2026-11-17主控接受[水文／冠层包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)的两项有限接口／执行修复，登记C53=`HD-FWET-01`、C54=`HD-JIT-01`，共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。C53按hydrol_soil:7307–7342保留当前TOPMODEL湿地诊断，仅在没有新值时沿用旧值；原ordinary／runtime／fast布局曾将0.412613023955767覆盖为0.123。C54按diffuco_trans_co2:2214–2234在显式参数缺光照表时提前调用既有静态布局helper，修复真实JIT层数转换异常。两项在`7cae3e02adad23674767a590fdf4d27f239ce065`已有精确源码证据，首次引入未知；新参考设施不伪称旧版已有。前者当前wrapper TOPMODEL=True仍未贯通，后者论文默认getter本来预供表，故不声称论文自然路径曾触发两项失败。主控复用独立原源、19项交接和10项隔离回归／Ruff证据，无数值重跑；见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)及[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)。当时水文四项自定义参数差异另列；现由C55同一参数链闭合。
 
-C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C59登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
+C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C61登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 

@@ -1,6 +1,16 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C55／C43扩展与C56–C59；研究同步仍暂停
+## 当前已接受：C60／C61；参数状态接力结束，同步仍暂停
+
+2026-11-18，接受基线`a3551dac4dbb2f53bee2ef47c80b4995eb57af82`上的WATCHOUT完整本地运输、初始化／连续历史与首读取整修正，共同代码／测试／CI提交`aa14d04210ab371aae6e959da193561f37f55d0e`。登记C60为旧支持缺口补齐，C61为旧NINT／首日准入错误；本包新接线的多处修正归C60，不机械增加旧bug数。正式61项修正／支持补齐、34个相关生产提交；[来源登记](correction_origins.md)保留精确年代、源规则、反例和新集成问题。
+
+未来集中同步必须按**基线a355及已接受累计修复＋本提交**审查依赖：driver下`bundle.py`、`dim2.py`、`domain.py`、`forcing_interpolation.py`、`orchestration.py`、`restart_bundle.py`、`restart_file_io.py`、`sechiba_boundary.py`，另`sechiba/diffuco.py`和`stomate/restart_io.py`。同时带入两audit caller、八WATCHOUT回归文件、固定reference fixture、已有接口测试适配、CI和字段YAML。尤其保留C43/C48/C49/C52/C55–C59的缓存、时钟、初始化、单位与状态合同，不能仅搬某个helper或覆盖研究整文件。
+
+支持固定annual file-start及有效state/context对的continuous-history；normalized单点14／2PFT、default93／canonical126、条件refSOC1及WATCHOUT driver9／默认13的各自分母不相加。真实外部producer身份、一般IOIPSL／多点scatter、fresh-midyear／TIME_SKIP与完整科学门仍限制外推。数值接受仍false。此次未读取、修改或同步daily／global研究树。
+
+[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)复核实际代码和六条最终交接边，复用分版本99＋1及最终35／另7证据，无新模型运行；[发布回执](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)记录准确远端SHA与工作区。本部分接力已停止，其他模块不自动启动。下方有日期段落保留历史接受范围，当前状态以本节和累计索引为准。
+
+## 已接受快照：C55／C43扩展与C56–C59（当时WATCHOUT待补）
 
 2026-11-18，本轮代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。深度参数归C55既有初始化到运行参数链扩展，scan context归C43已有缓存所有权扩展；条件refSOC、cold出口、block dispatch与temp_growth分别为C56–C59。正式59项／33个相关生产提交，57项有复查前证据、C42／C57为复查期间遗漏。C57准确引入为C48提交782535b4；本包stale refSOC集成遗漏归C56并单独保留年代。见[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)和[来源登记](correction_origins.md)。
 
@@ -927,12 +937,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C59，共59项已接受修正、33个相关生产代码提交；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C61，共61项已接受修正／支持补齐、34个相关生产代码提交；C60整合WATCHOUT支持链与本轮接线修补，C61单列旧首读取整／准入；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C59仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C61仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -983,6 +993,8 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C57 | `driver/orchestration.py` cold ready出口context；prepared／unprepared局部回归 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
 | C58 | `driver/orchestration.py` block state-derived静态dispatch缓存分区／快照；真实窄JIT回归 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
 | C59 | `driver/orchestration.py`中央STOMATE_HALF_HOUR_CARRY_FIELDS的temp_growth；实际clock交接测试 | `5fe049ffa249f2c53daf669d576fe590ecbbb999` |
+| C60 | driver forcing／bundle／DIM2／boundary／orchestration与restart链，`sechiba/diffuco.py`、`stomate/restart_io.py`；公开continuous历史、fixture／八测试／CI随同 | `aa14d04210ab371aae6e959da193561f37f55d0e` |
+| C61 | `driver/forcing_interpolation.py`首普通读取NINT和完整首日准入；实际文件／public bundle回归随同 | `aa14d04210ab371aae6e959da193561f37f55d0e` |
 
 ### C53／C54 状态选择与显式参数编译入口（2026-11-17已接受）
 

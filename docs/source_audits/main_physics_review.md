@@ -1,16 +1,19 @@
 # main 物理正确性检查入口
 
-## 当前已接受：参数和状态交接修复，继续WATCHOUT本地收尾
 
-2026-11-18，主控接受[本轮交付](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)，基线`db8dd72eea30e3c2dc30dd3b7368a664d5a56058`，代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。土壤七活动深度参数归C55扩展、scan的context所有权归C43扩展；新增C56条件refSOC初始化／carry／finalize／IO、C57冷启动ready出口context、C58状态派生dispatch缓存、C59 temp_growth半小时carry。累计59项／33相关生产提交；57项有复查前源码证据，C57由C48日历接线提交782535b4引入，与此前C42均明确归为复查期间遗漏。
+## 当前已接受：参数和状态传递收尾完成
 
-源hydrol_initialize625–636规定条件refSOC先读restart，仅全local999999才调静态reader，partial保留，finalize1748按开关写出。实现保留默认93／126并单列条件1，经双镜像、普通／compact、day-end／fast、七finalizer和14／2PFT真实三文件及实际reader验证。独立终审发现本包disabled初始化携带旧optional值的集成遗漏，已修两owner，原红反例保留，属C56同一链，不冒称复查前错误。深度参数保留原AKS_POWER误查nk_rel的源行为及inactive阈值分支。cold出口只认证局部AST就绪路径；scan／block是真实窄JIT加物理delegate witness，不外推整模型。
+2026-11-18，主控完成有限验收，代码／测试／CI提交`aa14d04210ab371aae6e959da193561f37f55d0e`。PFT14既定论文工作流内，选定有效参数、创建／恢复相位、运行中交接、缓存及normalized单点文件链已完成本轮收尾；新增WATCHOUT读取／插值／消费者／条件IO和公开连续历史交接一并接受。此处的完成只针对[有限计划](parameter_state_closeout_plan.md)，**不表示整个模型与Fortran已全面数值等价**。
 
-主控检查425项原交付绑定、两个review绑定、四历史源码绑定和保存JUnit中94个不同节点最终通过证据（59＋9＋6＋20）。首轮隔离及后续夹具／集成失败原样保留，是组合验证，不是单次全套全绿；C55五例eager／JIT各191项参考复用，无主控数值重跑。提交前仅移除测试EOF空行，AST不变。[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)、[当前总账](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-progress-ledger.json)和[发布记录](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-publication.json)给出当前身份；owner封存快照不倒改。
+新增登记C60（复查前WATCHOUT支持缺口的端到端补齐）和C61（复查前首插值取整／完整首日准入修复），共同计一个生产提交。正式累计**61项修正／支持补齐、34个相关生产提交**；59项有复查前错误或支持缺项证据，另C42／C57为复查期间已接受代码的遗漏。C60开发中的相位、tuple、writer和context接线遗漏保留年代，不按每个调用点追加旧bug。准确依据及未来集中同步依赖见[来源登记](correction_origins.md)与[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
-本部分仍未全部完成。追加[WATCHOUT源范围审查](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-watchout-scope-review.md)确认本地可继续reader→插值→高层driver／intersurf运输，无需先恢复实际大气producer身份。RELAXATION=false的合法路径应贯通，原源fatal的RELAXATION=true保持拒绝；文件四系数已经是ORCHIDEE约定，不能再乘dt或清零。未知的实际producer/build及输出时间属性是另一证据边界。默认93／126／181、92字段状态分类及`numerical_acceptance=false`保持；DOC／积雪严格门、整模型接受及研究同步分别管理。下方为历次接受快照，当前状态以本节和[中文进度](main_review_progress.md)为准。
+实际首插值子步确定native初始化模式，后续日／block及continuous传递已确定的context；两公开continuous入口缺历史即明确拒绝，standard／cold／native成功结果返回实际历史，空或失败结果不制造新历史。首main SWnet只执行一次；源正数NINT、文件真实默认长度、TIME_LENGTH和非WATCHOUT源零drag实参均保留各自源合同。
 
-## 当前已接受：C55自定义土壤参数贯通；继续参数与状态收尾
+验证按版本分开：上一repair为99项隔离检查＋另1项本地静态身份检查；最终R2续包同输入修前16失败／19通过、修后35通过，另受影响既有7项通过。原113项和forcing66／context30保留其历史身份，不相加或宣称全部在最终字节重跑。主控复核实际源码、六条交接边、162项封包绑定及2份终审，复用检查，无新数值运行；提交时仅去掉三个测试的空EOF行并证明AST不变。原参考和容差未改，hosted Ubuntu／uv未执行。见[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)和[发布回执](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)。
+
+90＋1＋1／92、93／126／181与条件refSOC1等重叠口径不变，`numerical_acceptance=false`。完整物理／科学门、真实外部producer身份、一般native IOIPSL与多点scatter、任意fresh-midyear／TIME_SKIP仍分别保留。研究分支同步继续暂停。本部分接力已完成并停止，不自动开始其他阶段；下方有日期的接受记录保留当时范围，以本节为当前状态。
+
+## 已接受快照：C55自定义土壤参数贯通（当时继续参数与状态收尾）
 
 2026-11-18，主控接受基线`43865933ed6ab53c4ea5f75e1510f5e7f3ba1ae7`的[土壤参数链包](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/README.md)，登记C55=`HD-SOIL-PARAM-01`，代码／测试／CI提交`474f52088be77a543ebf181b232acfc8a02ddc02`。十字段USDA合同贯通初始化、静态模板、CWRR表、真实组件和诊断；有效点阈值与原矿物背景分离，编译动态参数优先于捕获context。原四差同属一条参数链，不拆成四个bug。
 

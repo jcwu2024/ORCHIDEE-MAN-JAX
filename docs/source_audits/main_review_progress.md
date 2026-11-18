@@ -1,25 +1,19 @@
 # 主线进度
 
-2026-11-18，主控已接受本轮参数和状态交接修复，代码／测试／CI提交 `5fe049ffa249f2c53daf669d576fe590ecbbb999`。参数覆盖、条件状态的创建和保存读回、跨步保留及缓存隔离，在下表所列接口范围内已有证据。**这部分还差WATCHOUT输入传递链的本地收尾；整个模型的数值等价仍未验收。**
+2026-11-18，**参数和状态传递这一部分已验收完成，接力已停止。** 范围是既定PFT14论文工作流及已经声明支持的本地接口；还没有宣称整个模型与Fortran全面等价。
 
-累计为**59项修正／33个相关生产提交**。其中57项有复查前源码证据；C42与本轮C57是复查期间引入的遗漏。计数包括接口、默认值和缓存问题，不等于59条活动物理公式错误，也不是完成百分比。
-
-| 本轮接受 | 实际结果与边界 |
+| 工作面 | 这次完成意味着什么 |
 | --- | --- |
-| 土壤深度参数（C55扩展） | 七个活动标量从配置／初始化传到表、系数消费者和编译参数；一项原源注释分支的metadata保持不激活。原十向量合同不变 |
-| 条件refSOC状态（C56） | 按源开关读取、缺失／全marker初始化、双镜像交接及真实三文件读回；默认93科学字段／126 canonical字段不变，条件字段单列 |
-| 冷启动出口（C57） | 修正日历接线时引入的未定义context；保持已有prepared对象或从cold bundle建clock。只验证该就绪出口，不宣称完整冷启动物理链已通过 |
-| 编译缓存（C43扩展、C58） | scan隔离捕获的context；block隔离由状态决定的phenology分支。真实窄JIT使用明确的物理替身 |
-| 跨步温度状态（C59） | 补temp_growth半小时保留，实际clock入口可读取；旧carry遗漏与后来新增必需消费者分开记账 |
+| 参数读入和覆盖 | 选定参数能从配置送到实际消费者，缓存不会把另一份设置混进来 |
+| 初始化与继续运行 | 区分新运行、重启初始化和连续运行；沿用前次确定的设置，缺少必需历史时明确报错 |
+| 日／编译块与年界交接 | 受检状态和初始化模式跨接口保留；空运行或失败不伪造新历史 |
+| 保存与读回 | 已支持的14／2PFT normalized单点文件链及条件refSOC字段按源合同处理 |
+| WATCHOUT输入 | 文件识别、读取／插值、driver／消费者、条件重启与连续历史交接在声明域内接通 |
 
-主控核对了实际差异、源规则、425项交付绑定、独立审查及保存JUnit中94个不同节点的最终通过证据：59个可移植接口、9个深度driver、6个旧缓存构造、20个本地静态合同检查。它们是分批修复后的组合证据，**不是单次全套94全绿，也不是hosted Ubuntu执行**。C55原五例eager／JIT各191项证据直接复用，主控没有重跑数值或模型。
+本批登记两项：**C60**是既有WATCHOUT支持缺口的补齐，**C61**是旧取整及完整首日检查问题的修复。它们不是两项新发现的物理公式错误。累计**61项修正／支持补齐、34个相关生产提交**；修复依据、年代、准确提交和未来同步依赖均已记入[来源登记](correction_origins.md)和[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。研究分支尚未同步。
 
-独立终审还抓到本包新接入refSOC时“关闭开关仍保留旧条件值”的遗漏，已在首writer和新年度双镜像处修正，原两条失败证据保留，归入C56同一链。夹具错误单列；主控提交前只去掉一个测试文件尾部空行，执行AST不变。
+代码／测试／CI提交：`aa14d04210ab371aae6e959da193561f37f55d0e`。上一包99项隔离检查＋另1项静态检查，本次最终35项与另7项检查分别通过；各批按各自源码版本记录，不机械相加。主控复用这些验证并核对实际代码和交接边，没有重跑整模型。原参考与科学阈值不变。
 
-下一包核对**WATCHOUT文件→时间插值→driver／intersurf的参数运输**。原Fortran按forcing中的小写levels识别这条路径，本地源和文档已给出系数约定，足以继续；不能把缺实际大气producer身份当作当前必须停工的理由。RELAXATION=true仍按原源拒绝，不再次乘dt、不清零文件提供的A系数。实际外部producer版本和输出时间身份继续单列未知。
+还剩的是其他工作面：物理分支与当前消费者的数值覆盖、完整模型集成，以及部分外部参考／原生IO身份和科学限制。原有DOC与积雪严格门仍保留，`numerical_acceptance=false`。这些缺证和限制不等于已经确认的新代码bug。
 
-92／93／126／181及179参数投影等账本视图相互重叠，不能相加。原NPP／DOC／积雪浮点结论不重开；DOC严格状态与真实碳通量、其他物理条件覆盖和整模型门继续保留，`numerical_acceptance=false`。daily/global研究树仍未同步。
-
-用户已授权逐包接力：Sol封存并停止修改后给本主控发一次交付消息；主控验收后再派本范围下一包。这部分完成后停止，不自动进入其他阶段。范围和授权见[收尾计划](parameter_state_closeout_plan.md)。
-
-[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json) · [当前总账](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-progress-ledger.json) · [来源登记](correction_origins.md) · [发布回执](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-publication.json)
+[本部分完成标准](parameter_state_closeout_plan.md) · [主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json) · [发布核对](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)。后续阶段未自动启动。

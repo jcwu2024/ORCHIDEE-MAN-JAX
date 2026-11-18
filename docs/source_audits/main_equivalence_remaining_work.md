@@ -1,18 +1,19 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前已接受：参数和状态接口修复；WATCHOUT本地运输链继续收尾
 
-2026-11-18，主控接受基线`db8dd72eea30e3c2dc30dd3b7368a664d5a56058`的[交付包](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/README.md)，代码／测试／CI提交`5fe049ffa249f2c53daf669d576fe590ecbbb999`。深度参数归C55扩展，scan context归C43扩展，新增C56条件refSOC生命周期、C57冷启动就绪出口context、C58状态派生dispatch缓存键、C59 temp_growth carry。正式59项／33相关生产提交，57项有复查前证据、C42／C57属复查新增遗漏；本包终审纠正的stale refSOC仍归C56同一链，不能倒写成复查前已有。
+## 当前已接受：参数和状态传递收尾完成
 
-本包94个不同节点有最终通过证据（可移植59、driver9、旧cache构造6、静态合同20）；是保留失败后按受影响范围补齐的组合证据，不是单次94全绿。主控核对425项交付绑定、两份独立review和真实JUnit，复用C55各191项及原Fortran来源，无数值重跑。完整cold物理、整段compiled物理和模型step/day/year/669没有执行；局部AST／delegate／窄JIT与真实文件运输的证据边界保持。[验收](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-acceptance.json)、[当前总账](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-progress-ledger.json)补充封存owner的pending快照。
+2026-11-18，主控完成有限验收，代码／测试／CI提交`aa14d04210ab371aae6e959da193561f37f55d0e`。PFT14既定论文工作流内，选定有效参数、创建／恢复相位、运行中交接、缓存及normalized单点文件链已完成本轮收尾；新增WATCHOUT读取／插值／消费者／条件IO和公开连续历史交接一并接受。此处的完成只针对[有限计划](parameter_state_closeout_plan.md)，**不表示整个模型与Fortran已全面数值等价**。
 
-**本部分尚未完成，但当前不以外部PBL资料缺失停工。** [补充只读审查](../../outputs/reviews/main-physics-20261118/parameter-state-closeout/controller-watchout-scope-review.md)确认原readdim2按小写levels识别WATCHOUT，读取／插值四系数，dim2在RELAXATION=false时保留，intersurf按kindex传递；本地LMDZ转换文档也说明了dt边界。下一包补齐实际高层入口的source-backed文件→substep→bundle／dim2→intersurf运输，不以移除guard或测试旁路代替接线，不重复dt转换。RELAXATION=true在原源即fatal，继续拒绝。
+新增登记C60（复查前WATCHOUT支持缺口的端到端补齐）和C61（复查前首插值取整／完整首日准入修复），共同计一个生产提交。正式累计**61项修正／支持补齐、34个相关生产提交**；59项有复查前错误或支持缺项证据，另C42／C57为复查期间已接受代码的遗漏。C60开发中的相位、tuple、writer和context接线遗漏保留年代，不按每个调用点追加旧bug。准确依据及未来集中同步依赖见[来源登记](correction_origins.md)与[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
-封存`ledger/finite-dependencies.json`的“必须先取得外部tuple合同”是当时推断，由上述新源证据修正，不回写旧回执。实际大气producer/build、真实文件的输出时间约定仍未知，只限制对那个实际来源的科学／历史身份声明；不能冒称已验证。一般IOIPSL多点／复杂getin／native metadata与历史build仍是更宽边界。本包默认93／126、条件refSOC1与181生命周期分母保持；90 normalized＋1 source-undefined inactive＋1 precise gap／92不因接口修复上调。
+实际首插值子步确定native初始化模式，后续日／block及continuous传递已确定的context；两公开continuous入口缺历史即明确拒绝，standard／cold／native成功结果返回实际历史，空或失败结果不制造新历史。首main SWnet只执行一次；源正数NINT、文件真实默认长度、TIME_LENGTH和非WATCHOUT源零drag实参均保留各自源合同。
 
-完成标准继续见[计划](parameter_state_closeout_plan.md)：支持域的必需运输边不许仅改标unsupported。DOC严格状态／真实碳通量、积雪grain严格失败、其他物理条件及整模型门另管，`numerical_acceptance=false`。下方已接受包保留各自历史范围；其中“深度、cold出口、refSOC待补”不再代表当前状态。
+验证按版本分开：上一repair为99项隔离检查＋另1项本地静态身份检查；最终R2续包同输入修前16失败／19通过、修后35通过，另受影响既有7项通过。原113项和forcing66／context30保留其历史身份，不相加或宣称全部在最终字节重跑。主控复核实际源码、六条交接边、162项封包绑定及2份终审，复用检查，无新数值运行；提交时仅去掉三个测试的空EOF行并证明AST不变。原参考和容差未改，hosted Ubuntu／uv未执行。见[主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)和[发布回执](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json)。
 
-## 当前已接受：C55自定义土壤参数贯通；继续参数与状态收尾
+90＋1＋1／92、93／126／181与条件refSOC1等重叠口径不变，`numerical_acceptance=false`。完整物理／科学门、真实外部producer身份、一般native IOIPSL与多点scatter、任意fresh-midyear／TIME_SKIP仍分别保留。研究分支同步继续暂停。本部分接力已完成并停止，不自动开始其他阶段；下方有日期的接受记录保留当时范围，以本节为当前状态。
+
+## 已接受快照：C55自定义土壤参数贯通（当时继续参数与状态收尾）
 
 2026-11-18，主控接受基线`43865933ed6ab53c4ea5f75e1510f5e7f3ba1ae7`的[土壤参数链包](../../outputs/reviews/main-physics-20261117/hydrol-soil-parameter-closure/README.md)，登记C55=`HD-SOIL-PARAM-01`，代码／测试／CI提交`474f52088be77a543ebf181b232acfc8a02ddc02`。十字段USDA合同贯通初始化、静态模板、CWRR表、真实组件和诊断；有效点阈值与原矿物背景分离，编译动态参数优先于捕获context。原四差同属一条参数链，不拆成四个bug。
 
@@ -267,7 +268,7 @@ cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，�
 
 | 模块／边界 | 保留工作与最小动作 |
 | --- | --- |
-| driver／forcing／parameters／global | 完整有效默认与case override、输入身份、时间／索引规则、当前caller／compiled缓存关联；先做S-NEXT-01 |
+| driver／forcing／parameters／global | 本轮声明支持域的参数、forcing、时间／索引与缓存运输已收尾；其他配置域与真实外部producer身份仍单列，不重派已完成S-NEXT-01子项 |
 | SECHIBA／SLOWPROC／CONDVEG | 123字段合同及finalize别名的单位／mask／相位闭包；首日与普通更新分别检查 |
 | HYDROL／HYDRO_SUBGRID | 现有源oracle到当前调用与状态写回的逐case桥；冻结、mask、条件域保留；不重开已接受C29–C31因果 |
 | DIFFUCO／QSAT | 源分支同输入tuple、PFT／植被mask、返回状态及真实production消费者桥 |
@@ -279,8 +280,8 @@ cold修复同时替换静态读取和系数实参的两处缺键FALSE回退，�
 
 | 稳定未决组 | 性质与边界 |
 | --- | --- |
-| S-GAP-EXTRA-SCHEMA92 | 身份关联已完成；92字段单位／mask／有效默认及完整相位／数值schema仍未完成 |
-| S-GAP-COMPILED-STATIC | 完整有效参数与consumer／cache／闭包分母缺项；保留C38和选定gas证据 |
+| S-GAP-EXTRA-SCHEMA92 | 声明支持域的参数／状态合同与有限运输已收尾；92视图的完整数值／科学认证仍未完成，90＋1＋1口径不变 |
+| S-GAP-COMPILED-STATIC | 选定参数／consumer／cache／闭包本地合同已按有限清单收尾；其他配置域与完整compiled物理认证仍开放 |
 | S-GAP-REFERENCE-BRIDGES | 剩余旧oracle／当前kernel与caller／状态／真实compiled的逐case身份桥及认证 |
 | S-GAP-THERMAL-TRUTH | 原源初始化／首消费者已接受；当前8例完整组件eager／JIT及有限carry桥已接受；真实reader、历史producer及整模型仍缺证 |
 | S-GAP-THERMAL-DOMAIN | 默认显雪whole-array缺coeff已验证；custom FR_DT、热表／常数、未审flags、partial-marker和全no-explicit域仍未认证 |
@@ -303,8 +304,8 @@ C1–C40的准确原commit、接受来源与适用行见[accepted-corrections-ma
 
 constants闭合／writeback和thermosoil缓存结果测试另依赖被忽略的`outputs/reference_mode`资产，不能直接加入仅有Git checkout的无条件CI。读取旧pass也不认证当前production。轻量CI不能覆盖完整源分母、状态相位、独立数值oracle、真实compiled写回或669-case发布门。
 
-此前提出的[S-NEXT-01](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/next-package.json)保留为总体合同：复用已完成的92身份关联，补齐单位、mask、有效默认与cold／首日／普通／compiled／日年界的源相位合同，并把选定used_run键接到实际consumer与cache／闭包。入口为`prepare_paper_1961_driver_context`、`_paper_compiled_later_day_block_executable`、`restart_thermosoil_initial_fields`。后续已完成内容按本文件当前登记扣除，不能把整个旧计划重新派发。完成条件是每字段／选定knob均有源owner、单位、相位、默认／override及消费边，或明确稳定缺项；相位差不能被无条件复制抹平。
+此前[S-NEXT-01](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/next-package.json)中的本轮参数／状态接口子集现已完成；有限接受范围、六条最终交接边与不可外推项以文首和parameter_state_closeout_plan.md为准。旧总体合同保留作来源，不能整包重新派发。
 
-此处只提出离线包。发现实际同输入传递遗漏后，才准备一项局部共享修复和回归，并单列未来首次、普通、实际compiled、日年界／真实IO及独立Fortran验证的有界执行合同。逐模块oracle桥接随后推进；热真值、maxmass与历史外部身份可独立处理，不等待另一条DOC轨迹。
+本部分接力已结束。后续优先建议按既有模块清单核对独立参考到当前production消费者的数值桥，再选择有界集成门；这些工作本轮没有启动。DOC严格状态／真实碳通量、snow自然域与严格grain失败、历史外部身份分别保留，不合称新bug，不重开已接受浮点归因。
 
 源／状态分析器的正负控制、独立复核、报告补丁、文件预算和最终版本身份见[交付回执](../../outputs/reviews/main-physics-20261113/equivalence-gap-reconciliation/delivery-receipt.json)。本包的有限清单不替代合同的完整分母、零悬空状态边、全部活动／条件臂production认证和669-case集成门。
