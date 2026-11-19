@@ -541,6 +541,36 @@ def test_fresh_cold_real_entry_builds_source_clock_and_first_pair_without_restar
     _assert_boundary(caught, (308.33, 44.83))
 
 
+@pytest.mark.parametrize("form", ["default", "indexed", "literal_vector"])
+def test_cold_zwt_force_reaches_real_constructor(prepared, monkeypatch, form):
+    """Public cold reader -> real initialization; stop before physical processes."""
+    _cold_initialization_stubs(monkeypatch, prepared)
+    desired = np.asarray([1e20, .25, .5, 1., 1.5, 1e20])
+    values = {k: v for k, v in prepared.values.items() if not k.upper().startswith("ZWT_FORCE")}
+    if form == "indexed":
+        values.update({f"ZWT_FORCE__{i:05d}": str(v) for i, v in enumerate(desired, 1)})
+    elif form == "literal_vector":
+        values["ZWT_FORCE"] = " ".join(map(str, desired))
+    else:
+        desired = np.full(6, 1e20)
+    prepared.context.run_def_path.write_text(
+        "\n".join(f"{k}={v}" for k, v in values.items()), encoding="utf8")
+
+    class ReachedColdState(Exception):
+        def __init__(self, state):
+            self.state = state
+
+    def real_cold_boundary(**kwargs):
+        raise ReachedColdState(hydrol.hydrol_cold_start_state(**kwargs))
+
+    monkeypatch.setattr(driver, "hydrol_cold_start_state", real_cold_boundary)
+    with pytest.raises(ReachedColdState) as caught:
+        driver.paper_1961_driver_cold_start_first_step_coverage(
+            prepared.context.config_path, used_run_def_path=prepared.context.run_def_path)
+    np.testing.assert_array_equal(caught.value.state.zwt_force, desired[None, :])
+    assert caught.value.state.zforce is (form != "default")
+
+
 class _ReachedYearDispatch(Exception):
     def __init__(self, context, state, controls, clock):
         self.context, self.state, self.controls, self.clock = context, state, controls, clock

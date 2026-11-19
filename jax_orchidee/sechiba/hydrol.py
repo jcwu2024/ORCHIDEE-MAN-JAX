@@ -4606,7 +4606,14 @@ def hydrol_cold_start_state(
         if free_drain.shape != (nstm,):
             raise ValueError("free_drain_coef_default must have shape (nstm,)")
     free_drain_coef = jnp.broadcast_to(free_drain[None, :], (npts, nstm))
-    zwt_force = jnp.full((npts, nstm), float(zwt_force_default), dtype=dtype)
+    # hydrol_init:2843-2850 / sechiba_io_p::r21setvar_p:389-444 preserve
+    # every soil-tile value and spread the nstm vector over landpoints.
+    zwt_default = jnp.asarray(zwt_force_default, dtype=dtype)
+    if zwt_default.ndim == 0:
+        zwt_default = jnp.full((nstm,), zwt_default, dtype=dtype)
+    if zwt_default.shape != (nstm,) or not bool(jnp.all(jnp.isfinite(zwt_default))):
+        raise ValueError("zwt_force_default must be a finite scalar or have shape (nstm,)")
+    zwt_force = jnp.broadcast_to(zwt_default[None, :], (npts, nstm))
     zforce = bool(jnp.any(zwt_force[0, :] <= jnp.asarray(zmaxh, dtype=dtype)))
 
     snow = jnp.zeros((npts,), dtype=dtype)

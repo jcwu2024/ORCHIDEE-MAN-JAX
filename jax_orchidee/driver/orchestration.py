@@ -69,9 +69,12 @@ PAPER_CASE_PEAT_BULK_DENSITY = np.asarray(
 # `peat_hydro=F`/`branch_peat=F` (traces/hydrol_1961_v9, hydrol.f90 branches
 # at lines 5902 and 8259). Keep this as an explicit paper-case execution fact
 # instead of using the run.def switch as the HYDROL soil-coefficient branch.
-# The same HYDROL-local SAVE variable is used by coefficient, prognostic,
-# water-stress, and dynamic-root branches. It is distinct from the same-named
-# pft_parameters variable that does read run.def.
+# The supplied HYDROL source uses this name in coefficient, prognostic,
+# water-stress and dynamic-root branches. Its local SAVE declaration conflicts
+# with the transitive USE-associated global name in a minimal compiler check;
+# the historically bound build/module boundary remains unresolved. Preserve
+# the observed false route here, without inferring a source default or treating
+# the global run.def read as proof of the effective HYDROL storage/configuration.
 PAPER_1961_HYDROL_SOIL_PEAT_HYDRO = False
 PAPER_MANGROVE_PFT_ID = "mangrove_pft14"
 
@@ -102,6 +105,7 @@ from jax_orchidee.driver.tides import (
 )
 from jax_orchidee.parameters.soil import (
     require_supported_hydrol_check_cwrr, resolve_hydrol_check_cwrr,
+    resolve_hydrol_zwt_force,
 )
 from jax_orchidee.driver.domain import load_case_config, read_annual_co2, read_forcing_model_step_cached, read_forcing_step
 from jax_orchidee.driver.dim2 import CP_AIR, GRAVITY, Dim2Switches, validate_dim2_switches
@@ -5280,7 +5284,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
         frac_nobio=vegetation.frac_nobio,
         hydrol_moisture_content=float(run_def_values.get("HYDROL_MOISTURE_CONTENT", 0.3)),
         ok_freeze_cwrr=parse_run_def_bool(run_def_values.get("OK_FREEZE_CWRR", "TRUE")),
-        zwt_force_default=float(run_def_values.get("ZWT_FORCE__00001", 1.0e20)),
+        zwt_force_default=resolve_hydrol_zwt_force(
+            run_def_values, nstm=vegetation.soiltile.shape[1]),
         peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
         peat_nodr=parse_run_def_bool(run_def_values.get("PEAT_NODR", "FALSE")),
         tides=bool(config.get("model_switches", {}).get("tides", False)),

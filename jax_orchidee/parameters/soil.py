@@ -140,6 +140,38 @@ def _vector(values: Mapping[str, object], key: str, current: Sequence[float]) ->
     return tuple(result)
 
 
+def resolve_hydrol_zwt_force(overrides: Mapping[str, object] | None, *, nstm: int) -> np.ndarray:
+    """Read the complete soil-tile water-table vector for fresh initialization.
+
+    Fortran: ``hydrol.f90::hydrol_init`` 2834-2850 initializes nstm defaults
+    then calls ``setvar_p``; ``sechiba_io_p.f90::r21setvar_p`` 389-444 reads
+    the whole vector only when the entire restart array is missing and
+    spreads it over landpoints. This literal adapter accepts either the
+    complete materialized indexed vector or one nstm-value literal vector.
+    Partial indexed declarations of only the source's undefined sentinel
+    retain the unchanged all-undefined default, including compact used logs.
+    IOIPSL singleton expansion and mixed declaration precedence are not
+    established by that typed source boundary and are explicitly rejected.
+    Restart values are owned by the restart path, not this cold resolver.
+    """
+
+    count = int(nstm)
+    if count < 1 or count != nstm:
+        raise ValueError("ZWT_FORCE requires a positive integer nstm")
+    values = _normalized(overrides)
+    indexed = {key for key in values if key.startswith("ZWT_FORCE__")}
+    expected = {f"ZWT_FORCE__{index:05d}" for index in range(1, count + 1)}
+    if indexed:
+        if "ZWT_FORCE" in values:
+            raise ValueError("ZWT_FORCE cannot mix literal and indexed declarations")
+        default_equivalent = indexed <= expected and all(
+            _fortran_float(values[key]) == 1.0e20 for key in indexed
+        )
+        if indexed != expected and not default_equivalent:
+            raise ValueError(f"ZWT_FORCE requires the complete {count}-tile indexed vector")
+    return np.asarray(_vector(values, "ZWT_FORCE", (1.0e20,) * count), dtype=np.float64)
+
+
 def _positive(key: str, value: float) -> None:
     if value <= 0.0:
         raise SoilParameterError(f"{key} must be positive")

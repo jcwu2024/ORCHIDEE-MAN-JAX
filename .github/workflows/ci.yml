@@ -87,6 +87,7 @@ jobs:
           tests/unit/test_hydrol_check_cwrr_contract.py
           tests/unit/test_hydrol_tide_forcing.py
           tests/unit/test_hydrol_driver_controls.py
+          tests/unit/test_hydrol_water_table_initialization.py
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -125,5 +126,6 @@ jobs:
           tests/unit/test_hydrol_check_cwrr_contract.py
           tests/unit/test_hydrol_tide_forcing.py
           tests/unit/test_hydrol_driver_controls.py
+          tests/unit/test_hydrol_water_table_initialization.py
           jax_orchidee/driver/tides.py
           scripts/dev/oracle_hydrol_tide_boundary.py
