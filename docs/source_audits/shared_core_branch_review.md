@@ -1,6 +1,14 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C62／C63；继续物理分支检查，同步仍暂停
+## 当前已接受：C64；物理分支检查继续，同步仍暂停
+
+2026-11-19，冷启动完整ZWT_FORCE向量丢失已接受为C64，共同生产／测试／CI提交`e275a33fd5864957e9b241138359c1f6001a5756`。累计**64项修正／支持补齐、36个相关生产提交**，其中62项有复查前证据，C42／C57为复查期间遗漏。来源、原反例及有限单点验收见[修复登记](correction_origins.md)。
+
+未来同步成组核对`parameters/soil.py`、`sechiba/hydrol.py`、`driver/orchestration.py`，两份实际入口／消费者回归与CI；同时保留此前初始化／恢复、逐块参数、时钟和C62／C63合同。源等价仅npts=1、nstm=6；原setvar的等长轴优先序及一般多点未获证，不能将新vector API直接当成全球多点认证。部分非默认索引／singleton raw／mixed native grammar仍明确未支持，scalar低层及默认压缩日志保持。
+
+[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-acceptance.json)复用19项隔离通过、原setvar三例和有界数值证据，核对9份实际产品及独审，没有重跑物理。dry／joint热通量接受浮点／相消解释，不改热公式；严格门、水文／雪未解项和其他组保持。发布身份见[记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-publication.json)。未读取、修改或同步研究树，numerical_acceptance仍false。下方日期段落保留历史口径。
+
+## 已接受快照：C62／C63；物理分支检查
 
 2026-11-19，PB-03潮汐producer／消费者及有效CHECK_CWRR修订通过主控有限验收，共同生产／测试／CI提交`7b35196462fbfd53f531fd1dc751699092f80104`。正式累计**63项修正／支持补齐、35个相关生产提交**，其中61项有复查前证据、C42／C57为复查期间遗漏。C62接通两份独立潮汐流及native-run记录原点；C63恢复false源零通量并拒绝尚未支持的完整true语义。仅改变土柱求和顺序的候选已撤回，不计新修复。依据、旧反例和年代见[来源登记](correction_origins.md)。
 
@@ -945,12 +953,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C63，共63项已接受修正／支持补齐、35个相关生产代码提交；C62为潮汐输入链、C63为有效CHECK_CWRR合同，求和顺序候选不计修复；C60整合WATCHOUT支持链与本轮接线修补，C61单列旧首读取整／准入；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C64，共64项已接受修正／支持补齐、36个相关生产代码提交；C64是cold逐土壤块强制水位丢失，单点源等价边界需随修复保留；C62为潮汐输入链、C63为有效CHECK_CWRR合同，求和顺序候选不计修复；C60整合WATCHOUT支持链与本轮接线修补，C61单列旧首读取整／准入；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C63仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C64仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -1005,6 +1013,7 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C61 | `driver/forcing_interpolation.py`首普通读取NINT和完整首日准入；实际文件／public bundle回归随同 | `aa14d04210ab371aae6e959da193561f37f55d0e` |
 | C62 | `driver/tides.py`、`driver/orchestration.py`、`sechiba/hydrol.py`潮汐文件／原点／动态传递；独立参考、实际入口回归及CI随同 | `7b35196462fbfd53f531fd1dc751699092f80104` |
 | C63 | `parameters/soil.py`、`sechiba/hydrol.py`、`driver/orchestration.py`有效CHECK_CWRR false语义及完整true明确拒绝；配置／缓存／数值回归随同 | `7b35196462fbfd53f531fd1dc751699092f80104` |
+| C64 | `parameters/soil.py`完整ZWT_FORCE resolver、`sechiba/hydrol.py`cold逐块构造、`driver/orchestration.py`真实cold入口；两回归／CI随同，源等价仅npts1/nstm6 | `e275a33fd5864957e9b241138359c1f6001a5756` |
 
 ### C53／C54 状态选择与显式参数编译入口（2026-11-17已接受）
 

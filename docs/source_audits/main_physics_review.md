@@ -1,14 +1,12 @@
 # main 物理正确性检查入口
 
-## 当前接受：水文输入／配置修订；物理阶段继续
+## 当前接受：逐土壤块水位修复及有界热通量归因
 
-2026-11-19，主控接受PB-03组件证据及生产集成修订，登记C62潮汐输入链和C63有效CHECK_CWRR合同，共同生产／测试／CI提交`7b35196462fbfd53f531fd1dc751699092f80104`。累计**63项修正／支持补齐、35个相关生产提交**；61项有复查前错误或支持缺口证据，另C42／C57为复查期间遗漏。土柱求和顺序候选已撤回，不计修复；[来源登记](correction_origins.md)和[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)保留准确依据及未来同步依赖。
+2026-11-19，主控接受C64冷启动ZWT_FORCE完整向量传递修复，生产／测试／CI提交`e275a33fd5864957e9b241138359c1f6001a5756`。累计**64项修正／支持补齐、36个相关生产提交**，其中62项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏。旧代码把首土壤块水位复制到所有块；新resolver、cold入口与构造器保留逐块值。源等价仅npts=1、nstm=6，原setvar等长轴优先序及一般多点、native IOIPSL词法未认证；scalar／默认日志与restart所有权保持。见[来源登记](correction_origins.md)和[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
-潮汐两原始文件按source clock和显式native-run原点送到真实入口及编译消费者，新native重开首记录，continuous保留原点。CHECK_CWRR默认false的零通量按源执行；完整true缺守恒／ET语义时明确拒绝。接口验证止于相应组件／spy边界，不能称历史活动潮汐或完整年界物理验证。
+[本包验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-acceptance.json)复用最终隔离uv19通过／0skip、64个隔离导入，核对9份实际产品、原源及独审，没有新物理运行。dry／joint两个同输入热参考已有底层1ULP首差及实际系数经表面相消放大的证据，接受有界内部浮点归因，不改热公式。原16个热严格坐标仍失败，雪groundflux不属于这条递推链。冻结阈值→液态水和最终热钳制→真实writer也按有限边界接受。发布见[记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-publication.json)。
 
-主控复用隔离uv 135通过／195精确strict xfail／4身份门skip、另55输入／adapter及87邻接回归，核对22份产品和冻结绑定，没有新模型或Oracle运行。19个水文tuple的100 eager／93 JIT失败坐标仍按原限保留；旧热参考及其producer不改写。参见[验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-acceptance.json)与[发布](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-publication.json)。
-
-下一包是`PB03-STRICT-THERMAL`及同组剩余源条件：用已有完整输入定位热通量差异，区分逻辑与浮点，并补私有peat有效配置／其余目标分支证据；不重开已接受NPP／DOC／snow grain因果。PB-01／PB-02余项、PB-04／PB-05、源分母、外部身份和综合模型验证仍未完成。参数／状态90＋1＋1／92及重叠计数不变；`numerical_acceptance=false`。两研究分支仍暂缓同步。
+下一包处理水文pre/post求解、ALT蒸发限值与独立雪groundflux最小边界，并批量补合法目标mask／前驱条件。私有peat真实build身份缺项明确保留，先整理准确外部证据需求，不阻塞其他本地工作。PB-01／PB-02余项、PB-04／PB-05、完整源分母和综合模型验证仍未完成。当前严格次数100 eager＋93 JIT水文、21固定热／雪、2不同输入live handoff保持；参数／状态90＋1＋1／92等口径不变，numerical_acceptance=false，研究同步暂停。
 
 ## 已接受快照：物理阶段启动及冠层／能量首包
 

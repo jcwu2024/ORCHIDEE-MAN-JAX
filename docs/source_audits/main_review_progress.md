@@ -10,7 +10,7 @@
 | 保存与读回 | 已支持的14／2PFT normalized单点文件链及条件refSOC字段按源合同处理 |
 | WATCHOUT输入 | 文件识别、读取／插值、driver／消费者、条件重启与连续历史交接在声明域内接通 |
 
-当前累计**63项修正／支持补齐、35个相关生产提交**。参数／状态收尾接受的C60／C61之后，2026-11-19新增接受C62潮汐输入链和C63有效CHECK_CWRR合同，共同提交`7b35196462fbfd53f531fd1dc751699092f80104`。61项有复查前证据，C42／C57为复查期间遗漏；这不是63项物理公式错误。[来源登记](correction_origins.md)和[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)保留准确年代、证据与同步依赖。研究分支尚未同步。
+当前累计**64项修正／支持补齐、36个相关生产提交**。最新C64修复cold将完整ZWT_FORCE逐土壤块向量压成首值的问题，共同提交`e275a33fd5864957e9b241138359c1f6001a5756`。62项有复查前证据，C42／C57为复查期间遗漏；不是64项物理公式错误。[来源登记](correction_origins.md)与[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)保留准确依据、年代与未来同步依赖，研究分支尚未同步。
 
 参数／状态包代码／测试／CI提交：`aa14d04210ab371aae6e959da193561f37f55d0e`。上一包99项隔离检查＋另1项静态检查，本次最终35项与另7项检查分别通过；各批按各自源码版本记录，不机械相加。主控复用这些验证并核对实际代码和交接边，没有重跑整模型。原参考与科学阈值不变。
 
@@ -24,7 +24,11 @@
 守恒／ET 语义的 true；低层诊断 API 的历史默认保留。土柱求和恢复已接受基线，原顺序候选只保留为诊断。
 原包、参考、容差和未解严格坐标保留；修订已获[主控接受](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-acceptance.json)，[发布记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-publication.json)单列准确身份。
 隔离uv 135通过／195精确strict xfail／4身份门skip，另55输入／adapter及87邻接回归；主控复用结果并核对22份实际产品，未重跑模型。
-正式63／35；下一包为`PB03-STRICT-THERMAL`及同组有界源分支收口。私有peat／自然雪前驱和其他PB组仍有缺项，整个物理阶段没有完成。
+当前[第三包](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/README.md)已获[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-acceptance.json)。C64逐块水位修复限npts=1、nstm=6源等价，默认及scalar兼容，原setvar等长轴／一般多点未获证。最终隔离uv19通过／0skip，64个项目导入无泄漏；主控复用验证并核对9份当前及冻结产品，没有新物理运行。
+
+dry／joint同输入的首差递推与相消证据接受为有界内部浮点归因，不改热公式，原严格门保留。水文保存操作数只证明下游传播，首差土柱状态和5个JIT蒸发限值仍未解；独立雪groundflux链不受热结论覆盖。下一包补这三处最小边界和合法目标mask／前驱，私有peat历史build需求单独准备。
+
+新覆盖层保留13个PB03稳定过程ID，补冻结阈值与最终热表面钳制的原源／消费者证据，不宣称全arm闭合。私有peat的原始声明存在USE同名冲突，局部编译检查不能解释历史有效build；false仅为已有trace边界，不能据此排除true目标条件。自然雪前驱、独立groundflux链、其他PB组及整个物理阶段仍未完成。
 
 之后仍需完整模型集成，以及部分外部参考／原生IO身份和科学限制的处理。原有DOC与积雪严格门仍保留，`numerical_acceptance=false`。这些缺证和限制不等于已经确认的新代码bug，已接受浮点成因也不把严格失败改写为通过。
 

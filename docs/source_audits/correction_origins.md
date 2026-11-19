@@ -1,7 +1,19 @@
-# C1–C63修正与支持补齐来源登记（2026-11-19）
+# C1–C64修正与支持补齐来源登记（2026-11-19）
 
 
-## 当前接受：C62／C63水文潮汐与有效检查开关
+## 当前接受：C64冷启动逐土壤块强制水位
+
+2026-11-19，主控接受`HYDROL-ZWT-FORCE-TRANSPORT-01`，登记C64，共同生产／测试／CI提交`e275a33fd5864957e9b241138359c1f6001a5756`。累计**64项修正／支持补齐、36个相关生产提交**；62项有复查前错误或支持缺口证据，C42／C57仍为复查期间已接受代码的遗漏。
+
+原`hydrol_init:2685–2688,2834–2850`及`sechiba_io_p::r21setvar_p:389–444`在整数组未恢复时读取完整ZWT_FORCE向量。旧真实cold入口仅取__00001，构造器再广播首值；完整[.25,.5,.75,1,1.5,1e20]变成六个.25，首块未强制时还可能丢掉其他块有限水位和zforce激活。两个丢失表达式均见于复查前7cae3e02与最早tracked导入7333b46c，外部导入前的首次日期未知；同一原因跨两入口只计一项。
+
+修复在共享soil resolver、真实cold入口和构造器间保留完整逐块值；完整索引或恰好nstm个字面值可用，重述1e20默认的压缩日志保持等价，低层scalar API保持。部分非默认、混合形式、singleton raw、无效索引／非有限值明确拒绝；原IOIPSL词法与优先序没有被认证。**源等价验收仅限独立单点npts=1、nstm=6**：原setvar先判断第一轴，npts==nstm==6会走不同SPREAD，不能由helper接收shape外推多点等价。restart／部分恢复不被cold覆盖。
+
+同核心旧检查3失败／1通过，最终无原Fortran隔离uv19通过／0skip，64个项目导入均来自隔离副本；包括真实cold reader／constructor和eager／窄JIT饱和消费者。原typed setvar三例、默认兼容的中间失败及修正保留。主控核对9份产品／冻结副本、配对原源及独审，复用已有验证，未再运行物理；注释后改动AST相同。详见[源和年代](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/source-conditions/report.md)、[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-acceptance.json)与[发布](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-publication.json)。
+
+同包dry／joint热通量已接受为有界内部浮点计算和相消放大，**不增加热模型修复**，16个热严格坐标仍失败；雪groundflux和水文首差／5个ALT坐标未解，不能共用此结论。新冻结／最终热钳制消费者证据按各自边界接受，PB-03、整个阶段和numerical_acceptance仍false。未来同步C64时须保留C48／C49／C55／C62／C63的时钟、初始化、参数和控制合同，以及单点验收边界；两研究分支未同步。
+
+## 已接受快照：C62／C63水文潮汐与有效检查开关
 
 2026-11-19，主控接受基线`dfc67a8a94f4a750eb25251d1435ce856efa573c`上的PB-03组件包及生产集成修订，共同生产／测试／CI提交`7b35196462fbfd53f531fd1dc751699092f80104`。正式累计**63项修正／支持补齐、35个相关生产提交**；61项有复查前错误或支持缺口证据，C42／C57仍是复查期间已接受代码的遗漏。原土柱求和顺序候选已撤回，不算修复。
 
@@ -56,7 +68,7 @@ WATCHOUT尚需本地source→driver运输补齐；原封存包将外部producer�
 
 2026-11-17主控接受[水文／冠层包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)的两项有限接口／执行修复，登记C53=`HD-FWET-01`、C54=`HD-JIT-01`，共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。C53按hydrol_soil:7307–7342保留当前TOPMODEL湿地诊断，仅在没有新值时沿用旧值；原ordinary／runtime／fast布局曾将0.412613023955767覆盖为0.123。C54按diffuco_trans_co2:2214–2234在显式参数缺光照表时提前调用既有静态布局helper，修复真实JIT层数转换异常。两项在`7cae3e02adad23674767a590fdf4d27f239ce065`已有精确源码证据，首次引入未知；新参考设施不伪称旧版已有。前者当前wrapper TOPMODEL=True仍未贯通，后者论文默认getter本来预供表，故不声称论文自然路径曾触发两项失败。主控复用独立原源、19项交接和10项隔离回归／Ruff证据，无数值重跑；见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)及[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)。当时水文四项自定义参数差异另列；现由C55同一参数链闭合。
 
-C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C63登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
+C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C64登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 
