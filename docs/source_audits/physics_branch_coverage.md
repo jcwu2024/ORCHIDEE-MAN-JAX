@@ -1,6 +1,6 @@
 # 当前物理计算与条件分支覆盖
 
-2026-11-20，当前正式累计**66项修正／支持补齐、37个相关生产提交**，含C62–C66。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。
+2026-11-20，当前正式累计**72项修正／支持补齐、38个相关生产提交**，含C62–C72。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。
 
 执行资产以[CI交付修订](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-ci-repair/README.md)绑定：缺原源的隔离checkout仍执行全部数值／声明输入检查，仅两项source/span门跳过；实际本地uv三文件结果110 passed／2 source skipped／2 strict xfailed。有源静态门另2通过，hosted Ubuntu／uv sync未执行。主控核对实际修订与9份执行资产并复用检查；JSON夹具经Git换行规范化后值一致，当前管理文档另随验收更新。原科学证据和覆盖等级不升级，后续PB-03进度见下文。
 
@@ -31,6 +31,14 @@ C13／C17／C18／C55旧参考影响已有有界核查，未整体撤销原接�
 当前[修订包已获主控接受](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-acceptance.json)，生产／测试／CI提交`d2d48e6d5007079493cf91cca21c978eb79fa24a`。NSLM原compiled caller已迁移，全部原输入／数值断言／容差保持；真实module内外JIT的材料字段与源中止检查、本地和隔离UV各3项通过，无skip。原封包、独审及修订增量审查均保留。首次新增整返回比较的13/14项失败、max abs5.34106093e-12单独保留，成因未定；不因窄接口通过而提升全状态数值接受，不新增第三项原因。
 
 私有peat的一次本地补证确认hydrol与全局参数对象有不同COMMON存储符号；本地FCM身份与历史1961运行仍不一致，缺准确binary／module／ppsrc／compiler绑定。[外部请求](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/hydrol-conditions/external-evidence-request.json)保留true目标条件，不以trace false排除。C64及其`e275a33fd5864957e9b241138359c1f6001a5756`、npts1/nstm6和一般native grammar／多点未证限制保持接受范围。[具名剩余动作](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/remaining.json)保留自然初始雪包、第二energy容量、其余PB组与完整源分母；本包本地完成不能称PB03或物理阶段完成。
-正式66项／37相关生产提交；`numerical_acceptance=false`，整模型综合验证和669尚未开始。
+第四包接受时为66项／37相关生产提交；`numerical_acceptance=false`，整模型综合验证和669尚未开始。
 
-下一包并行推进PB-01／PB-02剩余冠层和能量源条件，以及PB-04植被生长、分配、周转、凋落物与碳过程的当前源／同输入／真实消费者核对。按有限源条件补缺，复用已接受参考，不重开已闭合浮点调查。PB-05跨组收口和后续完整模型综合验证仍需完成。参数／状态90＋1＋1／92及93／126／181等口径保持，研究分支同步继续暂停。
+第五包[机器覆盖层](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/coverage.json)为32个PB-01／PB-02／PB-04父过程保留原稳定ID、源身份、旧等级和当前有限处置；[条件对照](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/source-condition-reconciliation.json)逐项链接原条件证据、源排除或精确剩余动作。15条冠层增量、5组能量条件及124旧arm、101条season条件／2隐含cap、207条生长条件／68循环域、254条litter-soilcarbon条件／24算术界限是不同视图，不相加成通过分母，不把完整元组allclose称逐arm执行。原52过程和308／12／26428／4217／824历史口径不改。
+
+本包有界原参考和真实调用／写回见[回执](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/validation-receipt.json)。六项已由主控接受为C67–C72，共同提交`b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12`，正式72／38；全生长链字面原caller960比较通过，最初adapter相位参考保留为诊断。原浮点结论、严格失败和未解嵌套JIT门各守原范围；source-mapped、原组件数值和实际transport证据分别列明，不升级整过程或自然轨迹。
+
+fixedsnow原源未定义值、外部PBL、自然低LAI／联合／雪能量前驱、私有peat历史身份、native partial、DOC原始通量／floor和其余算术／diffusion条件及跨组IO继续按[具名动作](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/remaining.json)保留。本包已获主控有限接受，不是物理阶段或完整分母收口；numerical_acceptance=false，无整模型／669／远端运行。参数／状态90＋1＋1／92及93／126／181口径保持，研究树未读写、同步暂停。
+
+[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-acceptance.json)核对30份当前产品及原交付／独审封存身份，复用owner与独审证据。最终隔离六文件回归260通过、4个外部原源／历史资产身份门跳过；实际边界13通过、来源门2通过，相邻62通过分别保留，不相加为科学覆盖。新11份Python lint通过，生产旧诊断64前／64后未增加；hosted CI未执行。主控只解析回执、读配对源码及实际caller，没有重复积分或数值套件。5份新JSON的Git规范化仅为换行，解析值相同；发布状态见[记录](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-publication.json)。
+
+下一包按[具名剩余动作](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/remaining.json)并行核对目标源条件分母、生长／扩散等剩余算术分支、嵌套JIT整返回差异和PB-05跨组数值接口；可在现有本地组件边界内补实际前驱，不能把合成元组称为自然轨迹。复用已接受参考，不重开已闭合浮点调查。整模型综合验证尚未启动，`numerical_acceptance=false`。参数／状态90＋1＋1／92及93／126／181口径保持；研究分支同步继续暂停。

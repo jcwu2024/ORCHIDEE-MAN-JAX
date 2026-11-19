@@ -1,6 +1,27 @@
-# C1–C66修正与支持补齐来源登记（2026-11-20）
+# C1–C72修正与支持补齐来源登记（2026-11-20）
 
-## 当前接受：C65编译源中止检查、C66初始化整组覆盖顺序
+## 当前接受：C67–C72季节、日碳和凋落物边界
+
+2026-11-20，主控接受第五包六项独立修正／支持补齐，登记C67–C72，生产／测试／CI提交`b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12`。累计**72项修正／支持补齐、38个相关生产提交**；70项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是72项物理公式错误。本轮六项均经只读`git show`确认存在于复查前`7cae3e02adad23674767a590fdf4d27f239ce065`；首次引入日期未作断言，未恢复或运行旧模型。
+
+| 编号 | 修正 | 原源与原因 | 位置与验证范围 |
+| --- | --- | --- | --- |
+| C67 | NPP裸土SLA更新范围 | `stomate_npp.f90:594–642`的SLA更新限j=2..nvm；旧通用clamp改写PFT1，现保留其入口SLA。 | `stomate/carbon_kernels.py::npp_leaf_age_sla_age_update`；原参考、裸土carry及clamp回归 |
+| C68 | 日碳源控制量静态编译合同 | prescribe的firstcall／stomate_restart_none及constraints的agriculture／undef从动态叶提升为静态配置；保持源默认值与显式值。 | `stomate/integration.py`静态与outer编译适配器；真实外层JIT回归，调用者需保持配置静态 |
+| C69 | 分配后LAI／slai相位 | 原LPJ分配后只更新slai，NPP／turnover仍消费入口lai，末尾才更新lai；修正三条组合入口。 | `stomate/integration.py`三条日碳链；字面原caller960比较通过，原adapter参考已降为诊断 |
+| C70 | 凋落物源小量判断常数 | 源min_stomate=1e-8漏入组合核，旧generic默认0；现向pool混合和两类fuel同步传原常数。 | `stomate/carbon_kernels.py::littercalc_leak_core_with_controls`；低于／等于／高于边界、真实writer再入 |
+| C71 | 季节日期先后顺序和写回 | 原太阳最低值日期先更新再供NGD；现由共同前驱接收latitude／calendar，并防止旧packet覆盖新日期。 | `coupled.py`共同season前驱与`driver/orchestration.py`调用／写回；实际前驱、packet及下一实参 |
+| C72 | 季节小量归零精度 | 源EPSILON(zero)的zero为REAL(r_std)，参考r_std64；旧代码用float32 epsilon，现恢复float64精度。 | `stomate/season.py`三处归零helper；保留微小非零值的原参考。permafrost常量未改 |
+
+[复查前源码证据](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-origin-check.json)逐项保存原函数及来源身份。按原因登记，不按多个caller重复计数；候选开发期间修正的测试输入位置、旧adapter相位参考和元数据兼容问题不新增历史bug编号。
+
+[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-acceptance.json)核对30份当前产品及原交付／独审封存身份，复用owner与独审证据。最终隔离六文件回归260通过、4个外部原源／历史资产身份门跳过；实际边界13通过、来源门2通过，相邻62通过分别保留，不相加为科学覆盖。新11份Python lint通过，生产旧诊断64前／64后未增加；hosted CI未执行。主控只解析回执、读配对源码及实际caller，没有重复积分或数值套件。5份新JSON的Git规范化仅为换行，解析值相同；发布状态见[记录](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-publication.json)。
+
+本包接受有限组件、源条件与真实写回／下一实参；不宣布PB各组、完整源分母或物理阶段完成。保留原HYDROL／热／雪／低光／DOC严格失败及已接受浮点结论的原范围。嵌套JIT完整返回13/14项失败、最大绝对差5.34106093e-12仍未归因。fixedsnow原未定义值、私有peat／外部PBL、native partial、自然联合／雪能量前驱及DOC原始通量／floor观测等缺证继续具名保留；年度DOC真实残差与异养呼吸仍未知，不由端点推算。C64仍限npts1／nstm6。
+
+下一包按[具名剩余动作](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/remaining.json)并行核对目标源条件分母、生长／扩散等剩余算术分支、嵌套JIT整返回差异和PB-05跨组数值接口；可在现有本地组件边界内补实际前驱，不能把合成元组称为自然轨迹。复用已接受参考，不重开已闭合浮点调查。整模型综合验证尚未启动，`numerical_acceptance=false`。参数／状态90＋1＋1／92及93／126／181口径保持；研究分支同步继续暂停。
+
+## 已接受快照：C65／C66与第四包范围
 
 2026-11-20，主控接受C65（编译热过程保留原冻结profile中止检查）和C66（初始化先判整组重算，再校验保留字段），共同生产／测试／CI提交`d2d48e6d5007079493cf91cca21c978eb79fa24a`。累计**66项修正／支持补齐、37个相关生产提交**，其中64项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏；不是66项物理公式错误。两项源行为均见于最早跟踪7333b46c及复查前7cae3e02，不能追称导入前的首次引入日期。见[来源登记](correction_origins.md)及[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
