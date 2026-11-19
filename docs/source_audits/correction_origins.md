@@ -1,7 +1,22 @@
-# C1–C61修正与支持补齐来源登记（2026-11-18）
+# C1–C63修正与支持补齐来源登记（2026-11-19）
 
 
-## 当前接受：C60／C61与参数状态收尾
+## 当前接受：C62／C63水文潮汐与有效检查开关
+
+2026-11-19，主控接受基线`dfc67a8a94f4a750eb25251d1435ce856efa573c`上的PB-03组件包及生产集成修订，共同生产／测试／CI提交`7b35196462fbfd53f531fd1dc751699092f80104`。正式累计**63项修正／支持补齐、35个相关生产提交**；61项有复查前错误或支持缺口证据，C42／C57仍是复查期间已接受代码的遗漏。原土柱求和顺序候选已撤回，不算修复。
+
+| 登记 | 必要性与年代 | 接受范围及限制 |
+| --- | --- | --- |
+| C62：HYDROL-TIDE-TRANSPORT-01 | 原`dim2_driver.f90:147–151`打开两文件，`hydrol.f90:5541–5542,5645–5655,6276–6288`逐次读取并使用独立水位及变化量。复查前`7cae3e02adad23674767a590fdf4d27f239ce065`与最早tracked导入`7333b46c0b38650fb6c9250582876137831657b8`的wrapper丢弃已提供潮汐值且driver缺自然producer。旧falling tuple的tmc误差约0.24，water2infilt／wt_ab_tide误差0.24；首次库外引入未知 | 补齐两份F10.3原单位文本、明确native-run记录原点、source clock、实际cold／ordinary／first-main／compact／compiled消费者和wrapper；新native运行从首记录打开，continuous保留原点。历史TIDES=false日志不算活动潮汐轨迹，接口替身不算整模型验证，缺文件／冲突／EOF明确失败 |
+| C63：HYDROL-CHECK-CWRR-01 | 原`constantes_soil.f90:463–473`默认false并读取override；`hydrol.f90:5662,6335–6367,7363`门控qflux及wat_flux。上述两个旧Git快照无条件计算诊断通量且没有完整有效开关传递；旧mineral_rain_canopy的qflux误差0.5451314626606469、refsoc_mixed_freeze为0.13113306982923245 | false源零通量合同及override贯通准备、owner、缓存查询和返回callable。完整true还缺源守恒／ET检查，明确拒绝，不能只计算qflux就称支持；低层独立诊断API的历史默认保留。未证明年度DOC影响 |
+
+原缺输入拒绝是复查期间的合同变化，与更早丢值／缺producer分开；本修订开发中的接线补漏不另加旧bug。旧generic harness的soilc_max与peat albedo常量错误只按已激活输入限定影响；经核查不撤销C13／C17／C18／C55已接受范围。新water-depth采样相位修正的17个保存值恰好相同，不虚构数值反例。详见[年代及旧参考影响](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/provenance/report.md)。
+
+主控核对22份当前产品及冻结副本、独审／manifest／patch绑定和求和函数原文恢复，复用已有验证：隔离本地uv 135通过、195精确坐标strict xfail、4身份门跳过；另55输入／实际adapter、87受影响邻接检查通过。四份JSON夹具仅经Git换行规范化且值相同。严格失败仍失败，不以数量计算bug，未重跑模型或原参考。完整true、私有peat producer、热／雪及其他物理条件仍在剩余表；`numerical_acceptance=false`。见[主控接受](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-acceptance.json)与[发布记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-publication.json)。
+
+未来同步需按共同提交、source-clock／状态与C43／C48／C55／C60既有依赖成组核对，不能仅复制tides helper或整文件覆盖研究改动；两研究分支仍未同步。
+
+## 已接受快照：C60／C61与参数状态收尾
 
 2026-11-18，基线`a3551dac4dbb2f53bee2ef47c80b4995eb57af82`上的WATCHOUT原包、R1–R5修正与R2公开历史续包合并接受，代码／测试／CI提交`aa14d04210ab371aae6e959da193561f37f55d0e`。正式累计61项修正／支持补齐、34个相关生产提交；59项有复查前错误或支持缺项证据（含C60），C42／C57为复查期间已接受代码的遗漏。不能把61解释成61条当时均激活的物理公式bug。
 
@@ -41,7 +56,7 @@ WATCHOUT尚需本地source→driver运输补齐；原封存包将外部producer�
 
 2026-11-17主控接受[水文／冠层包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)的两项有限接口／执行修复，登记C53=`HD-FWET-01`、C54=`HD-JIT-01`，共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。C53按hydrol_soil:7307–7342保留当前TOPMODEL湿地诊断，仅在没有新值时沿用旧值；原ordinary／runtime／fast布局曾将0.412613023955767覆盖为0.123。C54按diffuco_trans_co2:2214–2234在显式参数缺光照表时提前调用既有静态布局helper，修复真实JIT层数转换异常。两项在`7cae3e02adad23674767a590fdf4d27f239ce065`已有精确源码证据，首次引入未知；新参考设施不伪称旧版已有。前者当前wrapper TOPMODEL=True仍未贯通，后者论文默认getter本来预供表，故不声称论文自然路径曾触发两项失败。主控复用独立原源、19项交接和10项隔离回归／Ruff证据，无数值重跑；见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)及[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)。当时水文四项自定义参数差异另列；现由C55同一参数链闭合。
 
-C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C61登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
+C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C63登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 

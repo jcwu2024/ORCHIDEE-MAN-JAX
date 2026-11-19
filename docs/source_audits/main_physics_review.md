@@ -1,6 +1,16 @@
 # main 物理正确性检查入口
 
-## 当前接力：物理计算与条件分支验证
+## 当前接受：水文输入／配置修订；物理阶段继续
+
+2026-11-19，主控接受PB-03组件证据及生产集成修订，登记C62潮汐输入链和C63有效CHECK_CWRR合同，共同生产／测试／CI提交`7b35196462fbfd53f531fd1dc751699092f80104`。累计**63项修正／支持补齐、35个相关生产提交**；61项有复查前错误或支持缺口证据，另C42／C57为复查期间遗漏。土柱求和顺序候选已撤回，不计修复；[来源登记](correction_origins.md)和[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)保留准确依据及未来同步依赖。
+
+潮汐两原始文件按source clock和显式native-run原点送到真实入口及编译消费者，新native重开首记录，continuous保留原点。CHECK_CWRR默认false的零通量按源执行；完整true缺守恒／ET语义时明确拒绝。接口验证止于相应组件／spy边界，不能称历史活动潮汐或完整年界物理验证。
+
+主控复用隔离uv 135通过／195精确strict xfail／4身份门skip、另55输入／adapter及87邻接回归，核对22份产品和冻结绑定，没有新模型或Oracle运行。19个水文tuple的100 eager／93 JIT失败坐标仍按原限保留；旧热参考及其producer不改写。参见[验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-acceptance.json)与[发布](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-publication.json)。
+
+下一包是`PB03-STRICT-THERMAL`及同组剩余源条件：用已有完整输入定位热通量差异，区分逻辑与浮点，并补私有peat有效配置／其余目标分支证据；不重开已接受NPP／DOC／snow grain因果。PB-01／PB-02余项、PB-04／PB-05、源分母、外部身份和综合模型验证仍未完成。参数／状态90＋1＋1／92及重叠计数不变；`numerical_acceptance=false`。两研究分支仍暂缓同步。
+
+## 已接受快照：物理阶段启动及冠层／能量首包
 
 2026-11-18，用户在参数／状态验收后明确授权新一轮Sol与主控接力，直至[本阶段完成标准](physics_branch_closeout_plan.md)满足。接受基线为`000d5307ede59df6b8f51d015d0ad5cf17f79845`；正式61项／34相关生产提交、90＋1＋1／92及`numerical_acceptance=false`均保持。
 
