@@ -78,6 +78,18 @@ jobs:
           tests/unit/test_physics_branch_thermal.py
           tests/unit/test_thermosoil_source_conditions.py
           tests/unit/test_thermosoil_nslm.py::test_thermosoil_nslm_wrapper_jit_uses_original_traced_moisture_shape
+      - name: Canopy energy and daily carbon source conditions
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_phase05_canopy_conditions.py
+          tests/unit/test_phase05_energy_conditions.py
+          tests/unit/test_phase05_daily_memory.py
+          tests/unit/test_phase05_growth_conditions.py
+          tests/unit/test_phase05_litter_soilcarbon.py
+          tests/unit/test_phase05_component_writeback.py
       - name: Hydrology production configuration and tide adapters
         env:
           JAX_PLATFORMS: cpu
@@ -133,3 +145,14 @@ jobs:
           tests/unit/test_hydrol_water_table_initialization.py
           jax_orchidee/driver/tides.py
           scripts/dev/oracle_hydrol_tide_boundary.py
+          scripts/dev/oracle_phase05_canopy_conditions.py
+          scripts/dev/oracle_phase05_energy_conditions.py
+          scripts/dev/oracle_phase05_daily_memory.py
+          scripts/dev/oracle_phase05_growth_conditions.py
+          scripts/dev/oracle_phase05_litter_soilcarbon.py
+          tests/unit/test_phase05_canopy_conditions.py
+          tests/unit/test_phase05_energy_conditions.py
+          tests/unit/test_phase05_daily_memory.py
+          tests/unit/test_phase05_growth_conditions.py
+          tests/unit/test_phase05_litter_soilcarbon.py
+          tests/unit/test_phase05_component_writeback.py

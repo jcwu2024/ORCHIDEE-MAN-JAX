@@ -21,6 +21,7 @@ import numpy as np
 from jax_orchidee.stomate.soil_properties import bulk_density_source_update
 
 from jax_orchidee.stomate.carbon_kernels import (
+    DEFAULT_UNDEF,
     AllocationStepResult,
     ConstraintsResult,
     CoverResult,
@@ -3170,7 +3171,9 @@ def stomate_daily_alloc_kill_gap_turnover_explicit(
         f_alloc=allocation.f_alloc,
         leaf_age=allocation.leaf_age,
         leaf_frac=allocation.leaf_frac,
-        lai=lai_after_alloc,
+        # StomateLpj:1113 updates slai only; turn at 1260-1268 still
+        # receives entry lai. The final setlai updates lai at 1552-1557.
+        lai=alloc_inputs["lai"],
     )
     return ExplicitDailyCarbonKillGapTurnoverWithAllocResult(
         allocation=allocation,
@@ -3236,7 +3239,7 @@ def stomate_daily_prescribe_alloc_kill_gap_turnover_explicit(
         cn_ind=prescribe.cn_ind,
         when_growthinit=prescribe.when_growthinit,
         everywhere=prescribe.everywhere,
-        lai=lai_after_alloc,
+        lai=alloc_inputs["lai"],
     )
     return ExplicitDailyCarbonPrescribeAllocKillGapTurnoverResult(
         prescribe=prescribe,
@@ -3359,7 +3362,7 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit(
         cn_ind=prescribe.cn_ind,
         when_growthinit=phenology_when_growthinit,
         everywhere=prescribe.everywhere,
-        lai=lai_after_alloc,
+        lai=alloc_inputs["lai"],
         regenerate=constraints.regenerate,
     )
     return ExplicitDailyCarbonPrescribeConstraintsAllocKillGapTurnoverResult(
@@ -3437,6 +3440,10 @@ def _daily_carbon_static_dispatch(
     post_lpj_gap_const_mort,
     post_wire_vmax,
     post_ok_nlim_vmax,
+    pres_firstcall=True,
+    pres_stomate_restart_none=False,
+    cons_agriculture=True,
+    cons_undef=DEFAULT_UNDEF,
 ):
     prescribe = dict(prescribe_inputs)
     prescribe.update(
@@ -3447,6 +3454,8 @@ def _daily_carbon_static_dispatch(
             "pasture": pres_pasture,
             "is_tree": pres_is_tree,
             "pheno_is_none": pres_pheno_is_none,
+            "firstcall": pres_firstcall,
+            "stomate_restart_none": pres_stomate_restart_none,
         }
     )
     constraints = dict(constraints_inputs)
@@ -3458,6 +3467,8 @@ def _daily_carbon_static_dispatch(
             "pheno_is_none": cons_pheno_is_none,
             "tmin_crit": cons_tmin_crit,
             "tcm_crit": cons_tcm_crit,
+            "agriculture": cons_agriculture,
+            "undef": cons_undef,
         }
     )
     phenology = dict(phenology_inputs)
@@ -3505,6 +3516,10 @@ _daily_carbon_static_dispatch_jit = jit(
         "post_lpj_gap_const_mort",
         "post_wire_vmax",
         "post_ok_nlim_vmax",
+        "pres_firstcall",
+        "pres_stomate_restart_none",
+        "cons_agriculture",
+        "cons_undef",
     ),
 )
 
@@ -3535,6 +3550,15 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled(
         "pheno_is_none",
     ):
         prescribe.pop(name)
+    # Optional source control gates are Python dispatch, just like the PFT
+    # flags above. Preserve explicit values when entering an outer JIT;
+    # omitted fields retain prescribe_step/constraints_step defaults.
+    optional_dispatch = {
+        "pres_firstcall": prescribe.pop("firstcall", True),
+        "pres_stomate_restart_none": prescribe.pop("stomate_restart_none", False),
+        "cons_agriculture": constraints.pop("agriculture", True),
+        "cons_undef": constraints.pop("undef", DEFAULT_UNDEF),
+    }
     for name in (
         "natural",
         "is_tree",
@@ -3554,7 +3578,7 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_outer_compiled(
         alloc_inputs,
         post_npp,
         allocation_kwargs,
-        **dict(static_dispatch),
+        **{**optional_dispatch, **dict(static_dispatch)},
     )
     return _daily_carbon_with_boundary_trace(result)
 
@@ -3585,6 +3609,12 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit(
     pres_pasture = _bool_tuple(prescribe.pop("pasture"))
     pres_is_tree = _bool_tuple(prescribe.pop("is_tree"))
     pres_pheno_is_none = _bool_tuple(prescribe.pop("pheno_is_none"))
+    # prescribe.f90:257 and constraints.f90:163 use these as source
+    # configuration/call-phase gates. They must not become traced bool leaves.
+    pres_firstcall = bool(prescribe.pop("firstcall", True))
+    pres_stomate_restart_none = bool(prescribe.pop("stomate_restart_none", False))
+    cons_agriculture = bool(constraints.pop("agriculture", True))
+    cons_undef = float(constraints.pop("undef", DEFAULT_UNDEF))
     cons_natural = _bool_tuple(constraints.pop("natural"))
     cons_is_tree = _bool_tuple(constraints.pop("is_tree"))
     cons_is_peat = _bool_tuple(constraints.pop("is_peat"))
@@ -3621,6 +3651,10 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit(
         post_lpj_gap_const_mort=post_lpj_gap_const_mort,
         post_wire_vmax=post_wire_vmax,
         post_ok_nlim_vmax=post_ok_nlim_vmax,
+        pres_firstcall=pres_firstcall,
+        pres_stomate_restart_none=pres_stomate_restart_none,
+        cons_agriculture=cons_agriculture,
+        cons_undef=cons_undef,
     )
     return _daily_carbon_with_boundary_trace(result)
 

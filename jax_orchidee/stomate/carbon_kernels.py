@@ -1696,6 +1696,7 @@ def littercalc_leak_core_with_controls(
     flood_frac,
     *,
     dt_days,
+    min_stomate=1.0e-8,
     control_temp_above=None,
     control_moist_above=None,
     soil_mc_top_by_pft=None,
@@ -1731,6 +1732,10 @@ def littercalc_leak_core_with_controls(
     ``frozen_respiration_func``. It does not implement the crop interpolation
     blocks in lines 2417-2479 and 2499-2560 or the mass-balance/output
     bookkeeping in lines 2801-2869.
+
+    The pool/fuel guards use ``min_stomate`` from
+    ``src_parameters/constantes_var.f90`` line 177 (1.E-8), including the
+    equality branch at litter lines 2370, 2382, 2397, 2606 and 2683.
     """
 
     litter_above = jnp.asarray(litter_above)
@@ -1793,6 +1798,7 @@ def littercalc_leak_core_with_controls(
         lignin_struc_below,
         litterpart,
         increments,
+        min_stomate=min_stomate,
     )
     fuel_added = littercalc_add_aboveground_fuel(
         fuel_1hr,
@@ -1822,6 +1828,7 @@ def littercalc_leak_core_with_controls(
         fuel_added.fuel_1000hr[:, :, ISTRUCTURAL, :],
         above.litter_above[:, ISTRUCTURAL, :, :].transpose((0, 1, 2)),
         above.qd_structural,
+        min_stomate=min_stomate,
     )
     fuel_met = sync_aboveground_fuel_after_decomposition(
         fuel_added.fuel_1hr[:, :, IMETABOLIC, :],
@@ -1830,6 +1837,7 @@ def littercalc_leak_core_with_controls(
         fuel_added.fuel_1000hr[:, :, IMETABOLIC, :],
         above.litter_above[:, IMETABOLIC, :, :].transpose((0, 1, 2)),
         above.qd_metabolic,
+        min_stomate=min_stomate,
     )
     fuel_1hr_new = fuel_added.fuel_1hr.at[:, :, ISTRUCTURAL, :].set(fuel_struct.fuel_1hr)
     fuel_1hr_new = fuel_1hr_new.at[:, :, IMETABOLIC, :].set(fuel_met.fuel_1hr)
@@ -4187,9 +4195,12 @@ def npp_leaf_age_sla_age_update(
     sla_calc = jnp.where(sla_update, sla_combined, sla_calc)
 
     leaf_age_weighted = jnp.sum(leaf_age * leaf_frac, axis=2)
+    sla_before_clamp = sla_calc
     sla_calc = jnp.where(sla_calc > sla_max[None, :], sla_max[None, :], sla_calc)
     sla_calc = jnp.where(leaf_age_weighted < 5.0, sla_max[None, :], sla_calc)
     sla_calc = jnp.where(sla_calc < sla_min[None, :], sla_min[None, :], sla_calc)
+    # stomate_npp.f90:594-642 keeps every SLA update inside DO j=2,nvm.
+    sla_calc = jnp.where(active_pft[None, :], sla_calc, sla_before_clamp)
 
     age = jnp.where(pft_present, age + dt_days / one_year, 0.0)
     bm_new = (

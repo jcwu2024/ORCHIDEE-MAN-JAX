@@ -83,6 +83,7 @@ from jax_orchidee.stomate.season import (
     season_annual_step,
     season_biometeorology_step,
     season_memory_step,
+    season_update_gdd_init_date,
 )
 from jax_orchidee.stomate.soilcarbon_kernels import (
     altcalc_doc,
@@ -2444,6 +2445,7 @@ def stomate_season_biometeorology_input_kwargs(
     julian_diff,
     firstcall=False,
     time_scales: SeasonTimeScales | None = None,
+    gdd_init_date=None,
 ) -> StomateSeasonBiometeorologyInputKwargs:
     """Advance ``season`` section 7-11 from restart/daily/static inputs."""
 
@@ -2458,7 +2460,7 @@ def stomate_season_biometeorology_input_kwargs(
         t2m_longterm=t2m_longterm,
         moiavail_month=moiavail_month,
         when_growthinit=entry_state.when_growthinit,
-        gdd_init_date=season.gdd_init_date,
+        gdd_init_date=season.gdd_init_date if gdd_init_date is None else gdd_init_date,
         pheno_gdd_crit=parameters.pheno_gdd_crit,
         ncdgdd_temp=parameters.ncdgdd_temp,
         hum_min_time=parameters.hum_min_time,
@@ -2493,6 +2495,8 @@ def paper_case_stomate_pre_step_input_kwargs(
     used_run_def=None,
     run_def_values=None,
     parameter_overrides: Mapping[str, object] | None = None,
+    latitude=None,
+    calendar_str="gregorian",
 ) -> PaperCaseStomatePreStepInputKwargs:
     """Compose source-backed static parameters and one local ``season`` step.
 
@@ -2517,6 +2521,16 @@ def paper_case_stomate_pre_step_input_kwargs(
         else run_def_values
     )
     tau_longterm_value = season.tau_longterm if tau_longterm is None else tau_longterm
+    # season.f90:537-543 updates the solar minimum before sections 7-11
+    # consume its date (notably NGD at 1051). Explicit component callers may
+    # instead supply an already-current date when latitude is unavailable.
+    gdd_init_date = (
+        season_update_gdd_init_date(
+            season.gdd_init_date, latitude=latitude,
+            julian_diff=julian_diff, calendar_str=calendar_str,
+        )
+        if latitude is not None else season.gdd_init_date
+    )
     memory = stomate_season_memory_input_kwargs(
         season=season,
         daily=daily,
@@ -2560,7 +2574,11 @@ def paper_case_stomate_pre_step_input_kwargs(
         julian_diff=julian_diff,
         firstcall=firstcall_season,
         time_scales=scales,
+        gdd_init_date=gdd_init_date,
     )
+    # Keep the producer's inout field beside its consumer for day-end
+    # writeback; it is not a new argument to the daily carbon component.
+    biometeorology.kwargs["gdd_init_date"] = gdd_init_date
     kwargs = {
         **static.kwargs,
         **memory.kwargs,
@@ -2768,6 +2786,8 @@ def paper_case_stomate_bundle_source_kwargs(
     used_run_def=None,
     run_def_values=None,
     parameter_overrides: Mapping[str, object] | None = None,
+    latitude=None,
+    calendar_str="gregorian",
 ) -> PaperCaseStomateBundleSourceKwargs:
     """Return source-backed kwargs accepted by ``stomate_restart_input_bundles``.
 
@@ -2792,6 +2812,8 @@ def paper_case_stomate_bundle_source_kwargs(
         used_run_def=used_run_def,
         run_def_values=run_def_values,
         parameter_overrides=parameter_overrides,
+        latitude=latitude,
+        calendar_str=calendar_str,
     )
     boundary = paper_case_stomate_boundary_input_kwargs(
         config_path,

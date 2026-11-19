@@ -23,7 +23,9 @@ ONE_YEAR_DAYS = 365.0
 SPRING_DAYS_MAX = 40
 T_LONG_REF_MIN = 253.1
 T_LONG_REF_MAX = 303.1
-FORTRAN_EPSILON_R4 = jnp.finfo(jnp.float32).eps
+# season.f90 uses EPSILON(zero); constantes_var.f90:351 declares zero as
+# REAL(r_std), and the source reference build uses 64-bit r_std.
+FORTRAN_EPSILON_RSTD = jnp.finfo(jnp.float64).eps
 
 SEASON_MEMORY_PROVENANCE = (
     "fortran_source/ORCHIDEE/src_stomate/stomate.f90::stomate_main lines 4221-4251 calls season with dt_days",
@@ -301,13 +303,13 @@ def _zero_small_except_bare(values):
     arr = jnp.asarray(values)
     pft_index = jnp.arange(arr.shape[1])
     return jnp.where(
-        (pft_index[None, :] > 0) & (jnp.abs(arr) < FORTRAN_EPSILON_R4), 0.0, arr
+        (pft_index[None, :] > 0) & (jnp.abs(arr) < FORTRAN_EPSILON_RSTD), 0.0, arr
     )
 
 
 def _zero_small(values):
     arr = jnp.asarray(values)
-    return jnp.where(jnp.abs(arr) < FORTRAN_EPSILON_R4, 0.0, arr)
+    return jnp.where(jnp.abs(arr) < FORTRAN_EPSILON_RSTD, 0.0, arr)
 
 
 def _initialise_firstcall(
@@ -573,7 +575,7 @@ def _zero_small_except_bare_nd(values):
     pft_index = jnp.arange(arr.shape[1])
     mask_shape = (1, arr.shape[1]) + (1,) * (arr.ndim - 2)
     return jnp.where(
-        (pft_index.reshape(mask_shape) > 0) & (jnp.abs(arr) < FORTRAN_EPSILON_R4),
+        (pft_index.reshape(mask_shape) > 0) & (jnp.abs(arr) < FORTRAN_EPSILON_RSTD),
         0.0,
         arr,
     )

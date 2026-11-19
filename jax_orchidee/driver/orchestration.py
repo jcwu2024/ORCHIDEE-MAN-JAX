@@ -1526,6 +1526,8 @@ def _paper_first_step_stomate_restart_input_bundles(
     calendar_state: DriverPreviousStepStatePacket | None = None,
     daily_fields: dict[str, object] | None = None,
     run_def_values: dict[str, str] | None = None,
+    latitude=None,
+    calendar_str="gregorian",
 ) -> tuple[PaperCaseStomateBundleSourceKwargs, StomateRestartInputBundles]:
     """Build explicit STOMATE chain dictionaries at a ``do_slow`` boundary.
 
@@ -1568,6 +1570,8 @@ def _paper_first_step_stomate_restart_input_bundles(
         firstcall_season=True,
         used_run_def=run_def_path,
         run_def_values=run_def_values,
+        latitude=latitude,
+        calendar_str=calendar_str,
     )
     bundles = stomate_restart_input_bundles(
         state=restart_state.stomate,
@@ -1596,6 +1600,8 @@ def _paper_cold_start_stomate_input_bundles(
     calendar_state: DriverPreviousStepStatePacket | None = None,
     daily_fold: StomateDailyProcessFold | None,
     run_def_values: dict[str, str] | None = None,
+    latitude=None,
+    calendar_str="gregorian",
 ) -> tuple[PaperCaseStomateBundleSourceKwargs | None, StomateRestartInputBundles | None, tuple[DriverDayStateGap, ...]]:
     """Build cold-start STOMATE daily-carbon bundles from no-restart state."""
 
@@ -1667,6 +1673,8 @@ def _paper_cold_start_stomate_input_bundles(
         firstcall_season=True,
         used_run_def=run_def_path,
         run_def_values=run_def_values,
+        latitude=latitude,
+        calendar_str=calendar_str,
     )
     bundles = stomate_restart_input_bundles(
         state=entry_state,
@@ -1873,6 +1881,8 @@ def _paper_later_day_stomate_input_bundles(
     stomate_parameter_overrides: Mapping[str, object] | None = None,
     stomate_restart_template: StomateRestartEntryState | None = None,
     stomate_season_template: StomateRestartSeasonState | None = None,
+    latitude=None,
+    calendar_str="gregorian",
 ) -> tuple[PaperCaseStomateBundleSourceKwargs | None, StomateRestartInputBundles | None, tuple[DriverDayStateGap, ...]]:
     """Build later-day STOMATE bundles without aliasing restart dynamics."""
 
@@ -1932,6 +1942,8 @@ def _paper_later_day_stomate_input_bundles(
         used_run_def=run_def_path,
         run_def_values=run_def_values,
         parameter_overrides=stomate_parameter_overrides,
+        latitude=latitude,
+        calendar_str=calendar_str,
     )
     bundles = stomate_restart_input_bundles(
         state=entry_state,
@@ -2019,11 +2031,14 @@ def _paper_day_season_fields_from_bundle_source(
         **{name: annual[name] for name in STOMATE_DAY_SEASON_ANNUAL_FIELDS if name in annual},
         **{name: biometeorology[name] for name in STOMATE_DAY_SEASON_BIOMETEOROLOGY_FIELDS if name in biometeorology},
     }
+    biometeorology_inputs = getattr(source.pre_step.biometeorology, "kwargs", {})
+    if "gdd_init_date" in biometeorology_inputs:
+        fields["gdd_init_date"] = biometeorology_inputs["gdd_init_date"]
     if "turnover_longterm" in annual:
         fields["turnover_longterm"] = annual["turnover_longterm"]
     if "lm_lastyearmax" in annual:
         fields["lm_lastyearmax"] = annual["lm_lastyearmax"]
-    if season_state is not None:
+    if season_state is not None and "gdd_init_date" not in fields:
         fields["gdd_init_date"] = (
             season_update_gdd_init_date(
                 season_state.gdd_init_date,
@@ -8181,6 +8196,8 @@ def paper_1961_driver_timestep_scaffold(
                 tstep=tstep,
                 source_clock=source_clock,
                 run_def_values=run_def_values,
+                latitude=payload.lalo[:, 0],
+                calendar_str=_source_clock_setup(context).binding.calendar,
             )
         covered.extend(
             [
@@ -8374,6 +8391,8 @@ def _paper_day_daily_process_from_completed_entries(
     use_maintenance_jit: bool = False,
     single_pass_daily_fold: bool = False,
     run_def_values: dict[str, str] | None = None,
+    latitude=None,
+    calendar_str="gregorian",
 ):
     if not entry_payloads:
         return None
@@ -8389,6 +8408,8 @@ def _paper_day_daily_process_from_completed_entries(
         source_clock=entry_payloads[-1].get("source_clock"),
         calendar_state=calendar_state,
         run_def_values=run_def_values,
+        latitude=latitude,
+        calendar_str=calendar_str,
     )
     daily_state = restart_state.stomate_readstart.daily_state
     season_state = restart_state.stomate_readstart.season_state
@@ -10125,7 +10146,7 @@ def _paper_day_first_stomate_state_packet(
         for name in STOMATE_DAY_STATE_PERSISTED_ENTRY_FIELDS:
             if name in previous_slowproc:
                 fields[name] = previous_slowproc[name]
-        if "gdd_init_date" in previous_slowproc:
+        if "gdd_init_date" in previous_slowproc and "gdd_init_date" not in fields:
             fields["gdd_init_date"] = previous_slowproc["gdd_init_date"]
     else:
         previous_slowproc = {}
@@ -10538,6 +10559,8 @@ def paper_1961_driver_day_scaffold(
             single_pass_daily_fold=single_pass_daily_fold,
             run_def_values=run_def_values,
             calendar_state=calendar_snapshot,
+            latitude=first.payload.lalo[:, 0],
+            calendar_str=_source_clock_setup(context).binding.calendar,
         )
         if daily_fold is not None:
             stomate_bundle_source, stomate_bundles = _paper_first_step_stomate_restart_input_bundles(
@@ -10550,6 +10573,8 @@ def paper_1961_driver_day_scaffold(
                 calendar_state=calendar_snapshot,
                 daily_fields=daily_fold.daily_fields,
                 run_def_values=run_def_values,
+                latitude=first.payload.lalo[:, 0],
+                calendar_str=_source_clock_setup(context).binding.calendar,
             )
             if (
                 stomate_bundles is not None
@@ -10587,6 +10612,8 @@ def paper_1961_driver_day_scaffold(
                     calendar_state=calendar_snapshot,
                     daily_fields=daily_fold.daily_fields,
                     run_def_values=run_def_values,
+                    latitude=first.payload.lalo[:, 0],
+                    calendar_str=_source_clock_setup(context).binding.calendar,
                 )
                 stomate_ok_leak = ExplicitOkLeakFromPostNppResult(
                     prep=SimpleNamespace(provenance=("stomate.f90 lines 3288-3489",)),
@@ -10884,6 +10911,8 @@ def paper_1961_driver_later_day_scaffold(
             daily_fold=daily_fold,
             firstcall_season=int(start) == 0,
             run_def_values=run_def_values,
+            latitude=first_step_scaffold.enerbil.payload.lalo[:, 0],
+            calendar_str=_source_clock_setup(context).binding.calendar,
         )
         if stomate_bundles is not None and not stomate_bundle_gaps:
             stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
@@ -10957,12 +10986,6 @@ def paper_1961_driver_later_day_scaffold(
                     firstcall=False,
                     julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
                 )
-                if season_memory_fields is not None and "gdd_init_date" in previous_state.fields_by_component["slowproc_stomate_previous_step_state"]:
-                    season_memory_fields["gdd_init_date"] = season_update_gdd_init_date(
-                        previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["gdd_init_date"],
-                        latitude=first_step_scaffold.enerbil.payload.lalo[:, 0],
-                        julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
-                    )
                 day_stomate_state = _paper_day_first_stomate_state_packet(
                     daily_carbon=stomate_daily_carbon,
                     ok_leak=stomate_ok_leak,
@@ -12260,6 +12283,8 @@ def paper_1961_driver_later_day_runtime_result(
         stomate_restart_template=compiled_stomate_restart_template,
         stomate_season_template=compiled_stomate_season_template,
         source_clock=completed_payloads[-1]["source_clock"],
+        latitude=first_step_metadata.lalo[:, 0],
+        calendar_str=_source_clock_setup(context).binding.calendar,
     )
     if stomate_bundles is None or stomate_bundle_gaps:
         return DriverRuntimeDayResult(
@@ -12311,12 +12336,6 @@ def paper_1961_driver_later_day_runtime_result(
         tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
         firstcall=False,
     )
-    if season_memory_fields is not None and "gdd_init_date" in previous_state.fields_by_component["slowproc_stomate_previous_step_state"]:
-        season_memory_fields["gdd_init_date"] = season_update_gdd_init_date(
-            previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["gdd_init_date"],
-            latitude=first_step_metadata.lalo[:, 0],
-            julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
-        )
     day_stomate_state = _paper_day_first_stomate_state_packet(
         daily_carbon=stomate_daily_carbon,
         ok_leak=stomate_ok_leak,
@@ -13415,6 +13434,8 @@ def paper_1961_driver_cold_start_day_scaffold(
             calendar_state=calendar_snapshot,
             daily_fold=daily_fold,
             run_def_values=run_def_values,
+            latitude=context.first_step_bundle.domain.lalo[:, 0],
+            calendar_str=_source_clock_setup(context).binding.calendar,
         )
         cold_payloads = first.initialized_payloads
         cold_entry_state = cold_payloads.get("stomate_cold_start_entry_state")
