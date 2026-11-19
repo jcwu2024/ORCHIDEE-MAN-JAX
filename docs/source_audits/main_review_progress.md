@@ -1,37 +1,24 @@
 # 主线进度
 
-2026-11-18，**参数和状态传递已验收完成；用户新授权的物理计算与条件分支验证接力现已启动。** 范围遵循既定PFT14等价合同；还没有宣称整个模型与Fortran全面等价。
+2026-11-20：**参数与状态传递已按声明范围收尾；物理计算与条件分支验证正在继续。** 尚未宣布完整模型等价，也未启动最终综合验证。
 
-| 工作面 | 这次完成意味着什么 |
-| --- | --- |
-| 参数读入和覆盖 | 选定参数能从配置送到实际消费者，缓存不会把另一份设置混进来 |
-| 初始化与继续运行 | 区分新运行、重启初始化和连续运行；沿用前次确定的设置，缺少必需历史时明确报错 |
-| 日／编译块与年界交接 | 受检状态和初始化模式跨接口保留；空运行或失败不伪造新历史 |
-| 保存与读回 | 已支持的14／2PFT normalized单点文件链及条件refSOC字段按源合同处理 |
-| WATCHOUT输入 | 文件识别、读取／插值、driver／消费者、条件重启与连续历史交接在声明域内接通 |
+2026-11-20，主控接受C65（编译热过程保留原冻结profile中止检查）和C66（初始化先判整组重算，再校验保留字段），共同生产／测试／CI提交`d2d48e6d5007079493cf91cca21c978eb79fa24a`。累计**66项修正／支持补齐、37个相关生产提交**，其中64项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏；不是66项物理公式错误。两项源行为均见于最早跟踪7333b46c及复查前7cae3e02，不能追称导入前的首次引入日期。见[来源登记](correction_origins.md)及[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
-当前累计**64项修正／支持补齐、36个相关生产提交**。最新C64修复cold将完整ZWT_FORCE逐土壤块向量压成首值的问题，共同提交`e275a33fd5864957e9b241138359c1f6001a5756`。62项有复查前证据，C42／C57为复查期间遗漏；不是64项物理公式错误。[来源登记](correction_origins.md)与[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)保留准确依据、年代与未来同步依赖，研究分支尚未同步。
+| 工作组 | 当前结果 | 尚需工作 |
+| --- | --- | --- |
+| 参数／状态 | 已接受初始化、日／年交接、normalized restart、WATCHOUT及首插值准入的有限合同 | 一般native IO／外部producer及完整模型科学门另留 |
+| PB-01冠层／光合 | 原参考及eager／JIT、实际能量消费者证据已接受 | 根通气、部分albedo、极低正LAI合法前驱与源条件收口 |
+| PB-02能量／QSAT | 已有420字段／运行检查、3456数值及量率写回证据 | 合法联合beta、tiny-Milly／雪条件与外部PBL |
+| PB-03水文／热／雪 | C62–C66已接受；normal／ALT、dry／joint热及雪groundflux有界归因完成 | 私有peat历史身份、自然雪／能量前驱、native partial与其他源条件，完整分母未闭合 |
+| PB-04植被／碳 | 既有Oracle、NPP／DOC结论及日历状态证据复用 | 当前完整同输入、条件分支及真实碳通量／写回核对 |
+| PB-05跨组 | 已有有限真实接口及单位合同 | 剩余跨组、diagnostic、restart／modelout数值边界与终审 |
 
-参数／状态包代码／测试／CI提交：`aa14d04210ab371aae6e959da193561f37f55d0e`。上一包99项隔离检查＋另1项静态检查，本次最终35项与另7项检查分别通过；各批按各自源码版本记录，不机械相加。主控复用这些验证并核对实际代码和交接边，没有重跑整模型。原参考与科学阈值不变。
+[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-acceptance.json)复用原包修前2失败／修后隔离13通过＋1原源身份门skip及本地源门，并核对[集成修订](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-repair/README.md)：NSLM原compiled回归的输入、断言和容差保持，新增真实内层module JIT／外层checkified窄owner的合法材料字段及非法拒绝，两环境各3通过、无skip。11份当前及冻结产品、原／新封存身份匹配；主控本次未重跑数值。原源码与科学封包保留，Git对两份新JSON仅规范换行，解析值相同。发布见[记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-publication.json)。
 
-2026-11-19，主控已接受[冠层／能量首包及CI修订](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)的有限增量证据。原Fortran、eager／真实窄JIT及实际消费者交接已按边界记录，[当前覆盖总账](physics_branch_coverage.md)保留未完成分支。没有生产模型修改或新修复编号；低光cim严格失败与极低正LAI前驱／参考问题保留。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，不增加34个生产提交的计数。
+C65改变纯explicit热helper的编译合同：checkify后JIT，返回Error／result并在消费前check_error；module／scan／block与维护测试成组接入。C66仅接受有任一整字段缺失、因此九系数整组覆盖的公共初始化输入，native partial restart及完整driver可达尚未证明，保留组的混合marker仍拒绝。旧C64源等价仍限npts=1、nstm=6。原HYDROL100 eager＋93 JIT、固定热／雪21和不同输入handoff2严格次数不变。新增完整返回的嵌套JIT比较另有13/14项失败、最大绝对差5.34106093e-12，成因未定；窄接口通过不等于整状态等价。
 
-本轮为[PB-03组件增量包](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/README.md)：关联已接受土壤／热证据，补有限水文／冻结／refSOC、完整热和相邻雪组件原参考，以及真实水分输入、writer／packet、下一DIFFUCO选择与STOMATE入口adapter。后者没有执行碳过程或完整下一步。热通量／雪groundflux新严格差异、旧grain门、私有泥炭开关producer和自然雪域限制分别保留；不因这些数值差异增加修复计数或宣称PB-03完成。实际检查、独审和主控状态以新包为准，PB-01／PB-02剩余项继续保留。每包封存后回传一次，主控验收接续；不设定时消息，不自动启动综合模型运行。
+水文normal／ALT残差与独立雪groundflux现有完整同输入、内部首差及传播链证据，接受有界浮点归因，不改物理公式、求和或科学容差。dry／joint热、NPP／DOC／grain的旧结论保持各自范围。新嵌套JIT完整返回差异不能自动套用上述归因。私有peat历史build、自然初始雪包／第二energy容量及native partial restart等缺证仍在；PB-03、完整源分母及整个物理阶段尚未完成，numerical_acceptance=false。
 
-主控对原 PB-03 候选要求补齐生产集成和配置合同，当前修订见
-[controller-repair](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/README.md)。
-本修订接通两份原潮汐文本到真实 HYDROL 入口，绑定有效 `CHECK_CWRR`，完整 owner 明确拒绝尚缺
-守恒／ET 语义的 true；低层诊断 API 的历史默认保留。土柱求和恢复已接受基线，原顺序候选只保留为诊断。
-原包、参考、容差和未解严格坐标保留；修订已获[主控接受](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-acceptance.json)，[发布记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase02-hydrol-thermal/controller-repair/controller-publication.json)单列准确身份。
-隔离uv 135通过／195精确strict xfail／4身份门skip，另55输入／adapter及87邻接回归；主控复用结果并核对22份实际产品，未重跑模型。
-当前[第三包](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/README.md)已获[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-acceptance.json)。C64逐块水位修复限npts=1、nstm=6源等价，默认及scalar兼容，原setvar等长轴／一般多点未获证。最终隔离uv19通过／0skip，64个项目导入无泄漏；主控复用验证并核对9份当前及冻结产品，没有新物理运行。
+下一包并行推进PB-01／PB-02剩余冠层和能量源条件，以及PB-04植被生长、分配、周转、凋落物与碳过程的当前源／同输入／真实消费者核对。按有限源条件补缺，复用已接受参考，不重开已闭合浮点调查。PB-05跨组收口和后续完整模型综合验证仍需完成。参数／状态90＋1＋1／92及93／126／181等口径保持，研究分支同步继续暂停。
 
-dry／joint同输入的首差递推与相消证据接受为有界内部浮点归因，不改热公式，原严格门保留。水文保存操作数只证明下游传播，首差土柱状态和5个JIT蒸发限值仍未解；独立雪groundflux链不受热结论覆盖。下一包补这三处最小边界和合法目标mask／前驱，私有peat历史build需求单独准备。
-
-新覆盖层保留13个PB03稳定过程ID，补冻结阈值与最终热表面钳制的原源／消费者证据，不宣称全arm闭合。私有peat的原始声明存在USE同名冲突，局部编译检查不能解释历史有效build；false仅为已有trace边界，不能据此排除true目标条件。自然雪前驱、独立groundflux链、其他PB组及整个物理阶段仍未完成。
-
-之后仍需完整模型集成，以及部分外部参考／原生IO身份和科学限制的处理。原有DOC与积雪严格门仍保留，`numerical_acceptance=false`。这些缺证和限制不等于已经确认的新代码bug，已接受浮点成因也不把严格失败改写为通过。
-
-已接受的[CI修订](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-ci-repair/README.md)解决干净检出缺原Fortran文件的问题。完整三文件在tracked＋明确overlay的隔离环境实际本地uv运行：110通过、2来源门跳过、2严格预期失败；声明输入与数值检查仍必跑。本地有源时另有2项静态来源门通过。主控复用结果，核对9份当前执行资产和依赖审计，没有重跑数值；hosted Ubuntu／uv sync未执行。原候选及科学回执保留，发布身份见[发布记录](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-publication.json)。
-
-[参数／状态完成标准](parameter_state_closeout_plan.md) · [主控验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json) · [发布核对](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-publication.json) · [新阶段范围及停止标准](physics_branch_closeout_plan.md)。
+原参数／状态收尾生产提交`aa14d04210ab371aae6e959da193561f37f55d0e`及[验收](../../outputs/reviews/main-physics-20261118/parameter-state-controller-final/controller-acceptance.json)保留。原冠层／能量[首包与CI验收](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)及C62／C63、C64历史封包均保持原身份，不把各版本的测试数量相加或称最终字节全套重跑。当前证据见[覆盖表](physics_branch_coverage.md)，接力与停止标准见[阶段计划](physics_branch_closeout_plan.md)。Sol完成一包只回传一次，主控集中验收发布后派下一包，不启用定时轮询。

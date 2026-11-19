@@ -1,7 +1,25 @@
-# C1–C64修正与支持补齐来源登记（2026-11-19）
+# C1–C66修正与支持补齐来源登记（2026-11-20）
 
+## 当前接受：C65编译源中止检查、C66初始化整组覆盖顺序
 
-## 当前接受：C64冷启动逐土壤块强制水位
+2026-11-20，主控接受C65（编译热过程保留原冻结profile中止检查）和C66（初始化先判整组重算，再校验保留字段），共同生产／测试／CI提交`d2d48e6d5007079493cf91cca21c978eb79fa24a`。累计**66项修正／支持补齐、37个相关生产提交**，其中64项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏；不是66项物理公式错误。两项源行为均见于最早跟踪7333b46c及复查前7cae3e02，不能追称导入前的首次引入日期。见[来源登记](correction_origins.md)及[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
+
+| 编号 | 原源、旧行为与修复 | 证据与边界 |
+| --- | --- | --- |
+| C65 | thermosoil_getdiff:2802–2809在PFT冻结profile不一致时中止；旧Tracer路径跳过检查。共享functional check经真实module／scan／block保留，host消费前拒绝 | 原源保存反例、修前JIT错误返回成功、修后拒绝；合法输入NSLM原断言保留。反例含合成新表温，不能称自然轨迹失败；不改变计算公式 |
+| C66 | thermosoil_initialize:665–740任一系数全缺失会重算九字段；旧代码逐字段拒绝mixed marker早于组决定。现先判是否整组覆盖，仅保留组继续严格校验 | 原源43输出、实际profile／energy消费者通过；仅公共API安全覆盖元组，native partial producer／完整driver可达未证；形状、有限性及ptn／refSOC政策不变 |
+
+同一C65下的module／scan／block接入与本次NSLM测试迁移不按调用点新增编号；NSLM遗漏属于尚未接受候选的集成收尾，不是第三项复查前漏洞。原两行为在`7333b46c0b38650fb6c9250582876137831657b8`与`7cae3e02adad23674767a590fdf4d27f239ce065`均有直接源码证据；导入前真实首次日期未知。[年代证据](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/integration/history-check.json)与原交付保持。
+
+[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-acceptance.json)复用原包修前2失败／修后隔离13通过＋1原源身份门skip及本地源门，并核对[集成修订](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-repair/README.md)：NSLM原compiled回归的输入、断言和容差保持，新增真实内层module JIT／外层checkified窄owner的合法材料字段及非法拒绝，两环境各3通过、无skip。11份当前及冻结产品、原／新封存身份匹配；主控本次未重跑数值。原源码与科学封包保留，Git对两份新JSON仅规范换行，解析值相同。发布见[记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-publication.json)。
+
+C65改变纯explicit热helper的编译合同：checkify后JIT，返回Error／result并在消费前check_error；module／scan／block与维护测试成组接入。C66仅接受有任一整字段缺失、因此九系数整组覆盖的公共初始化输入，native partial restart及完整driver可达尚未证明，保留组的混合marker仍拒绝。旧C64源等价仍限npts=1、nstm=6。原HYDROL100 eager＋93 JIT、固定热／雪21和不同输入handoff2严格次数不变。新增完整返回的嵌套JIT比较另有13/14项失败、最大绝对差5.34106093e-12，成因未定；窄接口通过不等于整状态等价。
+
+未来集中同步须成组评审`sechiba/thermosoil.py`、`driver/orchestration.py`、两份新增原参考fixture、source_conditions／NSLM／scan回归和CI。私有explicit JIT返回由结果改成Error／result；研究自有外层编译入口须接入相同错误合同，不能整文件覆盖。以新的不可变部署重建受影响编译缓存，单独验证CUDA／AD／训练；本包未认证这些模式，也未读取、修改或同步研究树。旧Teacher数据与运行中部署保持原身份。
+
+水文normal／ALT残差与独立雪groundflux现有完整同输入、内部首差及传播链证据，接受有界浮点归因，不改物理公式、求和或科学容差。dry／joint热、NPP／DOC／grain的旧结论保持各自范围。新嵌套JIT完整返回差异不能自动套用上述归因。私有peat历史build、自然初始雪包／第二energy容量及native partial restart等缺证仍在；PB-03、完整源分母及整个物理阶段尚未完成，numerical_acceptance=false。
+
+## 已接受快照：C64冷启动逐土壤块强制水位
 
 2026-11-19，主控接受`HYDROL-ZWT-FORCE-TRANSPORT-01`，登记C64，共同生产／测试／CI提交`e275a33fd5864957e9b241138359c1f6001a5756`。累计**64项修正／支持补齐、36个相关生产提交**；62项有复查前错误或支持缺口证据，C42／C57仍为复查期间已接受代码的遗漏。
 
@@ -68,7 +86,7 @@ WATCHOUT尚需本地source→driver运输补齐；原封存包将外部producer�
 
 2026-11-17主控接受[水文／冠层包](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/README.md)的两项有限接口／执行修复，登记C53=`HD-FWET-01`、C54=`HD-JIT-01`，共同代码／测试／CI提交 `139e1ba7ba2db46d6f1a3b00f0592335bf40cafa`。C53按hydrol_soil:7307–7342保留当前TOPMODEL湿地诊断，仅在没有新值时沿用旧值；原ordinary／runtime／fast布局曾将0.412613023955767覆盖为0.123。C54按diffuco_trans_co2:2214–2234在显式参数缺光照表时提前调用既有静态布局helper，修复真实JIT层数转换异常。两项在`7cae3e02adad23674767a590fdf4d27f239ce065`已有精确源码证据，首次引入未知；新参考设施不伪称旧版已有。前者当前wrapper TOPMODEL=True仍未贯通，后者论文默认getter本来预供表，故不声称论文自然路径曾触发两项失败。主控复用独立原源、19项交接和10项隔离回归／Ruff证据，无数值重跑；见[验收](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-acceptance.json)及[发布](../../outputs/reviews/main-physics-20261117/hydrol-diffuco-state-closure/controller-publication.json)。当时水文四项自定义参数差异另列；现由C55同一参数链闭合。
 
-C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C64登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
+C55接受时累计55项修正、32个相关生产代码提交，其中54项有复查前证据、1项C42属复查新增helper的默认遗漏；当前累计以上方C1–C66登记为准。C53为状态选择、C54为有限编译入口修复，计数不等同活动物理公式错误数。原C1–C52来源和接受范围保留；C51／C52共同提交 `9a856c6cf859437d2436f4f3748d4c9e770838a1`。C49初次提交 `ea75bde31012cf519d4b0fa5c689d865c9d9c2b7` 与US_INIT扩展 `d6bad452932d1a7179ff5ab5fd80c771da89e336` 仍算同一初始化链。
 
 C45–C47共同提交3f7b482765b7b41339ee56a818b1f164490a5d1e，具有配对源、保存旧反例和新identified native参考；不恢复历史001 producer。详见[累计登记](shared_core_branch_review.md#累计修改位置与提交索引)和[helper接受记录](../../outputs/reviews/main-physics-20261114/native-clock-helper/controller-acceptance.json)。旧C41–C43提交8a772de6f4977018a875093d535b6088317716c8、C44提交9c15c042a5ade9c91d91ac91a8c0ea39ed87c8f2保留。生产接线C48见下节，不并入这三个已接受helper修复。
 

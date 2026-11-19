@@ -1,12 +1,16 @@
 # PFT14 剩余源码与状态覆盖
 
-## 当前接受：逐土壤块水位修复及有界热通量归因
+## 当前接受：C65／C66及有界水文、积雪归因
 
-2026-11-19，主控接受C64冷启动ZWT_FORCE完整向量传递修复，生产／测试／CI提交`e275a33fd5864957e9b241138359c1f6001a5756`。累计**64项修正／支持补齐、36个相关生产提交**，其中62项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏。旧代码把首土壤块水位复制到所有块；新resolver、cold入口与构造器保留逐块值。源等价仅npts=1、nstm=6，原setvar等长轴优先序及一般多点、native IOIPSL词法未认证；scalar／默认日志与restart所有权保持。见[来源登记](correction_origins.md)和[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
+2026-11-20，主控接受C65（编译热过程保留原冻结profile中止检查）和C66（初始化先判整组重算，再校验保留字段），共同生产／测试／CI提交`d2d48e6d5007079493cf91cca21c978eb79fa24a`。累计**66项修正／支持补齐、37个相关生产提交**，其中64项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏；不是66项物理公式错误。两项源行为均见于最早跟踪7333b46c及复查前7cae3e02，不能追称导入前的首次引入日期。见[来源登记](correction_origins.md)及[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。
 
-[本包验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-acceptance.json)复用最终隔离uv19通过／0skip、64个隔离导入，核对9份实际产品、原源及独审，没有新物理运行。dry／joint两个同输入热参考已有底层1ULP首差及实际系数经表面相消放大的证据，接受有界内部浮点归因，不改热公式。原16个热严格坐标仍失败，雪groundflux不属于这条递推链。冻结阈值→液态水和最终热钳制→真实writer也按有限边界接受。发布见[记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase03-hydrol-thermal-closeout/controller-publication.json)。
+[主控验收](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-acceptance.json)复用原包修前2失败／修后隔离13通过＋1原源身份门skip及本地源门，并核对[集成修订](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-repair/README.md)：NSLM原compiled回归的输入、断言和容差保持，新增真实内层module JIT／外层checkified窄owner的合法材料字段及非法拒绝，两环境各3通过、无skip。11份当前及冻结产品、原／新封存身份匹配；主控本次未重跑数值。原源码与科学封包保留，Git对两份新JSON仅规范换行，解析值相同。发布见[记录](../../outputs/reviews/main-physics-20261119/physics-branch-closeout/phase04-hydrol-snow-boundaries/controller-publication.json)。
 
-下一包处理水文pre/post求解、ALT蒸发限值与独立雪groundflux最小边界，并批量补合法目标mask／前驱条件。私有peat真实build身份缺项明确保留，先整理准确外部证据需求，不阻塞其他本地工作。PB-01／PB-02余项、PB-04／PB-05、完整源分母和综合模型验证仍未完成。当前严格次数100 eager＋93 JIT水文、21固定热／雪、2不同输入live handoff保持；参数／状态90＋1＋1／92等口径不变，numerical_acceptance=false，研究同步暂停。
+C65改变纯explicit热helper的编译合同：checkify后JIT，返回Error／result并在消费前check_error；module／scan／block与维护测试成组接入。C66仅接受有任一整字段缺失、因此九系数整组覆盖的公共初始化输入，native partial restart及完整driver可达尚未证明，保留组的混合marker仍拒绝。旧C64源等价仍限npts=1、nstm=6。原HYDROL100 eager＋93 JIT、固定热／雪21和不同输入handoff2严格次数不变。新增完整返回的嵌套JIT比较另有13/14项失败、最大绝对差5.34106093e-12，成因未定；窄接口通过不等于整状态等价。
+
+水文normal／ALT残差与独立雪groundflux现有完整同输入、内部首差及传播链证据，接受有界浮点归因，不改物理公式、求和或科学容差。dry／joint热、NPP／DOC／grain的旧结论保持各自范围。新嵌套JIT完整返回差异不能自动套用上述归因。私有peat历史build、自然初始雪包／第二energy容量及native partial restart等缺证仍在；PB-03、完整源分母及整个物理阶段尚未完成，numerical_acceptance=false。
+
+下一包并行推进PB-01／PB-02剩余冠层和能量源条件，以及PB-04植被生长、分配、周转、凋落物与碳过程的当前源／同输入／真实消费者核对。按有限源条件补缺，复用已接受参考，不重开已闭合浮点调查。PB-05跨组收口和后续完整模型综合验证仍需完成。参数／状态90＋1＋1／92及93／126／181等口径保持，研究分支同步继续暂停。
 
 ## 已接受快照：物理阶段启动及冠层／能量首包
 
