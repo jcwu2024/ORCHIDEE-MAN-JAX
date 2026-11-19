@@ -90,6 +90,37 @@ def _logical(values: Mapping[str, object], key: str, current: bool) -> bool:
     return _boolean(values[key]) if key in values else current
 
 
+def resolve_hydrol_check_cwrr(overrides: Mapping[str, object] | None = None) -> bool:
+    """Resolve CHECK_CWRR without evaluating unrelated soil parameters.
+
+    Fortran provenance: ``src_parameters/constantes_soil.f90``,
+    ``config_soil_parameters`` lines 463-473 resets this control to FALSE on
+    every call, then reads its override. It does not inherit an earlier true
+    value or depend on the outer OK_SECHIBA/IMPOSE_PARAM gates.
+    """
+
+    return _logical(_normalized(overrides), "CHECK_CWRR", False)
+
+
+def require_supported_hydrol_check_cwrr(value: object, *, entrypoint: str = "complete HYDROL owner") -> bool:
+    """Refuse the unimplemented complete-owner CHECK_CWRR=true contract.
+
+    Source ``hydrol.f90::hydrol_soil`` lines 6333-6397 and
+    ``hydrol_split_soil`` lines 8819-8919 check conservation and ET consistency
+    in addition to computing flux. The complete-owner APIs currently support
+    FALSE only. This support guard does not alter low-level diagnostic APIs.
+    """
+
+    effective = _boolean(value)
+    if effective:
+        raise NotImplementedError(
+            f"{entrypoint}: effective CHECK_CWRR=true is unsupported: full "
+            "HYDROL conservation and ET consistency checks are not implemented; "
+            "the low-level diagnostic flux API is a separate component contract"
+        )
+    return False
+
+
 def _vector(values: Mapping[str, object], key: str, current: Sequence[float]) -> tuple[float, ...]:
     result = list(current)
     if key in values:
@@ -224,9 +255,15 @@ def config_soil_parameters(
     # Lines 463-483 explicitly reset these defaults on every call.
     return replace(
         state,
-        check_cwrr=_logical(values, "CHECK_CWRR", False),
+        check_cwrr=resolve_hydrol_check_cwrr(values),
         check_cwrr2=_logical(values, "CHECK_CWRR2", False),
     )
 
 
-__all__ = ["SoilParameterError", "SoilParameters", "config_soil_parameters"]
+__all__ = [
+    "SoilParameterError",
+    "SoilParameters",
+    "config_soil_parameters",
+    "resolve_hydrol_check_cwrr",
+    "require_supported_hydrol_check_cwrr",
+]

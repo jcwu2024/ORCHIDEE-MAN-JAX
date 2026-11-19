@@ -96,6 +96,13 @@ from jax_orchidee.driver.source_clock import (
     source_clock_setup_from_config, source_istp_for_local_tstep,
     validate_source_clock_runtime, rebase_source_clock_runtime,
 )
+from jax_orchidee.driver.tides import (
+    TideForcingError, TideForcingRun, TideForcingValues,
+    bind_tide_forcing_run, prepare_tide_forcing, tide_forcing_for_source_istp,
+)
+from jax_orchidee.parameters.soil import (
+    require_supported_hydrol_check_cwrr, resolve_hydrol_check_cwrr,
+)
 from jax_orchidee.driver.domain import load_case_config, read_annual_co2, read_forcing_model_step_cached, read_forcing_step
 from jax_orchidee.driver.dim2 import CP_AIR, GRAVITY, Dim2Switches, validate_dim2_switches
 from jax_orchidee.driver.init import (
@@ -436,6 +443,78 @@ class Paper1961PreparedDriverContext:
     hydrol_soil_parameters: HydrolSoilParameters | None = None
     hydrol_depth_parameters: HydrolDepthParameters | None = None
     watchout_initialize_main_tstep: int | None = None
+    hydrol_check_cwrr: bool = False
+    hydrol_tide_run: TideForcingRun | None = None
+
+
+def _effective_hydrol_check_cwrr(context) -> bool:
+    """Admit the effective source switch before cached or complete owners.
+
+    Source: constantes_soil463-473; hydrol_soil6335-6367 includes ET and
+    conservation checks that the complete JAX owner does not yet implement.
+    Read the mapping again: prepared contexts may retain a mutable mapping.
+    """
+    value = require_supported_hydrol_check_cwrr(
+        resolve_hydrol_check_cwrr(context.run_def_values), entrypoint="paper driver"
+    )
+    require_supported_hydrol_check_cwrr(
+        getattr(context, "hydrol_check_cwrr", value), entrypoint="prepared paper driver"
+    )
+    return value
+
+
+def _bind_context_hydrol_tides(context, setup, *, previous=None, run_mode="new_native_run"):
+    """Keep stream origin separate from a rebased local/source clock frame.
+
+    Source: dim2_driver147-151 opens streams once, hydrol_soil5645-5655
+    consumes once per main call. A new executable (including annual paper
+    restart) opens record zero; a continuous native run retains its origin.
+    """
+    _effective_hydrol_check_cwrr(context)
+    run = None
+    if context.hydrol_tides:
+        if run_mode == "continuous" and (
+            previous is None or previous.source_clock_binding_key != setup.binding.binding_key
+        ):
+            raise TideForcingError("continuous tide forcing requires its original TideForcingRun; no origin inference from rebased clock")
+        prepared = prepare_tide_forcing(context.config_path, run_def_values=context.run_def_values,
+            source_run_def_path=context.run_def_path.with_name("run.def"))
+        run = bind_tide_forcing_run(prepared, setup, previous=previous)
+    updates = {"source_clock_setup": setup}
+    if "hydrol_tide_run" in context.__dataclass_fields__:
+        updates["hydrol_tide_run"] = run
+    elif context.hydrol_tides:
+        raise TideForcingError("active tide context must retain its native-run stream origin")
+    return replace(context, **updates)
+
+
+def _driver_hydrol_controls(context, *, tstep, source_clock_runtime=None,
+                            source_clock=None, tide_values=None) -> dict[str, object]:
+    """Host-prefetched tide leaves and a static, effective CHECK_CWRR gate.
+
+    Compiled callers supply admitted numeric leaves. No text IO, calendar
+    modulo, host conversion of traced indices or derivative occurs in JIT.
+    """
+    check = _effective_hydrol_check_cwrr(context)
+    if not context.hydrol_tides:
+        pair = TideForcingValues(np.float64(0.0), np.float64(0.0))
+    else:
+        run = getattr(context, "hydrol_tide_run", None)
+        if run is None or run.source_clock_binding_key != _source_clock_setup(context).binding.binding_key:
+            raise TideForcingError("active HYDROL tides require a bound native-run stream origin")
+        if tide_values is None:
+            if source_clock is None:
+                source_clock = _driver_source_clock_payload(context, source_clock_runtime, tstep=tstep)
+            if isinstance(source_clock.istp, jax.core.Tracer):
+                raise TideForcingError("compiled HYDROL tides require host-prefetched READ103/104 leaves")
+            pair = tide_forcing_for_source_istp(run, source_clock.istp)
+        else:
+            pair = tide_values
+            if source_clock is not None and not isinstance(source_clock.istp, jax.core.Tracer):
+                expected = tide_forcing_for_source_istp(run, source_clock.istp)
+                if any(not np.array_equal(actual, reference) for actual, reference in zip(pair, expected, strict=True)):
+                    raise TideForcingError("prefetched HYDROL tide pair disagrees with the source stream record")
+    return {"check_cwrr": check, "wtp_tide": pair.wtp_tide, "dwtp_tide": pair.dwtp_tide}
 
 
 def _prepared_hydrol_soil_parameters(
@@ -723,8 +802,12 @@ def _prepare_paper_1961_driver_context_cached(
     config_path: str,
     run_def_path: str,
     reference_run_dir: str | None,
+    hydrol_check_cwrr: bool = False,
 ) -> Paper1961PreparedDriverContext:
     values = parse_run_def(run_def_path)
+    hydrol_check_cwrr = require_supported_hydrol_check_cwrr(
+        resolve_hydrol_check_cwrr(values), entrypoint="prepared paper driver cache"
+    )
     _validate_paper_forcing_coupling_switches(values)
     _validate_stomate_main_supported_switches(values)
     domain_override = _domain_override_from_run_def_values(values)
@@ -857,6 +940,7 @@ def _prepare_paper_1961_driver_context_cached(
         hydrol_ok_ru2peat=parse_run_def_bool(values["OK_RU2PEAT"]),
         hydrol_ok_wt_ab=parse_run_def_bool(values["OK_WT_AB"]),
         hydrol_tides=parse_run_def_bool(values["TIDES"]),
+        hydrol_check_cwrr=hydrol_check_cwrr,
         hydrol_agri_peat=parse_run_def_bool(values["AGRI_PEAT"]),
         hydrol_max_wt_ab=parse_run_def_float(values, "max_wt_ab") if "max_wt_ab" in values else 100.0,
         hydrol_dyn_nroot_larix=parse_run_def_bool(values["dyn_nroot_larix"]),
@@ -924,13 +1008,14 @@ def _prepare_paper_1961_driver_context_cached(
 
 
 @lru_cache(maxsize=8)
-def _prepare_paper_1961_clock_context_cached(config_key, run_def_key, run_dir_key):
-    context = _prepare_paper_1961_driver_context_cached(config_key, run_def_key, run_dir_key)
-    return replace(context, source_clock_setup=source_clock_setup_from_config(
+def _prepare_paper_1961_clock_context_cached(config_key, run_def_key, run_dir_key, hydrol_check_cwrr=False):
+    context = _prepare_paper_1961_driver_context_cached(config_key, run_def_key, run_dir_key, hydrol_check_cwrr)
+    setup = source_clock_setup_from_config(
         context.config_path, run_def_path=context.run_def_path,
         run_def_values=context.run_def_values, first_step_bundle=context.first_step_bundle,
         reference_run_dir=context.reference_run_dir,
-    ))
+    )
+    return _bind_context_hydrol_tides(context, setup)
 
 
 def prepare_paper_1961_driver_context(
@@ -941,20 +1026,28 @@ def prepare_paper_1961_driver_context(
     run_mode: str = "new_native_run",
     previous_runtime: SourceClockRuntime | None = None,
     run_id: str | None = None,
+    previous_tide_run: TideForcingRun | None = None,
 ) -> Paper1961PreparedDriverContext:
     """Prepare reusable constants for a source-backed paper-case day loop."""
 
     config_resolved = Path(config_path).resolve()
     run_def_path = Path(used_run_def_path) if used_run_def_path is not None else default_used_run_def_path(config_resolved)
+    # Guard before both LRU lookups: editing CHECK_CWRR at the same path must
+    # never retrieve a cached false context for an effective true request.
+    check = require_supported_hydrol_check_cwrr(
+        resolve_hydrol_check_cwrr(parse_run_def(run_def_path)), entrypoint="paper driver preparation"
+    )
     run_dir_key = None if reference_run_dir is None else str(Path(reference_run_dir).resolve())
     if run_mode == "new_native_run" and previous_runtime is None and run_id is None:
-        return _prepare_paper_1961_clock_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key)
-    context = _prepare_paper_1961_driver_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key)
-    return replace(context, source_clock_setup=source_clock_setup_from_config(
+        return _prepare_paper_1961_clock_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key, check)
+    context = _prepare_paper_1961_driver_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key, check)
+    setup = source_clock_setup_from_config(
         config_resolved, run_def_path=run_def_path, run_def_values=context.run_def_values,
         first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
         run_mode=run_mode, previous_runtime=previous_runtime, run_id=run_id,
-    ))
+    )
+    return _bind_context_hydrol_tides(context, setup,
+        previous=previous_tide_run if run_mode == "continuous" else None, run_mode=run_mode)
 
 
 def _paper_1961_step_bundle_from_context(
@@ -2269,6 +2362,7 @@ class DriverRuntimeHalfHourInput:
     step: DriverStepBundle
     base_payload: IntersurfFirstStepPayload
     source_clock: DriverSourceClockPayload | None = None
+    hydrol_tide_forcing: TideForcingValues | None = None
 
 
 class DriverSourceClockPayload(NamedTuple):
@@ -2315,6 +2409,7 @@ class DriverCompiledHalfHourForcing(NamedTuple):
     tide_height: object
     source_clock: DriverSourceClockPayload | None = None
     watchout: DriverCompiledWatchoutForcing | None = None
+    hydrol_tide_forcing: TideForcingValues | None = None
 
 
 class DriverCompiledDiffucoDayInputs(NamedTuple):
@@ -3295,10 +3390,27 @@ def _require_source_day_alignment(context, state, *, start):
 
 def _validate_compiled_source_clock_series(context, state, forcing_series, *, whole_days=False):
     """Host validation before a numeric series enters a compiled executable."""
+    _effective_hydrol_check_cwrr(context)
     clock = forcing_series.source_clock
     if clock is None:
         raise SourceClockError("compiled forcing lacks dynamic source-clock payload")
     setup = _source_clock_setup(context)
+    if context.hydrol_tides:
+        pair = getattr(forcing_series, "hydrol_tide_forcing", None)
+        run = getattr(context, "hydrol_tide_run", None)
+        if pair is None or run is None or run.source_clock_binding_key != setup.binding.binding_key:
+            raise TideForcingError("compiled forcing lacks bound READ103/104 tide leaves")
+        if not isinstance(clock.istp, jax.core.Tracer):
+            source = np.asarray(clock.istp)
+            index = source - run.first_source_istp
+            count = min(run.prepared.positive.size, run.prepared.differential.size)
+            if (not np.all(np.isfinite(index)) or not np.all(index == np.floor(index))
+                    or np.any(index < 0) or np.any(index >= count)):
+                raise TideForcingError("compiled tide source indices exceed the paired stream")
+            index = index.astype(np.int64)
+            expected = (run.prepared.positive[index], run.prepared.differential[index])
+            if any(not np.array_equal(actual, reference) for actual, reference in zip(pair, expected, strict=True)):
+                raise TideForcingError("compiled tide leaves disagree with declared source records")
     if whole_days and float(context.runtime.dt_stomate) != setup.binding.one_day_seconds:
         raise SourceClockError("compiled block requires DT_STOMATE equal to the declared source day")
     if isinstance(clock.istp, jax.core.Tracer):
@@ -4641,6 +4753,8 @@ def paper_1961_next_step_hydrol_precall_scaffold(
 ) -> DriverNextStepHydrolPrecallScaffold:
     """Assemble later-step HYDROL pre-call from local DIFFUCO/ENERBIL state."""
 
+    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    _effective_hydrol_check_cwrr(context)
     enerbil = paper_1961_next_step_enerbil_precall_scaffold(
         config_path,
         previous_state=previous_state,
@@ -4666,7 +4780,6 @@ def paper_1961_next_step_hydrol_precall_scaffold(
             missing_previous_state_fields=tuple(dict.fromkeys((*enerbil.missing_previous_state_fields, *hydrol_missing, "enerbil_local"))),
         )
 
-    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
     run_def_values = context.run_def_values
     nvm = int(np.asarray(previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["lai"]).shape[1])
     cwrr_grid = context.cwrr_grid
@@ -4703,6 +4816,8 @@ def paper_1961_next_step_hydrol_precall_scaffold(
             dt_days=context.dt_sechiba_days,
         )
     hydrol_precall = assemble_hydrol_first_step_precall_payload(
+        **_driver_hydrol_controls(context, tstep=tstep,
+            source_clock_runtime=previous_state.source_clock_runtime),
         soil_parameters=_prepared_hydrol_soil_parameters(context),
         enerbil_payload=enerbil.enerbil_local.payload,
         hydrol_restart=hydrol_state,
@@ -4940,6 +5055,10 @@ def paper_1961_driver_cold_start_first_step_coverage(
         else default_used_run_def_path(config_path)
     )
     run_def_values = prepared_context.run_def_values if prepared_context is not None else parse_run_def(run_def_path)
+    if prepared_context is not None:
+        _effective_hydrol_check_cwrr(prepared_context)
+    require_supported_hydrol_check_cwrr(resolve_hydrol_check_cwrr(run_def_values),
+        entrypoint="cold paper driver")
     _validate_paper_forcing_coupling_switches(run_def_values)
     cold_thermal_controls = _fresh_cold_thermosoil_controls(run_def_values)
     cold_thermal_missing = _fresh_cold_thermosoil_missing_inputs(
@@ -4981,6 +5100,21 @@ def paper_1961_driver_cold_start_first_step_coverage(
         )
     )
     init_step = step
+    clock_context = prepared_context
+    if clock_context is None:
+        cold_setup = source_clock_setup_from_config(
+            config_path, run_def_path=run_def_path, run_def_values=run_def_values,
+            first_step_bundle=init_step, run_mode="new_native_run",
+        )
+        cold_tides = parse_run_def_bool(run_def_values["TIDES"])
+        clock_context = SimpleNamespace(
+            run_def_values=run_def_values, source_clock_setup=cold_setup,
+            hydrol_tides=cold_tides, hydrol_check_cwrr=False,
+            hydrol_tide_run=(bind_tide_forcing_run(
+                prepare_tide_forcing(config_path, run_def_values=run_def_values,
+                    source_run_def_path=Path(run_def_path).with_name("run.def")), cold_setup,
+            ) if cold_tides else None),
+        )
     init_payload = build_intersurf_first_step_payload(init_step, dt_sechiba=dt_sechiba)
     payload = build_intersurf_first_step_payload(step, driver_z0_for_wind=999999.0, dt_sechiba=dt_sechiba)
     run_scalars = read_run_scalars(config_path, run_def_path=run_def_path)
@@ -5487,6 +5621,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
             wt_ab_tide=hydrol_cold.wt_ab_tide,
         )
         hydrol_precall = assemble_hydrol_first_step_precall_payload(
+            **_driver_hydrol_controls(clock_context, tstep=0),
             soil_parameters=hydrol_soil,
             enerbil_payload=enerbil_local.payload,
             hydrol_restart=hydrol_restart,
@@ -5958,16 +6093,6 @@ def paper_1961_driver_cold_start_first_step_coverage(
         # A no-restart initialization cannot enter the restart-backed prepared
         # context constructor. Bind the actual cold bundle's declared clock;
         # a caller's already admitted context retains its run identity.
-        clock_context = prepared_context
-        if clock_context is None:
-            clock_context = SimpleNamespace(
-                run_def_values=run_def_values,
-                source_clock_setup=source_clock_setup_from_config(
-                    config_path, run_def_path=run_def_path,
-                    run_def_values=run_def_values, first_step_bundle=init_step,
-                    run_mode="new_native_run",
-                ),
-            )
         initialized_payloads["source_clock_context"] = clock_context
         initialized_payloads["cold_start_first_step_previous_state"] = _previous_step_state_from_cold_start_payloads(
             initialized_payloads, source_clock_context=clock_context,
@@ -6939,10 +7064,12 @@ def _paper_1961_next_step_runtime_result_compact(
     runtime_forcing=None,
     capture_daily_flux_step: bool = False,
     source_clock: DriverSourceClockPayload | None = None,
+    hydrol_tide_forcing: TideForcingValues | None = None,
 ) -> DriverRuntimeStepResult:
     """Advance one half-hour step without retaining audit scaffold objects."""
 
     context = prepared_context
+    _effective_hydrol_check_cwrr(context)
     _validate_paper_forcing_coupling_switches(context.run_def_values)
     source_clock = (source_clock if source_clock is not None else
         getattr(prebuilt_input, "source_clock", None))
@@ -7162,6 +7289,10 @@ def _paper_1961_next_step_runtime_result_compact(
                 dt_days=context.dt_sechiba_days,
             )
         hydrol_precall = assemble_hydrol_first_step_precall_payload(
+            **_driver_hydrol_controls(context, tstep=tstep, source_clock=source_clock,
+                source_clock_runtime=previous_state.source_clock_runtime,
+                tide_values=(hydrol_tide_forcing if hydrol_tide_forcing is not None else
+                    getattr(prebuilt_input, "hydrol_tide_forcing", None))),
             soil_parameters=_prepared_hydrol_soil_parameters(context, runtime_static_tables=hydrol_runtime_static_tables),
             enerbil_payload=enerbil_local.payload,
             hydrol_restart=hydrol_state,
@@ -7558,6 +7689,7 @@ def paper_1961_driver_timestep_scaffold(
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
+    _effective_hydrol_check_cwrr(context)
     run_def_path = context.run_def_path
     runtime = context.runtime
     run_def_values = context.run_def_values
@@ -7810,6 +7942,7 @@ def paper_1961_driver_timestep_scaffold(
             )
         if enerbil_first_step_local is not None:
             hydrol_first_step_precall = assemble_hydrol_first_step_precall_payload(
+                **_driver_hydrol_controls(context, tstep=tstep),
                 soil_parameters=_prepared_hydrol_soil_parameters(context),
                 refSOC_1d=initial_refsoc_1d,
                 use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
@@ -10933,6 +11066,11 @@ def _paper_1961_later_day_transition_inputs(
             DriverRuntimeHalfHourInput(
                 step=step,
                 source_clock=_driver_source_clock_payload(context, current_state.source_clock_runtime, tstep=step.tstep),
+                hydrol_tide_forcing=TideForcingValues(**{
+                    name: value for name, value in _driver_hydrol_controls(
+                        context, tstep=step.tstep, source_clock_runtime=current_state.source_clock_runtime
+                    ).items() if name != "check_cwrr"
+                }),
                 base_payload=build_intersurf_first_step_payload(
                     step,
                     driver_z0_for_wind=0.1,
@@ -11117,6 +11255,7 @@ def _compiled_half_hour_forcing(item: DriverRuntimeHalfHourInput) -> DriverCompi
         salinity=payload.salinity,
         tide_height=payload.tide_height,
         source_clock=item.source_clock,
+        hydrol_tide_forcing=item.hydrol_tide_forcing,
         watchout=(DriverCompiledWatchoutForcing(**{name: getattr(payload, name) for name in WATCHOUT_COUPLING_FIELDS})
                   if bool(getattr(payload, "is_watchout", False)) else None),
     )
@@ -11132,6 +11271,7 @@ def _paper_compiled_forcing_day(
 ) -> DriverCompiledHalfHourForcing:
     """Stack one forcing day without constructing state-dependent process inputs."""
 
+    _effective_hydrol_check_cwrr(context)
     _validate_paper_forcing_coupling_switches(context.run_def_values)
     first = context.first_step_bundle
     if first is None:
@@ -11147,6 +11287,8 @@ def _paper_compiled_forcing_day(
         return np.asarray(value, dtype=np.float64).reshape(-1)
 
     def forcing_at(tstep: int) -> DriverCompiledHalfHourForcing:
+        clock = _driver_source_clock_payload(context, source_clock_runtime, tstep=tstep)
+        controls = _driver_hydrol_controls(context, tstep=tstep, source_clock=clock)
         forcing = read_forcing_model_step_cached(
             context.config_path,
             domain=first.domain,
@@ -11176,7 +11318,8 @@ def _paper_compiled_forcing_day(
             ccanopy=ccanopy,
             salinity=salinity,
             tide_height=tide_height,
-            source_clock=_driver_source_clock_payload(context, source_clock_runtime, tstep=tstep),
+            source_clock=clock,
+            hydrol_tide_forcing=TideForcingValues(controls["wtp_tide"], controls["dwtp_tide"]),
             watchout=(DriverCompiledWatchoutForcing(**intersurf_watchout_coupling_fields(forcing, npts=first.domain.nbindex))
                       if bool(getattr(forcing, "is_watchout", False)) else None),
         )
@@ -11310,6 +11453,7 @@ def _paper_compiled_sechiba_scan(
     wrapper retains the context, so its identity cannot be recycled while
     this cache entry is alive.
     """
+    check_cwrr = _effective_hydrol_check_cwrr(context)
     hydrol_dynamic_names = tuple(
         name
         for name in hydrol_static_template
@@ -11321,6 +11465,7 @@ def _paper_compiled_sechiba_scan(
         _source_clock_setup(context).binding.binding_key,
         tuple(sorted(_calendar_controls(context).items())),
         id(context),
+        check_cwrr,
         bool(getattr(base_payload_template, "is_watchout", False)),
         getattr(context, "watchout_initialize_main_tstep", None),
         runtime_spec.components,
@@ -11439,6 +11584,7 @@ def _paper_compiled_sechiba_scan(
             runtime_forcing=runtime_forcing,
             capture_daily_flux_step=capture_daily_flux_labels,
             source_clock=forcing.source_clock,
+            hydrol_tide_forcing=forcing.hydrol_tide_forcing,
         )
         entry_values = tuple(result.entry_payload[name] for name in _COMPILED_STOMATE_ENTRY_FIELDS)
         outputs = (
@@ -11483,6 +11629,7 @@ def _paper_compiled_sechiba_scan(
 
     compiled = jax.jit(scan_transition)
     def admitted_scan(initial_state, forcing_series, *args):
+        _effective_hydrol_check_cwrr(context)
         _validate_compiled_source_clock_series(context, initial_state, forcing_series)
         return compiled(initial_state, forcing_series, *args)
     if len(_COMPILED_SECHIBA_SCAN_CACHE) >= 8:
@@ -11626,6 +11773,7 @@ def _paper_1961_later_day_half_hour_transition(
             diffuco_local_jit=True,
             capture_daily_flux_step=capture_daily_flux_labels,
             source_clock=(None if first_compiled_forcing is None else first_compiled_forcing.source_clock),
+            hydrol_tide_forcing=(None if first_compiled_forcing is None else first_compiled_forcing.hydrol_tide_forcing),
         )
         if first_step.ok:
             runtime_state = fast_state_from_previous_packet(first_step.next_state)
@@ -12252,6 +12400,7 @@ def _paper_compiled_later_day_block_executable(
     separately; repeated use of the same prepared context still shares a block.
     """
 
+    check_cwrr = _effective_hydrol_check_cwrr(context)
     if training_output_projector is not None:
         if not capture_pre_daily_training_boundaries:
             raise ValueError("training projection requires boundary capture")
@@ -12282,6 +12431,7 @@ def _paper_compiled_later_day_block_executable(
         _source_clock_setup(context).binding.binding_key,
         tuple(sorted(_calendar_controls(context).items())),
         id(context),
+        check_cwrr,
         str(context.config_path.resolve()),
         getattr(block_forcing, "watchout", None) is not None,
         getattr(context, "watchout_initialize_main_tstep", None),
@@ -12412,6 +12562,7 @@ def _paper_compiled_later_day_block_executable(
         _compiled_diffuco_parameter_values(context),
     ).compile()
     def executable(initial_runtime_state, forcing_days, *args):
+        _effective_hydrol_check_cwrr(context)
         _validate_compiled_source_clock_series(context, initial_runtime_state, forcing_days, whole_days=True)
         return compiled_executable(initial_runtime_state, forcing_days, *args)
     if len(_COMPILED_LATER_DAY_BLOCK_CACHE) >= 8:
@@ -12590,13 +12741,16 @@ def paper_1961_driver_restart_year_start_day_result(
             first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
             run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
             run_id=run_id)
-        context = replace(context, source_clock_setup=setup, watchout_initialize_main_tstep=None)
+        context = _bind_context_hydrol_tides(context, setup,
+            previous=getattr(context, "hydrol_tide_run", None), run_mode="continuous")
+        context = replace(context, watchout_initialize_main_tstep=None)
     elif run_id is not None:
-        context = replace(context, source_clock_setup=source_clock_setup_from_config(
+        setup = source_clock_setup_from_config(
             context.config_path, run_def_path=context.run_def_path, run_def_values=context.run_def_values,
             first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
             run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
-            run_id=run_id))
+            run_id=run_id)
+        context = _bind_context_hydrol_tides(context, setup)
     rebased = rebase_driver_state_for_year_start(previous_year_end_state,
         run_mode=run_mode, source_clock_setup=_source_clock_setup(context))
     _require_source_day_alignment(context, rebased, start=0)

@@ -1,0 +1,250 @@
+{
+  "schema": "hydrol-tide-f10.3-native-boundary-v1",
+  "scope": "text input decoding only; no model execution",
+  "source": "fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5648,5654",
+  "compiler": "C:\\msys64\\ucrt64\\bin\\gfortran.EXE",
+  "original_read_statements": [
+    "READ(103,\"(F10.3)\") wtp_tide",
+    "READ(104,\"(F10.3)\") dwtp_tide"
+  ],
+  "rows": [
+    {
+      "records": [
+        "308.33",
+        "44.83"
+      ],
+      "float64_bits": [
+        "40734547AE147AE1",
+        "40466A3D70A3D70A"
+      ],
+      "values": [
+        308.33,
+        44.83
+      ]
+    },
+    {
+      "records": [
+        "329.00",
+        "20.67"
+      ],
+      "float64_bits": [
+        "4074900000000000",
+        "4034AB851EB851EC"
+      ],
+      "values": [
+        329.0,
+        20.67
+      ]
+    },
+    {
+      "records": [
+        "349.67",
+        "20.67"
+      ],
+      "float64_bits": [
+        "4075DAB851EB851F",
+        "4034AB851EB851EC"
+      ],
+      "values": [
+        349.67,
+        20.67
+      ]
+    },
+    {
+      "records": [
+        "347.92",
+        "-1.75"
+      ],
+      "float64_bits": [
+        "4075BEB851EB851F",
+        "BFFC000000000000"
+      ],
+      "values": [
+        347.92,
+        -1.75
+      ]
+    },
+    {
+      "records": [
+        "346.17",
+        "-1.75"
+      ],
+      "float64_bits": [
+        "4075A2B851EB851F",
+        "BFFC000000000000"
+      ],
+      "values": [
+        346.17,
+        -1.75
+      ]
+    },
+    {
+      "records": [
+        "318.75",
+        "-27.42"
+      ],
+      "float64_bits": [
+        "4073EC0000000000",
+        "C03B6B851EB851EC"
+      ],
+      "values": [
+        318.75,
+        -27.42
+      ]
+    },
+    {
+      "records": [
+        "291.33",
+        "-27.42"
+      ],
+      "float64_bits": [
+        "40723547AE147AE1",
+        "C03B6B851EB851EC"
+      ],
+      "values": [
+        291.33,
+        -27.42
+      ]
+    },
+    {
+      "records": [
+        "247.42",
+        "-43.91"
+      ],
+      "float64_bits": [
+        "406EED70A3D70A3D",
+        "C045F47AE147AE14"
+      ],
+      "values": [
+        247.42,
+        -43.91
+      ]
+    },
+    {
+      "records": [
+        "     12345",
+        "    -12345"
+      ],
+      "float64_bits": [
+        "4028B0A3D70A3D71",
+        "C028B0A3D70A3D71"
+      ],
+      "values": [
+        12.345,
+        -12.345
+      ]
+    },
+    {
+      "records": [
+        "  1.234567",
+        " -1.234567"
+      ],
+      "float64_bits": [
+        "3FF3C0C9539B8887",
+        "BFF3C0C9539B8887"
+      ],
+      "values": [
+        1.234567,
+        -1.234567
+      ]
+    },
+    {
+      "records": [
+        "123.456789999",
+        "-123.456789999"
+      ],
+      "float64_bits": [
+        "405EDD3C07EE0B0B",
+        "C05EDD3BE22E5DE1"
+      ],
+      "values": [
+        123.456789,
+        -123.45678
+      ]
+    },
+    {
+      "records": [
+        "1",
+        "-1"
+      ],
+      "float64_bits": [
+        "3F50624DD2F1A9FC",
+        "BF50624DD2F1A9FC"
+      ],
+      "values": [
+        0.001,
+        -0.001
+      ]
+    },
+    {
+      "records": [
+        " 1.234E+02",
+        "     1D+02"
+      ],
+      "float64_bits": [
+        "405ED9999999999A",
+        "3FB999999999999A"
+      ],
+      "values": [
+        123.4,
+        0.1
+      ]
+    },
+    {
+      "records": [
+        " 12345-02",
+        "  1 2 3 4"
+      ],
+      "float64_bits": [
+        "3FBF9A6B50B0F27C",
+        "3FF3BE76C8B43958"
+      ],
+      "values": [
+        0.12345,
+        1.234
+      ]
+    },
+    {
+      "records": [
+        "",
+        "          "
+      ],
+      "float64_bits": [
+        "0000000000000000",
+        "0000000000000000"
+      ],
+      "values": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "records": [
+        "-0.0000000",
+        "0.00000000"
+      ],
+      "float64_bits": [
+        "8000000000000000",
+        "0000000000000000"
+      ],
+      "values": [
+        -0.0,
+        0.0
+      ]
+    },
+    {
+      "records": [
+        "1,ignored",
+        ".12345678999"
+      ],
+      "float64_bits": [
+        "3F50624DD2F1A9FC",
+        "3FBF9ADD3739635F"
+      ],
+      "values": [
+        0.001,
+        0.123456789
+      ]
+    }
+  ]
+}

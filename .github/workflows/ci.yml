@@ -69,6 +69,24 @@ jobs:
           tests/unit/test_physics_branch_canopy.py
           tests/unit/test_physics_branch_energy.py
           tests/unit/test_physics_branch_coupling.py
+      - name: Thermal and snow branch components
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_physics_branch_thermal.py
+      - name: Hydrology production configuration and tide adapters
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_physics_branch_hydrol.py
+          tests/unit/test_physics_branch_handoff.py
+          tests/unit/test_hydrol_check_cwrr_contract.py
+          tests/unit/test_hydrol_tide_forcing.py
+          tests/unit/test_hydrol_driver_controls.py
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -101,3 +119,11 @@ jobs:
           tests/unit/test_physics_branch_canopy.py
           tests/unit/test_physics_branch_energy.py
           tests/unit/test_physics_branch_coupling.py
+          tests/unit/test_physics_branch_hydrol.py
+          tests/unit/test_physics_branch_thermal.py
+          tests/unit/test_physics_branch_handoff.py
+          tests/unit/test_hydrol_check_cwrr_contract.py
+          tests/unit/test_hydrol_tide_forcing.py
+          tests/unit/test_hydrol_driver_controls.py
+          jax_orchidee/driver/tides.py
+          scripts/dev/oracle_hydrol_tide_boundary.py

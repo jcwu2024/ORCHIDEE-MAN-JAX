@@ -19,6 +19,7 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 
+from jax_orchidee.parameters.soil import require_supported_hydrol_check_cwrr
 from jax_orchidee.sechiba.enerbil import CHALFU0
 from jax_orchidee.sechiba.enerbil_bridge import (
     EnerbilToHydrolBoundaryValidation,
@@ -5528,6 +5529,9 @@ def assemble_hydrol_first_step_precall_payload(
     static_payload_template: Mapping[str, object] | None = None,
     use_jit=False,
     soil_parameters=None,
+    check_cwrr=False,
+    wtp_tide=None,
+    dwtp_tide=None,
 ) -> HydrolFirstStepPrecallAssembly:
     """Assemble exact first-step fields immediately before ``hydrol_main``.
 
@@ -5543,6 +5547,13 @@ def assemble_hydrol_first_step_precall_payload(
     Fortran provenance: ``hydrol.f90::hydrol_init`` 2821-2832/3040-3041.
     """
 
+    check_cwrr = require_supported_hydrol_check_cwrr(
+        check_cwrr, entrypoint="driver HYDROL precall assembly"
+    )
+    require_supported_hydrol_check_cwrr(
+        (static_payload_template or {}).get("check_cwrr", False),
+        entrypoint="static HYDROL precall template",
+    )
     soil = hydrol_soil_parameters(soil_parameters)
     payload: dict[str, object] = {}
     enerbil_inputs: list[str] = []
@@ -5763,6 +5774,14 @@ def assemble_hydrol_first_step_precall_payload(
         if "mcf" not in payload:
             _add_payload_field(payload, source_kernel_inputs, "mcf", soil.mcf_mineral[tex])
 
+    # Driver-owned controls are bound after the reusable static template, so
+    # a previous step's tide pair cannot shadow the current READ103/104 pair.
+    # Source: constantes_soil463-473 and hydrol_soil5645-5655/6335-6367.
+    payload["check_cwrr"] = check_cwrr
+    driver_inputs.append("check_cwrr")
+    for name, value in (("wtp_tide", wtp_tide), ("dwtp_tide", dwtp_tide)):
+        if value is not None:
+            _add_payload_field(payload, driver_inputs, name, value)
     missing = tuple(field for field in HYDROL_FIRST_STEP_PRECALL_REQUIRED_FIELDS if field not in payload)
     return HydrolFirstStepPrecallAssembly(
         payload=payload,
@@ -9424,6 +9443,7 @@ def hydrol_cold_start_thermosoil_moisture_inputs(
 
 
 HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
+    "check_cwrr",
     "soil_parameters",
     "precip_rain",
     "vevapwet",
@@ -9488,6 +9508,8 @@ HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
     "run2man",
     "wt_ab",
     "wt_ab_tide",
+    "wtp_tide",
+    "dwtp_tide",
     "runoff2peat",
     "tides",
     "ok_ru2peat",
@@ -9497,6 +9519,7 @@ HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
 )
 
 HYDROL_MODULE_JIT_STATIC_ARGNAMES = (
+    "check_cwrr",
     "pref_soil_veg",
     "is_crop_soil",
     "doponds",
@@ -9582,6 +9605,9 @@ def run_hydrol_first_step_module_from_precall(
     if any required source-backed field is absent.
     """
 
+    require_supported_hydrol_check_cwrr(
+        precall.payload.get("check_cwrr", False), entrypoint="complete HYDROL precall owner"
+    )
     if soil_parameters is None and runtime_static_tables is not None:
         soil_parameters = runtime_static_tables.soil_parameters
     if depth_parameters is None and runtime_static_tables is not None:
@@ -9591,6 +9617,12 @@ def run_hydrol_first_step_module_from_precall(
         soil = HydrolSoilParameters(**{**soil, "ks": jnp.asarray(ks, dtype=jnp.float64)})
     ks = soil.ks
     payload = dict(precall.payload)
+    # hydrol_soil:5662 resets qflux, and 6337-6339 computes it only when
+    # CHECK_CWRR is enabled (default false, constantes_soil:463-473).
+    payload.setdefault("check_cwrr", False)
+    if not bool(tides):
+        payload.setdefault("wtp_tide", 0.0)
+        payload.setdefault("dwtp_tide", 0.0)
     missing: list[str] = list(precall.missing_inputs)
     if not precall.ok:
         return HydrolFirstStepModuleClosure(
@@ -10810,6 +10842,7 @@ def hydrol_soil_all_tiles_explicit_step(
     kfact,
     soiltile,
     tmc,
+    check_cwrr=True,
     evapot=None,
     evapot_corr=None,
     frac_bare_ns=None,
@@ -10859,6 +10892,10 @@ def hydrol_soil_all_tiles_explicit_step(
     subroutine ``hydrol_soil``, source-order tile loop from the surface setup
     at lines 5800-5847 through post-solve routing lines 6183-6296, followed by
     the post-loop runoff reinjection and ``tmc`` update at lines 6757-6787.
+    This low-level diagnostic API retains its historical flux calculation
+    default; module callers explicitly select the source CHECK_CWRR default
+    false. Source lines 5662, 6337-6339 and 7363 reset, conditionally compute,
+    and export qflux as wat_flux.
     Inputs remain explicit; this function does not compute upstream forcing,
     PFT-to-soil splits, or diagnostic moisture stress.
     """
@@ -11068,15 +11105,16 @@ def hydrol_soil_all_tiles_explicit_step(
             wtd_ns_state = wtd_ns_state.at[:, tile_offset].set(result.solve.water_table_depth.wtd_ns)
         if result.solve.under_mcr is not None:
             is_under_mcr_state = is_under_mcr_state.at[:, tile_offset].set(result.solve.under_mcr.is_under_mcr)
-        flux_diag = hydrol_soil_flux_diagnostics(
-            mcl_after=final_mcl,
-            mcl_before=result.mclint_for_flux,
-            dr_ns=dr_ns_tile,
-            rootsink=rootsink[:, :, tile_offset],
-            dz_mm=dz_mm,
-            flux_top=result.surface.flux_top,
-        )
-        qflux_state = qflux_state.at[:, :, tile_offset].set(flux_diag.qflux)
+        if bool(check_cwrr):
+            flux_diag = hydrol_soil_flux_diagnostics(
+                mcl_after=final_mcl,
+                mcl_before=result.mclint_for_flux,
+                dr_ns=dr_ns_tile,
+                rootsink=rootsink[:, :, tile_offset],
+                dz_mm=dz_mm,
+                flux_top=result.surface.flux_top,
+            )
+            qflux_state = qflux_state.at[:, :, tile_offset].set(flux_diag.qflux)
 
         routing = hydrol_after_under_mcr_runoff_peat_tide_routing(
             soil_tile_index=soil_tile_index,
@@ -11218,6 +11256,7 @@ def hydrol_module_explicit_step(
     ae_ns,
     evap_bare_lim,
     evap_bare_lim_ns,
+    check_cwrr=False,
     evapot=None,
     evapot_corr=None,
     tot_bare_soil=None,
@@ -11283,6 +11322,9 @@ def hydrol_module_explicit_step(
     this assembly.
     """
 
+    check_cwrr = require_supported_hydrol_check_cwrr(
+        check_cwrr, entrypoint="complete HYDROL module"
+    )
     veget = _as_2d("veget", veget)
     veget_max = _as_2d("veget_max", veget_max)
     soiltile = _as_2d("soiltile", soiltile)
@@ -11367,6 +11409,7 @@ def hydrol_module_explicit_step(
         kfact=kfact,
         soiltile=soiltile,
         tmc=tmc,
+        check_cwrr=check_cwrr,
         evapot=evapot,
         evapot_corr=evapot_corr,
         frac_bare_ns=vegupd.frac_bare_ns,
