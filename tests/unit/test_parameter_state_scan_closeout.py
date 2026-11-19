@@ -19,6 +19,7 @@ import pytest
 
 from jax_orchidee.driver import orchestration as o
 from jax_orchidee.sechiba import hydrol as h
+from jax_orchidee.sechiba.thermosoil import thermosoil_frozen_profile_mean
 
 
 @pytest.fixture
@@ -116,6 +117,24 @@ def test_same_context_accepts_same_shape_dynamic_values_without_stale_capture(sc
     np.testing.assert_array_equal(scan_harness.evaluate(executable, b, a1=9.), [2., .25, 150., 9.])
 
 
+def test_actual_scan_rejects_thermal_source_error(monkeypatch, scan_harness):
+    """Execute the real scan/error owner; all other physics is a boundary spy."""
+    def guarded_component(*args, **kwargs):
+        # A1 is a dynamic boundary input. Only one source guard executes;
+        # no model step or daily fold is evaluated by this test.
+        value = kwargs["compiled_diffuco_static_kwargs"]["trans_co2_pft_params"]["a1"][0]
+        thermosoil_frozen_profile_mean(jnp.stack((jnp.asarray(0.), value))[None, None, :])
+        state = kwargs["previous_state"]
+        return NS(next_state=state, entry_payload={name: state for name in o._COMPILED_STOMATE_ENTRY_FIELDS})
+
+    monkeypatch.setattr(o, "_paper_1961_next_step_runtime_result_compact", guarded_component)
+    runtime = scan_harness.tables()
+    executable = scan_harness.build(scan_harness.context(), runtime)
+    np.testing.assert_array_equal(scan_harness.evaluate(executable, runtime, a1=0.), np.zeros(4))
+    with pytest.raises(ValueError, match="profil_froz differs across PFTs"):
+        scan_harness.evaluate(executable, runtime, a1=.5)
+
+
 def test_actual_block_cache_specializes_static_mask_dispatch(monkeypatch, tmp_path, scan_harness):
     """One real compiled scan item; the daily physical delegate is a witness."""
     monkeypatch.setattr(o, "_COMPILED_LATER_DAY_BLOCK_CACHE", {})
@@ -128,6 +147,8 @@ def test_actual_block_cache_specializes_static_mask_dispatch(monkeypatch, tmp_pa
     def physical_spy(*args, **kwargs):
         previous = kwargs["previous_state"]
         dispatch = kwargs["outer_compiled_daily_carbon_dispatch"]
+        source_value = kwargs["compiled_forcing_series"] - 1.
+        thermosoil_frozen_profile_mean(jnp.stack((jnp.asarray(0.), source_value))[None, None, :])
         value = previous.values_by_component[0][0] + float(dispatch["phenology_active_pft_mask"][0])
         return NS(day_end_state=NS(tstep=previous.tstep + 1,
                                   fields_by_component={"witness": {"x": value}}, source_clock_runtime=None),
@@ -162,3 +183,6 @@ def test_actual_block_cache_specializes_static_mask_dispatch(monkeypatch, tmp_pa
     np.testing.assert_array_equal(evaluate(disabled), [0.])
     assert enabled is build(True) and disabled is build(False)
     assert enabled is not disabled
+    with pytest.raises(ValueError, match="profil_froz differs across PFTs"):
+        enabled(o.fast_state_from_previous_packet(packet), jnp.zeros_like(forcing), days, (),
+                o._compiled_hydrol_table_arrays(runtime), {}, (), {}, ())

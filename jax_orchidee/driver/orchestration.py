@@ -11,6 +11,7 @@ from typing import Mapping, NamedTuple
 import numpy as np
 import jax
 import jax.numpy as jnp
+from jax.experimental import checkify
 
 from jax_orchidee.coupled import (
     PaperCaseStomateBundleSourceKwargs,
@@ -11632,11 +11633,14 @@ def _paper_compiled_sechiba_scan(
             ),
         )
 
-    compiled = jax.jit(scan_transition)
+    # Retain source aborts from nested physical components across the scan.
+    compiled = jax.jit(checkify.checkify(scan_transition))
     def admitted_scan(initial_state, forcing_series, *args):
         _effective_hydrol_check_cwrr(context)
         _validate_compiled_source_clock_series(context, initial_state, forcing_series)
-        return compiled(initial_state, forcing_series, *args)
+        source_error, result = compiled(initial_state, forcing_series, *args)
+        checkify.check_error(source_error)
+        return result
     if len(_COMPILED_SECHIBA_SCAN_CACHE) >= 8:
         _COMPILED_SECHIBA_SCAN_CACHE.pop(next(iter(_COMPILED_SECHIBA_SCAN_CACHE)))
     _COMPILED_SECHIBA_SCAN_CACHE[cache_key] = admitted_scan
@@ -12540,7 +12544,7 @@ def _paper_compiled_later_day_block_executable(
             (forcing_days, science_day_numbers),
         )
 
-    compiled_executable = jax.jit(transition).lower(
+    compiled_executable = jax.jit(checkify.checkify(transition)).lower(
         initial,
         block_forcing,
         block_day_numbers,
@@ -12569,7 +12573,9 @@ def _paper_compiled_later_day_block_executable(
     def executable(initial_runtime_state, forcing_days, *args):
         _effective_hydrol_check_cwrr(context)
         _validate_compiled_source_clock_series(context, initial_runtime_state, forcing_days, whole_days=True)
-        return compiled_executable(initial_runtime_state, forcing_days, *args)
+        source_error, result = compiled_executable(initial_runtime_state, forcing_days, *args)
+        checkify.check_error(source_error)
+        return result
     if len(_COMPILED_LATER_DAY_BLOCK_CACHE) >= 8:
         _COMPILED_LATER_DAY_BLOCK_CACHE.pop(
             next(iter(_COMPILED_LATER_DAY_BLOCK_CACHE))

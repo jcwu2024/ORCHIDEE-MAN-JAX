@@ -76,6 +76,8 @@ jobs:
         run: >-
           uv run --frozen python -B -m pytest -q -rs
           tests/unit/test_physics_branch_thermal.py
+          tests/unit/test_thermosoil_source_conditions.py
+          tests/unit/test_thermosoil_nslm.py::test_thermosoil_nslm_wrapper_jit_uses_original_traced_moisture_shape
       - name: Hydrology production configuration and tide adapters
         env:
           JAX_PLATFORMS: cpu
@@ -122,6 +124,8 @@ jobs:
           tests/unit/test_physics_branch_coupling.py
           tests/unit/test_physics_branch_hydrol.py
           tests/unit/test_physics_branch_thermal.py
+          tests/unit/test_thermosoil_source_conditions.py
+          tests/unit/test_thermosoil_nslm.py
           tests/unit/test_physics_branch_handoff.py
           tests/unit/test_hydrol_check_cwrr_contract.py
           tests/unit/test_hydrol_tide_forcing.py

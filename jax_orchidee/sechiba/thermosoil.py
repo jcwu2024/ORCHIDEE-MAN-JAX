@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Mapping, NamedTuple
 
 from jax import config, core, jit, tree_util
+from jax.experimental import checkify
 
 config.update("jax_enable_x64", True)
 
@@ -1275,11 +1276,23 @@ def thermosoil_initialize(
         "dgrnd_snow": (npts, nsnow),
         "lambda_snow": (npts,),
     }
-    restart_coefficients = {
-        name: _thermosoil_restart_value(restart_fields, name, shape, val_exp=val_exp)
-        for name, shape in coefficient_shapes.items()
-    }
-    calculate_coef = any(value is None for value in restart_coefficients.values())
+    # thermosoil_initialize:665-740 decides the group before any coefficient
+    # is consumed. A wholly missing member causes all nine fields to be
+    # overwritten, including partial val_exp markers in another member.
+    raw_coefficients = {}
+    for name, shape in coefficient_shapes.items():
+        value = restart_fields.get(name)
+        if value is not None:
+            value = np.asarray(value)
+            if value.shape != shape:
+                raise ValueError(f"restart {name} must have shape {shape}, got {value.shape}")
+            if not np.all(np.isfinite(value)):
+                raise ValueError(f"restart {name} contains non-finite values")
+        raw_coefficients[name] = value
+    calculate_coef = any(
+        value is None or np.all(value == float(val_exp))
+        for value in raw_coefficients.values()
+    )
     computed = initialized.coef
     coefficients = {
         "soilcap": computed.soilcap,
@@ -1293,7 +1306,11 @@ def thermosoil_initialize(
         "lambda_snow": computed.lambda_snow,
     }
     if not calculate_coef:
-        coefficients = restart_coefficients
+        # Retained groups still require initialized values at every position.
+        coefficients = {
+            name: _thermosoil_restart_value(raw_coefficients, name, shape, val_exp=val_exp)
+            for name, shape in coefficient_shapes.items()
+        }
 
     final_getdiff = initialized.getdiff
     if not calculate_coef:
@@ -2204,6 +2221,25 @@ def thermosoil_cond_nopft(
     )
 
 
+def thermosoil_frozen_profile_mean(profil_froz):
+    """Return the shared frozen fraction, preserving the source abort.
+
+    Fortran: ``thermosoil.f90::thermosoil_getdiff`` lines 2802-2809.
+    Compiled callers must functionalize checks with ``checkify.checkify``
+    and call ``checkify.check_error`` before consuming the returned state.
+    The production module, scan and block owners enforce this contract.
+    """
+
+    profil_max = jnp.max(profil_froz, axis=2)
+    profil_min = jnp.min(profil_froz, axis=2)
+    profil_differs = jnp.any(jnp.abs(profil_max - profil_min) > 0.0)
+    if isinstance(profil_differs, core.Tracer):
+        checkify.check(~profil_differs, "profil_froz differs across PFTs; Fortran aborts this path")
+    elif bool(profil_differs):
+        raise ValueError("profil_froz differs across PFTs; Fortran aborts this path")
+    return profil_min
+
+
 def thermosoil_getdiff_explicit(
     *,
     ptn,
@@ -2361,12 +2397,7 @@ def thermosoil_getdiff_explicit(
         pcappa_supp = jnp.zeros_like(pcapa)
 
     pcapa_en = pcapa
-    profil_max = jnp.max(profil_froz, axis=2)
-    profil_min = jnp.min(profil_froz, axis=2)
-    profil_differs = jnp.any(jnp.abs(profil_max - profil_min) > 0.0)
-    if not isinstance(profil_differs, core.Tracer) and bool(profil_differs):
-        raise ValueError("profil_froz differs across PFTs; Fortran aborts this path")
-    profil_froz_mean = profil_min
+    profil_froz_mean = thermosoil_frozen_profile_mean(profil_froz)
     tmp = mc_layt * (1.0 - profil_froz_mean)
     cond_pft = thermosoil_cond_pft(
         njsc=njsc,
@@ -3105,6 +3136,9 @@ def thermosoil_explicit_step(
     ``thermosoil_energy`` before this step's coefficient update. Production
     recurrence should use ``thermosoil_explicit_transition``, which requires
     that state and writes the replacement back explicitly.
+
+    Compiled use requires ``checkify.checkify`` and checking its error before
+    consuming state; ``run_thermosoil_first_step_module`` does this for callers.
     """
 
     humlev = thermosoil_humlev(
@@ -3546,7 +3580,10 @@ def run_thermosoil_first_step_module(
             ok_shum_ngrnd_permalong=ok_shum_ngrnd_permalong,
         )
         if bool(use_jit):
-            module = _thermosoil_explicit_step_jit(**boundary.kwargs)
+            source_error, module = _thermosoil_explicit_step_jit(**boundary.kwargs)
+            # Raises here on the host; an outer checkified scan retains this
+            # error until its host admission boundary, before state publication.
+            checkify.check_error(source_error)
         else:
             module = thermosoil_explicit_step(**boundary.kwargs)
     else:
@@ -3612,7 +3649,7 @@ def run_thermosoil_first_step_module(
 
 
 _thermosoil_explicit_step_jit = jit(
-    thermosoil_explicit_step,
+    checkify.checkify(thermosoil_explicit_step),
     static_argnames=THERMOSOIL_EXPLICIT_STEP_JIT_STATIC_ARGNAMES,
 )
 _thermosoil_no_explicit_snow_step_jit = jit(

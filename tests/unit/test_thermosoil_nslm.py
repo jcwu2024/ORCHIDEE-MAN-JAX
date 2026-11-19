@@ -23,6 +23,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from jax.experimental import checkify
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -115,10 +116,12 @@ def test_thermosoil_nslm_wrapper_jit_uses_original_traced_moisture_shape():
     inputs = _wrapper_inputs()
 
     @jax.jit
+    @checkify.checkify
     def capacity(shumdiag_perma):
         result = thermosoil_explicit_step(**{**inputs, 'shumdiag_perma': shumdiag_perma})
         return result.getdiff.pcapa[0, :, 13], result.getdiff.pcappa_supp[0, :, 13]
 
-    pcapa, supp = capacity(jnp.asarray(inputs['shumdiag_perma']))
+    source_error, (pcapa, supp) = capacity(jnp.asarray(inputs['shumdiag_perma']))
+    checkify.check_error(source_error)
     np.testing.assert_allclose(np.asarray(pcapa), REFERENCE['expected']['pcapa'], atol=ATOL, rtol=RTOL)
     np.testing.assert_allclose(np.asarray(supp), REFERENCE['expected']['pcappa_supp'], atol=ATOL, rtol=RTOL)
