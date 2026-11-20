@@ -1,6 +1,20 @@
 # 共享物理核心与研究分支核查
 
-## 当前已接受：C67–C72；物理检查继续，同步暂停
+## 当前接受：C73–C77；研究同步仍暂停
+
+2026-11-20，第六包经主控接受，五项修补登记C73–C77，生产／测试／CI提交`f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b`。累计**77项修正／支持补齐、39个相关生产提交**；75项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是77项物理公式错误。本轮五项均有复查前`7cae3e02adad23674767a590fdf4d27f239ce065`只读源码证据，首次引入日期未断言，未恢复运行历史代码。
+
+未来集中同步须成组核对五个生产模块、旧Phase05显式参数helper、新参考／回归及CI。特别保留post-soil三处状态所有权，区分真实source默认值与显式实验配置；新的不可变部署应重建受影响输入／编译缓存。旧C65 checkify与C68静态控制合同继续适用；不得整文件覆盖研究树，本包未验证CUDA／AD／训练。
+
+[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/controller-acceptance.json)核对46份产品、交付与独审封存身份，并复核配对原源、实际写回及历史源码。保存的隔离CI按精确节点合并为454通过、9项科学strict xfail、10项外部身份skip、0失败／错误；这不是一次不间断全通过运行。首次漏复制已跟踪restart schema的9个setup错误保留，修正复制后仅重测受影响的10节点，未重测此前通过项。配置内Ruff通过，生产lint 62前／62后无新增；hosted CI未运行。主控解析JUnit并复用owner／独审验证，未再积分；12份JSON仅Git换行规范化、语义相同。[发布记录](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/controller-publication.json)保留最终版本。
+
+保存的嵌套JIT整返回差异现有有界递推取整与表面通量抵消证据；13/14 soilflx_pft及其别名仍严格失败，不声明唯一HLO／机器指令原因。两个新增合成相等浓度DOC元组捕获到入口约1e-17取整变化，实测入口重放能复现严格相等分支变化及4／5个失败坐标；没有定位最早上游算术，也不外推旧年度轨迹。新8项JIT完整系数通量门／60坐标仍未归因。旧HYDROL／热／雪／低光／DOC／NPP／grain严格门各守原范围，不同配置DGVM诊断不计新修复。
+
+52父过程的整体路线等级仍为source_mapped／open；4,059词法候选、565源审查组和187跨模块／外部调用组不等于数值覆盖或缺陷数。新有限证据包括14生长元组2611比较、扩散实际arm、非零冻融carry、冠层／capacity前驱、forcing／静态输入／modelout／routing和6份科学restart文件往返（1402检查，含147独立字段）。真实IOIPSL／native producer、maintained完整调度、自然历史、私有peat／PBL、原未定义合同与完整源分母仍有缺证。C64限npts1／nstm6；年度DOC真实边界／残差／异养呼吸均为null，原mass warning与负中间量保留。
+
+下一包优先实质审阅[565源组和187调用组](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/denominator/remaining.json)：解析真实callee与目标域，复用准确旧证据，明确排除依据，对确有缺口补独立原参考和实际compiled／写回。并行归因新8项完整系数通量失败，不重开本包已闭合的嵌套与DOC有界机制。停止标准仍见[阶段计划](physics_branch_closeout_plan.md)；本地可做项完成后再汇总真正外部缺项，不以扩大扫描清单替代验证。整模型综合验证尚未启动，`numerical_acceptance=false`；参数／状态90＋1＋1／92及93／126／181口径保持，研究树同步暂停。
+
+## 已接受快照：C67–C72与第五包范围
 
 2026-11-20，主控接受第五包六项独立修正／支持补齐，登记C67–C72，生产／测试／CI提交`b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12`。累计**72项修正／支持补齐、38个相关生产提交**；70项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是72项物理公式错误。本轮六项均经只读`git show`确认存在于复查前`7cae3e02adad23674767a590fdf4d27f239ce065`；首次引入日期未作断言，未恢复或运行旧模型。
 
@@ -969,12 +983,12 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 ### 累计修改位置与提交索引
 
 登记维护约定（用户2026-11-12重申）：后续须将适用的已接受修复同步到日尺度和全球效率分支；
-当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C72，共72项已接受修正／支持补齐、38个相关生产代码提交；C67–C72为第五包六个独立原因，见当前来源登记；C65为compiled源中止检查、C66为初始化整组覆盖顺序，NSLM迁移补齐不另编号；C64是cold逐土壤块强制水位丢失，单点源等价边界需随修复保留；C62为潮汐输入链、C63为有效CHECK_CWRR合同，求和顺序候选不计修复；C60整合WATCHOUT支持链与本轮接线修补，C61单列旧首读取整／准入；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
+当前仍先加固main、暂缓实际同步。此索引统一覆盖C1–C77，共77项已接受修正／支持补齐、39个相关生产代码提交；C73–C77为第六包五个独立原因；C67–C72为第五包六个独立原因，见当前来源登记；C65为compiled源中止检查、C66为初始化整组覆盖顺序，NSLM迁移补齐不另编号；C64是cold逐土壤块强制水位丢失，单点源等价边界需随修复保留；C62为潮汐输入链、C63为有效CHECK_CWRR合同，求和顺序候选不计修复；C60整合WATCHOUT支持链与本轮接线修补，C61单列旧首读取整／准入；C55的十向量与深度扩展仍属同一参数链，C43的scan扩展仍属context缓存所有权，C56–C59按四个独立遗漏登记；C49上游US_INIT扩展仍随原项登记，C50的两个热能调用点按一个权重遗漏计数，C51另计末段系数消费者的同类遗漏，C52计driver单位换算边界遗漏。C53的两个fallback按一个状态选择遗漏计数，C54为显式参数编译入口修复。
 此前九条重启候选合并为C32–C38；本批gas默认值与状态丢失分别登记C39、C40，四数组/多处接线不重复计数。未来新增候选继续单列，正式接纳前不计入已接受总数。
 每项持续保留修改原因与Fortran依据、准确生产/测试文件和提交、验证证据、触发范围、依赖及已知限制；
 同一缺陷的多处接线合并登记，接口完善与数值算法修正分别说明。
 同步时逐项核对目标分支当前实现及依赖，保留其研究改动；分别登记两个分支的接入提交与验证结果，
-完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C72仍待集中核对，
+完成实际核验后才标记已同步。C1–C3的历史同步记录保留原核查日期，C4–C77仍待集中核对，
 不从旧记录推断任一研究分支的当前状态，也不把单点/单年通过推广为全域或长期通过。
 
 下列路径均相对`jax_orchidee/`，测试及必要harness随对应提交一起同步。
@@ -1038,6 +1052,11 @@ C1–C3 已接入 main；I1、R1、R2 仍是接入候选。三个通用修复均
 | C70 | 凋落物源小量判断常数；`stomate/carbon_kernels.py::littercalc_leak_core_with_controls`；低于／等于／高于边界、真实writer再入 | `b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12` |
 | C71 | 季节日期先后顺序和写回；`coupled.py`共同season前驱与`driver/orchestration.py`调用／写回；实际前驱、packet及下一实参 | `b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12` |
 | C72 | 季节小量归零精度；`stomate/season.py`三处归零helper；保留微小非零值的原参考。permafrost常量未改 | `b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12` |
+| C73 | allocation源默认上限；`stomate/carbon_kernels.py::allocation_step`；同14元组120/2611失败→2611通过。driver显式读配置，不能推断全部历史paper受影响；Phase05明确0.6参考由runner显式保留。 | `f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b` |
+| C74 | post-soil凋落物写回；`driver/orchestration.py`半小时／日packet及`stomate/integration.py`LPJ诊断统一取soilcarbon返回；原3-call、实际下次调用及日末carry。原littercalc阶段对象不改。 | `f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b` |
+| C75 | 短forcing间隔SWdown；`driver/domain.py::_forcing_model_step_from_cached_point`；hourly同输入旧两向量失败、修后378字段／向量比较通过；WATCHOUT及长间隔原分支保留。 | `f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b` |
+| C76 | 年度标量负值预处理；`driver/static.py::read_slowproc_annual_bbox_field`；bbox／nearest同输入原参考与实际salinity控制。所测最终salinity受0.5下限保护，没有据此声称同化影响。 | `f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b` |
+| C77 | 时间字段首槽mask；`driver/static.py::read_slowproc_time_bbox_field`；原IO反例3/-4530/2与旧4/40/1区分，sentinel仅用于IO见证，物理消费者另用合法元组。 | `f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b` |
 
 ### C53／C54 状态选择与显式参数编译入口（2026-11-17已接受）
 

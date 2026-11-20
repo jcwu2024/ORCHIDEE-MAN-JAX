@@ -1,22 +1,24 @@
 # 主线进度
 
-2026-11-20：**参数与状态传递已按声明范围收尾；物理计算与条件分支验证正在继续。** 尚未宣布完整模型等价，也未启动最终综合验证。
+2026-11-20：**参数与状态传递已按声明范围收尾；物理检查第六包已验收，仍在继续补齐源码条件与数值接口。** 完整模型等价和综合验证尚未宣布。
 
-2026-11-20，主控接受第五包六项独立修正／支持补齐，登记C67–C72，生产／测试／CI提交`b73a12e5fb8a8b7ab6bdfa7e7a03c20c89808e12`。累计**72项修正／支持补齐、38个相关生产提交**；70项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是72项物理公式错误。本轮六项均经只读`git show`确认存在于复查前`7cae3e02adad23674767a590fdf4d27f239ce065`；首次引入日期未作断言，未恢复或运行旧模型。
+2026-11-20，第六包经主控接受，五项修补登记C73–C77，生产／测试／CI提交`f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b`。累计**77项修正／支持补齐、39个相关生产提交**；75项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是77项物理公式错误。本轮五项均有复查前`7cae3e02adad23674767a590fdf4d27f239ce065`只读源码证据，首次引入日期未断言，未恢复运行历史代码。
 
 | 工作组 | 当前结果 | 尚需工作 |
 | --- | --- | --- |
-| 参数／状态 | 初始化、日／年交接、normalized restart、WATCHOUT及首插值准入的有限合同已接受 | 一般native IO／外部producer及完整模型科学门另留 |
-| PB-01冠层／光合 | 第五包7组新增原参考和有限实际写回／消费者已接受 | fixedsnow原未定义值、自然低LAI／重启前驱、低光cim严格门与外部PBL |
-| PB-02能量／QSAT | 第五包198比较／3176值、联合beta和量率写回已接受 | 自然联合状态、非正capacity producer、tiny-Milly广域准入与外部PBL |
-| PB-03水文／热／雪 | C62–C66及normal／ALT、dry／joint热和雪groundflux有界归因已接受 | 未解嵌套JIT整返回、私有peat、native partial及自然雪／能量前驱 |
-| PB-04植被／碳 | 第五包season、生长、litter-soilcarbon完整元组与真实返回写回已接受；C67–C72已登记 | 其余算术／diffusion条件、自然前驱、DOC原始通量／floor观测 |
-| PB-05跨组 | 当前冠层／能量／日碳返回到packet及下一实参的有限合同已接受 | 剩余forcing／diagnostic／restart／modelout数值边界与阶段终审 |
+| 参数／状态 | 既有有限合同已接受；新增6份科学restart文件到实际reader／下一组件的有限往返 | 真实IOIPSL／native producer与自然年际历史等范围另留 |
+| PB-01冠层／光合 | 新增restart／held／维护LAI前驱与有限消费者 | 自然低LAI历史、外部PBL及fixedsnow原未定义合同 |
+| PB-02能量／QSAT | 正capacity与QSAT域有条件证据，有限原组件输入已绑定 | 新8项JIT完整系数通量失败待归因；超出证明前提的源域与外部PBL |
+| PB-03水文／热／雪 | 既有有界归因及新增嵌套整返回浮点机制已接受，严格门仍失败 | 私有peat身份、真实native partial、自然初始雪／第二capacity与其余源码条件 |
+| PB-04植被／碳 | C73默认值、C74状态所有权已修；生长、扩散、冻融有限同输入链通过 | 剩余源条件、自然联合前驱、年度DOC真实通量；相等DOC严格失败保留 |
+| PB-05跨组 | C75–C77输入处理已修，forcing／静态控制／modelout／routing与restart有限接口验证 | maintained完整调度、跨模块源调用归属及阶段终审 |
 
-[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-acceptance.json)核对30份当前产品及原交付／独审封存身份，复用owner与独审证据。最终隔离六文件回归260通过、4个外部原源／历史资产身份门跳过；实际边界13通过、来源门2通过，相邻62通过分别保留，不相加为科学覆盖。新11份Python lint通过，生产旧诊断64前／64后未增加；hosted CI未执行。主控只解析回执、读配对源码及实际caller，没有重复积分或数值套件。5份新JSON的Git规范化仅为换行，解析值相同；发布状态见[记录](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/controller-publication.json)。
+[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/controller-acceptance.json)核对46份产品、交付与独审封存身份，并复核配对原源、实际写回及历史源码。保存的隔离CI按精确节点合并为454通过、9项科学strict xfail、10项外部身份skip、0失败／错误；这不是一次不间断全通过运行。首次漏复制已跟踪restart schema的9个setup错误保留，修正复制后仅重测受影响的10节点，未重测此前通过项。配置内Ruff通过，生产lint 62前／62后无新增；hosted CI未运行。主控解析JUnit并复用owner／独审验证，未再积分；12份JSON仅Git换行规范化、语义相同。[发布记录](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/controller-publication.json)保留最终版本。
 
-本包接受有限组件、源条件与真实写回／下一实参；不宣布PB各组、完整源分母或物理阶段完成。保留原HYDROL／热／雪／低光／DOC严格失败及已接受浮点结论的原范围。嵌套JIT完整返回13/14项失败、最大绝对差5.34106093e-12仍未归因。fixedsnow原未定义值、私有peat／外部PBL、native partial、自然联合／雪能量前驱及DOC原始通量／floor观测等缺证继续具名保留；年度DOC真实残差与异养呼吸仍未知，不由端点推算。C64仍限npts1／nstm6。
+保存的嵌套JIT整返回差异现有有界递推取整与表面通量抵消证据；13/14 soilflx_pft及其别名仍严格失败，不声明唯一HLO／机器指令原因。两个新增合成相等浓度DOC元组捕获到入口约1e-17取整变化，实测入口重放能复现严格相等分支变化及4／5个失败坐标；没有定位最早上游算术，也不外推旧年度轨迹。新8项JIT完整系数通量门／60坐标仍未归因。旧HYDROL／热／雪／低光／DOC／NPP／grain严格门各守原范围，不同配置DGVM诊断不计新修复。
 
-下一包按[具名剩余动作](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase05-canopy-energy-carbon/remaining.json)并行核对目标源条件分母、生长／扩散等剩余算术分支、嵌套JIT整返回差异和PB-05跨组数值接口；可在现有本地组件边界内补实际前驱，不能把合成元组称为自然轨迹。复用已接受参考，不重开已闭合浮点调查。整模型综合验证尚未启动，`numerical_acceptance=false`。参数／状态90＋1＋1／92及93／126／181口径保持；研究分支同步继续暂停。
+52父过程的整体路线等级仍为source_mapped／open；4,059词法候选、565源审查组和187跨模块／外部调用组不等于数值覆盖或缺陷数。新有限证据包括14生长元组2611比较、扩散实际arm、非零冻融carry、冠层／capacity前驱、forcing／静态输入／modelout／routing和6份科学restart文件往返（1402检查，含147独立字段）。真实IOIPSL／native producer、maintained完整调度、自然历史、私有peat／PBL、原未定义合同与完整源分母仍有缺证。C64限npts1／nstm6；年度DOC真实边界／残差／异养呼吸均为null，原mass warning与负中间量保留。
 
-当前[覆盖表](physics_branch_coverage.md)保留32条本包父过程、52条历史过程及各条件视图，均不相加为全源码分母。修复位置、提交和将来同步依赖见[来源登记](correction_origins.md)与[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)。Sol完成一包只回传一次，主控集中验收发布后派下一包，不启用定时轮询。最终按[阶段计划](physics_branch_closeout_plan.md)逐条完成标准判断，不以修复数或运行时长替代验收。
+下一包优先实质审阅[565源组和187调用组](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/denominator/remaining.json)：解析真实callee与目标域，复用准确旧证据，明确排除依据，对确有缺口补独立原参考和实际compiled／写回。并行归因新8项完整系数通量失败，不重开本包已闭合的嵌套与DOC有界机制。停止标准仍见[阶段计划](physics_branch_closeout_plan.md)；本地可做项完成后再汇总真正外部缺项，不以扩大扫描清单替代验证。整模型综合验证尚未启动，`numerical_acceptance=false`；参数／状态90＋1＋1／92及93／126／181口径保持，研究树同步暂停。
+
+修复位置与未来同步依赖见[来源登记](correction_origins.md)、[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)和[当前覆盖表](physics_branch_coverage.md)。Sol每包封存后回传一次，主控集中验收发布后继续派发，不定时轮询。565／187是源码审阅分组，不是752个已知bug，也不是要求752次模型运行。
