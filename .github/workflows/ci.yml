@@ -108,6 +108,13 @@ jobs:
           tests/unit/test_phase06_routing_join.py
           tests/unit/test_phase06_carbon_join.py
           tests/unit/test_phase06_scientific_restart.py
+      - name: Source condition and consumer references
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_phase07_source_disposition_components.py
       - name: Hydrology production configuration and tide adapters
         env:
           JAX_PLATFORMS: cpu
@@ -197,3 +204,4 @@ jobs:
           tests/unit/test_phase06_routing_join.py
           tests/unit/test_phase06_carbon_join.py
           tests/unit/test_phase06_scientific_restart.py
+          tests/unit/test_phase07_source_disposition_components.py
