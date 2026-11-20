@@ -276,13 +276,17 @@ def chain_inputs(*, cold_start=False, agriculture=True):
         phenology_inputs=phenology,
         alloc_inputs=alloc,
         post_npp_inputs=post,
-        allocation_kwargs=dict(f_fruit=0.1, ecureuil=pv(0.0), max_possible_lai=10.0, min_stomate=1e-8),
+        allocation_kwargs=dict(f_fruit=0.1, ecureuil=pv(0.0), max_possible_lai=10.0, min_stomate=1e-8, max_l_to_lsr=0.6),
     )
 
 
 def run_current_chain(inputs, *, compiled=False, public_wrapper=False):
     import jax
 
+    # The frozen Phase05 Fortran micro-driver explicitly declares max_LtoLSR
+    # as 0.6. Keep that reference domain for its older serialized tuples;
+    # the production source default is 0.5 (constantes_var.f90:1050).
+    inputs = {**inputs, "allocation_kwargs": {"max_l_to_lsr": 0.6, **inputs["allocation_kwargs"]}}
     jax.config.update("jax_enable_x64", True)
     from jax_orchidee.stomate import integration
 

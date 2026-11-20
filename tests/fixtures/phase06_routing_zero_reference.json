@@ -1,0 +1,128 @@
+{
+  "original_output": "outputs/reference_mode/micro_oracles/driver_routing_zero/fortran_outputs.csv",
+  "original_output_sha256": "e862d7ce2d2ff454f8ad08eeac221985a518c4e2e74ee7cc408552ecce936676",
+  "original_input": "arrays initially nine; original no-routing ELSE then daily unit conversion",
+  "source": "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90",
+  "source_spans": [
+    {
+      "start": 1236,
+      "end": 1248,
+      "sha256": "94a7d68097101a7de046512745eaaee755bef2fbf9701fac47e86b02523a2b9d"
+    },
+    {
+      "start": 1252,
+      "end": 1262,
+      "sha256": "1875cec0f96afe5deba5e8d3b2a61b73047cfab3033d4e99870684ddeabf9568"
+    }
+  ],
+  "npts": 2,
+  "nflow": 3,
+  "dt_sechiba": 1800.0,
+  "expected": {
+    "riverflow": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "coastalflow": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "returnflow": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "reinfiltration": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "irrigation": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "sed_deposition": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "poc_deposition": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "flood_frac": [
+      0.0,
+      0.0
+    ],
+    "stream_frac": [
+      0.0,
+      0.0
+    ],
+    "streamfl_frac": [
+      0.0,
+      0.0
+    ],
+    "flood_res": [
+      0.0,
+      0.0
+    ],
+    "fastr": [
+      0.0,
+      0.0
+    ],
+    "DOC_to_topsoil": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "DOC_to_subsoil": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "sed_deposition_d": [
+      0.0,
+      0.0
+    ],
+    "poc_deposition_d": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "scope": "independent point-wise zero block; two cells do not establish multi-point routing"
+}

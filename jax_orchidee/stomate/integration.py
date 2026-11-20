@@ -5169,7 +5169,7 @@ def stomate_lpj_outputs_from_post_npp_ok_leak_explicit(
         turnover_daily=post_npp.turnover.turnover,
         bm_to_litter=post_npp.bm_to_litter,
         litter_above=ok_leak.ok_leak.littercalc.litter_above,
-        litter_below=ok_leak.ok_leak.littercalc.litter_below,
+        litter_below=ok_leak.ok_leak.soilcarbon.litter_below,
         carbon_32l=ok_leak.ok_leak.soilcarbon.carbon_32l,
         doc=ok_leak.ok_leak.soilcarbon.doc,
         veget_max=veget_max,

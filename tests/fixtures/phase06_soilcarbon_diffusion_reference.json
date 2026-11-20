@@ -1,0 +1,41 @@
+{
+  "source_sha256": "442842554b17a3f5479a5bcf9ec969bfb6be549c095c5ecea302091224f13e92",
+  "spans": {
+    "soilcarbon_leak": {
+      "start": 641,
+      "end": 2416,
+      "sha256": "364d2ef9a8c9e85c95c12d25aba0ffa01c9820dab8d47af48ba6df0305898f20"
+    },
+    "altcalc_DOC": {
+      "start": 2438,
+      "end": 2578,
+      "sha256": "a8675d31252158c66ba23e705a715f566205a628253976527b2ec32d79ccdee4"
+    },
+    "cryoturbate_DOC_POC": {
+      "start": 2599,
+      "end": 3369,
+      "sha256": "1db06bbd6c484f1990aee03fb0958aeb5010b1563340182428412524c8438816"
+    }
+  },
+  "rtol": 1e-12,
+  "atol": 1e-14,
+  "specs": [
+    {
+      "id": "thin_nonuniform_limiters",
+      "route": "diffusion"
+    },
+    {
+      "id": "thin_nonuniform_monotone",
+      "route": "diffusion"
+    },
+    {
+      "id": "nonuniform_frozen",
+      "route": "diffusion"
+    },
+    {
+      "id": "nonzero_cryo_carry",
+      "route": "cryoturbation"
+    }
+  ],
+  "provenance": "Original uninstrumented Fortran complete procedures plus observer clone; see Phase06 report and raw arrays."
+}

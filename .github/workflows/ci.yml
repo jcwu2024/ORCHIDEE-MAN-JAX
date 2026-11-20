@@ -90,6 +90,24 @@ jobs:
           tests/unit/test_phase05_growth_conditions.py
           tests/unit/test_phase05_litter_soilcarbon.py
           tests/unit/test_phase05_component_writeback.py
+      - name: Remaining physical arms and numerical joins
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_phase06_source_denominator.py
+          tests/unit/test_phase06_growth_arithmetic.py
+          tests/unit/test_phase06_daily_memory.py
+          tests/unit/test_phase06_soilcarbon_diffusion.py
+          tests/unit/test_phase06_canopy_predecessors.py
+          tests/unit/test_phase06_energy_predecessors.py
+          tests/unit/test_phase06_thermal_nested_return.py
+          tests/unit/test_phase06_forcing_modelout.py
+          tests/unit/test_phase06_native_partial.py
+          tests/unit/test_phase06_routing_join.py
+          tests/unit/test_phase06_carbon_join.py
+          tests/unit/test_phase06_scientific_restart.py
       - name: Hydrology production configuration and tide adapters
         env:
           JAX_PLATFORMS: cpu
@@ -156,3 +174,26 @@ jobs:
           tests/unit/test_phase05_growth_conditions.py
           tests/unit/test_phase05_litter_soilcarbon.py
           tests/unit/test_phase05_component_writeback.py
+          scripts/dev/build_phase06_source_denominator.py
+          scripts/dev/oracle_phase06_growth_arithmetic.py
+          scripts/dev/oracle_phase06_daily_memory.py
+          scripts/dev/oracle_phase06_soilcarbon_diffusion.py
+          scripts/dev/oracle_phase06_canopy_predecessors.py
+          scripts/dev/oracle_phase06_energy_predecessors.py
+          scripts/dev/diagnose_phase06_thermal_nested_return.py
+          scripts/dev/oracle_phase06_forcing_modelout.py
+          scripts/dev/oracle_phase06_native_partial.py
+          scripts/dev/audit_phase06_root_joins.py
+          scripts/dev/oracle_phase06_scientific_restart.py
+          tests/unit/test_phase06_source_denominator.py
+          tests/unit/test_phase06_growth_arithmetic.py
+          tests/unit/test_phase06_daily_memory.py
+          tests/unit/test_phase06_soilcarbon_diffusion.py
+          tests/unit/test_phase06_canopy_predecessors.py
+          tests/unit/test_phase06_energy_predecessors.py
+          tests/unit/test_phase06_thermal_nested_return.py
+          tests/unit/test_phase06_forcing_modelout.py
+          tests/unit/test_phase06_native_partial.py
+          tests/unit/test_phase06_routing_join.py
+          tests/unit/test_phase06_carbon_join.py
+          tests/unit/test_phase06_scientific_restart.py

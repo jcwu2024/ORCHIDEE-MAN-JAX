@@ -2720,7 +2720,7 @@ def allocation_step(
     ecureuil=None,
     alloc_sap_above_grass=1.0,
     min_l_to_lsr=0.2,
-    max_l_to_lsr=0.6,
+    max_l_to_lsr=0.5,
     z_nitrogen=0.2,
     nlim_tref=25.0,
     nlim_q10=10.0,

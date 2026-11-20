@@ -842,7 +842,11 @@ def _forcing_model_step_from_cached_point(
             return values[curr_index] * (float(split) / float(nb_spread))
         return np.zeros_like(values[curr_index], dtype=np.float64)
 
-    if land_indices_key is None:
+    if float(dt_force) <= 3600.0:
+        # readdim2.f90:1613-1617 uses ordinary linear interpolation at
+        # hourly or shorter forcing cadence, unless NETRAD_CONS is enabled.
+        swdown = cache.SWdown[curr_index] if netrad_cons else lin("SWdown")
+    elif land_indices_key is None:
         swdown = _paper_model_step_swdown_from_solarang(
             cache.SWdown[curr_index],
             model_tstep=model_tstep,

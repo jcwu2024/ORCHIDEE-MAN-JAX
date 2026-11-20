@@ -9211,7 +9211,7 @@ _OK_LEAK_HALF_HOUR_STATE_FIELDS = (
 
 
 def _paper_half_hour_ok_leak_state_updates(ok_leak) -> dict[str, object]:
-    """Return the live STOMATE state written by one ``littercalc_leak`` call.
+    """Return live STOMATE state after the half-hour litter/soilcarbon calls.
 
     Fortran calls ``littercalc_leak`` on every ``dt_sechiba`` entry before the
     daily ``StomateLpj`` gate (``stomate.f90`` lines 3288-3489 and 3589).
@@ -9222,7 +9222,9 @@ def _paper_half_hour_ok_leak_state_updates(ok_leak) -> dict[str, object]:
     soilcarbon = ok_leak.soilcarbon
     return {
         "litter_above": litter.litter_above,
-        "litter_below": litter.litter_below,
+        # soilcarbon_leak also updates this shared inout pool during
+        # cryoturbation (stomate_soilcarbon.f90:1353-1368).
+        "litter_below": soilcarbon.litter_below,
         "lignin_struc_above": litter.lignin_struc_above,
         "lignin_struc_below": litter.lignin_struc_below,
         "litterpart": litter.litterpart,
@@ -10114,7 +10116,7 @@ def _paper_day_first_stomate_state_packet(
         "resp_growth": daily.npp_update.resp_growth,
         "resp_maint_part": daily_reset_fields["resp_maint_part"],
         "litter_above": ok_leak.ok_leak.littercalc.litter_above,
-        "litter_below": ok_leak.ok_leak.littercalc.litter_below,
+        "litter_below": ok_leak.ok_leak.soilcarbon.litter_below,
         "lignin_struc_above": ok_leak.ok_leak.littercalc.lignin_struc_above,
         "lignin_struc_below": ok_leak.ok_leak.littercalc.lignin_struc_below,
         "litterpart": ok_leak.ok_leak.littercalc.litterpart,

@@ -512,7 +512,10 @@ def read_slowproc_annual_bbox_field(
         resolution_m,
         source_lon,
         source_lat,
-        values,
+        # slowproc_read_annual:6387-6396 builds the mask from the raw
+        # values before clipping all negative scalar values to zero.
+        np.maximum(values, 0.0),
+        valid_mask=values > -9000.0,
         allow_nearest_fallback=True,
     )
     return means.reshape(-1), counts
@@ -541,6 +544,9 @@ def read_slowproc_time_bbox_field(
         source_lon,
         source_lat,
         values,
+        # slowproc_read_data:6115-6118 uses only the first time slot to
+        # decide spatial validity, then transports every time slot.
+        valid_mask=values[:, :, 0] > -9000.0,
         allow_nearest_fallback=True,
     )
 
