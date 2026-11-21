@@ -6579,6 +6579,64 @@ def hydrol_runtime_static_tables_from_payload(
     return HydrolRuntimeStaticTables(mineral=mineral, peat=peat, soil_parameters=soil, depth_parameters=depth)
 
 
+def _frozen_cwrr_coordinates(mc, profil_froz, mcr, mcs, imin, imax):
+    """Return assigned moisture and the real source coordinate before INT."""
+    # hydrol_soil_coef:8255-8280 assigns mc_used, then divides before INT.
+    # Carry each rounded operation between stages to block fusion across
+    # those boundaries. Each stage processes all points and layers together.
+    stages = (
+        ("unfrozen", lambda _: 1.0 - profil_froz),
+        ("excess", lambda _: jnp.maximum(mc - mcr, 0.0)),
+        ("liquid", lambda state: state["unfrozen"] * state["excess"]),
+        ("used", lambda state: mcr + state["liquid"]),
+        ("available", lambda state: state["used"] - mcr),
+        ("numerator", lambda state: (imax - imin) * state["available"]),
+        ("span", lambda _: mcs - mcr),
+        ("quotient", lambda state: state["numerator"] / state["span"]),
+        ("bin", lambda state: imin + state["quotient"]),
+    )
+
+    def intermediates():
+        state = {}
+        for name, operation in stages:
+            state[name] = operation(state)
+        return state
+
+    # Keep the native shape and dtype of each result. Pack the division
+    # operands together so vmap batches both when only moisture is mapped.
+    specs = jax.eval_shape(intermediates)
+    division_slots = ("numerator", "span")
+    quotient = specs["quotient"]
+    initial = {
+        name: jnp.full(spec.shape, spec.dtype.type(0).item(), dtype=None if spec.weak_type else spec.dtype)
+        for name, spec in specs.items()
+        if name not in division_slots
+    }
+    initial["division"] = jnp.full(
+        quotient.shape + (2,), quotient.dtype.type(0).item(), dtype=None if quotient.weak_type else quotient.dtype
+    )
+
+    def divide(state):
+        operands = state["division"]
+        return operands[..., 0] / operands[..., 1]
+
+    def update_stage(name, operation):
+        if name in division_slots:
+            slot = division_slots.index(name)
+            return lambda state: {**state, "division": state["division"].at[..., slot].set(operation(state))}
+        if name == "quotient":
+            operation = divide
+        return lambda state: {**state, name: operation(state)}
+
+    branches = tuple(update_stage(name, operation) for name, operation in stages)
+
+    def step(index, state):
+        return jax.lax.switch(index, branches, state)
+
+    state = jax.lax.fori_loop(0, len(branches), step, initial, unroll=False)
+    return state["used"], state["bin"]
+
+
 def select_mineral_cwrr_bin(
     mc,
     profil_froz,
@@ -6602,9 +6660,7 @@ def select_mineral_cwrr_bin(
     mcr = jnp.asarray(mcr)
     mcs = jnp.asarray(mcs)
 
-    x = 1.0 - profil_froz
-    mc_used = mcr + x * jnp.maximum(mc - mcr, 0.0)
-    bin_real = imin + (imax - imin) * (mc_used - mcr) / (mcs - mcr)
+    mc_used, bin_real = _frozen_cwrr_coordinates(mc, profil_froz, mcr, mcs, imin, imax)
     bin_i = jnp.maximum(imin, jnp.minimum(imax - 1, bin_real.astype(jnp.int32)))
     return MineralCWRRBinSelection(
         mc_used=mc_used,
@@ -6775,10 +6831,8 @@ def hydrol_soil_coef_mineral_profile_from_tables(
     mcr_col = mcr[:, None]
     mcs_col = mcs[:, None]
     if ok_freeze_cwrr:
-        x = 1.0 - profil_froz
-        mc_used = mcr_col + x * jnp.maximum(mc - mcr_col, 0.0)
+        mc_used, bin_real = _frozen_cwrr_coordinates(mc, profil_froz, mcr_col, mcs_col, tables.imin, tables.imax)
         mc_for_k = mc_used
-        bin_real = tables.imin + (tables.imax - tables.imin) * (mc_used - mcr_col) / (mcs_col - mcr_col)
         bin_i = bin_real.astype(jnp.int32)
     else:
         mc_ratio = jnp.maximum(mc - mcr_col, 0.0) / (mcs_col - mcr_col)
@@ -6848,10 +6902,8 @@ def hydrol_soil_coef_peat_profile_from_tables(
     mcr = jnp.asarray(tables.mcr, dtype=mc.dtype)
     mcs = jnp.asarray(tables.mcs, dtype=mc.dtype)
     if ok_freeze_cwrr:
-        x = 1.0 - profil_froz
-        mc_used = mcr + x * jnp.maximum(mc - mcr, 0.0)
+        mc_used, bin_real = _frozen_cwrr_coordinates(mc, profil_froz, mcr, mcs, tables.imin, tables.imax)
         mc_for_k = mc_used
-        bin_real = tables.imin + (tables.imax - tables.imin) * (mc_used - mcr) / (mcs - mcr)
         bin_i = bin_real.astype(jnp.int32)
     else:
         mc_ratio = jnp.maximum(mc - mcr, 0.0) / (mcs - mcr)

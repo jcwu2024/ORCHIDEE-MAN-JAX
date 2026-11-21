@@ -8,9 +8,10 @@ updates.
 
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import NamedTuple
 
-from jax import config
+from jax import config, lax
 
 config.update("jax_enable_x64", True)
 
@@ -139,6 +140,40 @@ def _moyano_peat_moisture_table() -> np.ndarray:
 _MOYANO_PEAT_MOISTURE_TABLE = _moyano_peat_moisture_table()
 
 
+def _moyano_bin_boundaries(dtype):
+    """First representable moisture in each unclipped source INT bin."""
+    width = Fraction(float(dtype(0.02)))
+    thresholds = []
+    for index in range(1, len(_MOYANO_PEAT_MOISTURE_TABLE)):
+        upper = dtype(index)
+        lower = np.nextafter(upper, dtype(-np.inf))
+        # The integer has an even low significand bit, so the quotient
+        # midpoint rounds to it. Round the resulting moisture upward.
+        midpoint = width * (Fraction(float(lower)) + Fraction(float(upper))) / 2
+        threshold = dtype(float(midpoint))
+        if Fraction(float(threshold)) < midpoint:
+            threshold = np.nextafter(threshold, dtype(np.inf))
+        thresholds.append(threshold)
+    return np.asarray(thresholds, dtype=dtype)
+
+
+_MOYANO_BIN_BOUNDARIES = {
+    np.dtype(dtype): _moyano_bin_boundaries(dtype) for dtype in (np.float32, np.float64)
+}
+
+
+def _moyano_bin_index(moisture):
+    boundaries = _MOYANO_BIN_BOUNDARIES.get(moisture.dtype)
+    if boundaries is not None:
+        # microactem:2644,2660 uses division before INT. Comparisons against
+        # the rounded-division boundaries give the same bins under batching.
+        mc_ind = jnp.searchsorted(jnp.asarray(boundaries), moisture, side="right")
+        return jnp.where(jnp.isnan(moisture), 0, mc_ind)
+    moisture, bin_width = jnp.broadcast_arrays(moisture, 0.02)
+    scaled = moisture / lax.optimization_barrier(bin_width)
+    return jnp.clip(scaled.astype(jnp.int32), 0, len(_MOYANO_PEAT_MOISTURE_TABLE) - 1)
+
+
 def moyano_peat_moisture_lookup(mc_peat, *, epsilon=FORTRAN_EPSILON_R4):
     """Evaluate the peat moisture lookup table used by ``microactem``.
 
@@ -147,8 +182,9 @@ def moyano_peat_moisture_lookup(mc_peat, *, epsilon=FORTRAN_EPSILON_R4):
     ``control_moist_func_peat`` in ``stomate_litter.f90`` lines 1516-1569.
     """
 
-    corgmat = jnp.asarray(_MOYANO_PEAT_MOISTURE_TABLE, dtype=jnp.asarray(mc_peat).dtype)
-    mc_ind = jnp.minimum(44, jnp.maximum(0, jnp.floor(jnp.asarray(mc_peat) / 0.02).astype(jnp.int32)))
+    moisture = jnp.asarray(mc_peat)
+    corgmat = jnp.asarray(_MOYANO_PEAT_MOISTURE_TABLE, dtype=moisture.dtype)
+    mc_ind = _moyano_bin_index(moisture)
     return jnp.minimum(1.0, jnp.maximum(jnp.asarray(epsilon, dtype=corgmat.dtype), corgmat[mc_ind]))
 
 
