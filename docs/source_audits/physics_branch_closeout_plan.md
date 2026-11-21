@@ -16,7 +16,7 @@
 
 第八包修订已验收，冻结水文和 STOMATE 泥炭湿度分别登记 C78、C79。33 个明确本地缺口中 31 组得到有界证据，2 个雪主过程组仍缺自然雪包与匹配的能量前驱。相邻及跨组件证据合计将 55 个原源码组推进到限定范围支持。[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-acceptance.json)
 
-第九包验收 C80，确认论文构建的活动下限精度及两处碳调用的有限写回。剩余 142 个源码组和 34 个调用组。第十包从冠层和能量的具名条件出发，补齐论文配置下可在本地核实的实际输入、分支和下一组件写回，并推进与之相连的土壤热和调度接口。本阶段仍以文末条件收尾。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/controller-acceptance.json) · [剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/open-groups.json)
+第九包接受 C80（论文分解活动下限），第十包接受 C81（叶层 CO₂ 的重启写回）。核对冠层、能量及相邻过程后，剩余 101 个源码组、33 个调用组。第十一包以土壤热、水雪和实际调度交接为主，并行核实低风近中性气动 JIT 的 31 项严格差异，修复阻碍检验写回的测试输入。本阶段仍按文末的完成标准验收。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/controller-acceptance.json) · [剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/open-groups.json)
 
 ## 授权、基线与接力
 
@@ -29,9 +29,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 阶段启动时为 61 项、34 个生产提交。2026-11-21 接受到 C80，累计 **80 项修正或支持补齐、41 个生产提交**。
-  其中 78 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
-  最新已接受生产与回归提交为 `889024a213e1e665d3141668a0be5caf174814ea`。每包按当时记录的基线复核。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-21 接受到 C81，累计 **81 项修正或支持补齐、42 个生产提交**。
+  其中 79 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `64d13e4d71bce938f4d0ebac80d83744eb143020`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、

@@ -1,6 +1,6 @@
 # 当前物理计算与条件分支覆盖
 
-2026-11-21，第九包已验收，累计 **80 项修正或支持补齐、41 个生产提交**。未结的 142 个源码组和 34 个调用组中，12 处调用还缺外部证据。[剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/open-groups.json)
+2026-11-21，第十包已验收，累计 **81 项修正或支持补齐、42 个生产提交**。余下 101 个源码组和 33 个调用组，其中 12 处调用缺外部证据。[剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/open-groups.json)
 
 2026-11-20，当时正式累计**77项修正／支持补齐、39个相关生产提交**，含C62–C77。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。
 
@@ -58,5 +58,7 @@ fixedsnow原源未定义值、外部PBL、自然低LAI／联合／雪能量前�
 C78 和 C79 验证了所测 CPU 单点与批量形式下的分箱结果。第九包另行接受 C80，覆盖论文活动下限、原组件池量和通量及实际写回。局部原生残差和年度影响分别保留。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/controller-acceptance.json)
 
 第九包对 30 个碳源码组补证，其中 14 组有限支持、7 组按实际论文开关排除、9 组部分开放。实测 STOMATE 的两处碳调用获有界支持，LPJ 的 NPP 调用仍部分开放。剩余 142 个源码组、34 个调用组，外部缺口 12 个。本包还纠正第八包水文平滑合成网格的首层间距范围。原严格差异继续记录。 [覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/coverage-delta.json) · [平滑证据](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/hydrol-smoothing/README.md)
+
+第十包 50 个冠层与能量组逐项对账，37 组获有界支持，13 组部分开放，另有 4 个相邻组获得有限组件证据。CONDVEG 的完整局部返回和下一次空气动力接收得到有界支持，DIFFUCO 和 ENERBIL 仍有前驱缺口。低风的 31 项气动 JIT 严格差异及原未赋值、外部、自然前驱的限制仍具名保留。DIFFUCO `leaf_ci` 在 36 组同输入下证实存在逐层重启写回错误，登记为 C81。 [第十包覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/coverage-delta.json) · [主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/controller-acceptance.json)
 
 两组热系数输入中，底层递推的舍入差异经表层相消、PFT加权和雪土混合传到输出。原来8项严格比较的60个失败坐标全部保留。52个父过程的整体路线仍开放，`numerical_acceptance=false`。原始观测、编译计算、实际写回和外部运行身份的具体缺项见[剩余总账](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/open-groups.json)。

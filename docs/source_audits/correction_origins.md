@@ -1,4 +1,12 @@
-# C1–C80 修正与支持补齐来源登记（2026-11-21）
+# C1–C81 修正与支持补齐来源登记（2026-11-21）
+
+## C81 叶片内部 CO₂ 的逐层重启状态
+
+累计 **81 项修正或支持补齐、42 个生产提交**。其中 79 项有复查前来源证据，C42 和 C57 为复查期间遗漏。C81 的生产、测试与 CI 提交为 `64d13e4d71bce938f4d0ebac80d83744eb143020`。
+
+原 `diffuco_trans_co2` 先清零整个 `leaf_ci`。裸地保留零，未同化植被点的各层取该点大气 CO₂ 浓度 `Ca`，同化点上实际参与求解的叶层写入叶内浓度。`diffuco_finalize` 在启用 CO₂ 时保存全字段。复查前 `7cae3e02adad23674767a590fdf4d27f239ce065` 的 `diffuco.py` 第 2903 行给同化点未计算层也填了 `Ca`，`driver/orchestration.py` 第 3055 行仅更新选中 PFT，使裸地和已知缺席的植被槽沿用旧值。两处一起决定实际重启字段，登记一项。
+
+36 组同输入，旧例有 319 个 PFT14 坐标和 9,360 个裸地及缺席背景坐标偏离原值。修后 eager 和 JIT 各 10,080 个重启坐标与原程序匹配。319 处都在本次冠层平均值的读取掩码之外，同批 11 个所测物理输出均通过。其他实际存在的植被类型需要各自的求解证据，原 IOIPSL 后端及历史、年度 GPP/NPP/DOC 影响仍无本包验证。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/controller-acceptance.json)
 
 ## C80 论文构建的分解活动下限
 
