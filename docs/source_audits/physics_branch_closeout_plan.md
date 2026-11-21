@@ -14,7 +14,9 @@
 
 第七包已通过[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/controller-acceptance.json)。565个源码组、187个调用组与前包逐项对账，覆盖表保留52个父过程及七套历史清点的原记录。两组保存输入的8项严格热通量差异已追到递推舍入、表层相消及加权传播。原阈值与60个失败坐标保留，本轮无新增生产修复。
 
-第八包从[具名剩余项](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/open-groups.json)开始。先完成水文18组和积雪15组明确本地缺口的原条件、同输入编译结果和实际下一消费者核对，同时补与它们共享输入输出的部分证据。每次补证须列清原组内哪些条件已覆盖、哪些仍缺，以及调用端实际消费的量。其余局部缺证和外部原始运行资料依清单保留；仍按本计划末尾标准判断物理阶段是否完成。
+第八包修订已验收，冻结水文和 STOMATE 泥炭湿度分别登记 C78、C79。33 个明确本地缺口中 31 组得到有界证据，2 个雪主过程组仍缺自然雪包与匹配的能量前驱。相邻及跨组件证据合计将 55 个原源码组推进到限定范围支持。[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-acceptance.json)
+
+第九包以暖干 PFT14 的活动下限为首要问题，沿真实 `microactem` 调用、凋落物和土壤碳组件查清有效实数精度与池量更新，并补同一碳过程范围的原条件及实际写回。依据具名剩余项推进可并行的组件验证，验收后仍按本计划末尾的完成标准判断。[剩余组](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/open-groups.json) · [精度反例](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-repair/stomate/warm-epsilon-audit.json)
 
 ## 授权、基线与接力
 
@@ -27,9 +29,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 启动时累计61／34；2026-11-20接受至C77后，当前正式为**77项修正／支持补齐、39个相关生产提交**。
-  75项有复查前错误或支持缺口证据，C42／C57为复查期间已接受代码的遗漏。不是77项物理公式错误。
-  最新已接受生产／测试／CI提交`f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b`，原启动基线与历史封包保留。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-21 接受到 C79，累计 **79 项修正或支持补齐，40 个生产提交**。
+  其中 77 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `9591652668df1afb4955d7282a6091b96d844e4b`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、

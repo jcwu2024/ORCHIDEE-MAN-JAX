@@ -51,4 +51,8 @@ fixedsnow原源未定义值、外部PBL、自然低LAI／联合／雪能量前�
 
 已验收的[第七包覆盖表](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/dispositions.json)保留565个源码组、187个调用组、4,059个条件ID和1,277个原调用点。源码组中161组在其声明范围内有支持证据、94组依原源排除、92组属基础设施、185组有部分证据、33组有明确本地缺口。调用组相应为14组有支持证据、61组依原源排除、76组属基础设施、24组有部分证据、12组缺外部参考。`stomatelpj` 会调用 `cover`，但目标配置的 `ok_dgvm=false` 跳过了其物理计算；采用总表中的判定，旧子条目的 `partial` 标签待在新覆盖层对齐。
 
+第八包增量已验收。33 个本地缺口和 35 个相邻部分组的 445 个原成员 ID 已逐一关联。另有 16 组土壤热与 STOMATE 分支补证。共 84 组获得新增证据，其中 55 组在声明范围内得到支持。9 个部分调用组补充了真实消费者证据。仍有 163 个源码组、36 个调用组（含 12 个外部缺口），52 个父过程仍待整体验证。[覆盖差额](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-repair/coverage-delta.json)
+
+C78 和 C79 接受在所测 CPU 单点与批量形式下的分箱及下游结果。暖干 PFT14 在第一档使用的 `EPSILON(0.)` 仍有独立差异，当前已追到凋落物和土壤碳的首个活动系数，完整池量和年度影响待查。旧雪、水文平滑和非显式热导率的严格失败保留各自范围。[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-acceptance.json) · [具名剩余项](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/open-groups.json)
+
 两组热系数输入中，底层递推的舍入差异经表层相消、PFT加权和雪土混合传到输出。原来8项严格比较的60个失败坐标全部保留。52个父过程的整体路线仍开放，`numerical_acceptance=false`。原始观测、编译计算、实际写回和外部运行身份的具体缺项见[剩余总账](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/open-groups.json)。
