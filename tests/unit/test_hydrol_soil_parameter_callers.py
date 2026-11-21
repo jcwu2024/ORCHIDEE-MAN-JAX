@@ -79,7 +79,8 @@ def context_builder(monkeypatch, tmp_path):
     scalars = NS(nvm=2, nstm=3, pref_soil_veg=np.array([1, 3]),
                  fortran_pft_ids=(14, 2), pft_to_mtc=np.array([2, 3]))
     grid = NS(znh=ZZ_MM / 1000., dnh=np.ones(7) / 1000., dlh=np.ones(7) / 1000.)
-    bundle = NS(run_scalars=scalars, domain=NS(lalo=np.zeros((1, 2))))
+    bundle = NS(run_scalars=scalars, domain=NS(lalo=np.zeros((1, 2))),
+                forcing=NS(is_watchout=False))
     delegates = {
         "read_run_scalars": scalars, "_paper_mangrove_pft_index": 0,
         "_paper_mangrove_fortran_pft_id": 14,
@@ -346,8 +347,15 @@ def _restart_initialization_case(*, with_refsoc):
     return context, source
 
 
-def test_actual_restart_initialization_retains_contract_and_separates_effective_thresholds(monkeypatch):
+@pytest.mark.parametrize("points", [1, 12])
+def test_actual_restart_initialization_retains_contract_and_separates_effective_thresholds(monkeypatch, points):
     context, source = _restart_initialization_case(with_refsoc=True)
+    source = {name: np.repeat(value, points, axis=0) for name, value in source.items()}
+    source["njsc"] = np.resize([2, 4, 7, 2, 12, 9], points)
+    source["refSOC_1d"] = h.SOILC_MAX * np.linspace(.5, .8, points)
+    source["resdist"][:] = [.25, .375, .375]
+    vegetation = context.first_step_bundle.vegetation
+    vegetation.soiltile = np.repeat(vegetation.soiltile, points, axis=0)
     observed = {}
     original_hydro = h.hydrol_var_init
     original_moisture = h.hydrol_cold_start_thermosoil_moisture_inputs
@@ -366,6 +374,7 @@ def test_actual_restart_initialization_retains_contract_and_separates_effective_
         pass
 
     def stop_before_thermal(**kwargs):
+        observed["thermal_kwargs"] = kwargs
         raise ReachedThermalBoundary
 
     monkeypatch.setattr(h, "hydrol_var_init", hydro)
@@ -373,13 +382,24 @@ def test_actual_restart_initialization_retains_contract_and_separates_effective_
     monkeypatch.setattr(thermosoil, "thermosoil_humlev", stop_before_thermal)
     with pytest.raises(ReachedThermalBoundary):
         driver_restart.restart_thermosoil_initial_fields(
-            source, context=context, payload=NS(), altmax=np.zeros((1, 2)))
+            source, context=context, payload=NS(), altmax=np.zeros((points, 2)))
     assert observed["hydro_kwargs"]["soil_parameters"] is context.hydrol_soil_parameters
     assert observed["hydro_kwargs"]["refSOC_1d"] is source["refSOC_1d"]
     assert observed["hydro_kwargs"]["use_refSOC_hydrol"] is True
-    np.testing.assert_allclose(observed["hydro"].mcs, [.5 * h.POROS_ORG + .5 * .50], rtol=1.e-13)
-    np.testing.assert_array_equal(observed["moisture_kwargs"]["mcs_mineral"],
-                                  context.hydrol_soil_parameters.mcs_mineral)
+    mineral_mcs = np.asarray(context.hydrol_soil_parameters.mcs_mineral)[source["njsc"] - 1]
+    organic_fraction = source["refSOC_1d"] / h.SOILC_MAX
+    effective_mcs = organic_fraction * h.POROS_ORG + (1.0 - organic_fraction) * mineral_mcs
+    np.testing.assert_allclose(observed["hydro"].mcs, effective_mcs, rtol=1.e-13)
+    assert observed["moisture_kwargs"]["soil_parameters"] is context.hydrol_soil_parameters
+    moisture = observed["moisture"]
+    expected_perma = np.clip(
+        moisture.tmc_layh / context.hydrol_dh_mm / effective_mcs[:, None] * mineral_mcs[:, None],
+        0.0,
+        1.0,
+    )
+    assert np.any(expected_perma > 0.0)
+    np.testing.assert_allclose(observed["thermal_kwargs"]["shumdiag_perma"], expected_perma,
+                               rtol=1.e-12, atol=1.e-14)
     assert float(observed["hydro"].mcf[0]) != CUSTOM_A["mcf_mineral"]
     assert float(observed["hydro"].mcw[0]) != CUSTOM_A["mcw_mineral"]
 

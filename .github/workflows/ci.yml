@@ -148,6 +148,15 @@ jobs:
           tests/unit/test_hydrol_tide_forcing.py
           tests/unit/test_hydrol_driver_controls.py
           tests/unit/test_hydrol_water_table_initialization.py
+      - name: Water and thermal parameter receivers and restart fixtures
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_hydrol_module_step.py::test_hydrol_first_step_selects_texture_conductivity_when_points_equal_textures
+          tests/unit/test_thermosoil_initialize.py::test_recomputed_restart_thermal_bedrock_capacity_follows_freeze_gate
+          tests/unit/test_driver_snow_temperature_clamp.py
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli

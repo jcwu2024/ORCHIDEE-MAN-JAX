@@ -7341,9 +7341,9 @@ def hydrol_soil_layer_diagnostics(
     mcs=None,
     mcf=None,
     mcw=None,
-    mcs_mineral=USDA_MCS,
-    mcf_mineral=USDA_MCF,
-    mcw_mineral=USDA_MCW,
+    mcs_mineral=None,
+    mcf_mineral=None,
+    mcw_mineral=None,
     pcent=None,
     peat_hydro=False,
     soil_tile_index=1,
@@ -7665,7 +7665,7 @@ def hydrol_shumdiag(
     mcs=None,
     mcf=None,
     mcw=None,
-    mcs_mineral=USDA_MCS,
+    mcs_mineral=None,
     peat_hydro=False,
     agri_peat=False,
     tides=False,
@@ -7762,12 +7762,12 @@ def hydrol_litter_top_diagnostics(
     dz_mm,
     dh_mm,
     njsc,
-    mcr=USDA_MCR,
+    mcr=None,
     mcs=None,
     mcf=None,
     mcw=None,
-    mc_awet=USDA_MC_AWET,
-    mc_adry=USDA_MC_ADRY,
+    mc_awet=None,
+    mc_adry=None,
     peat_hydro=False,
     perma_peat=None,
     agri_peat=False,
@@ -8107,7 +8107,7 @@ def hydrol_litter_grid_diagnostics(
     njsc,
     mineral_tables: MineralCWRRTables | None = None,
     peat_tables: PeatCWRRTables | None = None,
-    ks=USDA_KS,
+    ks=None,
     peat_hydro=False,
     peat_tiles=(4, 5, 6),
     k_lin_layer1=None,
@@ -8194,17 +8194,17 @@ def hydrol_module_diagnostics(
     mcs=None,
     mcf=None,
     mcw=None,
-    mcs_mineral=USDA_MCS,
-    mcf_mineral=USDA_MCF,
-    mcw_mineral=USDA_MCW,
+    mcs_mineral=None,
+    mcf_mineral=None,
+    mcw_mineral=None,
     soil_parameters=None,
-    mcr=USDA_MCR,
-    mc_awet=USDA_MC_AWET,
-    mc_adry=USDA_MC_ADRY,
+    mcr=None,
+    mc_awet=None,
+    mc_adry=None,
     pcent=None,
     mineral_tables: MineralCWRRTables | None = None,
     peat_tables: PeatCWRRTables | None = None,
-    ks=USDA_KS,
+    ks=None,
     vevapnu=None,
     tot_melt=None,
     irrigation=None,
@@ -8249,16 +8249,27 @@ def hydrol_module_diagnostics(
     dynamic-root controls) remain explicit here.
     """
 
-    if soil_parameters is not None:
-        soil = hydrol_soil_parameters(soil_parameters)
-        mcs_mineral, mcf_mineral, mcw_mineral = soil.mcs_mineral, soil.mcf_mineral, soil.mcw_mineral
-        mcr, mc_awet, mc_adry, ks = soil.mcr, soil.mc_awet, soil.mc_adry, soil.ks
-        mcs = soil.mcs_mineral if mcs is None else mcs
-        mcf = soil.mcf_mineral if mcf is None else mcf
-        mcw = soil.mcw_mineral if mcw is None else mcw
-        pcent = soil.pcent if pcent is None else pcent
     mc = result.soil.mc
     mcl = result.soil.mcl
+    if soil_parameters is not None:
+        soil = hydrol_soil_parameters(soil_parameters)
+        npts = mc.shape[0]
+        # Resolve source tables at this boundary. Layer and permafrost
+        # diagnostics use these mineral values apart from the effective
+        # thresholds, which can include SOC (hydrol.f90:6488-6536, 9282).
+        mcs_mineral, mcf_mineral, mcw_mineral = (
+            _texture_lookup(name, soil[name], njsc, npts)
+            for name in ("mcs_mineral", "mcf_mineral", "mcw_mineral")
+        )
+        mcr, mc_awet, mc_adry = (
+            _texture_lookup(name, soil[name], njsc, npts)
+            for name in ("mcr", "mc_awet", "mc_adry")
+        )
+        ks = _texture_lookup("ks", soil.ks, njsc, npts) if soil.ks.ndim == 1 else soil.ks
+        mcs = mcs_mineral if mcs is None else mcs
+        mcf = mcf_mineral if mcf is None else mcf
+        mcw = mcw_mineral if mcw is None else mcw
+        pcent = _texture_lookup("pcent", soil.pcent, njsc, npts) if pcent is None else pcent
     if veget_max is None:
         veget_max = result.vegupd.vegetmax_soil.sum(axis=2)
     if soiltile is None:
@@ -9433,8 +9444,9 @@ def hydrol_cold_start_thermosoil_moisture_inputs(
     dh_mm,
     njsc,
     mcs=None,
-    mcs_mineral=USDA_MCS,
+    mcs_mineral=None,
     peat_hydro=False,
+    soil_parameters=None,
 ) -> HydrolThermosoilMoistureInputs:
     """Map ``hydrol_init`` cold-start moisture to THERMOSOIL init inputs.
 
@@ -9470,8 +9482,14 @@ def hydrol_cold_start_thermosoil_moisture_inputs(
         njsc = njsc[None]
     if njsc.shape != (npts,):
         raise ValueError("njsc must have shape (npts,)")
+    if soil_parameters is not None:
+        soil = hydrol_soil_parameters(soil_parameters)
+        mineral_mcs = _texture_lookup("mcs_mineral", soil.mcs_mineral, njsc, npts)
+        if mcs is None:
+            mcs = mineral_mcs
+    else:
+        mineral_mcs = _per_point_threshold("mcs_mineral", mcs_mineral, njsc, npts, USDA_MCS)
     point_mcs = _per_point_threshold("mcs", mcs, njsc, npts, USDA_MCS)
-    mineral_mcs = _per_point_threshold("mcs_mineral", mcs_mineral, njsc, npts, USDA_MCS)
     if bool(peat_hydro):
         shumdiag_perma = moisture.soilmoist / dh_mm[None, :]
     else:
@@ -9727,7 +9745,9 @@ def run_hydrol_first_step_module_from_precall(
             "dh_mm": dh_mm,
             "zz_mm": zz_mm,
             "resolv": soiltile > 0.0,
-            "ks": ks,
+            # hydrol_soil_infilt (7520) uses ks(njsc). Select the texture
+            # value before passing the point vector to the infiltration API.
+            "ks": _texture_lookup("ks", ks, njsc, npts) if ks.ndim == 1 else ks,
             "soil_parameters": soil,
             "kfact": mineral_tables.kfact,
             "mineral_tables": mineral_tables,
@@ -11625,8 +11645,9 @@ def hydrol_main_step(
         raise ValueError("TOPM_calcul requires raw hydro_subgrid_main inputs")
     module_args = dict(module_inputs)
     diagnostic_args = dict(diagnostic_inputs)
-    if module_args.get("soil_parameters") is not None:
-        soil_parameters = hydrol_soil_parameters(module_args["soil_parameters"])
+    soil_parameters = module_args.get("soil_parameters")
+    if soil_parameters is not None:
+        soil_parameters = hydrol_soil_parameters(soil_parameters)
         module_args["soil_parameters"] = soil_parameters
         module_args["ks"] = soil_parameters.ks
         diagnostic_args.setdefault("soil_parameters", soil_parameters)
@@ -11713,6 +11734,10 @@ def hydrol_main_step(
         ),
         irrigation_soil=routing.irrigation_soil,
     )
+    if soil_parameters is not None and soil_parameters.ks.ndim == 1:
+        # Root factors use the source table above. Infiltration receives the
+        # selected texture value for each point (hydrol.f90:7520).
+        module_args["ks"] = _texture_lookup("ks", soil_parameters.ks, module_args["njsc"], npts)
     module = hydrol_module_explicit_step(**module_args)
     outputs = hydrol_module_outputs(module, soiltile=module_args["soiltile"])
     diagnostic_args.update(

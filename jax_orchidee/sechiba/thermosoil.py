@@ -2395,6 +2395,9 @@ def thermosoil_getdiff_explicit(
         pcapa = jnp.where(laidev, pcapa_pft_tmp, pcapa_tmp)
         profil_froz = jnp.zeros_like(pcapa)
         pcappa_supp = jnp.zeros_like(pcapa)
+        # thermosoil_getdiff (2776-2781) applies bedrock within the freeze-off arm.
+        if int(brk_flag) == 1:
+            pcapa = pcapa.at[:, ngrnd - 2 : ngrnd, :].set(brk_capa)
 
     pcapa_en = pcapa
     profil_froz_mean = thermosoil_frozen_profile_mean(profil_froz)
@@ -2423,9 +2426,6 @@ def thermosoil_getdiff_explicit(
     )
     pkappa_nopft = jnp.broadcast_to(cond_nopft.cnd[:, :, None], (npts, ngrnd, nvm))
     pkappa = jnp.where(jnp.any(ok_laidev), cond_pft.cnd, pkappa_nopft)
-    if int(brk_flag) == 1:
-        pcapa = pcapa.at[:, ngrnd - 2 : ngrnd, :].set(brk_capa)
-        pcapa_en = pcapa_en.at[:, ngrnd - 2 : ngrnd, :].set(brk_capa)
 
     pcapa_snow = snowrho * xci
     pkappa_snow = (zsnowthrmcond1 + zsnowthrmcond2 * snowrho * snowrho) + jnp.maximum(

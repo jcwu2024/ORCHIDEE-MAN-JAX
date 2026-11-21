@@ -9,7 +9,11 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from jax_orchidee.sechiba import thermosoil as thermosoil_module  # noqa: E402
 from jax_orchidee.sechiba.thermosoil import (  # noqa: E402
+    BRK_CAPA,
+    FR_DT,
+    ZERO_CELSIUS,
     read_thermosoil_initialize_restart_fields,
     read_thermosoil_initialize_static_inputs,
     thermosoil_finalize_restart_packet,
@@ -225,6 +229,47 @@ def test_incomplete_restart_coefficient_group_is_recomputed_as_one_group():
     assert result.calculate_coef
     assert not np.array_equal(np.asarray(result.soilcap), restart["soilcap"])
     assert not np.array_equal(np.asarray(result.cgrnd), restart["cgrnd"])
+
+
+@pytest.mark.parametrize("freeze", [True, False], ids=["frozen", "freeze-off"])
+def test_recomputed_restart_thermal_bedrock_capacity_follows_freeze_gate(monkeypatch, freeze):
+    original = thermosoil_module.thermosoil_cold_start_coef_closure
+    received = []
+
+    def record_closure(**inputs):
+        result = original(**inputs)
+        received.append((inputs["ok_freeze_thermix"], inputs["brk_flag"], result))
+        return result
+
+    monkeypatch.setattr(thermosoil_module, "thermosoil_cold_start_coef_closure", record_closure)
+    lower = ZERO_CELSIUS - FR_DT / 2
+    ptn = np.asarray([270.0, lower, np.nextafter(lower, -np.inf)]).reshape(1, 3, 1)
+    states = [
+        _initialize(
+            restart_fields={"ptn": ptn, "refSOC": np.asarray([[0.0, 33000.0, 65000.0]])},
+            ok_freeze_thermix=freeze,
+            bedrock_flag=flag,
+        )
+        for flag in (0, 1)
+    ]
+    assert [(enabled, flag) for enabled, flag, _ in received] == [(freeze, 0), (freeze, 1)]
+    for state, (_, _, closure) in zip(states, received, strict=True):
+        assert closure.ok and state.calculate_coef and state.ptn_source == "restart"
+        np.testing.assert_array_equal(closure.getdiff.pcapa_en, closure.getdiff.pcapa)
+        np.testing.assert_array_equal(state.cgrnd, closure.coef.soil.cgrnd)
+        np.testing.assert_array_equal(state.dgrnd, closure.coef.soil.dgrnd)
+    without, with_rock = (entry[2].getdiff for entry in received)
+    np.testing.assert_array_equal(with_rock.pkappa, without.pkappa)
+    assert np.all(np.asarray(without.pcapa[:, -2:]) != BRK_CAPA)
+    # Fortran thermosoil_getdiff:2766-2788 writes bedrock capacity only with freezing disabled.
+    if freeze:
+        np.testing.assert_array_equal(with_rock.pcapa, without.pcapa)
+        np.testing.assert_array_equal(states[1].cgrnd, states[0].cgrnd)
+        np.testing.assert_array_equal(states[1].dgrnd, states[0].dgrnd)
+    else:
+        np.testing.assert_array_equal(with_rock.pcapa[:, :1], without.pcapa[:, :1])
+        np.testing.assert_array_equal(with_rock.pcapa[:, -2:], BRK_CAPA)
+        assert np.any(np.asarray(states[1].dgrnd) != np.asarray(states[0].dgrnd))
 
 
 def test_reference_temperature_branch_requires_and_uses_external_static_field():

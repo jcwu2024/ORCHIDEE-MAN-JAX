@@ -1131,6 +1131,109 @@ def test_hydrol_first_step_module_closure_runs_complete_explicit_snow_branch():
     np.testing.assert_allclose(np.asarray(hydrol_state["snowliq"]), np.asarray(closure.snow_step.snowliq))
 
 
+def _texture_conductivity_owner_inputs():
+    precall, inputs = _explicit_snow_module_precall()
+    ks = np.asarray(hydrol_module.USDA_KS)
+    texture = 4
+    humcste = np.ones(inputs["veget_max"].shape[1])
+    nroot = hydrol_nroot_from_humcste(humcste=humcste, dz_mm=inputs["dz_mm"], zz_mm=inputs["zz_mm"])
+    payload = dict(precall.payload)
+    payload.update(
+        njsc=np.array([texture]),
+        mcs=np.array([USDA_MCS[texture - 1]]),
+        mcr=np.array([USDA_MCR[texture - 1]]),
+        mc=np.full_like(payload["mc"], 0.2),
+        mcl=np.full_like(payload["mcl"], 0.2),
+        water2infilt=np.ones_like(payload["water2infilt"]),
+    )
+
+    def run(points, use_jit=False, *, point_inputs=None, soil_parameters=None):
+        batch = {
+            name: np.repeat(value, points, axis=0)
+            if isinstance(value, (np.ndarray, jax.Array)) and value.shape[:1] == (1,)
+            else value
+            for name, value in payload.items()
+        }
+        if point_inputs is not None:
+            batch.update(point_inputs)
+        return run_hydrol_first_step_module_from_precall(
+            precall._replace(payload=batch),
+            temp_air=np.full(points, 268.0),
+            pb=np.full(points, 1013.0),
+            u=np.zeros(points),
+            v=np.zeros(points),
+            humcste=humcste,
+            nroot_state=np.repeat(nroot, points, axis=0),
+            dz_mm=inputs["dz_mm"],
+            dh_mm=np.array([1.0, 3.0, 6.0, 8.0, 10.0, 12.0, 14.0]),
+            zz_mm=inputs["zz_mm"],
+            ks=ks,
+            soil_parameters=soil_parameters,
+            reinf_slope=np.repeat(inputs["reinf_slope"], points),
+            zmaxh_m=inputs["zmaxh_m"],
+            ok_freeze_cwrr=False,
+            znt=inputs["zz_mm"] / 1000.0,
+            use_jit=use_jit,
+        )
+
+    return run, ks, texture
+
+
+def _texture_diagnostic_outputs(closure):
+    diagnostics = closure.diagnostics
+    outputs = {
+        name: getattr(diagnostics, name)
+        for name in (
+            "soil_wet_ns", "us", "humrelv", "vegstressv", "humrel", "vegstress",
+            "shumdiag", "shumdiag_perma",
+        )
+    }
+    for index, layer in enumerate(diagnostics.layer_by_tile, 1):
+        for name in ("smw_tmp", "smf_tmp", "sms_tmp", "smw", "smf", "sms", "sm_nostress"):
+            outputs[f"tile{index}.{name}"] = getattr(layer, name)
+    outputs["thermosoil.shumdiag_perma"] = closure.thermosoil_moisture.shumdiag_perma
+    previous = _empty_previous_step_state_fields()
+    _add_hydrol_to_previous_fields(previous, closure)
+    outputs["diffuco.humrel"] = previous["diffuco_previous_step_state"]["humrel"]
+    outputs["hydrol.us"] = previous["hydrol_previous_step_state"]["us"]
+    outputs["hydrol.humrelv"] = previous["hydrol_previous_step_state"]["humrelv"]
+    return outputs
+
+
+def test_hydrol_first_step_selects_texture_conductivity_when_points_equal_textures():
+    """Source conductivity and mineral diagnostic tables use texture indices."""
+    with jax.enable_x64():
+        run, ks, texture = _texture_conductivity_owner_inputs()
+        one = run(1)
+        batch = run(ks.size)
+
+    assert ks[0] != ks[texture - 1]
+    assert one.ok and batch.ok
+    one_soil = one.module.soil
+    batch_soil = batch.module.soil
+    one_tile = one_soil.tile_results[3]
+    batch_tile = batch_soil.tile_results[3]
+    assert np.any(np.asarray(one_tile.infilt.qinfilt) > np.asarray(one_tile.infilt.wat_inf_first))
+    assert np.all(np.asarray(one.diagnostics.k_litt) > 0.0)
+    for field, actual, expected in (
+        ("qinfilt", batch_tile.infilt.qinfilt, one_tile.infilt.qinfilt),
+        ("infiltrated mc", batch_tile.infilt.mc, one_tile.infilt.mc),
+        ("written mc", batch_soil.mc, one_soil.mc),
+        ("tmc", batch.outputs.tmc, one.outputs.tmc),
+        ("k_litt", batch.diagnostics.k_litt, one.diagnostics.k_litt),
+        ("tmc_litter", batch.diagnostics.tmc_litter, one.diagnostics.tmc_litter),
+        ("litterhumdiag", batch.diagnostics.litterhumdiag, one.diagnostics.litterhumdiag),
+        ("drysoil_frac", batch.diagnostics.drysoil_frac, one.diagnostics.drysoil_frac),
+    ):
+        np.testing.assert_allclose(actual, np.repeat(expected, ks.size, axis=0), rtol=1e-12, atol=1e-14, err_msg=field)
+    np.testing.assert_array_equal(batch.module_inputs["ks"], np.full(ks.size, ks[texture - 1]))
+
+    one_diagnostics = _texture_diagnostic_outputs(one)
+    for field, actual in _texture_diagnostic_outputs(batch).items():
+        expected = np.repeat(one_diagnostics[field], ks.size, axis=0)
+        np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-14, err_msg=field)
+
+
 def test_hydrol_explicit_snow_melt_feeds_same_step_canopy_and_soil():
     precall, inputs = _explicit_snow_module_precall()
     payload = dict(precall.payload)

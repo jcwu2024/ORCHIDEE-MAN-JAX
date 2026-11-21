@@ -5351,7 +5351,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         dh_mm=cwrr_grid.dlh * 1000.0,
         njsc=payload.njsc,
         mcs=hydrol_cold_thresholds.mcs,
-        mcs_mineral=hydrol_soil.mcs_mineral,
+        soil_parameters=hydrol_soil,
         peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
     )
     soilalbedo_bg = None

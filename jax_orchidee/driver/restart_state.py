@@ -206,7 +206,7 @@ def restart_thermosoil_initial_fields(
         hydro, pref_soil_veg=context.run_scalars.pref_soil_veg,
         dz_mm=context.hydrol_dz_mm, dh_mm=context.hydrol_dh_mm,
         njsc=source["njsc"], mcs=hydro.mcs,
-        mcs_mineral=soil.mcs_mineral,
+        soil_parameters=soil,
         peat_hydro=context.hydrol_soil_peat_hydro,
     )
     humlev = thermosoil_humlev(

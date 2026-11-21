@@ -126,13 +126,19 @@ def test_hydrol_main_forwards_its_bound_soil_contract(monkeypatch):
     ).mineral
     diagnostic.update(mcs=module["mcs"], mineral_tables=module["mineral_tables"])
     root_factor = h.hydrol_kfact_root_from_vegupd
+    run_soil = h.hydrol_module_explicit_step
     captured = {}
 
     def capture_root_factor(**kwargs):
         captured["ks"] = kwargs["ks"]
         return root_factor(**kwargs)
 
+    def capture_soil(**kwargs):
+        captured["point_ks"] = kwargs["ks"]
+        return run_soil(**kwargs)
+
     monkeypatch.setattr(h, "hydrol_kfact_root_from_vegupd", capture_root_factor)
+    monkeypatch.setattr(h, "hydrol_module_explicit_step", capture_soil)
     result = h.hydrol_main_step(
         module_inputs=module, diagnostic_inputs=diagnostic, snow_inputs=snow,
         irrigation_inputs=irrigation, routing_inputs=routing,
@@ -143,6 +149,7 @@ def test_hydrol_main_forwards_its_bound_soil_contract(monkeypatch):
                      "snow_beg": np.array([3.0]), "mx_eau_var": np.array([900.0])},
     )
     assert captured["ks"] is soil.ks
+    np.testing.assert_array_equal(captured["point_ks"], np.asarray(soil.ks)[module["njsc"] - 1])
     weights = np.array([module["dz_mm"][1] / 2.0, *(module["dz_mm"][1:-1] + module["dz_mm"][2:]) / 2.0, module["dz_mm"][-1] / 2.0])
     np.testing.assert_allclose(result.diagnostics.layer_by_tile[0].smw_tmp, 0.12 * weights[None, :])
     np.testing.assert_allclose(result.diagnostics.layer_by_tile[0].smf_tmp, 0.30 * weights[None, :])
