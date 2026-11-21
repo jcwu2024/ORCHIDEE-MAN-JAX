@@ -1,6 +1,6 @@
 # 主线进度
 
-2026-11-21，**物理检查第八包已验收，累计 79 项修正或支持补齐、40 个生产提交。** 参数与状态传递已在既定范围收尾，物理分支验证仍在进行。
+2026-11-21，**物理检查第九包已验收。** 累计 80 项修正或支持补齐、41 个生产提交。下一包检查冠层和能量计算及其结果在下一组件的使用。
 
 2026-11-20，第六包经主控接受，五项修补登记C73–C77，生产／测试／CI提交`f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b`。累计**77项修正／支持补齐、39个相关生产提交**；75项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是77项物理公式错误。本轮五项均有复查前`7cae3e02adad23674767a590fdf4d27f239ce065`只读源码证据，首次引入日期未断言，未恢复运行历史代码。
 
@@ -23,6 +23,6 @@
 
 第八包登记 C78 冻结水文分箱、C79 泥炭湿度分箱，代码提交 `9591652668df1afb4955d7282a6091b96d844e4b`。上次批量复核有 90 个失败坐标记录（含重复单点），修订后的同一脚本 18 行结果全部通过。原生边界核对、实际含水量写回和 STOMATE 分解率均使用原参考。隔离测试 18 项通过，1 项外部原源身份检查跳过，该项在本地通过。[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-acceptance.json) · [累计修复及同步依赖](correction_origins.md)
 
-本包将 55 个源码组推进到其声明范围内有支持证据，仍有 163 个源码组和 36 个调用组要补证。下一包优先处理暖干 PFT14 的活动下限。已有同输入对照在两个分解率字段共观察到 64 个超限坐标，差异传至凋落物和土壤碳的活动系数。下一步要核对原精度在实际调用中的传递，并用相同输入检查碳库更新。年度 DOC 边界通量、质量残差和异养呼吸仍未知，`numerical_acceptance=false`。[剩余清单](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/open-groups.json)
+第九包登记 C80。暖干 PFT14 的论文分解率使用原构建的双精度下限，实际凋落物和土壤碳写回在匹配输入上通过。组件对照 348 项、本地测试 48 项通过。隔离环境 8 项通过、1 项外部源码身份检查跳过。剩余 142 个源码组和 34 个调用组，其中 12 个调用组缺外部证据。原局部收支警告仍出现，年度 DOC 和 NPP 影响未知。整模型 `numerical_acceptance=false`。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/controller-acceptance.json) · [剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/open-groups.json)
 
 修复位置与未来同步依赖见[来源登记](correction_origins.md)、[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)和[当前覆盖表](physics_branch_coverage.md)。Sol每包封存后回传一次，主控集中验收发布后继续派发，不定时轮询。565／187是源码审阅分组，不是752个已知bug，也不是要求752次模型运行。

@@ -1,6 +1,8 @@
 # 当前物理计算与条件分支覆盖
 
-2026-11-20，当前正式累计**77项修正／支持补齐、39个相关生产提交**，含C62–C77。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。
+2026-11-21，第九包已验收，累计 **80 项修正或支持补齐、41 个生产提交**。未结的 142 个源码组和 34 个调用组中，12 处调用还缺外部证据。[剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/open-groups.json)
+
+2026-11-20，当时正式累计**77项修正／支持补齐、39个相关生产提交**，含C62–C77。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。
 
 执行资产以[CI交付修订](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-ci-repair/README.md)绑定：缺原源的隔离checkout仍执行全部数值／声明输入检查，仅两项source/span门跳过；实际本地uv三文件结果110 passed／2 source skipped／2 strict xfailed。有源静态门另2通过，hosted Ubuntu／uv sync未执行。主控核对实际修订与9份执行资产并复用检查；JSON夹具经Git换行规范化后值一致，当前管理文档另随验收更新。原科学证据和覆盖等级不升级，后续PB-03进度见下文。
 
@@ -53,6 +55,8 @@ fixedsnow原源未定义值、外部PBL、自然低LAI／联合／雪能量前�
 
 第八包增量已验收。33 个本地缺口和 35 个相邻部分组的 445 个原成员 ID 已逐一关联。另有 16 组土壤热与 STOMATE 分支补证。共 84 组获得新增证据，其中 55 组在声明范围内得到支持。9 个部分调用组补充了真实消费者证据。仍有 163 个源码组、36 个调用组（含 12 个外部缺口），52 个父过程仍待整体验证。[覆盖差额](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-repair/coverage-delta.json)
 
-C78 和 C79 接受在所测 CPU 单点与批量形式下的分箱及下游结果。暖干 PFT14 在第一档使用的 `EPSILON(0.)` 仍有独立差异，当前已追到凋落物和土壤碳的首个活动系数，完整池量和年度影响待查。旧雪、水文平滑和非显式热导率的严格失败保留各自范围。[主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/controller-acceptance.json) · [具名剩余项](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase08-hydrol-snow-and-consumers/open-groups.json)
+C78 和 C79 验证了所测 CPU 单点与批量形式下的分箱结果。第九包另行接受 C80，覆盖论文活动下限、原组件池量和通量及实际写回。局部原生残差和年度影响分别保留。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/controller-acceptance.json)
+
+第九包对 30 个碳源码组补证，其中 14 组有限支持、7 组按实际论文开关排除、9 组部分开放。实测 STOMATE 的两处碳调用获有界支持，LPJ 的 NPP 调用仍部分开放。剩余 142 个源码组、34 个调用组，外部缺口 12 个。本包还纠正第八包水文平滑合成网格的首层间距范围。原严格差异继续记录。 [覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/coverage-delta.json) · [平滑证据](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/hydrol-smoothing/README.md)
 
 两组热系数输入中，底层递推的舍入差异经表层相消、PFT加权和雪土混合传到输出。原来8项严格比较的60个失败坐标全部保留。52个父过程的整体路线仍开放，`numerical_acceptance=false`。原始观测、编译计算、实际写回和外部运行身份的具体缺项见[剩余总账](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/open-groups.json)。
