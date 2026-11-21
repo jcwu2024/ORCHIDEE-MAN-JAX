@@ -158,6 +158,7 @@ from jax_orchidee.sechiba.diffuco import (
     DiffucoControlSalinityAssembly,
     DiffucoFirstStepPrecallAssembly,
     DIFFUCO_FIRST_STEP_PRECALL_RESTART_FIELDS,
+    MIN_SECHIBA,
     DiffucoPFT14FirstStepLocalEnerbilPrecallAssembly,
     assemble_diffuco_first_step_precall_payload,
     assemble_pft14_control_inundation_first_step,
@@ -1367,8 +1368,8 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object], *
             raise ValueError("DIFFUCO cold-start state requires explicit slowproc PFT axes")
         nvm = np.asarray(slowproc_full.veget).shape[1]
         # diffuco_initialize lines 212-225 applies DIFFUCO_LEAFCI=233 when
-        # the cold-start restart field is absent; trans_co2 then overwrites
-        # the active PFT14 slice during the first production step.
+        # the cold-start restart field is absent. The first trans_co2 call
+        # supplies the new leaf state at writeback.
         carry["leaf_ci"] = np.full((npts, nvm, nlai), 233.0, dtype=np.float64)
     if slowproc_full is not None:
         peat = slowproc_full.peat
@@ -3692,12 +3693,19 @@ _SECHIBA_HALF_HOUR_CARRY_FIELDS = frozenset(
 
 def _updated_leaf_ci(previous_leaf_ci, diffuco_local):
     boundary = diffuco_local.result.boundary
-    pft_index = int(diffuco_local.kwargs["pft_index"])
+    kwargs = diffuco_local.kwargs
+    pft_index = int(kwargs["pft_index"])
     active_leaf_ci = boundary.process_chain.trans_co2.canopy.leaf_ci
     previous = jnp.asarray(previous_leaf_ci)
     if active_leaf_ci.shape != (previous.shape[0], previous.shape[2]):
         raise ValueError("PFT14 active leaf_ci must match restart (npts,nlai) axes")
-    return previous.at[:, pft_index, :].set(active_leaf_ci)
+    # diffuco_trans_co2:2205 resets PFT1. Other absent PFTs enter the
+    # non-assimilating index at 2346-2379 and receive Ca at 2403-2406.
+    co2 = kwargs["trans_co2_inputs"]
+    ca = jnp.asarray(co2["ca"], dtype=previous.dtype)
+    present = jnp.asarray(kwargs["veget_max"]) > co2.get("min_sechiba", MIN_SECHIBA)
+    background = jnp.where(present[:, :, None], previous, ca[:, None, None])
+    return background.at[:, 0, :].set(0).at[:, pft_index, :].set(active_leaf_ci)
 
 
 def _sechiba_finalize_state_from_components(

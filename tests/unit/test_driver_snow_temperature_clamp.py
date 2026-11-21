@@ -82,7 +82,7 @@ def _components(closure, payload):
     ep["dt_sechiba"] = 1800.0
     enerbil = NS(payload=ep, step=NS(pottemp=None))
     diffuco = NS(
-        kwargs={"pft_index": 0},
+        kwargs={"pft_index": 0, "veget_max": tile, "trans_co2_inputs": {"ca": jax.numpy.full(grid.shape, 410.0)}},
         result=NS(payload=NS(payload={name: tile for name in ("rstruct", "gpp", "gsmean", "rveget", "cimean")}),
                   boundary=NS(drag=NS(q_cdrag_pft=tile),
                               process_chain=NS(trans_co2=NS(canopy=NS(leaf_ci=tile))))),

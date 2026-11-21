@@ -129,6 +129,13 @@ jobs:
         run: >-
           uv run --frozen python -B -m pytest -q -rs
           tests/unit/test_phase09_paper_activity.py
+      - name: DIFFUCO leaf CO2 restart state against original
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_phase10_diffuco_leaf_ci.py
       - name: Hydrology production configuration and tide adapters
         env:
           JAX_PLATFORMS: cpu
@@ -221,3 +228,4 @@ jobs:
           tests/unit/test_phase07_source_disposition_components.py
           tests/unit/test_phase08_hydrol_snow_consumers.py
           tests/unit/test_phase09_paper_activity.py
+          tests/unit/test_phase10_diffuco_leaf_ci.py

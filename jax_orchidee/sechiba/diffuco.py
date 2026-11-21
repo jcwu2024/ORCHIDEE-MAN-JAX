@@ -2931,7 +2931,10 @@ def diffuco_c3_canopy_layer_integrals(
     assimi = jnp.where(layer_active, layer.assimi, 0.0)
     rd_active = jnp.where(layer_active, rd, 0.0)
     gs = jnp.where(layer_active, layer.gs, 0.0)
-    leaf_ci = jnp.where(layer_active, layer.leaf_ci, ca[:, None])
+    # diffuco_trans_co2:2205,2403-2406 resets the field and fills Ca
+    # only at points that do not assimilate.
+    leaf_ci_background = jnp.where(assimilate, 0.0, ca)
+    leaf_ci = jnp.where(layer_active, layer.leaf_ci, leaf_ci_background[:, None])
     cc = jnp.where(layer_active, layer.cc, 0.0)
     info = jnp.where(layer_active, layer.info_limitphoto, 0.0)
     fallback = layer_active & layer.fallback
