@@ -282,7 +282,7 @@ from jax_orchidee.stomate.integration import (
     stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit,
     stomate_lpj_outputs_from_post_npp_ok_leak_explicit,
 )
-from jax_orchidee.stomate.permafrost import stomate_permafrost_decomposition_controls
+from jax_orchidee.stomate.permafrost import FORTRAN_EPSILON_R8, stomate_permafrost_decomposition_controls
 from jax_orchidee.stomate.reference import (
     StomateRestartEntryState,
     StomateRestartSeasonState,
@@ -9034,6 +9034,7 @@ def _paper_ok_leak_boundary_from_sources(
         permafrost_activity_boundary={
             "frozen_respiration_func": frozen_respiration_func,
             "perma_peat": perma_peat_enabled,
+            "epsilon": FORTRAN_EPSILON_R8,
             **({} if perma_peat_enabled else {"mc_peat": hydrol["soil_mc"][:, :, 0]}),
             **({"is_peat": is_peat} if perma_peat_enabled else {}),
         },
@@ -9477,6 +9478,7 @@ def _paper_compiled_ok_leak_fold(
             is_peat=is_peat if perma_peat else None,
             tau_peat=static_inputs.get("tau_peat", 3.1536e8),
             z_tau=static_inputs.get("z_tau", 1.0e6),
+            epsilon=FORTRAN_EPSILON_R8,
         )
         soil_mc_32l = stomate_soil_mc_32l(step.soil_mc, ndeep=ndeep, nslm=nslm)
         soilwater_31mm = jnp.sum(
@@ -9699,6 +9701,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
             permafrost_activity_boundary={
                 "frozen_respiration_func": parse_run_def_int(run_def_values, "frozen_respiration_func"),
                 "perma_peat": parse_run_def_bool(run_def_values["PERMA_PEAT"]),
+                "epsilon": FORTRAN_EPSILON_R8,
                 **({} if parse_run_def_bool(run_def_values["PERMA_PEAT"]) else {"mc_peat": payload["soil_mc"][:, :, 0]}),
                 **({"is_peat": is_peat} if parse_run_def_bool(run_def_values["PERMA_PEAT"]) else {}),
             },

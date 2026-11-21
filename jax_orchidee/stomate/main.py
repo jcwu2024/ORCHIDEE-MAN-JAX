@@ -18,6 +18,7 @@ from jax_orchidee.stomate.integration import (
     stomate_ok_leak_explicit,
 )
 from jax_orchidee.stomate.permafrost import (
+    FORTRAN_EPSILON_R8,
     StomatePermafrostControls,
     stomate_permafrost_decomposition_controls,
 )
@@ -354,6 +355,8 @@ def stomate_activity_control_precomputation(
         z_tau=z_tau,
         flux_tot_coeff=flux_tot_coeff,
         one_day=one_day,
+        # The paper's -r8 build evaluates microactem's EPSILON(0.) in binary64.
+        epsilon=FORTRAN_EPSILON_R8,
     )
     return StomateActivityControlResult(mc_peat, mc_man, hsdeep_new, controls)
 

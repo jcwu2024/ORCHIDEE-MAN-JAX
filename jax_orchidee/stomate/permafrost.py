@@ -24,6 +24,7 @@ STOMATE_TAU_SECONDS = 4.699e6
 ONE_DAY_SECONDS = 86400.0
 DEFAULT_FLUX_TOT_COEFF = (1.2, 1.4, 0.75)
 FORTRAN_EPSILON_R4 = jnp.finfo(jnp.float32).eps
+FORTRAN_EPSILON_R8 = jnp.finfo(jnp.float64).eps
 
 MICROACTEM_PROVENANCE = (
     "Fortran source truth: src_stomate/stomate_permafrost_soilcarbon.f90, "
@@ -284,6 +285,7 @@ def stomate_permafrost_decomposition_controls(
     z_tau=1.0e6,
     flux_tot_coeff=DEFAULT_FLUX_TOT_COEFF,
     one_day=ONE_DAY_SECONDS,
+    epsilon=FORTRAN_EPSILON_R4,
 ) -> StomatePermafrostControls:
     """Build ``stomate_main`` permafrost decomposition controls.
 
@@ -292,6 +294,7 @@ def stomate_permafrost_decomposition_controls(
     ``limit_decomp_moisture`` equal to 1 for ``fbact`` and 0 for
     ``fbact_doc`` in this source, converts seconds to day^-1 rates, and
     multiplies each grid-cell slab by ``(2 - poor_soils) * 0.5``.
+    Paper callers specify the build's default-real epsilon explicitly.
     """
 
     fbact = microactem(
@@ -307,6 +310,7 @@ def stomate_permafrost_decomposition_controls(
         tau_peat=tau_peat,
         z_tau=z_tau,
         flux_tot_coeff=flux_tot_coeff,
+        epsilon=epsilon,
     ).fbact_seconds
     fbact_doc = microactem(
         temp_celsius,
@@ -321,6 +325,7 @@ def stomate_permafrost_decomposition_controls(
         tau_peat=tau_peat,
         z_tau=z_tau,
         flux_tot_coeff=flux_tot_coeff,
+        epsilon=epsilon,
     ).fbact_seconds
     poor = jnp.asarray(poor_soils)
     factor = (2.0 - poor) * 0.5

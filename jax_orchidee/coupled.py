@@ -64,7 +64,7 @@ from jax_orchidee.stomate.carbon_kernels import (
     littercalc_aboveground_controls,
     stomate_soil_mc_32l,
 )
-from jax_orchidee.stomate.permafrost import stomate_permafrost_decomposition_controls
+from jax_orchidee.stomate.permafrost import FORTRAN_EPSILON_R4, stomate_permafrost_decomposition_controls
 from jax_orchidee.stomate.parameters import (
     PaperCaseStomateParameterBundle,
     load_paper_case_stomate_parameter_bundle,
@@ -832,6 +832,7 @@ def stomate_permafrost_activity_ok_leak_inputs(
     z_tau=1.0e6,
     flux_tot_coeff=(1.2, 1.4, 0.75),
     one_day=86400.0,
+    epsilon=FORTRAN_EPSILON_R4,
 ) -> StomatePermafrostActivityOkLeakInputs:
     """Compute OK_LEAK activity controls from ``stomate_main`` microactem calls.
 
@@ -877,6 +878,7 @@ def stomate_permafrost_activity_ok_leak_inputs(
         z_tau=z_tau,
         flux_tot_coeff=flux_tot_coeff,
         one_day=one_day,
+        epsilon=epsilon,
     )
     fbact = controls.prmfrst_soilc_tempctrl
     fbact_doc = controls.prmfrst_soilc_tempctrl_doc
