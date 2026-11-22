@@ -1,6 +1,6 @@
 # 当前物理计算与条件分支覆盖
 
-2026-11-21，第十包已验收，累计 **81 项修正或支持补齐、42 个生产提交**。余下 101 个源码组和 33 个调用组，其中 12 处调用缺外部证据。[剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/open-groups.json)
+2026-11-22，第十一包返修已验收，累计 **83 项修正或支持补齐、43 个生产提交**。余下 92 个源码组和 33 个调用组，其中 12 处调用缺外部证据。[修订余项](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/open-groups.json)
 
 2026-11-20，当时正式累计**77项修正／支持补齐、39个相关生产提交**，含C62–C77。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。
 
@@ -62,3 +62,7 @@ C78 和 C79 验证了所测 CPU 单点与批量形式下的分箱结果。第九
 第十包 50 个冠层与能量组逐项对账，37 组获有界支持，13 组部分开放，另有 4 个相邻组获得有限组件证据。CONDVEG 的完整局部返回和下一次空气动力接收得到有界支持，DIFFUCO 和 ENERBIL 仍有前驱缺口。低风的 31 项气动 JIT 严格差异及原未赋值、外部、自然前驱的限制仍具名保留。DIFFUCO `leaf_ci` 在 36 组同输入下证实存在逐层重启写回错误，登记为 C81。 [第十包覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/coverage-delta.json) · [主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/controller-acceptance.json)
 
 两组热系数输入中，底层递推的舍入差异经表层相消、PFT加权和雪土混合传到输出。原来8项严格比较的60个失败坐标全部保留。52个父过程的整体路线仍开放，`numerical_acceptance=false`。原始观测、编译计算、实际写回和外部运行身份的具体缺项见[剩余总账](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase07-source-dispositions-and-energy/open-groups.json)。
+
+第十一包逐项关联 42 个热土壤组与 21 个水文积雪组的 707 个原条件。9 个源码组获得范围内支持。实际 ENERBIL、HYDROL、THERMOSOIL 的三个调用组补充了参数、相位和写回证据，仍有其他前驱待核对。剩余 92 个源码组、33 个调用组，其中 12 个缺外部证据。水文源网格平滑 7 项、旧人工网格 8 项、土柱新比较 16 项和气动 31 项严格失败分别保留。52 个父过程和七套历史身份继续沿用，年度质量余量、DOC、NPP 效应未知，`numerical_acceptance=false`。[第十一包覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/coverage-delta.json) · [具名余项](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/open-groups.json)
+
+第十一包接受 C82 的基岩热容量开关和 C83 的土类索引。返修对照补齐了矿质土类索引、有效逐点阈值与后续湿度/胁迫的接收证据。层湿度、胁迫和冻土湿度的受影响源码组继续按具体余项标记为部分支持，原 9 组有限支持及 92／33／12 口径保留。气动、土柱和平滑严格失败及年度未知继续按原证据记录。 [主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-acceptance.json) · [修订覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/coverage-delta.json) · [气动勘误](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/aero-correction.md)

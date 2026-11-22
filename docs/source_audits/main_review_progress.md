@@ -1,6 +1,6 @@
 # 主线进度
 
-2026-11-21，**物理检查第十包已验收。** 累计 81 项修正或支持补齐、42 个生产提交。下一包处理土壤热与水雪计算、实际交接，以及低风时尚未解释的气动差异。
+2026-11-22，**物理检查第十一包返修已验收。** C82 和 C83 登记后累计 83 项修正或支持补齐、43 个生产提交，其中 81 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-acceptance.json)
 
 2026-11-20，第六包经主控接受，五项修补登记C73–C77，生产／测试／CI提交`f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b`。累计**77项修正／支持补齐、39个相关生产提交**；75项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是77项物理公式错误。本轮五项均有复查前`7cae3e02adad23674767a590fdf4d27f239ce065`只读源码证据，首次引入日期未断言，未恢复运行历史代码。
 
@@ -8,8 +8,8 @@
 | --- | --- | --- |
 | 参数／状态 | 既有有限合同已接受；新增6份科学restart文件到实际reader／下一组件的有限往返 | 真实IOIPSL／native producer与自然年际历史等范围另留 |
 | PB-01冠层／光合 | 新增restart／held／维护LAI前驱与有限消费者 | 自然低LAI历史、外部PBL及fixedsnow原未定义合同 |
-| PB-02能量／QSAT | 正capacity与QSAT域有条件证据，有限原组件输入已绑定 | 新8项JIT完整系数通量失败待归因；超出证明前提的源域与外部PBL |
-| PB-03水文／热／雪 | 既有有界归因及新增嵌套整返回浮点机制已接受，严格门仍失败 | 私有peat身份、真实native partial、自然初始雪／第二capacity与其余源码条件 |
+| PB-02能量／QSAT | 实际热容量和通量写回后进入下一次 ENERBIL，低风气动差异已有有界归因 | 31 项默认 JIT 气动严格失败，及其余源域与外部 PBL |
+| PB-03水文／热／雪 | 42 个热土壤组和 21 个水文积雪组逐项核对，9 组获有界支持 | 私有 peat 身份、自然初始雪包、第二次能量容量及其余分支，保留土柱和平滑的严格差异 |
 | PB-04植被／碳 | C73默认值、C74状态所有权已修；生长、扩散、冻融有限同输入链通过 | 剩余源条件、自然联合前驱、年度DOC真实通量；相等DOC严格失败保留 |
 | PB-05跨组 | C75–C77输入处理已修，forcing／静态控制／modelout／routing与restart有限接口验证 | maintained完整调度、跨模块源调用归属及阶段终审 |
 
@@ -26,5 +26,9 @@
 第九包登记 C80。暖干 PFT14 的论文分解率使用原构建的双精度下限，实际凋落物和土壤碳写回在匹配输入上通过。组件对照 348 项、本地测试 48 项通过。隔离环境 8 项通过、1 项外部源码身份检查跳过。剩余 142 个源码组和 34 个调用组，其中 12 个调用组缺外部证据。原局部收支警告仍出现，年度 DOC 和 NPP 影响未知。整模型 `numerical_acceptance=false`。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/controller-acceptance.json) · [剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase09-carbon-activity-and-consumers/open-groups.json)
 
 第十包接受 C81 叶层 CO₂ 重启写回。36 组同输入下，修后完整字段和 11 项公开物理量通过原容差。50 个冠层与能量源码组中 37 组获得有限支持，另有 4 个相邻组获支持。冠层结果传到下一次气动计算的调用已核对。剩余 101 个源码组、33 个调用组，其中 12 个调用组缺外部证据。低风近中性时 31 项严格气动对照仍失败。年度 NPP/DOC 影响未知。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/controller-acceptance.json) · [剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/open-groups.json)
+
+第十一包核对 707 个原源码条件，剩余 92 个源码组及 33 个调用组，含 12 个外部缺口。实际水文含水状态和雪字段进入热土壤，后者的容量、通量和网格温度写回并被下一次能量计算读取。新增土柱对比保留 16 项严格失败。低风气动的 31 项失败追到默认 CPU JIT 的融合舍入，原科学容差继续适用。五处重启夹具补齐后，完整文件和两项生产回归纳入本地 CI 入口。[覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/coverage-delta.json) · [独立复核](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/review/independent-review.md)
+
+第十一包登记 C82 基岩热容量的冻土开关、C83 水文土类表的逐点索引。主控用相同数组核实，初交超限的 26 个字段在返修后全部通过，单点参考保持一致。混合及重排的 12 点经 212 项对照，在原容差内匹配。年度 NPP、DOC 影响待验证。下一包优先核实配置导水率的根系公式及其真实调用，并行推进土柱严格差异和植被碳的局部收尾。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-acceptance.json) · [修订余项](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/open-groups.json)
 
 修复位置与未来同步依赖见[来源登记](correction_origins.md)、[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)和[当前覆盖表](physics_branch_coverage.md)。Sol每包封存后回传一次，主控集中验收发布后继续派发，不定时轮询。565／187是源码审阅分组，不是752个已知bug，也不是要求752次模型运行。

@@ -18,6 +18,10 @@
 
 第九包接受 C80（论文分解活动下限），第十包接受 C81（叶层 CO₂ 的重启写回）。核对冠层、能量及相邻过程后，剩余 101 个源码组、33 个调用组。第十一包以土壤热、水雪和实际调度交接为主，并行核实低风近中性气动 JIT 的 31 项严格差异，修复阻碍检验写回的测试输入。本阶段仍按文末的完成标准验收。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/controller-acceptance.json) · [剩余清单](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase10-canopy-energy-and-consumers/open-groups.json)
 
+第十一包接受 C82 和 C83。土壤热、水雪及实际交接已对账，剩余 92 个源码组和 33 个调用组，其中 12 处调用缺外部证据。低风气动 31 项严格失败已有有界舍入证据，气动扩展的分支翻转、未测自然雪与能量前驱、私有 peat 身份及新土柱 16 项严格失败按原范围保留。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-acceptance.json)
+
+第十二包先验证配置导水率的根系公式和实际调用，处理低层二维参数与通用耦合入口已记录的歧义。同时沿已保存的土柱对照定位水量残差与排水修正，并从剩余 9 个植被碳源码组及相关 STOMATE 调用推进本地可验证的条件。[修订余项](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/open-groups.json)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
@@ -29,9 +33,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 阶段启动时为 61 项、34 个生产提交。2026-11-21 接受到 C81，累计 **81 项修正或支持补齐、42 个生产提交**。
-  其中 79 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
-  最新已接受生产与回归提交为 `64d13e4d71bce938f4d0ebac80d83744eb143020`。每包按当时记录的基线复核。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-22 接受到 C83，累计 **83 项修正或支持补齐、43 个生产提交**。
+  其中 81 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `a77a1508ada77e2ee9a9093c77d11e839fd095a8`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、
