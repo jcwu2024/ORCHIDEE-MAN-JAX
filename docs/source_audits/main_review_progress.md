@@ -1,6 +1,6 @@
 # 主线进度
 
-2026-11-22，**物理检查第十一包返修已验收。** C82 和 C83 登记后累计 83 项修正或支持补齐、43 个生产提交，其中 81 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-acceptance.json)
+2026-11-22，**物理检查第十二包已验收。** C84 修正根系导水率公式，C85 补齐入渗参数轴，通用耦合诊断的配置传递归入 C83。累计 **85 项修正或支持补齐、44 个生产提交**，其中 83 项有复查前证据。两个研究分支的同步依赖已登记。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/controller-acceptance.json) · [累计修正](correction_origins.md)
 
 2026-11-20，第六包经主控接受，五项修补登记C73–C77，生产／测试／CI提交`f724dd1a6cf8f4edb3b5d1a1eeb780783d8d3e7b`。累计**77项修正／支持补齐、39个相关生产提交**；75项有复查前错误或支持缺口证据，C42／C57为复查期间遗漏，不是77项物理公式错误。本轮五项均有复查前`7cae3e02adad23674767a590fdf4d27f239ce065`只读源码证据，首次引入日期未断言，未恢复运行历史代码。
 
@@ -30,5 +30,7 @@
 第十一包核对 707 个原源码条件，剩余 92 个源码组及 33 个调用组，含 12 个外部缺口。实际水文含水状态和雪字段进入热土壤，后者的容量、通量和网格温度写回并被下一次能量计算读取。新增土柱对比保留 16 项严格失败。低风气动的 31 项失败追到默认 CPU JIT 的融合舍入，原科学容差继续适用。五处重启夹具补齐后，完整文件和两项生产回归纳入本地 CI 入口。[覆盖差额](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/coverage-delta.json) · [独立复核](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/review/independent-review.md)
 
 第十一包登记 C82 基岩热容量的冻土开关、C83 水文土类表的逐点索引。主控用相同数组核实，初交超限的 26 个字段在返修后全部通过，单点参考保持一致。混合及重排的 12 点经 212 项对照，在原容差内匹配。年度 NPP、DOC 影响待验证。下一包优先核实配置导水率的根系公式及其真实调用，并行推进土柱严格差异和植被碳的局部收尾。[主控验收](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-acceptance.json) · [修订余项](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/open-groups.json)
+
+第十二包对账 27 个仍获部分支持的源码组及 1,026 个原成员。土柱 270 项对照中保留 16 项严格差异。植被碳的两组上游结果送入同一个 JAX 接收方后，第二次调用的周转和 Vmax 在同一格点出现 6 项差异。第十三包先把相同完整实参分别交给原 Fortran 和 JAX，核实接收方的计算，再沿实际调用核对碳过程写回。余下 92 个源码组、33 个调用组，其中 12 处调用缺外部证据。全年 NPP、GPP、DOC 通量与收支影响待验证。[具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/open-groups.json) · [下游对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/npp-lpj/README.md)
 
 修复位置与未来同步依赖见[来源登记](correction_origins.md)、[累计索引](shared_core_branch_review.md#累计修改位置与提交索引)和[当前覆盖表](physics_branch_coverage.md)。Sol每包封存后回传一次，主控集中验收发布后继续派发，不定时轮询。565／187是源码审阅分组，不是752个已知bug，也不是要求752次模型运行。

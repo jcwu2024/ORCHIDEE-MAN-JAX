@@ -22,6 +22,10 @@
 
 第十二包先验证配置导水率的根系公式和实际调用，处理低层二维参数与通用耦合入口已记录的歧义。同时沿已保存的土柱对照定位水量残差与排水修正，并从剩余 9 个植被碳源码组及相关 STOMATE 调用推进本地可验证的条件。[修订余项](../../outputs/reviews/main-physics-20261121/physics-branch-closeout/phase11-soil-water-heat-and-aerodynamics/controller-repair/open-groups.json)
 
+第十二包已验收。登记 C84 根系导水率和 C85 入渗参数轴，两个通用耦合入口补入 C83。主控用初交的测试代码验证了六个旧调用的显式值优先级。土柱保留 16 项严格差异，年度影响待验证。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/controller-acceptance.json) · [具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/open-groups.json)
+
+第十三包先用相同完整操作数分别运行原 Fortran 与 JAX 的周转、最终 LAI 和 Vmax，核实第二次调用中同一格点的 6 项差异。核对周转到最终叶面积、光合能力之间的实际写回，并行处理凋落物警告、土壤碳运算及能在本地验证的碳过程调度。沿用上述 92/33 个余项的原成员与证据等级，独立审阅后交回主控。[对照输入与限制](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/npp-lpj/README.md)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
@@ -33,9 +37,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 阶段启动时为 61 项、34 个生产提交。2026-11-22 接受到 C83，累计 **83 项修正或支持补齐、43 个生产提交**。
-  其中 81 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
-  最新已接受生产与回归提交为 `a77a1508ada77e2ee9a9093c77d11e839fd095a8`。每包按当时记录的基线复核。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-22 接受到 C85，累计 **85 项修正或支持补齐、44 个生产提交**。
+  其中 83 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `87698036a37ba4e87cf0d4af10dc9c4cc8aba18b`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、

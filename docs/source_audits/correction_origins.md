@@ -1,4 +1,17 @@
-# C1–C83 修正与支持补齐来源登记（2026-11-22）
+# C1–C85 修正与支持补齐来源登记（2026-11-22）
+
+## C84 根系导水率与 C85 二维入渗参数
+
+2026-11-22，第十二包通过主控复验。累计 **85 项修正或支持补齐、44 个生产提交**，其中 83 项有复查前证据。代码、回归和 CI 提交为 `87698036a37ba4e87cf0d4af10dc9c4cc8aba18b`。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/controller-acceptance.json)
+
+| 编号 | 原规则与修改 | 证据与适用范围 |
+| --- | --- | --- |
+| C84 | 原 `hydrol.f90` 第 1219、1223 行以固定 USDA 饱和导水率最大值 7,128 mm/day 为分子，分母按矿质土类或泥炭取值。JAX 的两条根系路径曾把分子也改成配置表最大值。 | 默认参数的已有对照通过。修改配置后，旧版在根因子与入渗接收处共有 1,218 个坐标超限，修后所测 6,912 个坐标全部通过。 |
+| C85 | 入渗的二维深度因子支持按点给定或按土类查表。非均匀逐点矩阵在点数等于层数时会落入土类查表路径。显式轴参数区分两种输入；维护入口将生成表转为点×层后传递。 | 手工方阵原有 6 个字段比较超限。修后 180 个字段比较通过，省略轴参数的旧调用沿用原来的选择顺序。所测原生生成表各列相同，原先已能通过对照。 |
+
+复查前提交 `7cae3e02adad23674767a590fdf4d27f239ce065` 的 `hydrol.py` 第 8740、8826 行已有两处配置最大值，第 10077 行已有二维数组的层轴优先判断。两项的首次引入日期和全年 NPP、DOC 影响仍未知。[根系原生对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/root-factor/README.md) · [入渗轴对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/kfact-axis/README.md)
+
+本包将通用 SECHIBA 耦合入口的配置传递并入 **C83**。过程配置逐字段提供缺省值，诊断显式值、独立参数对象及 `None` 沿用各自含义。主控以初交封存的测试代码重放两个入口，六个旧调用从初稿均超限恢复为全部通过。标量例中，显式矿质值 0.49 与有效阈值 0.65 得到的诊断比值为 0.753846。两个独立参数字典在复查前已存在，类型化参数是后来补入的支持。[返修对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/controller-repair/README.md)
 
 ## C82 和 C83 土壤热容量与水文土类索引
 
