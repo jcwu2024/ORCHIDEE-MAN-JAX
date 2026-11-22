@@ -170,6 +170,14 @@ jobs:
           tests/unit/test_sechiba_step.py::test_coupled_diagnostics_preserve_explicit_raw_context
           tests/unit/test_sechiba_step.py::test_coupled_diagnostics_mix_explicit_and_configured_values
           tests/unit/test_sechiba_step.py::test_coupled_diagnostics_without_typed_module_keep_ordinary_behavior
+      - name: LPJ cover and harvest output receivers
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_phase13_lpj_output_receivers.py
+          tests/unit/test_stomate_integration.py::test_lpj_modelout_receives_final_gpp
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli
@@ -251,3 +259,4 @@ jobs:
           tests/unit/test_phase08_hydrol_snow_consumers.py
           tests/unit/test_phase09_paper_activity.py
           tests/unit/test_phase10_diffuco_leaf_ci.py
+          tests/unit/test_phase13_lpj_output_receivers.py

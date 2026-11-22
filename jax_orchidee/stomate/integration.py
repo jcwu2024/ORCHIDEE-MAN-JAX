@@ -3107,7 +3107,7 @@ def stomate_daily_carbon_kill_gap_turnover_explicit(
         )
         modelout_fields = stomate_lpj_history_fields_from_state(
             biomass=modelout_source_biomass,
-            gpp_daily=gpp_daily,
+            gpp_daily=cover.gpp_daily if cover is not None else gpp_daily,
             npp_daily=daily_carbon.npp_update.npp,
         )
         modelout = compute_modelout_from_fields(modelout_fields)
@@ -5164,9 +5164,30 @@ def stomate_lpj_outputs_from_post_npp_ok_leak_explicit(
     2200-2246.
     """
 
+    npp = post_npp.daily_carbon.npp_update
+    biomass = post_npp.turnover.biomass
+    turnover_daily = post_npp.turnover.turnover
+    resp_maint = npp.resp_maint
+    resp_growth = npp.resp_growth
+    # LPJ writes establishment/crown, cover and harvest before its diagnostics.
+    if post_npp.establishment_biomass is not None:
+        biomass = post_npp.establishment_biomass.biomass
+    if post_npp.crown_after_establish is not None:
+        veget_max = post_npp.crown_after_establish.veget_max
+    cover = post_npp.cover
+    if cover is not None:
+        biomass = cover.biomass
+        veget_max = cover.veget_max
+        turnover_daily = cover.turnover_daily
+        gpp_daily = cover.gpp_daily
+        resp_maint = cover.resp_maint
+        resp_growth = cover.resp_growth
+    if post_npp.harvest_agri is not None:
+        turnover_daily = post_npp.harvest_agri.turnover_daily
+
     diagnostics = stomate_lpj_output_diagnostics(
-        biomass=post_npp.turnover.biomass,
-        turnover_daily=post_npp.turnover.turnover,
+        biomass=biomass,
+        turnover_daily=turnover_daily,
         bm_to_litter=post_npp.bm_to_litter,
         litter_above=ok_leak.ok_leak.littercalc.litter_above,
         litter_below=ok_leak.ok_leak.soilcarbon.litter_below,
@@ -5182,17 +5203,17 @@ def stomate_lpj_outputs_from_post_npp_ok_leak_explicit(
         one_day=one_day,
     )
     modelout_fields = stomate_lpj_history_fields_from_state(
-        biomass=post_npp.turnover.biomass,
+        biomass=biomass,
         gpp_daily=gpp_daily,
-        npp_daily=post_npp.daily_carbon.npp_update.npp,
+        npp_daily=npp.npp,
     )
     # StomateLpj writes these beside the modelout inputs
     # (stomate_lpj.f90:2193, 2284-2286, 2302). Retaining them here permits
     # annual first-divergence diagnosis without retaining full day scaffolds.
     modelout_fields.update(
         {
-            "MAINT_RESP": post_npp.daily_carbon.npp_update.resp_maint,
-            "GROWTH_RESP": post_npp.daily_carbon.npp_update.resp_growth,
+            "MAINT_RESP": resp_maint,
+            "GROWTH_RESP": resp_growth,
         }
     )
     if post_npp.lai_after_setlai is not None:
@@ -5200,7 +5221,7 @@ def stomate_lpj_outputs_from_post_npp_ok_leak_explicit(
     if post_npp.vmax is not None:
         modelout_fields["VCMAX"] = post_npp.vmax.vcmax
     resp_parts = post_npp.daily_carbon.boundary.resp_maint_part
-    bm_alloc = post_npp.daily_carbon.npp_update.bm_alloc
+    bm_alloc = npp.bm_alloc
     modelout_fields.update(
         {
             "MAINT_RESP_AGRSAPST": resp_parts[:, :, IAGRSAPST],

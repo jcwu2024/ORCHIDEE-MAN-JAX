@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
+import jax
 import numpy as np
 import pytest
 
@@ -61,6 +63,7 @@ from jax_orchidee.stomate.daily import accumulate_resp_maint_part, sum_resp_main
 from jax_orchidee.stomate.daily import stomate_accumulate_daily
 from jax_orchidee.stomate.daily_inputs import StomateEntryLocalPrepResult, stomate_gpp_daily_increment
 from jax_orchidee.stomate.integration import (
+    ExplicitOkLeakFromPostNppResult,
     ExplicitOkPcDeepCarbonSidecarState,
     stomate_daily_alloc_kill_gap_turnover_explicit,
     stomate_daily_carbon_explicit,
@@ -4064,7 +4067,7 @@ def test_stomate_lpj_cover_peat_from_restart_state_writes_dynamic_peat_fields():
     assert np.allclose(np.asarray(result.cover.delta_fsave), np.asarray(expected.delta_fsave))
 
 
-def test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_setlai_and_vmax_after_cover():
+def _lpj_cover_output_inputs():
     npts, nvm = 1, 14
     pft = PFT14
     biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
@@ -4202,7 +4205,7 @@ def test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_setlai_and_vmax_a
     output_inputs["output_litter_below"][0, ISTRUCTURAL, pft, :, ICARBON] = [3.0, 4.0]
     output_inputs["output_carbon_32l"][0, :, pft, :] = [[5.0, 6.0], [7.0, 8.0], [9.0, 10.0]]
 
-    result = stomate_daily_carbon_kill_gap_turnover_explicit(
+    return dict(
         gpp_daily=np.zeros((npts, nvm), dtype=np.float64),
         biomass_before=biomass,
         f_alloc=f_alloc,
@@ -4225,31 +4228,36 @@ def test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_setlai_and_vmax_a
         **vmax_inputs,
         **output_inputs,
     )
+
+
+def test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_setlai_and_vmax_after_cover():
+    inputs = _lpj_cover_output_inputs()
+    result = stomate_daily_carbon_kill_gap_turnover_explicit(**inputs)
     expected_vmax = vmax_step(
         leaf_age=result.establishment_biomass.leaf_age,
         leaf_frac=result.establishment_biomass.leaf_frac,
-        vcmax25=vmax_inputs["vcmax25"],
-        n_limfert=vmax_inputs["n_limfert"],
-        leaf_timecst=vmax_inputs["leaf_timecst"],
-        leafagecrit=vmax_inputs["vmax_leafagecrit"],
-        pheno_type=vmax_inputs["vmax_pheno_type"],
-        leaf_tab=vmax_inputs["vmax_leaf_tab"],
-        ok_laidev=vmax_inputs["vmax_ok_laidev"],
+        vcmax25=inputs["vcmax25"],
+        n_limfert=inputs["n_limfert"],
+        leaf_timecst=inputs["leaf_timecst"],
+        leafagecrit=inputs["vmax_leafagecrit"],
+        pheno_type=inputs["vmax_pheno_type"],
+        leaf_tab=inputs["vmax_leaf_tab"],
+        ok_laidev=inputs["vmax_ok_laidev"],
     )
     expected_diag = stomate_lpj_output_diagnostics(
         biomass=result.cover.biomass,
         turnover_daily=result.harvest_agri.turnover_daily,
         bm_to_litter=result.harvest_agri.bm_to_litter,
-        litter_above=output_inputs["output_litter_above"],
-        litter_below=output_inputs["output_litter_below"],
-        carbon_32l=output_inputs["output_carbon_32l"],
-        doc=output_inputs["output_doc"],
+        litter_above=inputs["output_litter_above"],
+        litter_below=inputs["output_litter_below"],
+        carbon_32l=inputs["output_carbon_32l"],
+        doc=inputs["output_doc"],
         veget_max=result.cover.veget_max,
-        z_soil=output_inputs["output_z_soil"],
-        zf_soil=output_inputs["output_zf_soil"],
-        carb_mass_total_old=output_inputs["output_carb_mass_total_old"],
-        prod10_total=output_inputs["output_prod10_total"],
-        prod100_total=output_inputs["output_prod100_total"],
+        z_soil=inputs["output_z_soil"],
+        zf_soil=inputs["output_zf_soil"],
+        carb_mass_total_old=inputs["output_carb_mass_total_old"],
+        prod10_total=inputs["output_prod10_total"],
+        prod100_total=inputs["output_prod100_total"],
     )
 
     assert result.cover is not None
@@ -4257,12 +4265,74 @@ def test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_setlai_and_vmax_a
     assert result.vmax is not None
     assert result.output_diagnostics is not None
     assert result.modelout is not None
-    assert np.allclose(np.asarray(result.lai_after_setlai), np.asarray(result.cover.biomass[:, :, ILEAF, ICARBON]) * sla_calc)
+    assert np.allclose(np.asarray(result.lai_after_setlai), np.asarray(result.cover.biomass[:, :, ILEAF, ICARBON]) * inputs["sla_calc"])
     assert np.allclose(np.asarray(result.vmax.vcmax), np.asarray(expected_vmax.vcmax))
     assert np.allclose(np.asarray(result.output_diagnostics.tot_litter_soil_carb), np.asarray(expected_diag.tot_litter_soil_carb))
     assert np.allclose(np.asarray(result.modelout_fields["LEAF_M"]), np.asarray(result.cover.biomass[:, :, ILEAF, ICARBON]))
-    assert np.allclose(np.asarray(result.modelout.GPP_model), np.zeros((npts, nvm), dtype=np.float64))
+    assert np.allclose(np.asarray(result.modelout.GPP_model), inputs["gpp_daily"])
     assert np.allclose(np.asarray(result.modelout.NPP_model), np.asarray(result.daily_carbon.npp_update.npp))
+
+
+@pytest.mark.parametrize("cover_mode", ["dynamic", "fixed", "unwired"])
+def test_lpj_modelout_receives_final_gpp(cover_mode):
+    inputs = _lpj_cover_output_inputs()
+    area = np.zeros_like(inputs["veget_max"])
+    area[0, [0, PFT14]] = [0.25, 0.75]
+    gpp = np.zeros_like(area)
+    gpp[0, PFT14] = 5.0
+    dynamic = cover_mode == "dynamic"
+    inputs.update(
+        ok_dgvm=dynamic,
+        lpj_gap_const_mort=not dynamic,
+        wire_cover=cover_mode != "unwired",
+        veget_max=area.copy(),
+        cover_veget_max_old=area.copy(),
+        gpp_daily=gpp,
+        fpc_max=np.ones_like(area),
+        maxfpc_lastyear=np.zeros_like(area),
+        veget_lastlight=np.zeros_like(area),
+    )
+    gate = {"rtol": 1e-12, "atol": 1e-14}
+    with jax.enable_x64():
+        result = stomate_daily_carbon_kill_gap_turnover_explicit(**inputs)
+        # Supply the same output pools to the independent adapter.
+        leak = ExplicitOkLeakFromPostNppResult(
+            prep=None, requires_trace=(),
+            ok_leak=SimpleNamespace(
+                littercalc=SimpleNamespace(litter_above=inputs["output_litter_above"]),
+                soilcarbon=SimpleNamespace(
+                    litter_below=inputs["output_litter_below"],
+                    carbon_32l=inputs["output_carbon_32l"],
+                    doc=inputs["output_doc"],
+                ),
+            ),
+        )
+        separate = stomate_lpj_outputs_from_post_npp_ok_leak_explicit(
+            post_npp=result, ok_leak=leak, veget_max=area, gpp_daily=gpp,
+            z_soil=inputs["output_z_soil"], zf_soil=inputs["output_zf_soil"],
+            carb_mass_total_old=inputs["output_carb_mass_total_old"],
+        )
+    expected = gpp.copy()
+    if dynamic:
+        # lpj_cover.f90:323 redistributes area-weighted GPP. The declining
+        # bare class supplies zero GPP and the growing PFT covers the point.
+        area_after = np.zeros_like(area)
+        area_after[0, PFT14] = 1.0
+        np.testing.assert_allclose(result.cover.veget_max, area_after, **gate)
+        expected[0, PFT14] = gpp[0, PFT14] * area[0, PFT14] / area_after[0, PFT14]
+        np.testing.assert_allclose(np.sum(area_after * result.cover.gpp_daily), np.sum(area * gpp), **gate)
+    if cover_mode == "unwired":
+        assert result.cover is None
+    else:
+        np.testing.assert_allclose(result.cover.gpp_daily, expected, **gate)
+    npp = result.daily_carbon.npp_update.npp
+    for output in (result, separate):
+        np.testing.assert_allclose(output.modelout_fields["GPP"], expected, **gate)
+        np.testing.assert_allclose(output.modelout.GPP_model, expected, **gate)
+        np.testing.assert_allclose(output.modelout_fields["NPP"], npp, **gate)
+        np.testing.assert_allclose(output.modelout.NPP_model, npp, **gate)
+    for name, values in result.modelout_fields.items():
+        np.testing.assert_allclose(values, separate.modelout_fields[name], err_msg=name, **gate)
 
 
 def _ok_leak_inputs():
