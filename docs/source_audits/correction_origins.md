@@ -1,4 +1,10 @@
-# C1–C85 修正与支持补齐来源登记（2026-11-22）
+# C1–C86 修正与支持补齐来源登记（2026-11-23）
+
+## C86 植被碳模块写出建植、覆盖调整和收获后的值
+
+原 Fortran 在更新植被覆盖和收获后汇总生物量、周转并写出 GPP 等字段。JAX 的独立 LPJ 输出适配器曾读取较早的生物量、周转或通量。公开组合入口直接构建输出时，也曾写出覆盖调整前的 GPP。两处按同一输出时序登记为 C86，生产代码、两份回归及 CI 提交为 `0720d1bab0251cd460d9bcbf4bb3dcd1fa452701`。累计 **86 项修正或支持补齐、45 个生产提交**，其中 84 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/controller-acceptance.json)
+
+独立适配器在作物与动态植被用例中有 8 项修前差异，修后 129 项比较通过，含 110 项固定论文配置对照。主控另用单点核对组合入口，植被覆盖从 0.75 增至 1 时，原覆盖公式和实际覆盖返回均为 3.75，内联输出修前为 5。修后历史字段与 `GPP_model` 均为 3.75。专项 11 项、相邻 5 项本地回归通过。固定 PFT14 论文配置关闭动态植被，全年 NPP、GPP、DOC 通量与收支及异养呼吸影响待验证。复查前 `7cae3e02adad23674767a590fdf4d27f239ce065` 的两处旧取值均有源码记录，首次引入日期待考。[输出复验](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/controller-repair/README.md) · [作物与覆盖对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/lpj-receivers/README.md)
 
 ## C84 根系导水率与 C85 二维入渗参数
 

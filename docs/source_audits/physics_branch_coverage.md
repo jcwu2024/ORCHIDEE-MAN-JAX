@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+2026-11-23，第十三包已验收，累计 **86 项修正或支持补齐、45 个生产提交**。C86 覆盖独立适配器和组合入口两条 LPJ 输出路径。单点实测覆盖后的 GPP 和两个历史输出均为 3.75，固定 PFT14 关闭动态覆盖。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/controller-acceptance.json) · [输出复验](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/controller-repair/README.md)
+
+本包核对 17 个源码组的 629 个原成员。凋落物警告及 ALT 全真掩码在已声明范围内关闭，剩余 90 个源码组、33 个调用组，后者含 12 处外部缺口。原周转与 JAX 在 108 项同输入比较中通过，直接核对最终叶面积和 Vmax 的 90 项以及实际周转返回进入这两个过程的 180 项分别通过。土壤碳仍缺库存成为限制条件时的一致水文输入，全年 DOC 收支、异养呼吸、NPP 和 GPP 影响待验证。[叶片对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/lai-vmax/README.md) · [具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/open-groups.json)
+
 2026-11-22，第十二包已验收，累计 **85 项修正或支持补齐、44 个生产提交**。根系公式、入渗轴及两个通用耦合入口有组件级对照。余下 92 个源码组和 33 个调用组，其中 12 处调用缺外部证据。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/controller-acceptance.json) · [具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/open-groups.json)
 
 2026-11-20，当时正式累计**77项修正／支持补齐、39个相关生产提交**，含C62–C77。冠层／能量[首包与CI修订已获主控有限接受](../../outputs/reviews/main-physics-20261118/physics-branch-closeout/phase01-canopy-energy/controller-acceptance.json)；没有宣布整个阶段或PB-01／PB-02完成。测试／参考／CI提交为`ebd1141d5b214ab0b874d124eab2466eef8e0a77`，当时不改变生产模型或61／34计数。范围与门槛遵循[当前计划](physics_branch_closeout_plan.md)和[PFT14交付合同](pft14_equivalence_delivery_contract.md)：独立单点、forcing值／来源、连续参数和支持状态下的源条件，不能缩成默认点或旧319轨迹。

@@ -26,6 +26,10 @@
 
 第十三包先用相同完整操作数分别运行原 Fortran 与 JAX 的周转、最终 LAI 和 Vmax，核实第二次调用中同一格点的 6 项差异。核对周转到最终叶面积、光合能力之间的实际写回，并行处理凋落物警告、土壤碳运算及能在本地验证的碳过程调度。沿用上述 92/33 个余项的原成员与证据等级，独立审阅后交回主控。[对照输入与限制](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase12-root-water-and-vegetation-carbon/npp-lpj/README.md)
 
+第十三包已验收。C86 使两个 LPJ 输出入口使用对应过程的最终状态。凋落物警告与 ALT 全真掩码在限定范围内关闭，余 90 个源码组和 33 个调用组。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/controller-acceptance.json) · [具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/open-groups.json)
+
+第十四包沿实际水、热、碳过程调用核对已写回的值。优先验证日末 LPJ 输出的调用方，以及有一致供体水量、层深和出口流量的土壤 DOC 库存限制。结合现有水热前驱核实下一消费者，按原成员列明本地可验证、需自然轨迹或需外部后端的余项，供物理阶段终审使用。[具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/open-groups.json)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
@@ -37,9 +41,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 阶段启动时为 61 项、34 个生产提交。2026-11-22 接受到 C85，累计 **85 项修正或支持补齐、44 个生产提交**。
-  其中 83 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
-  最新已接受生产与回归提交为 `87698036a37ba4e87cf0d4af10dc9c4cc8aba18b`。每包按当时记录的基线复核。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-23 接受到 C86，累计 **86 项修正或支持补齐、45 个生产提交**。
+  其中 84 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `0720d1bab0251cd460d9bcbf4bb3dcd1fa452701`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、
