@@ -158,6 +158,13 @@ def sechiba_explicit_coupled_step(
         at lines 1109-1118. The SLOWPROC surface transition exposes its
         ``do_slow`` gate when that field is supplied. This helper starts after
         a caller supplies the audited DIFFUCO boundary payload.
+
+    When ``soil_parameters`` is omitted from HYDROL diagnostics, the module
+    configuration fills missing diagnostic values. Supplied raw values keep
+    their scalar, point, or texture interpretation. An explicit diagnostic
+    parameter object selects its own context, and explicit ``None`` selects
+    the raw/default context. Effective point thresholds are resolved separately
+    from the mineral background.
     """
 
     diffuco_source, diffuco_local_fields, diffuco_passthrough_fields = _normalize_diffuco_payload(diffuco_payload)
@@ -184,7 +191,11 @@ def sechiba_explicit_coupled_step(
             hydrol_kwargs[name] = e_payload[name]
     hydrol = hydrol_module_explicit_step(**hydrol_kwargs)
     hydrol_outputs = hydrol_module_outputs(hydrol, soiltile=hydrol_kwargs["soiltile"])
-    hydrol_diag = hydrol_module_diagnostics(hydrol, **hydrol_diagnostic_inputs)
+    diagnostic_kwargs = dict(hydrol_diagnostic_inputs)
+    module_soil = hydrol_kwargs.get("soil_parameters")
+    if "soil_parameters" not in diagnostic_kwargs and module_soil is not None:
+        diagnostic_kwargs["soil_parameter_defaults"] = module_soil
+    hydrol_diag = hydrol_module_diagnostics(hydrol, **diagnostic_kwargs)
     moisture = hydrol_to_thermosoil_moisture_inputs(
         hydrol_diag,
         pref_soil_veg=hydrol_kwargs["pref_soil_veg"],

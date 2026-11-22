@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -29,6 +31,249 @@ from jax_orchidee.stomate.entry import (  # noqa: E402
 
 class _MiniDriverPayload:
     pass
+
+
+class _ReachedHydrolLayerBoundary(Exception):
+    pass
+
+
+class _ReachedHydrolLitterBoundary(Exception):
+    pass
+
+
+def _capture_coupled_diagnostic_prefix(
+    monkeypatch, *, entrypoint, module_parameters, diagnostic_context, npts=12,
+    coupled_module=None, receive_litter=False,
+):
+    """Reach real HYDROL layer or litter diagnostics with a supplied soil state."""
+    import jax_orchidee.sechiba.hydrol as hydrol_owner
+    import jax_orchidee.sechiba.sechiba_step as current_step
+
+    step = current_step if coupled_module is None else coupled_module
+    nslm, nvm, nstm = (7, 14, 3) if receive_litter else (3, 14, 1)
+    soiltile = np.zeros((npts, nstm))
+    soiltile[:, 0] = 1.0
+    diagnostic_inputs = {
+        "nroot": np.full((npts, nvm, nslm), 1.0 / nslm),
+        "dz_mm": np.full(nslm, 100.0),
+        "dh_mm": np.array([50.0] + [100.0] * (nslm - 2) + [50.0]),
+        "njsc": np.full(npts, 4, dtype=np.int32),
+        "veget_max": np.full((npts, nvm), 1.0 / nvm),
+        "soiltile": soiltile,
+        "vegtot": np.ones(npts),
+        # Effective site values differ from mineral background parameters.
+        "mcs": np.full(npts, 0.65),
+        "mcf": np.full(npts, 0.40),
+        "mcw": np.full(npts, 0.15),
+        **diagnostic_context,
+    }
+    if receive_litter:
+        diagnostic_inputs["mineral_tables"] = SimpleNamespace(
+            k_lin=np.full((51, nslm, npts), 0.25), imin=1, imax=51,
+        )
+    hydrol_inputs = {"soiltile": diagnostic_inputs["soiltile"], "pref_soil_veg": np.ones(nvm, dtype=np.int32)}
+    if module_parameters is not _ABSENT_SOIL_PARAMETERS:
+        hydrol_inputs["soil_parameters"] = module_parameters
+    original_hydrol = dict(hydrol_inputs)
+    original_diagnostics = dict(diagnostic_inputs)
+    state = SimpleNamespace(
+        soil=SimpleNamespace(
+            mc=np.full((npts, nslm, nstm), 0.25),
+            mcl=np.full((npts, nslm, nstm), 0.23),
+            is_under_mcr=np.zeros((npts, nstm), dtype=bool),
+            wt_ab=np.zeros(npts),
+            wt_ab_tide=None,
+        ),
+        vegupd=SimpleNamespace(
+            vegetmax_soil=diagnostic_inputs["veget_max"][:, :, None] * soiltile[:, None, :],
+        ),
+    )
+    receipt = {}
+    actual_layer = hydrol_owner.hydrol_soil_layer_diagnostics
+    actual_diagnostics = hydrol_owner.hydrol_module_diagnostics
+    actual_litter_grid = hydrol_owner.hydrol_litter_grid_diagnostics
+
+    def layer_receiver(**kwargs):
+        layer = actual_layer(**kwargs)
+        receipt.setdefault("layer_inputs", kwargs)
+        receipt.setdefault("layer", layer)
+        if not receive_litter:
+            raise _ReachedHydrolLayerBoundary
+        return layer
+
+    def litter_grid_receiver(**kwargs):
+        receipt["litter"] = kwargs["litter"]
+        receipt["litter_grid"] = actual_litter_grid(**kwargs)
+        raise _ReachedHydrolLitterBoundary
+
+    def diagnostic_receiver(result, **kwargs):
+        receipt["diagnostic_inputs"] = kwargs
+        return actual_diagnostics(result, **kwargs)
+
+    fluxes = {name: np.zeros((npts, nvm)) if name in {"vevapwet", "vevapnu_pft", "transpir"} else np.zeros(npts)
+              for name in ("vevapwet", "vevapnu", "vevapnu_pft", "vevapflo", "transpir")}
+    with monkeypatch.context() as patch:
+        patch.setattr(step, "ENERBIL_LOCAL_STEP_FIELDS", ())
+        patch.setattr(step, "assemble_enerbil_precall_payload", lambda *args: None)
+        patch.setattr(step, "enerbil_explicit_local_step", lambda **kwargs: None)
+        patch.setattr(step, "enerbil_downstream_payload", lambda result: fluxes)
+        patch.setattr(step, "hydrol_module_explicit_step", lambda **kwargs: state)
+        patch.setattr(step, "hydrol_module_outputs", lambda *args, **kwargs: None)
+        patch.setattr(step, "hydrol_module_diagnostics", diagnostic_receiver)
+        patch.setattr(hydrol_owner, "hydrol_soil_layer_diagnostics", layer_receiver)
+        if receive_litter:
+            patch.setattr(hydrol_owner, "hydrol_litter_grid_diagnostics", litter_grid_receiver)
+        patch.setattr(step, "diffuco_pft14_local_enerbil_precall_explicit", lambda **kwargs: SimpleNamespace(payload={}))
+        common = dict(enerbil_inputs={}, hydrol_inputs=hydrol_inputs,
+                      hydrol_diagnostic_inputs=diagnostic_inputs, condveg_inputs={}, thermosoil_inputs={})
+        boundary = _ReachedHydrolLitterBoundary if receive_litter else _ReachedHydrolLayerBoundary
+        with pytest.raises(boundary):
+            if entrypoint == "payload":
+                step.sechiba_explicit_coupled_step(diffuco_payload={}, **common)
+            else:
+                step.sechiba_explicit_coupled_step_from_local_diffuco(
+                    diffuco_inputs={}, pft_output_backgrounds={}, **common,
+                )
+    assert hydrol_inputs.keys() == original_hydrol.keys()
+    assert diagnostic_inputs.keys() == original_diagnostics.keys()
+    assert all(hydrol_inputs[name] is value for name, value in original_hydrol.items())
+    assert all(diagnostic_inputs[name] is value for name, value in original_diagnostics.items())
+    receipt["original_diagnostic_inputs"] = original_diagnostics
+    return receipt
+
+
+_ABSENT_SOIL_PARAMETERS = object()
+
+
+def _coupled_binding_soil_parameters(override=False):
+    from jax_orchidee.sechiba.hydrol import hydrol_soil_parameters
+    if not override:
+        return hydrol_soil_parameters()
+    return hydrol_soil_parameters({
+        "mcs_mineral": np.linspace(0.48, 0.59, 12),
+        "ks": np.linspace(100.0, 210.0, 12),
+    })
+
+
+@pytest.mark.parametrize("entrypoint", ["payload", "local_diffuco"])
+@pytest.mark.parametrize("override", [False, True], ids=["native_defaults", "typed_config"])
+def test_coupled_diagnostics_inherit_module_soil_parameters(monkeypatch, entrypoint, override):
+    soil = _coupled_binding_soil_parameters(override)
+    receipt = _capture_coupled_diagnostic_prefix(
+        monkeypatch, entrypoint=entrypoint, module_parameters=soil, diagnostic_context={},
+    )
+    assert receipt["diagnostic_inputs"]["soil_parameter_defaults"] is soil
+    np.testing.assert_allclose(receipt["layer_inputs"]["mcs_mineral"], float(soil.mcs_mineral[3]))
+    np.testing.assert_allclose(receipt["layer"].sms_tmp / receipt["layer"].sms, float(soil.mcs_mineral[3]) / 0.65)
+    np.testing.assert_array_equal(receipt["layer_inputs"]["mcs"], np.full(12, 0.65))
+
+
+@pytest.mark.parametrize("entrypoint", ["payload", "local_diffuco"])
+@pytest.mark.parametrize("diagnostic_policy", ["typed_override", "explicit_none"])
+def test_coupled_diagnostics_preserve_explicit_parameter_context(monkeypatch, entrypoint, diagnostic_policy):
+    module_soil = _coupled_binding_soil_parameters(True)
+    diagnostic_soil = _coupled_binding_soil_parameters() if diagnostic_policy == "typed_override" else None
+    context = {"soil_parameters": diagnostic_soil}
+    if diagnostic_policy == "typed_override":
+        context.update(mcs_mineral=0.49, pcent=0.61)
+    receipt = _capture_coupled_diagnostic_prefix(
+        monkeypatch, entrypoint=entrypoint, module_parameters=module_soil,
+        diagnostic_context=context,
+    )
+    assert receipt["diagnostic_inputs"]["soil_parameters"] is diagnostic_soil
+    reference = _coupled_binding_soil_parameters().mcs_mineral[3]
+    np.testing.assert_allclose(receipt["layer"].sms_tmp / receipt["layer"].sms, float(reference) / 0.65, rtol=1e-12, atol=1e-14)
+    if diagnostic_policy == "typed_override":
+        layer = receipt["layer"]
+        np.testing.assert_allclose(
+            layer.sm_nostress, layer.smw + 0.61 * (layer.smf - layer.smw), rtol=1e-12, atol=1e-14,
+        )
+
+
+@pytest.mark.parametrize("entrypoint", ["payload", "local_diffuco"])
+@pytest.mark.parametrize("raw_kind", ["scalar", "point_array", "texture_table"])
+@pytest.mark.parametrize("policy", ["inherit_defaults", "explicit_none"])
+def test_coupled_diagnostics_preserve_explicit_raw_context(monkeypatch, entrypoint, raw_kind, policy):
+    npts = 13 if raw_kind == "texture_table" else 12
+    raw = 0.49 if raw_kind == "scalar" else np.linspace(0.42, 0.53, 12)
+    context = {"mcs_mineral": raw}
+    if policy == "explicit_none":
+        context["soil_parameters"] = None
+    receipt = _capture_coupled_diagnostic_prefix(
+        monkeypatch, entrypoint=entrypoint, module_parameters=_coupled_binding_soil_parameters(True),
+        diagnostic_context=context, npts=npts,
+    )
+    assert receipt["diagnostic_inputs"]["mcs_mineral"] is raw
+    expected = np.full(npts, 0.49) if raw_kind == "scalar" else raw if raw_kind == "point_array" else np.full(npts, raw[3])
+    np.testing.assert_allclose(receipt["layer"].sms_tmp / receipt["layer"].sms, np.repeat(expected[:, None], 3, axis=1) / 0.65, rtol=1e-12, atol=1e-14)
+
+
+@pytest.mark.parametrize("entrypoint", ["payload", "local_diffuco"])
+@pytest.mark.parametrize("npts", [12, 13])
+def test_coupled_diagnostics_mix_explicit_and_configured_values(monkeypatch, entrypoint, npts):
+    from jax_orchidee.sechiba.hydrol import hydrol_soil_parameters
+
+    njsc = np.resize([4, 11, 2, 7], npts)
+    textures = {
+        "mcs_mineral": np.linspace(0.48, 0.59, 12),
+        "mcf_mineral": np.linspace(0.29, 0.40, 12),
+        "mcw_mineral": np.linspace(0.10, 0.21, 12),
+        "mcr": np.linspace(0.02, 0.05, 12),
+        "mc_awet": np.linspace(0.30, 0.41, 12),
+        "mc_adry": np.linspace(0.05, 0.08, 12),
+        "ks": np.linspace(100., 210., 12),
+        "pcent": np.linspace(0.12, 0.34, 12),
+    }
+    configured = hydrol_soil_parameters(textures)
+    expected = {name: values[njsc - 1] for name, values in textures.items()}
+    effective = {"mcs": expected["mcs_mineral"], "mcf": 0.40, "mcw": 0.15}
+    if npts == 12:
+        # A raw vector is per-point even when there are twelve texture classes.
+        point = np.linspace(0.44, 0.49, npts)
+        raw = {"mcs_mineral": point, "mcf_mineral": None, "mcw_mineral": 0.12,
+               "mcr": 0.09, "mc_adry": 0.17, "pcent": 0.61}
+        expected.update(mcs_mineral=point, mcw_mineral=0.12, mcr=0.09, mc_adry=0.17, pcent=0.61)
+    else:
+        # At thirteen points the existing raw twelve-class dispatch selects njsc.
+        table = np.linspace(260., 320., 12)
+        raw = {"mcf_mineral": 0.42, "mc_awet": 0.34, "ks": table}
+        expected.update(mcf_mineral=0.42, mc_awet=0.34, ks=table[njsc - 1])
+    receipt = _capture_coupled_diagnostic_prefix(
+        monkeypatch, entrypoint=entrypoint, module_parameters=configured, npts=npts,
+        diagnostic_context={"mcs": None, "njsc": njsc, **raw}, receive_litter=True,
+    )
+    layer = receipt["layer"]
+    weights = np.array([50.0] + [100.0] * 5 + [50.0])
+    for suffix, name in (("s", "mcs"), ("f", "mcf"), ("w", "mcw")):
+        np.testing.assert_allclose(
+            getattr(layer, f"sm{suffix}_tmp"), np.broadcast_to(expected[f"{name}_mineral"], (npts,))[:, None] * weights,
+            rtol=1e-12, atol=1e-14,
+        )
+        np.testing.assert_allclose(
+            getattr(layer, f"sm{suffix}"), np.broadcast_to(effective[name], (npts,))[:, None] * weights,
+            rtol=1e-12, atol=1e-14,
+        )
+    reference_nostress = (effective["mcw"] + expected["pcent"] * (effective["mcf"] - effective["mcw"]))
+    np.testing.assert_allclose(
+        layer.sm_nostress, np.broadcast_to(reference_nostress, (npts,))[:, None] * weights, rtol=1e-12, atol=1e-14,
+    )
+    for field, name in (("res", "mcr"), ("awet", "mc_awet"), ("adry", "mc_adry")):
+        np.testing.assert_allclose(
+            getattr(receipt["litter"], f"tmc_litter_{field}")[:, 0], np.broadcast_to(expected[name], (npts,)) * 350.0,
+            rtol=1e-12, atol=1e-14,
+        )
+    np.testing.assert_allclose(receipt["litter_grid"].k_litt, np.sqrt(0.25 * expected["ks"]), rtol=1e-12, atol=1e-14)
+
+
+@pytest.mark.parametrize("entrypoint", ["payload", "local_diffuco"])
+@pytest.mark.parametrize("module_parameters", [_ABSENT_SOIL_PARAMETERS, None], ids=["omitted", "none"])
+def test_coupled_diagnostics_without_typed_module_keep_ordinary_behavior(monkeypatch, entrypoint, module_parameters):
+    receipt = _capture_coupled_diagnostic_prefix(
+        monkeypatch, entrypoint=entrypoint, module_parameters=module_parameters, diagnostic_context={},
+    )
+    assert "soil_parameters" not in receipt["diagnostic_inputs"]
+    reference = float(_coupled_binding_soil_parameters().mcs_mineral[3])
+    np.testing.assert_allclose(receipt["layer"].sms_tmp / receipt["layer"].sms, reference / 0.65, rtol=1e-12, atol=1e-14)
 
 
 def _enerbil_inputs():

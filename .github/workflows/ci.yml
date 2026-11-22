@@ -157,6 +157,19 @@ jobs:
           tests/unit/test_hydrol_module_step.py::test_hydrol_first_step_selects_texture_conductivity_when_points_equal_textures
           tests/unit/test_thermosoil_initialize.py::test_recomputed_restart_thermal_bedrock_capacity_follows_freeze_gate
           tests/unit/test_driver_snow_temperature_clamp.py
+      - name: Root conductivity, infiltration axes and coupled soil parameters
+        env:
+          JAX_PLATFORMS: cpu
+          JAX_ENABLE_X64: "true"
+        run: >-
+          uv run --frozen python -B -m pytest -q -rs
+          tests/unit/test_phase12_root_factor.py
+          tests/unit/test_hydrol_infilt.py
+          tests/unit/test_sechiba_step.py::test_coupled_diagnostics_inherit_module_soil_parameters
+          tests/unit/test_sechiba_step.py::test_coupled_diagnostics_preserve_explicit_parameter_context
+          tests/unit/test_sechiba_step.py::test_coupled_diagnostics_preserve_explicit_raw_context
+          tests/unit/test_sechiba_step.py::test_coupled_diagnostics_mix_explicit_and_configured_values
+          tests/unit/test_sechiba_step.py::test_coupled_diagnostics_without_typed_module_keep_ordinary_behavior
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli

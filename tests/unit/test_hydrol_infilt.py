@@ -3,7 +3,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
 import numpy as np
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -66,6 +68,34 @@ def test_hydrol_soil_infilt_explicit_matches_mineral_fortran_loop():
         hydrol_total_moisture_content(mc, dz) + infilt_tot
     )
     np.testing.assert_allclose(np.asarray(result.check), np.asarray(expected_check))
+
+
+@pytest.mark.parametrize(
+    ("layout", "selected"),
+    [("point", [.1, .4, .7]), ("texture", [.3, .1, .2]), (None, [.3, .1, .2])],
+    ids=["point", "texture", "legacy-texture"],
+)
+def test_hydrol_soil_infilt_square_kfact_uses_the_declared_layout(layout, selected):
+    profile = np.asarray([[.1, .2, .3], [.4, .5, .6], [.7, .8, .9]])
+    inputs = dict(
+        mc=np.full((3, 3), .2), flux_infilt=np.full(3, 20.), k=np.full((3, 3), .01),
+        dz_mm=np.full(3, 100.), dt_days=.02, mcs=np.full(3, .5), ks=1.,
+        kfact=profile, kfact_root=np.ones((3, 3)), njsc=np.array([3, 1, 2]),
+    )
+    options = {"kfact_layout": layout} if layout is not None else {}
+
+    # The first layer takes 15 mm. Fortran line 7520 sets the rate on the only interior layer.
+    k_m = (.01 + np.asarray(selected)) / 2
+    interior_mm = .02 * k_m * (1 - np.exp(-250. / k_m))
+    expected_mc = inputs["mc"].copy()
+    expected_mc[:, 0] = .5
+    expected_mc[:, 1] += interior_mm / 100.
+    compiled = jax.jit(hydrol_soil_infilt_explicit, static_argnames=("kfact_layout",))
+    for kernel in (hydrol_soil_infilt_explicit, compiled):
+        result = kernel(**inputs, **options)
+        np.testing.assert_allclose(result.qinfilt, 15. + interior_mm, rtol=1e-12, atol=1e-14)
+        np.testing.assert_allclose(result.ru_infilt, 5. - interior_mm, rtol=1e-12, atol=1e-14)
+        np.testing.assert_allclose(result.mc, expected_mc, rtol=1e-12, atol=1e-14)
 
 
 def test_hydrol_soil_infilt_explicit_uses_freeze_and_peat_branches():

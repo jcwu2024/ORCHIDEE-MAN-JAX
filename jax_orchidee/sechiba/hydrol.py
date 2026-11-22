@@ -8198,6 +8198,7 @@ def hydrol_module_diagnostics(
     mcf_mineral=None,
     mcw_mineral=None,
     soil_parameters=None,
+    soil_parameter_defaults=None,
     mcr=None,
     mc_awet=None,
     mc_adry=None,
@@ -8247,28 +8248,41 @@ def hydrol_module_diagnostics(
     downstream SECHIBA/STOMATE. Inputs that are Fortran module state
     (``nroot``, ``dh``, thresholds, litter conductivity tables, and optional
     dynamic-root controls) remain explicit here.
+
+    The coupled owner can provide module configuration as
+    ``soil_parameter_defaults`` to fill missing values. An independently
+    specified ``soil_parameters`` selects the existing typed context.
     """
 
     mc = result.soil.mc
     mcl = result.soil.mcl
-    if soil_parameters is not None:
-        soil = hydrol_soil_parameters(soil_parameters)
+    if soil_parameters is not None or soil_parameter_defaults is not None:
+        use_defaults = soil_parameters is None
+        soil = hydrol_soil_parameters(soil_parameter_defaults if use_defaults else soil_parameters)
         npts = mc.shape[0]
         # Resolve source tables at this boundary. Layer and permafrost
         # diagnostics use these mineral values apart from the effective
         # thresholds, which can include SOC (hydrol.f90:6488-6536, 9282).
-        mcs_mineral, mcf_mineral, mcw_mineral = (
+        configured_mcs, configured_mcf, configured_mcw = (
             _texture_lookup(name, soil[name], njsc, npts)
             for name in ("mcs_mineral", "mcf_mineral", "mcw_mineral")
         )
+
+        def diagnostic_value(explicit, configured):
+            return explicit if use_defaults and explicit is not None else configured
+
+        mcs_mineral = diagnostic_value(mcs_mineral, configured_mcs)
+        mcf_mineral = diagnostic_value(mcf_mineral, configured_mcf)
+        mcw_mineral = diagnostic_value(mcw_mineral, configured_mcw)
         mcr, mc_awet, mc_adry = (
-            _texture_lookup(name, soil[name], njsc, npts)
-            for name in ("mcr", "mc_awet", "mc_adry")
+            diagnostic_value(explicit, _texture_lookup(name, soil[name], njsc, npts))
+            for name, explicit in (("mcr", mcr), ("mc_awet", mc_awet), ("mc_adry", mc_adry))
         )
-        ks = _texture_lookup("ks", soil.ks, njsc, npts) if soil.ks.ndim == 1 else soil.ks
-        mcs = mcs_mineral if mcs is None else mcs
-        mcf = mcf_mineral if mcf is None else mcf
-        mcw = mcw_mineral if mcw is None else mcw
+        configured_ks = _texture_lookup("ks", soil.ks, njsc, npts) if soil.ks.ndim == 1 else soil.ks
+        ks = diagnostic_value(ks, configured_ks)
+        mcs = configured_mcs if mcs is None else mcs
+        mcf = configured_mcf if mcf is None else mcf
+        mcw = configured_mcw if mcw is None else mcw
         pcent = _texture_lookup("pcent", soil.pcent, njsc, npts) if pcent is None else pcent
     if veget_max is None:
         veget_max = result.vegupd.vegetmax_soil.sum(axis=2)
@@ -9182,7 +9196,7 @@ def hydrol_kfact_root_from_vegupd(
         raise ValueError("pref_soil_veg must contain Fortran 1-based soil tile indices")
 
     ks_values = jnp.asarray(ks, dtype=jnp.float64)
-    max_ks = jnp.max(ks_values)
+    max_ks = max(USDA_KS)  # hydrol.f90:1219, 1223 use MAXVAL(ks_usda).
     mineral_ks = ks_values[njsc - 1]
     peat_tile_set = {int(tile) for tile in peat_tiles}
     result = jnp.ones((npts, nslm, nstm), dtype=jnp.float64)
@@ -9269,7 +9283,7 @@ def _hydrol_vegupd_kfact_root_jit(
         )
 
     ks_values = jnp.asarray(ks, dtype=jnp.float64)
-    max_ks = jnp.max(ks_values)
+    max_ks = max(USDA_KS)  # hydrol.f90:1219, 1223 use MAXVAL(ks_usda).
     mineral_ks = ks_values[njsc - 1]
     peat_tile_set = {int(tile) for tile in peat_tiles}
     kfact_root = jnp.ones((npts, int(zz_mm.shape[0]), nstm), dtype=jnp.float64)
@@ -9564,6 +9578,7 @@ HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
     "kfact_root",
     "ks",
     "kfact",
+    "kfact_layout",
     "tmc",
     "njsc",
     "mineral_tables",
@@ -9597,6 +9612,7 @@ HYDROL_MODULE_EXPLICIT_STEP_FIELDS = (
 
 HYDROL_MODULE_JIT_STATIC_ARGNAMES = (
     "check_cwrr",
+    "kfact_layout",
     "pref_soil_veg",
     "is_crop_soil",
     "doponds",
@@ -9749,7 +9765,9 @@ def run_hydrol_first_step_module_from_precall(
             # value before passing the point vector to the infiltration API.
             "ks": _texture_lookup("ks", ks, njsc, npts) if ks.ndim == 1 else ks,
             "soil_parameters": soil,
-            "kfact": mineral_tables.kfact,
+            # The prepared table stores its landpoints along the second axis.
+            "kfact": mineral_tables.kfact.T,
+            "kfact_layout": "point",
             "mineral_tables": mineral_tables,
             "peat_tables": peat_tables,
             "tmc": hydrol_initial_tmc_from_restart_mc(
@@ -10499,6 +10517,7 @@ def hydrol_soil_infilt_explicit(
     ks,
     kfact,
     kfact_root,
+    kfact_layout=None,
     njsc=None,
     soil_tile_index=1,
     peat_hydro=False,
@@ -10519,6 +10538,11 @@ def hydrol_soil_infilt_explicit(
     one tile's ``mc`` profile from a supplied ``flux_infilt`` using exact
     hydraulic state inputs. It does not compute ``k``/``kfact_root`` or choose
     the active soil tile.
+
+    Set ``kfact_layout="point"`` for a (npts, nslm) profile or
+    ``kfact_layout="texture"`` for a (nslm, ntexture) table. Omission
+    retains rank-based selection, including the one-dimensional layer
+    profile and layer-first priority for overlapping two-dimensional shapes.
     """
 
     mc = jnp.asarray(mc)
@@ -10575,7 +10599,17 @@ def hydrol_soil_infilt_explicit(
             ks_profile = ks[texture_index][:, None]
         else:
             raise ValueError("ks must be scalar, per-point, or texture table")
-        if kfact.ndim == 1:
+        if kfact_layout == "point":
+            if kfact.shape != (npts, nslm):
+                raise ValueError("point kfact must have shape (npts,nslm)")
+            kfact_profile = kfact
+        elif kfact_layout == "texture":
+            if kfact.ndim != 2 or kfact.shape[0] != nslm:
+                raise ValueError("texture kfact must have shape (nslm,ntexture)")
+            kfact_profile = kfact[:, texture_index].T
+        elif kfact_layout is not None:
+            raise ValueError("kfact_layout must be 'point', 'texture', or None")
+        elif kfact.ndim == 1:
             kfact_profile = jnp.broadcast_to(kfact, (npts, nslm))
         elif kfact.ndim == 2 and kfact.shape[0] == nslm:
             kfact_profile = kfact[:, texture_index].T
@@ -10675,6 +10709,7 @@ def hydrol_soil_tile_explicit_step(
     kfact_root,
     ks,
     kfact,
+    kfact_layout=None,
     njsc=None,
     mineral_tables: MineralCWRRTables | None = None,
     peat_tables: PeatCWRRTables | None = None,
@@ -10779,6 +10814,7 @@ def hydrol_soil_tile_explicit_step(
         ks=ks,
         kfact=kfact,
         kfact_root=kfact_root,
+        kfact_layout=kfact_layout,
         njsc=njsc,
         soil_tile_index=soil_tile_index,
         peat_hydro=peat_hydro,
@@ -10921,6 +10957,7 @@ def hydrol_soil_all_tiles_explicit_step(
     kfact,
     soiltile,
     tmc,
+    kfact_layout=None,
     check_cwrr=True,
     evapot=None,
     evapot_corr=None,
@@ -11121,6 +11158,7 @@ def hydrol_soil_all_tiles_explicit_step(
             "kfact_root": kfact_root[:, :, tile_offset],
             "ks": ks,
             "kfact": kfact,
+            "kfact_layout": kfact_layout,
             "njsc": njsc,
             "irrigation_soil_tile": irrigation_soil[:, tile_offset],
             "reinf_slope": reinf_slope,
@@ -11354,6 +11392,7 @@ def hydrol_module_explicit_step(
     kfact_root=None,
     ks=None,
     kfact=None,
+    kfact_layout=None,
     tmc=None,
     njsc=None,
     mineral_tables: MineralCWRRTables | None = None,
@@ -11486,6 +11525,7 @@ def hydrol_module_explicit_step(
         kfact_root=kfact_root,
         ks=ks,
         kfact=kfact,
+        kfact_layout=kfact_layout,
         soiltile=soiltile,
         tmc=tmc,
         check_cwrr=check_cwrr,
