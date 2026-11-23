@@ -306,13 +306,17 @@ def test_non_slow_multiland_step_preserves_old_turnover_order_and_output_boundar
     assert result.output.xios["zz_EXP_DIC_RUNOFF"].shape == (3,)
 
 
-def test_slow_step_runs_season_then_lpj_and_resets_after_output(monkeypatch):
+@pytest.mark.parametrize("end_of_year", [False, True], ids=("daily", "year_end"))
+def test_slow_step_runs_season_then_lpj_and_resets_after_output(monkeypatch, end_of_year):
     calls = []
     _install_owner_fakes(monkeypatch, calls, nland=2, slow=True)
     kwargs = _base_kwargs(2)
     kwargs.update(
+        end_of_year=end_of_year,
+        tday_counter=np.full(2, 364.0),
         season_memory_state="memory-state",
         season_memory_inputs={
+            "end_of_year": not end_of_year,
             "moiavail_daily": -1.0,
             "t2m_daily": -2.0,
             "tsurf_daily": -3.0,
@@ -323,6 +327,7 @@ def test_slow_step_runs_season_then_lpj_and_resets_after_output(monkeypatch):
         season_biometeorology_inputs={"marker": "stale", "t2m_daily": -2.0},
         season_annual_state="annual-state",
         season_annual_inputs={
+            "end_of_year": not end_of_year,
             "marker": "stale",
             "moiavail_daily": -1.0,
             "t2m_daily": -2.0,
@@ -366,6 +371,9 @@ def test_slow_step_runs_season_then_lpj_and_resets_after_output(monkeypatch):
     ]
     day = result.daily.daily_fields
     memory, bio, annual = (calls[i][2] for i in (3, 4, 5))
+    assert memory["end_of_year"] is end_of_year
+    assert annual["end_of_year"] is end_of_year
+    np.testing.assert_array_equal(result.fixed_path_control.tday_counter, np.full(2, 0.0 if end_of_year else 365.0))
     np.testing.assert_array_equal(memory["moiavail_daily"], day["humrel_daily"])
     np.testing.assert_array_equal(annual["moiavail_daily"], day["humrel_daily"])
     for inputs in (memory, bio, annual):

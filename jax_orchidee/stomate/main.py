@@ -596,10 +596,11 @@ def stomate_main_pft14_step(
         raise ValueError("entry_payload['gpp'] must have shape (nland, 14)")
     if gpp.shape[0] < 1:
         raise ValueError("stomate_main requires at least one land point")
+    end_of_year = bool(end_of_year)
     fixed_path_control = stomate_fixed_path_control(
         initialized=initialized,
         do_slow=bool(do_slow),
-        end_of_year=bool(end_of_year),
+        end_of_year=end_of_year,
         dt_stomate=dt_stomate,
         one_day=one_day,
         tday_counter=tday_counter,
@@ -716,10 +717,11 @@ def stomate_main_pft14_step(
         missing = tuple(name for name, value in required.items() if value is None)
         if missing:
             raise ValueError("do_slow STOMATE step requires " + ", ".join(missing))
-        # stomate.f90:4225–4232 passes this day's normalized accumulators.
+        # stomate.f90:4225–4232 passes the main year-end flag and this day's accumulators.
         day = daily.daily_fields
         memory_args = dict(season_memory_inputs)
         memory_args.update(
+            end_of_year=end_of_year,
             moiavail_daily=day["humrel_daily"],
             t2m_daily=day["t2m_daily"],
             tsurf_daily=day["tsurf_daily"],
@@ -737,6 +739,7 @@ def stomate_main_pft14_step(
         annual_args = dict(season_annual_inputs)
         _replace_matching(annual_args, _state_values(memory, biometeorology))
         annual_args.update(
+            end_of_year=end_of_year,
             moiavail_daily=day["humrel_daily"],
             t2m_daily=day["t2m_daily"],
             precip_daily=day["precip_daily"],
