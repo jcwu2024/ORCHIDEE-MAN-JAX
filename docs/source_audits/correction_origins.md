@@ -1,4 +1,10 @@
-# C1–C89 修正与支持补齐来源登记（2026-11-23）
+# C1–C90 修正与支持补齐来源登记（2026-11-23）
+
+## C90 季节统计的年末结转
+
+原 `stomate_main` 在 `stomate.f90` 第 4225–4226 行把主时钟的 `EndOfYear` 传给 `season`。后者在 `stomate_season.f90` 第 1389 行起据此结转本年统计。JAX 的日计数已读主时钟，季节记忆和年统计却各自读调用参数里的旧标志。`ad161b28c75f7f1e38d2bbf1260ec2f9eac5887b` 将同一个年末标志传到这两个接收处，并增加普通日和年末的相反旧标志回归。差异在复查前 `7cae3e02adad23674767a590fdf4d27f239ce065` 的同一入口已有源码证据。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/controller-acceptance.json)
+
+在只由主时钟指定年末的两格点组件例中，旧 JAX 的 41 个字段有 17 个与原 Fortran 不符。第一点的当年／上年累计降水为 6／3，原值为 0／6。修后五种情形各 41 个字段符合原容差。自然跨年轨迹及年度 NPP、GPP、DOC 影响仍待综合验证。累计 **90 项修正或支持补齐、47 个生产提交，其中 88 项有复查前证据**。同包的发布入口及测试输入修补独立记在 `768b311494d4c857df63f2ffb65922b055d93b86`。[季节原生对照](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/season/README.md) · [发布测试](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/release-ci/README.md)
 
 ## C87、C88 和 C89 的状态传递
 

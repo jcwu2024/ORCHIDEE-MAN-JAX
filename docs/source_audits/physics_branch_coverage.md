@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+第十五包已验收。原 `thermosoil_diaglev` 第 3504 行按单点、14 个 PFT、11 层水文、32 层热网格和矿质无雪范围关闭。合法全覆盖输入的浮点求和略大于 1，原 Fortran 与 JAX 都将裸地余量夹为零。36 组上下文、6,120 个标量符合原门限。排水 DOC 的 100,440 个标量在给定水文边界下通过。自然形成这些边界的证据仍单列。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/controller-acceptance.json)
+
+剩余 89 个源码组和 33 个调用组，其中 12 个是外部调用。43 个源码组共有 197 项本地动作，涉及 299 个原条件。22 个组同时需要其他证据。第十六包先处理其中土壤热传导与水文的 33 组。[终审清单](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/terminal-review.json) · [逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/open-groups.json)
+
 2026-11-23，第十四包已验收，登记 C87–C89。新证据涉及 18 个源码组中的 424 个原成员及 15 个调用组，其中 15 个源码组在继承余项内。本轮仍余 90 个源码组、33 个调用组，后者含 12 个外部缺口。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/controller-acceptance.json) · [具名余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/open-groups.json)
 
 三套土壤碳输入在两种执行方式下共 100,440 个标量对照通过，四处径流导出或扣减选中库存。原排水导出和扣减使用不同层厚，样例的量比约为 1.5，六条原质量诊断保留。热写回到下一水文冻结和液态水计算共 24 字段、924 标量通过。排水受库存限制的分支、自然雪热前驱及年度影响仍待证。[土壤碳](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/doc-inventory/README.md) · [水热](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/water-heat/README.md)

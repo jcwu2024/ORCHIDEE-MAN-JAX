@@ -34,6 +34,10 @@
 
 第十五包将共用日内累积量接到实际季节生物气象、年统计及 LPJ 的下一次读取，同时核对零裸地面积的热诊断和土壤 DOC 排水库存限制的源条件。对剩余每组分辨在本地能补的具体证据和需要自然前驱或外部后端的部分，为物理阶段独立终审准备可核查的清单。[具名余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/open-groups.json)
 
+第十五包已验收。C90 修正主时钟向季节统计传递年末标志。`thermosoil_diaglev` 第 3504 行的裸地权重取得限定闭合，排水 DOC 两种库存限制取得给定底排的原生组件对照。剩余 89 个源码组、33 个调用组。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/controller-acceptance.json) · [终审清单](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/terminal-review.json)
+
+第十六包优先办理土壤热传导的 23 个源码组和水文的 10 个源码组。这 33 组共列有 180 项本地动作，涉及 250 个原条件。按可复用的原生同输入计算批量核对导热率、雪土递推、温度剖面和水分收支，保存实际条件操作数、掩码、返回及下一处读取。每组按已有证据及具名余项判定。自然前驱、历史后端和原有严格数值差异各自保留取证条件。[逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/open-groups.json)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
@@ -45,9 +49,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 阶段启动时为 61 项、34 个生产提交。2026-11-23 接受到 C89，累计 **89 项修正或支持补齐、46 个生产提交**。
-  其中 87 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
-  最新已接受生产与回归提交为 `c34b2bfb382adc432cdab96446f7817b970541c9`。每包按当时记录的基线复核。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-23 接受到 C90，累计 **90 项修正或支持补齐、47 个生产提交**。
+  其中 88 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `ad161b28c75f7f1e38d2bbf1260ec2f9eac5887b`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、
