@@ -114,7 +114,7 @@ def _read_fixed_trace_rows(path: Path, *, tag: str, fields: tuple[str, ...], mat
         for name, text in zip(fields, data, strict=False):
             if name in {"kjit", "ji", "jst", "jsl"}:
                 row[name] = int(float(text))
-            elif name in {"branch_peat", "resolv"}:
+            elif name == "resolv":
                 row[name] = text.upper().startswith("T")
             else:
                 row[name] = float(text)

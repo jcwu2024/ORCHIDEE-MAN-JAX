@@ -150,6 +150,7 @@ jobs:
           tests/unit/test_hydrol_peat_coef.py
           tests/unit/test_hydrol_surface_water.py
           tests/unit/test_hydrol_water_table_initialization.py
+          tests/unit/test_hydrol_trace_schema.py
       - name: Water and thermal parameter receivers and restart fixtures
         env:
           JAX_PLATFORMS: cpu
@@ -226,6 +227,7 @@ jobs:
           tests/unit/test_hydrol_peat_coef.py
           tests/unit/test_hydrol_surface_water.py
           tests/unit/test_hydrol_water_table_initialization.py
+          tests/unit/test_hydrol_trace_schema.py
           jax_orchidee/driver/tides.py
           scripts/dev/oracle_hydrol_tide_boundary.py
           scripts/dev/oracle_phase05_canopy_conditions.py

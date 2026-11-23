@@ -379,7 +379,7 @@ TRACE_SCHEMAS: dict[str, FixedTraceSchema] = {
                     "kjit",
                     "ji",
                     "jst",
-                    "branch_peat",
+                    "resolv",
                     "tmci",
                     "tmcf",
                     "flux_top",
@@ -393,6 +393,7 @@ TRACE_SCHEMAS: dict[str, FixedTraceSchema] = {
                 ),
                 (
                     "orchjax_hydrol_post_trace.txt:post_tile",
+                    "outputs/server_trace_patch/apply_trace_patch.py:64 emits resolv(ji) in the fourth data position.",
                     "hydrol.f90 hydrol_soil post-solve/drainage spans audited in docs/source_audits/hydrol_full_solve_trace_contract.md.",
                 ),
             ),

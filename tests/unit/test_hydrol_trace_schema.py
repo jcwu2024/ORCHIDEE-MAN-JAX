@@ -6,12 +6,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from jax_orchidee.sechiba.hydrol_trace import (
+from jax_orchidee.sechiba.hydrol_trace import (  # noqa: E402
+    POST_TILE_LIST_DIRECTED_COLUMNS,
     required_columns,
     trace_group,
     trace_group_names,
     validate_columns,
 )
+from jax_orchidee.trace.server_1961 import find_server_record, read_server_records, trace_schema  # noqa: E402
 
 
 def test_hydrol_trace_schema_exposes_full_solve_groups():
@@ -71,3 +73,26 @@ def test_validate_columns_accepts_csv_header():
         assert result.missing_by_group == {"solve": ()}
     finally:
         path.unlink(missing_ok=True)
+
+
+def test_server_hydrol_post_tile_reads_source_solve_mask(tmp_path):
+    schema = trace_schema("hydrol_post")
+    trace = tmp_path / schema.trace_file
+    trace.write_text(
+        # WRITE(912,*) emits kjit, ji, jst, resolv(ji), tmci, tmcf, then fluxes.
+        " post_tile 1 1 1 F 610.0 609.0\n"
+        "  2.0 3.0 4.0 5.0 6.0 7.0 8.0 0.02\n"
+        " post_tile 1 1 4 T 600.0 599.0\n"
+        "  12.0 13.0 14.0 15.0 16.0 17.0 18.0 0.02\n",
+        encoding="ascii",
+    )
+
+    first, active = read_server_records("hydrol_post", tags="post_tile", limit=2, root=tmp_path)
+    assert schema.tags["post_tile"].fields == POST_TILE_LIST_DIRECTED_COLUMNS
+    assert first["resolv"] is False
+    assert active["resolv"] is True
+    assert "branch_peat" not in first and "branch_peat" not in active
+    assert (active["start_line"], active["jst"], active["tmci"], active["dt_days"]) == (3, 4, 600.0, 0.02)
+    assert find_server_record(
+        "hydrol_post", tag="post_tile", criteria={"resolv": True, "jst": 4}, scan_limit=2, root=tmp_path
+    ) == active

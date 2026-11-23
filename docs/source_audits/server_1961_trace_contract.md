@@ -89,7 +89,13 @@ The local schema registry supports:
   `docs/source_audits/hydrol_full_solve_trace_contract.md`.
 - `hydrol_post`: `orchjax_hydrol_post_trace.txt`, tags `post_tile` and
   `post_layer`. Relevant Fortran source truth: `hydrol.f90`, `hydrol_soil`
-  post-solve/drainage path.
+  post-solve/drainage path. The fourth `post_tile` data value is the solve
+  mask `resolv(ji)` emitted by `apply_trace_patch.py` line 64. The fixed-format
+  and list-directed readers both expose `resolv`. To interpret an older JSON
+  field named `fortran_post_tile.branch_peat`, first establish that its source
+  trace has this writer layout, then re-read the raw record by `kjit/ji/jst`.
+  The separate v9 coefficient CSV retains its own `branch_peat` and
+  `peat_hydro` fields.
 - `hydrol_update`: `orchjax_hydrol_update_trace.txt`, tag `mc_after_update`.
   Relevant Fortran source truth: `hydrol.f90`, `hydrol_soil` layer update path.
 - `hydrol_alt`: `orchjax_hydrol_alt_trace.txt`, tag `alt_first_solve`.
@@ -117,7 +123,6 @@ Some fixed-format fields are intentionally preserved under `unmapped_*` names
 in `jax_orchidee.trace.server_1961`:
 
 - `hydrol_main.pre`: `unmapped_pre_01` through `unmapped_pre_05`
-- `hydrol_post.post_tile`: `unmapped_post_tile_01`
 - `grid.grid_scatter`: `unmapped_grid_01`, a sentinel-like `1.0e20` field
   whose emitted variable name is not in the local package.
 - `slowproc_soilt.soil_overlap`: `unmapped_soilt_01` through
