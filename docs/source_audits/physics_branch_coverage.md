@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+2026-11-24，第十六包已验收。土热和水文覆盖 33 组内的 250 个原条件。本包 180 项本地动作中 145 项有本轮组件实测，2 项复用先前证据，28 项有部分证据，5 项待特定输入。按原成员核对，15 组限定闭合。全表余 74 个源码组、33 个调用组（含 12 处外部调用）。21 个源码组还有 50 项本地动作，涉及 88 个原条件。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-acceptance.json) · [逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/open-groups.json)
+
+C91 的 6 个单点灌溉例与原拒绝或分水行为相符，C92 的无冻结泥炭用例消除了 14 项系数和剖面差异。三种导热入口的实际接线 226 项通过，裸土蒸发读取首步返回含水量的 36 字段、176 标量通过。矿质导热率饱和临界、热通量与土柱收支的原严格失败，各自保留输入、容差与坐标。四组含水接收证据止于实际蒸发读取，矿质 `tmc_soil` 的原外送协议另待验证。[逐项证据](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/dispositions.json) · [独立终审](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/review/independent-review.md)
+
 第十五包已验收。原 `thermosoil_diaglev` 第 3504 行按单点、14 个 PFT、11 层水文、32 层热网格和矿质无雪范围关闭。合法全覆盖输入的浮点求和略大于 1，原 Fortran 与 JAX 都将裸地余量夹为零。36 组上下文、6,120 个标量符合原门限。排水 DOC 的 100,440 个标量在给定水文边界下通过。自然形成这些边界的证据仍单列。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/controller-acceptance.json)
 
 剩余 89 个源码组和 33 个调用组，其中 12 个是外部调用。43 个源码组共有 197 项本地动作，涉及 299 个原条件。22 个组同时需要其他证据。第十六包先处理其中土壤热传导与水文的 33 组。[终审清单](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/terminal-review.json) · [逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/open-groups.json)

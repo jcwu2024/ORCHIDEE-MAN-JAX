@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-24，**物理检查第十六包已验收。** C91 修正灌溉的格点和需求检查，C92 修正无冻结泥炭选导水系数时的浮点运算顺序。灌溉 6 组原生对照一致。泥炭同输入第 4 层由第 32 档恢复到原第 33 档，关联的 14 项差异消失。42 项本地回归通过。累计 **92 项修正或支持补齐、48 个生产提交，其中 90 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-acceptance.json) · [累计修正](correction_origins.md) · [发布记录](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-publication.json)
+
+本包 180 项中办结 147 项，15 个源码组在相应组件和输入范围内完成。各通道合计还有 50 项本地动作，分布在 21 个组。全部余项为 74 个源码组和 33 个调用组，其中 12 个调用涉及外部后端。下包集中处理其余 17 项冠层、土壤碳和输入读取检查，同时推进 33 项水热余项中可复用同输入或现有记录的部分。自然年际轨迹和年度通量影响留待综合验证。[逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/open-groups.json)
+
 2026-11-23，**物理检查第十五包已验收。** C90 修正季节统计的年末结转。旧 JAX 在主时钟已到年末时仍可能用普通日逻辑处理降水等统计量。五种两格点同输入情形各有 41 个字段与 Fortran 相符，年度 NPP、GPP 和 DOC 的实际影响待综合验证。累计 **90 项修正或支持补齐、47 个生产提交，其中 88 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/controller-acceptance.json) · [累计修正](correction_origins.md)
 
 土温诊断的裸地权重在单点矿质无雪范围内完成核对。DOC 的导出和扣库分别在给定底排跨过约 30.03 和 45.04 mm/步时受库存限制，两侧相符。还余 89 个源码组和 33 个调用组。下包集中查土壤热传导和水文分支，可复用输入的两组工作共涉及 250 个原条件。本地发布流程 16 批共 1,417 次通过、227 次预期失败、26 次跳过。[逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/open-groups.json) · [发布记录](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase15-season-thermal-doc-and-ci/controller-publication.json)
@@ -21,7 +25,7 @@
 | 参数／状态 | 既有有限合同已接受；新增6份科学restart文件到实际reader／下一组件的有限往返 | 真实IOIPSL／native producer与自然年际历史等范围另留 |
 | PB-01冠层／光合 | 新增restart／held／维护LAI前驱与有限消费者 | 自然低LAI历史、外部PBL及fixedsnow原未定义合同 |
 | PB-02能量／QSAT | 实际热容量和通量写回后进入下一次 ENERBIL，低风气动差异已有有界归因 | 31 项默认 JIT 气动严格失败，及其余源域与外部 PBL |
-| PB-03水文／热／雪 | 42 个热土壤组和 21 个水文积雪组逐项核对，9 组获有界支持 | 私有 peat 身份、自然初始雪包、第二次能量容量及其余分支，保留土柱和平滑的严格差异 |
+| PB-03水文／热／雪 | C91、C92 已登记。三种导热率接线、裸土蒸发对实际土柱含水的读取已对照，15 个源码组限定闭合 | 水热余 33 项本地动作。热通量和土柱水量预算的严格残差、自然潮汐和泥炭前驱、原外送接口仍有缺项 |
 | PB-04植被／碳 | C86–C90 涵盖 LPJ 最终输出、叶龄和日量取样、季节输入及年界。径流和给定底排的 DOC 库存限制已有原生对照 | 完整 LPJ 原生接收、自然跨年和排水前驱、年度 DOC 收支待验证 |
 | PB-05跨组 | C75–C77输入处理已修，forcing／静态控制／modelout／routing与restart有限接口验证 | maintained完整调度、跨模块源调用归属及阶段终审 |
 

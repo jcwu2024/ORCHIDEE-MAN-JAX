@@ -1,4 +1,15 @@
-# C1–C90 修正与支持补齐来源登记（2026-11-23）
+# C1–C92 修正与支持补齐来源登记（2026-11-24）
+
+## C91 灌溉检查与 C92 无冻结泥炭选档
+
+C91 和 C92 共用生产、回归及 CI 提交 `43fca734fbfcd15e500b55c1519daa5b820d7da1`。两处旧实现都在复查前 `7cae3e02adad23674767a590fdf4d27f239ce065` 的水文源码中有记录。累计 **92 项修正或支持补齐、48 个生产提交，其中 90 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-acceptance.json)
+
+| 编号 | 原 Fortran 的行为和修正 | 相同输入下的结果 |
+| --- | --- | --- |
+| C91 | `hydrol_soil` 第 5709、5717–5743 行先判断格点植被面积，再对启用作物过程且需求严格为正的 PFT 检查目标土类。灌溉除法允许活动作物土块面积为极小正数。 | 旧 JAX 漏拒约 1×10⁻⁹ 的非作物正需求，又误拒植被覆盖率恰等于门槛的格点。修后 6 例的拒绝或分水结果与原程序相符。面积 5×10⁻⁹ 的合法作物土块可得到 0.125 kg/m² 每步。论文原配置关闭灌溉。 |
+| C92 | `hydrol_soil_coef` 第 8291–8292 行在无冻结泥炭路径先除以可用含水跨度，再乘档数取整。JAX 在分母和所得比率两处保留原计算边界。C78 涵盖冻结路径。 | 第 4 层含水率 0.63 m³/m³、跨度 0.75 m³/m³ 的两套 CPU 执行都从第 32 档恢复到原第 33 档。系数 `a` 从 123.0412 恢复到 156.5167 mm/day，系数、右端与土柱剖面的 14 项原差异消失。 |
+
+泥炭旧新数组来自灌溉最后一次小面积校核之前的候选，原源码保存在 `validation/products-first-review.zip`。核对两个版本的文件差异，唯一变化在灌溉面积检查。终版另外保存六例灌溉原生输出，并执行泥炭及其相邻浮点数的回归。自然泥炭历史与年度 NPP、GPP、DOC 影响仍待验证。[灌溉原生对照](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/validation/irrigation/guard-candidate.json) · [泥炭旧新对照](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/hydrol-entry/delivery-checks.json)
 
 ## C90 季节统计的年末结转
 
