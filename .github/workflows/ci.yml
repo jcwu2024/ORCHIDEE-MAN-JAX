@@ -147,6 +147,8 @@ jobs:
           tests/unit/test_hydrol_check_cwrr_contract.py
           tests/unit/test_hydrol_tide_forcing.py
           tests/unit/test_hydrol_driver_controls.py
+          tests/unit/test_hydrol_peat_coef.py
+          tests/unit/test_hydrol_surface_water.py
           tests/unit/test_hydrol_water_table_initialization.py
       - name: Water and thermal parameter receivers and restart fixtures
         env:
@@ -221,6 +223,8 @@ jobs:
           tests/unit/test_hydrol_check_cwrr_contract.py
           tests/unit/test_hydrol_tide_forcing.py
           tests/unit/test_hydrol_driver_controls.py
+          tests/unit/test_hydrol_peat_coef.py
+          tests/unit/test_hydrol_surface_water.py
           tests/unit/test_hydrol_water_table_initialization.py
           jax_orchidee/driver/tides.py
           scripts/dev/oracle_hydrol_tide_boundary.py

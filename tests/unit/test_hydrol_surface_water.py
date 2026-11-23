@@ -114,20 +114,75 @@ def test_hydrol_routing_soil_water_split_distributes_irrigation_to_crop_tiles():
     np.testing.assert_allclose(np.asarray(result.irrigation_soil), [[0.0, 0.0, 0.0, 0.40 / 0.40]])
 
 
-def test_hydrol_routing_soil_water_split_refuses_active_non_crop_irrigation():
+@pytest.mark.parametrize("demand_ratio", [1.0, 1.0e-9], ids=["full", "tiny_positive"])
+def test_hydrol_routing_soil_water_split_refuses_active_non_crop_irrigation(demand_ratio):
     with pytest.raises(ValueError, match="crop soil tile"):
         hydrol_routing_soil_water_split(
             vegtot=np.asarray([1.0], dtype=np.float64),
             returnflow=np.asarray([0.0], dtype=np.float64),
             reinfiltration=np.asarray([0.0], dtype=np.float64),
             irrigation=np.asarray([0.10], dtype=np.float64),
-            irrig_demand_ratio=np.asarray([[0.0, 1.0]], dtype=np.float64),
+            irrig_demand_ratio=np.asarray([[0.0, demand_ratio]], dtype=np.float64),
             veget_max=np.asarray([[0.0, 0.50]], dtype=np.float64),
             pref_soil_veg=np.asarray([1, 2], dtype=np.int32),
             soiltile=np.asarray([[0.50, 0.50]], dtype=np.float64),
             is_crop_soil=np.asarray([False, False]),
             ok_laidev=np.asarray([False, True]),
         )
+
+
+def test_hydrol_routing_soil_water_split_at_inactive_vegetation_threshold():
+    result = hydrol_routing_soil_water_split(
+        vegtot=np.asarray([1.0e-8], dtype=np.float64),
+        returnflow=np.asarray([0.04], dtype=np.float64),
+        reinfiltration=np.asarray([0.02], dtype=np.float64),
+        irrigation=np.asarray([0.10], dtype=np.float64),
+        irrig_demand_ratio=np.asarray([[0.0, 1.0]], dtype=np.float64),
+        veget_max=np.asarray([[0.0, 1.0e-8]], dtype=np.float64),
+        pref_soil_veg=np.asarray([1, 2], dtype=np.int32),
+        soiltile=np.asarray([[0.50, 0.50]], dtype=np.float64),
+        is_crop_soil=np.asarray([False, False]),
+        ok_laidev=np.asarray([False, True]),
+    )
+
+    for field in result:
+        np.testing.assert_array_equal(field, np.zeros_like(field))
+
+
+def test_hydrol_routing_soil_water_split_keeps_small_positive_crop_tile():
+    small_area = 5.0e-9
+    veget_max = np.asarray([[0.0, small_area, 1.0 - small_area]])
+    ok_laidev = np.asarray([False, True, True])
+    zeros = np.zeros_like(veget_max)
+    demand = hydrol_irrigation_demand_ratio(
+        veget=veget_max,
+        veget_max=veget_max,
+        transpot=zeros,
+        evapot=np.zeros(1),
+        precip_rain=np.zeros(1),
+        vegstress_old=zeros,
+        soil_deficit=np.ones_like(veget_max),
+        ok_laidev=ok_laidev,
+        irrig_threshold=np.ones(3),
+        irrig_fulfill=np.ones(3),
+        irrig_drip=False,
+        irrig_dosmax=1.0,
+    )
+    result = hydrol_routing_soil_water_split(
+        vegtot=np.ones(1),
+        returnflow=np.zeros(1),
+        reinfiltration=np.zeros(1),
+        irrigation=np.asarray([0.125]),
+        irrig_demand_ratio=demand.irrig_demand_ratio,
+        veget_max=veget_max,
+        pref_soil_veg=np.asarray([1, 4, 5]),
+        soiltile=np.asarray([[0.0, 0.0, 0.0, small_area, 1.0 - small_area]]),
+        is_crop_soil=np.asarray([False, False, False, True, True]),
+        ok_laidev=ok_laidev,
+    )
+
+    np.testing.assert_allclose(result.irrig_fin, [[0.0, 0.125, 0.125]], rtol=1e-12)
+    np.testing.assert_allclose(result.irrigation_soil, [[0.0, 0.0, 0.0, 0.125, 0.125]], rtol=1e-12)
 
 
 def test_hydrol_soil_surface_water_setup_matches_fortran_non_crop_branch():

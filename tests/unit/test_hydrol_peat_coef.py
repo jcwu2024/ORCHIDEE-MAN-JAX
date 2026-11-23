@@ -3,7 +3,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
 import numpy as np
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -70,6 +72,29 @@ def test_hydrol_soil_coef_peat_profile_freeze_and_no_freeze_follow_source_formul
     np.testing.assert_allclose(np.asarray(no_freeze.k_eval[0]), a_raw * mc[0] + b_raw)
     np.testing.assert_allclose(np.asarray(no_freeze.k[0]), np.maximum(k_floor, a_raw * mc[0] + b_raw))
     np.testing.assert_allclose(np.asarray(no_freeze.a[0]), a_raw * kfact_root[0])
+
+
+@pytest.mark.parametrize("compiled", [False, True], ids=["eager", "jit"])
+def test_nonfreezing_peat_bins_preserve_source_division_at_boundary(compiled):
+    assert jax.config.jax_enable_x64
+    tables = build_peat_cwrr_tables(np.linspace(0.001, 2.0, 11))
+    mc = np.full((1, 11), 0.62, dtype=np.float64)
+    mc[0, 2:5] = [np.nextafter(0.63, -np.inf), 0.63, np.nextafter(0.63, np.inf)]
+    profil_froz = np.zeros_like(mc)
+    kfact_root = np.ones_like(mc)
+
+    def compute(moisture):
+        return hydrol_soil_coef_peat_profile_from_tables(
+            mc=moisture,
+            profil_froz=profil_froz,
+            kfact_root=kfact_root,
+            tables=tables,
+            ok_freeze_cwrr=False,
+        )
+
+    result = (jax.jit(compute) if compiled else compute)(mc)
+    # The original divides before multiplying by 50 and truncating.
+    np.testing.assert_array_equal(result.bin_i[0, 2:5], [32, 33, 33])
 
 
 def test_tile_adapter_uses_peat_tables_for_active_pft14_soil_tile():

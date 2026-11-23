@@ -6906,7 +6906,10 @@ def hydrol_soil_coef_peat_profile_from_tables(
         mc_for_k = mc_used
         bin_i = bin_real.astype(jnp.int32)
     else:
-        mc_ratio = jnp.maximum(mc - mcr, 0.0) / (mcs - mcr)
+        # Keep the division at hydrol_soil_coef:8291. A broadcast constant
+        # reciprocal can round the quotient across the next INT boundary.
+        water_range = jax.lax.optimization_barrier(jnp.broadcast_to(mcs - mcr, mc.shape))
+        mc_ratio = jnp.maximum(mc - mcr, 0.0) / water_range
         # Same source-assignment boundary as the mineral nonfreeze branch.
         mc_ratio = jax.lax.optimization_barrier(mc_ratio)
         mc_used = mc
@@ -10403,16 +10406,21 @@ def hydrol_routing_soil_water_split(
     if ok.shape != (nvm,):
         raise ValueError("ok_laidev must have shape (nvm,)")
 
-    active_ratio = np.asarray(irrig_demand_ratio) > float(min_sechiba)
-    for jv in range(1, nvm):
-        tile = int(pref[jv]) - 1
-        if ok[jv] and np.any(active_ratio[:, jv]) and not crop[tile]:
-            raise ValueError("active HYDROL irrigation demand must map to a crop soil tile")
-        if ok[jv] and np.any(active_ratio[:, jv]) and np.any(np.asarray(soiltile)[:, tile] <= float(min_sechiba)):
-            raise ValueError("active HYDROL irrigation demand requires positive target soiltile fraction")
-
     zero = jnp.asarray(0.0, dtype=vegtot.dtype)
     active_cell = vegtot > jnp.asarray(min_sechiba, dtype=vegtot.dtype)
+    # HYDROL applies the vegetation threshold to the cell and then tests
+    # for positive irrigation demand inside that branch (5709, 5717–5722).
+    active_ratio = np.asarray(active_cell)[:, None] & (np.asarray(irrig_demand_ratio) > 0.0)
+    tile_fraction = np.asarray(soiltile)
+    for jv in range(1, nvm):
+        tile = int(pref[jv]) - 1
+        irrigated = active_ratio[:, jv]
+        if ok[jv] and np.any(irrigated):
+            if not crop[tile]:
+                raise ValueError("active HYDROL irrigation demand must map to a crop soil tile")
+            if np.any(irrigated & (tile_fraction[:, tile] <= 0.0)):
+                raise ValueError("active HYDROL irrigation demand requires positive target soiltile fraction")
+
     returnflow_soil = jnp.zeros_like(vegtot)
     reinfiltration_soil = jnp.where(
         active_cell,
