@@ -27,6 +27,31 @@ ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "configs/orchidee_man_250919.yaml"
 
 
+def _source_clock_context():
+    """Declared source-clock contract for limited first-step extraction tests."""
+    from jax_orchidee.driver.source_clock import (
+        SourceClockBinding,
+        SourceClockRuntime,
+        SourceClockSetup,
+    )
+    from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
+
+    calendar = IOIPSLCalendar("noleap")
+    date0 = calendar.ymds2ju(1961, 1, 1, 0.0)
+    lock = IOIPSLCalendar.from_scalar_startdate("noleap", date0)
+    binding = SourceClockBinding(
+        "gas-lifecycle-test", "noleap", date0, 1800.0,
+        lock.startdate_day, lock.startdate_second, 0,
+    )
+    # This fixture carries local steps 1 and 2 before serializing source kjit 48.
+    # Anchor the declared affine frame at the prior source step accordingly.
+    runtime = SourceClockRuntime(binding, np.int64(46), np.int64(0), np.int64(46))
+    return SimpleNamespace(
+        source_clock_setup=SourceClockSetup(binding, runtime, None, None, None),
+        run_def_values={},
+    )
+
+
 def _small_read(path: Path, **kwargs):
     return read_stomate_readstart_states_from_template(
         path, t2m=np.array([281.5]), nvm=2, nslm=2, ndeep=3,
@@ -106,11 +131,24 @@ def test_nondefault_gas_survives_actual_extract_carry_day_end_and_real_codec(tmp
     finalize = sechiba_finalize_source_state_from_restart(original.sechiba_restart_state)
     # Orthogonal SECHIBA recomputation is outside this gas-seam regression.
     # Use its real saved 93-field mapping for both extraction routes.
-    monkeypatch.setattr(orch, "_sechiba_finalize_state_from_components", lambda **kw: dict(finalize))
+    def finalize_from_saved_mapping(*, previous, **kwargs):
+        """Keep the real saved 93-field mapping without discarding calendar writes."""
+        result = dict(finalize)
+        for name in ("growth_day", "peatC_ok", "peatC"):
+            if name in previous:
+                result[name] = previous[name]
+        return result
+
+    monkeypatch.setattr(orch, "_sechiba_finalize_state_from_components", finalize_from_saved_mapping)
+    source_clock_context = _source_clock_context()
     if origin == "restart":
         scaffold = SimpleNamespace(
             step=SimpleNamespace(tstep=0), first_step_restart_state=original,
-            diffuco_first_step_precall=None, stomate_first_step_daily_accumulation=None, **components,
+            payload=SimpleNamespace(is_watchout=False),
+            source_clock_context=source_clock_context,
+            diffuco_first_step_precall=SimpleNamespace(payload={"temp_growth": np.zeros(1)}),
+            hydrol_first_step_precall=SimpleNamespace(payload={}),
+            stomate_first_step_daily_accumulation=None, **components,
         )
         first = orch.driver_previous_step_state_from_timestep_scaffold(scaffold)
     else:
@@ -128,8 +166,16 @@ def test_nondefault_gas_survives_actual_extract_carry_day_end_and_real_codec(tmp
                     "diffuco_first_step_precall": None, "slowproc_init_pft14": slow,
                     "hydrol_cold_start_state": unrelated, "enerbil_surface_state": unrelated,
                     "condveg_soilalbedo_bg": np.zeros((1, 3)), "thermosoil_refSOC": np.zeros((1, 32, 14)),
-                    "stomate_cold_start_gas_state": base.gas_state}
-        first = orch._previous_step_state_from_cold_start_payloads(payloads)
+                    "stomate_cold_start_gas_state": base.gas_state,
+                    "slowproc_derivvar": SimpleNamespace(
+                        assim_param=np.zeros((1, 14, 1)),
+                        deadleaf_cover=np.zeros((1, 14)),
+                        temp_growth=np.zeros(1),
+                    ),
+                    "source_clock_context": source_clock_context}
+        first = orch._previous_step_state_from_cold_start_payloads(
+            payloads, source_clock_context=source_clock_context,
+        )
     _assert_gas(first, base.gas_state)
     # First-day cold AND restart runners use the scaffold extractor before
     # the compact runtime path. Exercise its separate actual carry list.
@@ -137,17 +183,27 @@ def test_nondefault_gas_survives_actual_extract_carry_day_end_and_real_codec(tmp
         SimpleNamespace(
             ready_for_next_state=True, tstep=1,
             enerbil=SimpleNamespace(previous_state=first, enerbil_local=None,
+                                   payload=SimpleNamespace(is_watchout=False),
                                    diffuco_local_enerbil_precall=None),
             thermosoil_module=None, condveg_module=None, hydrol_module=None,
+                source_clock_context=source_clock_context,
         ),
     )
     _assert_gas(first, base.gas_state)
     step_kwargs = dict(enerbil_local=None, diffuco_local=None, thermosoil_module=None,
                        condveg_module=None, hydrol_module=None)
-    ordinary = orch._runtime_next_state_from_components(tstep=1, previous_state=first, **step_kwargs)
+    ordinary = orch._runtime_next_state_from_components(
+        tstep=1,
+        previous_state=first,
+        source_clock_context=source_clock_context,
+        **step_kwargs,
+    )
     _assert_gas(ordinary, base.gas_state)
     fast = orch._runtime_next_state_from_components(
-        tstep=2, previous_state=fast_state_from_previous_packet(ordinary), **step_kwargs,
+        tstep=2,
+        previous_state=fast_state_from_previous_packet(ordinary),
+        source_clock_context=source_clock_context,
+        **step_kwargs,
     )
     _assert_gas(fast, base.gas_state)
     day_end = orch._paper_day_end_state_packet(

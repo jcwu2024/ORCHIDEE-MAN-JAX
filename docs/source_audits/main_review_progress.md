@@ -1,5 +1,7 @@
 # 主线进度
 
+2026-11-24，**第十八包已验收，物理阶段部分交付。** 17 项本地待办完成 11 项，余 6 项需要同一原运行的水文观测或真实诊断端点。已接受土温诊断和末态地表温度写回两项限定验证。三处代表点已匹配原输入和参考文件。正式整模型验收仍需确认所选论文构建的水文私有泥炭开关，并配对同一步的水热接收和日末碳写回。此包更新两份测试夹具，累计登记 92 项修正或支持补齐、48 个生产提交，其中 90 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/controller-acceptance.json) · [代表点与最短观测](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md)
+
 2026-11-24，**物理检查第十七包已验收。** 上一包留下 50 项本地动作，此次完成 33 项，另 17 项仍缺具名证据。冠层叶内 CO₂ 分母的回退和无 priming 土壤碳分解在相应组件输入上通过，剩余 72 个源码组和 33 个调用组，其中 12 个调用涉及外部后端。本轮只提交审计记录。累计修正或支持补齐 **92 项、48 个生产提交，其中 90 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/controller-acceptance.json) · [发布记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/controller-publication.json)
 
 实测中，原 Fortran 与 JAX 的 584 个单点潮位记录逐项对应，冠层在分母过小时写回同一叶内 CO₂ 值。备用蒸发的 56 项差异对临时土柱储水量敏感，热通量有 49 个坐标仍超原门限。第十八包结合论文的有效配置和实际调用次序，对 17 项本地余项及全表其余依赖做物理阶段终审，判断开始整模型验证还需要哪些证据。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/open-groups.json)

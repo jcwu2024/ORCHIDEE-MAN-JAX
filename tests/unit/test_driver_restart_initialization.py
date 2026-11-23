@@ -9,6 +9,26 @@ import jax_orchidee.driver.orchestration as orch
 import pytest
 
 
+def _source_clock_context():
+    """Minimal declared clock contract for this no-process restart boundary."""
+    from jax_orchidee.driver.source_clock import (
+        SourceClockBinding,
+        SourceClockRuntime,
+        SourceClockSetup,
+    )
+    from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
+
+    calendar = IOIPSLCalendar("noleap")
+    date0 = calendar.ymds2ju(1962, 1, 1, 0.0)
+    lock = IOIPSLCalendar.from_scalar_startdate("noleap", date0)
+    binding = SourceClockBinding(
+        "restart-initialization-test", "noleap", date0, 1800.0,
+        lock.startdate_day, lock.startdate_second, 0,
+    )
+    runtime = SourceClockRuntime(binding, np.int64(0), np.int64(0), np.int64(1))
+    return SimpleNamespace(source_clock_setup=SourceClockSetup(binding, runtime, None, None, None))
+
+
 def test_first_restart_boundary_forwards_the_actual_restored_directory():
     """Execute the actual caller expression without any upstream process/IO."""
     tree = ast.parse(inspect.getsource(orch.paper_1961_driver_timestep_scaffold))
@@ -33,7 +53,11 @@ def test_year_entry_initializes_from_saved_surface_without_mutating_old_year(mon
     old_temp = np.asarray([274.75])
     old_pcapa = np.full((1, 2, 1), 900.0)
     initial_pcapa = np.full((1, 2, 1), 1200.0)
-    source = {"temp_sol": surface}
+    source = {
+        "temp_sol": surface,
+        "us": np.zeros((1, 1, 1, 1)),
+        "vegstress": np.zeros((1, 1)),
+    }
     state = orch.DriverPreviousStepStatePacket(
         tstep=17519,
         fields_by_component={
@@ -45,24 +69,50 @@ def test_year_entry_initializes_from_saved_surface_without_mutating_old_year(mon
         },
         provenance_by_component={},
     )
-    context = SimpleNamespace(runtime=SimpleNamespace(dt_stomate=86400, dt_sechiba=1800), dt_sechiba=1800, run_def_path="used_run.def", hydrol_ok_pc=False, hydrol_ok_leak=True, run_def_values={name: "TRUE" for name in ("OK_EXPLICITSNOW", "USE_SOILC_TEMPDIFF", "use_refSOC")})
+    context = SimpleNamespace(
+        runtime=SimpleNamespace(dt_stomate=86400, dt_sechiba=1800),
+        dt_sechiba=1800,
+        run_def_path="used_run.def",
+        hydrol_ok_pc=False,
+        hydrol_ok_leak=True,
+        run_scalars=SimpleNamespace(pref_soil_veg=np.ones(1, dtype=np.int32)),
+        first_step_restart_state=SimpleNamespace(sechiba_start=None),
+        run_def_values={name: "TRUE" for name in ("OK_EXPLICITSNOW", "USE_SOILC_TEMPDIFF", "use_refSOC")},
+        **vars(_source_clock_context()),
+    )
     observed = {}
     monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda state: ())
-    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", lambda context, **kw: SimpleNamespace(year=kw["year"]))
-    monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda step, **kw: SimpleNamespace(year=step.year))
+    monkeypatch.setattr(
+        orch,
+        "_paper_1961_step_bundle_from_context",
+        lambda context, **kw: SimpleNamespace(year=kw["year"], domain=None),
+    )
+    monkeypatch.setattr(orch, "_paper_native_initialization_context", lambda context, **kw: context)
+    monkeypatch.setattr(orch, "resolve_hydrol_initialization_refsoc_1d", lambda *args, **kwargs: None)
+    monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda step, **kw: SimpleNamespace(year=step.year, kjpindex=1))
     def initialize(restored, **kwargs):
         assert restored["temp_sol"] is surface
         assert kwargs["payload"].year == 1962
         return {"temp_sol_beg": restored["temp_sol"], "pcapa_en": initial_pcapa, "stempdiag": np.asarray([[273.0, 274.0]])}
     monkeypatch.setattr(orch, "restart_thermosoil_initial_fields", initialize)
+    expected_day = orch.DriverRuntimeDayResult(
+        year=1962,
+        day_index=1,
+        start_tstep=0,
+        steps_per_stomate=48,
+        daily_modelout=None,
+        day_end_state=None,
+        stopped_at_tstep=0,
+        missing_components=("runtime-not-executed",),
+    )
     def next_day(*args, **kwargs):
         observed.update(kwargs)
-        return "runtime-not-executed"
+        return expected_day
     monkeypatch.setattr(orch, "paper_1961_driver_later_day_runtime_result", next_day)
 
     result = orch.paper_1961_driver_restart_year_start_day_result("config.yaml", previous_year_end_state=state, year=1962, prepared_context=context)
 
-    assert result == "runtime-not-executed"
+    assert result == expected_day
     rebased = observed["previous_state"]
     assert rebased.tstep == -1 and observed["start_tstep"] == 0
     thermal = rebased.fields_by_component["thermosoil_previous_step_state"]
@@ -222,7 +272,11 @@ def test_first_extractor_carries_growth_and_thermal_alias_to_next_real_consumer(
         monkeypatch.setattr(orch,name,lambda *a,**kw:None)
     monkeypatch.setattr(orch,"stomate_fixed_path_carry_state",lambda **kw:SimpleNamespace(fields={}))
     monkeypatch.setattr(orch,"sechiba_finalize_source_state_from_restart",lambda state:{})
-    monkeypatch.setattr(orch,"_sechiba_finalize_state_from_components",lambda **kw:{})
+    monkeypatch.setattr(
+        orch,
+        "_sechiba_finalize_state_from_components",
+        lambda **kw: {"growth_day": np.zeros(1), "peatC_ok": np.ones(1), "peatC": np.zeros(1)},
+    )
     slow=SimpleNamespace(**{name:np.ones((1,2)) for name in ("veget","veget_max","lai","frac_nobio","height","frac_age")})
     restart=SimpleNamespace(slowproc=slow,stomate=SimpleNamespace(),diffuco_precall=SimpleNamespace(soilalbedo_bg=np.zeros((1,2))),
         hydrol=SimpleNamespace(),thermosoil=SimpleNamespace(refsoc=None,e_soil_lat=latent),stomate_input=None,
@@ -230,7 +284,10 @@ def test_first_extractor_carries_growth_and_thermal_alias_to_next_real_consumer(
         season_state=SimpleNamespace(dt_days_read=1.),remainder_state=SimpleNamespace(**{name:np.ones(1) for name in
         ("resp_hetero","tsurf_year","deepC_peat","depth_deepsoil","t2m_14")})))
     scaffold=SimpleNamespace(step=SimpleNamespace(tstep=0),first_step_restart_state=restart,
-        diffuco_first_step_precall=SimpleNamespace(payload={"temp_growth":growth}),stomate_first_step_daily_accumulation=None,
+        payload=SimpleNamespace(is_watchout=False),
+        diffuco_first_step_precall=SimpleNamespace(payload={"temp_growth":growth}),
+        hydrol_first_step_precall=None, stomate_first_step_daily_accumulation=None,
+        source_clock_context=SimpleNamespace(run_def_values={}, **vars(_source_clock_context())),
         **{name:None for name in ("enerbil_first_step_local","diffuco_first_step_local_enerbil_precall",
         "diffuco_control_salinity","diffuco_control_assembly","thermosoil_first_step_module",
         "condveg_first_step_module","hydrol_first_step_module")})
