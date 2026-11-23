@@ -716,19 +716,33 @@ def stomate_main_pft14_step(
         missing = tuple(name for name, value in required.items() if value is None)
         if missing:
             raise ValueError("do_slow STOMATE step requires " + ", ".join(missing))
-        memory = season_memory_step(season_memory_state, **dict(season_memory_inputs))
+        # stomate.f90:4225–4232 passes this day's normalized accumulators.
+        day = daily.daily_fields
+        memory_args = dict(season_memory_inputs)
+        memory_args.update(
+            moiavail_daily=day["humrel_daily"],
+            t2m_daily=day["t2m_daily"],
+            tsurf_daily=day["tsurf_daily"],
+            tsoil_daily=day["tsoil_daily"],
+            soilhum_daily=day["soilhum_daily"],
+        )
+        firstcall = bool(memory_args.get("firstcall", False))
+        memory = season_memory_step(season_memory_state, **memory_args)
         season_values = _state_values(memory)
         bio_args = dict(season_biometeorology_inputs)
         _replace_matching(bio_args, season_values)
-        bio_args.setdefault(
-            "firstcall", bool(dict(season_memory_inputs).get("firstcall", False))
-        )
+        bio_args["t2m_daily"] = day["t2m_daily"]
+        bio_args.setdefault("firstcall", firstcall)
         biometeorology = season_biometeorology_step(season_biometeorology_state, **bio_args)
         annual_args = dict(season_annual_inputs)
         _replace_matching(annual_args, _state_values(memory, biometeorology))
-        annual_args.setdefault(
-            "firstcall", bool(dict(season_memory_inputs).get("firstcall", False))
+        annual_args.update(
+            moiavail_daily=day["humrel_daily"],
+            t2m_daily=day["t2m_daily"],
+            precip_daily=day["precip_daily"],
+            gpp_daily=day["gpp_daily"],
         )
+        annual_args.setdefault("firstcall", firstcall)
         annual = season_annual_step(season_annual_state, **annual_args)
 
         process_values = _state_values(memory, biometeorology, annual)

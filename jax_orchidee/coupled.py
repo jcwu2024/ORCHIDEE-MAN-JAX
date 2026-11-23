@@ -1870,6 +1870,8 @@ def sechiba_stomate_ok_leak_explicit_step(
     *,
     sechiba: SechibaExplicitCoupledStepResult,
     ok_leak_inputs: Mapping[str, object] | None = None,
+    prior_turnover_daily=None,
+    prior_bm_to_litter=None,
     boundary_inputs: StomateOkLeakBoundaryInputs | None = None,
     pft_static_boundary: Mapping[str, object] | None = None,
     litter_controls_boundary: Mapping[str, object] | None = None,
@@ -1887,8 +1889,9 @@ def sechiba_stomate_ok_leak_explicit_step(
     Fortran provenance follows ``sechiba_stomate_pft14_explicit_step`` through
     ``StomateLpj`` and then ``stomate_main`` lines 3288-3489 for
     ``turnover_daily``/``bm_to_litter`` scaling, ``littercalc_leak``,
-    ``soilcarbon_leak``, and DOC aggregation. This helper wires only exact
-    upstream outputs and keeps the remaining OK_LEAK boundary values explicit.
+    ``soilcarbon_leak``, and DOC aggregation. In a source-ordered call, pass
+    both prior daily transfer arrays saved before the current LPJ update.
+    With both omitted, the explicit composition uses post-NPP transfer arrays.
     """
 
     if boundary_inputs is not None:
@@ -1928,6 +1931,8 @@ def sechiba_stomate_ok_leak_explicit_step(
         flood_root_radia=coupled.stomate.flood_root_radia,
         soil_mc=ok_args.pop("soil_mc"),
         dt_sechiba=stomate_kwargs["dt_sechiba"],
+        prior_turnover_daily=prior_turnover_daily,
+        prior_bm_to_litter=prior_bm_to_litter,
         **ok_args,
     )
     return SechibaStomateOkLeakExplicitResult(
@@ -1941,6 +1946,8 @@ def sechiba_stomate_output_explicit_step(
     sechiba: SechibaExplicitCoupledStepResult,
     ok_leak_inputs: Mapping[str, object] | None = None,
     output_inputs: Mapping[str, object] | None = None,
+    prior_turnover_daily=None,
+    prior_bm_to_litter=None,
     boundary_inputs: StomateOkLeakBoundaryInputs | None = None,
     pft_static_boundary: Mapping[str, object] | None = None,
     litter_controls_boundary: Mapping[str, object] | None = None,
@@ -1953,7 +1960,11 @@ def sechiba_stomate_output_explicit_step(
     doc_transport_boundary: Mapping[str, object] | None = None,
     **stomate_kwargs,
 ) -> SechibaStomateOutputExplicitResult:
-    """Run the current explicit chain through STOMATE output/modelout fields."""
+    """Run the explicit chain through STOMATE output/modelout fields.
+
+    Pass the prior LPJ transfer pair for source-ordered OK_LEAK inputs.
+    Output diagnostics use the current LPJ return.
+    """
 
     if boundary_inputs is not None:
         ok_leak_inputs = _merge_disjoint_sources(
@@ -1985,6 +1996,8 @@ def sechiba_stomate_output_explicit_step(
     ok_leak_chain = sechiba_stomate_ok_leak_explicit_step(
         sechiba=sechiba,
         ok_leak_inputs=ok_leak_inputs,
+        prior_turnover_daily=prior_turnover_daily,
+        prior_bm_to_litter=prior_bm_to_litter,
         boundary_inputs=None,
         pft_static_boundary=pft_static_boundary,
         litter_controls_boundary=litter_controls_boundary,

@@ -1294,8 +1294,13 @@ def _slowproc_main_post_stomate_vegetation(stomate, vegetation: dict[str, object
         vegetation["biomass"] = post.crown_after_establish.biomass
     else:
         vegetation["biomass"] = post.turnover.biomass
-    final_leaf = post.vmax.leaf_frac if post.vmax is not None else post.turnover.leaf_frac
-    vegetation["frac_age"] = final_leaf
+    # stomate_main copies leaf_frac at stomate.f90:4210, before LPJ.
+    frac_age = getattr(stomate.lpj, "leaf_frac_before_lpj", None)
+    if frac_age is None:
+        frac_age = vegetation.get("leaf_frac")
+    if frac_age is None:
+        raise ValueError("day-end frac_age requires the leaf_frac entering LPJ")
+    vegetation["frac_age"] = frac_age
     final_crown = post.crown_after_establish or post.crown_after_npp
     if final_crown is not None:
         vegetation["height"] = final_crown.height

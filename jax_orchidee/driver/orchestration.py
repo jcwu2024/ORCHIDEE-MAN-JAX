@@ -10085,6 +10085,13 @@ def _paper_day_first_stomate_state_packet(
     daily = post.daily_carbon
     final_leaf_age = post.vmax.leaf_age if post.vmax is not None else post.turnover.leaf_age
     final_leaf_frac = post.vmax.leaf_frac if post.vmax is not None else post.turnover.leaf_frac
+    frac_age = daily_carbon.leaf_frac_before_lpj
+    if frac_age is None and previous_state is not None:
+        frac_age = previous_state.fields_by_component.get(
+            "slowproc_stomate_previous_step_state", {}
+        ).get("leaf_frac")
+    if frac_age is None:
+        raise ValueError("day-end frac_age requires the leaf_frac entering LPJ")
     final_crown = (
         post.crown_after_establish
         if post.crown_after_establish is not None
@@ -10096,9 +10103,7 @@ def _paper_day_first_stomate_state_packet(
         "when_growthinit": post.kill_after_gap.when_growthinit,
         "biomass": post.turnover.biomass,
         "leaf_frac": final_leaf_frac,
-        # LAI_MAP is false in the paper protocol, so stomate_main copies the
-        # final leaf fractions into the slowproc-managed age fractions.
-        "frac_age": final_leaf_frac,
+        "frac_age": frac_age,
         "height": final_crown.height,
         "leaf_age": final_leaf_age,
         "age": post.turnover.age,
@@ -10242,7 +10247,7 @@ def _paper_day_first_stomate_state_packet(
             )
         elif name == "frac_age":
             provenance_by_field[name] = (
-                "fortran_source/ORCHIDEE/src_stomate/stomate.f90::stomate_main lines 4201-4218 copies leaf_frac to frac_age when LAI_MAP=false",
+                "fortran_source/ORCHIDEE/src_stomate/stomate.f90::stomate_main line 4210 snapshots leaf_frac before StomateLpj at line 4297",
                 "fortran_run_scripts/paper_250919/run.def.vn line 85 sets LAI_MAP=n",
             )
         elif name == "height":

@@ -35,6 +35,11 @@ def _install_owner_fakes(monkeypatch, calls, *, nland, slow):
     daily_fields = {
         "gpp_daily": gpp_daily,
         "resp_maint_part": resp_daily,
+        "humrel_daily": np.full((nland, 14), 0.8),
+        "t2m_daily": np.full(nland, 285.0),
+        "tsurf_daily": np.full(nland, 290.0),
+        "tsoil_daily": np.full((nland, 3), 283.0),
+        "soilhum_daily": np.full((nland, 3, 14), 0.7),
         "t2m_min_daily": np.ones(nland) * 270.0,
         "t2m_max_daily": np.ones(nland) * 305.0,
         "precip_daily": np.ones(nland) * 4.0,
@@ -307,11 +312,23 @@ def test_slow_step_runs_season_then_lpj_and_resets_after_output(monkeypatch):
     kwargs = _base_kwargs(2)
     kwargs.update(
         season_memory_state="memory-state",
-        season_memory_inputs={},
+        season_memory_inputs={
+            "moiavail_daily": -1.0,
+            "t2m_daily": -2.0,
+            "tsurf_daily": -3.0,
+            "tsoil_daily": -4.0,
+            "soilhum_daily": -5.0,
+        },
         season_biometeorology_state="bio-state",
-        season_biometeorology_inputs={"marker": "stale"},
+        season_biometeorology_inputs={"marker": "stale", "t2m_daily": -2.0},
         season_annual_state="annual-state",
-        season_annual_inputs={"marker": "stale"},
+        season_annual_inputs={
+            "marker": "stale",
+            "moiavail_daily": -1.0,
+            "t2m_daily": -2.0,
+            "precip_daily": -6.0,
+            "gpp_daily": -7.0,
+        },
         lpj_inputs={
             "prescribe_inputs": {},
             "constraints_inputs": {},
@@ -347,6 +364,16 @@ def test_slow_step_runs_season_then_lpj_and_resets_after_output(monkeypatch):
         "season_annual",
         "lpj",
     ]
+    day = result.daily.daily_fields
+    memory, bio, annual = (calls[i][2] for i in (3, 4, 5))
+    np.testing.assert_array_equal(memory["moiavail_daily"], day["humrel_daily"])
+    np.testing.assert_array_equal(annual["moiavail_daily"], day["humrel_daily"])
+    for inputs in (memory, bio, annual):
+        np.testing.assert_array_equal(inputs["t2m_daily"], day["t2m_daily"])
+    for name in ("tsurf_daily", "tsoil_daily", "soilhum_daily"):
+        np.testing.assert_array_equal(memory[name], day[name])
+    for name in ("precip_daily", "gpp_daily"):
+        np.testing.assert_array_equal(annual[name], day[name])
     np.testing.assert_array_equal(result.output.history["NPP"], np.ones((2, 14)))
     np.testing.assert_array_equal(result.daily_state["precip_daily"], np.zeros(2))
     np.testing.assert_array_equal(result.daily_state["t2m_min_daily"], np.ones(2) * 1.0e33)

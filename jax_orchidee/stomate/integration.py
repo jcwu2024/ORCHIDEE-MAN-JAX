@@ -215,6 +215,7 @@ class ExplicitDailyCarbonPrescribeConstraintsAllocKillGapTurnoverResult(NamedTup
     lai_after_prescribe: jnp.ndarray
     lai_after_alloc: jnp.ndarray
     requires_trace: tuple[str, ...]
+    leaf_frac_before_lpj: jnp.ndarray | None = None
 
 
 class ExplicitDailyCarbonScheduledGppPrescribeConstraintsAllocKillGapTurnoverResult(NamedTuple):
@@ -3318,6 +3319,9 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit(
             + ", ".join(overlap_post)
         )
 
+    # stomate_main snapshots these cohorts at stomate.f90:4210, before
+    # StomateLpj and its prescribe call can update leaf_frac.
+    leaf_frac_before_lpj = jnp.asarray(prescribe_inputs["leaf_frac"])
     prescribe = prescribe_step(**prescribe_inputs)
     constraints = constraints_step(
         **constraints_inputs,
@@ -3374,6 +3378,7 @@ def stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit(
         lai_after_prescribe=lai_after_prescribe,
         lai_after_alloc=lai_after_alloc,
         requires_trace=(),
+        leaf_frac_before_lpj=leaf_frac_before_lpj,
     )
 
 
@@ -5077,19 +5082,23 @@ def stomate_ok_leak_from_post_npp_explicit(
     flood_root_radia,
     soil_mc,
     dt_sechiba,
+    prior_turnover_daily=None,
+    prior_bm_to_litter=None,
     one_day=86400.0,
     nslm: int | None = None,
     ndeep: int | None = None,
     **ok_leak_inputs,
 ) -> ExplicitOkLeakFromPostNppResult:
-    """Wire post-NPP turnover/litter state into the audited OK_LEAK adapter.
+    """Run OK_LEAK with an explicit transfer pair or the post-NPP return.
 
     Fortran provenance: ``src_stomate/stomate.f90`` lines 3288-3293 scales
     ``turnover_daily`` and ``bm_to_litter`` by ``dt_sechiba/one_day`` before
     ``littercalc_leak``; lines 3301-3489 then run the OK_LEAK litter,
-    soil-carbon, and DOC path. The post-NPP producer provenance is
-    ``src_stomate/stomate_lpj.f90`` lines 1118-1557. This adapter intentionally
-    consumes already computed maintenance respiration and does not recompute it.
+    soil-carbon, and DOC path. On the source-ordered route, the caller passes
+    both unscaled daily transfer arrays carried into this call, since
+    ``StomateLpj`` updates them later at lines 4297-4335. With both absent,
+    this explicit adapter uses the post-NPP transfer arrays. Maintenance inputs
+    are already computed in either case.
     """
 
     soil_mc_arr = jnp.asarray(soil_mc)
@@ -5098,10 +5107,20 @@ def stomate_ok_leak_from_post_npp_explicit(
     if ndeep is None:
         ndeep = jnp.asarray(ok_leak_inputs["carbon_32l"]).shape[3]
 
+    if (prior_turnover_daily is None) != (prior_bm_to_litter is None):
+        raise ValueError("prior_turnover_daily and prior_bm_to_litter must be supplied together")
+    turnover_daily = post_npp.turnover.turnover
+    bm_to_litter = post_npp.bm_to_litter
+    if prior_turnover_daily is not None:
+        if jnp.shape(prior_turnover_daily) != turnover_daily.shape:
+            raise ValueError("prior_turnover_daily must have the LPJ turnover shape")
+        if jnp.shape(prior_bm_to_litter) != bm_to_litter.shape:
+            raise ValueError("prior_bm_to_litter must have the LPJ mortality shape")
+        turnover_daily, bm_to_litter = prior_turnover_daily, prior_bm_to_litter
     prep = stomate_littercalc_entry_prep(
         soil_mc_arr,
-        post_npp.turnover.turnover,
-        post_npp.bm_to_litter,
+        turnover_daily,
+        bm_to_litter,
         dt_sechiba=dt_sechiba,
         ndeep=int(ndeep),
         nslm=int(nslm),

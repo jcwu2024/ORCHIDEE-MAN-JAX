@@ -1825,7 +1825,8 @@ def test_sechiba_stomate_ok_leak_rejects_duplicate_hydrol_boundary_fields():
         )
 
 
-def test_sechiba_stomate_output_explicit_step_matches_manual_three_stage_chain():
+@pytest.mark.parametrize("source_ordered", (False, True), ids=("post_npp", "prior_transfers"))
+def test_sechiba_stomate_output_explicit_step_matches_manual_three_stage_chain(source_ordered):
     all_enerbil_inputs = _enerbil_inputs()
     diffuco_payload = _local_diffuco_payload_for_enerbil(all_enerbil_inputs)
     downstream = _downstream_sechiba_inputs(all_enerbil_inputs, diffuco_payload)
@@ -1858,6 +1859,16 @@ def test_sechiba_stomate_output_explicit_step_matches_manual_three_stage_chain()
         **vertical_inputs.output_inputs,
         "carb_mass_total_old": np.zeros(1, dtype=np.float64),
     }
+    transfer_inputs = {}
+    if source_ordered:
+        prior_turnover = np.zeros_like(chain["prescribe_inputs"]["biomass"])
+        prior_mortality = np.zeros_like(prior_turnover)
+        prior_turnover[:, 2, 0, 0] = 0.9
+        prior_mortality[:, 2, 1, 0] = 0.4
+        transfer_inputs.update(
+            prior_turnover_daily=prior_turnover,
+            prior_bm_to_litter=prior_mortality,
+        )
     manual_ok_chain = sechiba_stomate_ok_leak_explicit_step(
         sechiba=sechiba,
         driver_entry_source=driver_entry_source,
@@ -1869,6 +1880,7 @@ def test_sechiba_stomate_output_explicit_step_matches_manual_three_stage_chain()
         alloc_inputs=chain["alloc_inputs"],
         post_npp_inputs=chain["post_npp_inputs"],
         ok_leak_inputs=ok_leak_inputs,
+        **transfer_inputs,
     )
     manual_outputs = stomate_lpj_outputs_from_post_npp_ok_leak_explicit(
         post_npp=manual_ok_chain.coupled.stomate.scheduled_gpp_chain.chain.post_npp,
@@ -1890,9 +1902,18 @@ def test_sechiba_stomate_output_explicit_step_matches_manual_three_stage_chain()
         post_npp_inputs=chain["post_npp_inputs"],
         ok_leak_inputs=ok_leak_inputs,
         output_inputs=output_inputs,
+        **transfer_inputs,
     )
 
     assert result.provenance[-1].endswith("lines 50, 60-76, and 115-118")
+    if source_ordered:
+        prep = result.ok_leak_chain.ok_leak.prep
+        dt = chain["maintenance_inputs"]["dt_sechiba"]
+        np.testing.assert_allclose(prep.turnover_littercalc, prior_turnover * dt / 86400.0)
+        np.testing.assert_allclose(prep.bm_to_littercalc, prior_mortality * dt / 86400.0)
+        post_npp = result.ok_leak_chain.coupled.stomate.scheduled_gpp_chain.chain.post_npp
+        assert not np.allclose(prior_turnover, post_npp.turnover.turnover)
+        assert not np.allclose(prior_mortality, post_npp.bm_to_litter)
     np.testing.assert_allclose(
         np.asarray(result.outputs.output_diagnostics.tot_litter_soil_carb),
         np.asarray(manual_outputs.output_diagnostics.tot_litter_soil_carb),

@@ -170,7 +170,7 @@ jobs:
           tests/unit/test_sechiba_step.py::test_coupled_diagnostics_preserve_explicit_raw_context
           tests/unit/test_sechiba_step.py::test_coupled_diagnostics_mix_explicit_and_configured_values
           tests/unit/test_sechiba_step.py::test_coupled_diagnostics_without_typed_module_keep_ordinary_behavior
-      - name: LPJ cover and harvest output receivers
+      - name: LPJ and daily STOMATE receivers
         env:
           JAX_PLATFORMS: cpu
           JAX_ENABLE_X64: "true"
@@ -178,6 +178,9 @@ jobs:
           uv run --frozen python -B -m pytest -q -rs
           tests/unit/test_phase13_lpj_output_receivers.py
           tests/unit/test_stomate_integration.py::test_lpj_modelout_receives_final_gpp
+          tests/unit/test_coupled.py::test_sechiba_stomate_output_explicit_step_matches_manual_three_stage_chain
+          tests/unit/test_slowproc_main.py::test_slowproc_receives_the_pre_lpj_age_fractions_at_day_end
+          tests/unit/test_stomate_main.py::test_slow_step_runs_season_then_lpj_and_resets_after_output
       - run: >-
           uv run --frozen ruff check
           jax_orchidee/cli

@@ -99,8 +99,15 @@ def test_actual_daily_packet_retains_fresh_source_date_and_carbon_returns(actual
     np.testing.assert_array_equal(packet.fields["sla_calc"], carbon.post_npp.daily_carbon.age_sla.sla_calc)
     np.testing.assert_array_equal(packet.fields["lai"], carbon.post_npp.lai_after_setlai)
     np.testing.assert_array_equal(packet.fields["assim_param"][:, :, 0], carbon.post_npp.vmax.vcmax)
+    # STOMATE copies frac_age before calling LPJ. Final leaf_frac still
+    # belongs to the LPJ return and is the next LPJ entry state.
+    entry_leaf_frac = inputs["prescribe_inputs"]["leaf_frac"]
+    assert not np.allclose(entry_leaf_frac[:, 13], carbon.post_npp.vmax.leaf_frac[:, 13])
+    np.testing.assert_array_equal(packet.fields["frac_age"], entry_leaf_frac)
+    np.testing.assert_array_equal(packet.fields["leaf_frac"], carbon.post_npp.vmax.leaf_frac)
     end = driver._paper_day_end_state_packet(previous_state=old, stomate_state=packet)
     slow = end.fields_by_component["slowproc_stomate_previous_step_state"]
+    np.testing.assert_array_equal(slow["frac_age"], entry_leaf_frac)
     np.testing.assert_array_equal(slow["gdd_init_date"], expected)
     np.testing.assert_array_equal(slow["DOC"], leak.ok_leak.soilcarbon.doc)
     for name in ("lai", "veget", "veget_max", "frac_nobio", "tot_bare_soil"):
@@ -160,6 +167,7 @@ def test_outer_compiled_dispatch_preserves_explicit_source_flags():
 
     result = jax.jit(outer)(dynamic)
     eager = growth.run_current_chain(inputs)
+    np.testing.assert_array_equal(result.leaf_frac_before_lpj, inputs["prescribe_inputs"]["leaf_frac"])
     for name, expected in growth.chain_fields(eager).items():
         np.testing.assert_allclose(growth.chain_fields(result)[name], expected, rtol=1e-12, atol=1e-14, err_msg=name)
 

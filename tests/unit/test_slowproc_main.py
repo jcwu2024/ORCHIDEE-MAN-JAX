@@ -110,6 +110,28 @@ def test_day_end_multiland_surface_soil_and_static_state_writeback():
     np.testing.assert_array_equal(np.asarray(result.tide_height), [[0.1, -0.2], [0.3, 0.4]])
 
 
+def test_slowproc_receives_the_pre_lpj_age_fractions_at_day_end():
+    vegetation, _, _ = _states()
+    entry_cohorts = np.zeros_like(vegetation["frac_age"])
+    entry_cohorts[:, 13] = [0.25, 0.25, 0.25, 0.25]
+    final_cohorts = np.zeros_like(entry_cohorts)
+    final_cohorts[:, 13, 0] = 1.0
+    stomate = _stomate_result()
+    stomate.lpj = SimpleNamespace(
+        leaf_frac_before_lpj=entry_cohorts,
+        post_npp=SimpleNamespace(
+            lai_after_setlai=vegetation["lai"],
+            cover=None,
+            crown_after_establish=None,
+            crown_after_npp=None,
+            turnover=SimpleNamespace(biomass=np.zeros((2, 14, 12, 1))),
+            vmax=SimpleNamespace(leaf_frac=final_cohorts, vcmax=np.ones((2, 14))),
+        ),
+    )
+    result = _call(sec=0.0, vegetation_state=vegetation, stomate_result=stomate)
+    np.testing.assert_array_equal(result.vegetation_state["frac_age"], entry_cohorts)
+
+
 def test_exact_stomate_owner_receives_source_owned_calendar_and_boundaries(monkeypatch):
     captured = {}
 
@@ -129,7 +151,7 @@ def test_exact_stomate_owner_receives_source_owned_calendar_and_boundaries(monke
     )
 
     assert result.stomate is not None
-    assert captured["do_slow"] is True
+    assert bool(captured["do_slow"])
     assert captured["entry_payload"]["date"] == 101
     np.testing.assert_array_equal(captured["entry_payload"]["totfrac_nobio_new"], [0.0, 0.0])
 
