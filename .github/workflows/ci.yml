@@ -15,7 +15,7 @@ jobs:
       - run: uv sync --frozen --extra dev
       - run: uv run --frozen orchidee-jax --version
       - run: >-
-          uv run --frozen pytest -q
+          uv run --frozen python -B -m pytest -q
           tests/unit/test_public_cli.py
           tests/unit/test_portable_config.py
           tests/unit/test_paper_landpoint_acceptance.py
@@ -32,7 +32,7 @@ jobs:
           JAX_PLATFORMS: cpu
           JAX_ENABLE_X64: "true"
         run: >-
-          uv run --frozen pytest -q
+          uv run --frozen python -B -m pytest -q
           tests/unit/test_hydrol_soil_parameter_contract.py
           tests/unit/test_hydrol_soil_parameter_callers.py
           tests/unit/test_hydrol_component_owner_closure.py::test_custom_soil_parameters_reach_real_wrapper_diagnostics
@@ -41,7 +41,7 @@ jobs:
           JAX_PLATFORMS: cpu
           JAX_ENABLE_X64: "true"
         run: >-
-          uv run --frozen pytest -q
+          uv run --frozen python -B -m pytest -q
           tests/unit/test_hydrol_depth_parameter_closeout.py
           tests/unit/test_parameter_state_creation_phases.py
           tests/unit/test_parameter_state_io_closeout.py
@@ -51,7 +51,7 @@ jobs:
           JAX_PLATFORMS: cpu
           JAX_ENABLE_X64: "true"
         run: >-
-          uv run --frozen pytest -q
+          uv run --frozen python -B -m pytest -q
           tests/unit/test_watchout_domain_transport.py
           tests/unit/test_watchout_drag_transport.py
           tests/unit/test_watchout_driver_transport.py

@@ -115,7 +115,7 @@ def carry(route, hydrol, canopy=None, *, previous=None):
             return driver.driver_previous_step_state_from_next_step_hydrol_scaffold(NS(
                 ready_for_next_state=True, tstep=1, source_clock_context=None,
                 enerbil=NS(enerbil_local=energy, diffuco_local_enerbil_precall=diffuse,
-                           previous_state=previous), thermosoil_module=None,
+                           previous_state=previous, payload=NS(is_watchout=False)), thermosoil_module=None,
                 hydrol_module=hydrol, condveg_module=None))
         if route not in ("runtime", "compiled_fast"):
             raise ValueError(route)

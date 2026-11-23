@@ -47,10 +47,16 @@ def _execute(nodes, environment):
 def test_actual_cold_ready_exit_binds_source_context_before_extracting_state(monkeypatch, prepared):
     """Conditional exit reachability, not proof of complete physical cold closure."""
     owner = _function("paper_1961_driver_cold_start_first_step_coverage")
+    clock_start = next(index for index, node in enumerate(owner.body)
+                       if isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "clock_context")
+    clock_stop = next(index for index, node in enumerate(owner.body)
+                      if isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "init_payload")
+    clock_block = owner.body[clock_start:clock_stop]
     branch = [node for node in owner.body if isinstance(node, ast.If)
               and ast.unparse(node.test) == "not any(missing.values())"][-1]
     setup = object()
-    supplied = NS(source_clock_setup=setup, run_def_values={"PC_LIM": "73"}) if prepared else None
+    values = {"PC_LIM": "73", "TIDES": "FALSE"}
+    supplied = NS(source_clock_setup=setup, run_def_values=values) if prepared else None
     calls = []
 
     def clock_setup(config_path, **kwargs):
@@ -70,16 +76,18 @@ def test_actual_cold_ready_exit_binds_source_context_before_extracting_state(mon
     bundle = NS(year=1961)
     environment = {**vars(o), "missing": {}, "initialized_payloads": {},
                    "prepared_context": supplied, "config_path": "cold.yaml",
-                   "run_def_path": Path("cold.def"), "run_def_values": {"PC_LIM": "73"},
+                   "run_def_path": Path("cold.def"), "run_def_values": values,
                    "init_step": bundle, "step": bundle}
-    _execute([branch], environment)
+    _execute([*clock_block, branch], environment)
     payloads = environment["initialized_payloads"]
     assert payloads["cold_start_first_step_previous_state"] == "closed-local-exit"
     assert payloads["source_clock_context"].source_clock_setup is setup
-    if not prepared:
+    if prepared:
+        assert not calls
+    else:
         assert len(calls) == 1
         assert calls[0][1]["first_step_bundle"] is bundle
-        assert calls[0][1]["run_def_values"] == {"PC_LIM": "73"}
+        assert calls[0][1]["run_def_values"] is values
 
 
 def _tiny_canonical_restart():
@@ -216,7 +224,9 @@ def test_actual_restart_init_depth_refsoc_and_mineral_background_reach_real_loca
     soil = context.hydrol_soil_parameters
     np.testing.assert_allclose(observed["hydro"].mcs,
                                [.5 * h.POROS_ORG + .5 * float(soil.mcs_mineral[1])], rtol=1.e-13)
-    np.testing.assert_array_equal(observed["moisture_kwargs"]["mcs_mineral"], soil.mcs_mineral)
+    assert observed["moisture_kwargs"]["soil_parameters"] is soil
+    assert observed["moisture_kwargs"]["mcs"] is observed["hydro"].mcs
+    np.testing.assert_array_equal(observed["moisture_kwargs"]["soil_parameters"].mcs_mineral, soil.mcs_mineral)
     expected_tables = h.build_mineral_cwrr_tables(
         njsc=source["njsc"], mcs=observed["hydro"].mcs, z_m=context.cwrr_grid.znh,
         mcr=soil.mcr, nvan=soil.nvan, avan=soil.avan, ks=soil.ks, **expected_depth.table_kwargs())
@@ -392,7 +402,7 @@ def _exercise_actual_year_entry_phase(monkeypatch, tmp_path, mode, all_missing_s
                           first_step_restart_state=None, source_clock_setup=setup,
                           run_scalars=NS(pref_soil_veg=np.array([1] + [3] * 12 + [4])),
                           runtime=NS(dt_stomate=86400., dt_sechiba=1800.), dt_sechiba=1800.,
-                          hydrol_ok_pc=False, hydrol_ok_leak=True,
+                          hydrol_ok_pc=False, hydrol_ok_leak=True, hydrol_tides=False, hydrol_tide_run=None,
                           diffuco_pft14_static_kwargs={}, watchout_initialize_main_tstep=None)
     context_type = make_dataclass("LocalPhaseContext", [(name, object) for name in context_values])
     context = context_type(**context_values)

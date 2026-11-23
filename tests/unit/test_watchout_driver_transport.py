@@ -137,8 +137,9 @@ def test_actual_paper_energy_payload_preserves_watchout_and_first_main_exception
 def test_compiled_projection_keeps_same_shape_record_changes_dynamic():
     a = build_intersurf_first_step_payload(watch_bundle(1))
     b = build_intersurf_first_step_payload(watch_bundle(2))
-    first = o._compiled_half_hour_forcing(NS(base_payload=a, step=watch_bundle(1), source_clock=None))
-    second = o._compiled_half_hour_forcing(NS(base_payload=b, step=watch_bundle(2), source_clock=None))
+    no_tide_stream = {"source_clock": None, "hydrol_tide_forcing": None}
+    first = o._compiled_half_hour_forcing(NS(base_payload=a, step=watch_bundle(1), **no_tide_stream))
+    second = o._compiled_half_hour_forcing(NS(base_payload=b, step=watch_bundle(2), **no_tide_stream))
     assert first.watchout is not None and second.watchout is not None
     for name in WATCH_FIELDS:
         np.testing.assert_array_equal(getattr(first.watchout, name), getattr(a, name))
