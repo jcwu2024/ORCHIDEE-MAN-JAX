@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## 1961 水文追踪读取工具
+
+集中同步日尺度和全球效率分支时，按 `17db2adc5263a042163f0d7292ea9a0b93c42749` 更新共享追踪模式、重启年比较脚本、读取回归及其 CI 选择，并带上 `server_1961_trace_contract.md`。原 `post_tile` 第四个数据值由 `resolv(ji)` 写出。旧报告可按同一原文件和时间步、格点、土块重新解读。独立 v9 系数文件保留其 `branch_peat` 与 `peat_hydro` 定义。已在本地初始提交 `7333b46c` 和复查前快照 `7cae3e02` 核实旧列名。此项计入追踪工具维护，模型修正沿用 C1–C92。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-trace-reader-and-reference-preflight/review/controller-acceptance.json) · [两分支依赖与复查前记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-trace-reader-and-reference-preflight/trace-reader/comparison.json)
+
 ## C91、C92 的共享依赖
 
 两项修正共用 `43fca734fbfcd15e500b55c1519daa5b820d7da1`。日尺度和全球效率分支待集中同步时，C91 核对 `sechiba/hydrol.py::hydrol_routing_soil_water_split` 的格点面积、正需求和作物土类条件，包括微小正面积土块。C92 核对同文件 `hydrol_soil_coef_peat_profile_from_tables` 无冻结分支里的除法和选档边界，配合已有 C78 冻结回归。随带 `test_hydrol_surface_water.py`、`test_hydrol_peat_coef.py` 及对应发布测试。两研究分支所核对的历史提交和文件散列见候选清单。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-acceptance.json) · [同步依赖](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/candidates.json)

@@ -46,7 +46,7 @@
 
 第十八包进入物理阶段终审。以余下的 72 个源码组及 33 个调用组为核对范围，逐项确认论文条件可达性、已取得的原生参考及实际生产接收。优先把 17 项动作所需的同一次原生水文、潮汐和热状态与已存同源数据匹配，核实 21 个已有部分证据的调用，包括过程间传值和重启写出。可用已有证据或有限本地组件解决的缺项在本包办理。每项尚缺证据均标明对论文入口的具体影响，以及应在组件、真实后端或冷启动、跨年、重启的整体验收中观测的量。终审列出开始整体验收的依据或仍必需的最小补证。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/open-groups.json)
 
-第十八包于 2026-11-24 通过限定验收。接受两个源码组的组件证据，余 70 个源码组、33 个调用组。正式代表点验收前，先在同一点绑定原论文构建的 HYDROL 私有泥炭开关、连续两步水热接收和同一天的碳写回。独立 1961 追踪的 `post_tile` 第四列记录求解掩码 `resolv`，v9 另有私有开关的直接记录。先校正现行追踪读取器的这一列，再用已存的构建和点位资料准备最短观测。真实端点按其对论文输出的影响取证。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/controller-acceptance.json) · [窗口和原参考](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md)
+第十八包于 2026-11-24 通过限定验收。接受两个源码组的组件证据，余 70 个源码组、33 个调用组。正式代表点验收前，先在同一点绑定原论文构建的 HYDROL 私有泥炭开关、连续两步水热接收和同一天的碳写回。独立 1961 追踪的 `post_tile` 第四列记录求解掩码 `resolv`，v9 另有私有开关的直接记录。追踪读取器已在 `17db2adc` 修正，001 点原作业与两日观测方案已定位。下一步从旧服务器只读核对当年程序副本、构建绑定及同相位日志。真实端点按其对论文输出的影响取证。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/controller-acceptance.json) · [窗口和原参考](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md)
 
 ## 授权、基线与接力
 
