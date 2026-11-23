@@ -42,6 +42,10 @@
 
 第十七包集中处理冠层与能量 7 项、凋落物及土壤碳 8 项、输入读取 2 项，另以同输入比较和现有源记录推进水热余下的 33 项。优先查原运算数能解释的严格残差、`DO_RSOIL` 正常入口及原水热过程临时量的实际消费者。各项按真实证据判定能否在本地完成或需要哪份外部输入。综合验收从物理阶段终审后另行安排。[逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/open-groups.json)
 
+第十七包于 2026-11-24 验收。50 项本地动作完成 33 项，余 17 项。冠层叶内 CO₂ 分母回退和无 priming 土壤碳分解取得限定闭合。本包沿用已接受的生产代码，原分母、严格失败和年度验收门继续适用。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/controller-acceptance.json) · [逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/open-groups.json)
+
+第十八包进入物理阶段终审。以余下的 72 个源码组及 33 个调用组为核对范围，逐项确认论文条件可达性、已取得的原生参考及实际生产接收。优先把 17 项动作所需的同一次原生水文、潮汐和热状态与已存同源数据匹配，核实 21 个已有部分证据的调用，包括过程间传值和重启写出。可用已有证据或有限本地组件解决的缺项在本包办理。每项尚缺证据均标明对论文入口的具体影响，以及应在组件、真实后端或冷启动、跨年、重启的整体验收中观测的量。终审列出开始整体验收的依据或仍必需的最小补证。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/open-groups.json)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？

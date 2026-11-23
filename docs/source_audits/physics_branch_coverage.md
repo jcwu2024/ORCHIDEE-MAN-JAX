@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+第十七包已验收。21 个源码组内的 50 项本地动作覆盖 88 个原条件。25 项实测完成、2 项复用完成、6 项按原源码和适用输入完成。冠层 `diffuco_trans_co2:2893` 和土壤碳 `soilcarbon_leak:1628` 的两个组在声明范围内闭合。开放表还包括 72 个源码组和 33 个调用组，其中 21 个已有部分证据（含两处重启写出），12 个标记为外部缺口。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/controller-acceptance.json) · [逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/open-groups.json)
+
+17 项未完成的本地动作中，6 项已有部分证据，11 项缺已指明的输入或接收端。33 项已完成的动作里，11 项严格数值门、4 项自然前驱、1 项源定义和 1 项外部端点仍逐原成员保留。矿质和泥炭备用蒸发的 56 项比较在单独替换临时储水量的回放中回到原容差，原 49 个热通量坐标和第十二包 16 项土柱严格差异继续记录。年度 NPP、GPP、DOC 边界通量和收支留待整体验收。[原始数值与回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/numerics/README.md) · [逐项证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/dispositions.json)
+
 2026-11-24，第十六包已验收。土热和水文覆盖 33 组内的 250 个原条件。本包 180 项本地动作中 145 项有本轮组件实测，2 项复用先前证据，28 项有部分证据，5 项待特定输入。按原成员核对，15 组限定闭合。全表余 74 个源码组、33 个调用组（含 12 处外部调用）。21 个源码组还有 50 项本地动作，涉及 88 个原条件。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-acceptance.json) · [逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/open-groups.json)
 
 C91 的 6 个单点灌溉例与原拒绝或分水行为相符，C92 的无冻结泥炭用例消除了 14 项系数和剖面差异。三种导热入口的实际接线 226 项通过，裸土蒸发读取首步返回含水量的 36 字段、176 标量通过。矿质导热率饱和临界、热通量与土柱收支的原严格失败，各自保留输入、容差与坐标。四组含水接收证据止于实际蒸发读取，矿质 `tmc_soil` 的原外送协议另待验证。[逐项证据](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/dispositions.json) · [独立终审](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/review/independent-review.md)

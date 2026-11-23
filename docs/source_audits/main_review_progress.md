@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-24，**物理检查第十七包已验收。** 上一包留下 50 项本地动作，此次完成 33 项，另 17 项仍缺具名证据。冠层叶内 CO₂ 分母的回退和无 priming 土壤碳分解在相应组件输入上通过，剩余 72 个源码组和 33 个调用组，其中 12 个调用涉及外部后端。本轮只提交审计记录。累计修正或支持补齐 **92 项、48 个生产提交，其中 90 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/controller-acceptance.json) · [发布记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/controller-publication.json)
+
+实测中，原 Fortran 与 JAX 的 584 个单点潮位记录逐项对应，冠层在分母过小时写回同一叶内 CO₂ 值。备用蒸发的 56 项差异对临时土柱储水量敏感，热通量有 49 个坐标仍超原门限。第十八包结合论文的有效配置和实际调用次序，对 17 项本地余项及全表其余依赖做物理阶段终审，判断开始整模型验证还需要哪些证据。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase17-remaining-local-actions/open-groups.json)
+
 2026-11-24，**物理检查第十六包已验收。** C91 修正灌溉的格点和需求检查，C92 修正无冻结泥炭选导水系数时的浮点运算顺序。灌溉 6 组原生对照一致。泥炭同输入第 4 层由第 32 档恢复到原第 33 档，关联的 14 项差异消失。42 项本地回归通过。累计 **92 项修正或支持补齐、48 个生产提交，其中 90 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-acceptance.json) · [累计修正](correction_origins.md) · [发布记录](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/controller-publication.json)
 
 本包 180 项中办结 147 项，15 个源码组在相应组件和输入范围内完成。各通道合计还有 50 项本地动作，分布在 21 个组。全部余项为 74 个源码组和 33 个调用组，其中 12 个调用涉及外部后端。下包集中处理其余 17 项冠层、土壤碳和输入读取检查，同时推进 33 项水热余项中可复用同输入或现有记录的部分。自然年际轨迹和年度通量影响留待综合验证。[逐组余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase16-soil-thermal-and-hydrology/open-groups.json)
