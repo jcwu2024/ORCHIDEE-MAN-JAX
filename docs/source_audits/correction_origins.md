@@ -1,4 +1,16 @@
-# C1–C86 修正与支持补齐来源登记（2026-11-23）
+# C1–C89 修正与支持补齐来源登记（2026-11-23）
+
+## C87、C88 和 C89 的状态传递
+
+2026-11-23，第十四包登记两项取值时刻修正和一项通用接口支持补齐。三个来源均在复查前 `7cae3e02adad23674767a590fdf4d27f239ce065` 中取得源码证据。生产代码、回归和 CI 提交为 `c34b2bfb382adc432cdab96446f7817b970541c9`。累计 **89 项修正或支持补齐、46 个生产提交**，其中 87 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/controller-acceptance.json)
+
+| 编号 | 原 Fortran 规则和修正 | 验证范围 |
+| --- | --- | --- |
+| C87 | 固定论文配置在调用 LPJ 之前把叶龄组比例复制给 `frac_age`。论文日末状态包和固定 SLOWPROC 现在写出这份快照，更新后的比例另存于 `leaf_frac`。 | 两套样例各有 5 处写回受影响，包括重启组装和内存读回。修前 108/118，修后 118/118。 |
+| C88 | 固定 STOMATE 将当日归一化的湿度、温度等字段传给季节记忆、生物气象和年统计，分别涉及 5、1、4 个实参。 | 改动最后半小时湿度时，旧周湿度两次均为 0.342857，修后为 0.484869 和 0.482489，均符合原式。实际数值重放到周、月记忆，下游两过程有参数接收测试。专用论文记忆入口此前已能传入日平均值。 |
+| C89 | 通用耦合接口允许同时传入前一次的未缩放周转量和死亡凋落量，交给现有半小时准备过程按时间缩放。LPJ 诊断仍读取本次覆盖和收获的结果。 | 固定 PFT14 和作物对照共 80 项通过。原有省略两参数的过程组合继续使用其 post-NPP 输入。 |
+
+C87 对应 `stomate.f90` 第 4210、4297 行及 `slowproc.f90` 第 1230 行。C88 对应 `stomate.f90` 第 3201–3208、4225–4232 行及 `stomate_season.f90` 的周、月记忆更新。C89 对应 `stomate.f90` 第 3288–3293 行先使用旧日量、第 4297 行后调用 LPJ。物理阶段的组件回放保留了各自的输入来源，年度 NPP、GPP、DOC 收支和异养呼吸影响仍待验证。[叶龄状态](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/lpj-paper/README.md) · [季节过程](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/daily-receivers/README.md) · [凋落物输入](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/lpj-coupled/README.md)
 
 ## C86 植被碳模块写出建植、覆盖调整和收获后的值
 

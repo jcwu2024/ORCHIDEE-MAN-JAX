@@ -30,6 +30,10 @@
 
 第十四包沿实际水、热、碳过程调用核对已写回的值。优先验证日末 LPJ 输出的调用方，以及有一致供体水量、层深和出口流量的土壤 DOC 库存限制。结合现有水热前驱核实下一消费者，按原成员列明本地可验证、需自然轨迹或需外部后端的余项，供物理阶段终审使用。[具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/open-groups.json)
 
+第十四包已验收。登记 C87 叶龄比例快照、C88 季节过程的日平均输入、C89 通用 OK_LEAK 的前次转移量。径流 DOC 与水热接收新增组件证据，90 个源码组和 33 个调用组继续保留原成员和未决动作。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/controller-acceptance.json) · [具名余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/open-groups.json)
+
+第十五包将共用日内累积量接到实际季节生物气象、年统计及 LPJ 的下一次读取，同时核对零裸地面积的热诊断和土壤 DOC 排水库存限制的源条件。对剩余每组分辨在本地能补的具体证据和需要自然前驱或外部后端的部分，为物理阶段独立终审准备可核查的清单。[具名余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/open-groups.json)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
@@ -41,9 +45,9 @@
   `01a1ef4a-34fe-7063-9db9-a5aa86b2dec8`。这是新的直接用户授权，覆盖本阶段执行完成后的回传。
 - 阶段启动时已接受 main 基线：`000d5307ede59df6b8f51d015d0ad5cf17f79845`；当时生产／测试／CI提交：
   `aa14d04210ab371aae6e959da193561f37f55d0e`。本计划的文档提交不改变生产基线。
-- 阶段启动时为 61 项、34 个生产提交。2026-11-23 接受到 C86，累计 **86 项修正或支持补齐、45 个生产提交**。
-  其中 84 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
-  最新已接受生产与回归提交为 `0720d1bab0251cd460d9bcbf4bb3dcd1fa452701`。每包按当时记录的基线复核。
+- 阶段启动时为 61 项、34 个生产提交。2026-11-23 接受到 C89，累计 **89 项修正或支持补齐、46 个生产提交**。
+  其中 87 项有复查前错误或支持缺口证据，C42 和 C57 为复查期间遗漏。
+  最新已接受生产与回归提交为 `c34b2bfb382adc432cdab96446f7817b970541c9`。每包按当时记录的基线复核。
 
 Sol完成一个连贯包、停止修改并封存后，只给主控发送一次消息，包含产物路径、
 实际验证、待验收事项和剩余工作，然后停止。主控验收实际产物、处理科学判断、

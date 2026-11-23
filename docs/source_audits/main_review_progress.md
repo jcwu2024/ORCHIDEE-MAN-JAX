@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-23，**物理检查第十四包已验收。** C87 修正日末和重启中的叶龄组比例取样，C88 修正固定季节过程接收的日平均值，C89 补齐通用凋落物接口的前次日量。两套论文组件样例从 108/118 项通过变为 118/118。累计 **89 项修正或支持补齐、46 个生产提交**，其中 87 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/controller-acceptance.json) · [累计修正](correction_origins.md)
+
+本地 94 项回归通过。原 Fortran 的四处径流 DOC 库存限制取得组件对照，热状态的写回也传到了下一次冻结和液态水计算。仍余 90 个源码组、33 个调用组，后者含 12 个外部缺口。第十五包优先检查季节过程的实际返回和 LPJ 接收、裸地面积为零时的土温及 DOC 排水限制。[具名余项](../../outputs/reviews/main-physics-20261123/physics-branch-closeout/phase14-water-heat-carbon-receivers/open-groups.json)
+
 2026-11-23，**物理检查第十三包已验收。** C86 修正植被碳模块写出最终状态的两个入口。主控单点复验中，植被覆盖调整后的 GPP 和两个输出均为 3.75。累计 **86 项修正或支持补齐、45 个生产提交**，其中 84 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/controller-acceptance.json) · [累计修正](correction_origins.md)
 
 第十二包的 6 项叶片差异来自进入下游时已不同的状态。分别固定每套输入后，原 Fortran 与 JAX 的周转、最终叶面积和最大羧化速率均在原容差内相符。该格点在两套输入下分别得到 50 和约 26.67，原始极端叶片比例与另设的合法对照分别保留。自然轨迹和全年影响仍待综合验证。余 90 个源码组、33 个调用组，其中 12 个调用组缺外部证据。第十四包优先核对水、热、碳过程间的实际传值。[叶片对照](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/lai-vmax/README.md) · [具名余项](../../outputs/reviews/main-physics-20261122/physics-branch-closeout/phase13-vegetation-carbon-receivers/open-groups.json)
@@ -14,7 +18,7 @@
 | PB-01冠层／光合 | 新增restart／held／维护LAI前驱与有限消费者 | 自然低LAI历史、外部PBL及fixedsnow原未定义合同 |
 | PB-02能量／QSAT | 实际热容量和通量写回后进入下一次 ENERBIL，低风气动差异已有有界归因 | 31 项默认 JIT 气动严格失败，及其余源域与外部 PBL |
 | PB-03水文／热／雪 | 42 个热土壤组和 21 个水文积雪组逐项核对，9 组获有界支持 | 私有 peat 身份、自然初始雪包、第二次能量容量及其余分支，保留土柱和平滑的严格差异 |
-| PB-04植被／碳 | C73 默认值、C74 状态所有权、C86 最终输出已修。周转、叶面积和 Vmax 有同输入对照 | 自然联合前驱、土壤碳库存限制与年度 DOC 真实通量待验证。相等 DOC 的严格差异保留 |
+| PB-04植被／碳 | 周转、叶面积、Vmax 和径流 DOC 的四处库存限制已有同输入对照。C86–C89 涵盖最终输出、叶龄快照、季节输入及前次凋落物传递 | 季节过程到 LPJ 的实际返回、排水库存限制、自然前驱与年度 DOC 收支待验证 |
 | PB-05跨组 | C75–C77输入处理已修，forcing／静态控制／modelout／routing与restart有限接口验证 | maintained完整调度、跨模块源调用归属及阶段终审 |
 
 [主控验收](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/controller-acceptance.json)核对46份产品、交付与独审封存身份，并复核配对原源、实际写回及历史源码。保存的隔离CI按精确节点合并为454通过、9项科学strict xfail、10项外部身份skip、0失败／错误；这不是一次不间断全通过运行。首次漏复制已跟踪restart schema的9个setup错误保留，修正复制后仅重测受影响的10节点，未重测此前通过项。配置内Ruff通过，生产lint 62前／62后无新增；hosted CI未运行。主控解析JUnit并复用owner／独审验证，未再积分；12份JSON仅Git换行规范化、语义相同。[发布记录](../../outputs/reviews/main-physics-20261120/physics-branch-closeout/phase06-remaining-arms-and-joins/controller-publication.json)保留最终版本。
