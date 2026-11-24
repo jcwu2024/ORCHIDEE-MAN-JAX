@@ -1,4 +1,13 @@
-# C1–C99 修正与支持补齐来源登记（2026-11-25）
+# C1–C100 修正与支持补齐来源登记（2026-11-25）
+
+## C100 文件续跑的气象读头及 C98 编译调用修复
+
+两项驱动改动共用生产提交 `8adf774a55b9f5f4c413cb5e7ca28f97b0032f3e`。累计 **100 项修正或功能补齐、51 个生产提交**，其中 97 项在复查前有对应的错误或缺口证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [修前证据和同步依赖](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/candidates.md)
+
+- **C100**。普通和编译气象读器把局部步号直接用作文件索引。两处旧调用均见于 `7333b46c` 和复查前 `7cae3e02`。001 点从第 48 步文件续跑时，首步应读索引 48 的短波 757.016927 W/m²，旧入口读的是索引 0 的 950.014900 W/m²。现在两处共用 DIM2 源步和绑定气象文件的记录偏移。本地步号起于 0、1 的实参测试均通过，保存的两日和续跑读头逐步对齐。限定于同一已绑定文件。[实际续跑](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/execution/file-restart-after/file-restart.json) · [主控逐步读头核对](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/admitted-file-cursors.json)
+- **C98 后续修复**。上个生产提交 `f44033d5` 加入私有活动层状态后，编译折叠把整个容器也传给土碳函数，实际运行到第二天出现签名错误。编译循环现在保存六个状态量，土碳函数继续接收其所用的显式实参。此次退出由复查中的 C98 改动触发，单列在 C98 名下。暖点的 48 个编译半小时输入和暖启活动层已实测。[修前异常](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/execution/run-compiled-v2.stderr) · [修后调用](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/execution/compiled-96-final/calls.json)
+
+原基线 Ubuntu 第 8 步失败。本地冻结 Linux 复现出 4 个年界夹具缺少临时 PFT 参数的失败。补齐测试输入后该步 84 项通过，夹具计入测试维护。[发布测试复现](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/ci-investigation/README.md)
 
 ## C96–C99 与 C95 的可选配置
 

@@ -1,8 +1,12 @@
 # 主线进度
 
+2026-11-25，**001 暖点两日编译运行和文件续跑已完成限定验收。** C100 修复了从第二天恢复却读取第一天气象的问题，同时修复了 C98 在正式编译路径多传参数引起的退出。第 50–96 步实际进入 SECHIBA 编译扫描，土碳折叠执行第 49–96 步。续跑按绝对步号读取气象索引 48–95。两条 JAX 路线的第二天 26 个输出、364 个数值在原门限内，285 个重启变量的有限值和掩码通过对照。逐半小时排水和潜在蒸发修正量仍有严格差异。累计 **100 项修正或功能补齐、51 个生产提交**，97 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md)
+
+与同一 Fortran B 比较，两条 JAX 路线均保留原来的 24 个字段、96 个超差位置。土壤前三层的水分差可以重现其中 42 个分植被土壤湿度差，仍需把前一时步的自然水状态与原生实参配对。47 个 STOMATE 变量缺运行末态。接下来优先合并第 95–97 步的水热、气动、日末碳写回和下一步读取证据，以及复位前的异养呼吸和实际 DOC 接收端。代表点年度及 669 个论文算例的交付条件仍见原合同。[分组证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md) · [等价交付条件](pft14_equivalence_delivery_contract.md)
+
 2026-11-25，**001 暖点的两日重启对照从 28 个字段、115 个坐标超差降至 24 个字段、96 个坐标超差。** C96–C99 修复季节初值、季节辐照度的计算精度、最大融深跨步传递和裸地温度写回。另补齐 C95 的可选开关。累计 **99 项修正或支持补齐、50 个生产提交**，96 项有复查前证据。普通地表调度配合局部 JIT 完成了 96 个半小时步。此次前后只有四个重启字段的原值改变。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md)
 
-下一步在同一窗口用正式编译入口检查连续运行和从文件恢复，先核实裸地粗糙高度的缺值标记及后续实际读取，再按共同前驱追查仍会传给下游的差异。47 个 STOMATE 字段缺运行末态观测。年度 NPP、GPP、DOC 和异养呼吸、其余代表点及最终 669 个论文算例仍待整模型验证。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/remaining.md) · [等价交付条件](pft14_equivalence_delivery_contract.md)
+上轮剩余差异的原坐标、裸地粗糙高度的缺值标记及其待查的消费者均有逐组记录。年度 NPP、GPP、DOC 和异养呼吸、其余代表点及最终 669 个论文算例仍待整模型验证。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/remaining.md) · [等价交付条件](pft14_equivalence_delivery_contract.md)
 
 2026-11-24，**001 暖点两日本地收尾已验收，C93–C95 已合入主线。** 原始 1961 气象文件可由正常入口直接运行 96 步。原先写错的容重和解冻湿度分别写为 1650 kg/m³ 和 0.5，与三套原生参考一致。重启末态超差由 30 个字段、117 个坐标降至 **28 个字段、115 个坐标**，另有 47 个 STOMATE 字段缺少运行末态观测。累计 **95 项修正或支持补齐、49 个生产提交**，其中 92 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md) · [分支同步清单](shared_core_branch_review.md)
 

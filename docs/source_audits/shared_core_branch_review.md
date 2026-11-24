@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## C100 文件续跑与 C98 编译调用
+
+两研究分支后续集中同步以 `8adf774a55b9f5f4c413cb5e7ca28f97b0032f3e` 为依据。C100 需结合 `782535b4` 的源时钟和 C93 气象选轴，核对本分支的逐步读器、编译预读、同一气象文件暖启和显式局部步号起点。C98 需连同 `f44033d5` 的整个活动层修正，确保私有状态经过每个半小时并只将所需实参传入土碳过程。携带普通与编译气象读者、土碳签名和年界临时配置的回归。已查日尺度 `f898282a` 和全球效率 `ffe77a00` 都有相关共享入口。[同步依赖和来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/candidates.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json)
+
 ## C96–C99 与 C95 可选配置的同步依赖
 
 日尺度与全球效率分支后续集中同步时，以生产提交 `f44033d5d7e849dbc479770a306de8ac6de7030d` 为依据。此次核对的研究分支快照为日尺度 `f898282a`、全球效率 `ffe77a00`。按各分支保留的实际计算、编译和重启入口核对以下依赖。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [来源和分支范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/README.md)

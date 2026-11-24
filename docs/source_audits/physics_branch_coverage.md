@@ -1,5 +1,7 @@
 # 当前物理计算与条件分支覆盖
 
+001 暖点第二天的 SECHIBA 编译扫描及 48 个土碳编译半小时输入已实际覆盖。从三份第 48 步重启文件恢复后，确认源步 49–96 与原气象记录逐步配对。连续与续跑在日输出 26 项、364 个坐标上通过原门限。两者在半小时排水的 9 个坐标、潜在蒸发修正的 6 个坐标仍超严门。与 B 的 24 字段、96 坐标在三条 JAX 路线上身份一致。两处裸地槽已核实本点接收范围，原严格行、47 项缺运行末态、70 个开放源码组和 33 个开放调用组各保留原身份。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [开放证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
+
 2026-11-25，001 两日普通调度和局部编译对照新增四项限定证据。最低季节辐照度和日期、积温、活动层最大深度及裸地温度写回均满足原重启门限，19 个原超差坐标通过。半小时活动层的窄编译、暖启重建和 C95 显式湿度开关另有测试。两日末仍超差的 24 个字段包括地表与能量 8 个、水文 8 个、土热 3 个和日碳 5 个。自然逐步记录的 78 条超差及两种受控回放的 38、30 条各保留原取样范围。整段编译、年度输出和原 70 个源码组、33 个调用组的开放条件按既有清单核验。[本次主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [剩余字段](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/remaining.md)
 
 001 暖点、1961 冷启动的自然两日窗口现有常规气象入口、容重跨步及暖启读入、解冻湿度冷启和默认回退的限定证据。生产提交 `ad3375ec` 对应 C93–C95。四个采样步跨模型过程观测最初的 78 条超差在受控回放中分别有 38 条和 30 条保留。两日末实际新文件尚有 28 个字段、115 个坐标超差。源码组的办结按原身份判断，本次没有申请关闭新的源码组。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [短波回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/shortwave/dispositions.json)

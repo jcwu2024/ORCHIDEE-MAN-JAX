@@ -56,6 +56,8 @@
 
 ## 授权、基线与接力
 
+001 两日已核对实际 SECHIBA 半小时编译扫描、土碳编译折叠，以及第 48 步写文件至第 96 步的正常续跑。此窗口只有一个后续日，跨多个后续日的外层编译块尚缺本点实测。后续集中取同点同一构建的第 95 步末、第 96 步日末和第 97 步首次消费。以相同边界实参核对水分、热量、气动和日碳的差异来源，保留原数值门限和可达性限制。[两日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [合并观测范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
+
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”
 
