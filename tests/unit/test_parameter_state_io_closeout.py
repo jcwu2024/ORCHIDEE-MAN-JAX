@@ -7,6 +7,7 @@ Fortran references. All file definitions come from the tracked paper schemas.
 
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -32,6 +33,7 @@ from jax_orchidee.driver.orchestration import (
 )
 from jax_orchidee.driver.restart_bundle import (
     PaperRestartBundlePhysicalState,
+    PaperRestartBundleState,
     paper_restart_bundle_state_from_day_end_packet,
     write_paper_restart_start_bundle,
 )
@@ -192,6 +194,38 @@ def _packet_states(states):
         k: v for k, v in states.daily_state._asdict().items() if k != "provenance"
     }
     return result
+
+
+def test_configured_thawed_humidity_in_ordinary_file_entry(tmp_path, monkeypatch):
+    from jax_orchidee.driver.dim2 import Dim2DriverRestart
+
+    layout, config_path, run_def = _layout_and_config(tmp_path, False, monkeypatch, False)
+    states = _synthetic_stomate(layout.n_pft)
+    entry = states.entry_state._replace(thawed_humidity=np.array([0.75]))
+    states = replace(states, entry_state=entry)
+    driver = Dim2DriverRestart(**{name: np.array([1.]) for name in Dim2DriverRestart.__dataclass_fields__})
+    state = PaperRestartBundleState(driver=driver, sechiba=_synthetic_sechiba(layout.n_pft), stomate=states)
+    physical = PaperRestartBundlePhysicalState(
+        driver=_physical(ROOT / "docs/source_audits/driver_restart_netcdf_schema.json"),
+        sechiba=_physical(DEFAULT_SECHIBA_RESTART_SCHEMA),
+        stomate=_physical(DEFAULT_STOMATE_RESTART_SCHEMA),
+    )
+    report = write_paper_restart_start_bundle(
+        tmp_path / "restart", state=state, physical_state=physical, pft_layout=layout,
+    )
+    base = run_def.read_text(encoding="utf-8")
+    for options, expected in (
+        ("reset_thawed_humidity=TRUE\nthawed_humidity_input=0.325D0\n", 0.325),
+        ("RESET_THAWED_HUMIDITY=TRUE\n", 0.5),
+        ("RESET_THAWED_HUMIDITY=FALSE\nTHAWED_HUMIDITY_INPUT=unused\n", 0.75),
+        ("", 0.75),
+    ):
+        run_def.write_text(base + options, encoding="utf-8")
+        restored = reference_case_first_step_restart_state(
+            config_path, root=ROOT, run_dir=report.output_directory, run_def_path=run_def,
+        )
+        np.testing.assert_array_equal(restored.stomate_readstart.entry_state.thawed_humidity, [expected])
+        np.testing.assert_array_equal(restored.stomate.thawed_humidity, [expected])
 
 
 @pytest.mark.parametrize("compact", (False, True), ids=("legacy14", "compact2"))

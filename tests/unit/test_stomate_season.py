@@ -63,6 +63,17 @@ def test_season_midwinter_gdd_init_date_uses_fortran_downward_solar_flux_branch(
     np.testing.assert_allclose(np.asarray(updated[:, 1]), solad_day1)
 
 
+def test_gdd_solar_minimum_uses_real64_state_precision_with_float32_geometry():
+    latitude = np.array([-19.0], dtype=np.float32)
+    current = np.array([[365.0, 999999.0]], dtype=np.float64)
+    kwargs = dict(latitude=latitude, julian_diff=np.float64(1.0), calendar_str="noleap")
+    compiled = jax.jit(season_update_gdd_init_date, static_argnames=("calendar_str",))
+    # Same-input original downward_solar_flux and the stored day-96 Fortran minimum.
+    expected = [[1.0, 895.8803950541757]]
+    for update in (season_update_gdd_init_date, compiled):
+        np.testing.assert_allclose(update(current, **kwargs), expected, rtol=1e-12, atol=1e-14)
+
+
 def test_season_memory_step_matches_fortran_relaxations_and_ordered_daily_updates():
     state = _state()
     moiavail_daily = np.asarray([[0.8, 0.7, 0.6, 0.5], [0.4, 0.3, 0.2, 0.1]], dtype=np.float64)

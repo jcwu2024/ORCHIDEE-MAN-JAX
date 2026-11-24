@@ -312,7 +312,7 @@ def test_stomate_cold_start_readstart_fallbacks_match_fortran_defaults():
     np.testing.assert_allclose(season.t2m_longterm, t2m)
     np.testing.assert_allclose(season.t2m_month, t2m)
     np.testing.assert_allclose(season.tsoil_month, np.repeat(t2m[:, None], 11, axis=1))
-    np.testing.assert_allclose(season.gdd_init_date[:, 0], 365.0)
+    np.testing.assert_array_equal(season.gdd_init_date, [[365.0, 999999.0]])
     np.testing.assert_allclose(season.minmoiavail_lastyear, 1.0)
     np.testing.assert_allclose(season.gdd0_lastyear, 150.0)
     np.testing.assert_allclose(season.precip_lastyear, 100.0)

@@ -136,10 +136,12 @@ def _install_component_seam(monkeypatch, fixture):
     return records
 
 
-def _ordinary(fixture, *, compiled=False, steps=2):
+def _ordinary(fixture, *, compiled=False, steps=2, entries=None):
+    if entries is None:
+        entries = tuple(dict(fixture.payload) for _ in range(steps))
     return driver._paper_half_hour_ok_leak_fold_from_entries(
-        entry_payloads=tuple(dict(fixture.payload) for _ in range(steps)),
-        maintenance_resp_parts=np.zeros((steps, 1, 2, 12)), initial_state=fixture.initial,
+        entry_payloads=entries,
+        maintenance_resp_parts=np.zeros((len(entries), 1, 2, 12)), initial_state=fixture.initial,
         pre_step_boundary=fixture.base, runtime=fixture.runtime, run_def_values=fixture.values,
         rprof=fixture.rprof, pref_soil_veg=fixture.pref, is_tree=fixture.trees,
         is_peat=fixture.peat, dayno=2, use_compiled_ok_leak=compiled,
@@ -217,6 +219,33 @@ def test_ok_leak_half_hour_fold_carries_density_from_the_previous_state(monkeypa
     np.testing.assert_array_equal(result.bulk_dens, [100000.0])
     if not compiled:
         np.testing.assert_array_equal([a["bulk_dens"] for a in records], [[0.1], [100000.0]])
+
+
+@pytest.mark.parametrize("compiled", [False, True])
+def test_ok_leak_half_hour_fold_carries_active_layer_into_new_day(monkeypatch, compiled):
+    fixture = _fixture()
+    fixture.state["altmax"] = np.zeros((1, 2))
+    _install_component_seam(monkeypatch, fixture)
+    shallow = fixture.payload["tdeep"].copy()
+    shallow[:, 2:] = 270.0
+    day_one = SimpleNamespace(month=1, day=1)
+    day_two = SimpleNamespace(month=1, day=2)
+    _, updates = _ordinary(fixture, compiled=compiled, entries=(
+        dict(fixture.payload, source_clock=day_one),
+        dict(fixture.payload, tdeep=shallow, source_clock=day_two),
+    ))
+    layer = updates["ok_leak_active_layer"]
+    np.testing.assert_array_equal(updates["altmax"], [[1.5, 1.5]])
+    np.testing.assert_array_equal(layer.altmax_ind, [[2, 2]])
+    np.testing.assert_array_equal(layer.altmax_lastyear, [[30.5, 30.5]])
+    np.testing.assert_array_equal(layer.altmax_ind_lastyear, [[31, 31]])
+
+    fixture.state.update(updates)
+    _, next_day = _ordinary(fixture, compiled=compiled, entries=(
+        dict(fixture.payload, tdeep=shallow - 15.0, source_clock=SimpleNamespace(month=1, day=3)),
+    ))
+    np.testing.assert_array_equal(next_day["altmax"], updates["altmax"])
+    np.testing.assert_array_equal(next_day["ok_leak_active_layer"].altmax_lastyear, layer.altmax_lastyear)
 
 
 def _compiled_body(monkeypatch, *, tf_on=True, cutoff=None):

@@ -50,8 +50,12 @@ jobs:
           tests/unit/test_driver_source_clock_io.py::test_forcing_last_timestep_coordinate_uses_last_seconds_calendar
           tests/unit/test_driver_source_clock_io.py::test_restart_rejects_duplicate_axis_even_in_netcdf_order
           tests/parity/test_ok_leak_producer_contracts.py::test_ok_leak_half_hour_fold_carries_density_from_the_previous_state
+          tests/parity/test_ok_leak_producer_contracts.py::test_ok_leak_half_hour_fold_carries_active_layer_into_new_day
+          tests/unit/test_ok_leak_active_layer.py
           tests/unit/test_stomate_reference.py::test_stomate_cold_start_readstart_fallbacks_match_fortran_defaults
+          tests/unit/test_stomate_season.py::test_gdd_solar_minimum_uses_real64_state_precision_with_float32_geometry
           tests/unit/test_stomate_restart_io.py::test_readstart_thawed_humidity_respects_source_missing_value
+          tests/unit/test_us_init_production.py::test_year_entry_updates_consumer_mirror_only_at_new_native_phase
       - name: WATCHOUT forcing and restart transport
         env:
           JAX_PLATFORMS: cpu
@@ -75,6 +79,7 @@ jobs:
           tests/unit/test_physics_branch_canopy.py
           tests/unit/test_physics_branch_energy.py
           tests/unit/test_physics_branch_coupling.py
+          tests/unit/test_enerbil_bare_restart.py
       - name: Thermal and snow branch components
         env:
           JAX_PLATFORMS: cpu

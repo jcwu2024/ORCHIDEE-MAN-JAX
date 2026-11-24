@@ -2422,6 +2422,11 @@ def enerbil_explicit_local_step(
         dt_sechiba=dt_sechiba,
         min_wind=min_wind,
     )
+    # enerbil.f90:1203-1213 updates temp_sol_new_pft for jv=2:nvm.
+    # The initialized or restarted bare slot remains in the SECHIBA carry.
+    surftemp = surftemp._replace(
+        temp_sol_new_pft=surftemp.temp_sol_new_pft.at[:, 0].set(jnp.asarray(temp_sol_pft)[:, 0]),
+    )
     pottemp_inputs = (q_sol_pot, temp_sol_pot)
     if all(value is not None for value in pottemp_inputs):
         pottemp = enerbil_pottemp_pass_through(

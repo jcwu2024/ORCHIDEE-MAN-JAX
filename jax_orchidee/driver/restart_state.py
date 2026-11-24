@@ -10,7 +10,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 from jax_orchidee.driver.domain import load_case_config
-from jax_orchidee.driver.init import read_run_scalars
+from jax_orchidee.driver.init import parse_run_def_bool, read_run_scalars
 from jax_orchidee.driver.restart import SechibaStaticRestart, read_sechiba_static_restart, reference_restart_path
 from jax_orchidee.driver.source_clock import PREFIX, RestartClockBundle, read_source_clock_restart_bundle
 from jax_orchidee.parameters.pft_catalog import (
@@ -30,6 +30,7 @@ from jax_orchidee.sechiba.restart_io import SechibaRestartState, read_sechiba_in
 from jax_orchidee.sechiba.slowproc import SlowprocRestartEntryState, read_slowproc_restart_entry_state
 from jax_orchidee.sechiba.thermosoil import ThermosoilRestartState, read_thermosoil_restart_state
 from jax_orchidee.stomate.reference import (
+    DEFAULT_THAWED_HUMIDITY,
     StomateRestartEntryState,
     find_stomate_reference_files,
     read_stomate_daily_accumulator_state,
@@ -53,6 +54,16 @@ FIRST_STEP_RESTART_STATE_PROVENANCE = (
 
 REFERENCE_CASE_INITIAL_STATE_MODE = "restart_backed_reference_case"
 COLD_START_INITIAL_STATE_MODE = "cold_start_no_restart"
+
+
+def readstart_thawed_humidity_controls(run_def_values: Mapping[str, str]) -> tuple[bool, float]:
+    """Resolve the optional STOMATE readstart reset (stomate_io.f90:425,1201-1213)."""
+    values = {key.upper(): value for key, value in run_def_values.items()}
+    reset = parse_run_def_bool(values.get("RESET_THAWED_HUMIDITY", "FALSE"))
+    if reset and "THAWED_HUMIDITY_INPUT" in values:
+        token = str(values["THAWED_HUMIDITY_INPUT"]).upper().replace("D", "E")
+        return reset, float(token)
+    return reset, DEFAULT_THAWED_HUMIDITY
 
 
 def resolve_hydrol_initialization_refsoc_1d(
@@ -371,6 +382,7 @@ def reference_case_first_step_restart_state(
     season_scales = paper_case_season_time_scales(
         config_path, used_run_def=run_def_path
     )
+    reset_thawed_humidity, thawed_humidity_input = readstart_thawed_humidity_controls(run_scalars.raw_run_def)
     readstart = read_stomate_readstart_states_from_template(
         stomate_input,
         t2m=stomate_daily.t2m_daily,
@@ -384,6 +396,8 @@ def reference_case_first_step_restart_state(
         nlitt=stomate.litter.shape[1],
         nbpools=nbpools,
         tau_longterm_max=season_scales.tau_longterm_max,
+        reset_thawed_humidity=reset_thawed_humidity,
+        thawed_humidity_input=thawed_humidity_input,
         source_pft_layout=stomate_source_pft_layout,
         target_pft_layout=target_pft_layout,
     )

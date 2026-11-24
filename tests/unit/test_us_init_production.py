@@ -143,15 +143,20 @@ def _write_us_file(tmp_path, fixture, mode, scalar):
 
 
 def _paper_boundaries(monkeypatch):
+    from collections import namedtuple
+
     import jax_orchidee.coupled as coupled
     import jax_orchidee.driver.restart_state as entry
-    monkeypatch.setattr(entry, "read_stomate_restart_entry_state", lambda *a, **kw: SimpleNamespace(
+    stomate_entry = namedtuple("StomateEntryFixture", "biomass carbon_32l carbon litter thawed_humidity")
+    monkeypatch.setattr(entry, "read_stomate_restart_entry_state", lambda *a, **kw: stomate_entry(
         biomass=np.zeros((2, 14, 2)), carbon_32l=np.zeros((2, 3, 14, 1)),
-        carbon=np.zeros((2, 3, 14)), litter=np.zeros((2, 2, 14))))
+        carbon=np.zeros((2, 3, 14)), litter=np.zeros((2, 2, 14)), thawed_humidity=None))
     monkeypatch.setattr(entry, "read_stomate_daily_accumulator_state", lambda *a, **kw: SimpleNamespace(t2m_daily=np.ones(2)))
     monkeypatch.setattr(entry, "read_stomate_restart_season_state", lambda *a, **kw: SimpleNamespace(tsoil_month=np.ones((2, 11))))
     monkeypatch.setattr(coupled, "paper_case_season_time_scales", lambda *a, **kw: SimpleNamespace(tau_longterm_max=1095.0))
-    for name in ("read_stomate_readstart_states_from_template", "read_driver_albedo_restart",
+    monkeypatch.setattr(entry, "read_stomate_readstart_states_from_template", lambda *a, **kw: SimpleNamespace(
+        entry_state=SimpleNamespace(thawed_humidity=np.zeros((2, 14)))))
+    for name in ("read_driver_albedo_restart",
                  "read_sechiba_static_restart", "read_diffuco_first_step_restart_state",
                  "read_enerbil_soil_thermal_state_restart", "read_thermosoil_restart_state",
                  "read_slowproc_restart_entry_state"):
@@ -332,18 +337,37 @@ def test_year_entry_updates_consumer_mirror_only_at_new_native_phase(
     source = sechiba_finalize_source_state_from_restart(SechibaRestartState(
         {**fixture.fields, "us": us, "vegstress": np.full((2, 14), MARKER)}, {}))
     mirror = {"us": us.copy(), "humrelv": _sum_source(us), "nroot": np.ones((2, 14, 11))}
+    stored_humidity = np.array([0.75, 0.125])
+    public_altmax = np.full((2, 14), 1.25)
     packet = orch.DriverPreviousStepStatePacket(tstep=17519,
-        fields_by_component={"sechiba_finalize_state": source, "hydrol_previous_step_state": mirror},
+        fields_by_component={
+            "sechiba_finalize_state": source,
+            "hydrol_previous_step_state": mirror,
+            "slowproc_stomate_previous_step_state": {
+                "thawed_humidity": stored_humidity,
+                "altmax": public_altmax,
+                "ok_leak_active_layer": object(),
+            },
+        },
         provenance_by_component={}, source_clock_runtime=previous_runtime)
     values = dict(config_path=CONFIG, run_def_path=run_def, run_def_values=parse_run_def(run_def),
         first_step_bundle=object(), reference_run_dir=None, source_clock_setup=setup, run_scalars=scalars,
+        first_step_restart_state=SimpleNamespace(sechiba_start=None), hydrol_tides=False,
+        hydrol_tide_run=None, diffuco_pft14_static_kwargs={}, watchout_initialize_main_tstep=None,
         runtime=SimpleNamespace(dt_stomate=86400.0, dt_sechiba=1800.0), dt_sechiba=1800.0)
+    if us_mode == "mixed":
+        values["run_def_values"].update(RESET_THAWED_HUMIDITY="TRUE", THAWED_HUMIDITY_INPUT="0.325")
     context = make_dataclass("TinyContext", [(name, object) for name in values])(**values)
     monkeypatch.setattr(orch, "source_clock_setup_from_config", lambda *a, **kw: setup)
     monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda state: ())
     monkeypatch.setattr(orch, "_require_source_day_alignment", lambda *a, **kw: None)
-    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", lambda *a, **kw: object())
-    monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda *a, **kw: object())
+    monkeypatch.setattr(
+        orch,
+        "_paper_1961_step_bundle_from_context",
+        lambda *a, **kw: SimpleNamespace(forcing=SimpleNamespace(is_watchout=False), domain=None),
+    )
+    monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda *a, **kw: SimpleNamespace(kjpindex=2))
+    monkeypatch.setattr(orch, "resolve_hydrol_initialization_refsoc_1d", lambda *a, **kw: None)
     monkeypatch.setattr(orch, "restart_thermosoil_initialization_supported", lambda context: False)
     expected = initialized if mode == "new_native_run" else us
     actual = hydrol.hydrol_init_us_state
@@ -362,15 +386,32 @@ def test_year_entry_updates_consumer_mirror_only_at_new_native_phase(
         payload = _consumer(namespace, None)
         np.testing.assert_array_equal(payload["us"], expected)
         np.testing.assert_array_equal(payload["humrelv"], _sum_source(expected))
-        return state
+        return orch.DriverRuntimeDayResult(
+            year=1962,
+            day_index=1,
+            start_tstep=0,
+            steps_per_stomate=48,
+            daily_modelout=object(),
+            day_end_state=state,
+            stopped_at_tstep=None,
+            missing_components=(),
+        )
 
     monkeypatch.setattr(orch, "paper_1961_driver_later_day_runtime_result", runtime)
     result = orch.paper_1961_driver_restart_year_start_day_result(CONFIG,
         previous_year_end_state=packet, prepared_context=context, year=1962, run_mode=mode)
-    np.testing.assert_array_equal(result.fields_by_component["sechiba_finalize_state"]["us"], expected)
+    assert result.ready_for_day_end_state
+    final_state = result.day_end_state
+    assert final_state is not None
+    np.testing.assert_array_equal(final_state.fields_by_component["sechiba_finalize_state"]["us"], expected)
     expected_stress = (_stress_source(expected, scalars.pref_soil_veg, source["vegstress"])
                        if mode == "new_native_run" else source["vegstress"])
-    np.testing.assert_array_equal(result.fields_by_component["sechiba_finalize_state"]["vegstress"], expected_stress)
+    np.testing.assert_array_equal(final_state.fields_by_component["sechiba_finalize_state"]["vegstress"], expected_stress)
+    slowproc = final_state.fields_by_component["slowproc_stomate_previous_step_state"]
+    np.testing.assert_array_equal(slowproc["altmax"], public_altmax)
+    assert ("ok_leak_active_layer" in slowproc) == (mode == "continuous")
+    expected_humidity = [0.325, 0.325] if mode == "new_native_run" and us_mode == "mixed" else stored_humidity
+    np.testing.assert_array_equal(slowproc["thawed_humidity"], expected_humidity)
     assert len(transitions) == (1 if mode == "new_native_run" else 0)
     np.testing.assert_array_equal(source["us"], us)
     np.testing.assert_array_equal(mirror["us"], us)

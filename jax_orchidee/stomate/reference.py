@@ -652,6 +652,7 @@ def stomate_cold_start_season_state(
     undef: float = -9999.0,
     gdd_crit_estab: float = 150.0,
     precip_crit: float = 100.0,
+    val_exp: float = 999999.0,
 ) -> StomateRestartSeasonState:
     """Return no-restart season-memory fallbacks from ``readstart``."""
 
@@ -659,7 +660,8 @@ def stomate_cold_start_season_state(
     if t2m.ndim != 1:
         raise ValueError("t2m must have shape (npts,)")
     npts = t2m.shape[0]
-    gdd_init_date = _zeros((npts, 2))
+    # stomate_io.f90:516-520 defaults the date and leaves the solar minimum at val_exp.
+    gdd_init_date = _full((npts, 2), val_exp)
     gdd_init_date[:, 0] = 365.0
     return StomateRestartSeasonState(
         dt_days_read=float(dt_days),

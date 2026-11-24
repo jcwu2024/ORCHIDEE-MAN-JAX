@@ -884,6 +884,7 @@ def read_stomate_readstart_states_from_template(
         undef=undef,
         gdd_crit_estab=gdd_crit_estab,
         precip_crit=precip_crit,
+        val_exp=val_exp,
     )._asdict()
     entry = stomate_cold_start_entry_state(
         t2m=t2m_array,
@@ -979,13 +980,10 @@ def read_stomate_readstart_states_from_template(
         overlay(daily, field, source_name)
 
     # readstart lines 516-520 default only column 1; column 2 remains val_exp.
-    gdd_fallback = np.full((t2m_array.size, 2), float(val_exp), dtype=np.float64)
-    gdd_fallback[:, 0] = 365.0
-    season["gdd_init_date"] = gdd_fallback
     if "gdd_init_date" in present:
         value, status = _resolve_readstart_value(
             read_restart_soil_layer_field(restart_path, "gdd_init_date"),
-            np.full_like(gdd_fallback, val_exp),
+            np.full_like(season["gdd_init_date"], val_exp),
             val_exp=val_exp,
         )
         value_array = np.asarray(value).copy()

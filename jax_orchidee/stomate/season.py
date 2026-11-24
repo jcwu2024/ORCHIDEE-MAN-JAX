@@ -278,7 +278,11 @@ def season_update_gdd_init_date(
     """Update ``gdd_init_date`` from the season midwinter solar diagnostic."""
 
     current = jnp.asarray(gdd_init_date)
-    solad = season_midwinter_solad(latitude, julian_diff, calendar_str=calendar_str)
+    latitude = jnp.asarray(latitude)
+    # The Fortran arguments and stored minimum are REAL(r_std). A float32
+    # geometry array must not lower the precision of the REAL64 season state.
+    dtype = jnp.result_type(current, latitude, 0.0)
+    solad = season_midwinter_solad(latitude.astype(dtype), julian_diff, calendar_str=calendar_str)
     return jnp.where(
         (solad < current[:, 1])[:, None],
         jnp.stack(

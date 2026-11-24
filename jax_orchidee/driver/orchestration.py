@@ -125,6 +125,7 @@ from jax_orchidee.driver.restart_state import (
     COLD_START_INITIAL_STATE_MODE,
     REFERENCE_CASE_INITIAL_STATE_MODE,
     ReferenceCaseFirstStepRestartState,
+    readstart_thawed_humidity_controls,
     reference_case_first_step_restart_state,
     restart_thermosoil_initial_fields,
     restart_thermosoil_initialization_supported,
@@ -298,7 +299,7 @@ from jax_orchidee.stomate.restart_io import (
     stomate_cold_start_gas_state,
     stomate_fixed_path_carry_state,
 )
-from jax_orchidee.stomate.soilcarbon_kernels import soilcarbon_leak_tf_doc_inputs
+from jax_orchidee.stomate.soilcarbon_kernels import AltCalcDocResult, altcalc_doc, soilcarbon_leak_tf_doc_inputs
 from jax_orchidee.stomate.soil_properties import bulk_density_source_update
 from jax_orchidee.stomate.season import (
     SeasonMemoryState,
@@ -1760,7 +1761,7 @@ LATER_DAY_STOMATE_ENTRY_STATE_OVERRIDES = (
 # and are replaced at the day-end boundary.
 STOMATE_HALF_HOUR_CARRY_FIELDS = (
     "veget", "veget_max", "lai", "frac_nobio", "height", "frac_age",
-    "assim_param", "altmax", "fpeat", "pft_present", "veget_lastlight",
+    "assim_param", "altmax", "ok_leak_active_layer", "fpeat", "pft_present", "veget_lastlight",
     "need_adjacent", "everywhere", "when_growthinit", "biomass", "leaf_frac",
     "leaf_age", "age", "sla_calc", "ind", "cn_ind", "co2_to_bm", "adapted",
     "regenerate", "npp_longterm", "turnover_daily", "bm_to_litter",
@@ -3178,6 +3179,10 @@ def rebase_driver_state_for_year_start(
         for component, fields in state.fields_by_component.items()
     }
     hydrol_fields = fields_by_component.get("hydrol_previous_step_state")
+    if run_mode == "new_native_run":
+        # soilcarbon_leak:1058-1060 reconstructs private ALT state on its
+        # first call from the public depth saved in the restart.
+        fields_by_component.get("slowproc_stomate_previous_step_state", {}).pop("ok_leak_active_layer", None)
     if hydrol_fields is not None and run_mode == "new_native_run":
         # Fortran hydrol_end writes `us` but not dynamic `nroot` to restart
         # (hydrol.f90 lines 1730 and 1727-1748). A new executable year
@@ -4076,6 +4081,8 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
             hydrol_module=scaffold.hydrol_module,
         )
     prior_slowproc = scaffold.enerbil.previous_state.fields_by_component["slowproc_stomate_previous_step_state"]
+    if "ok_leak_active_layer" in prior_slowproc:
+        fields["slowproc_stomate_previous_step_state"]["ok_leak_active_layer"] = prior_slowproc["ok_leak_active_layer"]
     for name in (
         "veget",
         "veget_max",
@@ -5418,6 +5425,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         nslm=len(cwrr_grid.znh),
         date=0,
     )
+    _, thawed_humidity_input = readstart_thawed_humidity_controls(run_def_values)
     stomate_cold_entry = stomate_cold_start_entry_state(
         t2m=payload.temp_air,
         nvm=nvm,
@@ -5427,6 +5435,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         dt_days=parse_run_def_float(run_def_values, "DT_STOMATE") / 86400.0,
         date=0,
         sla=parse_run_def_indexed_selection(run_def_values, "SLA", fortran_pft_ids),
+        thawed_humidity_input=thawed_humidity_input,
     )
     stomate_cold_gas = stomate_cold_start_gas_state(
         npts=payload.kjpindex, nvm=nvm,
@@ -9308,6 +9317,7 @@ class DriverCompiledOkLeakCarry(NamedTuple):
     doc: object
     interception_storage: object
     bulk_dens: object = None
+    active_layer: AltCalcDocResult | None = None
 
 
 class DriverCompiledOkLeakStepInputs(NamedTuple):
@@ -9390,6 +9400,9 @@ def _compiled_ok_leak_updates(carry: DriverCompiledOkLeakCarry) -> dict[str, obj
     values = carry._asdict()
     values["DOC"] = values.pop("doc")
     values.pop("bulk_dens")
+    active_layer = values.pop("active_layer")
+    if active_layer is not None:
+        values.update(altmax=active_layer.altmax, ok_leak_active_layer=active_layer)
     return values
 
 
@@ -9427,6 +9440,7 @@ def _paper_compiled_ok_leak_fold(
     sro_bottom: int = 5,
     retain_step_results: bool = False,
     capture_daily_transfers: bool = False,
+    active_layer_day_numbers=None,
 ):
     """Compile the 48 source-ordered half-hour OK_LEAK state transitions."""
 
@@ -9453,9 +9467,15 @@ def _paper_compiled_ok_leak_fold(
     layer_thickness = jnp.diff(jnp.asarray(z_soil)[: sro_bottom + 1])
     initial = initial._replace(bulk_dens=jnp.asarray(static_inputs["bulk_dens"]))
     prepared = jnp.asarray(static_inputs.get("bulk_dens_litter_prepared", False), dtype=bool)
+    day_numbers = (
+        jnp.ones(steps.tdeep.shape[0], dtype=jnp.int32)
+        if active_layer_day_numbers is None else jnp.asarray(active_layer_day_numbers)
+    )
 
-    def body(scan_carry, step: DriverCompiledOkLeakStepInputs):
+    def body(scan_carry, inputs):
         carry, litter_prepared = scan_carry
+        step, day_number = inputs
+        active_layer = carry.active_layer
         # C8: execute litter's shared density update before Moyano controls;
         # integration skips this already-prepared assignment, then applies
         # soilcarbon's separate source-ordered density update.
@@ -9554,15 +9574,24 @@ def _paper_compiled_ok_leak_fold(
             sro_bottom=sro_bottom,
             perma_peat=perma_peat,
         )
+        if active_layer is not None:
+            active_layer = altcalc_doc(
+                step.tdeep, zi_soil, active_layer.altmax, active_layer.altmax_ind,
+                active_layer.altmax_lastyear, active_layer.altmax_ind_lastyear,
+                static_inputs["veget_mask"], firstcall=False, dayno=day_number,
+            )
+            ok_args.update(altmax_ind=active_layer.altmax_ind, altmax_lastyear=active_layer.altmax_lastyear)
         result = stomate_ok_leak_explicit(
             **ok_args,
             capture_transfers=capture_daily_transfers,
         )
         updates = _paper_half_hour_ok_leak_state_updates(result)
-        next_carry = _compiled_ok_leak_carry_from_mapping(updates)._replace(bulk_dens=result.bulk_dens)
+        next_carry = _compiled_ok_leak_carry_from_mapping(updates)._replace(
+            bulk_dens=result.bulk_dens, active_layer=active_layer,
+        )
         return (next_carry, jnp.asarray(False)), result
 
-    (final_carry, _), outputs = jax.lax.scan(body, (initial, prepared), steps)
+    (final_carry, _), outputs = jax.lax.scan(body, (initial, prepared), (steps, day_numbers))
     selected_outputs = _select_compiled_ok_leak_scan_outputs(
         outputs,
         retain_step_results=retain_step_results,
@@ -9644,6 +9673,12 @@ def _paper_half_hour_ok_leak_fold_from_entries(
         raise ValueError(f"OK_LEAK half-hour fold is missing carried STOMATE state: {missing}")
 
     current = {name: state[name] for name in _OK_LEAK_HALF_HOUR_STATE_FIELDS}
+    active_layer = state.get("ok_leak_active_layer")
+    # soilcarbon_leak:1166-1172 passes (month-1)*30+day from each step.
+    active_layer_days = tuple(
+        (source.month - 1) * 30 + source.day if (source := entry.get("source_clock")) is not None else dayno
+        for entry in entry_payloads
+    )
     bulk_dens = _previous_state_component_fields(initial_state, "sechiba_finalize_state").get(
         "bulk_density", pre_step_boundary.ok_leak_inputs["bulk_dens"]
     )
@@ -9724,8 +9759,9 @@ def _paper_half_hour_ok_leak_fold_from_entries(
             active_layer_boundary={
                 "restart_altmax": state["altmax"],
                 "restart_fixed_cryoturbation_depth": state["fixed_cryoturbation_depth"],
-                "dayno": dayno,
-                "firstcall_soilcarbon": False,
+                "dayno": active_layer_days[step_index],
+                "firstcall_soilcarbon": active_layer is None,
+                "previous_state": active_layer,
             },
             soilwater_boundary={"sro_bottom": int(step_base_inputs.get("sro_bottom", 5))},
             permafrost_activity_boundary={
@@ -9798,8 +9834,16 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 if name not in _COMPILED_OK_LEAK_DYNAMIC_NAMES
                 and name not in {"nslm", "ndeep", "sro_bottom"}
             }
+            if active_layer is None:
+                initial_depth = jnp.asarray(state["altmax"])
+                zero_ind = jnp.zeros(initial_depth.shape, dtype=int)
+                active_layer = altcalc_doc(
+                    series.tdeep[0], ok_args["zi_soil"], initial_depth, zero_ind,
+                    jnp.zeros_like(initial_depth), zero_ind,
+                    ok_args["veget_mask"], firstcall=True,
+                )
             final_carry, last_result, daily_transfers = _paper_compiled_ok_leak_fold_jit(
-                initial=_compiled_ok_leak_carry_from_mapping(current),
+                initial=_compiled_ok_leak_carry_from_mapping(current)._replace(active_layer=active_layer),
                 steps=series,
                 static_inputs=static_inputs,
                 turnover_daily=state["turnover_daily"],
@@ -9826,6 +9870,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 perma_peat=parse_run_def_bool(run_def_values["PERMA_PEAT"]),
                 conc_doc_rain=parse_run_def_float(run_def_values, "CONC_DOC_RAIN"),
                 capture_daily_transfers=capture_daily_transfers,
+                active_layer_day_numbers=jnp.stack(active_layer_days),
             )
             updates = _compiled_ok_leak_updates(final_carry)
             if capture_compiled_driver_steps and capture_daily_transfers:
@@ -9837,11 +9882,12 @@ def _paper_half_hour_ok_leak_fold_from_entries(
             return last_result, updates
         last_result = stomate_ok_leak_explicit(**ok_args)
         bulk_dens = last_result.bulk_dens
+        active_layer = AltCalcDocResult(**same_step.active_layer.state_updates)
         current = _paper_half_hour_ok_leak_state_updates(last_result)
 
     if last_result is None:
         raise RuntimeError("OK_LEAK half-hour fold did not execute")
-    return last_result, current
+    return last_result, {**current, "altmax": active_layer.altmax, "ok_leak_active_layer": active_layer}
 
 
 PAPER_DAY_ZERO_DAILY_RESET_FIELDS = (
@@ -10003,7 +10049,7 @@ STOMATE_DAY_END_EXPLICIT_WRITEBACK_FIELDS = (
     "fuel_1000hr", "lignin_struc_above", "lignin_struc_below", "carbon_32l",
     "DOC", "interception_storage", "carb_mass_total", "lai", "frac_nobio",
     "veget_max", "veget", "soiltile", "totfrac_nobio", "tot_bare_soil",
-    "altmax", "fixed_cryoturbation_depth", "assim_param", "temp_growth",
+    "altmax", "ok_leak_active_layer", "fixed_cryoturbation_depth", "assim_param", "temp_growth",
     "fpeat", "soilc_total", "thawed_humidity", "depth_organic_soil",
     "dt_days_read", "resp_hetero", "tsurf_year", "deepC_peat",
     "depth_deepsoil", "t2m_14",
@@ -10189,6 +10235,9 @@ def _paper_day_first_stomate_state_packet(
                 fields[name] = previous_slowproc[name]
         if "gdd_init_date" in previous_slowproc and "gdd_init_date" not in fields:
             fields["gdd_init_date"] = previous_slowproc["gdd_init_date"]
+        active_layer = previous_slowproc.get("ok_leak_active_layer")
+        if active_layer is not None:
+            fields.update(altmax=active_layer.altmax, ok_leak_active_layer=active_layer)
     else:
         previous_slowproc = {}
 
@@ -10258,6 +10307,7 @@ def _paper_day_first_stomate_state_packet(
             "interception_storage",
             "bulk_density",
             "altmax",
+            "ok_leak_active_layer",
             "fixed_cryoturbation_depth",
         }:
             provenance_by_field[name] = ok_leak_prov
@@ -10647,7 +10697,9 @@ def paper_1961_driver_day_scaffold(
                 )
                 updated_restart_state = replace(
                     first.first_step_restart_state,
-                    stomate=first.first_step_restart_state.stomate._replace(**half_hour_updates),
+                    stomate=first.first_step_restart_state.stomate._replace(
+                        **{name: value for name, value in half_hour_updates.items() if name != "ok_leak_active_layer"}
+                    ),
                 )
                 stomate_bundle_source, stomate_bundles = _paper_first_step_stomate_restart_input_bundles(
                     config_path=config_path,
@@ -12839,6 +12891,12 @@ def paper_1961_driver_restart_year_start_day_result(
             njsc_class_count=3 if context.run_def_values.get("SOILTYPE_CLASSIF", "usda").lower() == "fao" else 12,
         )
     if run_mode == "new_native_run":
+        reset_thawed_humidity, thawed_humidity_input = readstart_thawed_humidity_controls(context.run_def_values)
+        if reset_thawed_humidity:
+            slowproc = rebased.fields_by_component["slowproc_stomate_previous_step_state"]
+            slowproc["thawed_humidity"] = jnp.full_like(
+                jnp.asarray(slowproc["thawed_humidity"]), thawed_humidity_input,
+            )
         # Job0_bio315-322 starts another executable. dim2_driver1111 and
         # intersurf377 call sechiba_initialize again; HYDROL3039-3058 applies
         # this transition once before the first main call. A complete packet
@@ -13522,7 +13580,9 @@ def paper_1961_driver_cold_start_day_scaffold(
                 is_peat=run_scalars.is_peat,
                 dayno=1,
             )
-            updated_entry_state = cold_entry_state._replace(**half_hour_updates)
+            updated_entry_state = cold_entry_state._replace(
+                **{name: value for name, value in half_hour_updates.items() if name != "ok_leak_active_layer"}
+            )
             initial_slowproc = stomate_half_hour_initial_state.fields_by_component["slowproc_stomate_previous_step_state"]
             stomate_bundles = stomate_restart_input_bundles(
                 state=updated_entry_state,

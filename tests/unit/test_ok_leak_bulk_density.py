@@ -187,7 +187,8 @@ def test_compiled_scan_body_shares_one_litter_prepared_density(monkeypatch, dens
         bulk_dens: object
 
     args = adapter_inputs(np.array([density]))
-    state = {name: args[name] for name in driver.DriverCompiledOkLeakCarry._fields if name != "bulk_dens"}
+    state = {name: args[name] for name in driver.DriverCompiledOkLeakCarry._fields
+             if name not in {"bulk_dens", "active_layer"}}
     initial = driver.DriverCompiledOkLeakCarry(**state)
     payload = {name: args[name] for name in (
         "soil_mc", "wat_flux", "runoff_per_soil", "drainage_per_soil", "runoff2peat", "canopy2ground",

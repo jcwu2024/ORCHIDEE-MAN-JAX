@@ -86,6 +86,7 @@ from jax_orchidee.stomate.season import (
     season_update_gdd_init_date,
 )
 from jax_orchidee.stomate.soilcarbon_kernels import (
+    AltCalcDocResult,
     altcalc_doc,
     soilcarbon_leak_tf_doc_inputs,
     soilcarbon_perma_peat_cmax,
@@ -1157,6 +1158,7 @@ def stomate_active_layer_ok_leak_inputs(
     firstcall_soilcarbon: bool,
     newaltcalc: bool = False,
     soilc_isspinup: bool = False,
+    previous_state: AltCalcDocResult | None = None,
     npts: int | None = None,
     nvm: int | None = None,
 ) -> StomateActiveLayerOkLeakInputs:
@@ -1164,8 +1166,11 @@ def stomate_active_layer_ok_leak_inputs(
 
     For a first soilcarbon call, Fortran initializes ``altmax_ind`` and
     ``altmax_lastyear`` from restart ``altmax`` before the ordinary per-step
-    ``altcalc_DOC`` update. ``veget_mask_2d`` is currently initialized as all
-    true in the source, so this helper mirrors that exact mask.
+    ``altcalc_DOC`` update. During the same run, pass the previous half-hour's
+    ``state_updates`` as an ``AltCalcDocResult`` to carry the maximum depth
+    and layer index for the current and previous year. A standalone component
+    call can use the restart depth alone. The source uses an all-true
+    ``veget_mask_2d`` for this path.
     """
 
     tprof_arr = jnp.asarray(tprof, dtype=jnp.float64)
@@ -1204,6 +1209,16 @@ def stomate_active_layer_ok_leak_inputs(
         altmax_ind = initialized.altmax_ind
         altmax_lastyear = initialized.altmax_lastyear
         altmax_ind_lastyear = initialized.altmax_ind_lastyear
+    elif previous_state is not None:
+        altmax = previous_state.altmax
+        altmax_ind = previous_state.altmax_ind
+        altmax_lastyear = previous_state.altmax_lastyear
+        altmax_ind_lastyear = previous_state.altmax_ind_lastyear
+        if any(
+            jnp.shape(value) != altmax_arr.shape
+            for value in (altmax, altmax_ind, altmax_lastyear, altmax_ind_lastyear)
+        ):
+            raise ValueError("previous active-layer maxima and indices must have shape (npts, nvm)")
     else:
         altmax = altmax_arr
         altmax_ind = zero_ind

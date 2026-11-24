@@ -127,12 +127,14 @@ def test_actual_file_first_thermal_entry_receives_optional_refsoc_before_main(mo
 
     def thermal(source, **kwargs):
         np.testing.assert_array_equal(source["refSOC_1d"], [.37])
+        np.testing.assert_array_equal(kwargs["payload"].bulk_dens, restart.sechiba_restart_state.fields["bulk_dens"])
         observed.append(source)
         return {"phase_witness": np.array([71.])}
 
     monkeypatch.setattr(o, "paper_case_vertical_grids_from_used_run_def", lambda *a: ((), (), ()))
     monkeypatch.setattr(o, "paper_case_cwrr_vertical_soil_grid_from_used_run_def", lambda *a: NS())
-    monkeypatch.setattr(o, "build_intersurf_first_step_payload", lambda *a, **kw: NS(kjpindex=1))
+    payload_type = make_dataclass("ThermalEntryPayload", [("kjpindex", int), ("bulk_dens", np.ndarray)])
+    monkeypatch.setattr(o, "build_intersurf_first_step_payload", lambda *a, **kw: payload_type(1, np.array([1.65])))
     monkeypatch.setattr(o, "restart_thermosoil_initialization_supported", lambda context: True)
     monkeypatch.setattr(o, "restart_thermosoil_initial_fields", thermal)
     owner = _function("paper_1961_driver_timestep_scaffold")
@@ -152,6 +154,32 @@ def test_actual_file_first_thermal_entry_receives_optional_refsoc_before_main(mo
 
 class _InitializationBoundaryReached(Exception):
     pass
+
+
+@pytest.mark.parametrize(
+    "controls,expected",
+    [
+        ({"reset_thawed_humidity": ".TRUE.", "thawed_humidity_input": "3.25D-1"}, 0.325),
+        ({"RESET_THAWED_HUMIDITY": "TRUE"}, 0.5),
+        ({"RESET_THAWED_HUMIDITY": "FALSE", "THAWED_HUMIDITY_INPUT": "unused"}, 0.5),
+        ({}, 0.5),
+    ],
+)
+def test_actual_cold_stomate_entry_obeys_thawed_humidity_reset(controls, expected):
+    owner = _function("paper_1961_driver_cold_start_first_step_coverage")
+    for index, node in enumerate(owner.body):
+        if isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "stomate_cold_daily":
+            start = index
+        if isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "stomate_cold_gas":
+            stop = index
+            break
+    values = {"DT_STOMATE": "86400", "SLA__00001": ".02", "SLA__00014": ".03", **controls}
+    environment = {
+        **vars(o), "run_def_values": values, "payload": NS(temp_air=np.array([286.])),
+        "nvm": 2, "cwrr_grid": NS(znh=np.ones(11)), "fortran_pft_ids": (1, 14),
+    }
+    _execute(owner.body[start:stop], environment)
+    np.testing.assert_array_equal(environment["stomate_cold_entry"].thawed_humidity, [expected])
 
 
 def _hydro_restart_case(*, depth_on_context=True):
