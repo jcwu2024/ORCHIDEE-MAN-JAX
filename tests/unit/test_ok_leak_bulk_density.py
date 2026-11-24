@@ -97,6 +97,7 @@ def test_raw_producer_to_real_adapter_matches_two_source_density_updates(density
     result = stomate_ok_leak_explicit(**args)
     expected = source_adsorbed(source_density(float(raw[0]), 2), args["z_soil"])
     np.testing.assert_allclose(np.asarray(result.soilcarbon.doc)[0, 1, :, 1, 0, 0], expected, rtol=1e-12, atol=1e-14)
+    np.testing.assert_array_equal(result.bulk_dens, [source_density(float(raw[0]), 2)])
     np.testing.assert_array_equal(args["bulk_dens"], raw)
 
 
@@ -183,9 +184,10 @@ def test_compiled_scan_body_shares_one_litter_prepared_density(monkeypatch, dens
         control_density: object
         core_density: object
         marker: object
+        bulk_dens: object
 
     args = adapter_inputs(np.array([density]))
-    state = {name: args[name] for name in driver.DriverCompiledOkLeakCarry._fields}
+    state = {name: args[name] for name in driver.DriverCompiledOkLeakCarry._fields if name != "bulk_dens"}
     initial = driver.DriverCompiledOkLeakCarry(**state)
     payload = {name: args[name] for name in (
         "soil_mc", "wat_flux", "runoff_per_soil", "drainage_per_soil", "runoff2peat", "canopy2ground",
@@ -204,8 +206,11 @@ def test_compiled_scan_body_shares_one_litter_prepared_density(monkeypatch, dens
     monkeypatch.setattr(driver, "stomate_permafrost_decomposition_controls", lambda *_a, **_k:
                         SimpleNamespace(prmfrst_soilc_tempctrl=jnp.ones((1, 5, 2)),
                                         prmfrst_soilc_tempctrl_doc=jnp.ones((1, 5, 2))))
+    from jax_orchidee.stomate.soil_properties import bulk_density_source_update
+
     monkeypatch.setattr(driver, "stomate_ok_leak_explicit", lambda **a:
-                        Probe(a["control_moist_above"], a["bulk_dens"], jnp.asarray(a["bulk_dens_litter_prepared"])))
+                        Probe(a["control_moist_above"], a["bulk_dens"], jnp.asarray(a["bulk_dens_litter_prepared"]),
+                              bulk_density_source_update(a["bulk_dens"])))
     monkeypatch.setattr(driver, "_paper_half_hour_ok_leak_state_updates", lambda _result: state)
     static = dict(z_soil=args["z_soil"], zi_soil=np.arange(5) + .5,
                   poor_soils=args["poor_soils"], flood_frac=args["flood_frac"],

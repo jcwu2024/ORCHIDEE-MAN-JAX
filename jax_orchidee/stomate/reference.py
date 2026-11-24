@@ -44,6 +44,10 @@ from jax_orchidee.stomate.modelout import MODEL_OUTPUT_FIELD_NAMES, PAPER_MODEL_
 from jax_orchidee.stomate.soilcarbon_kernels import NDOC
 
 
+# stomate_io.f90::readstart, lines 425 and 1201-1213.
+DEFAULT_THAWED_HUMIDITY = 0.5
+
+
 REFERENCE_RUN_PATTERN = (
     "reference/case_001_071/OUT/orc_calibrate_250919_sen/arg2_1.0/"
     "001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658"
@@ -710,7 +714,7 @@ def stomate_cold_start_entry_state(
     dt_days: float = 1.0,
     date: int = 0,
     sla=None,
-    thawed_humidity_input: float = 1.0e20,
+    thawed_humidity_input: float = DEFAULT_THAWED_HUMIDITY,
     large_value: float = 1.0e33,
 ) -> StomateRestartEntryState:
     """Return no-restart STOMATE entry state fallbacks from ``readstart``.
@@ -1524,12 +1528,13 @@ def read_stomate_restart_entry_state(
     *,
     source_pft_layout: PFTRunLayout | None = None,
     target_pft_layout: PFTRunLayout | None = None,
+    allow_missing_thawed_humidity: bool = False,
 ) -> StomateRestartEntryState:
     """Read restart fields needed at the ``slowproc_main -> stomate_main`` edge.
 
-    This is a restart/state boundary reader, not a process implementation.
-    It only normalizes variables explicitly present in the restart file to the
-    Fortran axes used by ``stomate_main``. Fortran provenance: restart reads in
+    The reference reader requires variables to be present by default. The
+    driver may allow an absent thawed humidity on the way to readstart.
+    Fortran provenance: restart reads in
     ``src_stomate/stomate_io.f90::readstart`` lines 919-940, 1201-1225,
     1227-1232, 1466-1471, and 1512-1563; the corresponding ``stomate_main`` call is
     ``src_sechiba/slowproc.f90`` lines 973-1013.
@@ -1543,6 +1548,12 @@ def read_stomate_restart_entry_state(
     deepC_a = read_restart_deep_carbon_pool(path, "deepC_a")
     deepC_s = read_restart_deep_carbon_pool(path, "deepC_s")
     deepC_p = read_restart_deep_carbon_pool(path, "deepC_p")
+    try:
+        thawed_humidity = read_restart_grid_field(path, "thawed_humidity")
+    except KeyError:
+        if not allow_missing_thawed_humidity:
+            raise
+        thawed_humidity = np.full(deepC_a.shape[0], DEFAULT_THAWED_HUMIDITY)
 
     state = StomateRestartEntryState(
         biomass=read_restart_biomass_carbon(path),
@@ -1603,7 +1614,7 @@ def read_stomate_restart_entry_state(
         deepC_s=deepC_s,
         deepC_p=deepC_p,
         soilc_total=deepC_a + deepC_s + deepC_p,
-        thawed_humidity=read_restart_grid_field(path, "thawed_humidity"),
+        thawed_humidity=thawed_humidity,
         depth_organic_soil=read_restart_grid_field(path, "depth_organic_soil"),
     )
     return _maybe_remap_stomate_state(

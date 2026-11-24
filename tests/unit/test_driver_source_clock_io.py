@@ -137,6 +137,93 @@ def test_forcing_timestep_axis_precedes_physical_axis_and_owns_its_origin(tmp_pa
     assert metadata.origin_ymds == (1962, 1, 1, 0.0)
 
 
+def test_forcing_uses_last_seconds_coordinate_in_netcdf_order(tmp_path: Path):
+    path = tmp_path / "forcing.nc"
+    with Dataset(path, "w") as dataset:
+        dataset.createDimension("tstep", 8)
+        # The variable name does not determine precedence.
+        for name, offset in (("timeplussix", 0), ("time", 21600)):
+            coordinate = dataset.createVariable(name, "f8", ("tstep",))
+            coordinate.units = f"seconds since {_origin()}"
+            coordinate.calendar = "noleap"
+            coordinate[:] = offset + np.arange(8) * 21600
+
+    setup = source_clock_from_inputs(path, dt_sechiba=1800, run_id="cold", time_length="2D")
+
+    assert setup.forcing.selected_axis == "time"
+    assert setup.forcing.first_axis_value == 21600
+    assert setup.forcing.dt_force == 21600
+    assert setup.forcing.count == 8
+    assert setup.forcing.origin_ymds == (1961, 1, 1, 0.0)
+    assert setup.binding.date0 == IOIPSLCalendar("noleap").ymds2ju(1961, 1, 1, 0)
+    assert setup.binding.clock_at_istp(1).second == 1800
+    assert setup.time_control.itau_fin == 8
+
+
+def test_forcing_last_timestep_coordinate_uses_last_seconds_calendar(tmp_path: Path):
+    path = _write_forcing(tmp_path / "forcing.nc", calendar="gregorian", steps_calendar="gregorian",
+                          timestep_axis=True)
+    with Dataset(path, "a") as dataset:
+        steps = dataset.createVariable("driver_index", "i4", ("time",))
+        steps.units = f"timesteps since {_origin(year=1963)}"
+        steps.tstep_sec = 3600.0
+        steps[:] = 12 + np.arange(8)
+        physical = dataset.createVariable("time_shifted", "f8", ("time",))
+        physical.units = f"seconds since {_origin(year=1981)}"
+        physical.calendar = "noleap"
+        physical[:] = 21600 + np.arange(8) * 7200
+
+    metadata = read_forcing_clock_metadata(path)
+
+    assert metadata.selected_axis == "driver_index"
+    assert metadata.calendar == "noleap"
+    assert metadata.origin_ymds == (1963, 1, 1, 0.0)
+    assert metadata.date0 == IOIPSLCalendar("noleap").ymds2ju(1963, 1, 1, 0)
+    assert metadata.first_axis_value == 12
+    assert metadata.dt_force == 3600
+
+
+def test_forcing_rejects_malformed_selected_seconds_coordinate(tmp_path: Path):
+    path = _write_forcing(tmp_path / "forcing.nc")
+    with Dataset(path, "a") as dataset:
+        physical = dataset.createVariable("time_shifted", "f8", ("time",))
+        physical.units = f"seconds since {_origin()}"
+        physical.calendar = "noleap"
+        physical[:] = np.arange(8) ** 2 * 7200
+
+    with pytest.raises(SourceClockError, match="forcing time axis is not regular"):
+        read_forcing_clock_metadata(path)
+
+
+@pytest.mark.parametrize("units", ("legacy", "timesteps since 1961-01-01 00:00:00"))
+def test_forcing_cold_entry_requires_seconds_coordinate_calendar(tmp_path: Path, units: str):
+    path = tmp_path / "forcing.nc"
+    with Dataset(path, "w") as dataset:
+        dataset.createDimension("time", 8)
+        coordinate = dataset.createVariable("tstep", "i4", ("time",))
+        coordinate.units = units
+        coordinate.calendar = "noleap"
+        coordinate.tstep_sec = 7200
+        coordinate[:] = np.arange(8)
+
+    with pytest.raises(SourceClockError, match="requires a seconds-since time axis"):
+        read_forcing_clock_metadata(path)
+
+
+@pytest.mark.parametrize("duplicate_axis", ("time", "time_steps"))
+def test_restart_rejects_duplicate_axis_even_in_netcdf_order(tmp_path: Path, duplicate_axis: str):
+    runtime = SourceClockRuntime(_binding(), np.int64(4), np.int64(0), np.int64(1))
+    path = _write_restart(tmp_path / "restart.nc", runtime)
+    with Dataset(path, "a") as dataset:
+        original = dataset.variables[duplicate_axis]
+        duplicate = dataset.createVariable("duplicate", original.dtype, ("time",))
+        duplicate.setncatts({name: original.getncattr(name) for name in original.ncattrs()})
+        duplicate[:] = original[:]
+
+    with pytest.raises(SourceClockError, match="missing/ambiguous physical time axis or multiple time_steps axes"):
+        read_restart_clock_metadata(path)
+
+
 def test_declared_config_factory_reads_actual_forcing_and_cold_restart_controls(tmp_path: Path, monkeypatch):
     # The deliberately different filename year selects a file, never its date.
     forcing = _write_forcing(tmp_path / "forcing-2099.nc", timestep_axis=True, count=32)

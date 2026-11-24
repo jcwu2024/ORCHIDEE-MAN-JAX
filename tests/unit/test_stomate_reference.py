@@ -337,7 +337,7 @@ def test_stomate_cold_start_readstart_fallbacks_match_fortran_defaults():
     np.testing.assert_allclose(entry.turnover_time, 100.0)
     np.testing.assert_allclose(entry.rip_time, 1.0e33)
     assert np.asarray(entry.need_adjacent).dtype == np.bool_
-    np.testing.assert_allclose(entry.thawed_humidity, 1.0e20)
+    np.testing.assert_array_equal(entry.thawed_humidity, [0.5])
     assert any("stomate_io.f90::readstart lines 501-637" in item for item in daily.provenance)
 
 

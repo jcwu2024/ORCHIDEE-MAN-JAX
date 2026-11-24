@@ -223,6 +223,7 @@ from jax_orchidee.sechiba.slowproc import (
     slowproc_fire_disabled_entry_state,
     slowproc_init_pft14_explicit,
     slowproc_no_lcc_entry_state,
+    slowproc_restart_soil_missing,
     slowproc_static_entry_state,
     slowproc_surface_update_explicit,
     slowproc_thermosoil_entry_init_state,
@@ -4005,6 +4006,9 @@ def driver_previous_step_state_from_timestep_scaffold(
         initial_finalize = sechiba_finalize_source_state_from_restart(
             scaffold.first_step_restart_state.sechiba_restart_state
         )
+        bulk_dens = getattr(scaffold.payload, "bulk_dens", None)
+        if bulk_dens is not None:
+            initial_finalize["bulk_density"] = bulk_dens
         # hydrol_initialize:625-636 reads this restart field only when its
         # source switch is active. A stale field in an older input file is
         # not live state after a disabled initialization.
@@ -7801,6 +7805,10 @@ def paper_1961_driver_timestep_scaffold(
             driver_z0_for_wind=first_step_restart_state.driver_albedo.z0,
             dt_sechiba=runtime.dt_sechiba,
         )
+        soil = first_step_restart_state.sechiba_restart_state.fields
+        soil_keys = ("njsc", "clay_frac", "sand_frac", "bulk_dens", "soil_ph")
+        if not slowproc_restart_soil_missing(*(soil.get(name) for name in soil_keys)):
+            payload = replace(payload, bulk_dens=soil["bulk_dens"])
         # sechiba_initialize calls ENERBIL and HYDROL initialization before
         # THERMOSOIL initialization (640-643, 666-729). Rebuild the latter's
         # nonpersisted memory from the restored pre-main state, before any
@@ -8994,6 +9002,9 @@ def _paper_ok_leak_boundary_from_sources(
         return None, tuple(gaps)
 
     frozen_respiration_func = parse_run_def_int(run_def_values, "frozen_respiration_func")
+    bulk_dens = _previous_state_component_fields(previous_state, "sechiba_finalize_state").get(
+        "bulk_density", base.ok_leak_inputs.get("bulk_dens")
+    )
     adapter = _paper_ok_leak_sechiba_adapter(
         hydrol=hydrol,
         therm=therm,
@@ -9015,6 +9026,7 @@ def _paper_ok_leak_boundary_from_sources(
             "pref_soil_veg": pref_soil_veg,
             "frozen_respiration_func": frozen_respiration_func,
             "moist_func_moyano": parse_run_def_bool(run_def_values["MOIST_FUNC_MOYANO"]),
+            "bulk_dens": bulk_dens,
         },
         tf_doc_boundary={
             "ok_tf_doc": parse_run_def_bool(run_def_values["TF_DOC"]),
@@ -9295,6 +9307,7 @@ class DriverCompiledOkLeakCarry(NamedTuple):
     carbon_32l: object
     doc: object
     interception_storage: object
+    bulk_dens: object = None
 
 
 class DriverCompiledOkLeakStepInputs(NamedTuple):
@@ -9376,6 +9389,7 @@ def _compiled_ok_leak_carry_from_mapping(values: Mapping[str, object]) -> Driver
 def _compiled_ok_leak_updates(carry: DriverCompiledOkLeakCarry) -> dict[str, object]:
     values = carry._asdict()
     values["DOC"] = values.pop("doc")
+    values.pop("bulk_dens")
     return values
 
 
@@ -9437,14 +9451,18 @@ def _paper_compiled_ok_leak_fold(
     }
 
     layer_thickness = jnp.diff(jnp.asarray(z_soil)[: sro_bottom + 1])
-    def body(carry: DriverCompiledOkLeakCarry, step: DriverCompiledOkLeakStepInputs):
+    initial = initial._replace(bulk_dens=jnp.asarray(static_inputs["bulk_dens"]))
+    prepared = jnp.asarray(static_inputs.get("bulk_dens_litter_prepared", False), dtype=bool)
+
+    def body(scan_carry, step: DriverCompiledOkLeakStepInputs):
+        carry, litter_prepared = scan_carry
         # C8: execute litter's shared density update before Moyano controls;
         # integration skips this already-prepared assignment, then applies
         # soilcarbon's separate source-ordered density update.
         litter_bulk_dens = jnp.where(
-            jnp.asarray(static_inputs.get("bulk_dens_litter_prepared", False), dtype=bool),
-            jnp.asarray(static_inputs["bulk_dens"]),
-            bulk_density_source_update(static_inputs["bulk_dens"]),
+            litter_prepared,
+            carry.bulk_dens,
+            bulk_density_source_update(carry.bulk_dens),
         )
         controls = littercalc_aboveground_controls(
             step.temp_sol,
@@ -9541,10 +9559,10 @@ def _paper_compiled_ok_leak_fold(
             capture_transfers=capture_daily_transfers,
         )
         updates = _paper_half_hour_ok_leak_state_updates(result)
-        next_carry = _compiled_ok_leak_carry_from_mapping(updates)
-        return next_carry, result
+        next_carry = _compiled_ok_leak_carry_from_mapping(updates)._replace(bulk_dens=result.bulk_dens)
+        return (next_carry, jnp.asarray(False)), result
 
-    final_carry, outputs = jax.lax.scan(body, initial, steps)
+    (final_carry, _), outputs = jax.lax.scan(body, (initial, prepared), steps)
     selected_outputs = _select_compiled_ok_leak_scan_outputs(
         outputs,
         retain_step_results=retain_step_results,
@@ -9626,6 +9644,9 @@ def _paper_half_hour_ok_leak_fold_from_entries(
         raise ValueError(f"OK_LEAK half-hour fold is missing carried STOMATE state: {missing}")
 
     current = {name: state[name] for name in _OK_LEAK_HALF_HOUR_STATE_FIELDS}
+    bulk_dens = _previous_state_component_fields(initial_state, "sechiba_finalize_state").get(
+        "bulk_density", pre_step_boundary.ok_leak_inputs["bulk_dens"]
+    )
     last_result = None
     maintenance_items = (
         tuple(maintenance_step_results)
@@ -9641,6 +9662,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
             else maintenance_resp_parts[step_index]
         )
         step_base_inputs = dict(pre_step_boundary.ok_leak_inputs)
+        step_base_inputs["bulk_dens"] = bulk_dens
         step_base_inputs.update(
             {("doc" if name == "DOC" else name): value for name, value in current.items()}
         )
@@ -9814,6 +9836,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 return last_result, updates, daily_transfers
             return last_result, updates
         last_result = stomate_ok_leak_explicit(**ok_args)
+        bulk_dens = last_result.bulk_dens
         current = _paper_half_hour_ok_leak_state_updates(last_result)
 
     if last_result is None:
@@ -10184,6 +10207,8 @@ def _paper_day_first_stomate_state_packet(
     dynamic_temp_growth = _paper_day_temp_growth_from_season_fields(season_memory_fields)
     if dynamic_temp_growth is not None:
         fields["temp_growth"] = dynamic_temp_growth
+    if ok_leak.ok_leak.bulk_dens is not None:
+        fields["bulk_density"] = ok_leak.ok_leak.bulk_dens
     if slowproc_surface_update is not None:
         fields.update(
             {
@@ -10231,6 +10256,7 @@ def _paper_day_first_stomate_state_packet(
             "carbon_32l",
             "DOC",
             "interception_storage",
+            "bulk_density",
             "altmax",
             "fixed_cryoturbation_depth",
         }:
@@ -10352,8 +10378,11 @@ def _paper_day_end_state_packet(
                 fields.setdefault("diffuco_previous_step_state", {})[name] = value
     slowproc.update(calendar_owned)
     if "sechiba_finalize_state" in fields:
+        slowproc_finalize = dict(slowproc)
+        if "bulk_density" in stomate_state.fields:
+            slowproc_finalize["bulk_density"] = stomate_state.fields["bulk_density"]
         fields["sechiba_finalize_state"] = _sechiba_finalize_state_after_slowproc(
-            fields["sechiba_finalize_state"], slowproc
+            fields["sechiba_finalize_state"], slowproc_finalize
         )
     provenance["slowproc_stomate_previous_step_state"] = tuple(
         dict.fromkeys(

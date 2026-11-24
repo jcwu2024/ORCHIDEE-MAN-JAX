@@ -1638,6 +1638,26 @@ def slowproc_cold_start_vegetation_entry_state(
     )
 
 
+def slowproc_restart_soil_missing(
+    njsc, clay, sand, bulk_dens, soil_ph, *, val_exp=VAL_EXP, undef_int=999999999,
+) -> bool:
+    """Test the whole-array sentinels for the joint SLOWPROC soil reread.
+
+    slowproc.f90:1656-1664 normalizes a missing njsc to undef_int. At
+    2174-2193 a missing member triggers a reread of the whole soil group.
+    A mixed array of physical values and sentinels does not trigger it.
+    """
+    return (
+        njsc is None
+        or bool(np.all(np.asarray(njsc) == val_exp))
+        or bool(np.all(np.asarray(njsc) == undef_int))
+        or any(
+            field is None or bool(np.all(np.asarray(field) == val_exp))
+            for field in (clay, sand, bulk_dens, soil_ph)
+        )
+    )
+
+
 def slowproc_init_pft14_explicit(
     *,
     restart: Mapping[str, object],
@@ -1846,12 +1866,9 @@ def slowproc_init_pft14_explicit(
     bulk_restart = restart_array("bulk_dens", (npts,))
     ph_restart = restart_array("soil_ph", (npts,))
     poor_restart = restart_array("poor_soils", (npts,))
-    soil_missing = (
-        is_all(njsc_restart, undef_int)
-        or is_all(clay_restart, val_exp)
-        or is_all(sand_restart, val_exp)
-        or is_all(bulk_restart, val_exp)
-        or is_all(ph_restart, val_exp)
+    soil_missing = slowproc_restart_soil_missing(
+        njsc_restart, clay_restart, sand_restart, bulk_restart, ph_restart,
+        val_exp=val_exp, undef_int=undef_int,
     )
     if soil_missing:
         if soil_boundary is None:

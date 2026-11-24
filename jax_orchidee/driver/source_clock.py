@@ -253,7 +253,25 @@ def _axis_origin(attrs: Mapping, prefix: str, provider: IOIPSLCalendar) -> tuple
     return units, date, provider.ymds2ju(*date)
 
 
-def _axes(dataset):
+def _forcing_axes(dataset):
+    # flincom.f90::flinopen_work 592–605 keeps the last match in each
+    # unit class in NetCDF variable order. The seconds axis owns calendar
+    # metadata even when a timestep axis supplies the selected chronology.
+    physical = steps = None
+    for name, variable in dataset.variables.items():
+        units = str(_attrs(variable).get("units", ""))
+        if "seconds since" in units:
+            physical = (name, variable)
+        if "timesteps since" in units:
+            steps = (name, variable)
+    if physical is None:
+        # The legacy name/global-attribute route at 653–665 relies on a
+        # pre-existing IOIPSL calendar. The declared cold entry needs one.
+        raise SourceClockError("forcing clock requires a seconds-since time axis to declare its calendar")
+    return physical, steps
+
+
+def _restart_axes(dataset):
     physical, steps = [], []
     for name, variable in dataset.variables.items():
         units = str(_attrs(variable).get("units", ""))
@@ -286,7 +304,8 @@ def read_forcing_clock_metadata(source) -> ForcingClockMetadata:
     readdim2 forcing_info115-121 derives spacing, not a replacement origin.
     """
     with _dataset(source) as ds:
-        (_, physical), step_axis = _axes(ds)
+        physical_axis, step_axis = _forcing_axes(ds)
+        name, physical = physical_axis
         attrs = _attrs(physical)
         if "calendar" not in attrs:
             raise SourceClockError("forcing time variable is missing calendar")
@@ -303,9 +322,8 @@ def read_forcing_clock_metadata(source) -> ForcingClockMetadata:
             if len(values) < 2 or not np.all(np.diff(values) == 1):
                 raise SourceClockError("forcing time_steps axis must contain consecutive indices")
         else:
-            name, variable = _axes(ds)[0]
             units, date, date0 = _axis_origin(attrs, "seconds", provider)
-            values = _values(variable, name)
+            values = _values(physical, name)
             if len(values) < 2:
                 raise SourceClockError("forcing clock requires at least two time values")
             delta = np.diff(values.astype(np.float64))
@@ -355,7 +373,7 @@ def read_restart_clock_metadata(source, *, legacy_policy: str = "reject") -> Res
     if legacy_policy not in {"reject", LEGACY_NATIVE_METADATA}:
         raise SourceClockError("unknown legacy source clock policy")
     with _dataset(source) as ds:
-        (_, physical), step_axis = _axes(ds)
+        (_, physical), step_axis = _restart_axes(ds)
         if step_axis is None:
             raise SourceClockError("restart time_steps required; physical-only conversion is not implemented in restsett784-787")
         attrs = _attrs(physical)

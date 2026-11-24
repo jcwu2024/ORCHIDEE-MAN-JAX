@@ -22,6 +22,7 @@ from jax_orchidee.stomate.soilcarbon_kernels import (
     soilcarbon_leak_decompose_poc_doc,
     soilcarbon_leak_tf_doc_ground_fluxes,
 )
+from jax_orchidee.stomate.soil_properties import bulk_density_source_update
 
 
 class ComponentProbe(NamedTuple):
@@ -33,6 +34,7 @@ class ComponentProbe(NamedTuple):
     wet_flood: object
     soilwater: object
     cutoff: object
+    bulk_dens: object
 
 
 @pytest.fixture(autouse=True)
@@ -113,6 +115,7 @@ def _component_core(**args):
         ground.interception_storage, args["dry_dep_canopy"], args["doc_precip2canopy"],
         args["doc_precip2ground"], ground.wet_dep_ground, ground.wet_dep_flood,
         args["soilwater_31mm"], jnp.asarray(args.get("sro_bottom", 5)),
+        bulk_density_source_update(args["bulk_dens"]),
     )
 
 
@@ -199,6 +202,21 @@ def _capture_compiled_forward(monkeypatch, fixture):
 def test_c6_actual_compiled_producer_forwards_half_hour_clock(monkeypatch):
     args = _capture_compiled_forward(monkeypatch, _fixture())
     assert args["tf_doc_dt_days"] == 1800.0 / 86400.0
+
+
+@pytest.mark.parametrize("compiled", [False, True])
+def test_ok_leak_half_hour_fold_carries_density_from_the_previous_state(monkeypatch, compiled):
+    fixture = _fixture()
+    # A conflict with static 1650 exposes warm priority. With the source's
+    # two successive <500 conversions, the two returns are 100 and 100000.
+    fixture.initial.fields_by_component["sechiba_finalize_state"] = {
+        "bulk_density": np.array([0.0001]),
+    }
+    records = _install_component_seam(monkeypatch, fixture)
+    result, _ = _ordinary(fixture, compiled=compiled)
+    np.testing.assert_array_equal(result.bulk_dens, [100000.0])
+    if not compiled:
+        np.testing.assert_array_equal([a["bulk_dens"] for a in records], [[0.1], [100000.0]])
 
 
 def _compiled_body(monkeypatch, *, tf_on=True, cutoff=None):

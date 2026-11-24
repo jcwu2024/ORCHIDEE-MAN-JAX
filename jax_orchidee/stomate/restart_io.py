@@ -22,6 +22,7 @@ from jax_orchidee.parameters.pft_catalog import (
     pft_layout_netcdf_attributes,
 )
 from jax_orchidee.stomate.reference import (
+    DEFAULT_THAWED_HUMIDITY,
     STOMATE_DAILY_PFT_AXES,
     STOMATE_ENTRY_PFT_AXES,
     STOMATE_GAS_PFT_AXES,
@@ -826,7 +827,7 @@ def read_stomate_readstart_states_from_template(
     precip_crit: float = 100.0,
     tau_longterm_max: float = SeasonTimeScales().tau_longterm_max,
     sla: object | None = None,
-    thawed_humidity_input: float = 1.0e20,
+    thawed_humidity_input: float = DEFAULT_THAWED_HUMIDITY,
     reset_thawed_humidity: bool = False,
     nsnow: int = 3,
     o2_init_conc: float = STOMATE_O2_INIT_CONC,

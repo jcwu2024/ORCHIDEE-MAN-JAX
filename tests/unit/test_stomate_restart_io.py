@@ -110,6 +110,7 @@ def test_readstart_empty_template_uses_exact_existing_contract_defaults(tmp_path
     np.testing.assert_array_equal(result.season_state.tsoil_month, [[281.5, 281.5]])
     np.testing.assert_array_equal(result.season_state.gdd_init_date, [[365.0, 999999.0]])
     np.testing.assert_array_equal(result.entry_state.sla_calc, [[0.01, 0.02]])
+    np.testing.assert_array_equal(result.entry_state.thawed_humidity, [0.5])
     np.testing.assert_array_equal(result.gas_state.O2_soil, np.full((1, 3, 2), 0.21))
     np.testing.assert_array_equal(result.gas_state.CH4_snow, np.full((1, 3, 2), 0.0018))
     assert result.season_state.tau_longterm == 2.0
@@ -139,6 +140,24 @@ def test_readstart_empty_template_uses_exact_existing_contract_defaults(tmp_path
     } | {field for field in result.daily_state._fields if field != "provenance"} | {
         field for field in result.gas_state._fields if field != "provenance"
     } | {field for field in result.remainder_state._fields if field != "provenance"}
+
+
+@pytest.mark.parametrize(
+    "stored,expected",
+    [(999999.0, 0.5), (0.75, 0.75), (1.0e20, 1.0e20)],
+)
+def test_readstart_thawed_humidity_respects_source_missing_value(tmp_path: Path, stored, expected):
+    restart = tmp_path / "thawed.nc"
+    _minimal_restart(restart)
+    with Dataset(restart, "r+") as dataset:
+        dataset.createVariable("thawed_humidity", "f8", ("time", "y", "x"))[:] = stored
+
+    result = read_stomate_readstart_states_from_template(
+        restart, t2m=np.array([281.5]), nvm=2, nslm=2, ndeep=3, val_exp=999999.0,
+    )
+
+    np.testing.assert_array_equal(result.entry_state.thawed_humidity, [expected])
+    assert (result.remainder_state.read_input_thawed_humidity is True) == (stored == 999999.0)
 
 
 def test_readstart_partial_restart_preserves_all_semantics_and_bool_threshold(tmp_path: Path) -> None:

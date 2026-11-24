@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from types import SimpleNamespace
 from pathlib import Path
@@ -188,6 +189,24 @@ def test_compact_layout_restart_bundle_writes_reads_and_preserves_stable_identit
         restored.stomate_readstart.remainder_state.MatrixV,
         original.stomate_readstart.remainder_state.MatrixV,
     )
+
+
+@pytest.mark.parametrize("stored", [None, 999999.0, 0.75, 1.0e20])
+def test_file_initialization_uses_readstart_thawed_humidity(tmp_path: Path, stored) -> None:
+    run = _reference_run()
+    input_path = tmp_path / "stomate_start.nc"
+    shutil.copyfile(run / "stomate_start.nc", input_path)
+    with Dataset(input_path, "r+") as dataset:
+        if stored is None:
+            dataset.renameVariable("thawed_humidity", "removed_thawed_humidity")
+        else:
+            dataset.variables["thawed_humidity"][:] = stored
+    restored = reference_case_first_step_restart_state(
+        CONFIG, root=ROOT, run_dir=run, stomate_filename=input_path,
+    )
+    expected = [0.5 if stored in (None, 999999.0) else stored]
+    np.testing.assert_array_equal(restored.stomate_readstart.entry_state.thawed_humidity, expected)
+    np.testing.assert_array_equal(restored.stomate.thawed_humidity, expected)
 
 
 def test_complete_day_end_packet_constructs_all_three_scientific_states() -> None:

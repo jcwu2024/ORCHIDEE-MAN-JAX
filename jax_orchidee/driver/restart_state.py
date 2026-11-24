@@ -345,6 +345,7 @@ def reference_case_first_step_restart_state(
         stomate_input,
         source_pft_layout=stomate_source_pft_layout,
         target_pft_layout=target_pft_layout,
+        allow_missing_thawed_humidity=True,
     )
     stomate_daily = read_stomate_daily_accumulator_state(
         stomate_input,
@@ -423,7 +424,9 @@ def reference_case_first_step_restart_state(
             source_pft_layout=sechiba_source_pft_layout,
             target_pft_layout=target_pft_layout,
         ),
-        stomate=stomate,
+        # Cold/default handling belongs to STOMATE readstart (1201-1213).
+        # The warm driver also uses this entry directly at the next boundary.
+        stomate=stomate._replace(thawed_humidity=readstart.entry_state.thawed_humidity),
         stomate_readstart=readstart,
         sechiba_restart_state=read_sechiba_init_restart_state(
             sechiba_start,

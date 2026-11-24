@@ -249,6 +249,7 @@ class ExplicitOkLeakResult(NamedTuple):
     interception_storage: jnp.ndarray
     transfers: OkLeakTransferStepV1 | None
     requires_trace: tuple[str, ...]
+    bulk_dens: jnp.ndarray | None = None
 
 
 class OkLeakTransferStepV1(NamedTuple):
@@ -3919,8 +3920,8 @@ def stomate_ok_leak_explicit(
     before aboveground/Moyano controls by the litter boundary. With explicit
     controls and an unprepared raw density (default), apply litter1971-1973
     here first. Soilcarbon1476-1478 then reads that same value and applies its
-    own literal update. The marker prevents a third conversion for tiny values;
-    it does not introduce a persistent bulk-density carry or alter peat density.
+    own literal update. Return the post-soilcarbon density for SLOWPROC's
+    shared inout state (slowproc.f90:1007,1271). Peat density is separate.
     """
 
     required = {
@@ -4110,6 +4111,7 @@ def stomate_ok_leak_explicit(
         interception_storage=tf_doc.interception_storage,
         transfers=transfers,
         requires_trace=(),
+        bulk_dens=soil_bulk_dens,
     )
 
 
