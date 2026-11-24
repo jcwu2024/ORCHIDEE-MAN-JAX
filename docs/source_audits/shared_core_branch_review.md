@@ -1,5 +1,13 @@
 # 共享物理核心与研究分支核查
 
+## C93–C95 的共享依赖
+
+集中同步时以 `ad3375ec29be675635dda2aa4b99d7df106776ac` 为依据。所查日尺度快照 `f898282a`、全球效率快照 `ffe77a00` 均早于主线时钟接入及 C8 的当步密度补齐。按各分支实际调用的入口移植、核对相关回归。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json)
+
+- C93 核对 `driver/source_clock.py` 的气象选轴与原点，连同源时钟接入 `782535b4` 和原 CRUNCEP 并列坐标用例。重启轴沿用独立读器。
+- C94 核对 C8 `27ff14b3`、普通和编译半小时循环的容重、日末写出及暖文件优先读取。在日尺度替代流程或全球批量流程中，追到实际使用该状态的下一处计算。
+- C95 同步 STOMATE 直建冷启默认、模板读入与暖启生产载荷的取值。保留对缺变量、全哨兵和已存有限值的回归。[重启对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/restart/README.md)
+
 ## 1961 水文追踪读取工具
 
 集中同步日尺度和全球效率分支时，按 `17db2adc5263a042163f0d7292ea9a0b93c42749` 更新共享追踪模式、重启年比较脚本、读取回归及其 CI 选择，并带上 `server_1961_trace_contract.md`。原 `post_tile` 第四个数据值由 `resolv(ji)` 写出。旧报告可按同一原文件和时间步、格点、土块重新解读。独立 v9 系数文件保留其 `branch_peat` 与 `peat_hydro` 定义。已在本地初始提交 `7333b46c` 和复查前快照 `7cae3e02` 核实旧列名。此项计入追踪工具维护，模型修正沿用 C1–C92。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-trace-reader-and-reference-preflight/review/controller-acceptance.json) · [两分支依赖与复查前记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-trace-reader-and-reference-preflight/trace-reader/comparison.json)

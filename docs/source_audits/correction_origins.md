@@ -1,4 +1,16 @@
-# C1–C92 修正与支持补齐来源登记（2026-11-24）
+# C1–C95 修正与支持补齐来源登记（2026-11-24）
+
+## C93–C95 论文气象输入和两项土壤重启状态
+
+三项共用生产提交 `ad3375ec29be675635dda2aa4b99d7df106776ac`。累计 **95 项修正或支持补齐、49 个生产提交**。92 项有复查前证据。C42、C57 和 C93 是复查期间引入的遗漏。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [独立审阅](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/review/independent-review.md)
+
+| 编号 | 旧行为与来源 | 修后核对 |
+| --- | --- | --- |
+| C93 气象时钟 | `782535b4` 在复查期间接入源时钟时，对气象和重启共用的单秒轴限制拒绝了原 CRUNCEP 文件。 | 气象读器按 `flinopen_work` 的文件枚举和轴优先级读取。原点为 1961-01-01 00:00，所选轴首坐标为 21600 秒。96 步、21,415 个数值叶及 285 个重启变量与先前显式选择同轴的 JAX 对照逐位一致。 |
+| C94 容重跨步传递 | 复查前 `7cae3e02` 的半小时计算从静态输入取容重。C8 处理了当步两处单位换算，跨步共用值及其写出仍缺。 | 普通和编译循环均保留土碳过程最后返回的容重。001 的 1.65 g/cm³ 经换算后以 1650 kg/m³ 写出，暖启实际读取 1650，三个原生程序的文件值一致。 |
+| C95 解冻湿度初值 | `7cae3e02` 的直建冷启和模板读入缺省均为 1e20。原 `stomate_io.f90` 默认 0.5。 | 在论文配置 `RESET_THAWED_HUMIDITY=FALSE` 下，冷启动及缺字段或全哨兵的暖文件均得到 0.5。暖文件中实际存储的 0.75 和旧值 1e20 均正确保留。 |
+
+本窗口两项状态修复各消除一个末态超差坐标，其余 283 个重启变量的原始字节与只修时钟的对照一致。非默认湿度重设已有组件测试，正常生产配置的传递仍需核对。[时钟对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/clock/README.md) · [重启对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/restart/README.md) · [逐字段严门](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/restart/strict-counts.json)
 
 ## C91 灌溉检查与 C92 无冻结泥炭选档
 

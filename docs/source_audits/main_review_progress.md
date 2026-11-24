@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-24，**001 暖点两日本地收尾已验收，C93–C95 已合入主线。** 原始 1961 气象文件可由正常入口直接运行 96 步。原先写错的容重和解冻湿度分别写为 1650 kg/m³ 和 0.5，与三套原生参考一致。重启末态超差由 30 个字段、117 个坐标降至 **28 个字段、115 个坐标**，另有 47 个 STOMATE 字段缺少运行末态观测。累计 **95 项修正或支持补齐、49 个生产提交**，其中 92 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md) · [分支同步清单](shared_core_branch_review.md)
+
+首步的活动植被地表温度、热通量和潜在蒸发在采用同一入射短波后均通过原门限。四个采样步同步短波后，回放仍有 38 条超差，再同步已记录的大气和能量输入后还有 30 条。下一步优先核对末态差异较大的积温和起算日期、最大融深及分植被地表温度，检查它们是否被后续过程实际读取。年度碳通量仍待整模型验证。[短波回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/shortwave/dispositions.json) · [逐字段严门](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/restart/strict-counts.json)
+
 2026-11-24，**已验收 001 暖点 1961 年冷启动的两日参考。JAX 在这个窗口仍有超差。** 留存的 Fortran 程序、按原配方重建的程序、加观测的重建程序和本地 JAX 都完成了 96 个半小时步。三套 Fortran 有源定义的重启末态逐值一致。加观测的程序实读水文私有泥炭开关为关，首日抽样步只有 4 号土块参与求解。首日 PFT14 的 GPP 和 NPP 都为零，第二天结束由三份重启确认。年度通量和 2025 年原作业的实际开关仍缺对应证据。[两日实测](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-reference/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-reference/review/controller-acceptance.json)
 
 主线 JAX 的常规入口遇到原气象文件的两条时间轴时在第一步前退出。此次在包内按留存 IOIPSL 的顺序选轴后运行了生产计算。1,369 条两版配对记录中，1,287 条通过严格门限，4 条入射短波在其已登记容差内，78 条超过相应门限。第一步净短波差 2.66×10⁻⁸ W/m² 可由两边各自的入射量和同一个吸收系数复现。两日末有 30 个重启字段超差，另有 47 个 STOMATE 字段由 JAX 写出默认值补齐。接下来核对正常气象读取入口、相同辐射输入下的热通量，以及土壤容重和融土湿度从写出到重新读取时的实际值。[逐项比较](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-reference/compare/RESULTS.md)
