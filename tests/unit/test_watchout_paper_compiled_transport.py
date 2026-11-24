@@ -14,10 +14,13 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from netCDF4 import Dataset
 
 from jax_orchidee.driver import orchestration as o
+from jax_orchidee.driver.dim2 import iter_dim2_time_indices
 from jax_orchidee.driver.domain import read_forcing_first_step
 from jax_orchidee.driver.sechiba_boundary import build_intersurf_first_step_payload
+from jax_orchidee.driver.source_clock import source_clock_from_inputs
 from jax_orchidee.sechiba import hydrol as h
 from tests.unit.test_dim2_driver import _bundle
 from tests.unit.test_watchout_domain_transport import FIXTURE, _case
@@ -214,6 +217,36 @@ def _scan_evaluate(executable, forcing):
     assert flux is None
     np.testing.assert_array_equal(output[0][0], state)
     return np.asarray(state)
+
+
+@pytest.mark.parametrize("local_origin", [0, 1])
+def test_actual_paper_readers_use_dim2_forcing_cursor(tmp_path, monkeypatch, local_origin):
+    context = _prepared_case(tmp_path, monkeypatch, watchout=False)
+    path = tmp_path / "clock.nc"
+    with Dataset(path, "w") as dataset:
+        dataset.createDimension("time", 4)
+        axis = dataset.createVariable("time", "f8", ("time",))
+        axis.units, axis.calendar = "seconds since 1961-01-01 00:00:00", "noleap"
+        axis[:] = np.arange(4) * context.dt_sechiba * context.forcing_split
+    context.source_clock_setup = source_clock_from_inputs(
+        path, dt_sechiba=context.dt_sechiba, run_id="forcing-cursor", time_skip=1, time_length=1,
+        local_tstep_origin=local_origin,
+    )
+    indices = tuple(iter_dim2_time_indices(context.source_clock_setup.time_control))
+    expected = [item.forcing_model_tstep for item in indices[:2]]
+    calls = []
+    original = o.read_forcing_model_step_cached
+
+    def observe(*args, **kwargs):
+        calls.append(kwargs["model_tstep"])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(o, "read_forcing_model_step_cached", observe)
+    first = o._paper_1961_step_bundle_from_context(context, year=1961, tstep=local_origin)
+    stack = o._paper_compiled_forcing_day(context, year=1961, start_tstep=local_origin, steps_per_stomate=2)
+    assert calls == [expected[0], *expected]
+    np.testing.assert_array_equal(stack.source_clock.istp, [item.istp for item in indices[:2]])
+    np.testing.assert_array_equal(stack.swdown[0], np.ravel(first.forcing.swdown))
 
 
 def test_actual_one_item_jit_scan_keeps_tuple_dynamic_and_separates_none_cache(tmp_path, monkeypatch):

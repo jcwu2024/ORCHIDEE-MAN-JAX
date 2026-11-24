@@ -1058,6 +1058,18 @@ def prepare_paper_1961_driver_context(
         previous=previous_tide_run if run_mode == "continuous" else None, run_mode=run_mode)
 
 
+def _paper_forcing_model_tstep(context, *, year: int, tstep: int) -> int:
+    """Translate local steps for the forcing file admitted by DIM2."""
+    setup = getattr(context, "source_clock_setup", None)
+    if isinstance(setup, SourceClockSetup) and year == getattr(context.first_step_bundle, "year", None):
+        control = setup.time_control
+        if control is not None:
+            # dim2_driver:802-837 applies for_offset in whole forcing records.
+            source_step = int(source_istp_for_local_tstep(setup.runtime, tstep))
+            return source_step - 1 + control.for_offset * control.split
+    return tstep
+
+
 def _paper_1961_step_bundle_from_context(
     context: Paper1961PreparedDriverContext,
     *,
@@ -1081,7 +1093,7 @@ def _paper_1961_step_bundle_from_context(
         context.config_path,
         domain=first.domain,
         year=year,
-        model_tstep=tstep,
+        model_tstep=_paper_forcing_model_tstep(context, year=year, tstep=tstep),
         **paper_forcing_read_kwargs(
             first.forcing, dt_sechiba=context.dt_sechiba, split=context.forcing_split,
             nb_spread=context.forcing_nb_spread, run_def_values=context.run_def_values,
@@ -9536,8 +9548,12 @@ def _paper_compiled_ok_leak_fold(
             flood_frac=flood_frac,
         )
         ok_args = dict(static_ok_inputs)
+        carry_inputs = carry._asdict()
+        # The scan owns the private active-layer state. Only its explicit
+        # altmax_ind and altmax_lastyear operands are read by soilcarbon_leak.
+        carry_inputs.pop("active_layer")
         ok_args.update(
-            carry._asdict(),
+            carry_inputs,
             bulk_dens=litter_bulk_dens,
             bulk_dens_litter_prepared=True,
             bm_to_litter=bm_to_litter,
@@ -11421,7 +11437,7 @@ def _paper_compiled_forcing_day(
             context.config_path,
             domain=first.domain,
             year=year,
-            model_tstep=tstep,
+            model_tstep=_paper_forcing_model_tstep(context, year=year, tstep=tstep),
             **paper_forcing_read_kwargs(
                 first.forcing, dt_sechiba=context.dt_sechiba, split=context.forcing_split,
                 nb_spread=context.forcing_nb_spread, run_def_values=context.run_def_values,

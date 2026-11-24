@@ -8,6 +8,7 @@ Producer calls and real small components are exercised below. The full
 OK_LEAK carbon core is replaced, so these are not full compiled-core parity.
 """
 
+from inspect import signature
 from types import SimpleNamespace
 from typing import NamedTuple
 
@@ -121,8 +122,10 @@ def _component_core(**args):
 
 def _install_component_seam(monkeypatch, fixture):
     records = []
+    kernel_signature = signature(driver.stomate_ok_leak_explicit)
 
     def core(**args):
+        kernel_signature.bind_partial(**args)
         records.append(args)
         return _component_core(**args)
 

@@ -111,8 +111,20 @@ def test_us_input_domain_is_explicit(invalid):
 
 
 def _run_def(tmp_path, token):
-    lines = reference_run_def_path(CONFIG).read_text(encoding="utf8").splitlines()
+    template = reference_run_def_path(CONFIG)
+    lines = template.read_text(encoding="utf8").splitlines()
     lines = [line for line in lines if line.split("=", 1)[0].strip() != "US_INIT"]
+    existing_values = parse_run_def(template)
+    # Use the portable state-I/O fixture values for unrelated PFT parameters.
+    for name, value in (
+        ("EXT_COEFF_VEGETFRAC", 0.5),
+        ("SLOWPROC_HEIGHT", 0.4),
+        ("RATIO_Z0M_Z0H", 10.0),
+    ):
+        for pft in range(1, 15):
+            key = f"{name}__{pft:05d}"
+            if key not in existing_values:
+                lines.append(f"{key} = {value}")
     if token is not None:
         lines.append(f"US_INIT = {token}")
     path = tmp_path / "used-run.def"
