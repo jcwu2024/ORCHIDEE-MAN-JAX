@@ -55,6 +55,8 @@ jobs:
           tests/unit/test_stomate_reference.py::test_stomate_cold_start_readstart_fallbacks_match_fortran_defaults
           tests/unit/test_stomate_season.py::test_gdd_solar_minimum_uses_real64_state_precision_with_float32_geometry
           tests/unit/test_stomate_restart_io.py::test_readstart_thawed_humidity_respects_source_missing_value
+          tests/unit/test_stomate_daily.py::test_admitted_compiled_source_day_runs_actual_stomate_fold
+          tests/unit/test_driver_calendar_wiring.py::test_single_compiled_day_rejects_two_consecutive_days_of_forcing
           tests/unit/test_us_init_production.py::test_year_entry_updates_consumer_mirror_only_at_new_native_phase
       - name: WATCHOUT forcing and restart transport
         env:

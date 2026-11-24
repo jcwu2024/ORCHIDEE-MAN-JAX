@@ -723,6 +723,54 @@ def test_daily_process_fold_combines_accumulators_and_maintenance_boundary_field
     )
 
 
+def test_admitted_compiled_source_day_runs_actual_stomate_fold():
+    from types import SimpleNamespace as NS
+
+    import jax
+    import jax.numpy as jnp
+
+    from jax_orchidee.driver import orchestration as driver
+
+    # The actual block admits an active complete day on the host. In the
+    # nested day the source seconds and active flags are traced scalars.
+    payloads = tuple(_entry_payload(scale=scale, t2m_min=277.0, t2m_max=290.0)
+                     for scale in (1.0, 2.0, 3.0))
+    state = NS(fields_by_component={
+        "slowproc_stomate_previous_step_state": {
+            "lai": np.ones((1, 2)), "daily_accumulators": vars(_DailyAccumulatorState()),
+            "biomass": np.zeros((1, 2, NPARTS, 1)), "resp_maint_part": np.zeros((1, 2, NPARTS)),
+            "sla_calc": np.full((1, 2), 0.02),
+        },
+        "hydrol_previous_step_state": {"humrel": np.ones((1, 2))},
+    })
+    context = NS(stomate_static=NS(parameters=NS(
+        coeff_maint_zero=np.zeros((2, NPARTS)), maint_resp_slope=np.zeros((2, 3)),
+        ext_coeff=np.full(2, 0.5), is_tree=np.zeros(2, dtype=bool),
+    )), stomate_boundary=NS(kwargs={"rprof": np.full((1, 2), 0.8), "z_soil": np.array([0.0, 0.5, 1.0])}))
+
+    def fold(seconds, active, *, compiled):
+        entries = tuple({**payload, "source_clock": NS(second=seconds[i], active=active[i])}
+                        for i, payload in enumerate(payloads))
+        result = driver._paper_later_day_daily_process_from_completed_entries(
+            first_step=None, previous_state=state, config_path="unused", run_def_path=None,
+            run_def_values={"PEAT_OCCUR": "FALSE"},
+            runtime=NS(dt_stomate=86400.0, dt_sechiba=28800.0, dt_days=1.0),
+            start_tstep=3, entry_payloads=entries, prepared_context=context,
+            retain_step_results=False, use_compiled_accumulator=compiled,
+            compiled_complete_source_day=compiled,
+        )
+        assert result.ok
+        return result.daily_fields
+
+    seconds = jnp.array([28800.0, 57600.0, 0.0])
+    active = jnp.ones(3, dtype=bool)
+    actual = jax.jit(lambda seconds, active: fold(seconds, active, compiled=True))(seconds, active)
+    ordinary = fold(seconds, active, compiled=False)
+    for name in actual:
+        np.testing.assert_allclose(actual[name], ordinary[name], atol=1e-14, rtol=1e-12)
+    np.testing.assert_array_equal(actual["t2m_daily"], [282.0])
+
+
 def test_daily_process_fold_single_pass_matches_default_path_bit_exact():
     npts, nvm, pft = 1, 14, 13
     accumulator = _DailyAccumulatorState()

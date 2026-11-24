@@ -594,6 +594,22 @@ def test_actual_compiled_block_builder_and_executable_carry_clock_and_reuse_cont
     _mirrors(later, [5., 0., 0.], [1., 0., 1.])
 
 
+def test_single_compiled_day_rejects_two_consecutive_days_of_forcing(monkeypatch):
+    context, _, _, _, _ = _compiled_fixture(monkeypatch, source_start=1)
+    state = _packet(context)
+    forcing = _forcing_series(context, state, 96)
+
+    def unexpected_assembly(**kwargs):
+        pytest.fail("The single-day entry admitted two complete days of forcing")
+
+    monkeypatch.setattr(orch, "_paper_1961_later_day_transition_inputs", unexpected_assembly)
+    with pytest.raises(SourceClockError, match="one complete source day"):
+        orch.paper_1961_driver_later_day_runtime_result(
+            "synthetic.yml", previous_state=state, day_index=2, start_tstep=0,
+            prepared_context=context, use_compiled_sechiba_day=True, compiled_forcing_series=forcing,
+        )
+
+
 def test_actual_compiled_block_builder_rejects_source17_local0_rows_before_lower(monkeypatch):
     context, _, tables, _, _ = _compiled_fixture(monkeypatch, source_start=17)
     state = _packet(context)

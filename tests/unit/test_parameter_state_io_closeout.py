@@ -7,8 +7,8 @@ Fortran references. All file definitions come from the tracked paper schemas.
 
 from __future__ import annotations
 
-from dataclasses import replace
 import json
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 

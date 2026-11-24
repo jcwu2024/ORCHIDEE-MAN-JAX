@@ -8495,6 +8495,7 @@ def _paper_later_day_daily_process_from_completed_entries(
     single_pass_daily_fold: bool = False,
     use_compiled_accumulator: bool = False,
     use_numpy_accumulator: bool = False,
+    compiled_complete_source_day: bool = False,
     prepared_context: Paper1961PreparedDriverContext | None = None,
     stomate_parameter_overrides: Mapping[str, object] | None = None,
 ):
@@ -8532,7 +8533,12 @@ def _paper_later_day_daily_process_from_completed_entries(
             npts=npts,
             used_run_def=run_def_path,
         )
-    flags = tuple(_paper_first_step_do_slow(entry.get("source_clock")) for entry in entry_payloads)
+    if compiled_complete_source_day:
+        # The driver admitted a complete active source day before tracing.
+        # Its only slow boundary is the last entry of this row.
+        flags = (False,) * (steps_per_stomate - 1) + (True,)
+    else:
+        flags = tuple(_paper_first_step_do_slow(entry.get("source_clock")) for entry in entry_payloads)
     t2m_longterm = (
         slowproc_state["t2m_longterm"]
         if "t2m_longterm" in slowproc_state
@@ -12155,6 +12161,8 @@ def paper_1961_driver_later_day_runtime_result(
     else:
         _validate_compiled_source_clock_series(context, previous_state, compiled_forcing_series)
         source = compiled_forcing_series.source_clock
+        if np.shape(source.second) != (steps_per_stomate,):
+            raise SourceClockError("compiled day requires exactly one complete source day of forcing")
         if not isinstance(source.second, jax.core.Tracer):
             if float(source.second[0]) != context.dt_sechiba or float(source.second[-1]) != 0:
                 raise SourceClockError("compiled day requires a complete source day; partial-day source restart is unsupported")
@@ -12217,6 +12225,7 @@ def paper_1961_driver_later_day_runtime_result(
             single_pass_daily_fold=single_pass_daily_fold,
             use_compiled_accumulator=(use_compiled_accumulator or use_compiled_sechiba_day),
             use_numpy_accumulator=use_numpy_accumulator,
+            compiled_complete_source_day=compiled_forcing_series is not None,
             prepared_context=context,
             stomate_parameter_overrides=stomate_parameter_overrides,
         )
