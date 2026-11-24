@@ -247,7 +247,7 @@ def test_actual_later_scaffold_state_builder_uses_prior_runtime_offset(monkeypat
     calls = _replace_extraction_delegates(monkeypatch)
     scaffold = NS(ready_for_next_state=True, tstep=0, source_clock_context=context,
                   enerbil=NS(enerbil_local=None, diffuco_local_enerbil_precall=None,
-                             previous_state=state),
+                             previous_state=state, payload=_payload_template()),
                   thermosoil_module=None, condveg_module=None, hydrol_module=None)
     result = orch.driver_previous_step_state_from_next_step_hydrol_scaffold(scaffold)
     assert len(calls) == 6
@@ -264,7 +264,7 @@ def test_actual_first_day_scaffold_builder_and_repeated_summary_do_not_reapply(m
         fields[SLOW].update(seed.fields_by_component[SLOW])
         fields[FINAL] = dict(seed.fields_by_component[FINAL])
     monkeypatch.setattr(orch, "_add_enerbil_local_to_previous_fields", seed_fields)
-    scaffold = NS(step=NS(tstep=0), source_clock_context=context,
+    scaffold = NS(step=NS(tstep=0), source_clock_context=context, payload=_payload_template(),
                   enerbil_first_step_local=None, diffuco_first_step_local_enerbil_precall=None,
                   diffuco_control_salinity=None, diffuco_control_assembly=None,
                   diffuco_first_step_precall=None, thermosoil_first_step_module=None,
@@ -626,14 +626,18 @@ def test_actual_compiled_block_builder_rejects_source17_local0_rows_before_lower
 @pytest.mark.parametrize("mode,run_id,expected_cursor,keep_nroot", [
     ("continuous", None, 49, True), ("new_native_run", "synthetic-new-run", 1, False),
 ])
+@pytest.mark.parametrize("partial", [False, True], ids=["whole-source-day", "partial-source-day"])
 def test_actual_restart_year_wrapper_binds_changed_forcing_with_real_metadata_factory(
-    monkeypatch, tmp_path, mode, run_id, expected_cursor, keep_nroot,
+    monkeypatch, tmp_path, mode, run_id, expected_cursor, keep_nroot, partial,
 ):
     from netCDF4 import Dataset
     from jax_orchidee.driver import domain
-    old_context = _context(date=(2000, 12, 31), source_start=48)
+    old_start = 49 if partial and mode == "continuous" else 48
+    old_context = _context(date=(2000, 12, 31), source_start=old_start)
     state = _apply(old_context, _packet(old_context), 0)
     state.fields_by_component["hydrol_previous_step_state"] = {"nroot": jnp.asarray([42.])}
+    # A new native year initializes US and vegstress from the restored fields.
+    state.fields_by_component[FINAL].update(us=jnp.zeros((3, 2, 1, 1)), vegstress=jnp.zeros((3, 2)))
     forcing = tmp_path / "new-year-forcing.nc"
     with Dataset(forcing, "w") as dataset:
         dataset.createDimension("time", 96)
@@ -644,9 +648,15 @@ def test_actual_restart_year_wrapper_binds_changed_forcing_with_real_metadata_fa
         time[:] = np.arange(96) * 1800.
     values = dict(RESTART_FILEIN="NONE", SECHIBA_restart_in="NONE", STOMATE_RESTART_FILEIN="NONE",
                   DT_SECHIBA="1800")
+    if partial and mode == "new_native_run":
+        values["TIME_SKIP"] = "1"
+    run_scalars = NS(dt_sechiba=1800., pref_soil_veg=np.asarray([1, 1]))
     context_values = dict(source_clock_setup=old_context.source_clock_setup, config_path=tmp_path / "synthetic.yml",
                           run_def_path=tmp_path / "synthetic.def", run_def_values=values,
-                          first_step_bundle=NS(year=2001, run_scalars=NS(dt_sechiba=1800.)),
+                          first_step_bundle=NS(year=2001, run_scalars=run_scalars),
+                          first_step_restart_state=None, run_scalars=run_scalars, hydrol_tides=False,
+                          watchout_initialize_main_tstep=None,
+                          diffuco_pft14_static_kwargs={"ldq_cdrag_from_gcm": True},
                           reference_run_dir=None, dt_sechiba=1800.,
                           runtime=NS(dt_stomate=86400., dt_sechiba=1800.))
     Context = make_dataclass("SyntheticRestartContext", [(name, object) for name in context_values], frozen=True)
@@ -657,7 +667,13 @@ def test_actual_restart_year_wrapper_binds_changed_forcing_with_real_metadata_fa
     monkeypatch.setattr(domain, "forcing_file_for_year", lambda config, year: forcing)
     monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda *a: ())
     monkeypatch.setattr(orch, "restore_sechiba_integer_source_fields", lambda fields, **k: dict(fields))
-    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", lambda *a, **k: NS())
+    step_reads = []
+
+    def first_step_bundle(context, *, year, tstep):
+        step_reads.append((year, tstep))
+        return NS(forcing=NS(is_watchout=False), domain=NS())
+
+    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", first_step_bundle)
     monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda *a, **k: _payload_template())
     monkeypatch.setattr(orch, "_driver_wind_z0_from_previous_state", lambda *a: .1)
     monkeypatch.setattr(orch, "restart_thermosoil_initialization_supported", lambda *a: False)
@@ -665,17 +681,37 @@ def test_actual_restart_year_wrapper_binds_changed_forcing_with_real_metadata_fa
         raise AssertionError("calendar-only restart adapter must not execute physical thermal initialization")
     monkeypatch.setattr(orch, "restart_thermosoil_initial_fields", forbidden_thermal)
     observed = []
-    def calendar_only_day(config_path, *, previous_state, prepared_context, **kwargs):
+    def calendar_only_day(config_path, *, previous_state, prepared_context, year, **kwargs):
         observed.append((previous_state, prepared_context))
-        return _apply(prepared_context, previous_state, 0)
+        return orch.DriverRuntimeDayResult(
+            year=year, day_index=1, start_tstep=0, steps_per_stomate=48,
+            daily_modelout=orch.DriverDailyModelout(1, 0, 47, {}, {}),
+            day_end_state=_apply(prepared_context, previous_state, 0),
+            stopped_at_tstep=None, missing_components=(),
+        )
     monkeypatch.setattr(orch, "paper_1961_driver_later_day_runtime_result", calendar_only_day)
-    result = orch.paper_1961_driver_restart_year_start_day_result(
-        context.config_path, previous_year_end_state=state, year=2001, prepared_context=context,
-        run_mode=mode, run_id=run_id, module_jit=False, diffuco_local_jit=False)
+
+    def restart():
+        return orch.paper_1961_driver_restart_year_start_day_result(
+            context.config_path, previous_year_end_state=state, year=2001, prepared_context=context,
+            run_mode=mode, run_id=run_id, module_jit=False, diffuco_local_jit=False)
+
+    if partial:
+        with pytest.raises(SourceClockError, match="partial source-day"):
+            restart()
+        assert step_reads == []
+        assert observed == []
+        return
+
+    day = restart()
+    assert day.ready_for_day_end_state and day.prepared_context.watchout_initialize_main_tstep is None
+    result = day.day_end_state
     assert len(observed) == 1
+    assert step_reads == [(2001, 0)]
     rebased, rebound_context = observed[0]
     assert rebound_context is not context
     assert rebound_context.source_clock_setup.forcing.origin_ymds == (2001, 1, 1, 0.)
+    assert rebound_context.diffuco_pft14_static_kwargs["ldq_cdrag_from_gcm"] == (mode == "continuous")
     assert ("nroot" in rebased.fields_by_component["hydrol_previous_step_state"]) == keep_nroot
     assert int(result.source_clock_runtime.last_applied_istp) == expected_cursor
     assert (result.source_clock_runtime.binding == state.source_clock_runtime.binding) == (mode == "continuous")
@@ -696,6 +732,8 @@ def test_actual_whole_day_scaffolds_reject_partial_source_day_before_physics(mon
                  "paper_1961_next_step_hydrol_precall_scaffold", "_hydrol_state_namespace_from_previous_state",
                  "hydrol_static_precall_template_from_slowproc", "_paper_compiled_sechiba_scan"):
         monkeypatch.setattr(orch, name, forbidden)
+    if entry == "paper_1961_driver_cold_start_day_scaffold":
+        monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", forbidden)
     kwargs = dict(prepared_context=context)
     if entry == "paper_1961_driver_later_day_scaffold":
         runtime = replace(context.source_clock_setup.runtime, anchor_local_tstep=np.int64(48))

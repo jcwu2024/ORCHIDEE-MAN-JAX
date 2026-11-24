@@ -13422,7 +13422,6 @@ def paper_1961_driver_cold_start_day_scaffold(
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
-    context = _paper_native_initialization_context(context, year=year)
     run_def_path = context.run_def_path
     runtime = context.runtime
     steps_per_stomate = int(round(runtime.dt_stomate / runtime.dt_sechiba))
@@ -13437,6 +13436,7 @@ def paper_1961_driver_cold_start_day_scaffold(
         SimpleNamespace(source_clock_runtime=_source_clock_setup(context).runtime),
         start=0,
     )
+    context = _paper_native_initialization_context(context, year=year)
 
     first = paper_1961_driver_cold_start_first_step_coverage(
         config_path,
