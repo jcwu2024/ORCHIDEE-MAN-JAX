@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-25，**001 暖点三天的普通与编译 JAX 每天 26 个日输出字段均在原容差内。** 第三天末的 35 处状态超差来自两个量。冠层储水相差约 1.64 × 10⁻¹⁴ mm，土壤热通量相差约 4.66 × 10⁻¹¹ W/m²，两者都存入多个数组。相同土热输入下改变 JAX 编译方式能重现同量级的热通量差。加入半小时观测也改变了编译结果，原始运行中这两个量最早在哪一步分离仍待证。[自然运行与观测对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json)
+
+**C102 修复冷启动整日入口提前读取气象和 CO₂ 的问题。** 使用不足整日的原输入时，旧版和修后版本都在物理计算开始前退出。累计 102 项修正或支持补齐、53 个生产提交，97 项有复查前证据。下一项本地核查是 47 个 STOMATE 重启字段，优先查清哪些需要本次运行的值，以及写出的值能否供下次暖启动正确使用。[修正来源](correction_origins.md) · [重启字段来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/execution/comparison/file-restart-ledger.json)
+
 2026-11-25，**001 暖点第二天五个碳字段的六处超差，已追到共同的日 GPP 输入差。** 原 Fortran 日志重建值为 0.5301776170576762 gC/m²/天，JAX 为 0.5301776170758795。只替换日 GPP，保持其余 JAX 当日实参，六处均回到原容差。差值主要出现在第 60、85 个半小时步，两步中最早偏离的光合输入或运算仍待原生观测。本地 JAX 的 18 项日末碳状态交接逐值相同。与先前两日原生终止文件比较，仍有 24 个字段、96 个坐标超差，另有 47 个字段缺实测末态。[日碳对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/jax-carbon/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/controller-acceptance.json)
 
 **C101 修复了跨多个完整源日编译时在午夜判断处退出的问题。** 三天的普通与编译 JAX 每天 26 个日输出、364 个坐标均通过原门限，第 144 步末态仍有 9 个数组的 35 个存储位置超差。单日入口也已实测拒绝误传的两整天气象。累计 101 项修正或功能补齐、52 个生产提交，97 项有复查前证据。现有 Fortran 第 96 步是作业结束时的写出。观察正常的第二天日末和第 97 步首次读取，需要用同一配置多跑一个 6 小时气象区间；本机已完成原生取证准备。[修正来源](correction_origins.md) · [分组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/remaining.md)

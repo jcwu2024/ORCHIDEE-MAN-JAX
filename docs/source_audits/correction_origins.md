@@ -1,4 +1,10 @@
-# C1–C101 修正与支持补齐来源登记（2026-11-25）
+# C1–C102 修正与支持补齐来源登记（2026-11-25）
+
+## C102 冷启动整日入口的步进输入读取顺序
+
+生产提交 `b2fef009a2b80809ef41098bc9e166c3d31dfc05`。复查中的 `782535b4` 引入完整源日检查，随后 `aa14d042` 为 WATCHOUT 初始化在检查前读取首步气象和 CO₂。001 原文件跳过一个六小时记录时从 06:30 的第 13 步开始，旧版先读气象索引 12 和 CO₂ 才报整日错误。C102 将初始化调用移到时钟检查之后。两个版本在这个输入上都执行零个物理步，合法第 1 步的首笔气象、CO₂ 和拖曳配置一致。登记为复查期间引入的驱动问题。累计 **102 项修正或支持补齐、53 个生产提交，97 项有复查前证据**。[实测反例和合法对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/calendar/cold-admission-order.json) · [Git 行来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/calendar/cold-guard-blame.txt)
+
+同轮更新了四个过时的日历测试夹具，保留原有的状态复制、跨年光标和拖曳模式断言。整份日历测试已接入 Ubuntu 发布流程，本地按扩展后的发布步骤运行，130 项通过。[日历复核](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/calendar/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json)
 
 ## C101 多日编译时的日末条件
 

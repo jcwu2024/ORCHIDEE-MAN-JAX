@@ -60,6 +60,8 @@
 
 001 两日已核对实际 SECHIBA 半小时编译扫描、土碳编译折叠，以及第 48 步写文件至第 96 步的正常续跑。此窗口只有一个后续日，跨多个后续日的外层编译块尚缺本点实测。后续集中取同点同一构建的第 95 步末、第 96 步日末和第 97 步首次消费。以相同边界实参核对水分、热量、气动和日碳的差异来源，保留原数值门限和可达性限制。[两日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [合并观测范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
 
+001 三日普通与编译运行的 35 个超差位置已归到冠层储水和土壤热通量。下一步本地复用现有 47 项 STOMATE 字段清单、两日原生文件和 JAX 暖启证据，按原开关、实时更新者和暖启消费者核实依赖基状态写出的字段。优先核对会影响 PFT14 碳收支或继续运行的字段。原生第二天正常日末与随后第 97 步仍按上面的短窗方案取证。[三日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json) · [既有字段与配置证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
+
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”
 
