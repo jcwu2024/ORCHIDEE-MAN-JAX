@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-25，**001 暖点的两日重启对照从 28 个字段、115 个坐标超差降至 24 个字段、96 个坐标超差。** C96–C99 修复季节初值、季节辐照度的计算精度、最大融深跨步传递和裸地温度写回。另补齐 C95 的可选开关。累计 **99 项修正或支持补齐、50 个生产提交**，96 项有复查前证据。普通地表调度配合局部 JIT 完成了 96 个半小时步。此次前后只有四个重启字段的原值改变。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md)
+
+下一步在同一窗口用正式编译入口检查连续运行和从文件恢复，先核实裸地粗糙高度的缺值标记及后续实际读取，再按共同前驱追查仍会传给下游的差异。47 个 STOMATE 字段缺运行末态观测。年度 NPP、GPP、DOC 和异养呼吸、其余代表点及最终 669 个论文算例仍待整模型验证。[逐组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/remaining.md) · [等价交付条件](pft14_equivalence_delivery_contract.md)
+
 2026-11-24，**001 暖点两日本地收尾已验收，C93–C95 已合入主线。** 原始 1961 气象文件可由正常入口直接运行 96 步。原先写错的容重和解冻湿度分别写为 1650 kg/m³ 和 0.5，与三套原生参考一致。重启末态超差由 30 个字段、117 个坐标降至 **28 个字段、115 个坐标**，另有 47 个 STOMATE 字段缺少运行末态观测。累计 **95 项修正或支持补齐、49 个生产提交**，其中 92 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md) · [分支同步清单](shared_core_branch_review.md)
 
 首步的活动植被地表温度、热通量和潜在蒸发在采用同一入射短波后均通过原门限。四个采样步同步短波后，回放仍有 38 条超差，再同步已记录的大气和能量输入后还有 30 条。下一步优先核对末态差异较大的积温和起算日期、最大融深及分植被地表温度，检查它们是否被后续过程实际读取。年度碳通量仍待整模型验证。[短波回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/shortwave/dispositions.json) · [逐字段严门](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/restart/strict-counts.json)

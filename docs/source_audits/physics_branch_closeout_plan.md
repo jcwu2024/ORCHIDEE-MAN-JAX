@@ -52,6 +52,8 @@
 
 001 暖点本地收尾接受 C93–C95。常规气象入口已通过原文件实测，两项持久状态的写出和暖读已对齐。受控短波回放解释了首步活动植被温度、热通量和潜在蒸发的差异。余下 28 个末态字段中，优先核对积温记忆、最大融深和分植被地表温度的单位、有效掩码、实际写回与下一次读取，保留原窗口及年度验收各自的门限。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [逐字段严门](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/restart/strict-counts.json)
 
+001 暖点第二轮末态复查已完成。普通路径的 96 个半小时内，C96–C99 和 C95 可选配置通过限定验收。下一步用已存两日 Fortran 参考核对整段编译路径，在相同时间边界比较连续状态与重启文件读回的状态。先判定裸地粗糙高度在原程序和下次暖启中的定义，再按共用输入检查地表能量、水文、土热和日碳的实际消费者。原生记录缺少的相位及年度科学检验分别保留。代表点验收和最终 669 点矩阵按等价交付合同执行。[本轮验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [分组与所需实参](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/remaining.md)
+
 ## 授权、基线与接力
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？

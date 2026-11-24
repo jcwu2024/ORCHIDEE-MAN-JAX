@@ -1,5 +1,13 @@
 # 共享物理核心与研究分支核查
 
+## C96–C99 与 C95 可选配置的同步依赖
+
+日尺度与全球效率分支后续集中同步时，以生产提交 `f44033d5d7e849dbc479770a306de8ac6de7030d` 为依据。此次核对的研究分支快照为日尺度 `f898282a`、全球效率 `ffe77a00`。按各分支保留的实际计算、编译和重启入口核对以下依赖。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [来源和分支范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/README.md)
+
+- C96、C97 配合 C71 的日内更新次序、C88 的日平均量和 C90 的年界信号。核对冷启哨兵、纬度与季节状态的精度，以及最低辐照日期和积温的日末写回。
+- C98 配合 C29 的暖启根系初始化。从土碳半小时步保留公共深度、私有层号和上一年量，核对普通与编译两条通路。新原生运行从文件的公共深度重建私有状态，连续运行携带上一时步状态。
+- C99 保留布局中第一槽的裸地温度，核对冷暖文件、地表能量返回以及其余植被槽的更新。C95 的可选配置还涉及 STOMATE 直建冷启、文件读入和新年入口。对应的回归与发布测试随本提交同步。
+
 ## C93–C95 的共享依赖
 
 集中同步时以 `ad3375ec29be675635dda2aa4b99d7df106776ac` 为依据。所查日尺度快照 `f898282a`、全球效率快照 `ffe77a00` 均早于主线时钟接入及 C8 的当步密度补齐。按各分支实际调用的入口移植、核对相关回归。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json)

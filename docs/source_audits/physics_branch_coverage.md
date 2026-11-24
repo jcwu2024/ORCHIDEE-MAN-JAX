@@ -1,5 +1,7 @@
 # 当前物理计算与条件分支覆盖
 
+2026-11-25，001 两日普通调度和局部编译对照新增四项限定证据。最低季节辐照度和日期、积温、活动层最大深度及裸地温度写回均满足原重启门限，19 个原超差坐标通过。半小时活动层的窄编译、暖启重建和 C95 显式湿度开关另有测试。两日末仍超差的 24 个字段包括地表与能量 8 个、水文 8 个、土热 3 个和日碳 5 个。自然逐步记录的 78 条超差及两种受控回放的 38、30 条各保留原取样范围。整段编译、年度输出和原 70 个源码组、33 个调用组的开放条件按既有清单核验。[本次主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [剩余字段](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/remaining.md)
+
 001 暖点、1961 冷启动的自然两日窗口现有常规气象入口、容重跨步及暖启读入、解冻湿度冷启和默认回退的限定证据。生产提交 `ad3375ec` 对应 C93–C95。四个采样步跨模型过程观测最初的 78 条超差在受控回放中分别有 38 条和 30 条保留。两日末实际新文件尚有 28 个字段、115 个坐标超差。源码组的办结按原身份判断，本次没有申请关闭新的源码组。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-acceptance/controller-acceptance.json) · [短波回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-two-day-local-closeout/shortwave/dispositions.json)
 
 第十八包已验收。72 个源码组的 215 个动作及 33 个调用组逐项对齐。限定闭合 `thermosoil_diaglev` 第 3507–3508 行的土温诊断和 `sechiba_end` 第 3134 行的地表温度写回。现余 70 个源码组、33 个调用组，其中 12 个涉及外部端点。17 项本地待办中 11 项在归档配置下办结，6 项仍需同相位原记录或真实端点。两处重启写出已有本地读回证据，原 IOIPSL 端点仍开放。严格数值差异、565/187/4059 分母、52 个父过程及 7 份历史清点沿原身份登记。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/controller-acceptance.json) · [开放表](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/open-groups.json)

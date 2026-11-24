@@ -1,4 +1,17 @@
-# C1–C95 修正与支持补齐来源登记（2026-11-24）
+# C1–C99 修正与支持补齐来源登记（2026-11-25）
+
+## C96–C99 与 C95 的可选配置
+
+四项共用生产提交 `f44033d5d7e849dbc479770a306de8ac6de7030d`。以下旧行为均可在本地最早版本 `7333b46c` 和复查前版本 `7cae3e02` 中查到。累计 **99 项修正或支持补齐、50 个生产提交**，其中 96 项有复查前证据。C42、C57、C93 的遗漏发生在复查期间。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-acceptance/controller-acceptance.json) · [独立复核](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/review/independent-review.md)
+
+| 编号 | 原因 | 已验证的影响 |
+| --- | --- | --- |
+| C96 季节冷启动 | 最低辐照度的初值应保留读入哨兵 999999。旧入口填零，此后的正辐照度无法刷新最小值。 | 第一天按原程序记下日期 1，两个积温槽 PFT6、8 在第二天末与原文件一致。本站两槽覆盖均为零。 |
+| C97 季节辐照度精度 | 修正初值后，普通入口仍按单精度纬度计算太阳辐照度，与季节状态的双精度不匹配。 | 在相同的 −19° 纬度和日序下，最低值从 895.8803100585938 修正为原文件的 895.8803950541757 W/m²。 |
+| C98 土壤活动层状态 | 半小时步缺少当前及上一年最大融深和对应层号的传递。 | 001 两天末的 14 槽从 0 恢复为 33.06934507912562 m，即本算法在此暖剖面选中的第 31 层中心。已检查日末保存、文件暖启对公共深度的读取和对私有状态的重建。 |
+| C99 裸地地表温度 | 原能量循环从 PFT2 开始，旧 JAX 将格点温度也写入 PFT1。 | 裸地冷启 280 K 和给定暖启 286.125 K 均得到保留。同输入下其余植被槽和地表通量符合原门限。 |
+
+C95 补齐显式解冻湿度配置在冷启、文件暖启和新原生年界的接入。开关为真时冷暖入口都实读 0.325，论文配置为假时为 0.5，连续跨年保留内存值。按同一参数合同归入 C95。发布测试的参数载荷和年界夹具修订计入测试维护。[实际冷暖入口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/thawed/production-entry.json) · [年界回归](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-endpoint-state-followup/year-fixture/README.md)
 
 ## C93–C95 论文气象输入和两项土壤重启状态
 
