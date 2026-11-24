@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-25，**001 暖点第二天五个碳字段的六处超差，已追到共同的日 GPP 输入差。** 原 Fortran 日志重建值为 0.5301776170576762 gC/m²/天，JAX 为 0.5301776170758795。只替换日 GPP，保持其余 JAX 当日实参，六处均回到原容差。差值主要出现在第 60、85 个半小时步，两步中最早偏离的光合输入或运算仍待原生观测。本地 JAX 的 18 项日末碳状态交接逐值相同。与先前两日原生终止文件比较，仍有 24 个字段、96 个坐标超差，另有 47 个字段缺实测末态。[日碳对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/jax-carbon/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/controller-acceptance.json)
+
+**C101 修复了跨多个完整源日编译时在午夜判断处退出的问题。** 三天的普通与编译 JAX 每天 26 个日输出、364 个坐标均通过原门限，第 144 步末态仍有 9 个数组的 35 个存储位置超差。单日入口也已实测拒绝误传的两整天气象。累计 101 项修正或功能补齐、52 个生产提交，97 项有复查前证据。现有 Fortran 第 96 步是作业结束时的写出。观察正常的第二天日末和第 97 步首次读取，需要用同一配置多跑一个 6 小时气象区间；本机已完成原生取证准备。[修正来源](correction_origins.md) · [分组余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/remaining.md)
+
 2026-11-25，**001 暖点两日编译运行和文件续跑已完成限定验收。** C100 修复了从第二天恢复却读取第一天气象的问题，同时修复了 C98 在正式编译路径多传参数引起的退出。第 50–96 步实际进入 SECHIBA 编译扫描，土碳折叠执行第 49–96 步。续跑按绝对步号读取气象索引 48–95。两条 JAX 路线的第二天 26 个输出、364 个数值在原门限内，285 个重启变量的有限值和掩码通过对照。逐半小时排水和潜在蒸发修正量仍有严格差异。累计 **100 项修正或功能补齐、51 个生产提交**，97 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [来源登记](correction_origins.md)
 
 与同一 Fortran B 比较，两条 JAX 路线均保留原来的 24 个字段、96 个超差位置。土壤前三层的水分差可以重现其中 42 个分植被土壤湿度差，仍需把前一时步的自然水状态与原生实参配对。47 个 STOMATE 变量缺运行末态。接下来优先合并第 95–97 步的水热、气动、日末碳写回和下一步读取证据，以及复位前的异养呼吸和实际 DOC 接收端。代表点年度及 669 个论文算例的交付条件仍见原合同。[分组证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md) · [等价交付条件](pft14_equivalence_delivery_contract.md)

@@ -1,4 +1,10 @@
-# C1–C100 修正与支持补齐来源登记（2026-11-25）
+# C1–C101 修正与支持补齐来源登记（2026-11-25）
+
+## C101 多日编译时的日末条件
+
+生产提交 `d2ccda8e511b87b70e02db94c62e5264ac1ada36`。外层编译扫描和按 Python 布尔值处理的日累积入口在 `7333b46c` 已存在。复查前的 `7cae3e02` 传入静态步号。复查中的 `782535b4130f2ddc8cd30a251e0493709e1ab26a` 改为依据真实源时钟的午夜标志，编译时将被追踪的动态布尔量转为 Python 布尔值，导致多日入口退出。C101 登记为复查期间引入的编译回归。累计 **101 项修正或功能补齐、52 个生产提交**，97 项有复查前证据。C98 的编译回归另见其后续修复记录。[候选与历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/candidates.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/controller-acceptance.json)
+
+原 SLOWPROC 只在源日末启动日过程。正式多日编译入口先用真实时钟校验整行连续且活跃、起步相位和末步午夜，日累积器随后使用该行唯一的末步。普通路径仍逐步取源时钟。主控另以两整天的气象验证单日入口的行长度，补上对多余步数的拒绝并加入发布测试。001 暖点的第 49–96、97–144 步均进入真实外层扫描，只有第 96、144 步执行慢过程。第三天末态的 35 个严格差异位置继续按源输入和消费检查。[三日对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/review/review-checks.json) · [主控回归](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/single-day-after.log)
 
 ## C100 文件续跑的气象读头及 C98 编译调用修复
 

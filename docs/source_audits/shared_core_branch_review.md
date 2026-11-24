@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## C101 完整源日的多日编译
+
+生产提交 `d2ccda8e511b87b70e02db94c62e5264ac1ada36` 补齐 `782535b4` 接入源时钟后外层日扫描到 STOMATE 日累积器的调用。日尺度 `f898282a` 和全球效率 `ffe77a00` 的已查快照仍传静态局部步号。集中同步时，配套核对源时钟绑定、完整日行的步数和起止时刻、实际编译入口的午夜条件及普通逐步路径，带上日累积、输入行长度回归和发布测试。001 两个编译日的证据适用于此处的 CPU x64 路线。[来源与分支依赖](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation/candidates.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/controller-acceptance.json)
+
 ## C100 文件续跑与 C98 编译调用
 
 两研究分支后续集中同步以 `8adf774a55b9f5f4c413cb5e7ca28f97b0032f3e` 为依据。C100 需结合 `782535b4` 的源时钟和 C93 气象选轴，核对本分支的逐步读器、编译预读、同一气象文件暖启和显式局部步号起点。C98 需连同 `f44033d5` 的整个活动层修正，确保私有状态经过每个半小时并只将所需实参传入土碳过程。携带普通与编译气象读者、土碳签名和年界临时配置的回归。已查日尺度 `f898282a` 和全球效率 `ffe77a00` 都有相关共享入口。[同步依赖和来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/candidates.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json)

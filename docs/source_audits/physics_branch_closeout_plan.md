@@ -56,6 +56,8 @@
 
 ## 授权、基线与接力
 
+001 点本地第 95–97 步已完成水热与碳的实际交接核查，最短外层编译块已覆盖第二、三天。原生观测窗口已具体到第 59、60、85、86 步的光合实参、第 95–96 步的水热与日碳、以及第 97 步的首次消费。同一插桩程序可分别运行 8 和 9 个 6 小时区间，以核对第二天末普通写回与终止写出的差别。另有干净原生构建用来核对插桩影响。本地准备已验收，计算额度按本次作业的单独授权办理。[本地实测](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/controller-acceptance.json) · [已准备的调度参数](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/cancon-allocation.json)
+
 001 两日已核对实际 SECHIBA 半小时编译扫描、土碳编译折叠，以及第 48 步写文件至第 96 步的正常续跑。此窗口只有一个后续日，跨多个后续日的外层编译块尚缺本点实测。后续集中取同点同一构建的第 95 步末、第 96 步日末和第 97 步首次消费。以相同边界实参核对水分、热量、气动和日碳的差异来源，保留原数值门限和可达性限制。[两日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart-acceptance/controller-acceptance.json) · [合并观测范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
