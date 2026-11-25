@@ -466,6 +466,32 @@ def test_daily_accumulation_runtime_fold_matches_debug_path_bit_exact():
         np.testing.assert_allclose(np.asarray(runtime.fields[name]), np.asarray(debug.fields[name]), rtol=0, atol=0)
 
 
+def test_peat_wetness_accumulates_and_normalizes_only_with_peat_occurrence():
+    state = _DailyAccumulatorState()
+    state.fwet_daily = np.array([1.0])
+    state.liqwt_daily = np.array([0.5])
+    first = _entry_payload(scale=1.0, t2m_min=279.0, t2m_max=290.0)
+    second = _entry_payload(scale=2.0, t2m_min=277.0, t2m_max=292.0)
+    first.update(fwet_new=np.array([0.25]), liqwt_ratio=np.array([0.5]))
+    second.update(fwet_new=np.array([0.75]), liqwt_ratio=np.array([0.125]))
+    common = {
+        "entry_payloads": (first, second),
+        "accumulator_state": state,
+        "do_slow_flags": (False, True),
+        "dt_sechiba": 2.0,
+        "dt_stomate": 4.0,
+    }
+    for peat_occur, expected in ((False, (1.0, 0.5)), (True, (0.75, 0.4375))):
+        ordinary = stomate_daily_accumulation_fold_from_entries(**common, peat_occur=peat_occur)
+        runtime = stomate_daily_accumulation_fold_from_entries(
+            **common, peat_occur=peat_occur, retain_step_results=False, use_compiled_runtime=True,
+        )
+        assert ordinary.ok and runtime.ok
+        for name, value in zip(("fwet_daily", "liqwt_daily"), expected, strict=True):
+            np.testing.assert_array_equal(ordinary.fields[name], [value])
+            np.testing.assert_array_equal(runtime.fields[name], [value])
+
+
 def test_daily_accumulation_fold_rejects_internal_slow_boundary():
     state = _DailyAccumulatorState()
     payload = _entry_payload(scale=1.0, t2m_min=279.0, t2m_max=290.0)
@@ -735,9 +761,13 @@ def test_admitted_compiled_source_day_runs_actual_stomate_fold():
     # nested day the source seconds and active flags are traced scalars.
     payloads = tuple(_entry_payload(scale=scale, t2m_min=277.0, t2m_max=290.0)
                      for scale in (1.0, 2.0, 3.0))
+    accumulators = vars(_DailyAccumulatorState())
+    # A warm file can carry these values even when this day's peat processes
+    # are disabled. They remain live until the unconditional source reset.
+    accumulators.update(fwet_daily=np.array([27.0]), liqwt_daily=np.array([63.0]))
     state = NS(fields_by_component={
         "slowproc_stomate_previous_step_state": {
-            "lai": np.ones((1, 2)), "daily_accumulators": vars(_DailyAccumulatorState()),
+            "lai": np.ones((1, 2)), "daily_accumulators": accumulators,
             "biomass": np.zeros((1, 2, NPARTS, 1)), "resp_maint_part": np.zeros((1, 2, NPARTS)),
             "sla_calc": np.full((1, 2), 0.02),
         },
@@ -760,15 +790,20 @@ def test_admitted_compiled_source_day_runs_actual_stomate_fold():
             compiled_complete_source_day=compiled,
         )
         assert result.ok
-        return result.daily_fields
+        after_reset = driver._paper_day_daily_reset_fields(daily_fold=result, do_slow=True)
+        return result.daily_fields, after_reset
 
     seconds = jnp.array([28800.0, 57600.0, 0.0])
     active = jnp.ones(3, dtype=bool)
-    actual = jax.jit(lambda seconds, active: fold(seconds, active, compiled=True))(seconds, active)
-    ordinary = fold(seconds, active, compiled=False)
+    actual, compiled_reset = jax.jit(lambda seconds, active: fold(seconds, active, compiled=True))(seconds, active)
+    ordinary, ordinary_reset = fold(seconds, active, compiled=False)
     for name in actual:
         np.testing.assert_allclose(actual[name], ordinary[name], atol=1e-14, rtol=1e-12)
     np.testing.assert_array_equal(actual["t2m_daily"], [282.0])
+    for name in ("fwet_daily", "liqwt_daily"):
+        np.testing.assert_array_equal(actual[name], accumulators[name])
+        np.testing.assert_array_equal(compiled_reset[name], [0.0])
+        np.testing.assert_array_equal(ordinary_reset[name], [0.0])
 
 
 def test_daily_process_fold_single_pass_matches_default_path_bit_exact():

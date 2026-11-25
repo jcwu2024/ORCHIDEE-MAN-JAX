@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import ast
+import importlib
 import inspect
 import json
 import sys
@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -28,10 +27,13 @@ from jax_orchidee.stomate.reference import (  # noqa: E402
 )
 from jax_orchidee.stomate.restart_io import (  # noqa: E402
     STOMATE_FIXED_PATH_CARRY_FIELDS,
+    _write_daily_dataset,
+    _write_remainder_dataset,
+    read_stomate_readstart_states_from_template,
     stomate_writerestart_field_ledger,
 )
+from jax_orchidee.stomate.soilcarbon_kernels import AltCalcDocResult  # noqa: E402
 from scripts.dev.scan_stomate_io_restart_fields import scan_stomate_io_restart_fields  # noqa: E402
-
 
 DEFAULT_CONTRACT = ROOT / "docs" / "source_audits" / "restart_state_lifecycle.yaml"
 DEFAULT_SOURCE = ROOT / "fortran_source" / "ORCHIDEE" / "src_stomate" / "stomate_io.f90"
@@ -43,6 +45,11 @@ RESTART_READER_TYPES = (
     StomateOkPcRestartGasState,
     StomateReadstartRemainderState,
 )
+
+# These values are deliberately carried at the day boundary, but they are not
+# flat Fortran restart variables.  They need a structural lifecycle contract
+# rather than a fabricated scalar/axis declaration in ``axis_groups``.
+STRUCTURAL_DAY_END_FIELDS = frozenset({"ok_leak_active_layer"})
 
 
 def reader_contract_fields() -> tuple[str, ...]:
@@ -58,7 +65,16 @@ def lifecycle_contract_fields() -> tuple[str, ...]:
     """Return the union of restart-reader fields and explicit day-end packet fields."""
 
     return tuple(
-        dict.fromkeys((*reader_contract_fields(), *STOMATE_DAY_END_WRITEBACK_FIELDS))
+        dict.fromkeys(
+            (
+                *reader_contract_fields(),
+                *(
+                    field
+                    for field in STOMATE_DAY_END_WRITEBACK_FIELDS
+                    if field not in STRUCTURAL_DAY_END_FIELDS
+                ),
+            )
+        )
     )
 
 
@@ -144,14 +160,13 @@ def _mapping_literal_keys(
     names = set(mapping_names)
     keys: set[str] = set()
     for node in ast.walk(tree):
-        if (
-            "$return" in names
-            and isinstance(node, ast.Return)
-            and isinstance(node.value, ast.Dict)
-        ):
+        if "$return" in names and isinstance(node, ast.Return):
+            returned = node.value.elts if isinstance(node.value, ast.Tuple) else (node.value,)
             keys.update(
                 key.value
-                for key in node.value.keys
+                for child in returned
+                if isinstance(child, ast.Dict)
+                for key in child.keys
                 if isinstance(key, ast.Constant) and isinstance(key.value, str)
             )
         if isinstance(node, (ast.Assign, ast.AnnAssign)):
@@ -182,15 +197,300 @@ def _mapping_literal_keys(
             and isinstance(node.func.value, ast.Name)
             and node.func.value.id in names
             and node.func.attr == "update"
-            and node.args
-            and isinstance(node.args[0], ast.Dict)
         ):
+            if node.args and isinstance(node.args[0], ast.Dict):
+                keys.update(
+                    key.value
+                    for key in node.args[0].keys
+                    if isinstance(key, ast.Constant) and isinstance(key.value, str)
+                )
+            keys.update(keyword.arg for keyword in node.keywords if keyword.arg)
+    return keys
+
+
+def _keyword_mapping_literal_keys(owner: str, keyword_name: str, *, field: str) -> set[str]:
+    """Return literal string keys supplied to one callable keyword mapping."""
+
+    _, resolved = _resolve_owner(owner, field=field, role="production owner")
+    tree = ast.parse(inspect.getsource(resolved))
+    keys: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for keyword in node.keywords:
+            if keyword.arg != keyword_name or not isinstance(keyword.value, ast.Dict):
+                continue
             keys.update(
                 key.value
-                for key in node.args[0].keys
+                for key in keyword.value.keys
                 if isinstance(key, ast.Constant) and isinstance(key.value, str)
             )
     return keys
+
+
+def _owner_source_names(owner: str, *, field: str) -> set[str]:
+    """Return names referenced by a production owner without executing it."""
+
+    _, resolved = _resolve_owner(owner, field=field, role="production owner")
+    tree = ast.parse(inspect.getsource(resolved))
+    return {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+
+
+def _owner_attribute_names(owner: str, base_name: str, *, field: str) -> set[str]:
+    """Return direct ``base_name.attribute`` references in an owner AST."""
+
+    _, resolved = _resolve_owner(owner, field=field, role="production owner")
+    tree = ast.parse(inspect.getsource(resolved))
+    return {
+        node.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == base_name
+    }
+
+
+def _structured_state_records(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Validate non-flat day-end state with its real JAX container contract."""
+
+    declarations = document.get("structured_state_contracts", {})
+    if set(declarations) != STRUCTURAL_DAY_END_FIELDS:
+        raise ValueError(
+            "structured state contract coverage mismatch: "
+            f"missing={sorted(STRUCTURAL_DAY_END_FIELDS - set(declarations))}, "
+            f"extra={sorted(set(declarations) - STRUCTURAL_DAY_END_FIELDS)}"
+        )
+
+    records: dict[str, dict[str, Any]] = {}
+    for field, declaration in declarations.items():
+        state_type_owner = _require_owner(
+            declaration.get("state_type"), field=field, role="state_type"
+        )
+        _, state_type = _resolve_owner(
+            state_type_owner, field=field, role="state_type"
+        )
+        if state_type is not AltCalcDocResult:
+            raise ValueError(f"{field}: structural state_type must be AltCalcDocResult")
+        leaves = declaration.get("leaves")
+        if not isinstance(leaves, dict) or set(leaves) != set(AltCalcDocResult._fields):
+            raise ValueError(
+                f"{field}: structural leaves must exactly match AltCalcDocResult: "
+                f"expected={list(AltCalcDocResult._fields)}"
+            )
+        for leaf, leaf_contract in leaves.items():
+            if not isinstance(leaf_contract, dict):
+                raise ValueError(f"{field}/{leaf}: missing structural leaf contract")
+            if leaf_contract.get("axes") != ["npts", "nvm"]:
+                raise ValueError(f"{field}/{leaf}: structural leaf axes must be [npts, nvm]")
+            expected_family = "integer" if leaf in {"alt_ind", "altmax_ind", "altmax_ind_lastyear"} else "floating"
+            if leaf_contract.get("dtype_family") != expected_family:
+                raise ValueError(f"{field}/{leaf}: structural leaf dtype_family must be {expected_family}")
+
+        owners = {
+            role: _require_owner(declaration.get(role), field=field, role=role)
+            for role in (
+                "cold_and_file_warm_owner",
+                "half_hour_owner",
+                "compiled_fold_owner",
+                "compiled_projection_owner",
+                "day_end_owner",
+            )
+        }
+        public_restart_field = _require_text(
+            declaration, "public_restart_field", field=field
+        )
+        if public_restart_field != "altmax":
+            raise ValueError(f"{field}: public restart projection must be altmax")
+        private_leaves = declaration.get("private_leaves")
+        expected_private = set(AltCalcDocResult._fields) - {public_restart_field}
+        if not isinstance(private_leaves, list) or set(private_leaves) != expected_private:
+            raise ValueError(
+                f"{field}: private leaves must be every AltCalcDocResult leaf except altmax"
+            )
+        if declaration.get("serialization") != "private_not_fortran_restart":
+            raise ValueError(f"{field}: structural state must not claim a Fortran restart variable")
+
+        cold_leaves = _keyword_mapping_literal_keys(
+            owners["cold_and_file_warm_owner"], "state_updates", field=field
+        )
+        if set(AltCalcDocResult._fields) - cold_leaves:
+            raise ValueError(
+                f"{field}: cold/file-warm owner does not emit all AltCalcDocResult leaves: "
+                f"{sorted(set(AltCalcDocResult._fields) - cold_leaves)}"
+            )
+        half_hour_keys = _mapping_literal_keys(
+            owners["half_hour_owner"], ["$return"], field=field
+        )
+        compiled_keys = _mapping_literal_keys(
+            owners["compiled_projection_owner"], ["values"], field=field
+        )
+        day_end_keys = _mapping_literal_keys(
+            owners["day_end_owner"], ["fields"], field=field
+        )
+        required_projection = {"altmax", field}
+        for phase, keys in (
+            ("half-hour", half_hour_keys),
+            ("compiled", compiled_keys),
+            ("day-end", day_end_keys),
+        ):
+            missing = required_projection - keys
+            if missing:
+                raise ValueError(
+                    f"{field}: {phase} owner does not carry required projection {sorted(missing)}"
+                )
+        if "AltCalcDocResult" not in _owner_source_names(
+            owners["half_hour_owner"], field=field
+        ):
+            raise ValueError(f"{field}: half-hour owner does not construct AltCalcDocResult")
+        compiled_leaves = _owner_attribute_names(
+            owners["compiled_fold_owner"], "active_layer", field=field
+        )
+        required_compiled = {
+            "altmax",
+            "altmax_ind",
+            "altmax_lastyear",
+            "altmax_ind_lastyear",
+        }
+        if not required_compiled <= compiled_leaves:
+            raise ValueError(
+                f"{field}: compiled owner lacks active-layer carry leaves "
+                f"{sorted(required_compiled - compiled_leaves)}"
+            )
+        records[field] = {
+            "state_type": state_type_owner,
+            "leaves": leaves,
+            "owners": owners,
+            "public_restart_field": public_restart_field,
+            "private_leaves": private_leaves,
+            "serialization": declaration["serialization"],
+            "fortran_provenance": declaration.get("fortran_provenance"),
+            "closed": True,
+        }
+    return records
+
+
+def _production_value_records(
+    document: dict[str, Any], *, writer_fields: set[str]
+) -> dict[str, dict[str, Any]]:
+    """Validate selected day-end fields against actual producer/consumer maps."""
+
+    declarations = document.get("production_value_contracts", {})
+    expected = {"c103_day_end_state", "peat_daily_accumulators"}
+    if set(declarations) != expected:
+        raise ValueError(
+            "production value contract coverage mismatch: "
+            f"missing={sorted(expected - set(declarations))}, extra={sorted(set(declarations) - expected)}"
+        )
+
+    records: dict[str, dict[str, Any]] = {}
+    c103 = declarations["c103_day_end_state"]
+    c103_fields = {"co2_fire", "ni_acc", "litter_not_avail"}
+    if set(c103.get("fields", ())) != c103_fields:
+        raise ValueError("c103_day_end_state: fields must be co2_fire, ni_acc, litter_not_avail")
+    c103_owners = {
+        role: _require_owner(c103.get(role), field="c103_day_end_state", role=role)
+        for role in ("producer_owner", "packet_owner", "writer_owner", "next_reader_owner")
+    }
+    _validate_value_io_owners("c103_day_end_state", c103_owners, _write_remainder_dataset)
+    producer_keys = _mapping_literal_keys(
+        c103_owners["producer_owner"], ["$return"], field="c103_day_end_state"
+    )
+    packet_keys = _mapping_literal_keys(
+        c103_owners["packet_owner"], ["fields"], field="c103_day_end_state"
+    )
+    if {"co2_fire", "ni_acc"} - producer_keys:
+        raise ValueError("c103_day_end_state: producer owner lacks co2_fire or ni_acc")
+    if "litter_not_avail" not in packet_keys:
+        raise ValueError("c103_day_end_state: packet owner lacks litter_not_avail")
+    if not c103_fields <= writer_fields:
+        raise ValueError("c103_day_end_state: writer ledger lacks a C103 field")
+    records["c103_day_end_state"] = {
+        "fields": sorted(c103_fields),
+        "owners": c103_owners,
+        "producer_keys": sorted(producer_keys & c103_fields),
+        "packet_keys": sorted(packet_keys & c103_fields),
+        "writer_serialized": True,
+        "closed": True,
+    }
+
+    peat = declarations["peat_daily_accumulators"]
+    peat_fields = {"fwet_daily", "liqwt_daily"}
+    if set(peat.get("fields", ())) != peat_fields:
+        raise ValueError("peat_daily_accumulators: fields must be fwet_daily and liqwt_daily")
+    peat_owners = {
+        role: _require_owner(peat.get(role), field="peat_daily_accumulators", role=role)
+        for role in (
+            "producer_owner",
+            "compiled_owner",
+            "reset_owner",
+            "writer_owner",
+            "next_reader_owner",
+        )
+    }
+    _validate_value_io_owners("peat_daily_accumulators", peat_owners, _write_daily_dataset)
+    producer_keys = _mapping_literal_keys(
+        peat_owners["producer_owner"], ["current", "increments"], field="peat_daily_accumulators"
+    )
+    compiled_keys = _mapping_literal_keys(
+        peat_owners["compiled_owner"], ["fields"], field="peat_daily_accumulators"
+    )
+    if peat_fields - producer_keys:
+        raise ValueError("peat_daily_accumulators: producer owner lacks wetness fields")
+    if peat_fields - compiled_keys:
+        raise ValueError("peat_daily_accumulators: compiled owner lacks wetness fields")
+    if not peat_fields <= writer_fields:
+        raise ValueError("peat_daily_accumulators: writer ledger lacks wetness field")
+    reset_constant = _require_text(peat, "reset_constant", field="peat_daily_accumulators")
+    reset_names = _owner_source_names(peat_owners["reset_owner"], field="peat_daily_accumulators")
+    if not {reset_constant, "reset_daily_on_slow"} <= reset_names:
+        raise ValueError("peat_daily_accumulators: reset owner does not invoke the daily reset")
+    reset_module = importlib.import_module(peat_owners["reset_owner"].rsplit(".", 1)[0])
+    reset_fields = set(getattr(reset_module, reset_constant, ()))
+    if not peat_fields <= reset_fields:
+        raise ValueError("peat_daily_accumulators: reset constant lacks wetness field")
+    records["peat_daily_accumulators"] = {
+        "fields": sorted(peat_fields),
+        "owners": peat_owners,
+        "producer_keys": sorted(producer_keys & peat_fields),
+        "compiled_keys": sorted(compiled_keys & peat_fields),
+        "reset_constant": reset_constant,
+        "writer_serialized": True,
+        "closed": True,
+    }
+    return records
+
+
+def _validate_value_io_owners(field: str, owners: dict[str, str], writer: Any) -> None:
+    for role, expected in (
+        ("writer_owner", writer),
+        ("next_reader_owner", read_stomate_readstart_states_from_template),
+    ):
+        _, resolved = _resolve_owner(owners[role], field=field, role=role)
+        if resolved is not expected:
+            raise ValueError(f"{field}: {role} must be {expected.__name__}")
+
+
+def _production_state_audit(document: dict[str, Any], *, writer_fields: set[str]) -> dict[str, Any]:
+    structural = _structured_state_records(document)
+    names = set(structural)
+    carry_fields = set(STOMATE_HALF_HOUR_CARRY_FIELDS) & set(STOMATE_DAY_END_WRITEBACK_FIELDS)
+    if not names <= carry_fields:
+        raise ValueError("structured state is missing from the live half-hour or day-end carry")
+    public_fields = {record["public_restart_field"] for record in structural.values()}
+    if names & writer_fields or not public_fields <= writer_fields:
+        raise ValueError("structured state is private and must export its public depth only")
+    return {
+        "structured_state_contracts": structural,
+        "production_value_contracts": _production_value_records(document, writer_fields=writer_fields),
+    }
+
+
+def build_production_state_audit(contract_path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
+    """Verify the production state contracts without the optional Fortran checkout."""
+
+    document = yaml.safe_load(contract_path.read_text(encoding="utf-8"))
+    writer_fields = set(stomate_writerestart_field_ledger().serialized_fields)
+    return _production_state_audit(document, writer_fields=writer_fields)
 
 
 def _owner_constant_fields(
@@ -427,6 +727,11 @@ def build_audit(
     template_backed_writer_fields = (
         template_backed_serialized_fields | validated_not_serialized_fields
     )
+    production_state = _production_state_audit(
+        document, writer_fields=template_backed_serialized_fields
+    )
+    structured_state_records = production_state["structured_state_contracts"]
+    production_value_records = production_state["production_value_contracts"]
 
     special_fields = (
         set(derived) | set(runtime_initialized) | set(packet_only) | set(source_local)
@@ -771,7 +1076,15 @@ def build_audit(
         )
         for disposition in sorted({record["field_disposition"] for record in records})
     }
-    state_transition_closed = closed_fields == len(records)
+    structural_closed = all(
+        record["closed"] for record in structured_state_records.values()
+    )
+    production_values_closed = all(
+        record["closed"] for record in production_value_records.values()
+    )
+    state_transition_closed = (
+        closed_fields == len(records) and structural_closed and production_values_closed
+    )
     restart_lifecycle_closed = (
         state_transition_closed and not document["known_global_gaps"]
     )
@@ -807,6 +1120,8 @@ def build_audit(
                 record["lifecycle"]["next_restart_read_verified"] for record in records
             ),
             "closed_fields": closed_fields,
+            "structured_state_contracts": len(structured_state_records),
+            "production_value_contracts": len(production_value_records),
             "fixed_path_carry_fields": len(executable_fixed_carry),
             "field_dispositions": dispositions,
             "writer_normalized_fields": len(writer_ledger.normalized_state_fields),
@@ -816,6 +1131,8 @@ def build_audit(
         },
         "required_lifecycle_stages": document["required_lifecycle_stages"],
         "records": records,
+        "structured_state_contracts": structured_state_records,
+        "production_value_contracts": production_value_records,
         "limitations": document["known_global_gaps"],
     }
 

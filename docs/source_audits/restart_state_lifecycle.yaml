@@ -822,6 +822,60 @@ required_lifecycle_stages:
   source_local_control: [read_owner, use_owner, explicitly_not_serialized]
   packet_only: [producer, consumer, day_start, update, day_end, cross_step, cross_year, explicitly_not_serialized]
 
+# C98 is a private six-leaf half-hour state, not a NetCDF variable.  ``altmax``
+# is its only public restart projection.  Do not add this container to
+# ``axis_groups``: that would falsely treat an internal JAX object as a flat
+# Fortran restart field.
+structured_state_contracts:
+  ok_leak_active_layer:
+    state_type: jax_orchidee.stomate.soilcarbon_kernels.AltCalcDocResult
+    leaves:
+      alt: {axes: [npts, nvm], dtype_family: floating}
+      alt_ind: {axes: [npts, nvm], dtype_family: integer}
+      altmax: {axes: [npts, nvm], dtype_family: floating}
+      altmax_ind: {axes: [npts, nvm], dtype_family: integer}
+      altmax_lastyear: {axes: [npts, nvm], dtype_family: floating}
+      altmax_ind_lastyear: {axes: [npts, nvm], dtype_family: integer}
+    public_restart_field: altmax
+    private_leaves: [alt, alt_ind, altmax_ind, altmax_lastyear, altmax_ind_lastyear]
+    serialization: private_not_fortran_restart
+    cold_and_file_warm_owner: jax_orchidee.coupled.stomate_active_layer_ok_leak_inputs
+    half_hour_owner: jax_orchidee.driver.orchestration._paper_half_hour_ok_leak_fold_from_entries
+    compiled_fold_owner: jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold
+    compiled_projection_owner: jax_orchidee.driver.orchestration._compiled_ok_leak_updates
+    day_end_owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+      subroutine: soilcarbon_leak/altcalc_DOC
+      lines: 1037-1043, 1171-1172, 2438-2578
+
+# These are selected concrete production paths rather than broad ownership
+# claims.  They protect C103's day-end writeback and the two wetland daily
+# accumulators with executable producer, day-end/compiled, and I/O identities.
+production_value_contracts:
+  c103_day_end_state:
+    fields: [co2_fire, ni_acc, litter_not_avail]
+    producer_owner: jax_orchidee.driver.orchestration.paper_day_active_restart_producer_fields
+    packet_owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    writer_owner: jax_orchidee.stomate.restart_io._write_remainder_dataset
+    next_reader_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj/littercalc_leak
+      lines: 445-447, 874, 1189-1221; stomate_litter.f90 2325-2348
+  peat_daily_accumulators:
+    fields: [fwet_daily, liqwt_daily]
+    producer_owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    compiled_owner: jax_orchidee.stomate.daily._stomate_daily_accumulation_fold_runtime_from_entries
+    reset_owner: jax_orchidee.driver.orchestration._paper_day_daily_reset_fields
+    reset_constant: PAPER_DAY_ZERO_DAILY_RESET_FIELDS
+    writer_owner: jax_orchidee.stomate.restart_io._write_daily_dataset
+    next_reader_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3215-3218, 3593-3607, 5019-5020
+
 restart_file_scope:
   protocol: paper production uses one independent landpoint per ORCHIDEE run
   netcdf_schema: docs/source_audits/stomate_restart_netcdf_schema.json

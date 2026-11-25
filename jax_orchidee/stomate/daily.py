@@ -1156,6 +1156,10 @@ def stomate_first_step_daily_accumulation_from_entry(
         "snowfall_daily": accumulator_state.snowfall_daily,
         "snowmass_daily": accumulator_state.snowmass_daily,
         "tmc_topgrass_daily": accumulator_state.tmc_topgrass_daily,
+        # The source gates their increments at 3215-3218 and resets both
+        # stored values at 5019-5020 on every completed STOMATE day.
+        "fwet_daily": accumulator_state.fwet_daily,
+        "liqwt_daily": accumulator_state.liqwt_daily,
     }
     increments = {
         "humrel_daily": entry_payload["humrel"],
@@ -1172,8 +1176,6 @@ def stomate_first_step_daily_accumulation_from_entry(
         "tmc_topgrass_daily": entry_payload["tmc_topgrass"],
     }
     if bool(peat_occur):
-        current["fwet_daily"] = accumulator_state.fwet_daily
-        current["liqwt_daily"] = accumulator_state.liqwt_daily
         increments["fwet_daily"] = entry_payload["fwet_new"]
         increments["liqwt_daily"] = entry_payload["liqwt_ratio"]
 
@@ -1279,10 +1281,9 @@ def _stomate_daily_accumulation_fold_runtime_from_entries(
         "tmc_topgrass_daily": jnp.asarray(accumulator_state.tmc_topgrass_daily),
         "t2m_min_daily": jnp.asarray(accumulator_state.t2m_min_daily),
         "t2m_max_daily": jnp.asarray(accumulator_state.t2m_max_daily),
+        "fwet_daily": jnp.asarray(accumulator_state.fwet_daily),
+        "liqwt_daily": jnp.asarray(accumulator_state.liqwt_daily),
     }
-    if bool(peat_occur):
-        fields["fwet_daily"] = jnp.asarray(accumulator_state.fwet_daily)
-        fields["liqwt_daily"] = jnp.asarray(accumulator_state.liqwt_daily)
 
     shared_veget_cov_max = None
     try:

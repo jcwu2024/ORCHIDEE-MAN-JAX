@@ -56,6 +56,11 @@ jobs:
           tests/unit/test_stomate_season.py::test_gdd_solar_minimum_uses_real64_state_precision_with_float32_geometry
           tests/unit/test_stomate_restart_io.py::test_readstart_thawed_humidity_respects_source_missing_value
           tests/unit/test_stomate_daily.py::test_admitted_compiled_source_day_runs_actual_stomate_fold
+          tests/unit/test_stomate_daily.py::test_peat_wetness_accumulates_and_normalizes_only_with_peat_occurrence
+          tests/unit/test_restart_state_lifecycle.py::test_c98_active_layer_is_a_six_leaf_private_state_with_one_public_projection
+          tests/unit/test_restart_state_lifecycle.py::test_c98_active_layer_production_shapes_cover_cold_warm_and_narrow_jit
+          tests/unit/test_restart_state_lifecycle.py::test_c103_and_wetness_accumulators_require_real_production_paths
+          tests/unit/test_restart_state_lifecycle.py::test_structured_and_production_contract_mutations_fail
           tests/unit/test_driver_calendar_wiring.py
           tests/unit/test_us_init_production.py::test_year_entry_updates_consumer_mirror_only_at_new_native_phase
       - name: WATCHOUT forcing and restart transport

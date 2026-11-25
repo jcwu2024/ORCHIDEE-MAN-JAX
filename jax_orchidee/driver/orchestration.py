@@ -9953,7 +9953,7 @@ PAPER_DAY_ZERO_DAILY_RESET_FIELDS = (
     "temp_sol_daily",
     "snowdz_daily",
     "snowrho_daily",
-    # Fortran provenance: src_stomate/stomate.f90::stomate_main lines 4994-5000.
+    # Fortran provenance: stomate.f90::stomate_main lines 5019-5020.
     "fwet_daily",
     "liqwt_daily",
 )
@@ -9999,7 +9999,7 @@ def _paper_day_daily_reset_fields(
     """Return modeled daily accumulator state immediately after do_slow reset.
 
     Fortran provenance: ``src_stomate/stomate.f90::stomate_main`` lines
-    4944-5000. ``t2m_min_daily``/``t2m_max_daily`` are extrema sentinels
+    4944-5020. ``t2m_min_daily``/``t2m_max_daily`` are extrema sentinels
     (``large_value`` and ``-large_value`` from
     ``src_parameters/constantes_var.f90`` line 178), while the listed modeled
     accumulator fields are reset to zero.
