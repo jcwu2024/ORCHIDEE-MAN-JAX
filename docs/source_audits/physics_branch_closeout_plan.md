@@ -66,7 +66,7 @@
 
 第二个代表点 069 的两步已验收。原年末重启文件支持暖态，实测第 858481 步的水热返回已进入第 858482 步。本次修正 C105 处理从文件启动时准备层选错气象年份的问题。069 两条模式的蒸发限制及底部排水仍保留五处原严格差异。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json) · [原生最短窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/next-native.md)
 
-319 年界时钟修订及首日水热与日碳交接已通过限定验收。文件和内存两条启动均到达第 17569 步，首日 44 处内部严格差异的主要下游影响与 26 项日输出已实测。069 两条路线第三步均读到上一步的蒸发限制。接下来核实 319 旧凋落物状态在第二个实际日末的读取，并按现存原件检查自然雪冻时段。具名站点同相位原生水热及日碳、年度科学量和 669 点矩阵保留各自的验收条件。[年界时钟](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-acceptance.json) · [首日实际消费者](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-first-day-water-heat-and-carbon/README.md) · [代表点准入](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/representative-gate.md)
+319 年界两日的日输出、活动树 PFT14 的不可利用凋落物重启读回，以及独立 1961 年自然雪冻的有限组件交接已验收。下一包修复默认后续日路径，从实际日首库存按半小时更新碳库，并核对完整输出、默认轻量接口、论文路径及受影响的历史对照。具名站点同相位原生水热和日碳、完整雪层、年度科学量与 669 点矩阵另有各自的验收条件。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-second-day-and-natural-snow-freeze-acceptance/controller-acceptance.json) · [同输入库存反例](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-second-day-and-natural-snow-freeze/review/compact-day2.md) · [代表点准入](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/representative-gate.md)
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”
