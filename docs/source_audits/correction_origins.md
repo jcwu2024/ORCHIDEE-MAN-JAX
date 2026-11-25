@@ -1,4 +1,10 @@
-# C1–C105 修正与支持补齐来源登记（2026-11-25）
+# C1–C106 修正与支持补齐来源登记（2026-11-25）
+
+## C106 后续日按半小时更新凋落物和土壤碳库存
+
+生产提交 `9cfcd96a86a6550910f6a5adf008d92fb9bc4fa3`。原 Fortran 在每个 SECHIBA 步执行凋落物和土壤碳更新，日末再把最后一步的库存交给 LPJ。JAX 的完整输出和默认轻量输出在后续日取了初始化时的库存，只在日末调用一次。该接线见于 `7333b46c` 和复查前的 `7cae3e02`。修正后，这些入口从实际日首库存调用已有的半小时更新函数。累计 **106 项修正或支持补齐、58 个生产提交，100 项有复查前证据**。[调用与版本历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/impact/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair-acceptance/controller-acceptance.json)
+
+319 点从同一份 1962 年第 17568 步状态继续一天，修后七项正式重启量原有的 106 个超差坐标归零。含两类凋落物和 DOC 的三个重启文件与同输入论文路径逐字节相同。详细载荷使用最终源码，简略载荷的实跑使用前一候选，两版差别在末步诊断的返回写法。最终源码的三个公开入口另有 11 项回归。本次对照覆盖第 17569–17616 步。[实测与独审](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/review/README.md) · [正式重启](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/restart/README.md)
 
 ## C105 用请求年份的气象和保存的累计步号跨年
 

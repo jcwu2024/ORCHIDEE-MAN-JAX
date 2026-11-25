@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## C106 后续日的半小时碳库存更新
+
+主线生产提交 `9cfcd96a86a6550910f6a5adf008d92fb9bc4fa3`。日尺度 `f898282a` 与全球效率 `ffe77a00` 的快照都含有旧的后续日显式分派。集中同步时，沿各分支的完整输出和轻量输出入口核对日首库存、逐半小时的凋落物与土壤碳、C98 活动层、日末 LPJ 读入及文件写回。已有 319 同一日首的实测库存和三份重启文件可作对照。论文年度文件入口原已为后续日选择 compact，首日调度单独核查。[两研究线的依赖和旧运行适用范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/impact/README.md) · [公开入口回归](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/tests/ok-leak-scaffold-regression.md)
+
 ## C105 文件启动与跨年续算的气象时钟
 
 主线 `85b439d1aba4eb2000c262881a459dff12cfb3b7` 补齐逐年启动与同进程续算的入口，连同 C104 的旧完整日湿量缺项兼容登记。集中同步时沿各分支实际使用的年界入口，核对已保存的累计步号、与当年气象索引的映射、显式重置、带跳过量的实读，以及旧包缺时钟时的处理。三种输入可用同一 319 年末状态复核，包括带时钟内存、缺时钟但配原三文件的内存、两者均缺的旧包。WATCHOUT 和潮汐的首次初始化按逐年新启动或连续运行各自的约定验证。[生产接线及兼容来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/README.md) · [已验收的三组实读与拒绝](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-legacy-clock-check-after.json)
