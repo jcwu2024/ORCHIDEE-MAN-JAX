@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-26，**319 出现自然积雪和土壤冻结时，部分水热交接已核实。069 的原暖启动文件也已核实。** 319 原作业连续五次把活动土块的总水和液水传到下一步，110 个值逐个相同。进入表温求解的 16 个热容量和热通量值也相同。用原实参复算，JAX 普通和局部编译两种方式各有 28 个输出通过原门限。当地年末重启停在 17520，文件里与目标 9528 同秒的值是日平均的时间中点，完整三层雪热仍缺当时的瞬时状态。[319 原始记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-319-native-short-window-closeout/319-evidence/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-319-native-short-window-closeout-acceptance/controller-acceptance.json)
+
+069 的三个原文件都停在 858480，已查历史位置缺随后三个半小时的原生记录。001 的普通第二日日末、069 的暖启动水热、319 的完整雪热仍需相应原生观测。主控修正了 069 对照作业的 A/B 目录选择，修后在本地核实了两份源码和实际进入的构建、运行目录。此项属于验收作业脚本。本轮新增模型修正为零，主线累计 106 项修正或支持补齐。[069 作业入口及对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-319-native-short-window-closeout-acceptance/README.md) · [三点余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-319-native-short-window-closeout/README.md)
+
 2026-11-25，**319 论文文件入口的跨年首日碳库存已通过短窗验收。** 三份输入由 JAX 的 C31 年末状态按原 Fortran 兼容格式写出。1962 年首日从文件实读库存后，连续 48 个半小时都更新了凋落物和土壤碳，日末 LPJ 收到末步 13 项库存。七个重点重启字段共 7,267 个数值写出后精确读回。次日第一步的物理接收在本次运行中实测，其碳过程读值由同一日末状态的 C106 归档实跑核实。本轮登记为验证，累计 **106 项修正或支持补齐、58 个生产提交，100 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak-acceptance/controller-acceptance.json) · [正式读写](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak/restart/README.md)
 
 代表点短窗还需核对 001 普通第二日日末与次日第一步、069 连续三步水热、319 自然雪冻时的三层雪和热系数。短窗收尾时汇总可确认的结论和所缺原记录，接力在代表点全年验收前暂停，待用户要求继续。[具名短窗与原件](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak/short-windows.md)

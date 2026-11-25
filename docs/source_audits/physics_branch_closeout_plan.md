@@ -56,6 +56,8 @@
 
 ## 授权、基线与接力
 
+2026-11-26 已完成 069、319 具名历史原件的只读核查。001 普通第二日日末和 069 暖点前三步各有一份有界原生对照作业，单项上限均为 8 CPU、16 GiB、60 分钟。069 后续取本轮主控验收目录中的作业脚本和清单。319 如无法取得同一自然轨迹的第 9528 步瞬时前态，可用原冷启动推进到第 9540 步并核对已存水热锚点。沿旧作业吞吐外推，两次编译和前缀运行合计约 1.98 分配核时，调度上限另以实际方案确定。短窗和代表点全年仍按用户确定的暂停位置办理。[001 作业方案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/cancon-allocation.json) · [069 当前作业方案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-319-native-short-window-closeout-acceptance/cancon-069-allocation.json) · [319 前驱与资源依据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-319-native-short-window-closeout/319-evidence/README.md)
+
 319 点的首日和后续日碳库存承接已按各自入口验收。短窗下一步集中在原 Fortran 的具名记录，包括 001 的普通第 96 步日末与第 97 步接收、069 的第 858481–858483 步水热、319 自然雪冻第 9529–9532 步的完整雪层与下一步接收。只有要判定原生跨年首日的逐步数值时，才另需 319 同一次原生运行的第 17520 步重启和日末碳记录。按用户安排，主控将在短窗收尾时汇总结果并暂停接力，待用户要求继续后再启动代表点全年验收。[319 首日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak-acceptance/controller-acceptance.json) · [短窗余项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak/short-windows.md)
 
 C106 已修复默认后续日的 OK_LEAK 调度。319 的同输入第二日已核对 48 次碳库存承接、日末 LPJ 和正式重启。下一包核对论文驱动从文件启动的**第一日**，沿实际调用确认初始库存、半小时更新次数和末步库存的日末接收。两天交界以现存第 17568 步文件为参照。具名同相位原生水热、年度碳通量及 669 点矩阵仍需各自的实测。[验收回执](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair-acceptance/controller-acceptance.json) · [后续日入口与历史证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/impact/README.md)
