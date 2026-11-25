@@ -98,6 +98,7 @@ from jax_orchidee.driver.source_calendar import source_calendar_assignments
 from jax_orchidee.driver.source_clock import (
     SourceClockError, SourceClockRuntime, SourceClockSetup,
     source_clock_setup_from_config, source_istp_for_local_tstep,
+    validate_native_year_clock, validate_source_clock_packet_cursor,
     validate_source_clock_runtime, rebase_source_clock_runtime,
 )
 from jax_orchidee.driver.tides import (
@@ -1070,9 +1071,12 @@ def prepare_paper_1961_driver_context(
 def _paper_forcing_model_tstep(context, *, year: int, tstep: int) -> int:
     """Translate local steps for the forcing file admitted by DIM2."""
     setup = getattr(context, "source_clock_setup", None)
-    if isinstance(setup, SourceClockSetup) and year == getattr(context.first_step_bundle, "year", None):
+    if isinstance(setup, SourceClockSetup):
+        forcing_year = setup.forcing_year
+        if forcing_year is None:
+            forcing_year = getattr(context.first_step_bundle, "year", None)
         control = setup.time_control
-        if control is not None:
+        if control is not None and year == forcing_year:
             # dim2_driver:802-837 applies for_offset in whole forcing records.
             source_step = int(source_istp_for_local_tstep(setup.runtime, tstep))
             return source_step - 1 + control.for_offset * control.split
@@ -6271,6 +6275,8 @@ def _require_paper_continuous_context(prepared_context, *, run_mode):
     the source-clock packet nor a fresh forcing read restores that SAVE flag.
     This also preserves explicit non-WATCHOUT initialization overrides.
     """
+    if run_mode not in {"new_native_run", "continuous"}:
+        raise SourceClockError("declare run_mode='new_native_run' or 'continuous'")
     if run_mode == "continuous" and prepared_context is None:
         raise ValueError(
             "continuous requires prepared_context returned by the preceding "
@@ -8524,7 +8530,7 @@ def _paper_later_day_daily_process_from_completed_entries(
     """Fold a later day's STOMATE daily accumulators from model-produced state.
 
     Fortran provenance: ``src_stomate/stomate.f90`` lines 3187-3267 update
-    daily accumulators every half-hour; lines 4944-5000 reset them after the
+    daily accumulators every half-hour; lines 4944-5020 reset them after the
     previous ``do_slow`` boundary. The initial accumulator state here must come
     from ``previous_state`` rather than the original restart.
     """
@@ -8538,6 +8544,11 @@ def _paper_later_day_daily_process_from_completed_entries(
     daily_accumulators = slowproc_state.get("daily_accumulators")
     if daily_accumulators is None:
         return None
+    # Older day-end packets omit the wetness fields when PEAT_OCCUR is false.
+    # STOMATE resets both at each completed day (stomate.f90:5019-5020).
+    if "fwet_daily" not in daily_accumulators or "liqwt_daily" not in daily_accumulators:
+        zero = jnp.zeros_like(daily_accumulators["t2m_daily"])
+        daily_accumulators = {"fwet_daily": zero, "liqwt_daily": zero, **daily_accumulators}
     hydrol_state = previous_state.fields_by_component.get("hydrol_previous_step_state", {})
     if "humrel" not in hydrol_state:
         return None
@@ -12914,6 +12925,7 @@ def paper_1961_driver_restart_year_start_day_result(
     fixed_format_trace_dir: str | Path | None = None,
     static_trace_fields: StaticTraceFields | None = None,
     used_run_def_path: str | Path | None = None,
+    reference_run_dir: str | Path | None = None,
     prepared_context: Paper1961PreparedDriverContext | None = None,
     run_mode: str = "new_native_run",
     run_id: str | None = None,
@@ -12930,15 +12942,15 @@ def paper_1961_driver_restart_year_start_day_result(
 
     Fortran provenance: `fortran_run_scripts/paper_250919/Job0_bio` lines
     315-322 rolls restart files from the completed year into the next yearly
-    executable run. The driver timestep counter restarts at zero while the
-    SECHIBA/STOMATE dynamic state is carried forward.
+    executable run. The Python day loop starts at local zero. DIM2 starts
+    from the saved cumulative clock and selects the requested forcing file.
     """
 
     _require_paper_continuous_context(prepared_context, run_mode=run_mode)
     context = prepared_context or prepare_paper_1961_driver_context(
-        config_path, used_run_def_path=used_run_def_path, run_mode=run_mode,
-        previous_runtime=(None if previous_year_end_state is None or run_mode != "continuous"
-                          else previous_year_end_state.source_clock_runtime), run_id=run_id)
+        config_path, year=year, used_run_def_path=used_run_def_path,
+        reference_run_dir=reference_run_dir,
+    )
     steps_per_stomate = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
     gaps = driver_year_handoff_state_gaps(previous_year_end_state)
     if gaps or previous_year_end_state is None:
@@ -12953,22 +12965,63 @@ def paper_1961_driver_restart_year_start_day_result(
             missing_components=_runtime_missing_from_gaps(gaps, extra=("year_handoff_state",)),
             daily_process_fold=None,
         )
-    if run_mode == "continuous":
-        setup = source_clock_setup_from_config(context.config_path,
-            run_def_path=context.run_def_path, run_def_values=context.run_def_values,
-            first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
-            run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
-            run_id=run_id)
-        context = _bind_context_hydrol_tides(context, setup,
-            previous=getattr(context, "hydrol_tide_run", None), run_mode="continuous")
-        context = replace(context, watchout_initialize_main_tstep=None)
-    elif run_id is not None:
+    setup = _source_clock_setup(context)
+    current_year = setup.forcing_year
+    if current_year is None and setup.forcing is not None:
+        current_year = setup.forcing.origin_ymds[0]
+    previous_runtime = validate_source_clock_packet_cursor(previous_year_end_state)
+    control = setup.time_control
+    # A matching forcing year is insufficient. An explicitly prepared DIM2
+    # restart must carry the saved source step, not just TIME_SKIP.
+    file_clock = current_year == year and setup.restart is not None
+    prepared_clock = (
+        prepared_context is not None and current_year == year
+        and control is not None and control.istp_old > 0
+    )
+    if run_mode == "new_native_run" and (file_clock or prepared_clock):
+        if file_clock:
+            saved = setup.restart.driver
+            saved_calendar, saved_origin, saved_step, saved_dt = saved.calendar, saved.date0, saved.itau, saved.dt
+            clock_source = "declared restart files"
+            if run_id is not None and saved.runtime is not None and saved.runtime.binding.run_id == run_id:
+                raise SourceClockError("new_native_run requires a new run_id, not silent lifecycle reinitialization")
+        else:
+            saved_calendar, saved_origin = setup.binding.calendar, control.date0_rest
+            saved_step, saved_dt = control.istp_old, control.dt_rest
+            clock_source = "prepared year restart clock"
+        if previous_runtime is not None:
+            memory = previous_runtime.binding
+            saved_time = saved_origin + saved_step * saved_dt / 86400.0
+            memory_time = memory.date0 + float(previous_runtime.last_applied_istp) * memory.dt / 86400.0
+            resolution = np.spacing(max(abs(saved_time), abs(memory_time), 1.0))
+            if saved_calendar != memory.calendar or abs(saved_time - memory_time) > resolution:
+                raise SourceClockError(f"{clock_source} and memory checkpoint refer to different times")
+        validate_native_year_clock(
+            setup, saved_step=saved_step, saved_origin=saved_origin, saved_dt=saved_dt,
+            dt_sechiba=context.runtime.dt_sechiba, run_def_values=context.run_def_values,
+        )
+        if setup.forcing_year is None or run_id is not None:
+            binding = setup.binding if run_id is None else replace(setup.binding, run_id=run_id)
+            setup = replace(setup, binding=binding, runtime=replace(setup.runtime, binding=binding), forcing_year=year)
+            context = _bind_context_hydrol_tides(context, setup)
+    else:
+        # Rebind the requested forcing year using the actual restart inputs.
+        # A memory restart without a usable cursor reaches DIM2 only when
+        # DRIVER_reset_time explicitly starts a new chronology.
         setup = source_clock_setup_from_config(
             context.config_path, run_def_path=context.run_def_path, run_def_values=context.run_def_values,
             first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
-            run_mode=run_mode, previous_runtime=previous_year_end_state.source_clock_runtime,
-            run_id=run_id)
-        context = _bind_context_hydrol_tides(context, setup)
+            run_mode=run_mode, previous_runtime=previous_runtime, run_id=run_id,
+            forcing_year=year, restart_from_memory=(
+                run_mode == "continuous" or previous_runtime is not None or setup.restart is None
+            ),
+        )
+        context = _bind_context_hydrol_tides(
+            context, setup, run_mode=run_mode,
+            previous=getattr(context, "hydrol_tide_run", None) if run_mode == "continuous" else None,
+        )
+    if run_mode == "continuous":
+        context = _paper_context_after_initial_main(context)
     rebased = rebase_driver_state_for_year_start(previous_year_end_state,
         run_mode=run_mode, source_clock_setup=_source_clock_setup(context))
     _require_source_day_alignment(context, rebased, start=0)
@@ -13117,22 +13170,16 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
             "compiled day blocks require compiled later days, JIT, and no trace overrides"
         )
     _require_paper_continuous_context(prepared_context, run_mode=run_mode)
-    context = prepared_context or prepare_paper_1961_driver_context(
-        config_path,
-        used_run_def_path=used_run_def_path,
-        reference_run_dir=reference_run_dir,
-        run_mode=run_mode,
-        previous_runtime=(None if previous_year_end_state is None or run_mode != "continuous"
-                          else previous_year_end_state.source_clock_runtime),
-        run_id=run_id,
-    )
-    steps_per_stomate = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
     initial_state_mode = "restart_from_previous_year_state"
     if int(ndays) == 0:
+        context = prepared_context or prepare_paper_1961_driver_context(
+            config_path, year=year, used_run_def_path=used_run_def_path,
+            reference_run_dir=reference_run_dir,
+        )
         return DriverLiteMultiDayModeloutRun(
             year=int(year),
             requested_days=0,
-            steps_per_stomate=steps_per_stomate,
+            steps_per_stomate=int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba)),
             initial_state_mode=initial_state_mode,
             daily_modelout=(),
             stopped_day_index=None,
@@ -13151,8 +13198,9 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
         year=year,
         fixed_format_trace_dir=fixed_format_trace_dir,
         static_trace_fields=static_trace_fields,
-        used_run_def_path=context.run_def_path,
-        prepared_context=context,
+        used_run_def_path=used_run_def_path,
+        reference_run_dir=reference_run_dir,
+        prepared_context=prepared_context,
         run_mode=run_mode,
         run_id=run_id,
         module_jit=module_jit,
@@ -13164,7 +13212,8 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
         use_compiled_sechiba_day=use_compiled_sechiba_day,
         retain_stomate_step_results=False,
     )
-    context = first.prepared_context or context
+    steps_per_stomate = first.steps_per_stomate
+    context = first.prepared_context or prepared_context
     previous_state = first.day_end_state
     if not first.ready_for_day_end_state:
         stopped_day_index = 1

@@ -6,6 +6,7 @@ contracts, not observations of a native Fortran executable or trajectory.
 """
 import hashlib
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 
 import numpy as np
@@ -463,7 +464,7 @@ def test_production_year_entry_selects_only_the_new_process_initialization_phase
             run_id="old-native-run", time_length=1, run_mode="continuous", previous_runtime=previous_runtime)
     else:
         setup = source_clock_from_inputs(tmp_path / "forcing-1962.nc", dt_sechiba=1800.0,
-            run_id="new-native-run", time_length=1)
+            run_id="new-native-run", time_length=1, previous_runtime=previous_runtime, restart_from_memory=True)
     stress = np.full((2, 14), 999999.0)
     if stress_mode == "partial_land":
         stress[1] = 0.17
@@ -477,8 +478,10 @@ def test_production_year_entry_selects_only_the_new_process_initialization_phase
                              "hydrol_previous_step_state": {"nroot": np.ones((2, 14, 11))}},
         provenance_by_component={}, source_clock_runtime=previous_runtime)
     context_values = dict(config_path=tmp_path / "config.yaml", run_def_path=tmp_path / "run.def",
-        run_def_values={}, first_step_bundle=object(), reference_run_dir=None,
-        source_clock_setup=setup, run_scalars=SimpleNamespace(pref_soil_veg=fixture.pref),
+        run_def_values={"TIME_LENGTH": "1"}, first_step_bundle=object(), reference_run_dir=None,
+        source_clock_setup=replace(setup, forcing_year=1962), run_scalars=SimpleNamespace(pref_soil_veg=fixture.pref),
+        hydrol_tides=False, hydrol_tide_run=None, watchout_initialize_main_tstep=None,
+        diffuco_pft14_static_kwargs={}, first_step_restart_state=None,
         runtime=SimpleNamespace(dt_stomate=86400.0, dt_sechiba=1800.0), dt_sechiba=1800.0)
     TinyContext = make_dataclass("TinyContext", [(name, object) for name in context_values])
     context = TinyContext(**context_values)
@@ -487,8 +490,10 @@ def test_production_year_entry_selects_only_the_new_process_initialization_phase
     monkeypatch.setattr(orch, "source_clock_setup_from_config", lambda *a, **kw: setup)
     monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda state: ())
     monkeypatch.setattr(orch, "_require_source_day_alignment", lambda *a, **kw: None)
-    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", lambda *a, **kw: object())
-    monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda *a, **kw: object())
+    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", lambda *a, **kw:
+        SimpleNamespace(forcing=SimpleNamespace(is_watchout=False), domain=None))
+    monkeypatch.setattr(orch, "build_intersurf_first_step_payload", lambda *a, **kw: SimpleNamespace(kjpindex=2))
+    monkeypatch.setattr(orch, "resolve_hydrol_initialization_refsoc_1d", lambda *a, **kw: None)
     monkeypatch.setattr(orch, "restart_thermosoil_initialization_supported", lambda context: False)
     actual_transition = hydrol.hydrol_init_vegstress
     calls = []
@@ -501,11 +506,14 @@ def test_production_year_entry_selects_only_the_new_process_initialization_phase
     # Stop at the first runtime delegate: no timestep or physical kernel runs.
     def runtime(*args, **kwargs):
         calls.append("runtime_delegate")
-        return kwargs["previous_state"]
+        return orch.DriverRuntimeDayResult(
+            year=1962, day_index=1, start_tstep=0, steps_per_stomate=48, daily_modelout=None,
+            day_end_state=kwargs["previous_state"], stopped_at_tstep=0, missing_components=("test boundary",),
+        )
 
     monkeypatch.setattr(orch, "paper_1961_driver_later_day_runtime_result", runtime)
     result = orch.paper_1961_driver_restart_year_start_day_result("unused.yaml",
-        previous_year_end_state=packet, year=1962, prepared_context=context, run_mode=mode)
+        previous_year_end_state=packet, year=1962, prepared_context=context, run_mode=mode).day_end_state
     expected_us = source["us"].copy()
     if stress_mode == "unresolved_us" and mode == "new_native_run":
         expected_us[:, :, :, 0] = 0.0

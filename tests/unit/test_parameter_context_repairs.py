@@ -6,15 +6,16 @@ actual Python adapters and cache construction, never a model or real JAX compile
 from __future__ import annotations
 
 import ast
-from dataclasses import dataclass
 import gc
+import weakref
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import SimpleNamespace as NS
-import weakref
 
 import numpy as np
 import pytest
 
+from jax_orchidee.driver import bundle as driver_bundle
 from jax_orchidee.driver import orchestration as o
 from jax_orchidee.driver.restart_state import restart_thermosoil_initialization_supported
 
@@ -341,3 +342,127 @@ def test_direct_cache_snapshot_reader_reports_executable_identity(monkeypatch):
     assert snapshot["block_entries"] == 1
     assert snapshot["block_executable_ids"] == [id(executable)]
     assert snapshot["block_executable_ids"] != [id(entry)]
+
+
+@pytest.fixture
+def real_prepare_year_harness(monkeypatch, tmp_path):
+    """Keep both preparation layers and the first-step composer real.
+
+    File readers below ``load_paper_1961_first_step_bundle`` are deliberately
+    finite spies.  This leaves the public preparation entry, its two LRUs and
+    the real bundle composer responsible for carrying the selected year.
+    """
+    config = tmp_path / "case.yaml"
+    config.write_text("{}\n", encoding="utf-8")
+    run_def = tmp_path / "used_run.def"
+    run_def.write_text(
+        "\n".join(f"{name}={value}" for name, value in _materialized_values().items()),
+        encoding="utf-8",
+    )
+    scalars = NS(nvm=2, fortran_pft_ids=(14, 2), pft_to_mtc=np.array([2, 3]))
+    grid = NS(znh=np.array([0.1, 0.3]), dnh=np.array([0.1, 0.2]), dlh=np.array([0.1, 0.2]))
+    observed = {"domain": [], "forcing": [], "co2": [], "clock": []}
+
+    def read_domain(_config_path, *, year, **_kwargs):
+        observed["domain"].append(year)
+        return NS(
+            nbindex=1,
+            lalo=np.array([[float(year), 0.0]]),
+            resolution=None,
+            neighbours=None,
+            corners=None,
+            seglength=None,
+        )
+
+    def read_forcing(_config_path, *, domain, year):
+        assert int(domain.lalo[0, 0]) == year
+        observed["forcing"].append(year)
+        return NS(is_watchout=False, selected_year=year)
+
+    def read_co2(_config_path, year):
+        observed["co2"].append(year)
+        return float(year)
+
+    monkeypatch.setattr(driver_bundle, "read_domain_grid", read_domain)
+    monkeypatch.setattr(driver_bundle, "read_forcing_first_step", read_forcing)
+    monkeypatch.setattr(driver_bundle, "read_run_scalars", lambda *_args, **_kwargs: scalars)
+    monkeypatch.setattr(
+        driver_bundle, "initialize_imposed_vegetation_state", lambda *_args, **_kwargs: NS(veget=None)
+    )
+    monkeypatch.setattr(driver_bundle, "read_annual_co2", read_co2)
+    monkeypatch.setattr(driver_bundle, "read_water_table_sequences", lambda *_args, **_kwargs: NS())
+    monkeypatch.setattr(driver_bundle, "reference_restart_path", lambda *_args, **_kwargs: tmp_path / "absent.nc")
+    monkeypatch.setattr(driver_bundle, "_static_fields_with_local_inputs", lambda *_args, static_fields, **_kwargs: static_fields)
+
+    delegates = {
+        "read_run_scalars": scalars,
+        "_paper_mangrove_pft_index": 0,
+        "_paper_mangrove_fortran_pft_id": 14,
+        "paper_case_cwrr_vertical_soil_grid_from_used_run_def": grid,
+        "paper_case_vertical_grids_from_used_run_def": (np.ones(2),) * 3,
+        "load_case_config": {},
+        "paper_forcing_split_from_config": 1,
+        "paper_forcing_nb_spread": 1,
+        "reference_case_first_step_restart_state": NS(),
+        "paper_1961_first_step_stomate_boundary": NS(),
+        "paper_case_stomate_static_input_kwargs": NS(parameters=NS()),
+        "paper_case_stomate_boundary_input_kwargs": NS(),
+        "assemble_pft14_control_inundation_first_step": NS(),
+        "pft14_trans_co2_parameter_inputs_from_run_def": {},
+    }
+    for name, result in delegates.items():
+        monkeypatch.setattr(o, name, lambda *args, _result=result, **kwargs: _result)
+
+    def clock_setup(_config_path, *, first_step_bundle, **_kwargs):
+        observed["clock"].append(first_step_bundle.year)
+        return NS(bundle_year=first_step_bundle.year)
+
+    monkeypatch.setattr(o, "source_clock_setup_from_config", clock_setup)
+    monkeypatch.setattr(o, "_bind_context_hydrol_tides", lambda context, setup, **_kwargs: replace(
+        context, source_clock_setup=setup
+    ))
+    return NS(config=config, run_def=run_def, observed=observed)
+
+
+def test_c105_real_prepare_preserves_selected_year_and_partitions_caches(real_prepare_year_harness):
+    """C105: portable actual-preparation regression for annual file starts.
+
+    The assertions fail if the real composer call loses ``year=year`` (1962
+    silently becomes the default 1961 package), or if either preparation-cache
+    key drops the selected year (1962 returns the 1961 prepared instance).
+    """
+    harness = real_prepare_year_harness
+    o._prepare_paper_1961_driver_context_cached.cache_clear()
+    o._prepare_paper_1961_clock_context_cached.cache_clear()
+    try:
+        first_1961 = o.prepare_paper_1961_driver_context(
+            harness.config, used_run_def_path=harness.run_def, year=1961
+        )
+        first_1962 = o.prepare_paper_1961_driver_context(
+            harness.config, used_run_def_path=harness.run_def, year=1962
+        )
+        default_1961 = o.prepare_paper_1961_driver_context(
+            harness.config, used_run_def_path=harness.run_def
+        )
+        assert default_1961 is first_1961
+        assert o.prepare_paper_1961_driver_context(
+            harness.config, used_run_def_path=harness.run_def, year=1961
+        ) is first_1961
+        assert o.prepare_paper_1961_driver_context(
+            harness.config, used_run_def_path=harness.run_def, year=1962
+        ) is first_1962
+        assert first_1961 is not first_1962
+        for context, year in ((first_1961, 1961), (first_1962, 1962)):
+            assert context.first_step_bundle.year == year
+            assert context.first_step_bundle.forcing.selected_year == year
+            assert context.first_step_bundle.co2_ppm == float(year)
+            assert context.source_clock_setup.bundle_year == year
+        assert harness.observed == {
+            "domain": [1961, 1962],
+            "forcing": [1961, 1962],
+            "co2": [1961, 1962],
+            "clock": [1961, 1962],
+        }
+    finally:
+        o._prepare_paper_1961_driver_context_cached.cache_clear()
+        o._prepare_paper_1961_clock_context_cached.cache_clear()

@@ -50,6 +50,7 @@ jobs:
           tests/unit/test_driver_source_clock_io.py::test_forcing_last_timestep_coordinate_uses_last_seconds_calendar
           tests/unit/test_driver_source_clock_io.py::test_restart_rejects_duplicate_axis_even_in_netcdf_order
           tests/unit/test_driver_source_clock_io.py::test_paper_file_start_binds_requested_forcing_year_before_first_day
+          tests/unit/test_parameter_context_repairs.py::test_c105_real_prepare_preserves_selected_year_and_partitions_caches
           tests/parity/test_ok_leak_producer_contracts.py::test_ok_leak_half_hour_fold_carries_density_from_the_previous_state
           tests/parity/test_ok_leak_producer_contracts.py::test_ok_leak_half_hour_fold_carries_active_layer_into_new_day
           tests/unit/test_ok_leak_active_layer.py

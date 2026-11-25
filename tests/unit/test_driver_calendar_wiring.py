@@ -624,7 +624,7 @@ def test_actual_compiled_block_builder_rejects_source17_local0_rows_before_lower
 
 
 @pytest.mark.parametrize("mode,run_id,expected_cursor,keep_nroot", [
-    ("continuous", None, 49, True), ("new_native_run", "synthetic-new-run", 1, False),
+    ("continuous", None, 49, True), ("new_native_run", "synthetic-new-run", 49, False),
 ])
 @pytest.mark.parametrize("partial", [False, True], ids=["whole-source-day", "partial-source-day"])
 def test_actual_restart_year_wrapper_binds_changed_forcing_with_real_metadata_factory(
@@ -718,6 +718,263 @@ def test_actual_restart_year_wrapper_binds_changed_forcing_with_real_metadata_fa
     _mirrors(result, [0., 0., 0.], [0., 0., 1.])
 
 
+@pytest.mark.parametrize(("prepared_year", "mode", "skip", "first_index", "rejection"), [
+    (None, "new_native_run", "0", 0, None),
+    (1961, "new_native_run", "0", 0, None),
+    (1962, "new_native_run", "4", 48, None),
+    (1961, "continuous", "0", 0, None),
+    (1961, "continuous", "1", None, "skips/reverses"),
+    (None, "new_native_run", "1", None, "partial source-day"),
+])
+def test_memory_year_entry_binds_current_file_and_previous_cursor(
+    monkeypatch, tmp_path, prepared_year, mode, skip, first_index, rejection,
+):
+    from netCDF4 import Dataset
+    from jax_orchidee.driver import domain
+    from jax_orchidee.driver.source_clock import source_clock_setup_from_config
+
+    paths = {}
+    for year in (1961, 1962):
+        paths[year] = tmp_path / f"forcing-{year}.nc"
+        with Dataset(paths[year], "w") as dataset:
+            dataset.createDimension("time", 16)
+            time = dataset.createVariable("time", "f8", ("time",))
+            time.units = f"seconds since {year}-01-01 00:00:00"
+            time.calendar = "noleap"
+            time[:] = (np.arange(16) + 1) * 21600.0
+    monkeypatch.setattr(domain, "load_case_config", lambda path: {})
+    monkeypatch.setattr(domain, "forcing_file_for_year", lambda config, year: paths[year])
+
+    cursor = 365 * 48
+    previous = _packet(_context(date=(1961, 1, 1), source_start=cursor + 1))
+    values = dict(RESTART_FILEIN="NONE", SECHIBA_restart_in="NONE",
+                  STOMATE_RESTART_FILEIN="NONE", DT_SECHIBA="1800", TIME_SKIP=skip)
+    config_path = tmp_path / "case.yaml"
+
+    def prepare(path, *, year=1961, **kwargs):
+        fields = dict(
+            config_path=path, run_def_path=tmp_path / "used_run.def",
+            run_def_values=values, first_step_bundle=NS(year=year),
+            reference_run_dir=None, hydrol_tides=False, watchout_initialize_main_tstep=None,
+            run_scalars=NS(pref_soil_veg=np.asarray([1, 1])),
+            runtime=NS(dt_stomate=86400.0, dt_sechiba=1800.0),
+        )
+        setup = source_clock_setup_from_config(path, run_def_values=values,
+            first_step_bundle=fields["first_step_bundle"])
+        if year == 1961:
+            setup = replace(setup, binding=previous.source_clock_runtime.binding,
+                            runtime=previous.source_clock_runtime)
+        fields["source_clock_setup"] = setup
+        return make_dataclass("MemoryYearContext", [(key, object) for key in fields])(**fields)
+
+    class ReachedStep(Exception):
+        pass
+
+    def first_step(context, *, year, tstep):
+        assert rejection is None
+        setup = context.source_clock_setup
+        assert (year, tstep, setup.forcing_year) == (1962, 0, 1962)
+        assert setup.forcing.origin_ymds == (1962, 1, 1, 0.0)
+        assert setup.time_control.for_offset == -1460
+        assert setup.time_control.istp_old == cursor
+        assert setup.time_control.istp == cursor + 1 + first_index
+        assert setup.binding.clock_at_istp(setup.time_control.istp).year == 1962
+        assert (setup.binding == previous.source_clock_runtime.binding) == (mode == "continuous")
+        assert [orch._paper_forcing_model_tstep(context, year=year, tstep=step)
+                for step in (0, 1)] == [first_index, first_index + 1]
+        raise ReachedStep
+
+    monkeypatch.setattr(orch, "prepare_paper_1961_driver_context", prepare)
+    monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda state: ())
+    monkeypatch.setattr(orch, "restore_sechiba_integer_source_fields", lambda fields, **kwargs: dict(fields))
+    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", first_step)
+    monkeypatch.setattr(orch, "readstart_thawed_humidity_controls", lambda values: (False, 0.5))
+    previous.fields_by_component[FINAL].update(us=jnp.zeros((3, 2, 1, 1)), vegstress=jnp.zeros((3, 2)))
+    context = None if prepared_year is None else prepare(config_path, year=prepared_year)
+    expected = (pytest.raises(ReachedStep) if rejection is None
+                else pytest.raises(SourceClockError, match=rejection))
+    with expected:
+        orch.paper_1961_driver_restart_year_multiday_modelout_lite_run(
+            config_path, previous_year_end_state=previous, ndays=1, year=1962,
+            prepared_context=context, run_mode=mode, module_jit=False, diffuco_local_jit=False,
+        )
+
+
+@pytest.mark.parametrize("supply_context", (False, True))
+def test_native_year_rejects_conflicting_file_and_memory_restart_times(monkeypatch, supply_context):
+    context = _context(date=(1961, 1, 1), source_start=17521)
+    setup = context.source_clock_setup
+    file_clock = NS(calendar="noleap", date0=setup.binding.date0, itau=17520, dt=1800.0)
+    context.source_clock_setup = replace(setup, forcing_year=1962, restart=NS(driver=file_clock))
+    packet = _packet(context)
+    packet = replace(packet, source_clock_runtime=replace(packet.source_clock_runtime,
+        last_applied_istp=np.int64(17568), anchor_source_istp=np.int64(17569)))
+    monkeypatch.setattr(orch, "prepare_paper_1961_driver_context", lambda *a, **k: context)
+    monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda *a: ())
+    with pytest.raises(SourceClockError, match="restart files and memory checkpoint"):
+        orch.paper_1961_driver_restart_year_start_day_result(
+            context.config_path, previous_year_end_state=packet, year=1962,
+            prepared_context=context if supply_context else None,
+        )
+
+
+@pytest.mark.parametrize("route, multiday, first_istp, error", [
+    ("legacy", False, None, "versioned source clock"),
+    ("legacy", True, None, "versioned source clock"),
+    ("cold-context", False, None, "versioned source clock"),
+    ("skip", True, None, "versioned source clock"),
+    ("files", False, 17521, None),
+    ("prepared-files", True, 17521, None),
+    ("reused-file-id", False, None, "requires a new run_id"),
+    ("spliced-file-context", True, None, "prepared year restart clock is inconsistent"),
+    ("files-reset", False, 1, None),
+    ("prepared-cursor", False, 17521, None),
+    ("prepared-run-id", True, 17521, None),
+    ("inconsistent-cursor", False, None, "prepared year restart clock is inconsistent"),
+    ("inconsistent-skip", False, None, "prepared year restart clock is inconsistent"),
+    ("reset", True, 1, None),
+    ("typed", False, 17521, None),
+    ("conflicting-typed", False, None, "local tstep conflicts with source clock cursor"),
+    ("continuous", True, 17521, None),
+    ("legacy-continuous", True, None, "continuous year restart requires"),
+])
+def test_annual_entry_requires_authoritative_restart_chronology(
+    monkeypatch, tmp_path, route, multiday, first_istp, error,
+):
+    from netCDF4 import Dataset
+
+    from jax_orchidee.driver import domain
+    from jax_orchidee.driver.source_clock import source_clock_setup_from_config
+    from tests.unit.test_driver_source_clock_io import _write_restart
+
+    forcing = tmp_path / "forcing.nc"
+    with Dataset(forcing, "w") as dataset:
+        dataset.createDimension("time", 16)
+        time = dataset.createVariable("time", "f8", ("time",))
+        time.units, time.calendar = "seconds since 1962-01-01 00:00:00", "noleap"
+        time[:] = (np.arange(16) + 1) * 21600.0
+    previous = _packet(_context(date=(1961, 1, 1)), tstep=17519)
+    cursor = replace(previous.source_clock_runtime, last_applied_istp=np.int64(17520))
+    clocked = route in {"typed", "continuous", "conflicting-typed"}
+    if route == "conflicting-typed":
+        cursor = replace(cursor, last_applied_istp=np.int64(0))
+    previous = replace(previous, source_clock_runtime=cursor if clocked else None)
+    previous.fields_by_component[FINAL].update(us=jnp.zeros((3, 2, 1, 1)), vegstress=jnp.zeros((3, 2)))
+    values = {"DT_SECHIBA": "1800"}
+    for key, name in (("RESTART_FILEIN", "driver"), ("SECHIBA_restart_in", "sechiba"),
+                      ("STOMATE_RESTART_FILEIN", "stomate")):
+        values[key] = str(_write_restart(tmp_path / f"{name}.nc", cursor)) if route in {
+            "files", "prepared-files", "reused-file-id", "spliced-file-context", "files-reset",
+        } else "NONE"
+    if route == "skip":
+        values["TIME_SKIP"] = "4"
+    if route in {"reset", "files-reset"}:
+        values["DRIVER_reset_time"] = "TRUE"
+    monkeypatch.setattr(domain, "load_case_config", lambda path: {})
+    monkeypatch.setattr(domain, "forcing_file_for_year", lambda config, year: forcing)
+    config_path = tmp_path / "case.yaml"
+    fields = dict(config_path=config_path, run_def_path=tmp_path / "used_run.def", run_def_values=values,
+                  first_step_bundle=NS(year=1962), reference_run_dir=None,
+                  hydrol_tides=False, hydrol_tide_run=None, watchout_initialize_main_tstep=None,
+                  run_scalars=NS(pref_soil_veg=np.asarray([1, 1])), diffuco_pft14_static_kwargs={},
+                  runtime=NS(dt_stomate=86400.0, dt_sechiba=1800.0))
+    setup = source_clock_setup_from_config(
+        config_path, run_def_values=values, first_step_bundle=fields["first_step_bundle"],
+    )
+    if route == "spliced-file-context":
+        cold = source_clock_setup_from_config(
+            config_path, first_step_bundle=fields["first_step_bundle"], run_def_values={
+                "DT_SECHIBA": "1800", "RESTART_FILEIN": "NONE",
+                "SECHIBA_restart_in": "NONE", "STOMATE_RESTART_FILEIN": "NONE",
+            },
+        )
+        setup = replace(cold, restart=setup.restart)
+    if route in {"prepared-cursor", "prepared-run-id", "inconsistent-cursor", "inconsistent-skip"}:
+        clock_values = {**values, "TIME_SKIP": "4"} if route == "inconsistent-skip" else values
+        setup = source_clock_setup_from_config(
+            config_path, run_def_values=clock_values, first_step_bundle=fields["first_step_bundle"],
+            previous_runtime=cursor, restart_from_memory=True,
+        )
+    if route == "inconsistent-cursor":
+        setup = replace(setup, runtime=replace(setup.runtime, anchor_source_istp=np.int64(17569)))
+    context = make_dataclass("AnnualAdmissionFixture", [(key, object) for key in (*fields, "source_clock_setup")])(
+        **fields, source_clock_setup=setup,
+    )
+    monkeypatch.setattr(orch, "prepare_paper_1961_driver_context", lambda *a, **k: context)
+    monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda state: ())
+    if error:
+        def fail_before_physics(*args, **kwargs):
+            pytest.fail("unsupported annual restart reached physical initialization")
+        monkeypatch.setattr(orch, "restore_sechiba_integer_source_fields", fail_before_physics)
+    else:
+        monkeypatch.setattr(orch, "restore_sechiba_integer_source_fields", lambda fields, **kwargs: dict(fields))
+    class ReachedStep(Exception):
+        pass
+
+    def first_step(context, *, year, tstep):
+        actual = context.source_clock_setup
+        assert actual.time_control.istp == first_istp
+        assert orch._paper_forcing_model_tstep(context, year=year, tstep=tstep) == 0
+        assert (actual.binding == cursor.binding) == (route == "continuous")
+        if route == "prepared-run-id":
+            assert actual.binding.run_id == "caller-chosen-id"
+        raise ReachedStep
+
+    monkeypatch.setattr(orch, "_paper_1961_step_bundle_from_context", first_step)
+    options = dict(previous_year_end_state=previous, year=1962)
+    if route not in {"legacy", "skip", "files", "reused-file-id", "files-reset",
+                     "reset", "typed", "conflicting-typed"}:
+        options["prepared_context"] = context
+    if route in {"continuous", "legacy-continuous"}:
+        options["run_mode"] = "continuous"
+    if route == "prepared-run-id":
+        options["run_id"] = "caller-chosen-id"
+    if route == "reused-file-id":
+        options["run_id"] = cursor.binding.run_id
+    expected = pytest.raises(SourceClockError, match=error) if error else pytest.raises(ReachedStep)
+    with expected:
+        if multiday:
+            orch.paper_1961_driver_restart_year_multiday_modelout_lite_run(config_path, ndays=1, **options)
+        else:
+            orch.paper_1961_driver_restart_year_start_day_result(config_path, **options)
+
+
+@pytest.mark.parametrize("store_liquid", (False, True))
+def test_day_fold_restores_wetness_fields_omitted_from_legacy_packet(monkeypatch, store_liquid):
+    npts, nvm = 2, 14
+    t2m = jnp.zeros(npts, dtype=jnp.float64)
+    wetness = {"t2m_daily": t2m}
+    if store_liquid:
+        wetness["liqwt_daily"] = jnp.asarray([0.1875, 0.6875])
+    previous = orch.DriverPreviousStepStatePacket(
+        tstep=47, provenance_by_component={},
+        fields_by_component={
+            SLOW: dict(daily_accumulators=wetness, lai=jnp.zeros((npts, nvm)),
+                       biomass=None, sla_calc=None, resp_maint_part=None),
+            "hydrol_previous_step_state": {"humrel": None},
+        },
+    )
+    parameters = NS(coeff_maint_zero=None, maint_resp_slope=None, ext_coeff=None, is_tree=None)
+    context = NS(stomate_static=NS(parameters=parameters),
+                 stomate_boundary=NS(kwargs={"rprof": jnp.zeros((npts, 2)), "z_soil": None}))
+
+    def fold(*, accumulator_state, do_slow_flags, **kwargs):
+        assert do_slow_flags == (False,) * 47 + (True,)
+        return accumulator_state
+
+    monkeypatch.setattr(orch, "stomate_daily_process_fold_from_entries", fold)
+    result = orch._paper_later_day_daily_process_from_completed_entries(
+        first_step=None, previous_state=previous, config_path="fixture.yaml",
+        run_def_path=Path("fixture.def"), run_def_values={"PEAT_OCCUR": "FALSE"},
+        runtime=NS(dt_stomate=86400.0, dt_sechiba=1800.0, dt_days=1.0), start_tstep=48,
+        entry_payloads=({"t2m": t2m},) * 48, prepared_context=context,
+        compiled_complete_source_day=True,
+    )
+    np.testing.assert_array_equal(result.fwet_daily, t2m)
+    np.testing.assert_array_equal(result.liqwt_daily, wetness.get("liqwt_daily", t2m))
+    assert "fwet_daily" not in wetness
+
+
 @pytest.mark.parametrize("entry", [
     "paper_1961_driver_cold_start_day_scaffold", "paper_1961_driver_day_scaffold",
     "paper_1961_driver_later_day_scaffold",
@@ -744,11 +1001,26 @@ def test_actual_whole_day_scaffolds_reject_partial_source_day_before_physics(mon
     assert calls == []
 
 
-def test_actual_restart_year_adapter_rejects_partial_source_day_before_thermal_or_compile(monkeypatch):
+def test_actual_restart_year_adapter_rejects_partial_source_day_before_thermal_or_compile(monkeypatch, tmp_path):
+    from netCDF4 import Dataset
+
+    from jax_orchidee.driver.source_clock import source_clock_from_inputs
+
     context = _context(source_start=17)
     prior = _packet(context)
     prior = replace(prior, source_clock_runtime=replace(prior.source_clock_runtime,
                     binding=replace(prior.source_clock_runtime.binding, run_id="previous-native-run")))
+    forcing = tmp_path / "forcing.nc"
+    with Dataset(forcing, "w") as dataset:
+        dataset.createDimension("time", 96)
+        time = dataset.createVariable("time", "f8", ("time",))
+        time.units, time.calendar = "seconds since 2001-01-01 00:00:00", "noleap"
+        time[:] = (np.arange(96) + 1) * 1800.0
+    context.source_clock_setup = replace(
+        source_clock_from_inputs(forcing, dt_sechiba=1800., run_id="partial-native-run",
+                                 previous_runtime=prior.source_clock_runtime, restart_from_memory=True),
+        forcing_year=2001,
+    )
     monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda *args: ())
     calls = []
     def forbidden(*args, **kwargs):

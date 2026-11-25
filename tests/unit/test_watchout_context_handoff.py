@@ -14,10 +14,11 @@ from types import SimpleNamespace as NS
 import numpy as np
 import pytest
 import xarray as xr
+from netCDF4 import Dataset
 
 from jax_orchidee.driver import orchestration as o
 from jax_orchidee.driver.sechiba_boundary import build_intersurf_first_step_payload
-from tests.unit.test_watchout_paper_compiled_transport import _clock_payload, _prepared_case
+from tests.unit.test_watchout_paper_compiled_transport import _clock_payload, _clock_runtime_at, _prepared_case
 from tests.unit.test_watchout_run_context_repair import _handoff_packet, _immutable, _restart_delegates
 
 EVIDENCE = {"inputs": [], "chains": [], "missing_history": [], "producer_edges": [], "cold_empty": []}
@@ -51,6 +52,10 @@ class _Handoff:
         native.to_netcdf(tmp_path / "forcing_1962.nc")
         native.close()
         (tmp_path / "forcing_1963.nc").write_bytes(original_path.read_bytes())
+        for year in (1962, 1963):
+            with Dataset(tmp_path / f"forcing_{year}.nc", "a") as dataset:
+                dataset.variables["tstep"].calendar = "noleap"
+                dataset.variables["tstep"].units = "seconds since 1961-01-01 00:00:00"
         self.fresh = _immutable(fresh)
         self.expected_mode = not watchout
         self.reference = replace(self.fresh, watchout_initialize_main_tstep=0,
@@ -103,23 +108,25 @@ class _Handoff:
         return o.DriverRuntimeDayResult(year=kwargs["year"], day_index=day,
             start_tstep=(day - 1) * 48, steps_per_stomate=48,
             daily_modelout=None if fail else NS(day_index=day),
-            day_end_state=None if fail else replace(_handoff_packet(), tstep=day * 48 - 1),
+            day_end_state=None if fail else replace(_handoff_packet(), tstep=day * 48 - 1,
+                source_clock_runtime=_clock_runtime_at(context, local_tstep=day * 48 - 1, source_istp=day * 48)),
             stopped_at_tstep=0 if fail else None, missing_components=("delegated_science_gap",) if fail else ())
 
     def block(self, *args, **kwargs):
         self.record(kwargs["context"], year=kwargs["year"], boundary="block2-3")
         kwargs["daily_modelout"].extend((NS(day_index=2), NS(day_index=3)))
-        return replace(_handoff_packet(), tstep=143), 4
+        return replace(_handoff_packet(), tstep=143,
+            source_clock_runtime=_clock_runtime_at(kwargs["context"], local_tstep=143, source_istp=144)), 4
 
     def reference_first(self, *args, **kwargs):
         self.record(kwargs["prepared_context"], year=kwargs["year"], boundary="reference-first")
         ready = self.outcome != "first-fail"
         return NS(initial_state_mode=o.REFERENCE_CASE_INITIAL_STATE_MODE,
-            first_day_end_state=_handoff_packet() if ready else None,
+            first_day_end_state=replace(_handoff_packet(), source_clock_runtime=_clock_runtime_at(
+                kwargs["prepared_context"], local_tstep=47, source_istp=48)) if ready else None,
             ready_for_first_day_end_state=ready, missing_components=() if ready else ("delegated_science_gap",))
 
     def _cold_delegates(self, monkeypatch):
-        monkeypatch.setattr(o, "_source_clock_setup", lambda context: NS(runtime=None))
         monkeypatch.setattr(o, "_require_source_day_alignment", lambda *a, **kw: None)
         monkeypatch.setattr(o, "_driver_source_clock_payload", _clock_payload)
         monkeypatch.setattr(o, "_filter_day_state_gaps", lambda *a: ())
@@ -144,7 +151,8 @@ class _Handoff:
             # Science completion is an explicit delegate. Admission, its first
             # entry and returned retired context above are production behavior.
             return replace(result, completed_steps=48, daily_process_ready=True,
-                first_day_end_state=_handoff_packet(), stomate_outputs=NS())
+                first_day_end_state=replace(_handoff_packet(), source_clock_runtime=_clock_runtime_at(
+                    kwargs["prepared_context"], local_tstep=47, source_istp=48)), stomate_outputs=NS())
 
         monkeypatch.setattr(o, "paper_1961_driver_cold_start_day_scaffold", cold)
 
@@ -156,7 +164,8 @@ class _Handoff:
         if self.family == "cold":
             return o.paper_1961_driver_cold_start_multiday_modelout_lite_run(self.fresh.config_path, **common)
         return o.paper_1961_driver_restart_year_multiday_modelout_lite_run(self.fresh.config_path,
-            **common, previous_year_end_state=_handoff_packet())
+            **common, previous_year_end_state=replace(_handoff_packet(), source_clock_runtime=
+                _clock_runtime_at(self.fresh, local_tstep=47, source_istp=48)))
 
     def consume(self, produced, entry):
         self.phase = "consumer"

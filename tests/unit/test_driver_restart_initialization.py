@@ -9,7 +9,7 @@ import jax_orchidee.driver.orchestration as orch
 import pytest
 
 
-def _source_clock_context():
+def _source_clock_context(year=1962):
     """Minimal declared clock contract for this no-process restart boundary."""
     from jax_orchidee.driver.source_clock import (
         SourceClockBinding,
@@ -19,7 +19,7 @@ def _source_clock_context():
     from jax_orchidee.sechiba.ioipsl_calendar import IOIPSLCalendar
 
     calendar = IOIPSLCalendar("noleap")
-    date0 = calendar.ymds2ju(1962, 1, 1, 0.0)
+    date0 = calendar.ymds2ju(year, 1, 1, 0.0)
     lock = IOIPSLCalendar.from_scalar_startdate("noleap", date0)
     binding = SourceClockBinding(
         "restart-initialization-test", "noleap", date0, 1800.0,
@@ -48,7 +48,23 @@ def test_first_restart_boundary_forwards_the_actual_restored_directory():
     assert observed["run_dir"] is declared
 
 
-def test_year_entry_initializes_from_saved_surface_without_mutating_old_year(monkeypatch):
+def test_year_entry_initializes_from_saved_surface_without_mutating_old_year(monkeypatch, tmp_path):
+    from dataclasses import replace
+
+    from netCDF4 import Dataset
+
+    from jax_orchidee.driver.source_clock import source_clock_from_inputs
+
+    forcing = tmp_path / "forcing.nc"
+    with Dataset(forcing, "w") as dataset:
+        dataset.createDimension("time", 3)
+        time = dataset.createVariable("time", "f8", ("time",))
+        time.units, time.calendar = "seconds since 1962-01-01 00:00:00", "noleap"
+        time[:] = [21600.0, 43200.0, 64800.0]
+    previous_clock = replace(_source_clock_context(1961).source_clock_setup.runtime,
+                             last_applied_istp=np.int64(17520))
+    year_setup = source_clock_from_inputs(forcing, dt_sechiba=1800.0, run_id="new-year",
+                                         previous_runtime=previous_clock, restart_from_memory=True)
     surface = np.asarray([275.25])
     old_temp = np.asarray([274.75])
     old_pcapa = np.full((1, 2, 1), 900.0)
@@ -78,7 +94,7 @@ def test_year_entry_initializes_from_saved_surface_without_mutating_old_year(mon
         run_scalars=SimpleNamespace(pref_soil_veg=np.ones(1, dtype=np.int32)),
         first_step_restart_state=SimpleNamespace(sechiba_start=None),
         run_def_values={name: "TRUE" for name in ("OK_EXPLICITSNOW", "USE_SOILC_TEMPDIFF", "use_refSOC")},
-        **vars(_source_clock_context()),
+        source_clock_setup=replace(year_setup, forcing_year=1962),
     )
     observed = {}
     monkeypatch.setattr(orch, "driver_year_handoff_state_gaps", lambda state: ())

@@ -39,6 +39,19 @@ def _prepared_case(tmp_path, monkeypatch, *, daily=False, watchout=True, coupled
     first.water_table = None
     first.domain = domain
     first.forcing = read_forcing_first_step(config, domain=domain)
+    forcing_path = tmp_path / "forcing_1961.nc"
+    with Dataset(forcing_path, "a") as dataset:
+        dataset.variables["tstep"].calendar = "noleap"
+        dataset.variables["tstep"].units = "seconds since 1961-01-01 00:00:00"
+    run_def_values = {
+        "RESTART_FILEIN": "NONE", "SECHIBA_restart_in": "NONE",
+        "STOMATE_RESTART_FILEIN": "NONE", "DT_SECHIBA": str(spec["dt_sechiba"]),
+        "DRIVER_reset_time": "FALSE",
+    }
+    source_clock_setup = replace(source_clock_from_inputs(
+        forcing_path, dt_sechiba=spec["dt_sechiba"],
+        run_id=f"watchout-fixture-{tmp_path.name}",
+    ), forcing_year=1961)
     first.static_trace_fields.salinity = np.zeros(1)
     first.static_trace_fields.tide_height = np.zeros(1)
     first.run_scalars = NS(nvm=14, nstm=3, fortran_pft_ids=tuple(range(1, 15)),
@@ -46,9 +59,9 @@ def _prepared_case(tmp_path, monkeypatch, *, daily=False, watchout=True, coupled
                            pft_layout=NS(index_for_id=lambda pft_id: 13))
     static = {**_static_kwargs(), "dt_sechiba": spec["dt_sechiba"], "ldq_cdrag_from_gcm": coupled}
     context = NS(
-        config_path=config, run_def_path=tmp_path / "unused.def", run_def_values={},
+        config_path=config, run_def_path=tmp_path / "unused.def", run_def_values=run_def_values,
         first_step_bundle=first, first_step_restart_state=None, reference_run_dir=None, domain_override={},
-        source_clock_setup=None,
+        source_clock_setup=source_clock_setup,
         forcing_split=spec["split"], forcing_nb_spread=spec["nb_spread"],
         dt_sechiba=spec["dt_sechiba"], runtime=NS(dt_sechiba=spec["dt_sechiba"], dt_stomate=86400.),
         run_scalars=first.run_scalars, nvm=14, diffuco_pft14_static_kwargs=static,
@@ -65,6 +78,12 @@ def _previous(tstep):
         "slowproc_stomate_previous_step_state": {"biomass": np.zeros((1, 14, 8))},
         "driver_previous_step_state": {"z0": np.asarray([0.1]), "albedo": np.asarray([[0.3, 0.5]])},
     }, {})
+
+
+def _clock_runtime_at(context, *, local_tstep, source_istp):
+    runtime = context.source_clock_setup.runtime
+    return replace(runtime, last_applied_istp=np.int64(source_istp),
+                   anchor_local_tstep=np.int64(local_tstep), anchor_source_istp=np.int64(source_istp))
 
 
 def _day_cache():
@@ -306,13 +325,13 @@ def test_actual_restart_year_public_entry_binds_only_new_native_watchout_phase(t
     context_type = make_dataclass("PortableWatchoutYearContext", [(name, object) for name in vars(context_ns)])
     context = context_type(**vars(context_ns))
     packet = _previous(47)
+    packet = replace(packet, source_clock_runtime=_clock_runtime_at(
+        context, local_tstep=47, source_istp=48))
     packet.fields_by_component.update({
         "sechiba_finalize_state": {"us": np.zeros((1, 14, 6, 11)), "vegstress": np.ones((1, 14)), "njsc": np.asarray([2.])},
         "hydrol_previous_step_state": {}, "thermosoil_previous_step_state": {},
     })
     monkeypatch.setattr(o, "driver_year_handoff_state_gaps", lambda packet: ())
-    monkeypatch.setattr(o, "_source_clock_setup", lambda context: None)
-    monkeypatch.setattr(o, "source_clock_setup_from_config", lambda *args, **kwargs: None)
     monkeypatch.setattr(o, "rebase_driver_state_for_year_start", lambda previous, **kwargs: replace(previous, tstep=-1))
     monkeypatch.setattr(o, "_require_source_day_alignment", lambda *args, **kwargs: None)
     monkeypatch.setattr(h, "hydrol_init_us_state", lambda **kwargs: NS(us=kwargs["us"], humrelv=np.ones((1, 14))))

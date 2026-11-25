@@ -164,13 +164,8 @@ def source_istp_for_local_tstep(runtime: SourceClockRuntime, tstep: Any):
     return runtime.anchor_source_istp + (tstep - runtime.anchor_local_tstep)
 
 
-def validate_source_clock_restart_packet(packet, *, source_istp: int | None = None):
-    """Check versioned export mirrors and chronology before serialization.
-
-    growth_day/peatC_ok are one slowproc556-610 state mirrored for finalize;
-    source kjit is distinct from the packet's local label (DIM2519-529).
-    A legacy science-only packet has no clock claim and remains unchanged.
-    """
+def validate_source_clock_packet_cursor(packet, *, source_istp: int | None = None):
+    """Validate a versioned cursor against its stored local/source frame."""
     runtime = getattr(packet, "source_clock_runtime", None)
     if runtime is None:
         return None
@@ -181,6 +176,14 @@ def validate_source_clock_restart_packet(packet, *, source_istp: int | None = No
         raise SourceClockError("restart packet local tstep conflicts with source clock cursor")
     if source_istp is not None and _integer(source_istp, "restart source kjit") != cursor:
         raise SourceClockError("restart source kjit conflicts with source clock cursor")
+    return runtime
+
+
+def validate_source_clock_restart_packet(packet, *, source_istp: int | None = None):
+    """Check chronology and the slowproc556-610 export mirrors before serialization."""
+    runtime = validate_source_clock_packet_cursor(packet, source_istp=source_istp)
+    if runtime is None:
+        return None
     components = getattr(packet, "fields_by_component", None)
     if not isinstance(components, Mapping):
         raise SourceClockError("versioned restart packet requires both calendar science mirrors")
@@ -441,11 +444,47 @@ class SourceClockSetup:
     time_control: Any
     forcing: ForcingClockMetadata
     restart: RestartClockBundle | None
+    forcing_year: int | None = None
+
+
+def _dim2_time_options(values):
+    """Read the effective restart and run-window controls (DIM2 354-374, 498-556)."""
+    from jax_orchidee.driver.init import parse_run_def_bool
+
+    reset = next((parse_run_def_bool(v) for k, v in values.items() if k.upper() == "DRIVER_RESET_TIME"), False)
+    skip = next((v for k, v in values.items() if k.upper() == "TIME_SKIP"), 0)
+    length = next((v for k, v in values.items() if k.upper() == "TIME_LENGTH"), None)
+    return reset, skip, length
+
+
+def validate_native_year_clock(
+    setup: SourceClockSetup, *, saved_step, saved_origin, saved_dt, dt_sechiba, run_def_values,
+):
+    """Check that the prepared DIM2 first step was derived from the declared restart."""
+    from jax_orchidee.driver.dim2 import Dim2RestartTime, resolve_dim2_time_control
+
+    binding, forcing = setup.binding, setup.forcing
+    validate_source_clock_runtime(setup.runtime, binding)
+    reset, skip, length = _dim2_time_options(run_def_values)
+    restart = (Dim2RestartTime(0, forcing.date0, dt_sechiba, True) if reset
+               else Dim2RestartTime(saved_step, saved_origin, saved_dt))
+    expected = resolve_dim2_time_control(
+        dt_force=forcing.dt_force, dt_sechiba=dt_sechiba, forcing_length=forcing.count,
+        date0=forcing.date0, restart=restart, time_skip=skip, time_length=length, calendar=forcing.calendar,
+    )
+    if (
+        setup.time_control != expected or binding.initialization_istp != expected.istp_old
+        or binding.date0 != expected.date0_rest or binding.dt != expected.dt
+        or binding.calendar != forcing.calendar or setup.runtime.last_applied_istp != expected.istp - 1
+        or source_istp_for_local_tstep(setup.runtime, 0) != expected.istp
+    ):
+        raise SourceClockError("prepared year restart clock is inconsistent with its DIM2 boundary")
 
 
 def source_clock_from_inputs(forcing, *, dt_sechiba: float, run_id: str,
                              restart_paths=None, run_mode: str = "new_native_run",
                              previous_runtime: SourceClockRuntime | None = None,
+                             restart_from_memory: bool = False,
                              driver_reset_time: bool = False, overwrite_time: bool = False,
                              time_skip=0, time_length=None, local_tstep_origin: int = 0,
                              legacy_policy: str = "reject") -> SourceClockSetup:
@@ -457,6 +496,21 @@ def source_clock_from_inputs(forcing, *, dt_sechiba: float, run_id: str,
         raise SourceClockError("forcing and restart calendars conflict")
     if run_mode not in {"new_native_run", "continuous"}:
         raise SourceClockError("declare run_mode='new_native_run' or 'continuous'")
+    if restart_from_memory:
+        if bundle is not None:
+            raise SourceClockError("memory restart chronology cannot also read restart files")
+        if previous_runtime is None:
+            if run_mode == "continuous":
+                raise SourceClockError("continuous year restart requires the previous state's versioned source clock")
+            if not (driver_reset_time or overwrite_time):
+                raise SourceClockError(
+                    "year restart requires a versioned source clock on the previous state or matching "
+                    "driver/SECHIBA/STOMATE restart files. DRIVER_reset_time=TRUE explicitly resets a new run"
+                )
+        else:
+            validate_source_clock_runtime(previous_runtime)
+            if previous_runtime.binding.calendar != info.calendar:
+                raise SourceClockError("forcing and memory restart calendars conflict")
     if run_mode == "continuous":
         if previous_runtime is None or driver_reset_time or overwrite_time:
             raise SourceClockError("continuous run requires previous runtime and cannot reset/overwrite its locked chronology")
@@ -467,12 +521,19 @@ def source_clock_from_inputs(forcing, *, dt_sechiba: float, run_id: str,
             raise SourceClockError("continuous restart requires the exact versioned runtime, not legacy axes")
         rt = previous_runtime
         restart_time = Dim2RestartTime(int(rt.last_applied_istp), rt.binding.date0, rt.binding.dt)
-    elif bundle is None or driver_reset_time or overwrite_time:
+    elif driver_reset_time or overwrite_time:
         # IOIPSL overwrite uses the explicitly initialized caller tuple0/date0/dt.
         restart_time = Dim2RestartTime(0, info.date0, dt_sechiba, driver_reset_time)
-    else:
+    elif bundle is not None:
         r = bundle.driver
         restart_time = Dim2RestartTime(r.itau, r.date0, r.dt, driver_reset_time)
+    elif restart_from_memory:
+        restart_time = Dim2RestartTime(
+            int(previous_runtime.last_applied_istp), previous_runtime.binding.date0,
+            previous_runtime.binding.dt,
+        )
+    else:
+        restart_time = Dim2RestartTime(0, info.date0, dt_sechiba)
     control = resolve_dim2_time_control(dt_force=info.dt_force, dt_sechiba=dt_sechiba,
         forcing_length=info.count, date0=info.date0, restart=restart_time,
         time_skip=time_skip, time_length=time_length, calendar=info.calendar)
@@ -536,16 +597,17 @@ def physical_state_with_source_clock(physical_state, runtime: SourceClockRuntime
 def source_clock_setup_from_config(config_path, *, run_def_path=None, run_def_values=None,
                                    first_step_bundle, reference_run_dir=None,
                                    run_mode="new_native_run", previous_runtime=None,
-                                   run_id=None) -> SourceClockSetup:
-    """Use the same actual forcing file as the prepared bundle and declared IO.
+                                   run_id=None, forcing_year=None,
+                                   restart_from_memory=False) -> SourceClockSetup:
+    """Select the current forcing file and admit the declared restart chronology.
 
-    The bundle's year selects a filename only. Calendar dates come exclusively
-    from that file's variable attributes. Missing restart declarations are not
-    interpreted as NONE. No original001 producer identity is inferred.
+    A reused context can keep its original initialization bundle while reading
+    the next forcing year. Dates come from the selected file's metadata.
+    Memory handoff uses the predecessor cursor in place of the startup files.
     """
     from pathlib import Path
     from jax_orchidee.driver.domain import load_case_config, forcing_file_for_year
-    from jax_orchidee.driver.init import parse_run_def, parse_run_def_bool
+    from jax_orchidee.driver.init import parse_run_def
     from jax_orchidee.driver.restart import reference_restart_path
     values = dict(run_def_values if run_def_values is not None else parse_run_def(run_def_path))
     def declared(name):
@@ -554,13 +616,14 @@ def source_clock_setup_from_config(config_path, *, run_def_path=None, run_def_va
             raise SourceClockError(f"missing/conflicting declared run.def {name}")
         return matches[0]
     config = load_case_config(config_path)
-    forcing = forcing_file_for_year(config, first_step_bundle.year)
+    year = int(first_step_bundle.year if forcing_year is None else forcing_year)
+    forcing = forcing_file_for_year(config, year)
     names = [declared(key) for key in ("RESTART_FILEIN", "SECHIBA_restart_in", "STOMATE_RESTART_FILEIN")]
     absent = [name.upper() == "NONE" for name in names]
     if any(absent) and not all(absent):
         raise SourceClockError("partial three-file restart chronology is unsupported; declare all components or all NONE")
     paths = None
-    if not all(absent):
+    if not all(absent) and not restart_from_memory:
         paths = []
         for name in names:
             path = Path(name)
@@ -573,17 +636,22 @@ def source_clock_setup_from_config(config_path, *, run_def_path=None, run_def_va
         if run_mode == "continuous" and previous_runtime is not None:
             run_id = previous_runtime.binding.run_id
         else:
-            identity = json.dumps([str(Path(config_path).resolve()), str(run_def_path), str(forcing),
-                                   None if paths is None else [str(p) for p in paths], sorted(values.items())])
+            inputs = [str(Path(config_path).resolve()), str(run_def_path), str(forcing),
+                      None if paths is None else [str(p) for p in paths], sorted(values.items())]
+            if restart_from_memory and previous_runtime is not None:
+                validate_source_clock_runtime(previous_runtime)
+                inputs.append([previous_runtime.binding.binding_key,
+                               int(previous_runtime.last_applied_istp)])
+            identity = json.dumps(inputs)
             run_id = "declared-input-" + hashlib.sha256(identity.encode()).hexdigest()
     # DRIVER_reset_time defaults FALSE in source; missing is a source default,
     # unlike absent file identity. TIME_SKIP defaults0 and TIME_LENGTH uses
     # the source forcing span when absent (DIM2 378-401,498-556).
-    reset = next((parse_run_def_bool(v) for k, v in values.items() if k.upper() == "DRIVER_RESET_TIME"), False)
-    skip = next((v for k, v in values.items() if k.upper() == "TIME_SKIP"), 0)
-    length = next((v for k, v in values.items() if k.upper() == "TIME_LENGTH"), None)
+    reset, skip, length = _dim2_time_options(values)
     dt = float(declared("DT_SECHIBA"))
-    return source_clock_from_inputs(forcing, dt_sechiba=dt,
+    setup = source_clock_from_inputs(forcing, dt_sechiba=dt,
         run_id=run_id, restart_paths=paths, run_mode=run_mode, previous_runtime=previous_runtime,
+        restart_from_memory=restart_from_memory,
         driver_reset_time=reset, overwrite_time=reset, time_skip=skip, time_length=length,
         legacy_policy=LEGACY_NATIVE_METADATA)
+    return replace(setup, forcing_year=year)

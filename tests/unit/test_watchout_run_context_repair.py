@@ -16,6 +16,7 @@ from types import SimpleNamespace as NS
 import numpy as np
 import pytest
 import xarray as xr
+from netCDF4 import Dataset
 
 from jax_orchidee.driver import orchestration as o
 from jax_orchidee.driver.domain import read_forcing_first_step
@@ -42,6 +43,9 @@ def _case(tmp_path, monkeypatch, *, watchout=True, override=None):
     dataset["cdrag"].values[-1] = .04
     dataset.to_netcdf(path, mode="w")
     dataset.close()
+    with Dataset(path, "a") as dataset:
+        dataset.variables["tstep"].calendar = "noleap"
+        dataset.variables["tstep"].units = "seconds since 1961-01-01 00:00:00"
     context.first_step_bundle.forcing = read_forcing_first_step(context.config_path, domain=context.first_step_bundle.domain)
     EVIDENCE["inputs"].append({"watchout": watchout, "override": override,
         "netcdf_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -157,8 +161,6 @@ def test_cold_coverage_initialize_payload_uses_actual_substep(tmp_path, monkeypa
 
 def _restart_delegates(monkeypatch):
     monkeypatch.setattr(o, "driver_year_handoff_state_gaps", lambda packet: ())
-    monkeypatch.setattr(o, "_source_clock_setup", lambda context: None)
-    monkeypatch.setattr(o, "source_clock_setup_from_config", lambda *args, **kwargs: None)
     monkeypatch.setattr(o, "rebase_driver_state_for_year_start", lambda previous, **kw: replace(previous, tstep=-1))
     monkeypatch.setattr(o, "_require_source_day_alignment", lambda *args, **kwargs: None)
     monkeypatch.setattr(h, "hydrol_init_us_state", lambda **kw: NS(us=kw["us"], humrelv=np.ones((1, 14))))
@@ -167,13 +169,19 @@ def _restart_delegates(monkeypatch):
     monkeypatch.setattr(o, "restart_thermosoil_initialization_supported", lambda context: False)
 
 
-def _handoff_packet():
+def _handoff_packet(source_clock_runtime=None):
     packet = _previous(47)
     packet.fields_by_component.update({
+        "slowproc_stomate_previous_step_state": {
+            **packet.fields_by_component["slowproc_stomate_previous_step_state"],
+            "growth_day": np.asarray([1.]), "peatC_ok": np.asarray([0.]),
+        },
         "sechiba_finalize_state": {"us": np.zeros((1, 14, 6, 11)), "vegstress": np.ones((1, 14)), "njsc": np.array([2.])},
         "hydrol_previous_step_state": {}, "thermosoil_previous_step_state": {},
     })
-    return packet
+    packet.fields_by_component["sechiba_finalize_state"].update(
+        growth_day=np.asarray([1.]), peatC_ok=np.asarray([0.]))
+    return replace(packet, source_clock_runtime=source_clock_runtime)
 
 
 def _day_result(kwargs):
@@ -203,7 +211,9 @@ def test_restart_outer_retains_admitted_mode_and_retires_phase(tmp_path, monkeyp
     monkeypatch.setattr(o, "paper_1961_driver_later_day_runtime_result", daily)
     monkeypatch.setattr(o, "_paper_run_compiled_later_day_blocks", block)
     result = o.paper_1961_driver_restart_year_multiday_modelout_lite_run(
-        context.config_path, previous_year_end_state=_handoff_packet(), year=1961,
+        context.config_path, previous_year_end_state=_handoff_packet(
+            replace(context.source_clock_setup.runtime, last_applied_istp=np.int64(48),
+                    anchor_local_tstep=np.int64(47), anchor_source_istp=np.int64(48))), year=1961,
         ndays=3 if blocks else 2, use_compiled_sechiba_day=blocks, compiled_day_block_size=2 if blocks else 0,
     )
     data = [{"day": day, "actual_mode": o._paper_context_drag_mode(ctx),
@@ -237,12 +247,16 @@ def test_continuous_outer_preserves_mode_and_does_not_replay_first_main(tmp_path
     # continuous contract, so its TypeError is retained as an API failure.
     if entry == "year-start":
         result = o.paper_1961_driver_restart_year_start_day_result(
-            context.config_path, previous_year_end_state=_handoff_packet(), year=1961,
+            context.config_path, previous_year_end_state=_handoff_packet(
+                replace(context.source_clock_setup.runtime, last_applied_istp=np.int64(48),
+                        anchor_local_tstep=np.int64(47), anchor_source_istp=np.int64(48))), year=1961,
             prepared_context=context, run_mode="continuous",
         )
     else:
         result = o.paper_1961_driver_restart_year_multiday_modelout_lite_run(
-            context.config_path, previous_year_end_state=_handoff_packet(), year=1961, ndays=1,
+            context.config_path, previous_year_end_state=_handoff_packet(
+                replace(context.source_clock_setup.runtime, last_applied_istp=np.int64(48),
+                        anchor_local_tstep=np.int64(47), anchor_source_istp=np.int64(48))), year=1961, ndays=1,
             prepared_context=context, run_mode="continuous",
         )
     EVIDENCE["restart"].append({"entry": entry, "continuous": observed, "physical_days": 0})
@@ -255,7 +269,6 @@ def test_continuous_outer_preserves_mode_and_does_not_replay_first_main(tmp_path
 def test_cold_real_admission_result_reaches_outer_later_day(tmp_path, monkeypatch, outer):
     context = _immutable(_case(tmp_path, monkeypatch))
     monkeypatch.setattr(o, "prepare_paper_1961_driver_context", lambda *a, **kw: context)
-    monkeypatch.setattr(o, "_source_clock_setup", lambda context: NS(runtime=None))
     monkeypatch.setattr(o, "_require_source_day_alignment", lambda *a, **kw: None)
     monkeypatch.setattr(o, "_driver_source_clock_payload", _clock_payload)
     monkeypatch.setattr(o, "_filter_day_state_gaps", lambda *a: ())
