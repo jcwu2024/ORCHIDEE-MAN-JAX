@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+319 跨年首日两条 JAX 路线实读的气象与 CO₂ 相同。七个半小时共 44 处超原严格门，首处在第 17549 步。水文写出和 DIFFUCO 保存的裸土蒸发限制是同一数值的两个位置，两路相差 1.649 × 10⁻¹³。第 17550 步的输入可用存档复算，实际选用的蒸发上限仍待观测。第 17563 步有两个活动 PFT14 的根系坐标超门，后续根抽水和首日日末 C103 三项碳状态的实际传值仍缺。PFT14 的 48 个半小时 GPP 均过原门。[原首日捕获](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/year/first-day-independent.md) · [水热与日末碳的来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-legacy-clock-repair/state/README.md)
+
+069 两条路线在第 858483 步分别把本路上一步返回的蒸发限值传入实际 DIFFUCO，格点与 PFT14 都接到。用各自的同一输入对照原 Fortran 裸土蒸发组件，每路 30 个输出相符。前三步逐步比较 5,993 个坐标，各有 0、5、6 处超原门。该点的原作业逐步水热及自然雪冻证据仍需另外取得。[实际传值和组件复算](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/step3/README.md)
+
 069 从 2009 年末原档开始的两步为温暖矿质土壤状态。两步各有六组水分数组由 HYDROL 写出并进入 THERMOSOIL，第一步的土温进入第二步水文，30 个热容量及热通量值进入第二步 ENERBIL。普通路径直接观测到第二步 DIFFUCO 使用第一步的裸土蒸发限制 0.24658272830797467。两步的土热和能量按真实输入在不同执行方式下比较 47,304 次，均在原门限内。另有 15,768 次正积雪对照来自给定雪层的组件试验。八个源码组和四个调用组的部分成员增加本点证据，仍有 70 个源码组和 33 个调用组待补。[热与能量](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/thermal/README.md) · [成员与范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/dispositions.json)
 
 普通和局部编译之间，第二步裸土蒸发限制相差 2.72 × 10⁻¹¹（无量纲），在三个保存位置超门。底部排水相差 2.84 × 10⁻¹⁴ mm/步，在两个位置超门。换入实测库存和潜在蒸发可双向复现限制系数，水量残差可复现底排修正。水文同输入原组件的普通对照 905/906 通过，局部 JIT 可比项 319/319 通过。普通对照剩余一项涉及向 XIOS 外送的 `tmc_soil` 与 JAX 内部同名量在不同位置取样。原 069 当年作业的私有泥炭开关和真实外送仍缺同一时刻的记录。[各量的操作数](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/hydrology/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json)

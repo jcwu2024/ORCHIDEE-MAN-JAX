@@ -1,6 +1,8 @@
 # 共享物理核心与研究分支核查
 
-## C105 按请求年份绑定文件启动的气象
+## C105 文件启动与跨年续算的气象时钟
+
+主线 `85b439d1aba4eb2000c262881a459dff12cfb3b7` 补齐逐年启动与同进程续算的入口，连同 C104 的旧完整日湿量缺项兼容登记。集中同步时沿各分支实际使用的年界入口，核对已保存的累计步号、与当年气象索引的映射、显式重置、带跳过量的实读，以及旧包缺时钟时的处理。三种输入可用同一 319 年末状态复核，包括带时钟内存、缺时钟但配原三文件的内存、两者均缺的旧包。WATCHOUT 和潮汐的首次初始化按逐年新启动或连续运行各自的约定验证。[生产接线及兼容来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/README.md) · [已验收的三组实读与拒绝](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-legacy-clock-check-after.json)
 
 主线 `489562cec976ebbf4935824fe99bf1e771c80a8a` 将请求年传到首步准备层和时钟缓存。日尺度 `f898282a` 与全球效率 `ffe77a00` 快照都保留以默认 1961 年准备首步包的历史入口。集中同步时沿各自实际入口核对 C93 的选轴、C100 的同文件偏移、C102 的首日检查、跨年份缓存和首个物理步的实际输入。对文件年初索引 0、1 及带跳过量的 4、5 都有参考。本次登记的来源为复查期间接入的源时钟。[两研究线与主线历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/production/source-origins.txt) · [根因与回归](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/README.md)
 

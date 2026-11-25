@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-25，**319 从 1961 年末进入 1962 年的时钟已通过复核。** 带可核实时钟的内存状态和配对的三个重启文件都从累计步 17521 开始，实读同一笔气象和 318.05 ppm CO₂。只提供无时钟旧包时，初交候选会从第 1 步读起，修订后在读取首笔步进气象前报告缺项。这次归入 C105 和 C104，累计 **105 项修正或支持补齐、57 个生产提交，99 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-acceptance.json) · [修正来源](correction_origins.md)
+
+已封存的文件和内存路线各跑完 1962 年首日 48 个半小时。81,888 个共同坐标有 44 处超原门限，PFT14 各半小时 GPP 都在门内，最大绝对差为 4.81 × 10⁻¹⁵。下一步追最早一处裸土蒸发限值差、活动 PFT14 根系吸水及日末碳状态的实际读写。069 的第三步已实测接到第二步蒸发限值。代表点同相位 Fortran 水热、自然雪冻、年度碳通量及 669 点仍有独立验收要求。[319 首日复核](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/year/first-day-independent.md) · [069 第三步](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/step3/README.md) · [代表点准入](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/representative-gate.md)
+
 2026-11-25，**第二个代表点 069 已核对连续两个半小时的水热传值，并修复文件启动的气象年份 C105。** 从 2009 年末原档开始，JAX 第一步的热容量、热通量、土温以及供蒸发使用的水分限制都到了第二步对应过程。当地暖、无雪、无冻结。启动准备原来误用 1961 年的气象时钟，修后使用 2010 年。此窗口修前修后的实际气象相同，两步的有限状态值都在原对照门限内。累计 **105 项修正或支持补齐、56 个生产提交，99 项有复查前证据**。[两步暖启动](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/README.md) · [修正来源](correction_origins.md)
 
 普通与局部编译路线在第二步有五个存储位置超过原门限。它们对应裸土蒸发限制和底部排水，已用当步实参复现库存末位差对两者的影响。接着核对直接用内存年末状态续跑时的气象年份、原点与首笔实际输入，并跟到 069 第三步的蒸发读取。原历史作业第二步的逐过程记录、自然雪冻窗口、代表点年度科学量及最终 669 点验收仍有各自的证据要求。[操作数和收支](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/hydrology/k858482-attribution.json) · [原生窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/next-native.md)

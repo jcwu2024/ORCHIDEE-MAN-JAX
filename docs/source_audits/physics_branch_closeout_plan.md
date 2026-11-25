@@ -66,7 +66,7 @@
 
 第二个代表点 069 的两步已验收。原年末重启文件支持暖态，实测第 858481 步的水热返回已进入第 858482 步。本次修正 C105 处理从文件启动时准备层选错气象年份的问题。069 两条模式的蒸发限制及底部排水仍保留五处原严格差异。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json) · [原生最短窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/next-native.md)
 
-下一包以年末状态直接留在内存、翌年换气象文件的入口为主。对照逐年启动和同一进程连续运行各自的时钟约定，核实实际气象包、首个有效步和物理过程收到的值。复用 069 的第二步末态，补第三步蒸发限值的真实接收。按代表点准入表汇总仍会影响物理阶段判断的本地与原生缺证，年度和 669 点按交付合同另行验收。[代表点与已有原档案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md) · [文件启动与内存入口的已测范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/README.md)
+319 年界入口修订已验收。主控用相同的 1961 年末状态实测 1962 年首次读取和旧包的拒绝条件。文件和内存两条逐年启动的完整首日沿用先前封存的 48 步，连续运行另有两步实测。069 两条路线第三步都读到了上一步的蒸发限制，底排进入当步 STOMATE。下一步在 319 首日核对有严格差异的蒸发、根抽水与日末碳读写。正式代表点仍需原构建和同相位自然前态，年度与 669 点另行验收。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-acceptance.json) · [319 源码与观测缺项](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-legacy-clock-repair/state/README.md) · [代表点准入](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/representative-gate.md)
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”

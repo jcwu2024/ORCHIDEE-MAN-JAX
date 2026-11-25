@@ -1,12 +1,16 @@
 # C1–C105 修正与支持补齐来源登记（2026-11-25）
 
-## C105 文件启动时按所请求的年份准备气象时钟
+## C105 用请求年份的气象和保存的累计步号跨年
+
+生产提交 `85b439d1aba4eb2000c262881a459dff12cfb3b7` 补齐 C105 的逐年启动和连续运行入口。319 的 1961 年末状态保存在累计步 17520。使用可核实的内存时钟或配对的三个文件，1962 年的第一笔实读均在累计步 17521、当年气象索引 0。旧内存同时缺时钟和文件时，初版会从第 1 步读取，修订后在读气象前报告缺项。显式时钟重置与真正冷启动保留 DIM2 的起步规则。累计 **105 项修正或支持补齐、57 个生产提交，99 项有复查前证据**。[主控修前复现](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-legacy-clock-check.json) · [同一输入修后复测](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-acceptance/controller-legacy-clock-check-after.json) · [时钟来源和入口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-legacy-clock-repair/README.md)
 
 生产提交 `489562cec976ebbf4935824fe99bf1e771c80a8a`。069 从 2009 年末的三个原文件启动时，物理步实读了 2010 年气象，准备层却默认使用 1961 年文件的时间原点。DIM2 按当前气象文件与重启文件的原点差计算记录偏移。现将请求年传入首步准备和两层缓存，069 的偏移从 0 修正为 −71540 个六小时记录。年初未跳过记录时，修前、修后两个物理步都读本年索引 0、1。有一条记录跳过量的双年份回归在首日物理计算前验证了所选时间原点及索引 4、5。[原件与时钟](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/identity/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json)
 
-固定首步包可追至 `7333b46c`。本次确认的问题出现在复查期间的 `782535b4`，该版本开始从这个包绑定源时钟。C93 管理同一文件内的时间轴选择，C100 管理已绑定文件里的续跑步号，C102 管理首日完整性检查的读入顺序。累计 **105 项修正或支持补齐、56 个生产提交，99 项有复查前证据**。随本次提交补齐的 Phase05 测试初值归 C104。[接线历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/production/source-origins.txt) · [C104 发布测试修复](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/ci-fixture.md)
+固定首步包可追至 `7333b46c`。本次确认的问题出现在复查期间的 `782535b4`，该版本开始从这个包绑定源时钟。C93 管理同一文件内的时间轴选择，C100 管理已绑定文件里的续跑步号，C102 管理首日完整性检查的读入顺序。首次发布 C105 时累计 **105 项修正或支持补齐、56 个生产提交，99 项有复查前证据**。随该次提交补齐的 Phase05 测试初值归 C104。[接线历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/production/source-origins.txt) · [C104 发布测试修复](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/ci-fixture.md)
 
 ## C104 暖启动时两项日湿量的日末复位
+
+提交 `85b439d1` 同时支持早期完整日内存包。旧包已有日累计容器、但缺少 `fwet_daily` 或 `liqwt_daily` 时，按 STOMATE 上一完整日末的复位值补回缺项，保留包内现存的数值。此兼容改动归入 C104。[旧 319 内存包和首日](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/README.md) · [独立回归](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-legacy-clock-repair/review/README.md)
 
 生产提交 `d97f618f15de419b73d058da80e9389902e229ce`。原 `stomate_main` 第 3215–3218 行按 `PEAT_OCCUR` 累积 `fwet_daily` 和 `liqwt_daily`，第 5019–5020 行在每个实际日末将两者清零。此前普通和编译累积入口在开关关闭时把这两个键也省略了，写重启文件时沿用了暖档里的旧值。`7333b46c` 和复查前的 `7cae3e02` 均有这段逻辑。两字段共享一次状态传递修正。累计 **104 项修正或支持补齐、55 个生产提交，99 项有复查前证据**。[源历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/validation/source-origins.txt) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle-acceptance/controller-acceptance.json)
 
