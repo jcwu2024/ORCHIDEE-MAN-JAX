@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+069 从 2009 年末原档开始的两步为温暖矿质土壤状态。两步各有六组水分数组由 HYDROL 写出并进入 THERMOSOIL，第一步的土温进入第二步水文，30 个热容量及热通量值进入第二步 ENERBIL。普通路径直接观测到第二步 DIFFUCO 使用第一步的裸土蒸发限制 0.24658272830797467。两步的土热和能量按真实输入在不同执行方式下比较 47,304 次，均在原门限内。另有 15,768 次正积雪对照来自给定雪层的组件试验。八个源码组和四个调用组的部分成员增加本点证据，仍有 70 个源码组和 33 个调用组待补。[热与能量](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/thermal/README.md) · [成员与范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/dispositions.json)
+
+普通和局部编译之间，第二步裸土蒸发限制相差 2.72 × 10⁻¹¹（无量纲），在三个保存位置超门。底部排水相差 2.84 × 10⁻¹⁴ mm/步，在两个位置超门。换入实测库存和潜在蒸发可双向复现限制系数，水量残差可复现底排修正。水文同输入原组件的普通对照 905/906 通过，局部 JIT 可比项 319/319 通过。普通对照剩余一项涉及向 XIOS 外送的 `tmc_soil` 与 JAX 内部同名量在不同位置取样。原 069 当年作业的私有泥炭开关和真实外送仍缺同一时刻的记录。[各量的操作数](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/hydrology/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json)
+
 001 的 `PEAT_OCCUR=FALSE` 暖启动实测覆盖日内持有、日末清零、文件写读和次步使用。两组暖启动的首个续跑日都实际走普通折叠。开关为真时，独立原生组件与 JAX 在同输入下得到相同的归一化湿量和复位值。自然冷启动另外实测了第 49–96、97–144 步两个编译区间，三天每天 26 项、364 个日输出坐标逐值复现上次 JAX 编译对照。C98 的活动层审计核实了六叶结构及公开重启字段 `altmax`，完整源审计覆盖 181 个平面字段、一项结构声明和两组生产读写合同。[实测边界](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/wetness/README.md) · [生命周期审计](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/lifecycle/README.md)
 
 半小时 CO₂ 在原 DIM2 路径传至 INTERSURF 局部量 `znetco2`，001 关闭了相应历史输出。JAX 暖启动实测第 49 步读入火碳标记、第 96 步日末清零、第 97 步读回零。该窗口内 JAX 半小时通量和格点聚合组件的调用数都是零。第 49 步的 0.0005 gC/m²/s 增量来自实测操作数的离线重放。第二天正常日末的异养呼吸、内部碳接收和下一步原生值仍待同一时钟的参考。[实际接收与回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/carbon/README.md)

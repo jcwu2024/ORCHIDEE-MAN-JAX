@@ -1,8 +1,12 @@
 # 主线进度
 
+2026-11-25，**第二个代表点 069 已核对连续两个半小时的水热传值，并修复文件启动的气象年份 C105。** 从 2009 年末原档开始，JAX 第一步的热容量、热通量、土温以及供蒸发使用的水分限制都到了第二步对应过程。当地暖、无雪、无冻结。启动准备原来误用 1961 年的气象时钟，修后使用 2010 年。此窗口修前修后的实际气象相同，两步的有限状态值都在原对照门限内。累计 **105 项修正或支持补齐、56 个生产提交，99 项有复查前证据**。[两步暖启动](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/README.md) · [修正来源](correction_origins.md)
+
+普通与局部编译路线在第二步有五个存储位置超过原门限。它们对应裸土蒸发限制和底部排水，已用当步实参复现库存末位差对两者的影响。接着核对直接用内存年末状态续跑时的气象年份、原点与首笔实际输入，并跟到 069 第三步的蒸发读取。原历史作业第二步的逐过程记录、自然雪冻窗口、代表点年度科学量及最终 669 点验收仍有各自的证据要求。[操作数和收支](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/hydrology/k858482-attribution.json) · [原生窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/next-native.md)
+
 2026-11-25，**001 暖点的两份重启清单已核完，确认一处日湿量写回修正 C104。** 在同一份暖档放入两个非零值，旧版在当天结束后仍把它们写回文件。修后从实际日末文件重新启动，下一步读到原 Fortran 要求的两个零。这个点自然运行时两项本来就是零，三天共 1,092 个日输出数值逐值复现上一版 JAX。累计 **104 项修正或支持补齐、55 个生产提交，99 项有复查前证据**。[修正登记](correction_origins.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle-acceptance/controller-acceptance.json)
 
-下一项本地工作优先查 069 代表点，用同一点、同一时刻的温度、土壤水分和气象输入核对连续两个半小时的过程传值。有配对的积雪或冻结前态时一并验证相应分支。001 的原生第二日日末至次步交接仍需延长观测窗口。年度 GPP、NPP、DOC、异养呼吸和最终 669 点验收各有独立的科学判据。[代表点准入与窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md) · [001 原生取证方案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/cancon-allocation.json)
+001 的原生第二日日末至次步交接仍需延长观测窗口。年度 GPP、NPP、DOC、异养呼吸和最终 669 点验收各有独立的科学判据。[代表点准入与窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md) · [001 原生取证方案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/cancon-allocation.json)
 
 2026-11-25，**001 暖点的 STOMATE 重启复查确认了 C103。** 火灾碳排放、火险指数和不可用凋落物本应在日末复位或重算，旧版会继续写入上次的值。用非零暖启动文件复现了旧行为，修后日末包、写出的文件、正常读回和第 97 步状态均符合原规则。此点自然冷启动时三项为零，三天每天 26 个日输出字段与原编译基线逐值相同。累计 103 项修正或支持补齐、54 个生产提交，98 项有复查前证据。[修正登记](correction_origins.md) · [暖启对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/warm/verification.json)
 

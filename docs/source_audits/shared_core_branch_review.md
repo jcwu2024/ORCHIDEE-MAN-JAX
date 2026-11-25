@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## C105 按请求年份绑定文件启动的气象
+
+主线 `489562cec976ebbf4935824fe99bf1e771c80a8a` 将请求年传到首步准备层和时钟缓存。日尺度 `f898282a` 与全球效率 `ffe77a00` 快照都保留以默认 1961 年准备首步包的历史入口。集中同步时沿各自实际入口核对 C93 的选轴、C100 的同文件偏移、C102 的首日检查、跨年份缓存和首个物理步的实际输入。对文件年初索引 0、1 及带跳过量的 4、5 都有参考。本次登记的来源为复查期间接入的源时钟。[两研究线与主线历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/production/source-origins.txt) · [根因与回归](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/README.md)
+
 ## C104 暖档日湿量的日末复位
 
 主线 `d97f618f15de419b73d058da80e9389902e229ce` 让普通和编译日累积入口在 `PEAT_OCCUR=FALSE` 时也保存 `fwet_daily`、`liqwt_daily`，使日末统一复位能取得两项当前值。日尺度 `f898282a` 和全球效率 `ffe77a00` 的只读快照都有原先漏键的入口。集中同步时核对各自的日内累积、日末复位和重启读写，连同 C79 的开关为真时的累积，以及本轮 C98 六叶活动层和 C103 日末字段的审计回归。两个非零暖启动标记可用于检查同步后的实际行为。[来源证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/validation/source-origins.txt) · [回归与接收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/README.md)

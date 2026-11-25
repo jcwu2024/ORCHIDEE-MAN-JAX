@@ -1,4 +1,10 @@
-# C1–C104 修正与支持补齐来源登记（2026-11-25）
+# C1–C105 修正与支持补齐来源登记（2026-11-25）
+
+## C105 文件启动时按所请求的年份准备气象时钟
+
+生产提交 `489562cec976ebbf4935824fe99bf1e771c80a8a`。069 从 2009 年末的三个原文件启动时，物理步实读了 2010 年气象，准备层却默认使用 1961 年文件的时间原点。DIM2 按当前气象文件与重启文件的原点差计算记录偏移。现将请求年传入首步准备和两层缓存，069 的偏移从 0 修正为 −71540 个六小时记录。年初未跳过记录时，修前、修后两个物理步都读本年索引 0、1。有一条记录跳过量的双年份回归在首日物理计算前验证了所选时间原点及索引 4、5。[原件与时钟](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/identity/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json)
+
+固定首步包可追至 `7333b46c`。本次确认的问题出现在复查期间的 `782535b4`，该版本开始从这个包绑定源时钟。C93 管理同一文件内的时间轴选择，C100 管理已绑定文件里的续跑步号，C102 管理首日完整性检查的读入顺序。累计 **105 项修正或支持补齐、56 个生产提交，99 项有复查前证据**。随本次提交补齐的 Phase05 测试初值归 C104。[接线历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/production/source-origins.txt) · [C104 发布测试修复](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/ci-fixture.md)
 
 ## C104 暖启动时两项日湿量的日末复位
 

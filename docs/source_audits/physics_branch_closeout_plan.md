@@ -64,7 +64,9 @@
 
 001 两份 47 项清单已核完。文件清单独有的两项日湿量登记为 C104。C98 私有活动层的完整源审计已通过。原半小时 CO₂ 在本站止于 INTERSURF 局部接收，对应历史输出关闭。原两日作业在第 96 步终止，仍缺正常第二天日末和第 97 步的原生交接。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle-acceptance/controller-acceptance.json) · [碳通量边界](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/carbon/README.md)
 
-下一包在本地查第二个代表点，优先用 069 自己的输入与原档案核对连续两个半小时的土壤水热传递。检查原雪层、液态水、冻土及前一能量状态有没有同点同时刻的记录。可配对的窗口用相同输入对照原过程和 JAX 编译路径，追至下一次实际读取。仅有年末文件或其他点参考的字段，分别注明时间和可支持的结论。年度与 669 点整模验收按交付合同另行办理。[代表点与已有原档案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md)
+第二个代表点 069 的两步已验收。原年末重启文件支持暖态，实测第 858481 步的水热返回已进入第 858482 步。本次修正 C105 处理从文件启动时准备层选错气象年份的问题。069 两条模式的蒸发限制及底部排水仍保留五处原严格差异。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat-acceptance/controller-acceptance.json) · [原生最短窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/next-native.md)
+
+下一包以年末状态直接留在内存、翌年换气象文件的入口为主。对照逐年启动和同一进程连续运行各自的时钟约定，核实实际气象包、首个有效步和物理过程收到的值。复用 069 的第二步末态，补第三步蒸发限值的真实接收。按代表点准入表汇总仍会影响物理阶段判断的本地与原生缺证，年度和 669 点按交付合同另行验收。[代表点与已有原档案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md) · [文件启动与内存入口的已测范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-069-two-step-water-heat/review/README.md)
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”
