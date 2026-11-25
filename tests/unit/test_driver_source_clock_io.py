@@ -66,6 +66,7 @@ def _binding(*, run_id: str = "run-a", dt: float = 3600.0) -> SourceClockBinding
 def _write_forcing(
     path: Path,
     *,
+    year: int = 1961,
     calendar: str | None = "noleap",
     timestep_axis: bool = False,
     conflicting_origin: bool = False,
@@ -77,7 +78,7 @@ def _write_forcing(
     with Dataset(path, "w") as dataset:
         dataset.createDimension("time", count)
         time = dataset.createVariable("time", "f8", ("time",))
-        time_origin = _origin(year=1961)
+        time_origin = _origin(year=year)
         time.units = f"seconds since {time_origin}"
         time.time_origin = _origin(year=1962) if conflicting_origin else time_origin
         if calendar is not None:
@@ -135,6 +136,65 @@ def test_forcing_timestep_axis_precedes_physical_axis_and_owns_its_origin(tmp_pa
     assert metadata.dt_force == 7200.0
     assert metadata.count == 8
     assert metadata.origin_ymds == (1962, 1, 1, 0.0)
+
+
+def test_paper_file_start_binds_requested_forcing_year_before_first_day(monkeypatch, tmp_path):
+    from jax_orchidee.driver import domain, orchestration
+
+    forcing = {year: _write_forcing(tmp_path / f"forcing-{year}.nc", year=year)
+               for year in (1961, 1962)}
+    cursor = 365 * 48
+    runtime = SourceClockRuntime(_binding(dt=1800.0), cursor, 0, cursor + 1)
+    for component in ("driver", "sechiba", "stomate"):
+        _write_restart(tmp_path / f"{component}_start.nc", runtime)
+    values = {
+        "RESTART_FILEIN": "driver_start.nc",
+        "SECHIBA_restart_in": "sechiba_start.nc",
+        "STOMATE_RESTART_FILEIN": "stomate_start.nc",
+        "DT_SECHIBA": "1800",
+        "TIME_SKIP": "1",
+    }
+    run_def = tmp_path / "used_run.def"
+    run_def.write_text("\n".join(f"{key} = {value}" for key, value in values.items()),
+                       encoding="utf-8")
+
+    def physical_context(config_path, run_def_path, reference_run_dir, check, year=1961):
+        return SimpleNamespace(
+            config_path=config_path, run_def_path=run_def_path,
+            reference_run_dir=reference_run_dir, run_def_values=values,
+            first_step_bundle=SimpleNamespace(year=year),
+            runtime=SimpleNamespace(dt_stomate=86400.0, dt_sechiba=1800.0),
+        )
+
+    def bind(context, setup):
+        return SimpleNamespace(**vars(context), source_clock_setup=setup)
+
+    class BeforePhysics(Exception):
+        pass
+
+    def check_context(config_path, *, year, prepared_context, **kwargs):
+        setup = prepared_context.source_clock_setup
+        assert setup.forcing.origin_ymds == (year, 1, 1, 0.0)
+        assert setup.time_control.for_offset == -(365 * 12)
+        assert setup.time_control.istp == cursor + 5
+        assert [orchestration._paper_forcing_model_tstep(prepared_context, year=year, tstep=k)
+                for k in (0, 1)] == [4, 5]
+        raise BeforePhysics
+
+    monkeypatch.setattr(domain, "load_case_config", lambda path: {})
+    monkeypatch.setattr(domain, "forcing_file_for_year", lambda config, year: forcing[year])
+    monkeypatch.setattr(orchestration, "_prepare_paper_1961_driver_context_cached", physical_context)
+    monkeypatch.setattr(orchestration, "_bind_context_hydrol_tides", bind)
+    monkeypatch.setattr(orchestration, "paper_1961_driver_day_scaffold", check_context)
+    orchestration._prepare_paper_1961_clock_context_cached.cache_clear()
+    try:
+        with pytest.raises(BeforePhysics):
+            orchestration.paper_1961_driver_multiday_modelout_lite_run(
+                tmp_path / "case.yaml", year=1962, ndays=1,
+                used_run_def_path=run_def, reference_run_dir=tmp_path,
+            )
+    finally:
+        orchestration._prepare_paper_1961_clock_context_cached.cache_clear()
 
 
 def test_forcing_uses_last_seconds_coordinate_in_netcdf_order(tmp_path: Path):

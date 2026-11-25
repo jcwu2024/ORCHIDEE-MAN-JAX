@@ -816,6 +816,7 @@ def _prepare_paper_1961_driver_context_cached(
     run_def_path: str,
     reference_run_dir: str | None,
     hydrol_check_cwrr: bool = False,
+    year: int = 1961,
 ) -> Paper1961PreparedDriverContext:
     values = parse_run_def(run_def_path)
     hydrol_check_cwrr = require_supported_hydrol_check_cwrr(
@@ -858,6 +859,7 @@ def _prepare_paper_1961_driver_context_cached(
     )
     first_step_bundle = load_paper_1961_first_step_bundle(
         config_path,
+        year=year,
         run_def_path=run_def_path,
         reference_run_dir=reference_run_dir,
         domain_override=domain_override,
@@ -1021,8 +1023,8 @@ def _prepare_paper_1961_driver_context_cached(
 
 
 @lru_cache(maxsize=8)
-def _prepare_paper_1961_clock_context_cached(config_key, run_def_key, run_dir_key, hydrol_check_cwrr=False):
-    context = _prepare_paper_1961_driver_context_cached(config_key, run_def_key, run_dir_key, hydrol_check_cwrr)
+def _prepare_paper_1961_clock_context_cached(config_key, run_def_key, run_dir_key, hydrol_check_cwrr=False, year=1961):
+    context = _prepare_paper_1961_driver_context_cached(config_key, run_def_key, run_dir_key, hydrol_check_cwrr, year)
     setup = source_clock_setup_from_config(
         context.config_path, run_def_path=context.run_def_path,
         run_def_values=context.run_def_values, first_step_bundle=context.first_step_bundle,
@@ -1034,6 +1036,7 @@ def _prepare_paper_1961_clock_context_cached(config_key, run_def_key, run_dir_ke
 def prepare_paper_1961_driver_context(
     config_path: str | Path,
     *,
+    year: int = 1961,
     used_run_def_path: str | Path | None = None,
     reference_run_dir: str | Path | None = None,
     run_mode: str = "new_native_run",
@@ -1041,7 +1044,7 @@ def prepare_paper_1961_driver_context(
     run_id: str | None = None,
     previous_tide_run: TideForcingRun | None = None,
 ) -> Paper1961PreparedDriverContext:
-    """Prepare reusable constants for a source-backed paper-case day loop."""
+    """Prepare constants and bind the selected forcing file before the first physical step."""
 
     config_resolved = Path(config_path).resolve()
     run_def_path = Path(used_run_def_path) if used_run_def_path is not None else default_used_run_def_path(config_resolved)
@@ -1051,9 +1054,10 @@ def prepare_paper_1961_driver_context(
         resolve_hydrol_check_cwrr(parse_run_def(run_def_path)), entrypoint="paper driver preparation"
     )
     run_dir_key = None if reference_run_dir is None else str(Path(reference_run_dir).resolve())
+    context_keys = (str(config_resolved), str(run_def_path.resolve()), run_dir_key, check, int(year))
     if run_mode == "new_native_run" and previous_runtime is None and run_id is None:
-        return _prepare_paper_1961_clock_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key, check)
-    context = _prepare_paper_1961_driver_context_cached(str(config_resolved), str(run_def_path.resolve()), run_dir_key, check)
+        return _prepare_paper_1961_clock_context_cached(*context_keys)
+    context = _prepare_paper_1961_driver_context_cached(*context_keys)
     setup = source_clock_setup_from_config(
         config_resolved, run_def_path=run_def_path, run_def_values=context.run_def_values,
         first_step_bundle=context.first_step_bundle, reference_run_dir=context.reference_run_dir,
@@ -4527,7 +4531,7 @@ def paper_1961_next_step_diffuco_precall_scaffold(
     if previous_state.tstep != int(tstep) - 1:
         raise ValueError("previous_state.tstep must be exactly tstep - 1")
 
-    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    context = prepared_context or prepare_paper_1961_driver_context(config_path, year=year, used_run_def_path=used_run_def_path)
     if prepared_context is not None and fixed_format_trace_dir is None and static_trace_fields is None:
         step = _paper_1961_step_bundle_from_context(prepared_context, year=year, tstep=tstep)
     else:
@@ -4721,7 +4725,7 @@ def paper_1961_next_step_enerbil_precall_scaffold(
         driver_albedo_payload["albedo"] = driver_fields["albedo"]
     elif "albedo" in state_fields:
         driver_albedo_payload["albedo"] = state_fields["albedo"]
-    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    context = prepared_context or prepare_paper_1961_driver_context(config_path, year=year, used_run_def_path=used_run_def_path)
     run_def_values = context.run_def_values
     diffuco_local = None
     after_diffuco_payload = diffuco.diffuco_precall.payload
@@ -4821,7 +4825,7 @@ def paper_1961_next_step_hydrol_precall_scaffold(
 ) -> DriverNextStepHydrolPrecallScaffold:
     """Assemble later-step HYDROL pre-call from local DIFFUCO/ENERBIL state."""
 
-    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    context = prepared_context or prepare_paper_1961_driver_context(config_path, year=year, used_run_def_path=used_run_def_path)
     _effective_hydrol_check_cwrr(context)
     enerbil = paper_1961_next_step_enerbil_precall_scaffold(
         config_path,
@@ -7655,7 +7659,7 @@ def paper_1961_next_step_runtime_result(
     replaced by a pure-array compiled state transition.
     """
 
-    context = prepared_context or prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    context = prepared_context or prepare_paper_1961_driver_context(config_path, year=year, used_run_def_path=used_run_def_path)
     if prepared_context is not None:
         return _paper_1961_next_step_runtime_result_compact(
             config_path,
@@ -7757,6 +7761,7 @@ def paper_1961_driver_timestep_scaffold(
 
     context = prepared_context or prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -10566,6 +10571,7 @@ def paper_1961_driver_day_scaffold(
 
     context = prepared_context or prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -10920,6 +10926,7 @@ def paper_1961_driver_later_day_scaffold(
 
     context = prepared_context or prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -12184,6 +12191,7 @@ def paper_1961_driver_later_day_runtime_result(
 
     context = prepared_context or prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -13273,6 +13281,7 @@ def paper_1961_driver_cold_start_multiday_modelout_lite_run(
         )
     context = prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -13398,7 +13407,7 @@ def paper_1961_driver_cold_start_runtime_day_result(
 
     if int(day_index) < 1:
         raise ValueError("day_index must be positive")
-    context = prepare_paper_1961_driver_context(config_path, used_run_def_path=used_run_def_path)
+    context = prepare_paper_1961_driver_context(config_path, year=year, used_run_def_path=used_run_def_path)
     if int(day_index) == 1:
         return paper_1961_driver_cold_start_day_scaffold(
             config_path,
@@ -13475,6 +13484,7 @@ def paper_1961_driver_cold_start_day_scaffold(
 
     context = prepared_context or prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -13829,6 +13839,7 @@ def paper_1961_driver_multiday_scaffold(
         raise ValueError("ndays must be non-negative")
     context = prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )
@@ -13992,6 +14003,7 @@ def paper_1961_driver_multiday_modelout_lite_run(
         )
     context = prepare_paper_1961_driver_context(
         config_path,
+        year=year,
         used_run_def_path=used_run_def_path,
         reference_run_dir=reference_run_dir,
     )

@@ -209,6 +209,8 @@ def empty_accumulators(payload, *, nonzero=False):
         "tmc_topgrass_daily": "tmc_topgrass",
     }
     fields = {name: np.full_like(payload[source], 2.0 if nonzero else 0.0) for name, source in mapping.items()}
+    # The inactive peat path still carries both grid accumulators to the daily reset.
+    fields.update(fwet_daily=np.zeros_like(payload["t2m"]), liqwt_daily=np.zeros_like(payload["t2m"]))
     fields.update(t2m_min_daily=np.full(2, 1e33), t2m_max_daily=np.full(2, -1e33))
     return SimpleNamespace(**fields)
 
