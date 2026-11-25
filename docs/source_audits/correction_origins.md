@@ -1,4 +1,16 @@
-# C1–C102 修正与支持补齐来源登记（2026-11-25）
+# C1–C103 修正与支持补齐来源登记（2026-11-25）
+
+## C103 STOMATE 日末三项重启状态的写回
+
+生产提交 `6c1dbe7806841fc4489663c82dbd20df88d3359f`。复查前的 `7cae3e02` 已将 `co2_fire`、`ni_acc` 和 `litter_not_avail` 列为全程沿用旧值的字段，更早的本地快照 `7333b46c` 也有这组映射。三项共享同一日末写回缺口，登记为一项修正。累计 **103 项修正或支持补齐、54 个生产提交，98 项有复查前证据**。[原源和代码对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/fire-and-grazing/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state-acceptance/controller-acceptance.json)
+
+| 字段 | 原过程所需行为 | 001 暖启动验证 |
+| --- | --- | --- |
+| `co2_fire` 火灾碳排放 | LPJ 每次开始时清零，禁火的论文配置将零写到日末 | 输入标记 43.2，日末前保留，第 96 步写出及第 97 步状态为零 |
+| `ni_acc` 火险指数 | 禁火分支在日末清零格点指数 | 输入标记 123，在相同边界归零 |
+| `litter_not_avail` 不可用凋落物 | 用新增后、分解前的地上凋落物求可用比例，以独立的旧库 ×（1 − 可用比例）计算不可用量。PFT14 在此为树，其可用比例为 1 | 两个凋落物类别各输入 1.25 gC/m²，日末文件、正常读回及次步均为零 |
+
+三个标记来自第 48 步重启文件的实验副本。修前它们均被原样写过第 96 步，修后的相邻五项非零继承对照仍逐值保留。自然冷启动编译三天的日输出均与修前逐值相同。[暖启和冷启实测](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/warm/verification.json) · [逐字段判定](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/field-ledger.json)
 
 ## C102 冷启动整日入口的步进输入读取顺序
 

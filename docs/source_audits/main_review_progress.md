@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-25，**001 暖点的 STOMATE 重启复查确认了 C103。** 火灾碳排放、火险指数和不可用凋落物本应在日末复位或重算，旧版会继续写入上次的值。用非零暖启动文件复现了旧行为，修后日末包、写出的文件、正常读回和第 97 步状态均符合原规则。此点自然冷启动时三项为零，三天每天 26 个日输出字段与原编译基线逐值相同。累计 103 项修正或支持补齐、54 个生产提交，98 项有复查前证据。[修正登记](correction_origins.md) · [暖启对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/warm/verification.json)
+
+本轮 47 项续跑清单中，另有 42 项按配置继承，2 项是原文件读取子程序的局部量。旧 NetCDF 末态清单也有 47 项，两表重合 45 项。接下来核对文件清单独有的两项日水分累计量、暖启后半小时 CO₂ 的实际读取，并补齐活动层私有状态的审计声明。上轮 Ubuntu 失败的两例来自同一历史夹具的换行散列，修后冻结 Linux 的对应发布步骤 130 项通过。[两份字段清单](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/review/README.md) · [发布复现](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/ci/README.md)
+
 2026-11-25，**001 暖点三天的普通与编译 JAX 每天 26 个日输出字段均在原容差内。** 第三天末的 35 处状态超差来自两个量。冠层储水相差约 1.64 × 10⁻¹⁴ mm，土壤热通量相差约 4.66 × 10⁻¹¹ W/m²，两者都存入多个数组。相同土热输入下改变 JAX 编译方式能重现同量级的热通量差。加入半小时观测也改变了编译结果，原始运行中这两个量最早在哪一步分离仍待证。[自然运行与观测对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json)
 
 **C102 修复冷启动整日入口提前读取气象和 CO₂ 的问题。** 使用不足整日的原输入时，旧版和修后版本都在物理计算开始前退出。累计 102 项修正或支持补齐、53 个生产提交，97 项有复查前证据。下一项本地核查是 47 个 STOMATE 重启字段，优先查清哪些需要本次运行的值，以及写出的值能否供下次暖启动正确使用。[修正来源](correction_origins.md) · [重启字段来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/execution/comparison/file-restart-ledger.json)

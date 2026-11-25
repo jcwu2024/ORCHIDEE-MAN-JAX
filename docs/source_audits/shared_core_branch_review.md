@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## C103 禁火配置与日末凋落物状态
+
+主线 `6c1dbe7806841fc4489663c82dbd20df88d3359f` 将火灾碳排放、火险指数和不可用凋落物接入日末更新、文件和暖启动读取。只读检查确认，日尺度 `f898282a`、全球效率 `ffe77a00` 的源码都还把这三项列为固定沿用旧值。集中同步时一起核对普通与编译日末、C95/C98/C101 的状态传递、PFT 草地管理参数，以及 LEAK 分解前和 LPJ 写回时使用的两份凋落物库。三个非零暖启动标记与五个继承对照可直接用于验证。[修正与依赖](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/README.md) · [主控记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state-acceptance/controller-acceptance.json)
+
 ## C102 冷启动整日的读入顺序
 
 主线 `b2fef009a2b80809ef41098bc9e166c3d31dfc05` 先验证源时钟是否从完整日的第一步开始，再用第一笔气象初始化 WATCHOUT 拖曳选择。日尺度 `f898282a` 和全球效率 `ffe77a00` 的已查快照均缺少引入这一顺序的 `aa14d042`，也缺少先前的源日检查 `782535b4`。集中同步时按各自的源时钟、冷启动入口和 WATCHOUT 所有权合并，复核完整日与中途起步、连续年与新原生年、C100 气象续读及 C101 编译日末。日历测试现覆盖上述入口的步进读取时机。[分支祖先](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/calendar/ancestry.json) · [冷启动和跨年用例](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/calendar/README.md)

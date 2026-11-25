@@ -62,6 +62,8 @@
 
 001 三日普通与编译运行的 35 个超差位置已归到冠层储水和土壤热通量。下一步本地复用现有 47 项 STOMATE 字段清单、两日原生文件和 JAX 暖启证据，按原开关、实时更新者和暖启消费者核实依赖基状态写出的字段。优先核对会影响 PFT14 碳收支或继续运行的字段。原生第二天正常日末与随后第 97 步仍按上面的短窗方案取证。[三日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json) · [既有字段与配置证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
 
+续跑清单的 47 项已逐名核完。文件末态清单另含 `fwet_daily` 和 `liqwt_daily`，需用非零暖值区分日内的累积开关与日末复位。接着用已存 001 暖启边界核实半小时 CO₂ 的实际发送，并恢复 C98 私有活动层的完整生命周期审计。原两日 Fortran 终止写出、延长窗口的正常日末和代表点年度科学量均保留各自的取样时钟。[本轮交付](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state-acceptance/controller-acceptance.json) · [旧基线的 19 项审计失败](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/ci/lifecycle-preflight.md)
+
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”
 
