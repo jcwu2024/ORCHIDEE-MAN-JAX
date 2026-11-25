@@ -1,6 +1,8 @@
 # 当前物理计算与条件分支覆盖
 
-319 跨年首日两条 JAX 路线实读的气象与 CO₂ 相同。七个半小时共 44 处超原严格门，首处在第 17549 步。水文写出和 DIFFUCO 保存的裸土蒸发限制是同一数值的两个位置，两路相差 1.649 × 10⁻¹³。第 17550 步的输入可用存档复算，实际选用的蒸发上限仍待观测。第 17563 步有两个活动 PFT14 的根系坐标超门，后续根抽水和首日日末 C103 三项碳状态的实际传值仍缺。PFT14 的 48 个半小时 GPP 均过原门。[原首日捕获](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/year/first-day-independent.md) · [水热与日末碳的来源](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3-legacy-clock-repair/state/README.md)
+319 年界首日两条 JAX 路线的气象与 CO₂ 相同，七个半小时共 44 处超原严格门。第 17549 步正常柱水量相差 2.842 × 10⁻¹⁴ mm，虚拟柱水量和底通量逐值相同。换入另一条路线的正常柱水量及潜在蒸发，即可复现裸土限值差 1.649 × 10⁻¹³。第 17550 步两路的格点及活动 PFT14 都选中水文限值，实测裸土蒸发差 7.78 × 10⁻¹⁵ mm/步。在第 17563 步单换相对含水量可复现活动土块的根分布和水分权重，下一步实际根抽水合计相差 8.82 × 10⁻¹⁵ mm。土热通量和地表比湿的差异也进入了下一步实际调用。30 组相同输入的原 Fortran 片段重放共 380 个坐标过门。第 17521 步文件启动的内层水文操作数仍缺具体数值。[实际读写与原式复算](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-first-day-water-heat-and-carbon/water/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-first-day-water-heat-and-carbon-acceptance/controller-acceptance.json)
+
+第 17568 步日末及 17569 步入口，文件路径的火灾碳、火险状态与不可利用凋落物均为零，旧 C31 内存路径产生前两项零值，第三项仍缺。当日研究输出全部过门。用本站实际树型掩码和库存离线比较两个既定旧值，活动 PFT14 的凋落物可利用比例均为 1。下一次日末对旧包的实际读取仍待观测。[日碳与旧包边界](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-first-day-water-heat-and-carbon/carbon/README.md) · [独立复算](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-first-day-water-heat-and-carbon/review/README.md)
 
 069 两条路线在第 858483 步分别把本路上一步返回的蒸发限值传入实际 DIFFUCO，格点与 PFT14 都接到。用各自的同一输入对照原 Fortran 裸土蒸发组件，每路 30 个输出相符。前三步逐步比较 5,993 个坐标，各有 0、5、6 处超原门。该点的原作业逐步水热及自然雪冻证据仍需另外取得。[实际传值和组件复算](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-year-boundary-and-069-step3/step3/README.md)
 

@@ -24,6 +24,7 @@ from jax_orchidee.sechiba.restart_io import (
     sechiba_finalize_source_state_from_restart,
     write_sechiba_restart_state,
 )
+from jax_orchidee.stomate.reference import StomateRestartEntryState
 from jax_orchidee.stomate.restart_io import StomateRestartPhysicalState
 
 
@@ -283,18 +284,24 @@ def test_production_paper_file_entry_initializes_stress_once_and_writes_back(
     # Keep the actual catalog, stable-PFT layout, run-scalars selection, raw
     # SECHIBA reader, HYDROL diagnostic anchors and initialization adapter.
     scalars = entry.read_run_scalars(config)
-    monkeypatch.setattr(entry, "read_stomate_restart_entry_state", lambda *a, **kw: SimpleNamespace(
+    stomate_values = {name: np.zeros((1,)) for name in StomateRestartEntryState._fields}
+    stomate_values.update(
         biomass=np.zeros((2, 14, 2)), carbon_32l=np.zeros((2, 3, 14, 1)),
         carbon=np.zeros((2, 3, 14)), litter=np.zeros((2, 2, 14)),
-    ))
+        thawed_humidity=np.zeros(2),
+    )
+    monkeypatch.setattr(entry, "read_stomate_restart_entry_state",
+                        lambda *a, **kw: StomateRestartEntryState(**stomate_values))
     monkeypatch.setattr(entry, "read_stomate_daily_accumulator_state",
                         lambda *a, **kw: SimpleNamespace(t2m_daily=np.ones(2)))
     monkeypatch.setattr(entry, "read_stomate_restart_season_state",
                         lambda *a, **kw: SimpleNamespace(tsoil_month=np.ones((2, 11))))
     monkeypatch.setattr(coupled, "paper_case_season_time_scales",
                         lambda *a, **kw: SimpleNamespace(tau_longterm_max=1095.0))
+    monkeypatch.setattr(entry, "read_stomate_readstart_states_from_template", lambda *a, **kw:
+        SimpleNamespace(entry_state=SimpleNamespace(thawed_humidity=np.full(2, 0.5))))
     for name in (
-        "read_stomate_readstart_states_from_template", "read_driver_albedo_restart",
+        "read_driver_albedo_restart",
         "read_sechiba_static_restart", "read_diffuco_first_step_restart_state",
         "read_enerbil_soil_thermal_state_restart", "read_thermosoil_restart_state",
         "read_slowproc_restart_entry_state",
