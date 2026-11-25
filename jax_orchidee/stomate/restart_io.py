@@ -234,14 +234,14 @@ STOMATE_FIXED_PATH_CARRY_FIELDS = (
     "thawed_humidity", "depth_organic_soil",
     "date",
     "O2_soil", "CH4_soil", "O2_snow", "CH4_snow",
-    "fireindex", "firelitter", "co2_fire", "ni_acc",
+    "fireindex", "firelitter",
     "uo_0", "uold2_0", "uo_wet1", "uold2_wet1", "uo_wet2", "uold2_wet2",
     "uo_wet3", "uold2_wet3", "uo_wet4", "uold2_wet4",
     "height_acro", "carbon_acro", "carbon_cato",
     "fwet_month", "liqwt_month", "liqwt_max", "fwet_series",
     "carbon_save", "deepC_a_save", "deepC_s_save", "deepC_p_save", "delta_fsave",
     "wshtotsum", "sr_ugb", "nb_ani", "grazed_frac", "import_yield",
-    "litter_not_avail", "nb_grazingdays", "after_snow", "after_wet", "wet1day", "wet2day",
+    "nb_grazingdays", "after_snow", "after_wet", "wet1day", "wet2day",
     "Global_years", "nbp_sum", "nbp_flux", "ok_equilibrium",
     "MatrixV", "Vector_U", "previous_stock", "current_stock",
 )
@@ -390,7 +390,7 @@ def stomate_fixed_path_carry_state(
         **{name: "no_permafrost_inputs" for name in ("thawed_humidity", "depth_organic_soil")},
         **{name: "date" for name in ("date",)},
         **{name: "ok_pc" for name in ("O2_soil", "CH4_soil", "O2_snow", "CH4_snow")},
-        **{name: "fire" for name in ("fireindex", "firelitter", "co2_fire", "ni_acc")},
+        **{name: "fire" for name in ("fireindex", "firelitter")},
         **{name: "wetland_ch4" for name in (
             "uo_0", "uold2_0", "uo_wet1", "uold2_wet1", "uo_wet2", "uold2_wet2",
             "uo_wet3", "uold2_wet3", "uo_wet4", "uold2_wet4",
@@ -401,7 +401,7 @@ def stomate_fixed_path_carry_state(
             "carbon_save", "deepC_a_save", "deepC_s_save", "deepC_p_save", "delta_fsave",
         )},
         **{name: "grazing" for name in (
-            "wshtotsum", "sr_ugb", "nb_ani", "grazed_frac", "import_yield", "litter_not_avail",
+            "wshtotsum", "sr_ugb", "nb_ani", "grazed_frac", "import_yield",
             "nb_grazingdays", "after_snow", "after_wet", "wet1day", "wet2day",
         )},
         **{name: "spinup" for name in (

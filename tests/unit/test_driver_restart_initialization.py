@@ -282,7 +282,7 @@ def test_first_extractor_carries_growth_and_thermal_alias_to_next_real_consumer(
         hydrol=SimpleNamespace(),thermosoil=SimpleNamespace(refsoc=None,e_soil_lat=latent),stomate_input=None,
         sechiba_restart_state=object(),stomate_readstart=SimpleNamespace(entry_state=object(),gas_state=object(),
         season_state=SimpleNamespace(dt_days_read=1.),remainder_state=SimpleNamespace(**{name:np.ones(1) for name in
-        ("resp_hetero","tsurf_year","deepC_peat","depth_deepsoil","t2m_14")})))
+        ("resp_hetero","co2_fire","ni_acc","litter_not_avail","tsurf_year","deepC_peat","depth_deepsoil","t2m_14")})))
     scaffold=SimpleNamespace(step=SimpleNamespace(tstep=0),first_step_restart_state=restart,
         payload=SimpleNamespace(is_watchout=False),
         diffuco_first_step_precall=SimpleNamespace(payload={"temp_growth":growth}),

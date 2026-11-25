@@ -607,7 +607,8 @@ def test_fixed_paper_path_carries_only_source_proven_inactive_state() -> None:
     )
 
     assert tuple(carry.fields) == STOMATE_FIXED_PATH_CARRY_FIELDS
-    assert len(carry.fields) == 65
+    assert len(carry.fields) == 62
+    assert not {"co2_fire", "ni_acc", "litter_not_avail"}.intersection(carry.fields)
     assert carry.fields["date"] == states.season_state.date
     assert carry.fields["O2_soil"] is states.gas_state.O2_soil
     assert carry.fields["MatrixV"] is states.remainder_state.MatrixV

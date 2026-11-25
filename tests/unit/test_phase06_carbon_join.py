@@ -5,6 +5,8 @@ new original oracle for a combined natural daily trajectory.
 """
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -76,3 +78,40 @@ def test_nonzero_original_post_soil_litter_enters_actual_lpj_diagnostic(actual_j
     expected_total[:, 0, :] = 0.
     np.testing.assert_allclose(outputs.output_diagnostics.tot_litter_carb, expected_total,
                                rtol=soil.RTOL, atol=soil.ATOL)
+
+
+def test_unavailable_litter_uses_pre_decay_and_legacy_pools_at_day_end(actual_join):
+    inputs, carbon_inputs, carbon, envelope, outputs, _ = actual_join
+    # Distinct pool values exercise littercalc_leak 2325–2348 and LPJ 1218–1221.
+    pre_decay = np.full((2, 2, 14), 4.0)
+    littercalc = envelope.ok_leak.littercalc._replace(litter_above_before_decay_carbon=pre_decay)
+    envelope = envelope._replace(ok_leak=envelope.ok_leak._replace(littercalc=littercalc))
+    grass = np.arange(14) == 9
+    flags_off = np.zeros(14, dtype=bool)
+    parameters = SimpleNamespace(
+        is_tree=np.arange(14) == 13, natural=grass, is_grassland_manag=flags_off,
+        is_grassland_grazed=flags_off, is_grassland_cut=flags_off,
+    )
+    previous = driver.DriverPreviousStepStatePacket(
+        tstep=47, fields_by_component={"slowproc_stomate_previous_step_state": {
+            "litter": np.full((2, 2, 14, 2, 1), 8.0),
+            "litter_not_avail": np.ones_like(pre_decay),
+            "deepC_peat": np.zeros((2, 14, 32)), "depth_deepsoil": inputs["zf_soil_b"],
+        }}, provenance_by_component={},
+    )
+    packet = driver._paper_day_first_stomate_state_packet(
+        daily_carbon=carbon, ok_leak=envelope, outputs=outputs, previous_state=previous,
+        stomate_parameters=parameters, dt_days=1.0, daily_reset_fields={
+            "gpp_daily": np.zeros_like(carbon_inputs["post_npp_inputs"]["gpp_daily"]),
+            "resp_maint_part": np.zeros_like(carbon_inputs["post_npp_inputs"]["resp_maint_part"]),
+        },
+    )
+    end = driver._paper_day_end_state_packet(previous_state=previous, stomate_state=packet)
+    expected = np.zeros_like(pre_decay)
+    expected[:, :, 0] = 8.0  # Bare soil has zero available fraction.
+    expected[:, :, 9] = 2.0  # Natural grass retains 8 × (1 − (4 − 1) / 4).
+    np.testing.assert_array_equal(packet.fields["litter_not_avail"], expected)
+    np.testing.assert_array_equal(
+        end.fields_by_component["slowproc_stomate_previous_step_state"]["litter_not_avail"],
+        expected,
+    )

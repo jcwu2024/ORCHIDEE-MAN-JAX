@@ -695,6 +695,7 @@ class LittercalcLeakCoreResult(NamedTuple):
     floodcarbon_input: jnp.ndarray
     fuel: FuelPools
     increments: LitterIncrementResult
+    litter_above_before_decay_carbon: jnp.ndarray
 
 
 class LitterAbovegroundControls(NamedTuple):
@@ -1879,6 +1880,9 @@ def littercalc_leak_core_with_controls(
         floodcarbon_input=above.floodcarbon_input + below.floodcarbon_input,
         fuel=fuel,
         increments=increments,
+        # littercalc_leak 2325 and 2330-2347 compute availability after
+        # adding fresh litter and before the aboveground decay.
+        litter_above_before_decay_carbon=pools.litter_above[..., ICARBON],
     )
 
 
@@ -8929,33 +8933,18 @@ def litter_availability_fraction_step(
         if arr.shape != (nvm,):
             raise ValueError(f"{name} must have shape (nvm,)")
 
-    litter_avail_frac = jnp.zeros((npts, NLITT, nvm), dtype=litter_above_carbon.dtype)
     if not do_slow:
-        return litter_avail_frac
+        return jnp.zeros_like(litter_above_carbon)
 
-    for pft in range(1, nvm):
-        grazing_litter_branch = (
-            (bool(is_grassland_manag[pft]) and bool(is_grassland_grazed[pft]))
-            or (
-                (not bool(is_tree[pft]))
-                and bool(natural[pft])
-                and (not bool(is_grassland_cut[pft]))
-                and (not bool(is_grassland_grazed[pft]))
-            )
-        )
-        if grazing_litter_branch:
-            litter_pft = litter_above_carbon[:, :, pft]
-            not_avail_pft = litter_not_avail[:, :, pft]
-            frac = jnp.where(
-                (litter_pft >= not_avail_pft) & (litter_pft > 0.0),
-                (litter_pft - not_avail_pft) / litter_pft,
-                0.0,
-            )
-            litter_avail_frac = litter_avail_frac.at[:, :, pft].set(frac)
-        else:
-            litter_avail_frac = litter_avail_frac.at[:, :, pft].set(1.0)
-
-    return litter_avail_frac
+    grazing_litter_branch = (
+        (is_grassland_manag & is_grassland_grazed)
+        | (~is_tree & natural & ~is_grassland_cut & ~is_grassland_grazed)
+    )
+    valid = (litter_above_carbon >= litter_not_avail) & (litter_above_carbon > 0.0)
+    denominator = jnp.where(valid, litter_above_carbon, 1.0)
+    grazing_fraction = jnp.where(valid, (litter_above_carbon - litter_not_avail) / denominator, 0.0)
+    litter_avail_frac = jnp.where(grazing_litter_branch[None, None, :], grazing_fraction, 1.0)
+    return litter_avail_frac.at[:, :, 0].set(0.0)
 
 
 def stomate_lpj_litter_availability_from_fraction(
@@ -8979,7 +8968,7 @@ def stomate_lpj_litter_availability_from_fraction(
     litter_avail = litter_above_carbon * litter_avail_frac
     return LitterAvailabilityResult(
         litter_avail=litter_avail,
-        litter_not_avail=litter_above_carbon - litter_avail,
+        litter_not_avail=litter_above_carbon * (1.0 - litter_avail_frac),
     )
 
 

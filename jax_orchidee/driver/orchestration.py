@@ -248,7 +248,11 @@ from jax_orchidee.stomate.daily import (
     stomate_maintenance_respiration_parts_from_stacks,
 )
 from jax_orchidee.stomate.carbon_kernels import (
+    IABOVE,
+    ICARBON,
+    litter_availability_fraction_step,
     littercalc_aboveground_controls,
+    stomate_lpj_litter_availability_from_fraction,
     stomate_littercalc_entry_prep,
     stomate_soil_mc_32l,
 )
@@ -285,6 +289,7 @@ from jax_orchidee.stomate.integration import (
     stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit,
     stomate_lpj_outputs_from_post_npp_ok_leak_explicit,
 )
+from jax_orchidee.stomate.parameters import PaperCaseStomateParameterBundle
 from jax_orchidee.stomate.permafrost import FORTRAN_EPSILON_R8, stomate_permafrost_decomposition_controls
 from jax_orchidee.stomate.reference import (
     StomateRestartEntryState,
@@ -1313,6 +1318,12 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object], *
                 # slowproc/stomate_initialize INTENT(out) object to zero.
                 "depth_deepsoil": np.zeros((npts, nvm), dtype=np.float64),
                 "resp_hetero": np.zeros((npts, nvm), dtype=np.float64),
+                # stomate_io.f90::readstart 997-1001 initializes missing fire emissions.
+                "co2_fire": np.zeros((npts, nvm), dtype=np.float64),
+                # stomate_io.f90::readstart 1075-1079 initializes the fire danger index.
+                "ni_acc": np.zeros(npts, dtype=np.float64),
+                # stomate_io.f90::readstart 1636-1639 restores this slot or uses zero.
+                "litter_not_avail": np.zeros_like(cold_entry.litter_above[..., ICARBON]),
                 "dt_days_read": float(season.dt_days_read),
             }
         )
@@ -1788,7 +1799,7 @@ STOMATE_HALF_HOUR_CARRY_FIELDS = (
     # slowproc_main:588 reads the prior growth temperature before STOMATE;
     # stomate_main:5049 updates it at the daily boundary, not each half-hour.
     "resp_maint_part", "daily_accumulators", "t2m_longterm", "temp_growth",
-    "dt_days_read", "resp_hetero", "tsurf_year", "deepC_peat",
+    "dt_days_read", "resp_hetero", "co2_fire", "ni_acc", "litter_not_avail", "tsurf_year", "deepC_peat",
     "depth_deepsoil", "t2m_14",
     *STOMATE_FIXED_PATH_CARRY_FIELDS,
 )
@@ -3994,6 +4005,9 @@ def driver_previous_step_state_from_timestep_scaffold(
             {
                 "dt_days_read": float(readstart.season_state.dt_days_read),
                 "resp_hetero": readstart.remainder_state.resp_hetero,
+                "co2_fire": readstart.remainder_state.co2_fire,
+                "ni_acc": readstart.remainder_state.ni_acc,
+                "litter_not_avail": readstart.remainder_state.litter_not_avail,
                 "tsurf_year": readstart.remainder_state.tsurf_year,
                 "deepC_peat": readstart.remainder_state.deepC_peat,
                 "depth_deepsoil": readstart.remainder_state.depth_deepsoil,
@@ -4166,6 +4180,9 @@ def driver_previous_step_state_from_next_step_hydrol_scaffold(
         "temp_growth",
         "dt_days_read",
         "resp_hetero",
+        "co2_fire",
+        "ni_acc",
+        "litter_not_avail",
         "tsurf_year",
         "deepC_peat",
         "depth_deepsoil",
@@ -10073,7 +10090,7 @@ STOMATE_DAY_END_EXPLICIT_WRITEBACK_FIELDS = (
     "veget_max", "veget", "soiltile", "totfrac_nobio", "tot_bare_soil",
     "altmax", "ok_leak_active_layer", "fixed_cryoturbation_depth", "assim_param", "temp_growth",
     "fpeat", "soilc_total", "thawed_humidity", "depth_organic_soil",
-    "dt_days_read", "resp_hetero", "tsurf_year", "deepC_peat",
+    "dt_days_read", "resp_hetero", "co2_fire", "ni_acc", "litter_not_avail", "tsurf_year", "deepC_peat",
     "depth_deepsoil", "t2m_14",
 )
 
@@ -10143,6 +10160,11 @@ def paper_day_active_restart_producer_fields(
         # stomate.f90::stomate_main line 4958 resets resp_hetero_d before
         # writerestart receives it at lines 5467 and 5496.
         "resp_hetero": jnp.zeros_like(ok_leak.ok_leak.soilcarbon.resp_hetero_soil),
+        # StomateLpj initializes this daily INTENT(out) at line 874 before
+        # the fire call, which is disabled in the supported paper path.
+        "co2_fire": jnp.zeros_like(ok_leak.ok_leak.soilcarbon.resp_hetero_soil),
+        # StomateLpj lines 1211-1213 clears the grid fire danger index when fire is disabled.
+        "ni_acc": jnp.zeros_like(ok_leak.ok_leak.soilcarbon.resp_hetero_soil[:, 0]),
         "deepC_peat": deepc_peat,
         # slowproc_initialize lines 278-290 receives stomate_initialize's
         # INTENT(out) ddeepsoil. No slowproc_main assignment follows;
@@ -10158,6 +10180,7 @@ def _paper_day_first_stomate_state_packet(
     ok_leak: ExplicitOkLeakFromPostNppResult | None,
     outputs: ExplicitStomateLpjOutputsResult | None,
     daily_reset_fields: dict[str, object] | None,
+    stomate_parameters: PaperCaseStomateParameterBundle | None = None,
     ok_leak_boundary: StomateOkLeakBoundaryInputs | None = None,
     season_memory_fields: dict[str, object] | None = None,
     slowproc_surface_update=None,
@@ -10272,6 +10295,26 @@ def _paper_day_first_stomate_state_packet(
             dt_days=dt_days,
         )
     )
+    if "litter_not_avail" in previous_slowproc:
+        if stomate_parameters is None:
+            raise ValueError("litter availability writeback requires the run's STOMATE PFT parameters")
+        # At do_slow, littercalc_leak 2325-2348 uses the fresh aboveground
+        # litter before decay. StomateLpj 1218-1221 then applies its fraction
+        # to the separate legacy litter pool with fire and cover change off.
+        fraction = litter_availability_fraction_step(
+            litter_above_carbon=ok_leak.ok_leak.littercalc.litter_above_before_decay_carbon,
+            litter_not_avail=previous_slowproc["litter_not_avail"],
+            is_tree=stomate_parameters.is_tree,
+            natural=stomate_parameters.natural,
+            is_grassland_manag=stomate_parameters.is_grassland_manag,
+            is_grassland_grazed=stomate_parameters.is_grassland_grazed,
+            is_grassland_cut=stomate_parameters.is_grassland_cut,
+        )
+        legacy_above_carbon = jnp.asarray(previous_slowproc["litter"])[:, :, :, IABOVE, ICARBON]
+        availability = stomate_lpj_litter_availability_from_fraction(
+            litter_above_carbon=legacy_above_carbon, litter_avail_frac=fraction,
+        )
+        fields["litter_not_avail"] = availability.litter_not_avail
     dynamic_assim_param = _paper_day_dynamic_assim_param_from_daily_carbon(daily_carbon)
     if dynamic_assim_param is not None:
         fields["assim_param"] = dynamic_assim_param
@@ -10376,6 +10419,16 @@ def _paper_day_first_stomate_state_packet(
             provenance_by_field[name] = (
                 "fortran_source/ORCHIDEE/src_stomate/stomate.f90::stomate_main lines 3364, 3378, 3476, 3561, and 3648 accumulate resp_hetero_d",
                 "fortran_source/ORCHIDEE/src_stomate/stomate.f90::stomate_main line 4958 resets resp_hetero_d before writerestart line 5467",
+            )
+        elif name in {"co2_fire", "ni_acc"}:
+            provenance_by_field[name] = (
+                "fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90::StomateLpj lines 445-447, 874, and 1189-1221",
+                "fortran_source/ORCHIDEE/src_stomate/stomate_io.f90::writerestart lines 2687-2689 and 2737-2739",
+            )
+        elif name == "litter_not_avail":
+            provenance_by_field[name] = (
+                "fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90::littercalc_leak lines 2325-2348",
+                "fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90::StomateLpj lines 1218-1221",
             )
         elif name == "dt_days_read":
             provenance_by_field[name] = (
@@ -10801,6 +10854,7 @@ def paper_1961_driver_day_scaffold(
                     ok_leak=stomate_ok_leak,
                     outputs=stomate_outputs,
                     daily_reset_fields=daily_reset_fields,
+                    stomate_parameters=context.stomate_static.parameters,
                     ok_leak_boundary=ok_leak_boundary,
                     season_memory_fields=season_memory_fields,
                     slowproc_surface_update=slowproc_surface_update,
@@ -11112,6 +11166,7 @@ def paper_1961_driver_later_day_scaffold(
                     ok_leak=stomate_ok_leak,
                     outputs=stomate_outputs,
                     daily_reset_fields=daily_reset_fields,
+                    stomate_parameters=context.stomate_static.parameters,
                     ok_leak_boundary=ok_leak_boundary,
                     season_memory_fields=season_memory_fields,
                     slowproc_surface_update=slowproc_surface_update,
@@ -12465,6 +12520,7 @@ def paper_1961_driver_later_day_runtime_result(
         ok_leak=stomate_ok_leak,
         outputs=stomate_outputs,
         daily_reset_fields=daily_reset_fields,
+        stomate_parameters=stomate_static.parameters,
         ok_leak_boundary=base_boundary,
         season_memory_fields=season_memory_fields,
         slowproc_surface_update=slowproc_surface_update,
@@ -13710,6 +13766,7 @@ def paper_1961_driver_cold_start_day_scaffold(
                 ok_leak=stomate_ok_leak,
                 outputs=stomate_outputs,
                 daily_reset_fields=daily_reset_fields,
+                stomate_parameters=context.stomate_static.parameters,
                 ok_leak_boundary=ok_leak_boundary,
                 season_memory_fields=season_memory_fields,
                 slowproc_surface_update=slowproc_surface_update,

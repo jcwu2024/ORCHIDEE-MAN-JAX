@@ -30,6 +30,7 @@ from jax_orchidee.driver.orchestration import (
     _paper_day_end_state_packet,
     _paper_later_day_stomate_entry_state_from_previous,
     _paper_later_day_stomate_season_state_from_previous,
+    paper_day_active_restart_producer_fields,
 )
 from jax_orchidee.driver.restart_bundle import (
     PaperRestartBundlePhysicalState,
@@ -251,9 +252,17 @@ def test_nondefault_day_end_fast_codec_real_triplet_and_next_consumers(
         },
         provenance_by_component={},
     )
-    daily_packet = DriverFirstDayStomateStatePacket(
-        day_index=31, fields=_packet_states(states), provenance_by_field={},
-    )
+    prior = previous.fields_by_component["slowproc_stomate_previous_step_state"]
+    assert np.any(prior["co2_fire"] != 0)
+    assert np.any(prior["ni_acc"] != 0)
+    soilcarbon = SimpleNamespace(perma_peat=None, resp_hetero_soil=np.ones_like(prior["co2_fire"]))
+    daily_fields = _packet_states(states)
+    daily_fields.update(paper_day_active_restart_producer_fields(
+        ok_leak=SimpleNamespace(ok_leak=SimpleNamespace(soilcarbon=soilcarbon)),
+        previous_slowproc=prior,
+        dt_days=1.0,
+    ))
+    daily_packet = DriverFirstDayStomateStatePacket(day_index=31, fields=daily_fields, provenance_by_field={})
     packet = _paper_day_end_state_packet(previous_state=previous, stomate_state=daily_packet)
     fast = fast_state_from_previous_packet(packet)
     roundtripped = previous_packet_from_fast_state(fast)
@@ -277,6 +286,8 @@ def test_nondefault_day_end_fast_codec_real_triplet_and_next_consumers(
     restored = reference_case_first_step_restart_state(
         config_path, root=ROOT, run_dir=report.output_directory, run_def_path=run_def_path,
     )
+    np.testing.assert_array_equal(restored.stomate_readstart.remainder_state.co2_fire, np.zeros_like(prior["co2_fire"]))
+    np.testing.assert_array_equal(restored.stomate_readstart.remainder_state.ni_acc, np.zeros_like(prior["ni_acc"]))
     assert (len(report.driver.written_fields), len(report.sechiba.written_fields), len(report.stomate.written_fields)) == (13, 93 + int(refsoc_enabled), 161)
     assert restored.pft_layout == layout
     assert restored.sechiba_source_pft_layout.pft_ids == layout.pft_ids

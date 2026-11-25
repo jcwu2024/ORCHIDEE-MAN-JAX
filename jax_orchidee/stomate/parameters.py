@@ -139,6 +139,8 @@ _PHENO_MODEL_MTC = (
 )
 _LEAF_TAB_MTC = np.asarray([4, 1, 1, 2, 1, 1, 2, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 1], dtype=np.int32)
 _IS_GRASSLAND_MANAG_MTC = np.zeros(18, dtype=bool)
+_IS_GRASSLAND_CUT_MTC = np.zeros(18, dtype=bool)
+_IS_GRASSLAND_GRAZED_MTC = np.zeros(18, dtype=bool)
 _PASTURE_MTC = np.zeros(18, dtype=bool)
 _TMIN_CRIT_MTC = np.asarray(
     [-9999.0, 0.0, 0.0, -30.0, -14.0, -30.0, -45.0, -45.0, -60.0, -9999.0, -9999.0, -9999.0, -9999.0, -9999.0, -9999.0, -9999.0, -9999.0, 0.0],
@@ -233,6 +235,8 @@ class PaperCaseStomateParameterBundle:
     pheno_model: tuple[str, ...]
     pheno_is_none: np.ndarray
     is_grassland_manag: np.ndarray
+    is_grassland_cut: np.ndarray
+    is_grassland_grazed: np.ndarray
     ok_laidev: np.ndarray
     lpj_gap_const_mort: bool
     ok_dgvm: bool
@@ -703,7 +707,17 @@ def _indexed_bool_vector(
     values: dict[str, str],
     name: str,
     fortran_pft_ids: Sequence[int],
+    *,
+    default: np.ndarray | None = None,
 ) -> np.ndarray:
+    if default is not None:
+        return np.asarray(
+            [
+                parse_run_def_bool(values.get(_pft_key(name, index), bool(fallback)))
+                for index, fallback in zip(fortran_pft_ids, default, strict=True)
+            ],
+            dtype=bool,
+        )
     return np.asarray(
         [parse_run_def_bool(values[_pft_key(name, index)]) for index in fortran_pft_ids],
         dtype=bool,
@@ -780,7 +794,16 @@ def load_paper_case_stomate_parameter_bundle(
     mtc_index = np.asarray(run_scalars.pft_to_mtc, dtype=np.int32) - 1
     leaf_tab = _LEAF_TAB_MTC[mtc_index].astype(np.int32)
     pheno_model = tuple(_PHENO_MODEL_MTC[int(index)] for index in mtc_index)
-    is_grassland_manag = _IS_GRASSLAND_MANAG_MTC[mtc_index].astype(bool)
+    # pft_parameters.f90 2880-2909 lets the run override each MTC default.
+    is_grassland_manag = _indexed_bool_vector(
+        values, "GRM_IS_GRASSLAND_MANAG", fortran_pft_ids, default=_IS_GRASSLAND_MANAG_MTC[mtc_index],
+    )
+    is_grassland_cut = _indexed_bool_vector(
+        values, "GRM_IS_GRASSLAND_CUT", fortran_pft_ids, default=_IS_GRASSLAND_CUT_MTC[mtc_index],
+    )
+    is_grassland_grazed = _indexed_bool_vector(
+        values, "GRM_IS_GRASSLAND_GRAZED", fortran_pft_ids, default=_IS_GRASSLAND_GRAZED_MTC[mtc_index],
+    )
     tmin_crit = _TMIN_CRIT_MTC[mtc_index].astype(np.float64)
     lai_initmin_tree = _scalar_float(values, "LAI_INITMIN_TREE")
     lai_initmin_grass = _scalar_float(values, "LAI_INITMIN_GRASS")
@@ -800,6 +823,8 @@ def load_paper_case_stomate_parameter_bundle(
         pheno_model=pheno_model,
         pheno_is_none=np.asarray([model == "none" for model in pheno_model], dtype=bool),
         is_grassland_manag=is_grassland_manag,
+        is_grassland_cut=is_grassland_cut,
+        is_grassland_grazed=is_grassland_grazed,
         ok_laidev=ok_laidev,
         lpj_gap_const_mort=_scalar_bool(values, "LPJ_GAP_CONST_MORT"),
         ok_dgvm=_scalar_bool(values, "STOMATE_OK_DGVM"),

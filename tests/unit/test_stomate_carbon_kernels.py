@@ -8180,7 +8180,7 @@ def test_litter_availability_fraction_and_writeback_match_grazing_litter_branch(
     is_grassland_grazed = np.asarray([False, True, False, False], dtype=bool)
     is_grassland_cut = np.asarray([False, False, False, False], dtype=bool)
 
-    frac = litter_availability_fraction_step(
+    operands = dict(
         litter_above_carbon=litter_above,
         litter_not_avail=litter_not_avail,
         is_tree=is_tree,
@@ -8189,7 +8189,9 @@ def test_litter_availability_fraction_and_writeback_match_grazing_litter_branch(
         is_grassland_grazed=is_grassland_grazed,
         is_grassland_cut=is_grassland_cut,
     )
-    frac = np.asarray(frac)
+    frac = np.asarray(litter_availability_fraction_step(**operands))
+    compiled = jax.jit(litter_availability_fraction_step)(**operands)
+    np.testing.assert_array_equal(compiled, frac)
 
     expected_frac = np.zeros_like(litter_above)
     expected_frac[0, :, 1] = [0.75, 0.0]

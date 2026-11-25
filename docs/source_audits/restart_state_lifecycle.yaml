@@ -400,6 +400,23 @@ restart_field_contracts:
       file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
       subroutine: stomate_main
       lines: 294-296, 3364-3648, 4958, 5467
+  co2_fire:
+    default_policy: readstart keeps a finite file value or initializes an absent or all-missing field to zero
+    half_hour_owner: jax_orchidee.driver.orchestration._runtime_next_state_from_components
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj
+      lines: 445-447, 874, 1189-1221
+  ni_acc:
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj
+      lines: 1197-1213
+  litter_not_avail:
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj
+      lines: 1218-1221
 
 # Every restart field must occur in exactly one group below or in
 # fixed_path_carry_fields.  There is deliberately no default update mode.
@@ -408,12 +425,12 @@ restart_update_groups:
     disposition: production_overwrite
     owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
     ast_mapping_names: [fields]
-    fields: [DOC, adapted, age, altmax, assim_param, begin_leaves, biomass, bm_to_litter, carb_mass_total, carbon_32l, co2_to_bm, dead_leaves, everywhere, fixed_cryoturbation_depth, fuel_1000hr, fuel_100hr, fuel_10hr, fuel_1hr, gdd_init_date, gpp_daily, ind, interception_storage, leaf_age, leaf_frac, lignin_struc_above, lignin_struc_below, litter_above, litter_below, litterpart, npp_daily, npp_longterm, pft_present, regenerate, resp_growth, resp_maint, resp_maint_part, rip_time, senescence, sla_calc, turnover_daily, turnover_time, when_growthinit]
+    fields: [DOC, adapted, age, altmax, assim_param, begin_leaves, biomass, bm_to_litter, carb_mass_total, carbon_32l, co2_to_bm, dead_leaves, everywhere, fixed_cryoturbation_depth, fuel_1000hr, fuel_100hr, fuel_10hr, fuel_1hr, gdd_init_date, gpp_daily, ind, interception_storage, leaf_age, leaf_frac, lignin_struc_above, lignin_struc_below, litter_above, litter_below, litter_not_avail, litterpart, npp_daily, npp_longterm, pft_present, regenerate, resp_growth, resp_maint, resp_maint_part, rip_time, senescence, sla_calc, turnover_daily, turnover_time, when_growthinit]
   active_restart_producers:
     disposition: production_overwrite
     owner: jax_orchidee.driver.orchestration.paper_day_active_restart_producer_fields
     ast_mapping_names: [$return]
-    fields: [dt_days_read, resp_hetero, deepC_peat, depth_deepsoil]
+    fields: [dt_days_read, resp_hetero, co2_fire, ni_acc, deepC_peat, depth_deepsoil]
   daily_accumulator_outputs:
     disposition: production_overwrite
     owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
@@ -727,8 +744,6 @@ fixed_path_carry_fields:
       subroutine: StomateLpj
       lines: 1184-1221
   firelitter: *carry_fire
-  co2_fire: *carry_fire
-  ni_acc: *carry_fire
   uo_0: &carry_wetland_ch4
     guard: CH4_CALCUL=false
     fortran_provenance:
@@ -781,7 +796,6 @@ fixed_path_carry_fields:
   nb_ani: *carry_grazing
   grazed_frac: *carry_grazing
   import_yield: *carry_grazing
-  litter_not_avail: *carry_grazing
   nb_grazingdays: *carry_grazing
   after_snow: *carry_grazing
   after_wet: *carry_grazing

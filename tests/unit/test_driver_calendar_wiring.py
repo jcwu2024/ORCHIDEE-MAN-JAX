@@ -884,7 +884,8 @@ def test_complete_saved_b5_adapter_reproduces_stale_calendar_then_current_builde
     calls = _replace_extraction_delegates(monkeypatch)
     fixture = Path(__file__).parent / "fixtures" / "calendar_carry_b5_adapter.py"
     saved_source = fixture.read_bytes()
-    assert hashlib.sha256(saved_source).hexdigest() == "bb04dc1120bae031002e9609e67781ad94a87f0c1b455d4fd3c6101d7a736da0"
+    source_lf = saved_source.replace(b"\r\n", b"\n")
+    assert hashlib.sha256(source_lf).hexdigest() == "1bc43d3e894a4cc1a16adb37bc18558cdc7470a349247d6b3b1efc8665c38213"
     # Execute the complete saved function against today's replaced extraction
     # globals. No historical module top-level or physical kernel is imported.
     namespace = dict(vars(orch))
