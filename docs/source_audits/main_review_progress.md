@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-25，**319 论文文件入口的跨年首日碳库存已通过短窗验收。** 三份输入由 JAX 的 C31 年末状态按原 Fortran 兼容格式写出。1962 年首日从文件实读库存后，连续 48 个半小时都更新了凋落物和土壤碳，日末 LPJ 收到末步 13 项库存。七个重点重启字段共 7,267 个数值写出后精确读回。次日第一步的物理接收在本次运行中实测，其碳过程读值由同一日末状态的 C106 归档实跑核实。本轮登记为验证，累计 **106 项修正或支持补齐、58 个生产提交，100 项有复查前证据**。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak-acceptance/controller-acceptance.json) · [正式读写](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak/restart/README.md)
+
+代表点短窗还需核对 001 普通第二日日末与次日第一步、069 连续三步水热、319 自然雪冻时的三层雪和热系数。短窗收尾时汇总可确认的结论和所缺原记录，接力在代表点全年验收前暂停，待用户要求继续。[具名短窗与原件](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-file-first-day-ok-leak/short-windows.md)
+
 2026-11-25，**已修复后续日碳库存更新次数错误，登记为 C106。** 319 点从同一份第一天末状态续跑第二天，完整和默认轻量输出所用的入口现按 48 个半小时更新。两种载荷写出的三份重启文件都与论文路径逐字节相同，原有 106 个超差坐标归零。此前仅比较每日 GPP、NPP 等 26 项输出时，364 个数值已相同，库存错误要从日内更新和重启文件中才能看出来。修订台账累计 **106 项、58 个生产提交，100 项有复查前证据**。下一步核对论文文件启动首日怎样生成这份日末状态。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair-acceptance/controller-acceptance.json) · [修正来源](correction_origins.md)
 
 2026-11-25，**319 跨年第二日确认了一处默认运行入口的碳库存错误。** 从同一份第一天末状态和气象开始，论文年度驱动选用的路径从当日初库存连续更新 48 次。完整输出接口和轻量接口的默认路径在日末重新取初始化库存，只更新一次。两条文件路径的 364 个日输出数值逐值相同，地下凋落物却有 22 个坐标超过原门限，地上凋落物有 2 个，溶解有机碳（DOC）有 78 个。这处接线在 `7333b46c` 与复查前的 `7cae3e02` 已存在。下一轮修复该入口，并核实哪些历史对照实际依赖了这些库存。本次为证据发布，已落地累计 **105 项修正或支持补齐、57 个生产提交，99 项有复查前证据**。[同输入独审](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-second-day-and-natural-snow-freeze/review/compact-day2.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-319-second-day-and-natural-snow-freeze-acceptance/controller-acceptance.json)
