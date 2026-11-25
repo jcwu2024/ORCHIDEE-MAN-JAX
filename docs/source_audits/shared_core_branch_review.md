@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## C104 暖档日湿量的日末复位
+
+主线 `d97f618f15de419b73d058da80e9389902e229ce` 让普通和编译日累积入口在 `PEAT_OCCUR=FALSE` 时也保存 `fwet_daily`、`liqwt_daily`，使日末统一复位能取得两项当前值。日尺度 `f898282a` 和全球效率 `ffe77a00` 的只读快照都有原先漏键的入口。集中同步时核对各自的日内累积、日末复位和重启读写，连同 C79 的开关为真时的累积，以及本轮 C98 六叶活动层和 C103 日末字段的审计回归。两个非零暖启动标记可用于检查同步后的实际行为。[来源证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/validation/source-origins.txt) · [回归与接收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/README.md)
+
 ## C103 禁火配置与日末凋落物状态
 
 主线 `6c1dbe7806841fc4489663c82dbd20df88d3359f` 将火灾碳排放、火险指数和不可用凋落物接入日末更新、文件和暖启动读取。只读检查确认，日尺度 `f898282a`、全球效率 `ffe77a00` 的源码都还把这三项列为固定沿用旧值。集中同步时一起核对普通与编译日末、C95/C98/C101 的状态传递、PFT 草地管理参数，以及 LEAK 分解前和 LPJ 写回时使用的两份凋落物库。三个非零暖启动标记与五个继承对照可直接用于验证。[修正与依赖](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/README.md) · [主控记录](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state-acceptance/controller-acceptance.json)

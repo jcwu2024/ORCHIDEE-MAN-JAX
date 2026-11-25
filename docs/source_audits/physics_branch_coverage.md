@@ -1,5 +1,9 @@
 # 当前物理计算与条件分支覆盖
 
+001 的 `PEAT_OCCUR=FALSE` 暖启动实测覆盖日内持有、日末清零、文件写读和次步使用。两组暖启动的首个续跑日都实际走普通折叠。开关为真时，独立原生组件与 JAX 在同输入下得到相同的归一化湿量和复位值。自然冷启动另外实测了第 49–96、97–144 步两个编译区间，三天每天 26 项、364 个日输出坐标逐值复现上次 JAX 编译对照。C98 的活动层审计核实了六叶结构及公开重启字段 `altmax`，完整源审计覆盖 181 个平面字段、一项结构声明和两组生产读写合同。[实测边界](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/wetness/README.md) · [生命周期审计](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/lifecycle/README.md)
+
+半小时 CO₂ 在原 DIM2 路径传至 INTERSURF 局部量 `znetco2`，001 关闭了相应历史输出。JAX 暖启动实测第 49 步读入火碳标记、第 96 步日末清零、第 97 步读回零。该窗口内 JAX 半小时通量和格点聚合组件的调用数都是零。第 49 步的 0.0005 gC/m²/s 增量来自实测操作数的离线重放。第二天正常日末的异养呼吸、内部碳接收和下一步原生值仍待同一时钟的参考。[实际接收与回放](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/carbon/README.md)
+
 001、1961 年两日 Fortran A0/A/B 终止文件中，活动 PFT14 的火灾碳排放、格点火险指数及不可用凋落物均为零。JAX 非零暖启动反例通过日末写回和下步读取验证了这三项的更新时机。两份 47 项清单重合的 45 个文件字段还比对了 12 个自然文件，每份 3,384 个坐标。原半小时 CO₂ 源式对暖启火碳标记 43.2 的响应为 0.0005 gC/m²/s，生产路径在该半小时实际送出的 CO₂ 值仍需直接核对。三日日输出对照适用于 001，年度与论文算例矩阵仍待各自验收。[源码与原生通量](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/net-carbon/README.md) · [实测范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state-acceptance/controller-acceptance.json)
 
 001 暖点三天的无观测编译复跑逐值重现了原日输出和第三天末态。对普通路径的 35 处严格超差归入 4 个冠层库存位置和 31 个土壤热通量位置。两条加观测轨迹各有 285 组相邻步读取和 8 组日末写回对齐。热通量第 57 步、库存第 69 步首次超门仅适用于加观测轨迹，加入观测使编译末态的 31 个热通量坐标相对无观测超门。相同输入的土热组件对编译方式敏感，原始两条轨迹中这两种状态的首次分离限于第 49–144 步。对 Fortran 终止文件的 24 字段、96 坐标，47 个缺运行末态的 STOMATE 字段及年度科学量分别沿用原验收记录。[独立对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/review/README.md) · [组件同输入复算](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/trajectory/k49-replay.json)

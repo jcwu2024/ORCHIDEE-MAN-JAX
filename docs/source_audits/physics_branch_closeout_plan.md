@@ -62,7 +62,9 @@
 
 001 三日普通与编译运行的 35 个超差位置已归到冠层储水和土壤热通量。下一步本地复用现有 47 项 STOMATE 字段清单、两日原生文件和 JAX 暖启证据，按原开关、实时更新者和暖启消费者核实依赖基状态写出的字段。优先核对会影响 PFT14 碳收支或继续运行的字段。原生第二天正常日末与随后第 97 步仍按上面的短窗方案取证。[三日验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json) · [既有字段与配置证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-compiled-and-restart/remaining.md)
 
-续跑清单的 47 项已逐名核完。文件末态清单另含 `fwet_daily` 和 `liqwt_daily`，需用非零暖值区分日内的累积开关与日末复位。接着用已存 001 暖启边界核实半小时 CO₂ 的实际发送，并恢复 C98 私有活动层的完整生命周期审计。原两日 Fortran 终止写出、延长窗口的正常日末和代表点年度科学量均保留各自的取样时钟。[本轮交付](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state-acceptance/controller-acceptance.json) · [旧基线的 19 项审计失败](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/ci/lifecycle-preflight.md)
+001 两份 47 项清单已核完。文件清单独有的两项日湿量登记为 C104。C98 私有活动层的完整源审计已通过。原半小时 CO₂ 在本站止于 INTERSURF 局部接收，对应历史输出关闭。原两日作业在第 96 步终止，仍缺正常第二天日末和第 97 步的原生交接。[主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle-acceptance/controller-acceptance.json) · [碳通量边界](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/carbon/README.md)
+
+下一包在本地查第二个代表点，优先用 069 自己的输入与原档案核对连续两个半小时的土壤水热传递。检查原雪层、液态水、冻土及前一能量状态有没有同点同时刻的记录。可配对的窗口用相同输入对照原过程和 JAX 编译路径，追至下一次实际读取。仅有年末文件或其他点参考的字段，分别注明时间和可支持的结论。年度与 669 点整模验收按交付合同另行办理。[代表点与已有原档案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md)
 
 用户直接授权：“所以在全面综合审查之前。就只剩物理计算与条件分支验证了是吧？
 你可以开启下一波的跟sol的互相接力。把这部分完成。”

@@ -1,4 +1,10 @@
-# C1–C103 修正与支持补齐来源登记（2026-11-25）
+# C1–C104 修正与支持补齐来源登记（2026-11-25）
+
+## C104 暖启动时两项日湿量的日末复位
+
+生产提交 `d97f618f15de419b73d058da80e9389902e229ce`。原 `stomate_main` 第 3215–3218 行按 `PEAT_OCCUR` 累积 `fwet_daily` 和 `liqwt_daily`，第 5019–5020 行在每个实际日末将两者清零。此前普通和编译累积入口在开关关闭时把这两个键也省略了，写重启文件时沿用了暖档里的旧值。`7333b46c` 和复查前的 `7cae3e02` 均有这段逻辑。两字段共享一次状态传递修正。累计 **104 项修正或支持补齐、55 个生产提交，99 项有复查前证据**。[源历史](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/validation/source-origins.txt) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle-acceptance/controller-acceptance.json)
+
+在 001 第 48 步暖档写入 0.1875 和 0.6875，旧版在第 96 步写出两值，并在第 97 步重新读入。修后两值保留到日末复位前，随后日末文件和次步均为零。每对暖启文件比较的 285 个变量中只有这两项变化。C98 的六叶活动层和 C103 的状态更新在本轮补入生命周期审计，沿用原编号。[暖启动与原生组件对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/wetness/README.md) · [审计范围](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/lifecycle/README.md)
 
 ## C103 STOMATE 日末三项重启状态的写回
 

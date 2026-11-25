@@ -1,8 +1,12 @@
 # 主线进度
 
+2026-11-25，**001 暖点的两份重启清单已核完，确认一处日湿量写回修正 C104。** 在同一份暖档放入两个非零值，旧版在当天结束后仍把它们写回文件。修后从实际日末文件重新启动，下一步读到原 Fortran 要求的两个零。这个点自然运行时两项本来就是零，三天共 1,092 个日输出数值逐值复现上一版 JAX。累计 **104 项修正或支持补齐、55 个生产提交，99 项有复查前证据**。[修正登记](correction_origins.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle-acceptance/controller-acceptance.json)
+
+下一项本地工作优先查 069 代表点，用同一点、同一时刻的温度、土壤水分和气象输入核对连续两个半小时的过程传值。有配对的积雪或冻结前态时一并验证相应分支。001 的原生第二日日末至次步交接仍需延长观测窗口。年度 GPP、NPP、DOC、异养呼吸和最终 669 点验收各有独立的科学判据。[代表点准入与窗口](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-physics-terminal-review/representative-gate.md) · [001 原生取证方案](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k95-k97-observation-acceptance/cancon-allocation.json)
+
 2026-11-25，**001 暖点的 STOMATE 重启复查确认了 C103。** 火灾碳排放、火险指数和不可用凋落物本应在日末复位或重算，旧版会继续写入上次的值。用非零暖启动文件复现了旧行为，修后日末包、写出的文件、正常读回和第 97 步状态均符合原规则。此点自然冷启动时三项为零，三天每天 26 个日输出字段与原编译基线逐值相同。累计 103 项修正或支持补齐、54 个生产提交，98 项有复查前证据。[修正登记](correction_origins.md) · [暖启对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/warm/verification.json)
 
-本轮 47 项续跑清单中，另有 42 项按配置继承，2 项是原文件读取子程序的局部量。旧 NetCDF 末态清单也有 47 项，两表重合 45 项。接下来核对文件清单独有的两项日水分累计量、暖启后半小时 CO₂ 的实际读取，并补齐活动层私有状态的审计声明。上轮 Ubuntu 失败的两例来自同一历史夹具的换行散列，修后冻结 Linux 的对应发布步骤 130 项通过。[两份字段清单](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/review/README.md) · [发布复现](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/ci/README.md)
+C103 的 47 项续跑清单中，另有 42 项按配置继承，2 项是原文件读取子程序的局部量。旧 NetCDF 末态清单也有 47 项，两表重合 45 项。当时发布测试失败的两例来自同一历史夹具的换行散列，修后冻结 Linux 的对应步骤 130 项通过，发布提交 `aae7abbc` 的 Ubuntu 25 步随后全部通过。[两份字段清单](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-stomate-restart-state/review/README.md) · [Ubuntu 回执](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-wetness-carbon-lifecycle/ci/release-smoke.json)
 
 2026-11-25，**001 暖点三天的普通与编译 JAX 每天 26 个日输出字段均在原容差内。** 第三天末的 35 处状态超差来自两个量。冠层储水相差约 1.64 × 10⁻¹⁴ mm，土壤热通量相差约 4.66 × 10⁻¹¹ W/m²，两者都存入多个数组。相同土热输入下改变 JAX 编译方式能重现同量级的热通量差。加入半小时观测也改变了编译结果，原始运行中这两个量最早在哪一步分离仍待证。[自然运行与观测对照](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar/README.md) · [主控验收](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-001-k144-compiled-calendar-acceptance/controller-acceptance.json)
 
