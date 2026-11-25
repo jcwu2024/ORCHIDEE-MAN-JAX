@@ -9290,6 +9290,11 @@ _OK_LEAK_HALF_HOUR_STATE_FIELDS = (
     "interception_storage",
 )
 
+_OK_LEAK_HALF_HOUR_ENTRY_FIELDS = (
+    "soil_mc", "wat_flux", "runoff_per_soil", "drainage_per_soil", "runoff2peat",
+    "canopy2ground", "precip2ground", "precip2canopy", "tdeep", "hsdeep", "temp_sol",
+)
+
 
 def _paper_half_hour_ok_leak_state_updates(ok_leak) -> dict[str, object]:
     """Return live STOMATE state after the half-hour litter/soilcarbon calls.
@@ -9699,8 +9704,11 @@ def _paper_half_hour_ok_leak_fold_from_entries(
     compiled_entry_stacks: Mapping[str, object] | None = None,
     capture_compiled_driver_steps: bool = False,
     capture_daily_transfers: bool = False,
+    capture_last_step: bool = False,
 ) -> tuple[object, dict[str, object]] | tuple[
     object, dict[str, object], DriverCompiledOkLeakStepInputs
+] | tuple[
+    ExplicitOkLeakFromPostNppResult, dict[str, object], StomateOkLeakBoundaryInputs
 ]:
     """Advance the OK_LEAK state on each SECHIBA entry of one STOMATE day.
 
@@ -9708,6 +9716,9 @@ def _paper_half_hour_ok_leak_fold_from_entries(
     throughout this fold. ``StomateLpj`` replaces them only after the final
     half-hour OK_LEAK call, for use by the next day. This directly follows
     ``stomate_main`` source order at lines 3288-3489 and 3589-4364.
+
+    The explicit scaffold can retain the last call's prep and actual input
+    boundary for diagnostics.
     """
 
     if maintenance_resp_parts is None and len(entry_payloads) != len(maintenance_step_results):
@@ -9720,6 +9731,8 @@ def _paper_half_hour_ok_leak_fold_from_entries(
         raise ValueError("OK_LEAK driver-step capture requires the compiled fold")
     if capture_daily_transfers and not use_compiled_ok_leak:
         raise ValueError("OK_LEAK daily transfer capture requires the compiled fold")
+    if capture_last_step and use_compiled_ok_leak:
+        raise ValueError("OK_LEAK last-step diagnostics require the explicit fold")
 
     state = initial_state.fields_by_component["slowproc_stomate_previous_step_state"]
     required = (*_OK_LEAK_HALF_HOUR_STATE_FIELDS, "turnover_daily", "bm_to_litter", "biomass", "veget_max", "sla_calc")
@@ -9942,7 +9955,11 @@ def _paper_half_hour_ok_leak_fold_from_entries(
 
     if last_result is None:
         raise RuntimeError("OK_LEAK half-hour fold did not execute")
-    return last_result, {**current, "altmax": active_layer.altmax, "ok_leak_active_layer": active_layer}
+    diagnostics = ()
+    if capture_last_step:
+        last_result = ExplicitOkLeakFromPostNppResult(prep=prep, ok_leak=last_result, requires_trace=())
+        diagnostics = (same_step.boundary_inputs._replace(ok_leak_inputs=ok_args),)
+    return last_result, {**current, "altmax": active_layer.altmax, "ok_leak_active_layer": active_layer}, *diagnostics
 
 
 PAPER_DAY_ZERO_DAILY_RESET_FIELDS = (
@@ -10929,10 +10946,9 @@ def paper_1961_driver_later_day_scaffold(
 ) -> DriverLaterDayScaffold:
     """Advance one later STOMATE day from model-produced previous state.
 
-    Fortran provenance follows the same driver/SECHIBA/STOMATE accumulator
-    order as ``paper_1961_driver_day_scaffold``. Unlike the first-day helper,
-    this starts from ``previous_state`` and therefore refuses to alias the
-    original restart as later prognostic state.
+    Each half-hour SECHIBA entry supplies one OK_LEAK update, beginning with
+    the pools in ``previous_state``. STOMATE LPJ then sees the updated pools
+    at do_slow (stomate.f90:3288–3489 and 4225–4364).
     """
 
     context = prepared_context or prepare_paper_1961_driver_context(
@@ -10952,6 +10968,8 @@ def paper_1961_driver_later_day_scaffold(
     if start <= 0 or start % steps_per_stomate != 0:
         raise ValueError("later-day scaffold start_tstep must be a positive do_slow-aligned day boundary")
     _require_source_day_alignment(context, previous_state, start=start)
+    _validate_stomate_main_supported_switches(run_def_values)
+    stomate_enabled = parse_run_def_bool(run_def_values.get("STOMATE_OK_STOMATE", "TRUE"))
 
     completed_payloads: list[dict[str, object]] = []
     current_state = previous_state
@@ -11059,7 +11077,7 @@ def paper_1961_driver_later_day_scaffold(
         else None
     )
     daily_fold = None
-    if first_step_scaffold is not None and stopped_at_tstep is None and not state_gaps:
+    if stomate_enabled and first_step_scaffold is not None and stopped_at_tstep is None and not state_gaps:
         daily_fold = _paper_later_day_daily_process_from_completed_entries(
             first_step=first_step_scaffold,
             previous_state=calendar_snapshot,
@@ -11069,7 +11087,9 @@ def paper_1961_driver_later_day_scaffold(
             runtime=runtime,
             start_tstep=start,
             entry_payloads=tuple(completed_payloads),
-            retain_step_results=retain_stomate_step_results,
+            # OK_LEAK consumes each actual maintenance result, even if the
+            # caller only wants the daily fold summary.
+            retain_step_results=True,
             use_maintenance_jit=maintenance_local_jit,
             single_pass_daily_fold=single_pass_daily_fold,
             prepared_context=context,
@@ -11086,6 +11106,15 @@ def paper_1961_driver_later_day_scaffold(
     slowproc_surface_update = None
     day_stomate_state = None
     day_end_state = None
+    if not stomate_enabled:
+        stomate_bundle_gaps = (
+            DriverDayStateGap(
+                component="stomate_disabled",
+                fields=("STOMATE_OK_STOMATE",),
+                provenance=("fortran_source/ORCHIDEE/src_sechiba/slowproc.f90 lines 936-1071",),
+                notes=("The daily carbon outputs require active STOMATE.",),
+            ),
+        )
     if first_step_scaffold is not None and daily_fold is not None and daily_fold.ok:
         restart_state = context.first_step_restart_state or reference_case_first_step_restart_state(
             config_path,
@@ -11093,108 +11122,137 @@ def paper_1961_driver_later_day_scaffold(
             run_dir=context.reference_run_dir,
             run_def_path=run_def_path,
         )
-        stomate_bundle_source, stomate_bundles, stomate_bundle_gaps = _paper_later_day_stomate_input_bundles(
-            config_path=config_path,
-            run_def_path=run_def_path,
-            restart_state=restart_state,
-            previous_state=calendar_snapshot,
-            runtime=runtime,
-            tstep=start + steps_per_stomate - 1,
-            source_clock=completed_payloads[-1].get("source_clock"),
-            daily_fold=daily_fold,
-            firstcall_season=int(start) == 0,
-            run_def_values=run_def_values,
-            latitude=first_step_scaffold.enerbil.payload.lalo[:, 0],
-            calendar_str=_source_clock_setup(context).binding.calendar,
+        entry_state, stomate_bundle_gaps = _paper_later_day_stomate_entry_state_from_previous(
+            template=restart_state.stomate,
+            previous_state=previous_state,
         )
+        maintenance = daily_fold.maintenance.step_results
+        if len(maintenance) != steps_per_stomate:
+            ok_leak_gaps = (
+                DriverDayStateGap(
+                    component="stomate_ok_leak_maintenance",
+                    fields=("step_results",),
+                    provenance=("fortran_source/ORCHIDEE/src_stomate/stomate.f90 lines 3244-3267 and 3288-3489",),
+                ),
+            )
+        else:
+            required = _OK_LEAK_HALF_HOUR_ENTRY_FIELDS
+            if parse_run_def_bool(run_def_values["PERMA_PEAT"]):
+                required = (*required, "shumdiag_peat")
+            ok_leak_gaps = tuple(
+                DriverDayStateGap(
+                    component=f"stomate_ok_leak_tstep_{start + offset}",
+                    fields=missing,
+                    provenance=("fortran_source/ORCHIDEE/src_stomate/stomate.f90 lines 3288-3489",),
+                )
+                for offset, payload in enumerate(completed_payloads)
+                if (missing := tuple(name for name in required if payload.get(name) is None))
+            )
+        if entry_state is not None and not ok_leak_gaps:
+            driver_payload = first_step_scaffold.enerbil.payload
+            run_scalars = first_step_scaffold.enerbil.step.run_scalars
+            stomate_static = context.stomate_static or paper_case_stomate_static_input_kwargs(
+                config_path, used_run_def=run_def_path,
+            )
+            boundary_template = context.stomate_boundary
+            if boundary_template is None or int(np.asarray(boundary_template.kwargs["rprof"]).shape[0]) != driver_payload.kjpindex:
+                boundary_template = paper_case_stomate_boundary_input_kwargs(
+                    config_path,
+                    parameters=stomate_static.parameters,
+                    npts=driver_payload.kjpindex,
+                    used_run_def=run_def_path,
+                )
+            base_boundary = _paper_ok_leak_pre_step_boundary_from_entry_state(
+                config_path=config_path,
+                run_def_path=run_def_path,
+                run_def_values=run_def_values,
+                entry_state=entry_state,
+                driver_payload=driver_payload,
+                run_scalars=run_scalars,
+                diaglev=context.diaglev,
+                deep_zlt=context.zlt,
+                deep_znt=context.znt,
+                kjit=start + 1,
+                nflow=run_scalars.nstm,
+                final_entry_payload=completed_payloads[-1],
+            )
+            stomate_ok_leak, half_hour_updates, ok_leak_boundary = _paper_half_hour_ok_leak_fold_from_entries(
+                entry_payloads=tuple(completed_payloads),
+                maintenance_step_results=maintenance,
+                initial_state=previous_state,
+                pre_step_boundary=base_boundary,
+                runtime=runtime,
+                run_def_values=run_def_values,
+                rprof=boundary_template.kwargs["rprof"],
+                pref_soil_veg=run_scalars.pref_soil_veg,
+                is_tree=run_scalars.is_tree,
+                is_peat=run_scalars.is_peat,
+                dayno=start // steps_per_stomate + 1,
+                capture_last_step=True,
+            )
+            state_after_ok_leak = _paper_previous_state_with_stomate_updates(calendar_snapshot, half_hour_updates)
+            stomate_bundle_source, stomate_bundles, stomate_bundle_gaps = _paper_later_day_stomate_input_bundles(
+                config_path=config_path,
+                run_def_path=run_def_path,
+                restart_state=restart_state,
+                previous_state=state_after_ok_leak,
+                runtime=runtime,
+                tstep=start + steps_per_stomate - 1,
+                source_clock=completed_payloads[-1]["source_clock"],
+                daily_fold=daily_fold,
+                run_def_values=run_def_values,
+                latitude=driver_payload.lalo[:, 0],
+                calendar_str=_source_clock_setup(context).binding.calendar,
+            )
         if stomate_bundles is not None and not stomate_bundle_gaps:
             stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
                 stomate_bundles,
                 run_def_values=run_def_values,
-                run_scalars=first_step_scaffold.enerbil.step.run_scalars,
+                run_scalars=run_scalars,
             )
-            pre_step_boundary = context.first_step_stomate_boundary
-            if pre_step_boundary is None:
-                first_step_bundle = load_paper_1961_first_step_bundle(
-                    config_path,
-                    year=year,
-                    run_def_path=run_def_path,
-                    reference_run_dir=context.reference_run_dir,
-                    fixed_format_trace_dir=fixed_format_trace_dir,
-                    static_trace_fields=static_trace_fields,
-                    domain_override=context.domain_override,
-                )
-                pre_step_boundary = paper_1961_first_step_stomate_boundary(
-                    config_path,
-                    bundle=first_step_bundle,
-                    used_run_def_path=run_def_path,
-                    root=Path(config_path).resolve().parents[1],
-                    run_dir=context.reference_run_dir,
-                )
-            slowproc_state = previous_state.fields_by_component["slowproc_stomate_previous_step_state"]
-            ok_leak_boundary, ok_leak_gaps = _paper_ok_leak_boundary_from_sources(
-                base=pre_step_boundary.pre_step.boundary_inputs,
-                previous_state=current_state,
-                runtime=runtime,
+            stomate_outputs = _paper_day_outputs_from_ok_leak(
+                daily_fold=daily_fold,
+                daily_carbon=stomate_daily_carbon,
+                ok_leak=stomate_ok_leak,
+                boundary=base_boundary,
+            )
+            daily_reset_fields = _paper_day_daily_reset_fields(daily_fold=daily_fold, do_slow=True)
+            slowproc_surface_update = _paper_later_day_slowproc_surface_update(
+                previous_state=previous_state,
                 run_def_values=run_def_values,
                 daily_carbon=stomate_daily_carbon,
-                bundles=stomate_bundles,
-                final_entry_payload=completed_payloads[-1] if completed_payloads else None,
-                veget_max=slowproc_state["veget_max"],
-                pref_soil_veg=first_step_scaffold.enerbil.step.run_scalars.pref_soil_veg,
-                is_tree=first_step_scaffold.enerbil.step.run_scalars.is_tree,
-                is_peat=first_step_scaffold.enerbil.step.run_scalars.is_peat,
-                restart_altmax=slowproc_state["altmax"],
-                restart_fixed_cryoturbation_depth=slowproc_state["fixed_cryoturbation_depth"],
-                npts=first_step_scaffold.enerbil.payload.kjpindex,
-                dayno=int(start // steps_per_stomate) + 1,
+                step=first_step_scaffold,
             )
-            if ok_leak_boundary is not None and not ok_leak_gaps:
-                stomate_ok_leak = _paper_day_ok_leak_from_boundary(
-                    daily_carbon=stomate_daily_carbon,
-                    boundary=ok_leak_boundary,
-                    runtime=runtime,
-                )
-                stomate_outputs = _paper_day_outputs_from_ok_leak(
-                    daily_fold=daily_fold,
-                    daily_carbon=stomate_daily_carbon,
-                    ok_leak=stomate_ok_leak,
-                    boundary=ok_leak_boundary,
-                )
-                daily_reset_fields = _paper_day_daily_reset_fields(
-                    daily_fold=daily_fold,
-                    do_slow=True,
-                )
-                slowproc_surface_update = _paper_later_day_slowproc_surface_update(
-                    previous_state=previous_state,
-                    run_def_values=run_def_values,
-                    daily_carbon=stomate_daily_carbon,
-                    step=first_step_scaffold,
-                )
-                season_memory_fields = _paper_day_season_fields_from_bundle_source(
-                    stomate_bundle_source,
-                    prior_fields=previous_state.fields_by_component["slowproc_stomate_previous_step_state"],
-                    dt_days=runtime.dt_days,
-                    tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
-                    firstcall=False,
-                    julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
-                )
-                day_stomate_state = _paper_day_first_stomate_state_packet(
-                    daily_carbon=stomate_daily_carbon,
-                    ok_leak=stomate_ok_leak,
-                    outputs=stomate_outputs,
-                    daily_reset_fields=daily_reset_fields,
-                    stomate_parameters=context.stomate_static.parameters,
-                    ok_leak_boundary=ok_leak_boundary,
-                    season_memory_fields=season_memory_fields,
-                    slowproc_surface_update=slowproc_surface_update,
-                    previous_state=previous_state,
-                    dt_days=runtime.dt_days,
-                )
-                day_end_state = _paper_day_end_state_packet(
-                    previous_state=current_state,
-                    stomate_state=day_stomate_state,
-                )
+            season_memory_fields = _paper_day_season_fields_from_bundle_source(
+                stomate_bundle_source,
+                prior_fields=previous_state.fields_by_component["slowproc_stomate_previous_step_state"],
+                dt_days=runtime.dt_days,
+                tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
+                firstcall=False,
+                julian_diff=completed_payloads[-1]["source_clock"].julian_diff,
+            )
+            day_stomate_state = _paper_day_first_stomate_state_packet(
+                daily_carbon=stomate_daily_carbon,
+                ok_leak=stomate_ok_leak,
+                outputs=stomate_outputs,
+                daily_reset_fields=daily_reset_fields,
+                stomate_parameters=stomate_static.parameters,
+                ok_leak_boundary=base_boundary,
+                season_memory_fields=season_memory_fields,
+                slowproc_surface_update=slowproc_surface_update,
+                previous_state=state_after_ok_leak,
+                dt_days=runtime.dt_days,
+            )
+            day_end_state = _paper_day_end_state_packet(
+                previous_state=current_state,
+                stomate_state=day_stomate_state,
+            )
+
+    if daily_fold is not None and not retain_stomate_step_results:
+        daily_fold = daily_fold._replace(
+            accumulator=daily_fold.accumulator._replace(step_results=()),
+            maintenance=daily_fold.maintenance._replace(step_results=()),
+        )
 
     return DriverLaterDayScaffold(
         year=year,
