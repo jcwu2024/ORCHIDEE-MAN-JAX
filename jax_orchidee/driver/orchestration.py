@@ -889,8 +889,7 @@ def _prepare_paper_1961_driver_context_cached(
         config_path,
         bundle=first_step_bundle,
         used_run_def_path=Path(run_def_path),
-        root=Path(config_path).resolve().parents[1],
-        run_dir=reference_run_dir,
+        restart_state=first_step_restart_state,
     )
     stomate_static = paper_case_stomate_static_input_kwargs(config_path, used_run_def=Path(run_def_path))
     stomate_boundary = paper_case_stomate_boundary_input_kwargs(
@@ -8238,8 +8237,7 @@ def paper_1961_driver_timestep_scaffold(
             bundle=step,
             payload=payload,
             used_run_def_path=run_def_path,
-            root=root,
-            run_dir=first_step_restart_state.run_dir,
+            restart_state=first_step_restart_state,
         )
         daily_accumulators = first_step_restart_state.stomate_readstart.daily_state
         stomate_first_step_daily_accumulation = stomate_first_step_daily_accumulation_from_entry(

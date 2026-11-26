@@ -64,6 +64,7 @@ jobs:
           tests/unit/test_restart_state_lifecycle.py::test_c103_and_wetness_accumulators_require_real_production_paths
           tests/unit/test_restart_state_lifecycle.py::test_structured_and_production_contract_mutations_fail
           tests/unit/test_driver_calendar_wiring.py
+          tests/unit/test_driver_restart_initialization.py::test_first_restart_boundary_uses_the_restored_state_in_a_mixed_directory
           tests/unit/test_us_init_production.py::test_year_entry_updates_consumer_mirror_only_at_new_native_phase
       - name: WATCHOUT forcing and restart transport
         env:

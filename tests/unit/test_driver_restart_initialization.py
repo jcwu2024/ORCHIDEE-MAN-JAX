@@ -1,10 +1,11 @@
 """Restart entry must rebuild nonpersisted memory before any model step."""
-from types import SimpleNamespace
-
-import numpy as np
 import ast
 import inspect
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
+import numpy as np
 import jax_orchidee.driver.orchestration as orch
 import pytest
 
@@ -29,23 +30,61 @@ def _source_clock_context(year=1962):
     return SimpleNamespace(source_clock_setup=SourceClockSetup(binding, runtime, None, None, None))
 
 
-def test_first_restart_boundary_forwards_the_actual_restored_directory():
-    """Execute the actual caller expression without any upstream process/IO."""
-    tree = ast.parse(inspect.getsource(orch.paper_1961_driver_timestep_scaffold))
-    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
-             and isinstance(node.func, ast.Name) and node.func.id == "paper_1961_first_step_stomate_boundary"]
-    assert len(calls) == 1
-    observed = {}
-    def boundary(*args, **kwargs):
-        observed.update(kwargs)
-        return "no-model-no-io"
-    declared = object()
-    env = dict(paper_1961_first_step_stomate_boundary=boundary, config_path="config.yaml",
-               step=object(), payload=object(), run_def_path="run.def", root=object(),
-               first_step_restart_state=SimpleNamespace(run_dir=declared))
-    result = eval(compile(ast.Expression(calls[0]), "<actual-first-step-boundary-call>", "eval"), env)
-    assert result == "no-model-no-io"
-    assert observed["run_dir"] is declared
+@pytest.mark.parametrize("caller", [orch._prepare_paper_1961_driver_context_cached, orch.paper_1961_driver_timestep_scaffold])
+def test_first_restart_boundary_uses_the_restored_state_in_a_mixed_directory(caller, tmp_path, monkeypatch):
+    """Execute each real boundary call with distinct STOMATE input and output files."""
+    from netCDF4 import Dataset
+
+    import jax_orchidee.driver.stomate_boundary as boundary
+
+    restored = tmp_path / "stomate_start.nc"
+    later = tmp_path / "stomate_restart.nc"
+    for path, total in ((restored, 12.0), (later, 37.25)):
+        with Dataset(path, "w") as dataset:
+            dataset.createVariable("carb_mass_total", "f8").assignValue(total)
+    (tmp_path / "stomate_history_1962.nc").touch()
+
+    def read_state(path, **_kwargs):
+        with Dataset(path) as dataset:
+            return SimpleNamespace(carb_mass_total=float(dataset["carb_mass_total"][...]))
+
+    state = read_state(restored)
+    restored_bundle = SimpleNamespace(run_dir=tmp_path, stomate_input=restored, stomate=state)
+    consumer = Mock()
+    monkeypatch.setattr(boundary, "stomate_pre_step_ok_leak_boundary_inputs", consumer)
+    monkeypatch.setattr(boundary, "parse_run_def", lambda _: {"NSTM": "3", "RIVER_ROUTING": "FALSE"})
+    monkeypatch.setattr(boundary, "paper_case_vertical_grids_from_used_run_def", lambda _: (np.ones(1),) * 3)
+    monkeypatch.setattr(boundary, "load_case_config", lambda _: {"pft_catalog": {"path": "unused.yaml"}})
+    monkeypatch.setattr(boundary, "load_pft_catalog", Mock())
+    monkeypatch.setattr(boundary, "read_pft_layout_from_netcdf", Mock())
+    reread = Mock(side_effect=read_state)
+    monkeypatch.setattr(boundary, "read_stomate_restart_entry_state", reread)
+    payload = SimpleNamespace(kjpindex=1)
+    step = SimpleNamespace(run_scalars=SimpleNamespace(pft_layout=None))
+    monkeypatch.setattr(boundary, "build_intersurf_first_step_payload", lambda _: payload)
+    config_path = tmp_path / "configs/case.yaml"
+    run_def_path = tmp_path / "used_run.def"
+
+    tree = ast.parse(inspect.getsource(caller))
+    call, = [
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "paper_1961_first_step_stomate_boundary"
+    ]
+    result = eval(compile(ast.Expression(call), "<actual-first-step-boundary-call>", "eval"), {
+        "Path": Path, "paper_1961_first_step_stomate_boundary": boundary.paper_1961_first_step_stomate_boundary,
+        "config_path": config_path, "run_def_path": run_def_path, "root": tmp_path,
+        "step": step, "payload": payload, "first_step_bundle": step, "reference_run_dir": tmp_path,
+        "first_step_restart_state": restored_bundle,
+    })
+    assert result.stomate_files.restart == restored
+    assert consumer.call_args.kwargs["state"] is state
+    reread.assert_not_called()
+
+    diagnostic = boundary.paper_1961_first_step_stomate_boundary(
+        config_path, bundle=step, run_dir=tmp_path, used_run_def_path=run_def_path,
+    )
+    assert diagnostic.stomate_files.restart == later
+    assert consumer.call_args.kwargs["state"].carb_mass_total == 37.25
 
 
 def test_year_entry_initializes_from_saved_surface_without_mutating_old_year(monkeypatch, tmp_path):
@@ -315,7 +354,7 @@ def test_first_extractor_carries_growth_and_thermal_alias_to_next_real_consumer(
 
 
 def test_forwarded_directory_reaches_real_stomate_reader(tmp_path,monkeypatch):
-    """Actual caller expression + boundary + NetCDF reader; no model processes."""
+    """The actual caller carries the real NetCDF entry state into the boundary."""
     from pathlib import Path
     from shutil import copyfile
     from netCDF4 import Dataset
@@ -328,6 +367,7 @@ def test_forwarded_directory_reaches_real_stomate_reader(tmp_path,monkeypatch):
     restored=tmp_path/"stomate_start.nc";copyfile(templates[0],restored)
     with Dataset(restored,"r+") as nc:nc.variables["biomass"][:]=37.25
     scalars=read_run_scalars(config)
+    state = boundary.read_stomate_restart_entry_state(restored, allow_missing_thawed_humidity=True)
     monkeypatch.setattr(boundary,"parse_run_def",lambda path:{"NSTM":"3","RIVER_ROUTING":"FALSE"})
     monkeypatch.setattr(boundary,"paper_case_vertical_grids_from_used_run_def",lambda path:(np.ones(1),)*3)
     monkeypatch.setattr(boundary,"find_stomate_reference_files",lambda *a:pytest.fail("forwarding must suppress default historical reader"))
@@ -340,6 +380,8 @@ def test_forwarded_directory_reaches_real_stomate_reader(tmp_path,monkeypatch):
     result=eval(compile(ast.Expression(call),"<actual-restored-reader-call>","eval"),dict(
         paper_1961_first_step_stomate_boundary=boundary.paper_1961_first_step_stomate_boundary,
         config_path=config,step=SimpleNamespace(run_scalars=scalars),payload=SimpleNamespace(kjpindex=1),
-        run_def_path=tmp_path/"unused.def",root=root,first_step_restart_state=SimpleNamespace(run_dir=tmp_path)))
+        run_def_path=tmp_path/"unused.def",root=root,
+        first_step_restart_state=SimpleNamespace(run_dir=tmp_path, stomate_input=restored, stomate=state)))
     assert result.stomate_files.start==restored
+    assert seen["state"] is state
     np.testing.assert_array_equal(seen["state"].biomass,np.full_like(seen["state"].biomass,37.25))

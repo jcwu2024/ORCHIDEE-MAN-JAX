@@ -11,6 +11,7 @@ from jax_orchidee.coupled import StomatePreStepOkLeakBoundaryInputs, stomate_pre
 from jax_orchidee.driver.bundle import DriverFirstStepBundle, DriverStepBundle
 from jax_orchidee.driver.init import parse_run_def, parse_run_def_bool, parse_run_def_float, parse_run_def_int
 from jax_orchidee.driver.restart import reference_case_output_dir
+from jax_orchidee.driver.restart_state import ReferenceCaseFirstStepRestartState
 from jax_orchidee.driver.sechiba_boundary import IntersurfFirstStepPayload, build_intersurf_first_step_payload
 from jax_orchidee.parameters.pft_catalog import load_pft_catalog, read_pft_layout_from_netcdf
 from jax_orchidee.driver.domain import load_case_config
@@ -112,17 +113,21 @@ def paper_1961_first_step_stomate_boundary(
     used_run_def_path: str | Path | None = None,
     root: str | Path | None = None,
     run_dir: str | Path | None = None,
+    restart_state: ReferenceCaseFirstStepRestartState | None = None,
     kjit: int = 1,
     nbp_glo: int | None = None,
 ) -> PaperFirstStepStomateBoundary:
     """Assemble the source-backed first-step STOMATE OK_LEAK boundary.
 
     This function is a composition point, not a process kernel. It reads the
-    actual archived run-definition for vertical-grid and routing scalars, reads
-    STOMATE restart state, and delegates boundary construction to
+    actual archived run-definition for vertical-grid and routing scalars, uses
+    the initialized STOMATE state when supplied, and delegates assembly to
     ``stomate_pre_step_ok_leak_boundary_inputs``. Same-step HYDROL,
     THERMOSOIL, and litter-control fields remain absent until the ordered
     SECHIBA -> STOMATE step produces them.
+
+    The standalone reference diagnostic can omit ``restart_state`` to read
+    the archived restart output from a reference directory.
     """
 
     if isinstance(bundle, DriverStepBundle) and bundle.tstep != 0:
@@ -131,39 +136,35 @@ def paper_1961_first_step_stomate_boundary(
     run_def_path = Path(used_run_def_path) if used_run_def_path is not None else default_used_run_def_path(config_path)
     values = parse_run_def(run_def_path)
     diaglev, zz_coef_deep, zz_deep = paper_case_vertical_grids_from_used_run_def(run_def_path)
-    if run_dir is not None:
-        run_dir_path = Path(run_dir)
-        archived_restart = run_dir_path / "stomate_restart.nc"
-        if archived_restart.exists():
-            stomate_files = stomate_reference_files_from_run_dir(run_dir_path)
-            stomate_state_path = stomate_files.restart
+    if restart_state is not None:
+        # Job0_bio:317-322 binds this year's STOMATE input before launch.
+        # Use the same state for first-day carbon bookkeeping (stomate_lpj.f90:1637-1650).
+        path = restart_state.stomate_input
+        stomate_files = StomateReferenceFiles(restart_state.run_dir, path, path, ())
+        state = restart_state.stomate
+    else:
+        if run_dir is None:
+            stomate_files = find_stomate_reference_files(
+                Path(root) if root is not None else Path(config_path).resolve().parents[1]
+            )
+        elif (Path(run_dir) / "stomate_restart.nc").exists():
+            stomate_files = stomate_reference_files_from_run_dir(run_dir)
         else:
-            handoff_start = run_dir_path / "stomate_start.nc"
+            handoff_start = Path(run_dir) / "stomate_start.nc"
             if not handoff_start.exists():
                 raise FileNotFoundError(handoff_start)
-            stomate_files = StomateReferenceFiles(
-                run_dir=run_dir_path,
-                start=handoff_start,
-                restart=handoff_start,
-                histories=(),
-            )
-            stomate_state_path = handoff_start
-    else:
-        stomate_files = find_stomate_reference_files(
-            Path(root) if root is not None else Path(config_path).resolve().parents[1]
+            stomate_files = StomateReferenceFiles(Path(run_dir), handoff_start, handoff_start, ())
+        catalog = load_pft_catalog(load_case_config(config_path)["pft_catalog"]["path"])
+        source_pft_layout = read_pft_layout_from_netcdf(
+            stomate_files.restart,
+            catalog,
+            legacy_layout_id="paper_250919_legacy14",
         )
-        stomate_state_path = stomate_files.restart
-    catalog = load_pft_catalog(load_case_config(config_path)["pft_catalog"]["path"])
-    source_pft_layout = read_pft_layout_from_netcdf(
-        stomate_state_path,
-        catalog,
-        legacy_layout_id="paper_250919_legacy14",
-    )
-    state = read_stomate_restart_entry_state(
-        stomate_state_path,
-        source_pft_layout=source_pft_layout,
-        target_pft_layout=bundle.run_scalars.pft_layout,
-    )
+        state = read_stomate_restart_entry_state(
+            stomate_files.restart,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=bundle.run_scalars.pft_layout,
+        )
     nflow = parse_run_def_int(values, "NSTM")
     river_routing = parse_run_def_bool(values["RIVER_ROUTING"])
 
