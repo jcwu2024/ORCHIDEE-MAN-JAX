@@ -1,4 +1,10 @@
-# C1–C106 修正与支持补齐来源登记（2026-11-25）
+# C1–C107 修正与支持补齐来源登记（2026-11-26）
+
+## C107 文件续跑首日使用指定 STOMATE 启动文件的累计总碳
+
+生产提交 `c2f92b9d3f3eefdd813ff27d0472f8c9742d57b9`。论文年循环把上一年末的重启文件改名为下一年的输入。原 STOMATE 从指定输入读取累计总碳，LPJ 用它加上当日变动量。JAX 在首步准备和首步组装时按目录重选文件，混放两年文件时优先选到较晚的输出。这个优先级在复查前的 `ed2ff6d1`（2026-08-04）已有记录。两个实际调用处现共用已读入的 STOMATE 启动状态。累计 **107 项修正或支持补齐、59 个生产提交，101 项有复查前证据**。[Fortran 来源、调用与版本记录](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart/restart-replay/README.md) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart-acceptance/controller-acceptance.json)
+
+069 点续跑 2010 年时，指定输入为第 858480 步，原目录还有第 876000 步的输出。修正后首日写回总碳为 61,826,931.82546856 gC m⁻²，与只含指定三文件的对照逐值相同。在检查的 9,073 个坐标中，修前后只有日末累计总碳改变。当日碳变动量以及生物量、GPP、NPP 等 26 个日输出均有独立读数可复核。[逐值对照](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart/restart-replay/comparison.json)
 
 ## C106 后续日按半小时更新凋落物和土壤碳库存
 
