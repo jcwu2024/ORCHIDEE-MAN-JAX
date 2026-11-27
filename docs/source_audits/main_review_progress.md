@@ -1,5 +1,11 @@
 # 主线进度
 
+2026-11-27，**四个代表点年中的 069/2010 已取得全年 DOC 出流对照。** 原 Fortran 与 JAX 每平方米格点面积全年随底部排水排出的有机碳分别为 1.04620 × 10⁻²³ 和 1.02888 × 10⁻²³ gC，JAX 低约 1.66%，绝对差为 1.73 × 10⁻²⁵ gC m⁻²。两边的地表径流与洪泛有机 DOC 均为零。观测版与对照版 Fortran 在七个起止状态及年史文件的 44,004 个有效值上逐值吻合，1,095 次采样接收的 32,850 个槽也与同一步生产结果逐位相同。这些值对应单格模型内部交接。当前没有全年 DOC 独立通过阈值。[逐日和全年对照](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/science/README.md) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution-acceptance/controller-acceptance.json)
+
+069 的两种底排有机 DOC 和底排无机碳（DIC）在第 20 天均出现最大日差。确定起因还缺当天同一半小时的排水量、底层游离碳库存和液态水量。全年配对的 365 天中，PFT14 的 GPP、NPP、异养呼吸最大日绝对差依次为 2.03 × 10⁻¹¹、1.47 × 10⁻¹¹、5.72 × 10⁻¹³ gC m⁻² d⁻¹。四个点年先前通过的 16 项论文指标保留各自的运行与对照依据。[同钟原件复算](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/independent-review/README.md)
+
+001 的输入校验清单含 Windows 换行，319 的构建脚本误拒了源码副本内的两条编译器配置链接，两项作业均在物理首步前退出。修订脚本已用取回原件和实际工具验证，待补 001/1961、319/1961、319/1962 三个点年的出流。三份已结束作业合计用 4.14 分配核时，补跑两份作业合计上限 16 分配核时。本轮新增模型修正 0 项。[001 复现与修正](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/001/repair-proposal/README.md) · [319 复现与修正](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/319/repair-proposal/README.md) · [实际用量](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/allocation-actual.json)
+
 2026-11-26，**代表点的四个点年已通过四项论文指标，全年 DOC 出流待原 Fortran 同期观测。** 069 文件续跑首日的累计总碳选源已修正为 C107。混放两年文件时，现从 2009 年末指定输入取得 2010 年首日的清算基数。修后混放与隔离的 9,073 个核对值逐值相同。前次 069 全年采用隔离的三份原文件，其首日 26 个输出与本次修后实测逐值相同。主线累计 107 项修正或支持补齐，涉及 59 个生产提交，101 项有复查前证据。[069 复现与修正](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart/restart-replay/README.md) · [验收回执](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart-acceptance/controller-acceptance.json)
 
 现存原档可核对 069/2010 和 319/1961 两个年末的 PFT14 游离态和吸附态 DOC 库存，最大绝对差均小于 1.15 × 10⁻¹³ gC m⁻²。后者来自独立原生开发作业。四个点年仍缺同一时刻、同一路径的全年 DOC 出流。三个曙光作业的输入、观测脚本和 319 逐年接续方式已在本地预检，三项合计上限为 24 分配核时。论文 669 点为后续独立验收。[库存与原输出级别](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart/doc-evidence/README.md) · [补采方案](../../outputs/reviews/main-physics-20261126/representative-annual-doc-and-restart/native-preflight/allocation.json)
