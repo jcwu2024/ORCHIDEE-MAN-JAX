@@ -11,7 +11,9 @@
 | 319/1961，365 天 | 1.29763 × 10⁻¹⁹ | 4.16636 × 10⁻²⁰ | 1.29763 × 10⁻¹⁹ | 2.91397 × 10⁻²⁸ |
 | 319/1962，前 362 天 | 1.93198 × 10⁻²⁷ | 5.57950 × 10⁻²⁸ | 1.73776 × 10⁻²⁷ | 1.94223 × 10⁻²⁸ |
 
-接下来核对两处暖启动最早出现差异的排水步。069/2010 全年底排有机 DOC 较原值低 0.552%，第 2 个半小时两类 DOC 和 DIC 的比例与独立短窗实测的底排水量比例相符。319/1962 前 362 日较原值低 10.05%，续跑第 1 步已有分离。确定原因还要核对同一步水文实际送出的排水、碳过程读到的水量和底层各组分的碳库存。319/1962 随后的 43 步独立比较，Fortran 与 JAX 合计分别为 4.63332 × 10⁻²⁹、2.76988 × 10⁻²⁹ gC m⁻²。001 第 96 步的自然日末 NPP 仍超过原短窗严限。论文 669 点矩阵另行验收。[两处差异的原值](../../outputs/reviews/main-physics-20261127/representative-annual-c108/diagnostics/remaining-residual-context.json) · [319 后续 43 步](../../outputs/reviews/main-physics-20261127/representative-annual-c108/carbon/319-1962/partial-day-tail.csv)
+两个暖启动窗口的最早底排差异已追到土柱液水的浮点累加。用相同的 11 层实测液水计算，原 Fortran 逐项加总与 JAX 分组求和的末库存相差 2.84217 × 10⁻¹⁴ kg/m²，恰为该库存量级的一个双精度末位。当步试算底排只有 1.06250 × 10⁻¹⁴ kg/m²，水量守恒校正会据此补排或扣减。069 第 858482 步采用原求和顺序，得到 3.90468 × 10⁻¹⁴ kg/m² 的底排，与原生水文写出、碳过程实收逐值相同。将这份水量传入碳计算，两类 DOC 和无机碳（DIC）均复现到舍入精度。319 第 17521 步的 JAX 自然运行把底排扣到零，同输入源序复算保留了正底排，三个碳出流接近原值。319 原生当步的预算和实际选臂仍缺直接记录。本轮新增生产修正 0 项。[原值与受控复算](../../outputs/reviews/main-physics-20261127/representative-warm-drainage-origin/README.md) · [主控验收](../../outputs/reviews/main-physics-20261127/representative-warm-drainage-origin-acceptance/controller-acceptance.json)
+
+069 全年底排有机 DOC 较原值低 0.552%。319/1962 前 362 日低 10.05%，随后的 43 步另有同钟数据。两处峰差步已有碳出流读数，归因还缺当步原生水量预算、液水和游离碳库存。001 第 96 步的 NPP 仍超过原短窗严限。下一步汇总综合验收前仍达不到源码或状态要求的条目，并核对论文 669 点的输入、参考年份和运行规模。[数值差异记录](numeric_tolerance_ledger.md) · [已配对的年度与尾段](../../outputs/reviews/main-physics-20261127/representative-annual-c108/README.md) · [交付合同](pft14_equivalence_delivery_contract.md)
 
 319/1962 的对照版完成全年并保存 365 个 GPP、NPP、异养呼吸日值。观测版最后一条完整出流记录为第 34939 步，即第 362 天结束后又有 43 个半小时。末尾缺 101 个出流记录、7 次接收取样、3 次日末观测及有效年末重启文件。HDF5 实读确认五份文件截断。11 月 27 日北京时间 14:53 只读复查时，作业所在共享盘可用空间为 0，写入当时的系统错误码缺失。空间恢复后，可用同一观测程序和自身年初三文件补采 319/1962。[对照版完整日史](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/1962-a-xios-daily-carbon.json) · [缺项与补采起点](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/remaining-reference.md)
 
