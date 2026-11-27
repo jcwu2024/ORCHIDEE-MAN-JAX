@@ -77,6 +77,21 @@ def _scalar(values: Mapping[str, object], key: str, current: float) -> float:
     return _fortran_float(values[key]) if key in values else current
 
 
+def resolve_peat_turnover_parameters(
+    overrides: Mapping[str, object] | None = None,
+    *,
+    initial: SoilParameters | None = None,
+) -> dict[str, float]:
+    """Read ``TAU_PEAT`` and ``Z_TAU`` as in ``constantes_soil.f90:320-321``."""
+
+    values = _normalized(overrides)
+    state = SoilParameters() if initial is None else initial
+    return {
+        "tau_peat": _scalar(values, "TAU_PEAT", state.tau_peat),
+        "z_tau": _scalar(values, "Z_TAU", state.z_tau),
+    }
+
+
 def _integer(values: Mapping[str, object], key: str, current: int) -> int:
     if key not in values:
         return current
@@ -252,11 +267,7 @@ def config_soil_parameters(
             state = replace(state, hcrit_litter=litter)
 
     # Lines 320-336: these reads occur regardless of the outer option gate.
-    state = replace(
-        state,
-        tau_peat=_scalar(values, "TAU_PEAT", state.tau_peat),
-        z_tau=_scalar(values, "Z_TAU", state.z_tau),
-    )
+    state = replace(state, **resolve_peat_turnover_parameters(values, initial=state))
     ok_freeze = _logical(values, "OK_FREEZE", False)
 
     # Lines 346-379: each default follows OK_FREEZE, then its own key wins.
@@ -296,6 +307,7 @@ __all__ = [
     "SoilParameterError",
     "SoilParameters",
     "config_soil_parameters",
+    "resolve_peat_turnover_parameters",
     "resolve_hydrol_check_cwrr",
     "require_supported_hydrol_check_cwrr",
 ]

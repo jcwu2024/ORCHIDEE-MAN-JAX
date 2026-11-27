@@ -36,12 +36,15 @@ class ComponentProbe(NamedTuple):
     soilwater: object
     cutoff: object
     bulk_dens: object
+    activity: object
 
 
 @pytest.fixture(autouse=True)
 def _isolate_unrelated_permafrost_activity(monkeypatch):
     # The target is TF-DOC and runoff-cutoff producer wiring. Do not compile
     # or claim admission of the distinct permafrost moisture/deep-grid path.
+    original = (coupled.stomate_permafrost_activity_ok_leak_inputs,
+                driver.stomate_permafrost_decomposition_controls)
     monkeypatch.setattr(
         coupled, "stomate_permafrost_activity_ok_leak_inputs",
         lambda **args: SimpleNamespace(ok_leak_inputs={"tprof": args["tdeep"]}, output_inputs={}, provenance=()),
@@ -51,6 +54,7 @@ def _isolate_unrelated_permafrost_activity(monkeypatch):
         lambda *args, **kwargs: SimpleNamespace(prmfrst_soilc_tempctrl=jnp.ones((1, 32, 2)),
                                                prmfrst_soilc_tempctrl_doc=jnp.ones((1, 32, 2))),
     )
+    return original
 
 
 def _fixture(*, tf_on=True, cutoff=None):
@@ -117,6 +121,7 @@ def _component_core(**args):
         args["doc_precip2ground"], ground.wet_dep_ground, ground.wet_dep_flood,
         args["soilwater_31mm"], jnp.asarray(args.get("sro_bottom", 5)),
         bulk_density_source_update(args["bulk_dens"]),
+        tuple(args.get(name) for name in ("fbact_litter", "fbact_soilcarbon", "fbact_doc")),
     )
 
 
@@ -300,6 +305,41 @@ def test_c9_actual_compiled_producer_forwards_explicit_api_cutoff(monkeypatch):
     assert args["sro_bottom"] == 3
     assert args["nslm"] == 11
     assert args["ndeep"] == 32
+
+
+@pytest.mark.parametrize("mode", ["initialization", "ordinary", "compiled"])
+@pytest.mark.parametrize("configured", [False, True])
+def test_paper_ok_leak_uses_configured_peat_turnover(
+    monkeypatch, _isolate_unrelated_permafrost_activity, mode, configured,
+):
+    activity_source, decomposition = _isolate_unrelated_permafrost_activity
+    monkeypatch.setattr(coupled, "stomate_permafrost_activity_ok_leak_inputs", activity_source)
+    monkeypatch.setattr(driver, "stomate_permafrost_decomposition_controls", decomposition)
+    f = _fixture()
+    f.peat[1] = True
+    f.values.update(PERMA_PEAT="TRUE", FRAC1="0.5", FRAC2="0.5")
+    f.payload["shumdiag_peat"].fill(0.0)
+    if configured:
+        f.values.update(TAU_PEAT="3.1536D7", Z_TAU="1.5")
+        tau_peat, z_tau = 3.1536e7, 1.5
+    else:
+        tau_peat, z_tau = 3.1536e8, 1.0e6
+
+    if mode == "initialization":
+        args = _initialization(f).ok_leak_inputs
+        rates = tuple(args[name] for name in ("fbact_litter", "fbact_soilcarbon", "fbact_doc"))
+    else:
+        _install_component_seam(monkeypatch, f)
+        result, _ = _ordinary(f, compiled=mode == "compiled")
+        rates = result.activity
+
+    # microactem:2673–2687 caps the depth at layer 12. Zero peat moisture
+    # selects the binary64 epsilon floor, and 280 K selects the warm arm.
+    depth = np.minimum(f.base.ok_leak_inputs["zi_soil"], f.base.ok_leak_inputs["zi_soil"][11])
+    temperature = 2.0 ** ((280.0 - 303.15) / 10.0)
+    expected = 86400.0 * np.finfo(np.float64).eps * temperature / (tau_peat * np.exp(depth / z_tau))
+    for rate in rates:
+        np.testing.assert_allclose(rate[0, :, 1], expected, rtol=3.0e-14, atol=0.0)
 
 
 @pytest.mark.parametrize("mode", ["ordinary", "compiled"])

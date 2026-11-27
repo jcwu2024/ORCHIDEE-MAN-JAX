@@ -53,6 +53,7 @@ jobs:
           tests/unit/test_parameter_context_repairs.py::test_c105_real_prepare_preserves_selected_year_and_partitions_caches
           tests/parity/test_ok_leak_producer_contracts.py::test_ok_leak_half_hour_fold_carries_density_from_the_previous_state
           tests/parity/test_ok_leak_producer_contracts.py::test_ok_leak_half_hour_fold_carries_active_layer_into_new_day
+          tests/parity/test_ok_leak_producer_contracts.py::test_paper_ok_leak_uses_configured_peat_turnover
           tests/unit/test_ok_leak_active_layer.py
           tests/unit/test_stomate_reference.py::test_stomate_cold_start_readstart_fallbacks_match_fortran_defaults
           tests/unit/test_stomate_season.py::test_gdd_solar_minimum_uses_real64_state_precision_with_float32_geometry

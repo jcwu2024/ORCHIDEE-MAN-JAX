@@ -107,7 +107,7 @@ from jax_orchidee.driver.tides import (
 )
 from jax_orchidee.parameters.soil import (
     require_supported_hydrol_check_cwrr, resolve_hydrol_check_cwrr,
-    resolve_hydrol_zwt_force,
+    resolve_hydrol_zwt_force, resolve_peat_turnover_parameters,
 )
 from jax_orchidee.driver.domain import load_case_config, read_annual_co2, read_forcing_model_step_cached, read_forcing_step
 from jax_orchidee.driver.dim2 import CP_AIR, GRAVITY, Dim2Switches, validate_dim2_switches
@@ -9113,6 +9113,7 @@ def _paper_ok_leak_boundary_from_sources(
             "frozen_respiration_func": frozen_respiration_func,
             "perma_peat": perma_peat_enabled,
             "epsilon": FORTRAN_EPSILON_R8,
+            **resolve_peat_turnover_parameters(run_def_values),
             **({} if perma_peat_enabled else {"mc_peat": hydrol["soil_mc"][:, :, 0]}),
             **({"is_peat": is_peat} if perma_peat_enabled else {}),
         },
@@ -9515,7 +9516,7 @@ def _paper_compiled_ok_leak_fold(
         name: value
         for name, value in static_inputs.items()
         if name not in _COMPILED_OK_LEAK_DYNAMIC_NAMES
-        and name not in {"nslm", "ndeep", "perma_peat", "sro_bottom"}
+        and name not in {"nslm", "ndeep", "perma_peat", "sro_bottom", "tau_peat", "z_tau"}
     }
 
     layer_thickness = jnp.diff(jnp.asarray(z_soil)[: sro_bottom + 1])
@@ -9740,6 +9741,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
 
     current = {name: state[name] for name in _OK_LEAK_HALF_HOUR_STATE_FIELDS}
     active_layer = state.get("ok_leak_active_layer")
+    peat_turnover = resolve_peat_turnover_parameters(run_def_values)
     # soilcarbon_leak:1166-1172 passes (month-1)*30+day from each step.
     active_layer_days = tuple(
         (source.month - 1) * 30 + source.day if (source := entry.get("source_clock")) is not None else dayno
@@ -9834,6 +9836,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 "frozen_respiration_func": parse_run_def_int(run_def_values, "frozen_respiration_func"),
                 "perma_peat": parse_run_def_bool(run_def_values["PERMA_PEAT"]),
                 "epsilon": FORTRAN_EPSILON_R8,
+                **peat_turnover,
                 **({} if parse_run_def_bool(run_def_values["PERMA_PEAT"]) else {"mc_peat": payload["soil_mc"][:, :, 0]}),
                 **({"is_peat": is_peat} if parse_run_def_bool(run_def_values["PERMA_PEAT"]) else {}),
             },
@@ -9900,6 +9903,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 if name not in _COMPILED_OK_LEAK_DYNAMIC_NAMES
                 and name not in {"nslm", "ndeep", "sro_bottom"}
             }
+            static_inputs.update(peat_turnover)
             if active_layer is None:
                 initial_depth = jnp.asarray(state["altmax"])
                 zero_ind = jnp.zeros(initial_depth.shape, dtype=int)
