@@ -1,19 +1,17 @@
 # 主线进度
 
-2026-11-27，**C108 已修正两个冷启动点底排溶解有机碳（DOC）偏低的一个共同原因。** 001 和 319 的论文配置规定了泥炭分解的周转时间及其随深度变化的尺度，旧 JAX 调用半小时土壤碳过程时漏传了这两项。按原公式计算，第 11 层的旧分解速率应为原值的 32.1074%，与 001 第 96 步两个实测碳库的比例吻合。只换两项参数，两个点第 2 日易分解、难分解底排对原值的相对差均小于 1.2 × 10⁻¹²。001 成对实跑的两天 GPP、NPP 逐值相同。[同输入取证](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/physics/k49-replay.json) · [两个点的逐日对照](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/physics/window-comparison.json) · [修正登记](correction_origins.md)
+2026-11-27，**C108 在三个代表点的四个点年都跑满 365 天。地上生物量、地下生物量、GPP、NPP 共 16 项通过原论文门限。** 12 个点位指标序列的最大绝对归一化偏差为 8.83 × 10⁻⁸，最大归一化 RMSE 为 1.09 × 10⁻⁷，原限均为 10⁻³。112 项年度数值诊断和四个异养呼吸年均也通过原门。四个点年的逐日 PFT14 GPP、NPP 与修前逐值相同。319/1962 实读本次 1961 年末的三份重启，源步从 17520 接到 17521，最后到 35040。[逐年四指标](../../outputs/reviews/main-physics-20261127/representative-annual-c108/annual-comparison.csv) · [重启文件核对](../../outputs/reviews/main-physics-20261127/representative-annual-c108/states/README.md) · [主控验收](../../outputs/reviews/main-physics-20261127/representative-annual-c108-acceptance/controller-acceptance.json)
 
-**下一步是用 C108 重验四个代表点年。** 复用已取回的 Fortran 出流和日碳记录，319/1962 从修后 1961 年末的三个文件续跑。此前通过的 16 项论文指标和下表的年度 DOC 数值来自修前版本。069 第 20 天的底排差和 001 第 96 步的 NPP 严格差各有独立记录。319/1962 原生观测的尾段还缺 101 个半小时，单年补采方案已核实。[主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay-acceptance/controller-acceptance.json) · [319 原生补采方案](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/319-replay-operations.md)
+**两个冷启动点的全年底排 DOC 已恢复到原 Fortran 数值附近。** C108 将配置中的泥炭周转时间和深度尺度传入半小时碳过程。001、319 的 1961 年旧出流均为原值的 32.1074%，修后两个点的全年绝对差分别为 1.13 × 10⁻²⁷、2.91 × 10⁻²⁸ gC m⁻²。下表为同一时段按格点面积累计的底排有机碳，含易分解和难分解两项。DOC 沿用分路径、分组分的诊断口径，项目尚无独立的年度 DOC 通过阈值。[修正与同输入归因](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/README.md) · [逐日原量与库存](../../outputs/reviews/main-physics-20261127/representative-annual-c108/README.md)
 
-2026-11-27，**三个点年已有完整的原 Fortran 与 JAX 全年有机 DOC 出流对照。319/1962 已配对前 362 个完整日。** 下表是每平方米格点面积在所列期间的有机碳出流量（gC m⁻²）。两种模型观测到的有机出流均来自底部排水。无机碳（DIC）逐路径另计。全年 DOC 尚无独立科学通过阈值。[各路径与逐日记录](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/science/README.md) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution-acceptance/controller-acceptance.json)
-
-| 点年 | 配对天数 | Fortran | JAX | 绝对差 |
+| 点年及原生可比时段 | Fortran | 修前 JAX | C108 JAX | 修后绝对差（gC m⁻²） |
 | --- | ---: | ---: | ---: | ---: |
-| 001/1961 | 365 | 2.50247 × 10⁻¹⁶ | 8.03479 × 10⁻¹⁷ | 1.69899 × 10⁻¹⁶ |
-| 069/2010 | 365 | 1.04620 × 10⁻²³ | 1.02888 × 10⁻²³ | 1.73225 × 10⁻²⁵ |
-| 319/1961 | 365 | 1.29763 × 10⁻¹⁹ | 4.16636 × 10⁻²⁰ | 8.80995 × 10⁻²⁰ |
-| 319/1962 | 362 | 1.93198 × 10⁻²⁷ | 5.57950 × 10⁻²⁸ | 1.37403 × 10⁻²⁷ |
+| 001/1961，365 天 | 2.50247 × 10⁻¹⁶ | 8.03479 × 10⁻¹⁷ | 2.50247 × 10⁻¹⁶ | 1.13354 × 10⁻²⁷ |
+| 069/2010，365 天 | 1.04620 × 10⁻²³ | 1.02888 × 10⁻²³ | 1.04043 × 10⁻²³ | 5.77096 × 10⁻²⁶ |
+| 319/1961，365 天 | 1.29763 × 10⁻¹⁹ | 4.16636 × 10⁻²⁰ | 1.29763 × 10⁻¹⁹ | 2.91397 × 10⁻²⁸ |
+| 319/1962，前 362 天 | 1.93198 × 10⁻²⁷ | 5.57950 × 10⁻²⁸ | 1.73776 × 10⁻²⁷ | 1.94223 × 10⁻²⁸ |
 
-两个 1961 冷启动点的修前 JAX 年有机出流都是 Fortran 的约 32.1074%。其年末 PFT14 第 11 层的两个地下凋落物来源游离碳库也有同一比值。这两项库存直接参与底排计算，319 两边各自将其带入下一年。[第 11 层两种模型的库存读数](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/independent-review/layer11-doc.json) · [出流比值和峰值](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/science/doc-daily-ratio-and-peaks.json)
+接下来核对两处暖启动最早出现差异的排水步。069/2010 全年底排有机 DOC 较原值低 0.552%，第 2 个半小时两类 DOC 和 DIC 的比例与独立短窗实测的底排水量比例相符。319/1962 前 362 日较原值低 10.05%，续跑第 1 步已有分离。确定原因还要核对同一步水文实际送出的排水、碳过程读到的水量和底层各组分的碳库存。319/1962 随后的 43 步独立比较，Fortran 与 JAX 合计分别为 4.63332 × 10⁻²⁹、2.76988 × 10⁻²⁹ gC m⁻²。001 第 96 步的自然日末 NPP 仍超过原短窗严限。论文 669 点矩阵另行验收。[两处差异的原值](../../outputs/reviews/main-physics-20261127/representative-annual-c108/diagnostics/remaining-residual-context.json) · [319 后续 43 步](../../outputs/reviews/main-physics-20261127/representative-annual-c108/carbon/319-1962/partial-day-tail.csv)
 
 319/1962 的对照版完成全年并保存 365 个 GPP、NPP、异养呼吸日值。观测版最后一条完整出流记录为第 34939 步，即第 362 天结束后又有 43 个半小时。末尾缺 101 个出流记录、7 次接收取样、3 次日末观测及有效年末重启文件。HDF5 实读确认五份文件截断。11 月 27 日北京时间 14:53 只读复查时，作业所在共享盘可用空间为 0，写入当时的系统错误码缺失。空间恢复后，可用同一观测程序和自身年初三文件补采 319/1962。[对照版完整日史](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/1962-a-xios-daily-carbon.json) · [缺项与补采起点](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/remaining-reference.md)
 
