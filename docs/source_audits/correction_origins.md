@@ -1,4 +1,10 @@
-# C1–C107 修正与支持补齐来源登记（2026-11-26）
+# C1–C108 修正与支持补齐来源登记（2026-11-27）
+
+## C108 半小时土壤碳过程读取配置中的泥炭分解参数
+
+生产提交 `e77b163b4146672de9b571cc55a32e7b6d50b7b8`。原 Fortran 逐项读取泥炭周转时间 `TAU_PEAT` 和深度尺度 `Z_TAU`。001、319 两个 1961 冷启动配置给出 31,536,000 秒和 1.5 米。旧 JAX 的半小时土壤碳过程漏传两项，用了通用缺省值 315,360,000 秒和 1,000,000 米。该接线在复查前的 `7333b46c`（2026-07-20）已存在。两参数沿同一条调用链丢失，合计登记一项。累计 **108 项修正或支持补齐、60 个生产提交，102 项有复查前证据**。[原有效配置与同输入复算](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/physics/k49-replay.json) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay-acceptance/controller-acceptance.json)
+
+单次调用、普通半小时循环和编译循环现共用土壤参数读法。三个入口修前均在显式配置用例失败，修后六项配置和缺省测试全过。两个冷启动点到第 96 步的正式运行均观测到易分解、难分解两类底排 DOC 恢复到原值附近。全年影响由修后版本的年度运行判定。[三入口复核](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/upstream-review/candidate-review.md) · [两个点的逐日实测](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/physics/window-comparison.json)
 
 ## C107 文件续跑首日使用指定 STOMATE 启动文件的累计总碳
 
