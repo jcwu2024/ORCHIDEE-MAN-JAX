@@ -1,5 +1,18 @@
 # 主线进度
 
+2026-11-27，**三个点年已有完整的原 Fortran 与 JAX 全年有机 DOC 出流对照。319/1962 已配对前 362 个完整日。** 下表是每平方米格点面积在所列期间的有机碳出流量（gC m⁻²）。两种模型观测到的有机出流均来自底部排水。无机碳（DIC）逐路径另计。全年 DOC 尚无独立科学通过阈值。[各路径与逐日记录](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/science/README.md) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution-acceptance/controller-acceptance.json)
+
+| 点年 | 配对天数 | Fortran | JAX | 绝对差 |
+| --- | ---: | ---: | ---: | ---: |
+| 001/1961 | 365 | 2.50247 × 10⁻¹⁶ | 8.03479 × 10⁻¹⁷ | 1.69899 × 10⁻¹⁶ |
+| 069/2010 | 365 | 1.04620 × 10⁻²³ | 1.02888 × 10⁻²³ | 1.73225 × 10⁻²⁵ |
+| 319/1961 | 365 | 1.29763 × 10⁻¹⁹ | 4.16636 × 10⁻²⁰ | 8.80995 × 10⁻²⁰ |
+| 319/1962 | 362 | 1.93198 × 10⁻²⁷ | 5.57950 × 10⁻²⁸ | 1.37403 × 10⁻²⁷ |
+
+两个 1961 冷启动点的 JAX 年有机出流都是 Fortran 的约 32.1074%。其年末 PFT14 第 11 层的两个地下凋落物来源游离碳库也有同一比值。这两项库存直接参与底排计算，319 两边各自将其带入下一年。首次产生这一比例的库存更新仍待同输入实证。069 第 20 天的底排日差有独立的证据边界。本次新增模型修正 0 项。[第 11 层两种模型的库存读数](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/independent-review/layer11-doc.json) · [出流比值和峰值](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/science/doc-daily-ratio-and-peaks.json)
+
+319/1962 的对照版完成全年并保存 365 个 GPP、NPP、异养呼吸日值。观测版最后一条完整出流记录为第 34939 步，即第 362 天结束后又有 43 个半小时。末尾缺 101 个出流记录、7 次接收取样、3 次日末观测及有效年末重启文件。HDF5 实读确认五份文件截断。11 月 27 日北京时间 14:53 只读复查时，作业所在共享盘可用空间为 0，写入当时的系统错误码缺失。空间恢复后，可用同一观测程序和自身年初三文件补采 319/1962。[对照版完整日史](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/1962-a-xios-daily-carbon.json) · [缺项与补采起点](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/remaining-reference.md)
+
 2026-11-27，**四个代表点年中的 069/2010 已取得全年 DOC 出流对照。** 原 Fortran 与 JAX 每平方米格点面积全年随底部排水排出的有机碳分别为 1.04620 × 10⁻²³ 和 1.02888 × 10⁻²³ gC，JAX 低约 1.66%，绝对差为 1.73 × 10⁻²⁵ gC m⁻²。两边的地表径流与洪泛有机 DOC 均为零。观测版与对照版 Fortran 在七个起止状态及年史文件的 44,004 个有效值上逐值吻合，1,095 次采样接收的 32,850 个槽也与同一步生产结果逐位相同。这些值对应单格模型内部交接。当前没有全年 DOC 独立通过阈值。[逐日和全年对照](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/science/README.md) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution-acceptance/controller-acceptance.json)
 
 069 的两种底排有机 DOC 和底排无机碳（DIC）在第 20 天均出现最大日差。确定起因还缺当天同一半小时的排水量、底层游离碳库存和液态水量。全年配对的 365 天中，PFT14 的 GPP、NPP、异养呼吸最大日绝对差依次为 2.03 × 10⁻¹¹、1.47 × 10⁻¹¹、5.72 × 10⁻¹³ gC m⁻² d⁻¹。四个点年先前通过的 16 项论文指标保留各自的运行与对照依据。[同钟原件复算](../../outputs/reviews/main-physics-20261126/representative-annual-doc-execution/independent-review/README.md)
