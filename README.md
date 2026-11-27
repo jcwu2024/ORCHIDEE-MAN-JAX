@@ -118,9 +118,27 @@ uv run orchidee-jax validate-landpoints \
   --start-year 1961 \
   --years 50 \
   --initial-state cold-start \
-  --strict-on-failure off \
+  --strict-on-failure on \
   --output-dir "$ORCHIDEE_OUTPUT_ROOT/acceptance"
 ```
+
+Run the same request again to reuse its matching result or resume from its
+latest complete annual checkpoint. Add `--force` to rerun from the declared
+initial state. Keep shared input files fixed during a batch.
+
+For a formal aggregate, supply the same site manifest used for validation.
+The command reports missing and unexpected site IDs and verifies the shard
+assignments before reporting a pass.
+
+```bash
+uv run python scripts/dev/aggregate_paper_landpoint_acceptance.py \
+  --input-dir "$ORCHIDEE_OUTPUT_ROOT/acceptance" \
+  --expected-selection manifests/landpoints_669.json
+```
+
+For independent jobs that each write `SITE/summary.json`, add
+`--pattern '*/summary.json'`. A count-only aggregate can display historical
+results. Formal acceptance requires the expected site IDs.
 
 For production clusters, run one landpoint per process or scheduler array
 task. This isolates JAX/XLA memory, makes restart checkpoints independent, and

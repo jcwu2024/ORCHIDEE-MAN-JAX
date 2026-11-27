@@ -1,5 +1,7 @@
 # C1–C108 修正与支持补齐来源登记（2026-11-27）
 
+11 月 28 日的论文多点验收工具修复按结果协议 2 和提交 `82736475` 单独登记。复查前的 `7333b46c` 已存在失败后读取旧结果的路径。主线模型计数截至 C108。两条研究线将来同步验收入口、年度断点和汇总脚本时可按同一提交核对。[适用文件与分支版本](shared_core_branch_review.md) · [主控验收](../../outputs/reviews/main-physics-20261128/integrated-acceptance-runner-acceptance/controller-acceptance.json)
+
 ## C108 半小时土壤碳过程读取配置中的泥炭分解参数
 
 生产提交 `e77b163b4146672de9b571cc55a32e7b6d50b7b8`。原 Fortran 逐项读取泥炭周转时间 `TAU_PEAT` 和深度尺度 `Z_TAU`。001、319 两个 1961 冷启动配置给出 31,536,000 秒和 1.5 米。旧 JAX 的半小时土壤碳过程漏传两项，用了通用缺省值 315,360,000 秒和 1,000,000 米。该接线在复查前的 `7333b46c`（2026-07-20）已存在。两参数沿同一条调用链丢失，合计登记一项。累计 **108 项修正或支持补齐、60 个生产提交，102 项有复查前证据**。[原有效配置与同输入复算](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/physics/k49-replay.json) · [主控验收](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay-acceptance/controller-acceptance.json)

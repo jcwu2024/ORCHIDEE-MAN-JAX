@@ -1,8 +1,12 @@
 # 主线进度
 
+2026-11-28，**多点验收工具已修复，代码提交为 `82736475`。** 当次运行异常、非零退出或没有产生新结果时，即使目录中有旧的通过记录，接受点数也为零。正式汇总现在逐个核对点号。请求 001 和 069，实收 001 和 319 时，两行数值可以各自过门，整批仍会报告缺 069、多 319。319 在 1961 年末中断后从第 17521 步续至 1962 年末第 35040 步，两年的年度输出和年末状态均与同输入连续运行一致。本次按验收工具的结果协议 2 登记。主线累计 108 项模型修正或支持补齐，涉及 60 个生产提交，其中 102 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261128/integrated-acceptance-runner-acceptance/controller-acceptance.json) · [公开命令](../../README.md#validate-landpoints) · [两研究分支同步记录](shared_core_branch_review.md)
+
+下一批在本机运行两个此前未列入代表点全年验收的论文点，各从 1961 年冷启动，连续算到 1962 年末。359.0-071.0（179°E、19°S）已有输入准备实测。179.0-095.0（1°W、5°N）按正式清单中离经纬度原点最近的位置选定。实跑将用各点各年的原年史评价四项指标，并记录实际耗时和峰值内存。[点年与输入清单](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/matrix-readiness.json)
+
 2026-11-27，**论文 669 点的本机输入和原 Fortran 年度参考已经核齐，C108 的 669 点正式计算尚未启动。** 每点从 1961 年冷启动，逐年承接自身状态到 2010 年。已逐份读过 33,450 份原年史，可用于 133,800 个年度四指标比较和 2,676 条逐点指标序列。论文按观测年龄选取的 1,993 行样本对应 920 个不同点年，按原提取公式逐项复现。每点另有一套 2009 年末原三文件，可独立检查 2010 年暖启动。[点年清单](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/matrix-readiness.json) · [原年史和论文样本](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/references/README.md)
 
-主控在正式验收入口复现了一处误报。同目录有旧的通过结果时，本次强制重算在第一步前抛出异常，底层返回失败，汇总仍把该点计为通过并以成功状态退出。批量运行前先修复这条失败路径，核对复用结果和年度断点时的代码、配置、数据和实际运行模式，再用小批次验证中断续跑。已有代表点的四个点年各有独立的运行回执及输入、输出证据。主线累计 108 项修正或支持补齐，涉及 60 个生产提交，其中 102 项有复查前证据。[本轮主控验收与误报复现](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness-acceptance/controller-acceptance.json) · [执行方案及规模](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/execution.md)
+当时发现的误报可以在零积分测试中复现。同目录有旧的通过结果时，强制重算在第一步前抛出异常，旧汇总仍把该点计为通过。此前代表点的四个点年各有独立的运行回执及输入、输出证据。[修前复现](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness-acceptance/controller-acceptance.json) · [执行方案及规模](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/execution.md)
 
 2026-11-27，**C108 在三个代表点的四个点年都跑满 365 天。地上生物量、地下生物量、GPP、NPP 共 16 项通过原论文门限。** 12 个点位指标序列的最大绝对归一化偏差为 8.83 × 10⁻⁸，最大归一化 RMSE 为 1.09 × 10⁻⁷，原限均为 10⁻³。112 项年度数值诊断和四个异养呼吸年均也通过原门。四个点年的逐日 PFT14 GPP、NPP 与修前逐值相同。319/1962 实读本次 1961 年末的三份重启，源步从 17520 接到 17521，最后到 35040。[逐年四指标](../../outputs/reviews/main-physics-20261127/representative-annual-c108/annual-comparison.csv) · [重启文件核对](../../outputs/reviews/main-physics-20261127/representative-annual-c108/states/README.md) · [主控验收](../../outputs/reviews/main-physics-20261127/representative-annual-c108-acceptance/controller-acceptance.json)
 

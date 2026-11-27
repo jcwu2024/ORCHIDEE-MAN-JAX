@@ -1,5 +1,9 @@
 # 共享物理核心与研究分支核查
 
+## 论文多点验收工具（结果协议 2）
+
+主线工具提交 `82736475dd2ec0832aeedbff706504f8a3530f3f`。日尺度 `f898282a` 和全球效率 `ffe77a00` 的快照都带有旧验收入口。两条研究线集中同步时，如使用论文点验收或自动年度断点，需一起更新 `jax_orchidee/runners/acceptance.py`、`multiyear.py`、同目录新增的 `run_identity.py`、`scripts/dev/aggregate_paper_landpoint_acceptance.py` 及 `tests/unit/test_paper_landpoint_acceptance.py`。相同请求可复用已核验的结果或完整年度断点，`--force` 从声明的初态重算。正式汇总传入 `--expected-selection` 指定原名单。普通恢复使用当前运行身份，旧显式前驱仍可按其原接口读取。此次改动登记在验收工具项下。[同步范围与修前证据](../../outputs/reviews/main-physics-20261127/integrated-acceptance-runner-repair/review/preliminary.md) · [发布回执](../../outputs/reviews/main-physics-20261128/integrated-acceptance-runner-acceptance/controller-acceptance.json)
+
 ## C108 泥炭分解的周转时间和深度尺度
 
 主线生产提交 `e77b163b4146672de9b571cc55a32e7b6d50b7b8`。日尺度 `f898282a` 和全球效率 `ffe77a00` 的快照均有旧接线。集中同步时，将两项有效土壤参数送到各研究线实际采用的单次碳过程、普通半小时循环和编译循环。编译路径先把两项送入活动率计算，再从下游土壤碳函数的实参中移除。各自用显式配置和缺省配置核查三个入口，论文路径可用 001、319 第 2 日的底排 DOC 作对照。[依赖与回归](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/upstream-review/candidate-review.md) · [短窗对照](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/physics/window-comparison.json)
