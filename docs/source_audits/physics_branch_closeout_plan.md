@@ -64,7 +64,9 @@
 
 **C108 已完成四个代表点年的论文指标复验。** 001/1961、069/2010、319/1961、319/1962 共 16 项通过原门，两个冷启动点的全年底排有机 DOC 偏差已随泥炭参数修正消退。暖启动 069 第 858482 步和 319 第 17521 步已用同一组自然剖面复现一个双精度末位引起的排水校正变化。069 有直接的原生水文写出和碳过程接收。319 原生当步实际校正臂、069 第 859408 步及 319 第 34854 步的峰差成因仍缺原生实参。319 B 尾部 101 个半小时及年末重启另有固定程序的补采方案。[年度验收](../../outputs/reviews/main-physics-20261127/representative-annual-c108-acceptance/controller-acceptance.json) · [暖启数值归因](../../outputs/reviews/main-physics-20261127/representative-warm-drainage-origin-acceptance/controller-acceptance.json) · [两个峰步的原生取证范围](../../outputs/reviews/main-physics-20261127/representative-warm-drainage-origin/observation-windows.json)
 
-综合验收准备以当前生产版和已有的源码、状态清单为准。对仍影响论文 PFT14 路径的具名条目核对证据等级，给出实际缺项和对应入口。盘点 669 点的点号、目标年、起始状态、气象、参数及四项指标的原参考，列出可复用的既有运行和待计算规模。完整矩阵按原论文阈值独立验收。[交付合同](pft14_equivalence_delivery_contract.md) · [完成计划](pft14_completion_execution_plan.md)
+**综合验收准备已完成。** 669 个论文点均已绑定本机输入、校准参数和 1961–2010 年四项指标的原年史。代表点的后续实测为 70 个开放源码组中的 33 组补充了限定范围的证据，其余 37 组沿用此前记录。33 个调用组中，12 组补充了实际接收，2 组验证了生产文件读写，7 组仍有部分交接待查，12 组缺原生外部端点。最终 PFT14 等价验收仍按合同检查活动与条件分支、状态交接和 669 点完整序列。[逐组依据与缺项](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/coverage/crosswalk.json) · [交付合同](pft14_equivalence_delivery_contract.md)
+
+批量验收入口已复现异常退出后误读旧结果。先用实际运行回执和可核验来源修复结果复用、年度断点和失败分类，再以连续两年的小批次核实正常运行、跨年及恢复。拟用 Explore1000 时，先取得 C108 在目标平台的实际耗时、峰值内存及可用资源，据此确定全量分片。全量矩阵为 33,450 个点年，单点连续 50 年。[主控复核](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness-acceptance/controller-acceptance.json) · [执行与资源依据](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/execution.md)
 
 C106 已修复默认后续日的 OK_LEAK 调度。319 的同输入第二日已核对 48 次碳库存承接、日末 LPJ 和正式重启。下一包核对论文驱动从文件启动的**第一日**，沿实际调用确认初始库存、半小时更新次数和末步库存的日末接收。两天交界以现存第 17568 步文件为参照。具名同相位原生水热、年度碳通量及 669 点矩阵仍需各自的实测。[验收回执](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair-acceptance/controller-acceptance.json) · [后续日入口与历史证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/impact/README.md)
 

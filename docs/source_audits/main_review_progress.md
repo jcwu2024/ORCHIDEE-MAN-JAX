@@ -1,5 +1,9 @@
 # 主线进度
 
+2026-11-27，**论文 669 点的本机输入和原 Fortran 年度参考已经核齐，C108 的 669 点正式计算尚未启动。** 每点从 1961 年冷启动，逐年承接自身状态到 2010 年。已逐份读过 33,450 份原年史，可用于 133,800 个年度四指标比较和 2,676 条逐点指标序列。论文按观测年龄选取的 1,993 行样本对应 920 个不同点年，按原提取公式逐项复现。每点另有一套 2009 年末原三文件，可独立检查 2010 年暖启动。[点年清单](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/matrix-readiness.json) · [原年史和论文样本](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/references/README.md)
+
+主控在正式验收入口复现了一处误报。同目录有旧的通过结果时，本次强制重算在第一步前抛出异常，底层返回失败，汇总仍把该点计为通过并以成功状态退出。批量运行前先修复这条失败路径，核对复用结果和年度断点时的代码、配置、数据和实际运行模式，再用小批次验证中断续跑。已有代表点的四个点年各有独立的运行回执及输入、输出证据。主线累计 108 项修正或支持补齐，涉及 60 个生产提交，其中 102 项有复查前证据。[本轮主控验收与误报复现](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness-acceptance/controller-acceptance.json) · [执行方案及规模](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/execution.md)
+
 2026-11-27，**C108 在三个代表点的四个点年都跑满 365 天。地上生物量、地下生物量、GPP、NPP 共 16 项通过原论文门限。** 12 个点位指标序列的最大绝对归一化偏差为 8.83 × 10⁻⁸，最大归一化 RMSE 为 1.09 × 10⁻⁷，原限均为 10⁻³。112 项年度数值诊断和四个异养呼吸年均也通过原门。四个点年的逐日 PFT14 GPP、NPP 与修前逐值相同。319/1962 实读本次 1961 年末的三份重启，源步从 17520 接到 17521，最后到 35040。[逐年四指标](../../outputs/reviews/main-physics-20261127/representative-annual-c108/annual-comparison.csv) · [重启文件核对](../../outputs/reviews/main-physics-20261127/representative-annual-c108/states/README.md) · [主控验收](../../outputs/reviews/main-physics-20261127/representative-annual-c108-acceptance/controller-acceptance.json)
 
 **两个冷启动点的全年底排 DOC 已恢复到原 Fortran 数值附近。** C108 将配置中的泥炭周转时间和深度尺度传入半小时碳过程。001、319 的 1961 年旧出流均为原值的 32.1074%，修后两个点的全年绝对差分别为 1.13 × 10⁻²⁷、2.91 × 10⁻²⁸ gC m⁻²。下表为同一时段按格点面积累计的底排有机碳，含易分解和难分解两项。DOC 沿用分路径、分组分的诊断口径，项目尚无独立的年度 DOC 通过阈值。[修正与同输入归因](../../outputs/reviews/main-physics-20261126/representative-annual-doc-cold-start-and-319-replay/README.md) · [逐日原量与库存](../../outputs/reviews/main-physics-20261127/representative-annual-c108/README.md)
@@ -13,7 +17,7 @@
 
 两个暖启动窗口的最早底排差异已追到土柱液水的浮点累加。用相同的 11 层实测液水计算，原 Fortran 逐项加总与 JAX 分组求和的末库存相差 2.84217 × 10⁻¹⁴ kg/m²，恰为该库存量级的一个双精度末位。当步试算底排只有 1.06250 × 10⁻¹⁴ kg/m²，水量守恒校正会据此补排或扣减。069 第 858482 步采用原求和顺序，得到 3.90468 × 10⁻¹⁴ kg/m² 的底排，与原生水文写出、碳过程实收逐值相同。将这份水量传入碳计算，两类 DOC 和无机碳（DIC）均复现到舍入精度。319 第 17521 步的 JAX 自然运行把底排扣到零，同输入源序复算保留了正底排，三个碳出流接近原值。319 原生当步的预算和实际选臂仍缺直接记录。本轮新增生产修正 0 项。[原值与受控复算](../../outputs/reviews/main-physics-20261127/representative-warm-drainage-origin/README.md) · [主控验收](../../outputs/reviews/main-physics-20261127/representative-warm-drainage-origin-acceptance/controller-acceptance.json)
 
-069 全年底排有机 DOC 较原值低 0.552%。319/1962 前 362 日低 10.05%，随后的 43 步另有同钟数据。两处峰差步已有碳出流读数，归因还缺当步原生水量预算、液水和游离碳库存。001 第 96 步的 NPP 仍超过原短窗严限。下一步汇总综合验收前仍达不到源码或状态要求的条目，并核对论文 669 点的输入、参考年份和运行规模。[数值差异记录](numeric_tolerance_ledger.md) · [已配对的年度与尾段](../../outputs/reviews/main-physics-20261127/representative-annual-c108/README.md) · [交付合同](pft14_equivalence_delivery_contract.md)
+069 全年底排有机 DOC 较原值低 0.552%。319/1962 前 362 日低 10.05%，随后的 43 步另有同钟数据。两处峰差步已有碳出流读数，归因还缺当步原生水量预算、液水和游离碳库存。001 第 96 步的 NPP 仍超过原短窗严限。综合验收清单已逐组登记这些结果适用的过程、状态交接和时间范围。[数值差异记录](numeric_tolerance_ledger.md) · [已配对的年度与尾段](../../outputs/reviews/main-physics-20261127/representative-annual-c108/README.md) · [覆盖对账](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/coverage/README.md)
 
 319/1962 的对照版完成全年并保存 365 个 GPP、NPP、异养呼吸日值。观测版最后一条完整出流记录为第 34939 步，即第 362 天结束后又有 43 个半小时。末尾缺 101 个出流记录、7 次接收取样、3 次日末观测及有效年末重启文件。HDF5 实读确认五份文件截断。11 月 27 日北京时间 14:53 只读复查时，作业所在共享盘可用空间为 0，写入当时的系统错误码缺失。空间恢复后，可用同一观测程序和自身年初三文件补采 319/1962。[对照版完整日史](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/1962-a-xios-daily-carbon.json) · [缺项与补采起点](../../outputs/reviews/main-physics-20261126/representative-annual-doc-v2-execution/319/remaining-reference.md)
 
