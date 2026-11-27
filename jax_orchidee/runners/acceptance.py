@@ -9,6 +9,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -18,7 +19,20 @@ ROOT = Path(
 sys.path.insert(0, str(ROOT))
 
 from jax_orchidee.driver.paper_validation import annual_delta_passes  # noqa: E402
+from jax_orchidee.runners.multiyear import (  # noqa: E402
+    EXECUTION_OPTIONS,
+    RunRequest,
+    completed_years_match,
+    parse_run_args,
+    prepare_run,
+)
 from jax_orchidee.runners.multiyear import main as run_multiyear_main  # noqa: E402
+from jax_orchidee.runners.run_identity import (  # noqa: E402
+    RESULT_PROTOCOL,
+    assigned_site_ids,
+    read_selection_ids,
+    write_json,
+)
 
 KEY_MODEL_OUTPUTS = ("AGB_model", "BGB_model", "GPP_model", "NPP_model")
 DEFAULT_OUTPUT_DIR = (
@@ -35,6 +49,7 @@ def _multiyear_command(
     compiled: bool,
     output: Path,
     checkpoint_dir: Path,
+    force: bool = False,
 ) -> list[str]:
     """Build one production acceptance command with the accepted fast-path policy."""
 
@@ -71,13 +86,8 @@ def _multiyear_command(
         "--field", "BM_ALLOC_ROOT",
         "--output", str(output),
         "--year-checkpoint-dir", str(checkpoint_dir),
-        "--resume-checkpoints", "on",
+        "--resume-checkpoints", "off" if force else "on",
     ]
-
-
-def _selection_ids(path: Path) -> tuple[str, ...]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    return tuple(str(value) for value in payload["selected_landpoint_ids"])
 
 
 def _delta_errors(deltas: list[dict[str, object] | None]) -> list[float]:
@@ -176,29 +186,29 @@ def _evaluate(
 
 
 def _payload_matches_request(
-    payload: dict[str, object],
-    *,
-    landpoint_id: str,
-    args: argparse.Namespace,
+    payload: object,
+    request: RunRequest,
 ) -> bool:
-    """Reject cached runs produced for a different scientific protocol."""
-
-    requested_days = [
-        int(value.strip())
-        for value in str(args.days_per_year).split(",")
-        if value.strip()
-    ]
-    if len(requested_days) == 1:
-        requested_days *= int(args.years)
+    args = request.args
     return bool(
-        payload.get("landpoint_id") == landpoint_id
-        and int(payload.get("start_year", -1)) == int(args.start_year)
-        and int(payload.get("requested_years", -1)) == int(args.years)
-        and payload.get("days_per_year") == requested_days
+        isinstance(payload, dict)
+        and payload.get("run_identity") == request.identity
+        and payload.get("landpoint_id") == args.landpoint_id
+        and payload.get("start_year") == args.start_year
+        and payload.get("requested_years") == args.years
+        and payload.get("days_per_year") == request.days
         and payload.get("initial_state") == args.initial_state
+        and all(payload.get(key) == getattr(args, key) for key in EXECUTION_OPTIONS)
         and payload.get("ready_for_requested_years") is True
-        and len(payload.get("years", [])) == int(args.years)
+        and completed_years_match(payload.get("years"), request, args.years)
     )
+
+
+def _read_result(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
 
 
 def _run_point(
@@ -213,43 +223,55 @@ def _run_point(
     point_dir.mkdir(parents=True, exist_ok=True)
     output = point_dir / f"{mode}_{args.start_year}_{args.start_year + args.years - 1}.json"
     log = point_dir / f"{mode}.stdout.log"
-    if output.exists() and not force:
-        payload = json.loads(output.read_text(encoding="utf-8"))
-        if _payload_matches_request(payload, landpoint_id=landpoint_id, args=args):
-            return payload, {"mode": mode, "resumed": True, "output": str(output), "elapsed_seconds": 0.0}
-
-    command = _multiyear_command(
-        landpoint_id,
-        args=args,
-        compiled=compiled,
-        output=output,
-        checkpoint_dir=point_dir / f"{mode}_checkpoints",
-    )
     stdout = io.StringIO()
     started = time.perf_counter()
-    try:
-        with contextlib.redirect_stdout(stdout):
-            returncode = run_multiyear_main(command)
-        error = None
-    except Exception:
-        returncode = 1
-        error = traceback.format_exc()
-    elapsed = time.perf_counter() - started
-    log.write_text(stdout.getvalue() + ("\n" + error if error else ""), encoding="utf-8")
-    payload = json.loads(output.read_text(encoding="utf-8")) if output.exists() else None
-    return payload, {
-        "mode": mode,
-        "resumed": False,
-        "returncode": returncode,
-        "output": str(output),
-        "log": str(log),
-        "elapsed_seconds": elapsed,
-    }
+    receipt = {"mode": mode, "resumed": False, "output": None, "log": str(log)}
+    payload = None
+    with TemporaryDirectory(prefix=f".{mode}-", dir=point_dir) as temporary:
+        staged = Path(temporary) / output.name
+        command = _multiyear_command(
+            landpoint_id, args=args, compiled=compiled, output=staged,
+            checkpoint_dir=point_dir / f"{mode}_checkpoints", force=force,
+        )
+        try:
+            request = prepare_run(parse_run_args(command))
+            receipt["batch_identity"] = request.identity["batch"]
+            if args.initial_state == "restart-backed" and request.identity["initial_source"] != "restart-files":
+                raise ValueError("restart-backed acceptance requires a declared driver/SECHIBA/STOMATE restart triplet")
+            cached = None if force else _read_result(output)
+            if _payload_matches_request(cached, request):
+                return cached, {
+                    **receipt, "resumed": True, "output": str(output), "returncode": 0,
+                    "elapsed_seconds": time.perf_counter() - started,
+                }
+            with contextlib.redirect_stdout(stdout):
+                receipt["returncode"] = run_multiyear_main(command, request=request)
+            current = _read_result(staged)
+            if isinstance(current, dict) and isinstance(current.get("years"), list):
+                receipt["reported_years"] = len(current["years"])
+            if receipt["returncode"] != 0:
+                receipt["error"] = "multiyear execution did not complete"
+            elif not _payload_matches_request(current, request):
+                receipt.update(returncode=1, error="current attempt produced no matching complete result")
+            else:
+                staged.replace(output)
+                payload = current
+                receipt["output"] = str(output)
+        except KeyboardInterrupt:
+            receipt.update(returncode=130, error="interrupted")
+        except Exception:
+            receipt.update(returncode=1, error=traceback.format_exc())
+    log.write_text(stdout.getvalue() + "\n" + receipt.get("error", ""), encoding="utf-8")
+    receipt["elapsed_seconds"] = time.perf_counter() - started
+    return payload, receipt
 
 
-def _write_summary(args: argparse.Namespace, rows: list[dict[str, object]], started: float) -> Path:
+def _write_summary(
+    args: argparse.Namespace, selection: tuple[str, ...], rows: list[dict[str, object]], started: float,
+) -> Path:
     accepted = sum(bool(row.get("scientific_acceptance_pass")) for row in rows)
     payload = {
+        "result_protocol": RESULT_PROTOCOL,
         "description": (
             "Paper PFT14 annual scientific acceptance. Compiled mode runs first in one process so "
             "landpoints reuse the compiled SECHIBA executable; strict mode runs only for scientific failures."
@@ -266,10 +288,12 @@ def _write_summary(args: argparse.Namespace, rows: list[dict[str, object]], star
         },
         "start_year": args.start_year,
         "years": args.years,
-        "days_per_year": args.days_per_year,
+        "days_per_year": [int(part) for part in args.days_per_year.split(",") if part.strip()],
         "initial_state": args.initial_state,
         "shard_index": args.shard_index,
         "shard_count": args.shard_count,
+        "selection_ids": selection,
+        "max_points": args.max_points,
         "landpoint_count": len(rows),
         "scientific_acceptance_count": accepted,
         "elapsed_seconds": time.perf_counter() - started,
@@ -281,9 +305,7 @@ def _write_summary(args: argparse.Namespace, rows: list[dict[str, object]], star
         else f"summary_shard_{args.shard_index:03d}_of_{args.shard_count:03d}.json"
     )
     summary = args.output_dir / summary_name
-    temporary = summary.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(summary)
+    write_json(summary, payload)
     return summary
 
 
@@ -305,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-normalized-rmse", type=float, default=1.0e-3)
     parser.add_argument("--diagnostic-atol", type=float, default=2.0e-6)
     parser.add_argument("--diagnostic-rtol", type=float, default=1.0e-7)
-    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--force", action="store_true", help="Run from the declared start without automatic result or checkpoint reuse.")
     parser.add_argument("--shard-index", type=int, default=0)
     parser.add_argument("--shard-count", type=int, default=1)
     parser.add_argument("--max-points", type=int, default=None)
@@ -317,26 +339,36 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("--shard-index must be in [0, shard-count)")
     ids = list(args.landpoint_id)
     if args.selection is not None:
-        ids.extend(_selection_ids(args.selection))
-    ids = list(dict.fromkeys(ids))
-    if not ids:
+        ids.extend(read_selection_ids(args.selection))
+    selection = tuple(dict.fromkeys(ids))
+    if not selection:
         raise ValueError("provide --selection or at least one --landpoint-id")
-    ids = [landpoint_id for index, landpoint_id in enumerate(ids) if index % args.shard_count == args.shard_index]
-    if args.max_points is not None:
-        if args.max_points < 1:
-            raise ValueError("--max-points must be positive")
-        ids = ids[: args.max_points]
+    if args.max_points is not None and args.max_points < 1:
+        raise ValueError("--max-points must be positive")
+    ids = assigned_site_ids(selection, args.shard_index, args.shard_count, args.max_points)
+    if not ids:
+        parser.error("this shard selects no landpoints")
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
-    rows: list[dict[str, object]] = []
-    for landpoint_id in ids:
+    rows: list[dict[str, object]] = [
+        {"landpoint_id": landpoint_id, "scientific_acceptance_pass": False, "classification": "pending"}
+        for landpoint_id in ids
+    ]
+    # Replace any prior summary before starting physics. After an external
+    # interruption unvisited points still appear as pending in this batch.
+    _write_summary(args, selection, rows, started)
+    for index, landpoint_id in enumerate(ids):
         compiled_payload, compiled_run = _run_point(
             landpoint_id, args=args, compiled=True, force=args.force
         )
         row: dict[str, object] = {"landpoint_id": landpoint_id, "compiled_run": compiled_run}
+        interrupted = compiled_run["returncode"] == 130
         if compiled_payload is None:
-            row.update(scientific_acceptance_pass=False, classification="compiled_execution_failure")
+            row.update(
+                scientific_acceptance_pass=False,
+                classification="compiled_interrupted" if interrupted else "compiled_execution_failure",
+            )
         else:
             compiled_evaluation = _evaluate(
                 compiled_payload,
@@ -361,7 +393,8 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 row["strict_run"] = strict_run
                 if strict_payload is None:
-                    row["classification"] = "strict_execution_failure"
+                    interrupted = strict_run["returncode"] == 130
+                    row["classification"] = "strict_interrupted" if interrupted else "strict_execution_failure"
                 else:
                     strict_evaluation = _evaluate(
                         strict_payload,
@@ -379,11 +412,13 @@ def main(argv: list[str] | None = None) -> int:
                         if strict_evaluation["scientific_acceptance_pass"]
                         else "shared_semantic_input_or_reference_mismatch"
                     )
-        rows.append(row)
-        summary = _write_summary(args, rows, started)
+        rows[index] = row
+        summary = _write_summary(args, selection, rows, started)
         print(json.dumps({"landpoint_id": landpoint_id, "classification": row["classification"]}), flush=True)
+        if interrupted:
+            return 130
 
-    summary = _write_summary(args, rows, started)
+    summary = _write_summary(args, selection, rows, started)
     print(json.dumps({"summary": str(summary), "accepted": sum(bool(row.get("scientific_acceptance_pass")) for row in rows), "total": len(rows)}, indent=2))
     return 0 if all(bool(row.get("scientific_acceptance_pass")) for row in rows) else 1
 

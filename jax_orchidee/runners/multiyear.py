@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import pickle
 import sys
 import time
+from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -20,8 +23,9 @@ from jax_orchidee.runtime import configure_jax_compilation_cache  # noqa: E402
 
 configure_jax_compilation_cache(ROOT)
 
-from jax_orchidee.driver.domain import load_case_config  # noqa: E402
-from jax_orchidee.driver.init import read_run_scalars  # noqa: E402
+from jax_orchidee.driver.dim2 import Dim2RestartTime, resolve_dim2_time_control  # noqa: E402
+from jax_orchidee.driver.domain import forcing_file_for_year, load_case_config  # noqa: E402
+from jax_orchidee.driver.init import parse_run_def, read_run_scalars  # noqa: E402
 from jax_orchidee.driver.orchestration import (  # noqa: E402
     DriverPreviousStepStatePacket,
     driver_year_handoff_state_gaps,
@@ -30,11 +34,23 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     paper_1961_driver_restart_year_multiday_modelout_lite_run,
 )
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference  # noqa: E402
-from jax_orchidee.driver.run_def_materialization import (  # noqa: E402
-    materialize_case_run_def_values,
-    write_materialized_run_def,
+from jax_orchidee.driver.restart import reference_restart_path  # noqa: E402
+from jax_orchidee.driver.run_def_materialization import materialize_case_run_def_values  # noqa: E402
+from jax_orchidee.driver.source_clock import (  # noqa: E402
+    LEGACY_NATIVE_METADATA,
+    _dim2_time_options,
+    read_forcing_clock_metadata,
+    read_source_clock_restart_bundle,
+    validate_source_clock_packet_cursor,
 )
 from jax_orchidee.parameters.pft_catalog import load_pft_catalog  # noqa: E402
+from jax_orchidee.runners.run_identity import (  # noqa: E402
+    digest,
+    file_identity,
+    runtime_identity,
+    write_atomic,
+    write_json,
+)
 from jax_orchidee.stomate.modelout import (  # noqa: E402
     MODEL_OUTPUT_FIELD_NAMES,
     annual_history_mean_fields_from_daily_modelout,
@@ -43,7 +59,6 @@ from jax_orchidee.stomate.modelout import (  # noqa: E402
     select_history_point_fields,
 )
 from jax_orchidee.stomate.reference import (  # noqa: E402
-    find_stomate_reference_files,
     pack_history_modelout_fields,
     paper_modelout_csv_targets_by_year,
     read_variables,
@@ -69,6 +84,12 @@ PRODUCTION_COMPILED_SECHIBA_DAY_DEFAULT = "on"
 PRODUCTION_NUMPY_ACCUMULATOR_DEFAULT = "off"
 PAPER_REFERENCE_PFT_LAYOUT_ID = "paper_250919_legacy14"
 PAPER_MANGROVE_PFT_ID = "mangrove_pft14"
+EXECUTION_OPTIONS = (
+    "module_jit", "diffuco_local_jit", "single_pass_daily_fold", "use_static_jit_daily_carbon",
+    "prebuild_day_payloads", "compiled_sechiba_day", "compiled_day_block_size", "numpy_accumulator",
+)
+RESTART_KEYS = ("RESTART_FILEIN", "SECHIBA_RESTART_IN", "STOMATE_RESTART_FILEIN")
+START_FILES = ("driver_start.nc", "sechiba_start.nc", "stomate_start.nc")
 
 
 def _paper_reference_pft_index(config_path: str | Path) -> int:
@@ -84,23 +105,20 @@ def _materialized_runtime_run_def(reference, *, output_root: Path = DEFAULT_MATE
         raise FileNotFoundError(f"selected landpoint {reference.landpoint_id} has no archived output run.def")
     if reference.iteration_id is None or reference.param_set is None:
         raise ValueError(f"selected landpoint {reference.landpoint_id} is missing iteration/parameter metadata")
-    output = output_root / "arg2_1.0" / reference.landpoint_id / reference.iteration_id / reference.param_set / "used_run.def"
     base_used_run_def = reference.used_run_def or DEFAULT_BASE_USED_RUN_DEF
     values = materialize_case_run_def_values(
         base_used_run_def=base_used_run_def,
         case_run_def=reference.run_def,
         base_is_fortran_used_truth=reference.used_run_def is not None,
     )
-    return write_materialized_run_def(
-        values,
-        output,
-        header_lines=(
-            "# Materialized runtime run.def for local JAX paper landpoint validation.",
-            f"# Base materialized defaults: {base_used_run_def}",
-            f"# Archived landpoint run.def static overrides: {reference.run_def}",
-            "# Restart state is bound separately through reference_run_dir.",
-        ),
-    )
+    output = output_root / "arg2_1.0" / reference.landpoint_id / reference.iteration_id / reference.param_set
+    # The prepared driver caches by path. A new deck must use a new path even
+    # when another worker is materializing the same point at the same time.
+    output = output / f"used_run.{digest(values)}.def"
+    if not output.exists() or parse_run_def(output) != values:
+        text = "".join(f"{key} = {value}\n" for key, value in sorted(values.items()))
+        write_atomic(output, text.encode("utf-8"))
+    return output
 
 
 def _block_until_ready(value) -> None:
@@ -179,20 +197,7 @@ def _paper_csv_delta(annual_modelout: dict[str, float] | None, csv_row) -> dict[
     }
 
 
-def _reference_annual_modelout(
-    year: int,
-    *,
-    landpoint_id: str,
-    reference_pft_index: int,
-) -> dict[str, float] | None:
-    histories = {path.name: path for path in find_stomate_reference_files(ROOT, landpoint_id=landpoint_id).histories}
-    path = histories.get(f"stomate_history_{int(year)}.nc")
-    if path is None:
-        return None
-    fields = select_history_point_fields(
-        pack_history_modelout_fields(path),
-        pft_index=reference_pft_index,
-    )
+def _reference_annual_modelout(fields) -> dict[str, float]:
     modelout = compute_modelout_from_fields(fields)
     return {
         "AGB_model": _scalar(modelout.AGB_model),
@@ -202,33 +207,7 @@ def _reference_annual_modelout(
     }
 
 
-def _reference_annual_fields(
-    year: int,
-    *,
-    landpoint_id: str,
-    reference_pft_index: int,
-) -> dict[str, float] | None:
-    histories = {path.name: path for path in find_stomate_reference_files(ROOT, landpoint_id=landpoint_id).histories}
-    path = histories.get(f"stomate_history_{int(year)}.nc")
-    if path is None:
-        return None
-    selected = select_history_point_fields(
-        pack_history_modelout_fields(path),
-        pft_index=reference_pft_index,
-    )
-    return {name: _scalar(selected[name]) for name in MODEL_OUTPUT_FIELD_NAMES}
-
-
-def _reference_annual_diagnostics(
-    year: int,
-    *,
-    landpoint_id: str,
-    reference_pft_index: int,
-) -> dict[str, float] | None:
-    histories = {path.name: path for path in find_stomate_reference_files(ROOT, landpoint_id=landpoint_id).histories}
-    path = histories.get(f"stomate_history_{int(year)}.nc")
-    if path is None:
-        return None
+def _reference_annual_diagnostics(path: Path, *, reference_pft_index: int) -> dict[str, float]:
     fields = read_variables(path, DIAGNOSTIC_HISTORY_FIELDS)
     return {
         name: float(np.asarray(value, dtype=np.float64)[0, reference_pft_index, 0, 0])
@@ -243,7 +222,7 @@ def _summarize_year(
     elapsed: float,
     handoff_gap_count: int | None,
     paper_csv_targets: dict[int, tuple[object, ...]],
-    landpoint_id: str,
+    reference_history: Path | None,
     pft_index: int,
     pft_metadata: dict[str, object],
     reference_pft_index: int,
@@ -280,29 +259,19 @@ def _summarize_year(
             "NPP_model": _scalar(annual_result.NPP_model),
         }
     completed_days = len(run.daily_modelout)
-    reference_annual_modelout = _reference_annual_modelout(
-        int(run.year),
-        landpoint_id=landpoint_id,
-        reference_pft_index=reference_pft_index,
-    )
-    reference_annual_fields = (
-        _reference_annual_fields(
-            int(run.year),
-            landpoint_id=landpoint_id,
-            reference_pft_index=reference_pft_index,
+    reference_annual_modelout = None
+    reference_annual_fields = None
+    reference_annual_diagnostics = None
+    if reference_history is not None:
+        reference_selected = select_history_point_fields(
+            pack_history_modelout_fields(reference_history), pft_index=reference_pft_index,
         )
-        if completed_days == 365
-        else None
-    )
-    reference_annual_diagnostics = (
-        _reference_annual_diagnostics(
-            int(run.year),
-            landpoint_id=landpoint_id,
-            reference_pft_index=reference_pft_index,
-        )
-        if completed_days == 365
-        else None
-    )
+        reference_annual_modelout = _reference_annual_modelout(reference_selected)
+        if completed_days == 365:
+            reference_annual_fields = {name: _scalar(reference_selected[name]) for name in MODEL_OUTPUT_FIELD_NAMES}
+            reference_annual_diagnostics = _reference_annual_diagnostics(
+                reference_history, reference_pft_index=reference_pft_index,
+            )
     annual_reference_delta = None
     annual_reference_field_delta = None
     annual_reference_diagnostic_delta = None
@@ -347,6 +316,7 @@ def _summarize_year(
         "stopped_day_index": run.stopped_day_index,
         "missing_components": list(run.missing_components),
         "last_tstep": None if run.last_day_end_state is None else int(run.last_day_end_state.tstep),
+        "source_clock": _completed_clock(run.last_day_end_state, completed_days * run.steps_per_stomate),
         "handoff_gap_count_before_year": handoff_gap_count,
         "elapsed_seconds": elapsed,
         "fields": field_summary,
@@ -368,6 +338,194 @@ def _days_for_years(start_year: int, years: int, days_per_year: int | list[int])
     return [int(value) for value in days_per_year]
 
 
+@dataclass
+class RunRequest:
+    args: argparse.Namespace
+    days: list[int]
+    fields: tuple[str, ...]
+    reference_run_dir: Path | None
+    histories: dict[int, Path | None]
+    identity: dict
+    clocks: list[dict]
+    steps_per_day: int
+    predecessor: dict | None
+
+
+def _declared_restart_paths(values: dict[str, str], config_path: Path, reference_run_dir: Path | None) -> tuple[Path, ...]:
+    names = [values.get(key, "NONE") for key in RESTART_KEYS]
+    absent = [name.upper() == "NONE" for name in names]
+    if all(absent):
+        return ()
+    if any(absent):
+        raise ValueError("declare all three restart files or all NONE")
+    root = reference_run_dir
+    return tuple(
+        Path(name).resolve() if Path(name).is_absolute()
+        else (root / name).resolve() if root is not None
+        else reference_restart_path(config_path, name).resolve()
+        for name in names
+    )
+
+
+def _file_restart_directory(paths: tuple[Path, ...], reference_run_dir: Path | None) -> Path:
+    # The physical reader uses the three conventional filenames. Bind those
+    # files to the very same triplet as DIM2 instead of mixing two archives.
+    for directory in (paths[0].parent, reference_run_dir):
+        if directory is None:
+            continue
+        conventional = tuple(directory / name for name in START_FILES)
+        if all(candidate.is_file() and source.is_file() and candidate.samefile(source)
+               for candidate, source in zip(conventional, paths, strict=True)):
+            return directory
+    raise ValueError("file restart requires the named driver_start.nc, sechiba_start.nc and stomate_start.nc of one case")
+
+
+@lru_cache(maxsize=128)
+def _forcing_clock(path: str, identity_key: str):
+    return read_forcing_clock_metadata(path)
+
+
+def _expected_clocks(values, forcing, day_counts, steps_per_day, restart, predecessor):
+    dt = float(values["DT_SECHIBA"])
+    reset, skip, length = _dim2_time_options(values)
+    runtime = None if predecessor is None else validate_source_clock_packet_cursor(predecessor["state"])
+    if restart:
+        start = read_source_clock_restart_bundle(restart, legacy_policy=LEGACY_NATIVE_METADATA).driver
+        saved = Dim2RestartTime(start.itau, start.date0, start.dt)
+        if runtime is not None:
+            clock = runtime.binding
+            file_time = start.date0 + start.itau * start.dt / 86400.0
+            cache_time = clock.date0 + int(runtime.last_applied_istp) * clock.dt / 86400.0
+            if start.calendar != clock.calendar or abs(file_time - cache_time) > np.spacing(max(abs(file_time), abs(cache_time), 1.0)):
+                raise ValueError("declared restart files and explicit predecessor refer to different times")
+    elif runtime is not None:
+        saved = Dim2RestartTime(int(runtime.last_applied_istp), runtime.binding.date0, runtime.binding.dt)
+    else:
+        saved = None
+    clocks = []
+    for asset, ndays in zip(forcing, day_counts, strict=True):
+        info = _forcing_clock(asset["path"], digest(asset))
+        control = resolve_dim2_time_control(
+            dt_force=info.dt_force, dt_sechiba=dt, forcing_length=info.count, date0=info.date0,
+            restart=Dim2RestartTime(0, info.date0, dt, reset) if reset or saved is None else saved,
+            time_skip=skip, time_length=length, calendar=info.calendar,
+        )
+        terminal = control.istp + ndays * steps_per_day - 1
+        clocks.append({
+            "calendar": info.calendar, "date0": control.date0_rest, "dt": dt,
+            "first_istp": control.istp, "last_istp": terminal,
+        })
+        saved = Dim2RestartTime(terminal, control.date0_rest, dt)
+    return clocks
+
+
+def _completed_clock(state, nsteps: int) -> dict | None:
+    if state is None or nsteps < 1:
+        return None
+    runtime = validate_source_clock_packet_cursor(state)
+    if runtime is None:
+        return None
+    binding = runtime.binding
+    terminal = int(runtime.last_applied_istp)
+    return {
+        "calendar": binding.calendar, "date0": binding.date0, "dt": binding.dt,
+        "first_istp": terminal - nsteps + 1, "last_istp": terminal,
+    }
+
+
+def _configuration_inputs(config: dict) -> dict:
+    drivers = config["drivers"]
+    return {
+        "pft_catalog": file_identity(config["pft_catalog"]["path"]),
+        "co2": file_identity(drivers["co2"]["file"]),
+        "water_table_text": {key: file_identity(drivers["water_table_text"][key])
+                             for key in ("positive_file", "differential_file")},
+        "salinity": file_identity(drivers["salinity"]["file"]),
+        "tide": file_identity(drivers["tide"]["file"]),
+        "static_inputs": {key: file_identity(path) for key, path in config["static_inputs"].items()},
+    }
+
+
+def prepare_run(args: argparse.Namespace) -> RunRequest:
+    """Bind one point and its requested years before reading reusable output."""
+    if args.years < 1:
+        raise ValueError("--years must be positive")
+    days = [int(part) for part in args.days_per_year.split(",") if part.strip()]
+    day_counts = _days_for_years(args.start_year, args.years, days if "," in args.days_per_year else int(args.days_per_year))
+    if any(days < 1 for days in day_counts):
+        raise ValueError("all day counts must be positive")
+    fields = tuple(args.fields or ("GPP", "NPP", "LEAF_M"))
+    reference = resolve_paper_landpoint_reference(ROOT, args.landpoint_id)
+    reference_run_dir = reference.output_dir
+    if args.run_def is None:
+        args.run_def = _materialized_runtime_run_def(reference) if reference_run_dir is not None else DEFAULT_BASE_USED_RUN_DEF
+    args.config = args.config.resolve()
+    args.run_def = args.run_def.resolve()
+    values = parse_run_def(args.run_def)
+    declared = _declared_restart_paths({key.upper(): value for key, value in values.items()}, args.config, reference_run_dir)
+    if declared and args.initial_state == "restart-backed" and args.previous_state_cache is None:
+        reference_run_dir = _file_restart_directory(declared, reference_run_dir)
+    predecessor = None if args.previous_state_cache is None else _read_year_end_state_cache(args.previous_state_cache)
+    config = load_case_config(args.config)
+    steps_per_day = int(round(float(values["DT_STOMATE"]) / float(values["DT_SECHIBA"])))
+    years = list(range(args.start_year, args.start_year + args.years))
+    histories_by_name = {path.name: path for path in reference.histories}
+    histories = {year: histories_by_name.get(f"stomate_history_{year}.nc") for year in years}
+    forcing = [file_identity(forcing_file_for_year(config, year)) for year in years]
+    clocks = _expected_clocks(values, forcing, day_counts, steps_per_day, declared, predecessor)
+    csv = args.paper_modelout_csv or reference.modelout_csv
+    csv_zip = reference.modelout_csv_zip if csv is None else None
+    source_paths = (reference_run_dir / name for name in START_FILES) if reference_run_dir is not None else (
+        reference_restart_path(args.config, name) for name in START_FILES
+    )
+    initial_source = "previous-state-cache" if predecessor is not None else (
+        "cold-start" if args.initial_state == "cold-start" else "restart-files" if declared else "reference-state"
+    )
+    shared_inputs = _configuration_inputs(config)
+    runtime = runtime_identity()
+    identity = {
+        "version": 1,
+        "runtime": runtime,
+        "batch": digest({
+            "runtime": runtime, "config": file_identity(args.config), "inputs": shared_inputs,
+            "forcing": forcing, "start_year": args.start_year, "days": day_counts, "fields": fields,
+        }),
+        "common": digest({
+            "landpoint_id": args.landpoint_id, "start_year": args.start_year,
+            "initial_state": args.initial_state, "initial_source": initial_source,
+            "config": file_identity(args.config), "inputs": shared_inputs,
+            "effective_run_def": values,
+            "tide_source_run_def": file_identity(args.run_def.with_name("run.def")),
+            "source_start": [file_identity(path) for path in source_paths],
+            "declared_restart": [file_identity(path) for path in declared],
+            "reference_dir": str(reference.output_dir),
+            "reference_csv": file_identity(csv) if csv_zip is None else [file_identity(csv_zip.archive), csv_zip.member],
+            "previous_state": file_identity(args.previous_state_cache),
+            "fields": fields, "options": {key: getattr(args, key) for key in EXECUTION_OPTIONS},
+            "runtime": runtime,
+        }),
+        "initial_source": initial_source,
+        "years": [digest({
+            "year": year, "days": ndays, "clock": clock, "forcing": weather, "history": file_identity(histories[year]),
+        }) for year, ndays, clock, weather in zip(years, day_counts, clocks, forcing, strict=True)],
+    }
+    return RunRequest(
+        args, day_counts, fields, reference_run_dir, histories, identity, clocks, steps_per_day, predecessor,
+    )
+
+
+def completed_years_match(rows, request: RunRequest, count: int) -> bool:
+    return isinstance(rows, list) and len(rows) == count and all(
+        isinstance(row, dict)
+        and row.get("year") == int(request.args.start_year) + offset
+        and row.get("requested_days") == row.get("closed_modelout_days") == request.days[offset]
+        and row.get("ready_for_requested_days") is True
+        and row.get("source_clock") == request.clocks[offset]
+        and row.get("last_tstep") == request.days[offset] * request.steps_per_day - 1
+        for offset, row in enumerate(rows)
+    )
+
+
 def _read_year_end_state_cache(path: Path) -> dict[str, object]:
     with path.open("rb") as handle:
         payload = pickle.load(handle)
@@ -376,7 +534,7 @@ def _read_year_end_state_cache(path: Path) -> dict[str, object]:
     return payload
 
 
-def _latest_year_checkpoint(checkpoint_dir: Path) -> Path | None:
+def _year_checkpoints(checkpoint_dir: Path) -> list[tuple[int, Path]]:
     candidates: list[tuple[int, Path]] = []
     for path in checkpoint_dir.glob("paper_driver_*_year_end_state.pkl"):
         try:
@@ -384,13 +542,66 @@ def _latest_year_checkpoint(checkpoint_dir: Path) -> Path | None:
         except ValueError:
             continue
         candidates.append((year, path))
-    return None if not candidates else max(candidates, key=lambda item: item[0])[1]
+    return sorted(candidates, reverse=True)
+
+
+def _latest_year_checkpoint(checkpoint_dir: Path) -> Path | None:
+    checkpoints = _year_checkpoints(checkpoint_dir)
+    return checkpoints[0][1] if checkpoints else None
+
+
+def _checkpoint_identity(request: RunRequest, count: int) -> dict:
+    return {
+        key: request.identity[key] for key in ("version", "common", "runtime", "initial_source")
+    } | {"years": request.identity["years"][:count]}
+
+
+def _resume_checkpoint(request: RunRequest, pft_layout: dict):
+    checkpoint_dir = request.args.year_checkpoint_dir
+    for year, state_path in _year_checkpoints(checkpoint_dir):
+        count = year - request.args.start_year + 1
+        if not 1 <= count <= len(request.days):
+            continue
+        summary_path = checkpoint_dir / f"multiyear_partial_through_{year}.json"
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            if not isinstance(summary, dict) or (
+                summary.get("run_identity") != _checkpoint_identity(request, count)
+                or summary.get("start_year") != request.args.start_year
+                or summary.get("end_year") != year
+                or summary.get("pft_layout") != pft_layout
+                or not completed_years_match(summary.get("year_summaries"), request, count)
+            ):
+                raise ValueError("checkpoint identity or completed year sequence does not match")
+            state_bytes = state_path.read_bytes()
+            if hashlib.sha256(state_bytes).hexdigest() != summary.get("state_sha256"):
+                raise ValueError("checkpoint state and summary are not a committed pair")
+            payload = pickle.loads(state_bytes)
+            stored_years = payload["year_summaries"]
+            if (
+                payload["run_identity"] != summary["run_identity"]
+                or payload["end_year"] != year
+                or json.dumps(stored_years, sort_keys=True) != json.dumps(summary["year_summaries"], sort_keys=True)
+            ):
+                raise ValueError("checkpoint state identity does not match its summary")
+            state = payload["state"]
+            if (
+                _completed_clock(state, request.days[count - 1] * request.steps_per_day) != request.clocks[count - 1]
+                or int(state.tstep) != summary["year_summaries"][-1]["last_tstep"]
+                or driver_year_handoff_state_gaps(state)
+            ):
+                raise ValueError("checkpoint state does not support the recorded year handoff")
+        except (OSError, ValueError, TypeError, AttributeError, KeyError, ImportError, EOFError, pickle.UnpicklingError) as exc:
+            print(f"Ignoring checkpoint {state_path}: {exc}")
+            continue
+        return count, state, summary["year_summaries"], state_path
+    return None
 
 
 def _write_year_checkpoint(
     *,
     checkpoint_dir: Path,
-    args: argparse.Namespace,
+    request: RunRequest,
     year: int,
     ndays: int,
     state: DriverPreviousStepStatePacket,
@@ -399,7 +610,7 @@ def _write_year_checkpoint(
     previous_state_cache_metadata: dict[str, object] | None,
     pft_layout_metadata: dict[str, object],
 ) -> dict[str, str]:
-    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    args = request.args
     state_path = checkpoint_dir / f"paper_driver_{int(year)}_year_end_state.pkl"
     summary_path = checkpoint_dir / f"multiyear_partial_through_{int(year)}.json"
     cache_payload = {
@@ -412,22 +623,25 @@ def _write_year_checkpoint(
         "previous_state_cache": None if args.previous_state_cache is None else str(args.previous_state_cache),
         "previous_state_cache_metadata": previous_state_cache_metadata,
         "pft_layout": pft_layout_metadata,
+        "landpoint_id": args.landpoint_id,
+        "run_identity": _checkpoint_identity(request, len(summaries)),
         "created_elapsed_seconds": time.perf_counter() - started_at,
         "year_summaries": summaries,
         "state": state,
     }
-    with state_path.open("wb") as handle:
-        pickle.dump(cache_payload, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    state_bytes = pickle.dumps(cache_payload, protocol=pickle.HIGHEST_PROTOCOL)
     summary_payload = {
         key: value
         for key, value in cache_payload.items()
         if key != "state"
     }
-    summary_path.write_text(json.dumps(summary_payload, indent=2), encoding="utf-8")
+    summary_payload["state_sha256"] = hashlib.sha256(state_bytes).hexdigest()
+    write_atomic(state_path, state_bytes)
+    write_json(summary_path, summary_payload)
     return {"state_cache": str(state_path), "summary": str(summary_path)}
 
 
-def main(argv: list[str] | None = None) -> int:
+def parse_run_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="orchidee-jax run",
         description=(
@@ -523,29 +737,15 @@ def main(argv: list[str] | None = None) -> int:
         default="off",
         help="Resume automatically from the latest complete year in --year-checkpoint-dir.",
     )
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
 
-    if args.years < 1:
-        raise ValueError("--years must be positive")
-    if "," in str(args.days_per_year):
-        day_counts = _days_for_years(
-            args.start_year,
-            args.years,
-            [int(part.strip()) for part in str(args.days_per_year).split(",") if part.strip()],
-        )
-    else:
-        day_counts = _days_for_years(args.start_year, args.years, int(args.days_per_year))
-    if any(days < 1 for days in day_counts):
-        raise ValueError("all day counts must be positive")
-    fields = tuple(args.fields or ("GPP", "NPP", "LEAF_M"))
-    reference = resolve_paper_landpoint_reference(ROOT, args.landpoint_id)
-    reference_run_dir = reference.output_dir
-    if args.run_def is None:
-        args.run_def = (
-            _materialized_runtime_run_def(reference)
-            if reference.output_dir is not None
-            else DEFAULT_BASE_USED_RUN_DEF
-        )
+
+def main(argv: list[str] | None = None, *, request: RunRequest | None = None) -> int:
+    if request is None:
+        request = prepare_run(parse_run_args(argv))
+    args = request.args
+    day_counts, fields = request.days, request.fields
+    reference_run_dir = request.reference_run_dir
     if args.paper_modelout_csv is None:
         paper_csv_targets = paper_modelout_csv_targets_by_year(root=ROOT, landpoint_id=args.landpoint_id)
         paper_modelout_csv_label = f"resolver:{args.landpoint_id}"
@@ -564,8 +764,8 @@ def main(argv: list[str] | None = None) -> int:
     previous_state_cache_metadata = None
     summaries: list[dict[str, object]] = []
     start_offset = 0
-    if args.previous_state_cache is not None:
-        cache_payload = _read_year_end_state_cache(args.previous_state_cache)
+    if request.predecessor is not None:
+        cache_payload = request.predecessor
         if int(cache_payload.get("end_year", -9999)) != int(args.start_year) - 1:
             raise ValueError("--previous-state-cache must end at start_year - 1")
         cached_layout = cache_payload.get("pft_layout")
@@ -578,27 +778,14 @@ def main(argv: list[str] | None = None) -> int:
             key: cache_payload.get(key)
             for key in ("description", "config", "run_def", "start_year", "end_year", "days_per_year", "created_elapsed_seconds")
         }
-    elif args.resume_checkpoints == "on" and args.year_checkpoint_dir is not None:
-        latest_checkpoint = _latest_year_checkpoint(args.year_checkpoint_dir)
-        if latest_checkpoint is not None:
-            cache_payload = _read_year_end_state_cache(latest_checkpoint)
-            if int(cache_payload.get("start_year", -9999)) != int(args.start_year):
-                raise ValueError("checkpoint start_year does not match --start-year")
-            if cache_payload.get("pft_layout") != pft_layout_metadata:
-                raise ValueError("checkpoint PFT layout does not match the configured stable IDs")
-            cached_end_year = int(cache_payload.get("end_year", -9999))
-            start_offset = cached_end_year - int(args.start_year) + 1
-            if start_offset < 0 or start_offset > int(args.years):
-                raise ValueError("checkpoint end_year lies outside the requested year range")
-            cached_summaries = cache_payload.get("year_summaries")
-            if not isinstance(cached_summaries, list) or len(cached_summaries) != start_offset:
-                raise ValueError("checkpoint year summaries do not match its end_year")
-            previous_state = cache_payload["state"]
-            summaries = list(cached_summaries)
+    if args.resume_checkpoints == "on" and args.year_checkpoint_dir is not None:
+        resumed = _resume_checkpoint(request, pft_layout_metadata)
+        if resumed is not None:
+            start_offset, previous_state, summaries, checkpoint = resumed
             previous_state_cache_metadata = {
-                "resume_checkpoint": str(latest_checkpoint),
+                "resume_checkpoint": str(checkpoint),
                 "start_year": int(args.start_year),
-                "end_year": cached_end_year,
+                "end_year": int(summaries[-1]["year"]),
                 "completed_years": start_offset,
             }
     checkpoint_outputs: list[dict[str, str]] = []
@@ -690,18 +877,23 @@ def main(argv: list[str] | None = None) -> int:
                 elapsed=elapsed,
                 handoff_gap_count=handoff_gap_count,
                 paper_csv_targets=paper_csv_targets,
-                landpoint_id=args.landpoint_id,
+                reference_history=request.histories[year],
                 pft_index=pft_selection.pft_index,
                 pft_metadata=pft_selection_metadata,
                 reference_pft_index=reference_pft_index,
             )
         )
         previous_state = run.last_day_end_state
-        if args.year_checkpoint_dir is not None and previous_state is not None and run.ready_for_requested_days:
+        if not run.ready_for_requested_days:
+            failed = True
+            break
+        if not completed_years_match(summaries, request, offset + 1):
+            raise ValueError(f"completed year {year} disagrees with the requested day count or source clock")
+        if args.year_checkpoint_dir is not None:
             checkpoint_outputs.append(
                 _write_year_checkpoint(
                     checkpoint_dir=args.year_checkpoint_dir,
-                    args=args,
+                    request=request,
                     year=year,
                     ndays=ndays,
                     state=previous_state,
@@ -711,9 +903,6 @@ def main(argv: list[str] | None = None) -> int:
                     pft_layout_metadata=pft_layout_metadata,
                 )
             )
-        if not run.ready_for_requested_days:
-            failed = True
-            break
 
     payload = {
         "description": (
@@ -736,6 +925,7 @@ def main(argv: list[str] | None = None) -> int:
         "previous_state_cache": None if args.previous_state_cache is None else str(args.previous_state_cache),
         "previous_state_cache_metadata": previous_state_cache_metadata,
         "landpoint_id": args.landpoint_id,
+        "run_identity": request.identity,
         "pft_layout": pft_layout_metadata,
         "pft_selection": pft_selection_metadata,
         "module_jit": args.module_jit,
@@ -756,8 +946,7 @@ def main(argv: list[str] | None = None) -> int:
         "years": summaries,
     }
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    write_json(args.output, payload)
     print(
         json.dumps(
             {
