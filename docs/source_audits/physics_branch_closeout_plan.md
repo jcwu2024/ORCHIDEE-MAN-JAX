@@ -68,7 +68,7 @@
 
 批量验收工具已按结果协议 2 核验点位名单、运行结果以及年度断点的来源和时钟。319 连续两年的结果已有中断续跑对照。359.0-071.0 和 179.0-095.0 已用发布工具在本机从 1961 年连续跑至 1962 年末，两站按预选名单通过编译模式年度验收，16 项论文指标、8 条两年序列和 112 项年度数值诊断均过原门。本机两进程并行耗时 577.49 秒，合计峰值工作集采样值为 17.87 GiB。[本机两站验收](../../outputs/reviews/main-physics-20261128/integrated-two-site-pilot-acceptance/controller-acceptance.json)
 
-Explore1000 已用两个独立作业，通过同一份年末状态接续并复核了 359 点的这两个年份。首日完成后释放编译缓存，使后续 7 日块在节点的内存映射上限内编译通过。下一步由正式批量入口在同一进程连续执行 1961–1963 年，核验三年原年史和两次状态交接，测量后续年度耗时。再据此为 33,450 个点年安排分批、续跑和预算。逐日过程按各自的同钟原参考核验。[原始年度比较](../../outputs/reviews/main-physics-20261128/explore1000-359-1962-resume/annual-comparison.csv) · [探索两年验收](../../outputs/reviews/main-physics-20261128/explore1000-359-1962-resume-acceptance/controller-acceptance.json)
+Explore1000 的正式批量入口已用同一进程从冷启动跑完 359 点的 1961–1963 年。两次年界均接续自身状态。协议 2 按预选名单汇总为 1/1 通过，前两年的指标逐值复现此前两个独立作业。8 核配置下，三个年份的引擎耗时分别为 480.53、458.07、430.76 秒。按后两年速度外推，全部 33,450 个点年约需 32,275–34,224 核时，费用约 1,614–1,711 元。下一步在相同三年任务上比较 1、2、4 核，依据每点实耗和共享文件配额确定首批资源与规模。逐日过程按各自的同钟原参考核验。[三年主控验收](../../outputs/reviews/main-physics-20261128/explore1000-359-three-year-acceptance-acceptance/controller-acceptance.json) · [分批与预算假设](../../outputs/reviews/main-physics-20261128/explore1000-359-three-year-acceptance/matrix-plan.md)
 
 C106 已修复默认后续日的 OK_LEAK 调度。319 的同输入第二日已核对 48 次碳库存承接、日末 LPJ 和正式重启。下一包核对论文驱动从文件启动的**第一日**，沿实际调用确认初始库存、半小时更新次数和末步库存的日末接收。两天交界以现存第 17568 步文件为参照。具名同相位原生水热、年度碳通量及 669 点矩阵仍需各自的实测。[验收回执](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair-acceptance/controller-acceptance.json) · [后续日入口与历史证据](../../outputs/reviews/main-physics-20261124/physics-branch-closeout/phase18-later-day-ok-leak-repair/impact/README.md)
 

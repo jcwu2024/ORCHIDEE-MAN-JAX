@@ -2,6 +2,8 @@
 
 ## 论文多点验收工具（结果协议 2）
 
+探索 CPU 上的编译缓存选项已纳入主线 `0789cc8f977db7f080b475fccf2b30ff6535ec78`。集中同步时，使用论文批量验收或多年度 CPU 运行器的研究线可按需移植 `--release-jit-caches`，涉及 `jax_orchidee/driver/orchestration.py`、`jax_orchidee/runners/acceptance.py`、`jax_orchidee/runners/multiyear.py` 及现有验收回归。默认关闭，开启后在首日完成及年末交接处释放进程内编译缓存，所选设置进入运行身份。该项登记为运行支持，实测覆盖探索 CPU x64 单进程三年。[来源、代码与实跑](../../outputs/reviews/main-physics-20261128/explore1000-359-three-year-acceptance/README.md)
+
 主线工具提交 `82736475dd2ec0832aeedbff706504f8a3530f3f`。日尺度 `f898282a` 和全球效率 `ffe77a00` 的快照都带有旧验收入口。两条研究线集中同步时，如使用论文点验收或自动年度断点，需一起更新 `jax_orchidee/runners/acceptance.py`、`multiyear.py`、同目录新增的 `run_identity.py`、`scripts/dev/aggregate_paper_landpoint_acceptance.py` 及 `tests/unit/test_paper_landpoint_acceptance.py`。相同请求可复用已核验的结果或完整年度断点，`--force` 从声明的初态重算。正式汇总传入 `--expected-selection` 指定原名单。普通恢复使用当前运行身份，旧显式前驱仍可按其原接口读取。此次改动登记在验收工具项下。[同步范围与修前证据](../../outputs/reviews/main-physics-20261127/integrated-acceptance-runner-repair/review/preliminary.md) · [发布回执](../../outputs/reviews/main-physics-20261128/integrated-acceptance-runner-acceptance/controller-acceptance.json)
 
 ## C108 泥炭分解的周转时间和深度尺度
