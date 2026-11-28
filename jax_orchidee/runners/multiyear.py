@@ -32,6 +32,7 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     paper_1961_driver_cold_start_multiday_modelout_lite_run,
     paper_1961_driver_multiday_modelout_lite_run,
     paper_1961_driver_restart_year_multiday_modelout_lite_run,
+    release_driver_jit_caches,
 )
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference  # noqa: E402
 from jax_orchidee.driver.restart import reference_restart_path  # noqa: E402
@@ -87,6 +88,7 @@ PAPER_MANGROVE_PFT_ID = "mangrove_pft14"
 EXECUTION_OPTIONS = (
     "module_jit", "diffuco_local_jit", "single_pass_daily_fold", "use_static_jit_daily_carbon",
     "prebuild_day_payloads", "compiled_sechiba_day", "compiled_day_block_size", "numpy_accumulator",
+    "release_jit_caches",
 )
 RESTART_KEYS = ("RESTART_FILEIN", "SECHIBA_RESTART_IN", "STOMATE_RESTART_FILEIN")
 START_FILES = ("driver_start.nc", "sechiba_start.nc", "stomate_start.nc")
@@ -489,6 +491,7 @@ def prepare_run(args: argparse.Namespace) -> RunRequest:
         "batch": digest({
             "runtime": runtime, "config": file_identity(args.config), "inputs": shared_inputs,
             "forcing": forcing, "start_year": args.start_year, "days": day_counts, "fields": fields,
+            "release_jit_caches": args.release_jit_caches,
         }),
         "common": digest({
             "landpoint_id": args.landpoint_id, "start_year": args.start_year,
@@ -695,6 +698,10 @@ def parse_run_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Compile complete later-day transitions in fixed blocks; zero disables it.",
     )
     parser.add_argument(
+        "--release-jit-caches", choices=("on", "off"), default="off",
+        help="Release idle in-process JIT executables before later-day blocks and after each completed year.",
+    )
+    parser.add_argument(
         "--numpy-accumulator",
         choices=("on", "off"),
         default=PRODUCTION_NUMPY_ACCUMULATOR_DEFAULT,
@@ -790,6 +797,7 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
             }
     checkpoint_outputs: list[dict[str, str]] = []
     failed = False
+    release_jit_caches = args.release_jit_caches == "on"
 
     for offset, ndays in enumerate(day_counts[start_offset:], start=start_offset):
         year = int(args.start_year) + offset
@@ -812,6 +820,7 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
                 prebuild_day_payloads=args.prebuild_day_payloads == "on",
                 use_compiled_sechiba_day=args.compiled_sechiba_day == "on",
                 compiled_day_block_size=args.compiled_day_block_size,
+                release_jit_caches=release_jit_caches,
                 use_numpy_accumulator=args.numpy_accumulator == "on",
             )
         elif offset == 0:
@@ -829,6 +838,7 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
                     prebuild_day_payloads=args.prebuild_day_payloads == "on",
                     use_compiled_sechiba_day=args.compiled_sechiba_day == "on",
                     compiled_day_block_size=args.compiled_day_block_size,
+                    release_jit_caches=release_jit_caches,
                     use_numpy_accumulator=args.numpy_accumulator == "on",
                 )
             else:
@@ -847,6 +857,7 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
                     prebuild_day_payloads=args.prebuild_day_payloads == "on",
                     use_compiled_sechiba_day=args.compiled_sechiba_day == "on",
                     compiled_day_block_size=args.compiled_day_block_size,
+                    release_jit_caches=release_jit_caches,
                     use_numpy_accumulator=args.numpy_accumulator == "on",
                 )
         else:
@@ -866,6 +877,7 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
                 prebuild_day_payloads=args.prebuild_day_payloads == "on",
                 use_compiled_sechiba_day=args.compiled_sechiba_day == "on",
                 compiled_day_block_size=args.compiled_day_block_size,
+                release_jit_caches=release_jit_caches,
                 use_numpy_accumulator=args.numpy_accumulator == "on",
             )
         _block_until_ready(run)
@@ -903,6 +915,9 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
                     pft_layout_metadata=pft_layout_metadata,
                 )
             )
+        if release_jit_caches:
+            _block_until_ready(previous_state.fields_by_component)
+            release_driver_jit_caches(year=year, boundary="after_year")
 
     payload = {
         "description": (
@@ -935,6 +950,7 @@ def main(argv: list[str] | None = None, *, request: RunRequest | None = None) ->
         "prebuild_day_payloads": args.prebuild_day_payloads,
         "compiled_sechiba_day": args.compiled_sechiba_day,
         "compiled_day_block_size": args.compiled_day_block_size,
+        "release_jit_caches": args.release_jit_caches,
         "numpy_accumulator": args.numpy_accumulator,
         "paper_modelout_csv": paper_modelout_csv_label,
         "paper_modelout_target_years": sorted(int(year) for year in paper_csv_targets),

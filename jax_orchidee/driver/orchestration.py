@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import gc
+import json
+import os
+import sys
+import time
 from dataclasses import dataclass, fields as dataclass_fields, replace
 from functools import lru_cache
 from types import SimpleNamespace
@@ -11519,6 +11524,30 @@ class _CompiledLaterDayBlockCacheEntry:
 _COMPILED_LATER_DAY_BLOCK_CACHE: dict[tuple[object, ...], _CompiledLaterDayBlockCacheEntry] = {}
 
 
+def release_driver_jit_caches(*, year: int, boundary: str) -> None:
+    """Release idle process-local executables after the caller has synchronized."""
+    def mapping_count():
+        try:
+            with Path("/proc/self/maps").open(encoding="utf-8", errors="replace") as mappings:
+                return sum(1 for _ in mappings)
+        except OSError:
+            return None
+
+    started = time.perf_counter()
+    before = mapping_count()
+    entries = len(_COMPILED_SECHIBA_SCAN_CACHE) + len(_COMPILED_LATER_DAY_BLOCK_CACHE)
+    _COMPILED_SECHIBA_SCAN_CACHE.clear()
+    _COMPILED_LATER_DAY_BLOCK_CACHE.clear()
+    jax.clear_caches()
+    gc.collect()
+    print(json.dumps({
+        "event": "driver_jit_cache_release", "year": year, "boundary": boundary,
+        "pid": os.getpid(), "driver_cache_entries": entries,
+        "maps_before": before, "maps_after": mapping_count(),
+        "time_unix": time.time(), "elapsed_seconds": time.perf_counter() - started,
+    }), file=sys.stderr, flush=True)
+
+
 def _compiled_half_hour_forcing(item: DriverRuntimeHalfHourInput) -> DriverCompiledHalfHourForcing:
     payload = item.base_payload
     forcing = item.step.forcing
@@ -12876,12 +12905,17 @@ def _paper_run_compiled_later_day_blocks(
     steps_per_stomate: int,
     block_size: int,
     daily_modelout: list[DriverDailyModelout],
+    release_jit_caches: bool = False,
 ) -> tuple[DriverPreviousStepStatePacket, int]:
     """Advance all complete later-day blocks and return the tail start day."""
 
     next_day_index = 2
     if next_day_index + int(block_size) - 1 > int(ndays):
         return previous_state, next_day_index
+    if release_jit_caches:
+        jax.block_until_ready((previous_state.fields_by_component, [day.modelout_fields for day in daily_modelout]))
+        jax.effects_barrier()
+        release_driver_jit_caches(year=year, boundary="before_later_day_blocks")
     first_block_inputs = _paper_1961_later_day_transition_inputs(
         context=context,
         current_state=previous_state,
@@ -13203,6 +13237,7 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
     prebuild_day_payloads: bool = True,
     use_compiled_sechiba_day: bool = False,
     compiled_day_block_size: int = 0,
+    release_jit_caches: bool = False,
     prepared_context: Paper1961PreparedDriverContext | None = None,
     run_mode: str = "new_native_run",
     run_id: str | None = None,
@@ -13297,6 +13332,7 @@ def paper_1961_driver_restart_year_multiday_modelout_lite_run(
             steps_per_stomate=steps_per_stomate,
             block_size=int(compiled_day_block_size),
             daily_modelout=daily_modelout,
+            release_jit_caches=release_jit_caches,
         )
 
     if stopped_day_index is None:
@@ -13363,6 +13399,7 @@ def paper_1961_driver_cold_start_multiday_modelout_lite_run(
     prebuild_day_payloads: bool = True,
     use_compiled_sechiba_day: bool = False,
     compiled_day_block_size: int = 0,
+    release_jit_caches: bool = False,
 ) -> DriverLiteMultiDayModeloutRun:
     """Run a compact no-restart paper-case chain through daily modelout.
 
@@ -13450,6 +13487,7 @@ def paper_1961_driver_cold_start_multiday_modelout_lite_run(
             steps_per_stomate=steps_per_stomate,
             block_size=int(compiled_day_block_size),
             daily_modelout=daily_modelout,
+            release_jit_caches=release_jit_caches,
         )
 
     if stopped_day_index is None:
@@ -14084,6 +14122,7 @@ def paper_1961_driver_multiday_modelout_lite_run(
     prebuild_day_payloads: bool = True,
     use_compiled_sechiba_day: bool = False,
     compiled_day_block_size: int = 0,
+    release_jit_caches: bool = False,
 ) -> DriverLiteMultiDayModeloutRun:
     """Run daily modelout without retaining completed day scaffolds.
 
@@ -14176,6 +14215,7 @@ def paper_1961_driver_multiday_modelout_lite_run(
             steps_per_stomate=steps_per_stomate,
             block_size=int(compiled_day_block_size),
             daily_modelout=daily_modelout,
+            release_jit_caches=release_jit_caches,
         )
 
     if stopped_day_index is None:

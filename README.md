@@ -126,6 +126,12 @@ Run the same request again to reuse its matching result or resume from its
 latest complete annual checkpoint. Add `--force` to rerun from the declared
 initial state. Keep shared input files fixed during a batch.
 
+On Explore1000 CPU nodes, add `--release-jit-caches on` to release idle
+in-process JIT executables before the first seven-day block and at year end.
+This option is off by default. Use the same setting across all compiled shards
+and when resuming a batch. The on-disk JAX compilation cache is available to
+subsequent years.
+
 For a formal aggregate, supply the same site manifest used for validation.
 The command reports missing and unexpected site IDs and verifies the shard
 assignments before reporting a pass.

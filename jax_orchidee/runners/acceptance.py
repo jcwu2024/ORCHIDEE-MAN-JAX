@@ -61,6 +61,7 @@ def _multiyear_command(
         "--landpoint-id", landpoint_id,
         "--compiled-sechiba-day", "on" if compiled else "off",
         "--compiled-day-block-size", "7" if compiled else "0",
+        "--release-jit-caches", getattr(args, "release_jit_caches", "off") if compiled else "off",
         # The three-point annual gate rejected this companion optimization at
         # fixed atol=1e-8 on 319.0-057.0 DOC. Keep it off in production.
         "--numpy-accumulator", "off",
@@ -273,8 +274,8 @@ def _write_summary(
     payload = {
         "result_protocol": RESULT_PROTOCOL,
         "description": (
-            "Paper PFT14 annual scientific acceptance. Compiled mode runs first in one process so "
-            "landpoints reuse the compiled SECHIBA executable; strict mode runs only for scientific failures."
+            "Paper PFT14 annual scientific acceptance. Compiled mode runs first in one process. "
+            "Strict mode runs only for scientific failures."
         ),
         "tolerance_policy": {
             "scientific_key_outputs": list(KEY_MODEL_OUTPUTS),
@@ -290,6 +291,8 @@ def _write_summary(
         "years": args.years,
         "days_per_year": [int(part) for part in args.days_per_year.split(",") if part.strip()],
         "initial_state": args.initial_state,
+        "release_jit_caches": args.release_jit_caches,
+        "strict_on_failure": args.strict_on_failure,
         "shard_index": args.shard_index,
         "shard_count": args.shard_count,
         "selection_ids": selection,
@@ -321,6 +324,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--days-per-year", default="365")
     parser.add_argument("--initial-state", choices=("cold-start", "restart-backed"), default="cold-start")
     parser.add_argument("--strict-on-failure", choices=("on", "off"), default="on")
+    parser.add_argument(
+        "--release-jit-caches", choices=("on", "off"), default="off",
+        help="Use process-local JIT cache cleanup at compiled day-block and year boundaries.",
+    )
     parser.add_argument("--science-atol", type=float, default=1.0e-5)
     parser.add_argument("--science-rtol", type=float, default=1.0e-3)
     parser.add_argument("--max-normalized-bias", type=float, default=1.0e-3)

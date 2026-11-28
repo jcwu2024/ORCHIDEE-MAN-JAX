@@ -127,8 +127,37 @@ def test_production_defaults_enable_compiled_day_and_reject_numpy_accumulator(tm
     strict_options = dict(zip(strict[::2], strict[1::2], strict=True))
     assert compiled_options["--compiled-sechiba-day"] == "on"
     assert compiled_options["--numpy-accumulator"] == "off"
+    assert compiled_options["--release-jit-caches"] == "off"
     assert strict_options["--compiled-sechiba-day"] == "off"
     assert strict_options["--numpy-accumulator"] == "off"
+
+
+def test_jit_cache_release_is_opt_in_on_the_compiled_acceptance_route(tmp_path):
+    args = Namespace(start_year=1961, years=3, days_per_year="365",
+                     initial_state="cold-start", release_jit_caches="on")
+    for compiled, expected in ((True, "on"), (False, "off")):
+        command = _multiyear_command(
+            "359.0-071.0", args=args, compiled=compiled,
+            output=tmp_path / "result.json", checkpoint_dir=tmp_path / "checkpoints",
+        )
+        parsed = multiyear.parse_run_args(command)
+        assert parsed.release_jit_caches == expected
+        assert parsed.compiled_day_block_size == (7 if compiled else 0)
+        assert parsed.resume_checkpoints == "on"
+
+
+def test_cache_release_drops_both_executable_owners(monkeypatch, capsys):
+    from jax_orchidee.driver import orchestration
+
+    scans, blocks = {"scan": object()}, {"block": object()}
+    releases = []
+    monkeypatch.setattr(orchestration, "_COMPILED_SECHIBA_SCAN_CACHE", scans)
+    monkeypatch.setattr(orchestration, "_COMPILED_LATER_DAY_BLOCK_CACHE", blocks)
+    monkeypatch.setattr(orchestration.jax, "clear_caches", lambda: releases.append((len(scans), len(blocks))))
+    orchestration.release_driver_jit_caches(year=1962, boundary="after_year")
+    assert releases == [(0, 0)]
+    event = json.loads(capsys.readouterr().err)
+    assert (event["year"], event["boundary"], event["driver_cache_entries"]) == (1962, "after_year", 2)
 
 
 def test_archived_fortran_history_pft_slot_resolves_from_named_stable_layout():
