@@ -1,6 +1,6 @@
 # Explore1000 项目部署入口
 
-本页是 `main` 的共享管理入口，不是新科学运行或付费作业授权。
+本页是 `main` 的共享管理入口，记录部署流程及用户已批准的运行范围。
 项目服务端统一入口为
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/deployment/README.md`；
 其 `registry.json` 登记开发分支镜像、实际执行 checkout、source overlays、数据、
@@ -43,7 +43,7 @@
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`；复用 canonical 环境
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu` 和已接受的
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu`，不擅自重建环境。
-`cln01` / `cln02` 仅作连接、传输和调度入口，按连接质量选择并复用 SSH 身份；
-不在登录节点计算。小 CPU/GPU 检查使用既定 test 节点/gln01。
-paid `cnall` / `cnmix` / `gnall` 提交仍须明确批准资源、时限、cwd、命令和最坏费用。
+`cln01` / `cln02` 仅作连接、传输和调度入口，按连接质量选择并复用 SSH 身份。
+计算在测试节点或 Slurm 分配的计算节点上执行。免费的小规模 CPU 检查使用 `test01`–`test04`，GPU 检查使用 `gln01`。
+2026-11-28，用户已授权主线模型验收所需的同类小额短时 CPU 测试直接提交，随结果报告资源用量和费用。359 点的 `cnmix` 两年试跑是已批准的实例，申请 8 个 CPU、最多 1 小时，费用上限 0.40 元。其他付费作业仍须在提交前确认资源、时限、工作目录、命令和费用上限。
 进一步操作遵守本地 AGENTS 与 `explore1000-job-script` 技能。
