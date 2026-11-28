@@ -6,7 +6,9 @@
 
 359 点在 Explore1000 免费 CPU 节点跑完了 1961 年的 365 天，实际源步为 1–17520。三次完整首年的四项年度指标逐值一致。与原 Fortran 比较，4 项论文指标和 28 项年度数值诊断全部通过。1962 年多次在 LLVM 编译时遇到内存分配失败，从已核验的 1961 年末状态恢复也在次年编译时停止。免费求解共用 58 分 24 秒，费用 0 元。这次补充了同一站点、同一年的 Linux 实测。两年的平台耗时和 50 年预算仍需成功的续年计时。[全年数值和原门限](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution/annual-comparison.csv) · [主控核验](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution-acceptance/controller-acceptance.json)
 
-测试节点曾发生 CPU 争用。改用当时空闲的 8 核后仍遇到同一编译错误，失败瞬间的内存申请原因待查。单次付费测量的脚本已通过现场 Bash 命令展开，拟由 Slurm 在 `cnmix` 自动分配一个节点、8 个 CPU，限时 1 小时，估计上限为 0.40 元。该作业从冷启动再跑同一点两年，以便在同一节点比较首年和续年的耗时。[免费节点终态和故障记录](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution/README.md) · [付费作业范围及核价](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution/paid-request.json)
+359 点在 `cnmix` 付费节点也完成了 1961 年。作业 16984600 的四项年度指标与免费节点逐值相同，28 项年度诊断均通过原门。首年引擎用时 489.11 秒，年末状态已核实到第 17520 步。1962 年编译时 LLVM 再次报告无法分配内存，两年合并验收仍待完成。Slurm 记录作业占用 8 个 CPU 共 684 秒，即 1.52 核时，按登记费率估算为 0.076 元。[年度对照](../../outputs/reviews/main-physics-20261128/explore1000-359-cnmix-paid/annual-comparison.csv) · [调度记录](../../outputs/reviews/main-physics-20261128/explore1000-359-cnmix-paid/09-status.stdout)
+
+付费节点在首次报错前约 1.6 秒仍有 51.38 GiB 可用内存。该进程当时有 59,038 个内存映射，系统上限为 65,530。失败瞬间的调用和映射数仍待观测。下一步从已核验的 1961 年末状态恢复，在第二年首次失败的编译过程中定位具体的分配请求，验证可行的续年运行方式，再按原年度门限核对 1962 年结果。[编译记录与原始采样](../../outputs/reviews/main-physics-20261128/explore1000-359-cnmix-paid/README.md) · [主控验收](../../outputs/reviews/main-physics-20261128/explore1000-359-cnmix-paid-acceptance/controller-acceptance.json)
 
 2026-11-28，**多点验收工具已修复，代码提交为 `82736475`。** 当次运行异常、非零退出或没有产生新结果时，即使目录中有旧的通过记录，接受点数也为零。正式汇总现在逐个核对点号。请求 001 和 069，实收 001 和 319 时，两行数值可以各自过门，整批仍会报告缺 069、多 319。319 在 1961 年末中断后从第 17521 步续至 1962 年末第 35040 步，两年的年度输出和年末状态均与同输入连续运行一致。本次按验收工具的结果协议 2 登记。主线累计 108 项模型修正或支持补齐，涉及 60 个生产提交，其中 102 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261128/integrated-acceptance-runner-acceptance/controller-acceptance.json) · [公开命令](../../README.md#validate-landpoints) · [两研究分支同步记录](shared_core_branch_review.md)
 
