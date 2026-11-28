@@ -4,7 +4,9 @@
 
 本机两个 CPU x64 进程并行耗时 577.49 秒，采样合计峰值工作集为 17.87 GiB，14 份正式结果共 1,092,086 字节，配置及缓存另计。这批原参考的时间分辨率为一年。669 点各连续 50 年的正式计算共 33,450 个点年，仍待启动。[本机实耗](../../outputs/reviews/main-physics-20261128/integrated-two-site-pilot/attempt-01/receipt.json) · [规模与资源依据](../../outputs/reviews/main-physics-20261127/integrated-acceptance-readiness/execution.md)
 
-359 点在 Explore1000 免费 CPU 节点的两年测量已完成本地准备。Linux 启动命令只选择该点，两年的四项 Fortran 年度参考均与已验档逐值一致。拟用一个进程，现场选取 8 个逻辑 CPU，求解限时 60 分钟，预计机时费 0 元。上机时核对实际环境和共享输入，用实测耗时、峰值内存及文件开销确定长期计算的分批方式。[启动命令与输入](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-preflight/README.md) · [主控核验](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-preflight-acceptance/controller-acceptance.json)
+359 点在 Explore1000 免费 CPU 节点跑完了 1961 年的 365 天，实际源步为 1–17520。三次完整首年的四项年度指标逐值一致。与原 Fortran 比较，4 项论文指标和 28 项年度数值诊断全部通过。1962 年多次在 LLVM 编译时遇到内存分配失败，从已核验的 1961 年末状态恢复也在次年编译时停止。免费求解共用 58 分 24 秒，费用 0 元。这次补充了同一站点、同一年的 Linux 实测。两年的平台耗时和 50 年预算仍需成功的续年计时。[全年数值和原门限](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution/annual-comparison.csv) · [主控核验](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution-acceptance/controller-acceptance.json)
+
+测试节点曾发生 CPU 争用。改用当时空闲的 8 核后仍遇到同一编译错误，失败瞬间的内存申请原因待查。单次付费测量的脚本已通过现场 Bash 命令展开，拟由 Slurm 在 `cnmix` 自动分配一个节点、8 个 CPU，限时 1 小时，估计上限为 0.40 元。该作业从冷启动再跑同一点两年，以便在同一节点比较首年和续年的耗时。[免费节点终态和故障记录](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution/README.md) · [付费作业范围及核价](../../outputs/reviews/main-physics-20261128/explore1000-359-two-year-execution/paid-request.json)
 
 2026-11-28，**多点验收工具已修复，代码提交为 `82736475`。** 当次运行异常、非零退出或没有产生新结果时，即使目录中有旧的通过记录，接受点数也为零。正式汇总现在逐个核对点号。请求 001 和 069，实收 001 和 319 时，两行数值可以各自过门，整批仍会报告缺 069、多 319。319 在 1961 年末中断后从第 17521 步续至 1962 年末第 35040 步，两年的年度输出和年末状态均与同输入连续运行一致。本次按验收工具的结果协议 2 登记。主线累计 108 项模型修正或支持补齐，涉及 60 个生产提交，其中 102 项有复查前证据。[主控验收](../../outputs/reviews/main-physics-20261128/integrated-acceptance-runner-acceptance/controller-acceptance.json) · [公开命令](../../README.md#validate-landpoints) · [两研究分支同步记录](shared_core_branch_review.md)
 
